@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,

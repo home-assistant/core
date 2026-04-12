@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -18,8 +17,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import MoonConfigEntry
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import MoonData, MoonUpdateCoordinator
-
-ENTITY_ID_BINARY_SENSOR_FORMAT = BINARY_SENSOR_DOMAIN + ".moon_{}"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -68,7 +65,7 @@ class MoonBinarySensorEntity(
         """Initialize the moon binary sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.entity_id = ENTITY_ID_BINARY_SENSOR_FORMAT.format(description.key)
+        self._attr_suggested_object_id = f"moon_{description.key}"
         self._attr_unique_id = f"{entry.entry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             name=DEFAULT_NAME,

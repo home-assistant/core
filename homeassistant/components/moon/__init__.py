@@ -11,7 +11,7 @@ type MoonConfigEntry = ConfigEntry[MoonUpdateCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: MoonConfigEntry) -> bool:
     """Set up from a config entry."""
-    coordinator = MoonUpdateCoordinator(hass)
+    coordinator = MoonUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

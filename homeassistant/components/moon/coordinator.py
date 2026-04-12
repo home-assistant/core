@@ -12,6 +12,7 @@ from typing import cast
 from astral import moon as astral_moon
 import ephem
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.sun import get_astral_location
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -55,13 +56,14 @@ class MoonData:
 class MoonUpdateCoordinator(DataUpdateCoordinator[MoonData]):
     """Coordinate moon calculations."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self) -> MoonData:

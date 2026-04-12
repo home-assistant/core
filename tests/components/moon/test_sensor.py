@@ -4,27 +4,20 @@ from __future__ import annotations
 
 from datetime import datetime
 from math import degrees
+from unittest.mock import patch
 
 from astral import moon as astral_moon
 import ephem
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.moon.const import (
-    PHASE_OPTIONS,
-    STATE_FIRST_QUARTER,
-    STATE_FULL_MOON,
-    STATE_LAST_QUARTER,
-    STATE_NEW_MOON,
-    STATE_WANING_CRESCENT,
-    STATE_WANING_GIBBOUS,
-    STATE_WAXING_CRESCENT,
-    STATE_WAXING_GIBBOUS,
-)
+from homeassistant.components.moon.const import PHASE_OPTIONS
+from homeassistant.components.moon.coordinator import moon_phase_state
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -32,6 +25,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DEGREE,
     PERCENTAGE,
+    STATE_UNKNOWN,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -41,46 +35,80 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 
 
-def _phase_state(value: float) -> str:
-    """Convert an Astral moon phase value to the expected state."""
-    if value < 0.5 or value > 27.5:
-        return STATE_NEW_MOON
-    if value < 6.5:
-        return STATE_WAXING_CRESCENT
-    if value < 7.5:
-        return STATE_FIRST_QUARTER
-    if value < 13.5:
-        return STATE_WAXING_GIBBOUS
-    if value < 14.5:
-        return STATE_FULL_MOON
-    if value < 20.5:
-        return STATE_WANING_GIBBOUS
-    if value < 21.5:
-        return STATE_LAST_QUARTER
-    return STATE_WANING_CRESCENT
-
-
 def _to_datetime(value: ephem.Date) -> datetime:
     """Convert an ephem date to a UTC datetime."""
     return value.datetime().replace(tzinfo=dt_util.UTC)
 
 
+def _entity_id(
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    unique_id: str,
+) -> str:
+    """Get an entity id by unique id."""
+    entity_id = entity_registry.async_get_entity_id(platform, "moon", unique_id)
+    assert entity_id is not None
+    return entity_id
+
+
 @pytest.mark.parametrize(
     ("moon_value", "native_value"),
     [
-        (0, STATE_NEW_MOON),
-        (5, STATE_WAXING_CRESCENT),
-        (7, STATE_FIRST_QUARTER),
-        (12, STATE_WAXING_GIBBOUS),
-        (14.3, STATE_FULL_MOON),
-        (20.1, STATE_WANING_GIBBOUS),
-        (20.8, STATE_LAST_QUARTER),
-        (23, STATE_WANING_CRESCENT),
+        (0, "new_moon"),
+        (5, "waxing_crescent"),
+        (7, "first_quarter"),
+        (12, "waxing_gibbous"),
+        (14.3, "full_moon"),
+        (20.1, "waning_gibbous"),
+        (20.8, "last_quarter"),
+        (23, "waning_crescent"),
     ],
 )
 def test_moon_phase_state(moon_value: float, native_value: str) -> None:
     """Test moon phase mapping."""
-    assert _phase_state(moon_value) == native_value
+    assert moon_phase_state(moon_value) == native_value
+
+
+@pytest.mark.parametrize(
+    ("moon_value", "native_value"),
+    [
+        (0.4, "new_moon"),
+        (0.5, "waxing_crescent"),
+        (6.49, "waxing_crescent"),
+        (6.5, "first_quarter"),
+        (7.49, "first_quarter"),
+        (7.5, "waxing_gibbous"),
+        (13.49, "waxing_gibbous"),
+        (13.5, "full_moon"),
+        (14.49, "full_moon"),
+        (14.5, "waning_gibbous"),
+        (20.49, "waning_gibbous"),
+        (20.5, "last_quarter"),
+        (21.49, "last_quarter"),
+        (21.5, "waning_crescent"),
+        (27.5, "waning_crescent"),
+        (27.51, "new_moon"),
+    ],
+)
+async def test_moon_phase_sensor_boundary_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    moon_value: float,
+    native_value: str,
+) -> None:
+    """Test phase sensor boundary mapping against the integration."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.moon.coordinator.astral_moon.phase",
+        return_value=moon_value,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.moon_phase")
+    assert state
+    assert state.state == native_value
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -102,7 +130,7 @@ async def test_moon_sensors(
     observer.date = utc_now
     current_moon = ephem.Moon(observer)
 
-    expected_phase = _phase_state(astral_moon.phase(dt_util.now().date()))
+    expected_phase = moon_phase_state(astral_moon.phase(dt_util.now().date()))
     expected_next_rising = _to_datetime(observer.next_rising(ephem.Moon()))
     expected_next_setting = _to_datetime(observer.next_setting(ephem.Moon()))
     expected_next_new_moon = _to_datetime(ephem.next_new_moon(observer.date))
@@ -120,6 +148,17 @@ async def test_moon_sensors(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    next_first_quarter_moon_entity_id = _entity_id(
+        entity_registry,
+        "sensor",
+        f"{mock_config_entry.entry_id}-next_first_quarter_moon",
+    )
+    next_last_quarter_moon_entity_id = _entity_id(
+        entity_registry,
+        "sensor",
+        f"{mock_config_entry.entry_id}-next_last_quarter_moon",
+    )
 
     phase_state = hass.states.get("sensor.moon_phase")
     assert phase_state
@@ -151,9 +190,7 @@ async def test_moon_sensors(
         next_new_moon_state.state
     )
 
-    next_first_quarter_moon_state = hass.states.get(
-        "sensor.moon_next_first_quarter_moon"
-    )
+    next_first_quarter_moon_state = hass.states.get(next_first_quarter_moon_entity_id)
     assert next_first_quarter_moon_state
     assert expected_next_first_quarter_moon.replace(
         microsecond=0
@@ -165,7 +202,7 @@ async def test_moon_sensors(
         next_full_moon_state.state
     )
 
-    next_last_quarter_moon_state = hass.states.get("sensor.moon_next_last_quarter_moon")
+    next_last_quarter_moon_state = hass.states.get(next_last_quarter_moon_entity_id)
     assert next_last_quarter_moon_state
     assert expected_next_last_quarter_moon.replace(
         microsecond=0
@@ -180,13 +217,13 @@ async def test_moon_sensors(
     elevation_state = hass.states.get("sensor.moon_elevation")
     assert elevation_state
     assert float(elevation_state.state) == pytest.approx(expected_elevation, abs=0.01)
-    assert elevation_state.attributes[ATTR_STATE_CLASS] == "measurement"
+    assert elevation_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     assert elevation_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == DEGREE
 
     azimuth_state = hass.states.get("sensor.moon_azimuth")
     assert azimuth_state
     assert float(azimuth_state.state) == pytest.approx(expected_azimuth, abs=0.01)
-    assert azimuth_state.attributes[ATTR_STATE_CLASS] == "measurement"
+    assert azimuth_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
     assert azimuth_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == DEGREE
 
     phase_entry = entity_registry.async_get("sensor.moon_phase")
@@ -221,7 +258,7 @@ async def test_moon_sensors(
     assert next_new_moon_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     next_first_quarter_moon_entry = entity_registry.async_get(
-        "sensor.moon_next_first_quarter_moon"
+        next_first_quarter_moon_entity_id
     )
     assert next_first_quarter_moon_entry
     assert (
@@ -240,7 +277,7 @@ async def test_moon_sensors(
     assert next_full_moon_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     next_last_quarter_moon_entry = entity_registry.async_get(
-        "sensor.moon_next_last_quarter_moon"
+        next_last_quarter_moon_entity_id
     )
     assert next_last_quarter_moon_entry
     assert (
@@ -273,3 +310,54 @@ async def test_moon_sensors(
     assert device_entry
     assert device_entry.name == "Moon"
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
+
+
+async def test_moon_disabled_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test azimuth and elevation sensors are disabled by default."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.moon_elevation") is None
+    assert hass.states.get("sensor.moon_azimuth") is None
+
+    elevation_entry = entity_registry.async_get("sensor.moon_elevation")
+    assert elevation_entry
+    assert elevation_entry.disabled
+
+    azimuth_entry = entity_registry.async_get("sensor.moon_azimuth")
+    assert azimuth_entry
+    assert azimuth_entry.disabled
+
+
+async def test_moon_rising_setting_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test rising and setting sensors become unknown on observer errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.moon.coordinator.ephem.Observer.next_rising",
+            side_effect=ephem.AlwaysUpError,
+        ),
+        patch(
+            "homeassistant.components.moon.coordinator.ephem.Observer.next_setting",
+            side_effect=ephem.NeverUpError,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    next_rising_state = hass.states.get("sensor.moon_next_rising")
+    assert next_rising_state
+    assert next_rising_state.state == STATE_UNKNOWN
+
+    next_setting_state = hass.states.get("sensor.moon_next_setting")
+    assert next_setting_state
+    assert next_setting_state.state == STATE_UNKNOWN

@@ -7,6 +7,7 @@ from datetime import datetime
 import ephem
 from freezegun.api import FrozenDateTimeFactory
 
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -38,7 +39,7 @@ async def test_moon_above_horizon_binary_sensor(
 
     state = hass.states.get("binary_sensor.moon_above_horizon")
     assert state
-    assert state.state == ("on" if float(current_moon.alt) > 0 else "off")
+    assert state.state == (STATE_ON if float(current_moon.alt) > 0 else STATE_OFF)
 
     entry = entity_registry.async_get("binary_sensor.moon_above_horizon")
     assert entry
