@@ -843,24 +843,6 @@ async def setup_comp_4(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_comp_4")
 async def test_set_target_temp_with_hvac_mode_heat(hass: HomeAssistant) -> None:
     """Test setting the target temperature and HVAC mode together."""
-    hass.config.units = METRIC_SYSTEM
-    assert await async_setup_component(
-        hass,
-        CLIMATE_DOMAIN,
-        {
-            "climate": {
-                "platform": "generic_thermostat",
-                "name": "test",
-                "cold_tolerance": 2,
-                "hot_tolerance": 4,
-                "heater": ENT_SWITCH,
-                "target_sensor": ENT_SENSOR,
-                "initial_hvac_mode": HVACMode.OFF,
-                "target_temp": 20,
-            }
-        },
-    )
-    await hass.async_block_till_done()
 
     await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.HEAT)
     state = hass.states.get(ENTITY)
