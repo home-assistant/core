@@ -101,12 +101,11 @@ async def test_with_existing_config(
         ),
         patch(
             "homeassistant.components.iaqualink.config_flow.async_get_systems",
-            return_value=(
+            return_value=config_flow.SystemsSuccess(
                 {
                     "SN001": mock_system1,
                     "SN002": mock_system2,
-                },
-                None,
+                }
             ),
         ),
     ):
@@ -142,7 +141,7 @@ async def test_user_step_relies_on_async_get_systems(
         ),
         patch(
             "homeassistant.components.iaqualink.config_flow.async_get_systems",
-            return_value=({"SN001": mock_system}, None),
+            return_value=config_flow.SystemsSuccess({"SN001": mock_system}),
         ),
     ):
         result = await flow.async_step_user(config_data)
@@ -236,14 +235,14 @@ async def test_async_get_systems_success(
             return_value={"SN001": mock_system},
         ),
     ):
-        systems, error_reason = await config_flow.async_get_systems(
+        systems_result = await config_flow.async_get_systems(
             hass,
             config_data[CONF_USERNAME],
             config_data[CONF_PASSWORD],
         )
 
-    assert systems == {"SN001": mock_system}
-    assert error_reason is None
+    assert isinstance(systems_result, config_flow.SystemsSuccess)
+    assert systems_result.systems == {"SN001": mock_system}
 
 
 async def test_async_get_systems_no_systems(
@@ -261,14 +260,14 @@ async def test_async_get_systems_no_systems(
             return_value={},
         ),
     ):
-        systems, error_reason = await config_flow.async_get_systems(
+        systems_result = await config_flow.async_get_systems(
             hass,
             config_data[CONF_USERNAME],
             config_data[CONF_PASSWORD],
         )
 
-    assert systems == {}
-    assert error_reason is None
+    assert isinstance(systems_result, config_flow.SystemsSuccess)
+    assert systems_result.systems == {}
 
 
 async def test_async_get_systems_none_systems(
@@ -286,14 +285,14 @@ async def test_async_get_systems_none_systems(
             return_value=None,
         ),
     ):
-        systems, error_reason = await config_flow.async_get_systems(
+        systems_result = await config_flow.async_get_systems(
             hass,
             config_data[CONF_USERNAME],
             config_data[CONF_PASSWORD],
         )
 
-    assert systems == {}
-    assert error_reason is None
+    assert isinstance(systems_result, config_flow.SystemsSuccess)
+    assert systems_result.systems == {}
 
 
 async def test_systems_step_without_pending_user_input(
@@ -407,12 +406,11 @@ async def test_options_flow_init_success(
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.async_get_systems",
-        return_value=(
+        return_value=config_flow.SystemsSuccess(
             {
                 "SN001": mock_system1,
                 "SN002": mock_system2,
-            },
-            None,
+            }
         ),
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -444,12 +442,11 @@ async def test_options_flow_submit_systems(
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.async_get_systems",
-        return_value=(
+        return_value=config_flow.SystemsSuccess(
             {
                 "SN001": mock_system1,
                 "SN002": mock_system2,
-            },
-            None,
+            }
         ),
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -480,7 +477,7 @@ async def test_options_flow_submit_systems_direct_init_call(
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.async_get_systems",
-        return_value=({"SN001": mock_system}, None),
+        return_value=config_flow.SystemsSuccess({"SN001": mock_system}),
     ):
         result = await flow.async_step_init({CONF_SYSTEMS: ["SN001"]})
 
@@ -509,12 +506,11 @@ async def test_options_flow_filters_stale_selected_systems(
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.async_get_systems",
-        return_value=(
+        return_value=config_flow.SystemsSuccess(
             {
                 "SN001": mock_system1,
                 "SN002": mock_system2,
-            },
-            None,
+            }
         ),
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 import httpx
 from iaqualink.exception import (
@@ -32,20 +33,39 @@ CREDENTIALS_DATA_SCHEMA = vol.Schema(
     }
 )
 
+type SystemsError = Literal["invalid_auth", "cannot_connect"]
+
+
+@dataclass(slots=True, frozen=True)
+class SystemsSuccess:
+    """Successful systems fetch result."""
+
+    systems: dict[str, Any]
+
+
+@dataclass(slots=True, frozen=True)
+class SystemsFailure:
+    """Failed systems fetch result."""
+
+    error: SystemsError
+
+
+type SystemsResult = SystemsSuccess | SystemsFailure
+
 
 async def async_get_systems(
     hass: HomeAssistant, username: str, password: str
-) -> tuple[dict[str, Any] | None, str | None]:
+) -> SystemsResult:
     """Fetch systems from iAqualink and map failures to flow error reasons."""
     try:
         async with async_get_aqualink_client(hass, username, password) as aqualink:
             systems = await aqualink.get_systems()
     except AqualinkServiceUnauthorizedException:
-        return None, "invalid_auth"
+        return SystemsFailure("invalid_auth")
     except AqualinkServiceException, TimeoutError, httpx.HTTPError:
-        return None, "cannot_connect"
+        return SystemsFailure("cannot_connect")
 
-    return systems or {}, None
+    return SystemsSuccess(systems or {})
 
 
 class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -81,18 +101,18 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            systems, systems_error = await async_get_systems(
+            systems_result = await async_get_systems(
                 self.hass,
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
             )
-            if systems is None:
-                assert systems_error is not None
-                errors = {"base": systems_error}
+            if isinstance(systems_result, SystemsFailure):
+                errors = {"base": systems_result.error}
             else:
                 self._pending_user_input = user_input
                 self._system_keys = {
-                    system.serial: system.name for system in systems.values()
+                    system.serial: system.name
+                    for system in systems_result.systems.values()
                 }
                 return await self.async_step_systems()
 
@@ -181,14 +201,13 @@ class AqualinkOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         # Fetch systems from API
-        systems, error_reason = await async_get_systems(
+        systems_result = await async_get_systems(
             self.hass,
             self.config_entry.data[CONF_USERNAME],
             self.config_entry.data[CONF_PASSWORD],
         )
 
-        if systems is None:
-            assert error_reason is not None
+        if isinstance(systems_result, SystemsFailure):
             return self.async_show_form(
                 step_id="init",
                 data_schema=vol.Schema(
@@ -199,11 +218,13 @@ class AqualinkOptionsFlowHandler(OptionsFlowWithReload):
                         ): cv.multi_select({}),
                     }
                 ),
-                errors={"base": error_reason},
+                errors={"base": systems_result.error},
             )
 
         # Build schema with all systems as selectable checkboxes
-        self._system_keys = {system.serial: system.name for system in systems.values()}
+        self._system_keys = {
+            system.serial: system.name for system in systems_result.systems.values()
+        }
 
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
