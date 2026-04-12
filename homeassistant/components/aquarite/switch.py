@@ -98,7 +98,8 @@ class AquariteSwitchEntity(AquariteEntity, SwitchEntity):
         """Return true if switch is on."""
         onoff = bool(self.coordinator.get_value(self._value_path))
         if self._is_relay:
-            status_path = self._value_path.replace("onoff", "status")
+            path_parts = self._value_path.split(".")
+            status_path = ".".join([*path_parts[:-1], "status"])
             status = bool(self.coordinator.get_value(status_path))
             return onoff or status
         return onoff
