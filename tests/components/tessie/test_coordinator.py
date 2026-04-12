@@ -221,10 +221,10 @@ async def test_coordinator_energy_history_cold_start_invalid_data(
     # Coordinator should not have raised an exception
     assert coordinator.last_exception is None
 
-    # All energy history fields should be None in the fallback output
+    # All energy history fields should use the coordinator's numeric fallback output
     for key in ENERGY_HISTORY_FIELDS:
-        assert coordinator.data[key] is None
+        assert coordinator.data[key] == 0
     assert "_period_start" in coordinator.data
 
-    # Sensor should be unknown (None native value), not unavailable
-    assert hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNKNOWN
+    # Sensor should reflect the numeric fallback value, not become unavailable
+    assert hass.states.get("sensor.energy_site_grid_imported").state == "0"
