@@ -26,7 +26,7 @@ async def async_setup_entry(
 
     tracked: set[str] = set()
 
-    mac_filter: list[str] = entry.options.get(CONF_MAC_FILTER, [])
+    mac_filter: set[str] = set(entry.options.get(CONF_MAC_FILTER, []))
 
     @callback
     def router_update():
@@ -70,7 +70,7 @@ def restore_entities(
     entry: RuckusUnleashedConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
-    mac_filter: list[str],
+    mac_filter: set[str],
 ) -> None:
     """Restore clients that are not a part of active clients list."""
     missing: list[RuckusDevice] = []
