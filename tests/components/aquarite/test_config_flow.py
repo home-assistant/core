@@ -1,8 +1,8 @@
 """Tests for the Aquarite config flow.
 
-These tests require the Home Assistant test framework (pytest-homeassistant-custom-component).
+These tests run in the Home Assistant Core test environment.
 They validate the config flow, reauth, reconfigure, and options flow steps.
-Run with: pytest tests/test_config_flow.py (requires HA test environment)
+Run with: pytest tests/components/aquarite/test_config_flow.py
 """
 from __future__ import annotations
 
