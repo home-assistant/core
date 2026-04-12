@@ -74,7 +74,8 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
             error, info = await _async_try_connect(user_input[CONF_API_TOKEN])
             if error is not None:
                 errors["base"] = error
-            elif info is not None:
+            else:
+                assert info is not None
                 await self.async_set_unique_id(str(info.id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -103,17 +104,19 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth."""
+        reauth_entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
 
         if user_input is not None:
             error, info = await _async_try_connect(user_input[CONF_API_TOKEN])
             if error is not None:
                 errors["base"] = error
-            elif info is not None:
+            else:
+                assert info is not None
                 await self.async_set_unique_id(str(info.id))
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_and_abort(
-                    self._get_reauth_entry(),
+                    reauth_entry,
                     title=info.name,
                     data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
                 )
@@ -123,7 +126,7 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input or {}
             ),
-            description_placeholders={"bot_name": self._get_reauth_entry().title},
+            description_placeholders={"bot_name": reauth_entry.title},
             errors=errors,
         )
 
@@ -175,7 +178,8 @@ class DiscordChannelSubEntryFlowHandler(ConfigSubentryFlow):
                     errors["base"] = "invalid_auth"
                 except Exception:
                     _LOGGER.exception(
-                        "Unexpected error looking up Discord channel %s", channel_id
+                        "Unexpected error looking up Discord channel %s",
+                        channel_id,
                     )
                     errors["base"] = "cannot_connect"
                 finally:

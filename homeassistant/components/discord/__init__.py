@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.NOTIFY]
+PLATFORMS = [Platform.NOTIFY]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
