@@ -306,7 +306,32 @@ async def test_delete_service(
 
     mock_onedrive_client.delete_drive_item.assert_called_once()
     call_args = mock_onedrive_client.delete_drive_item.call_args
-    assert TEST_DESTINATION_PATH in call_args.args[0]
+    assert call_args.args[0] == f"id:/{TEST_DESTINATION_PATH}:"
+    assert call_args.args[1] is False
+
+
+async def test_delete_service_delete_permanently(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service passes delete_permanently=True when option is set."""
+    mock_config_entry.options = {"delete_permanently": True}
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        DELETE_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
+        },
+        blocking=True,
+    )
+
+    call_args = mock_onedrive_client.delete_drive_item.call_args
+    assert call_args.args[0] == f"id:/{TEST_DESTINATION_PATH}:"
+    assert call_args.args[1] is True
 
 
 async def test_delete_service_with_local_file(
@@ -380,6 +405,37 @@ async def test_delete_local_path_not_allowed(
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
                 CONF_FILENAME: TEST_LOCAL_FILENAME,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "bad_path",
+    [
+        "",
+        "/",
+        "//",
+        "photos/../secrets",
+        "photos/file:name.jpg",
+        "../escape",
+    ],
+)
+async def test_delete_invalid_destination_path(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    bad_path: str,
+) -> None:
+    """Test delete service raises HomeAssistantError for invalid destination paths."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError, match="Invalid destination path"):
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: bad_path,
             },
             blocking=True,
         )

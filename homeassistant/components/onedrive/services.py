@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import cast
 
 from onedrive_personal_sdk.exceptions import OneDriveException
@@ -82,6 +82,35 @@ def _read_file_contents(
     return results
 
 
+def _validate_destination_path(destination_path: str) -> str:
+    """Validate and normalize a remote destination path.
+
+    Returns the normalized path or raises HomeAssistantError.
+    """
+    normalized = destination_path.strip("/")
+    if not normalized:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_destination_path",
+            translation_placeholders={"destination_path": destination_path},
+        )
+    parts = PurePosixPath(normalized).parts
+    for part in parts:
+        if part == "..":
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_destination_path",
+                translation_placeholders={"destination_path": destination_path},
+            )
+        if ":" in part:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_destination_path",
+                translation_placeholders={"destination_path": destination_path},
+            )
+    return str(PurePosixPath(normalized))
+
+
 def _delete_local_file(hass: HomeAssistant, filename: str) -> None:
     """Delete a local file after validating access."""
     if not hass.config.is_allowed_path(filename):
@@ -97,7 +126,14 @@ def _delete_local_file(hass: HomeAssistant, filename: str) -> None:
             translation_key="filename_does_not_exist",
             translation_placeholders={"filename": filename},
         )
-    filename_path.unlink()
+    try:
+        filename_path.unlink()
+    except OSError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="delete_local_file_error",
+            translation_placeholders={"filename": filename, "message": str(err)},
+        ) from err
 
 
 @callback
@@ -153,7 +189,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         client = config_entry.runtime_data.client
         delete_permanently = config_entry.options.get(CONF_DELETE_PERMANENTLY, False)
-        file_path = cast(str, call.data[CONF_DESTINATION_PATH]).strip("/")
+        file_path = _validate_destination_path(
+            cast(str, call.data[CONF_DESTINATION_PATH])
+        )
 
         try:
             approot_id = (await client.get_approot()).id

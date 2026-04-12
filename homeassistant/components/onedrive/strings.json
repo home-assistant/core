@@ -96,6 +96,9 @@
     "delete_error": {
       "message": "Failed to delete file: {message}"
     },
+    "delete_local_file_error": {
+      "message": "Failed to delete local file `{filename}`: {message}"
+    },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
@@ -107,6 +110,9 @@
     },
     "filename_does_not_exist": {
       "message": "`{filename}` does not exist"
+    },
+    "invalid_destination_path": {
+      "message": "Invalid destination path `{destination_path}`: must be non-empty, must not contain `:` or `..` path segments"
     },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
