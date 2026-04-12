@@ -33,6 +33,10 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
+        # we don't have access to serial yet here without doing a network call to the device
+        # so dedupe on macc address here, we will overwrite with serial in the next step
+        await self.async_set_unique_id(discovery_info.macaddress)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -47,10 +51,9 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 heater = Heater(user_input[CONF_HOST])
-                await self.hass.async_add_executor_job(heater.parse_data)
+                data = await self.hass.async_add_executor_job(heater.parse_data)
             except requests.exceptions.ConnectionError:
                 errors["base"] = "cannot_connect"
             except NoSerialException:
@@ -60,6 +63,13 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # set serial as unique id for deduplication, ip isn't a good match
+                serial = data.get("Serial", [None])[0]
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
+
                 return self.async_create_entry(
                     title="Guntamatic Heater", data=user_input
                 )
