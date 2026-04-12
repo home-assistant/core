@@ -6,28 +6,17 @@ import logging
 
 from aioaquarite import AquariteAuth, AquariteClient, AuthenticationError
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
 from .coordinator import AquariteDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.DEVICE_TRACKER,
-    Platform.LIGHT,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.TIME,
-]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 type AquariteConfigEntry = ConfigEntry[AquariteDataUpdateCoordinator]
@@ -59,28 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
         entry.runtime_data = coordinator
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-        async def handle_sync_time(call: ServiceCall) -> None:
-            """Service call to sync pool time for all loaded entries."""
-            for config_entry in hass.config_entries.async_entries(DOMAIN):
-                if config_entry.state is ConfigEntryState.LOADED:
-                    await config_entry.runtime_data.set_pool_time_to_now()
-
-        if not hass.services.has_service(DOMAIN, "sync_pool_time"):
-            hass.services.async_register(DOMAIN, "sync_pool_time", handle_sync_time)
-
-        def _maybe_remove_service() -> None:
-            """Remove service if this is the last loaded entry."""
-            remaining = [
-                e
-                for e in hass.config_entries.async_entries(DOMAIN)
-                if e.entry_id != entry.entry_id
-                and e.state is ConfigEntryState.LOADED
-            ]
-            if not remaining:
-                hass.services.async_remove(DOMAIN, "sync_pool_time")
-
-        entry.async_on_unload(_maybe_remove_service)
 
         return True
 

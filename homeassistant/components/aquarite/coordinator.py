@@ -11,7 +11,6 @@ from aioaquarite import AquariteAuth, AquariteClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
 
 from .const import CONF_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_INTERVAL
 
@@ -123,17 +122,3 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_value(self, path: str, default: Any = None) -> Any:
         """Get nested data using dot-notation path."""
         return AquariteClient.get_value(self.data, path, default)
-
-    async def set_pool_time_to_now(self) -> None:
-        """Sync the pool controller clock with the current time."""
-        now = dt_util.now()
-        offset = now.utcoffset()
-        utc_offset = int(offset.total_seconds()) if offset else 0
-        timestamp = int(now.timestamp()) + utc_offset
-        _LOGGER.info(
-            "Syncing pool localTime to: %s (%s, UTC offset %+ds)",
-            timestamp,
-            now.isoformat(),
-            utc_offset,
-        )
-        await self.api.set_value(self.pool_id, "main.localTime", timestamp)

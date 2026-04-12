@@ -1,8 +1,8 @@
 rules:
   # Bronze
   action-setup:
-    status: done
-    comment: Service registered in async_setup_entry
+    status: exempt
+    comment: No service actions in initial sensor-only platform
   appropriate-polling:
     status: done
     comment: Cloud push via Firestore, no polling (update_interval=None)
@@ -53,8 +53,8 @@ rules:
 
   # Silver
   action-exceptions:
-    status: done
-    comment: All entity actions raise HomeAssistantError on API failure
+    status: exempt
+    comment: No user actions (sensor-only platform)
   config-entry-unloading:
     status: done
     comment: async_unload_entry properly unloads platforms and shuts down coordinator
@@ -76,7 +76,7 @@ rules:
     comment: Coordinator logs errors on health check and token refresh failures
   parallel-updates:
     status: done
-    comment: PARALLEL_UPDATES set appropriately on all 9 platforms
+    comment: PARALLEL_UPDATES set on sensor platform
   reauthentication-flow:
     status: done
   test-coverage:
@@ -112,13 +112,13 @@ rules:
     comment: Single pool device per config entry, statically configured
   entity-translations:
     status: done
-    comment: All 70 entities use translation_key with en, nl, da translations
+    comment: All sensor entities use translation_key
   exception-translations:
-    status: done
-    comment: Exception strings defined in strings.json
+    status: exempt
+    comment: No user-facing exceptions in sensor-only platform
   icon-translations:
     status: done
-    comment: icons.json with per-entity icons and service icon
+    comment: icons.json with per-entity icons
   reconfiguration-flow:
     status: done
   repair-issues:

@@ -5,7 +5,6 @@ Run with: pytest tests/components/aquarite/test_coordinator.py
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -78,24 +77,3 @@ async def test_async_shutdown(
 
     mock_health_task.cancel.assert_called_once()
     mock_token_task.cancel.assert_called_once()
-
-
-async def test_set_pool_time_to_now(
-    coordinator: AquariteDataUpdateCoordinator,
-) -> None:
-    """Test set_pool_time_to_now writes a local timestamp."""
-    with patch("homeassistant.components.aquarite.coordinator.dt_util") as mock_dt:
-        tz = timezone(timedelta(hours=2))
-        fake_now = datetime(2026, 4, 12, 14, 30, 0, tzinfo=tz)
-        mock_dt.now.return_value = fake_now
-
-        await coordinator.set_pool_time_to_now()
-
-    coordinator.api.set_value.assert_called_once()
-    call_args = coordinator.api.set_value.call_args
-    assert call_args[0][0] == MOCK_POOL_ID
-    assert call_args[0][1] == "main.localTime"
-
-    utc_timestamp = int(fake_now.timestamp())
-    expected = utc_timestamp + 7200
-    assert call_args[0][2] == expected
