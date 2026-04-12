@@ -29,6 +29,7 @@ def mock_heater() -> Generator[MagicMock]:
         "homeassistant.components.guntamatic.Heater",
         autospec=True,
     ) as mock:
+        mock.return_value.get_data = MagicMock(return_value=MOCK_DATA)
         mock.return_value.parse_data = MagicMock(return_value=MOCK_DATA)
         mock.return_value.host = "1.1.1.1"
         yield mock

@@ -23,7 +23,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.guntamatic.config_flow.Heater.get_data",
+        "homeassistant.components.guntamatic.config_flow.Heater.parse_data",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -51,7 +51,7 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "homeassistant.components.guntamatic.config_flow.Heater.get_data",
+        "homeassistant.components.guntamatic.config_flow.Heater.parse_data",
         side_effect=requests.exceptions.ConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -69,7 +69,7 @@ async def test_form_cannot_connect(
     # we can show the config flow is able to recover from an error.
 
     with patch(
-        "homeassistant.components.guntamatic.config_flow.Heater.get_data",
+        "homeassistant.components.guntamatic.config_flow.Heater.parse_data",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -104,7 +104,7 @@ async def test_form_empty_data(
             {CONF_HOST: "1.1.1.1"},
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "bad_data"}
 
 
 async def test_form_unknown_error(
@@ -115,7 +115,7 @@ async def test_form_unknown_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.guntamatic.config_flow.Heater.get_data",
+        "homeassistant.components.guntamatic.config_flow.Heater.parse_data",
         side_effect=Exception("Unknown error"),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -137,7 +137,7 @@ async def test_form_already_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.guntamatic.config_flow.Heater.get_data",
+        "homeassistant.components.guntamatic.config_flow.Heater.parse_data",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -153,7 +153,7 @@ async def test_dhcp_discovery(
 ) -> None:
     """Test DHCP discovery."""
     with patch(
-        "homeassistant.components.guntamatic.config_flow.Heater.get_data",
+        "homeassistant.components.guntamatic.config_flow.Heater.parse_data",
         return_value=mock_heater,
     ):
         result = await hass.config_entries.flow.async_init(

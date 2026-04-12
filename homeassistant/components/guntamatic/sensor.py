@@ -19,7 +19,6 @@ from .coordinator import GuntamaticCoordinator
 
 PARALLEL_UPDATES = 0
 
-# Mapping from unit of measurement to sensor description.
 GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="Status",

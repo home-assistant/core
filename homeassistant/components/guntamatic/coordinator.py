@@ -48,6 +48,4 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
             raise UpdateFailed(f"Error communicating with heater: {err}") from err
         if not data:
             raise UpdateFailed("No data received from heater")
-        if not data.get("Serial"):
-            raise UpdateFailed("Could not get serial number from heater")
         return data

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from guntamatic.heater import Heater
+from guntamatic.heater import Heater, NoSerialException
 import requests
 import voluptuous as vol
 
@@ -28,7 +28,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for guntamatic."""
 
     VERSION = 1
-    _discovered_host = None
+    _discovered_host: str | None = None
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
@@ -52,19 +52,19 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 heater = Heater(user_input[CONF_HOST])
-                data = await self.hass.async_add_executor_job(heater.parse_data)
+                await self.hass.async_add_executor_job(heater.parse_data)
             except requests.exceptions.ConnectionError:
                 errors["base"] = "cannot_connect"
+            except NoSerialException:
+                errors["base"] = "bad_data"
+
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if not data:
-                    errors["base"] = "cannot_connect"
-                else:
-                    return self.async_create_entry(
-                        title="Guntamatic Heater", data=user_input
-                    )
+                return self.async_create_entry(
+                    title="Guntamatic Heater", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
