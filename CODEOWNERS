@@ -1057,8 +1057,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/met/ @danielhiversen
 /homeassistant/components/met_eireann/ @DylanGore
 /tests/components/met_eireann/ @DylanGore
-/homeassistant/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
-/tests/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
+/homeassistant/components/meteo_france/ @hacf-fr/reviewers @oncleben31 @Quentame
+/tests/components/meteo_france/ @hacf-fr/reviewers @oncleben31 @Quentame
 /homeassistant/components/meteo_lt/ @xE1H
 /tests/components/meteo_lt/ @xE1H
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
