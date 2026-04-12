@@ -11,9 +11,6 @@ from . import AquariteConfigEntry
 from .coordinator import AquariteDataUpdateCoordinator
 from .entity import AquariteEntity
 
-PARALLEL_UPDATES = 0
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AquariteConfigEntry,
