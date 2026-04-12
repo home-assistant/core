@@ -62,13 +62,31 @@ class ResourceStorageCollection(collection.DictStorageCollection):
         )
         self.ll_config = ll_config
 
-    async def async_get_info(self) -> dict[str, int]:
-        """Return the resources info for YAML mode."""
+    async def _async_ensure_loaded(self) -> None:
+        """Ensure the collection has been loaded from storage."""
         if not self.loaded:
             await self.async_load()
             self.loaded = True
 
+    async def async_get_info(self) -> dict[str, int]:
+        """Return the resources info for YAML mode."""
+        await self._async_ensure_loaded()
         return {"resources": len(self.async_items() or [])}
+
+    async def async_create_item(self, data: dict) -> dict:
+        """Create a new item."""
+        await self._async_ensure_loaded()
+        return await super().async_create_item(data)
+
+    async def async_update_item(self, item_id: str, updates: dict) -> dict:
+        """Update item."""
+        await self._async_ensure_loaded()
+        return await super().async_update_item(item_id, updates)
+
+    async def async_delete_item(self, item_id: str) -> None:
+        """Delete item."""
+        await self._async_ensure_loaded()
+        await super().async_delete_item(item_id)
 
     async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data."""
@@ -118,10 +136,6 @@ class ResourceStorageCollection(collection.DictStorageCollection):
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        if not self.loaded:
-            await self.async_load()
-            self.loaded = True
-
         update_data = self.UPDATE_SCHEMA(update_data)
         if CONF_RESOURCE_TYPE_WS in update_data:
             update_data[CONF_TYPE] = update_data.pop(CONF_RESOURCE_TYPE_WS)

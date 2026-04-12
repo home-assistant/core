@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-import json
-import logging
 from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -29,14 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity,
-    entity_registry as er,
-    template,
-    translation,
-)
-from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers import entity_registry as er, template, translation
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
@@ -406,85 +396,6 @@ def test_if_state_exists(hass: HomeAssistant) -> None:
         hass, "{% if states.test.object %}exists{% else %}not exists{% endif %}"
     )
     assert result == "exists"
-
-
-def test_entity_name(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test entity_name method."""
-    assert render(hass, "{{ entity_name('sensor.fake') }}") is None
-
-    entry = entity_registry.async_get_or_create(
-        "sensor", "test", "unique_1", original_name="Registry Sensor"
-    )
-    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
-        "Registry Sensor"
-    )
-    assert render(hass, f"{{{{ '{entry.entity_id}' | entity_name }}}}") == (
-        "Registry Sensor"
-    )
-
-    entity_registry.async_update_entity(entry.entity_id, name="My Custom Sensor")
-    assert render(hass, f"{{{{ entity_name('{entry.entity_id}') }}}}") == (
-        "My Custom Sensor"
-    )
-
-    # Falls back to state for entities not in the registry
-    hass.states.async_set(
-        "light.no_unique_id", "on", {"friendly_name": "No Unique ID Light"}
-    )
-    assert render(hass, "{{ entity_name('light.no_unique_id') }}") == (
-        "No Unique ID Light"
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        name="My Device",
-    )
-    entry2 = entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "unique_2",
-        config_entry=config_entry,
-        device_id=device_entry.id,
-        has_entity_name=True,
-        original_name="Temperature",
-    )
-    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
-        "Temperature"
-    )
-
-    # Strips device name prefix
-    entity_registry.async_update_entity(
-        entry2.entity_id, name="My Device Custom Sensor"
-    )
-    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
-        "Custom Sensor"
-    )
-
-
-def test_is_hidden_entity(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test is_hidden_entity method."""
-    hidden_entity = entity_registry.async_get_or_create(
-        "sensor", "mock", "hidden", hidden_by=er.RegistryEntryHider.USER
-    )
-    visible_entity = entity_registry.async_get_or_create("sensor", "mock", "visible")
-    assert render(hass, f"{{{{ is_hidden_entity('{hidden_entity.entity_id}') }}}}")
-
-    assert not render(hass, f"{{{{ is_hidden_entity('{visible_entity.entity_id}') }}}}")
-
-    assert not render(
-        hass,
-        f"{{{{ ['{visible_entity.entity_id}'] | select('is_hidden_entity') | first }}}}",
-    )
 
 
 def test_is_state(hass: HomeAssistant) -> None:
@@ -1324,141 +1235,6 @@ async def test_expand(hass: HomeAssistant) -> None:
         info,
         "person.person1, person.person2",
         ["zone.test", "person.person1", "person.person2"],
-    )
-
-
-async def test_integration_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test integration_entities function."""
-    # test entities for untitled config entry
-    config_entry = MockConfigEntry(domain="mock", title="")
-    config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        "sensor", "mock", "untitled", config_entry=config_entry
-    )
-    info = render_to_info(hass, "{{ integration_entities('') }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-    # test entities for given config entry title
-    config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
-    config_entry.add_to_hass(hass)
-    entity_entry = entity_registry.async_get_or_create(
-        "sensor", "mock", "test", config_entry=config_entry
-    )
-    info = render_to_info(hass, "{{ integration_entities('Mock bridge 2') }}")
-    assert_result_info(info, [entity_entry.entity_id])
-    assert info.rate_limit is None
-
-    # test entities for given non unique config entry title
-    config_entry = MockConfigEntry(domain="mock", title="Not unique")
-    config_entry.add_to_hass(hass)
-    entity_entry_not_unique_1 = entity_registry.async_get_or_create(
-        "sensor", "mock", "not_unique_1", config_entry=config_entry
-    )
-    config_entry = MockConfigEntry(domain="mock", title="Not unique")
-    config_entry.add_to_hass(hass)
-    entity_entry_not_unique_2 = entity_registry.async_get_or_create(
-        "sensor", "mock", "not_unique_2", config_entry=config_entry
-    )
-    info = render_to_info(hass, "{{ integration_entities('Not unique') }}")
-    assert_result_info(
-        info, [entity_entry_not_unique_1.entity_id, entity_entry_not_unique_2.entity_id]
-    )
-    assert info.rate_limit is None
-
-    # test integration entities not in entity registry
-    mock_entity = entity.Entity()
-    mock_entity.hass = hass
-    mock_entity.entity_id = "light.test_entity"
-    mock_entity.platform = EntityPlatform(
-        hass=hass,
-        logger=logging.getLogger(__name__),
-        domain="light",
-        platform_name="entryless_integration",
-        platform=None,
-        scan_interval=timedelta(seconds=30),
-        entity_namespace=None,
-    )
-    await mock_entity.async_internal_added_to_hass()
-    info = render_to_info(hass, "{{ integration_entities('entryless_integration') }}")
-    assert_result_info(info, ["light.test_entity"])
-    assert info.rate_limit is None
-
-    # Test non existing integration/entry title
-    info = render_to_info(hass, "{{ integration_entities('abc123') }}")
-    assert_result_info(info, [])
-    assert info.rate_limit is None
-
-
-async def test_config_entry_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test config_entry_id function."""
-    config_entry = MockConfigEntry(domain="light", title="Some integration")
-    config_entry.add_to_hass(hass)
-    entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test", "test", suggested_object_id="test", config_entry=config_entry
-    )
-
-    info = render_to_info(hass, "{{ 'sensor.fail' | config_entry_id }}")
-    assert_result_info(info, None)
-    assert info.rate_limit is None
-
-    info = render_to_info(hass, "{{ 56 | config_entry_id }}")
-    assert_result_info(info, None)
-
-    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | config_entry_id }}")
-    assert_result_info(info, None)
-
-    info = render_to_info(
-        hass, f"{{{{ config_entry_id('{entity_entry.entity_id}') }}}}"
-    )
-    assert_result_info(info, config_entry.entry_id)
-    assert info.rate_limit is None
-
-
-async def test_config_entry_attr(hass: HomeAssistant) -> None:
-    """Test config entry attr."""
-    info = {
-        "domain": "mock_light",
-        "title": "mock title",
-        "source": config_entries.SOURCE_BLUETOOTH,
-        "disabled_by": config_entries.ConfigEntryDisabler.USER,
-        "pref_disable_polling": True,
-    }
-    config_entry = MockConfigEntry(**info)
-    config_entry.add_to_hass(hass)
-
-    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
-
-    for key, value in info.items():
-        assert render(
-            hass,
-            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
-            parse_result=False,
-        ) == str(value)
-
-    for config_entry_id, key in (
-        (config_entry.entry_id, "invalid_key"),
-        (56, "domain"),
-    ):
-        with pytest.raises(TemplateError):
-            render(
-                hass,
-                "{{ config_entry_attr("
-                + json.dumps(config_entry_id)
-                + ", '"
-                + key
-                + "') }}",
-            )
-
-    assert (
-        render(
-            hass, "{{ config_entry_attr('invalid_id', 'domain') }}", parse_result=False
-        )
-        == "None"
     )
 
 

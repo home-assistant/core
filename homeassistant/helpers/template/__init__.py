@@ -1156,72 +1156,6 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     return list(found.values())
 
 
-def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
-    """Get entity ids for entities tied to an integration/domain.
-
-    Provide entry_name as domain to get all entity id's for a integration/domain
-    or provide a config entry title for filtering between instances of the same
-    integration.
-    """
-
-    # Don't allow searching for config entries without title
-    if not entry_name:
-        return []
-
-    # first try if there are any config entries with a matching title
-    entities: list[str] = []
-    ent_reg = er.async_get(hass)
-    for entry in hass.config_entries.async_entries():
-        if entry.title != entry_name:
-            continue
-        entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
-        entities.extend(entry.entity_id for entry in entries)
-    if entities:
-        return entities
-
-    # fallback to just returning all entities for a domain
-    from homeassistant.helpers.entity import entity_sources  # noqa: PLC0415
-
-    return [
-        entity_id
-        for entity_id, info in entity_sources(hass).items()
-        if info["domain"] == entry_name
-    ]
-
-
-def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get an config entry ID from an entity ID."""
-    entity_reg = er.async_get(hass)
-    if entity := entity_reg.async_get(entity_id):
-        return entity.config_entry_id
-    return None
-
-
-def config_entry_attr(
-    hass: HomeAssistant, config_entry_id_: str, attr_name: str
-) -> Any:
-    """Get config entry specific attribute."""
-    if not isinstance(config_entry_id_, str):
-        raise TemplateError("Must provide a config entry ID")
-
-    if attr_name not in (
-        "domain",
-        "title",
-        "state",
-        "source",
-        "disabled_by",
-        "pref_disable_polling",
-    ):
-        raise TemplateError("Invalid config entry attribute")
-
-    config_entry = hass.config_entries.async_get_entry(config_entry_id_)
-
-    if config_entry is None:
-        return None
-
-    return getattr(config_entry, attr_name)
-
-
 def closest(hass: HomeAssistant, *args: Any) -> State | None:
     """Find closest entity.
 
@@ -1353,26 +1287,6 @@ def distance(hass: HomeAssistant, *args: Any) -> float | None:
     return hass.config.units.length(
         location_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
     )
-
-
-def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get the name of an entity from its entity ID."""
-    ent_reg = er.async_get(hass)
-    if (entry := ent_reg.async_get(entity_id)) is not None:
-        return er.async_get_unprefixed_name(hass, entry)
-
-    # Fall back to state for entities without a unique_id (not in the registry)
-    if (state := hass.states.get(entity_id)) is not None:
-        return state.name
-
-    return None
-
-
-def is_hidden_entity(hass: HomeAssistant, entity_id: str) -> bool:
-    """Test if an entity is hidden."""
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get(entity_id)
-    return entry is not None and entry.hidden
 
 
 def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> bool:
@@ -1540,11 +1454,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(
             "homeassistant.helpers.template.extensions.CollectionExtension"
         )
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.ConfigEntryExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.DateTimeExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.EntityExtension")
         self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.FunctionalExtension"
@@ -1587,19 +1505,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return jinja_context(wrapper)
 
-        # Integration extensions
-
-        self.globals["integration_entities"] = hassfunction(integration_entities)
-        self.filters["integration_entities"] = self.globals["integration_entities"]
-
-        # Config entry extensions
-
-        self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
-        self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
-
-        self.globals["config_entry_id"] = hassfunction(config_entry_id)
-        self.filters["config_entry_id"] = self.globals["config_entry_id"]
-
         if limited:
 
             def unsupported(name: str) -> Callable[[], NoReturn]:
@@ -1613,10 +1518,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             hass_globals = [
                 "closest",
                 "distance",
-                "entity_name",
                 "expand",
                 "has_value",
-                "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
                 "state_attr",
@@ -1626,7 +1529,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             ]
             hass_filters = [
                 "closest",
-                "entity_name",
                 "expand",
                 "has_value",
                 "state_attr",
@@ -1636,7 +1538,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             ]
             hass_tests = [
                 "has_value",
-                "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
             ]
@@ -1658,15 +1559,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["has_value"] = self.globals["has_value"]
 
         self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
-
-        # Entity extensions
-
-        self.globals["entity_name"] = hassfunction(entity_name)
-        self.filters["entity_name"] = self.globals["entity_name"]
-        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
-        self.tests["is_hidden_entity"] = hassfunction(
-            is_hidden_entity, pass_eval_context
-        )
 
         # State extensions
 
