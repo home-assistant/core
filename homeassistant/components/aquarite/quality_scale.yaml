@@ -1,0 +1,140 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: Service registered in async_setup_entry
+  appropriate-polling:
+    status: done
+    comment: Cloud push via Firestore, no polling (update_interval=None)
+  brands:
+    status: done
+    comment: Accepted in home-assistant/brands
+  common-modules:
+    status: done
+    comment: Uses async_get_clientsession for HTTP sessions
+  config-flow:
+    status: done
+  config-flow-test-coverage:
+    status: done
+    comment: Tests cover user, pool, reauth, reconfigure, options, errors, duplicate
+  dependency-transparency:
+    status: done
+    comment: aioaquarite published on PyPI
+  docs-actions:
+    status: todo
+    comment: Need documentation page on home-assistant.io
+  docs-high-level-description:
+    status: todo
+  docs-installation-instructions:
+    status: todo
+  docs-removal-instructions:
+    status: todo
+  entity-event-setup:
+    status: done
+    comment: Uses async_add_entities in all platform setup functions
+  entity-unique-id:
+    status: done
+    comment: All entities have unique IDs via build_unique_id helper
+  has-entity-name:
+    status: done
+    comment: _attr_has_entity_name = True on base entity
+  runtime-data:
+    status: done
+    comment: Uses entry.runtime_data with typed AquariteRuntimeData dataclass
+  test-before-configure:
+    status: done
+    comment: Auth tested before creating entry in async_step_pool
+  test-before-setup:
+    status: done
+    comment: Auth tested in async_setup_entry, raises ConfigEntryAuthFailed
+  unique-config-entry:
+    status: done
+    comment: unique_id set to pool_id, _abort_if_unique_id_configured used
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: All entity actions raise HomeAssistantError on API failure
+  config-entry-unloading:
+    status: done
+    comment: async_unload_entry properly unloads platforms and shuts down coordinator
+  docs-configuration-parameters:
+    status: todo
+  docs-troubleshooting:
+    status: todo
+  entity-category:
+    status: done
+    comment: Diagnostic entities properly categorized (location, module presence, RSSI)
+  entity-disabled-by-default:
+    status: done
+    comment: Module presence sensors and RSSI disabled by default
+  integration-owner:
+    status: done
+    comment: "@fdebrus"
+  log-when-unavailable:
+    status: done
+    comment: Coordinator logs errors on health check and token refresh failures
+  parallel-updates:
+    status: done
+    comment: PARALLEL_UPDATES set appropriately on all 9 platforms
+  reauthentication-flow:
+    status: done
+  test-coverage:
+    status: done
+    comment: Config flow, coordinator, data navigation, value conversions all tested
+
+  # Gold
+  devices:
+    status: done
+    comment: DeviceInfo with identifiers, name, manufacturer, model, sw_version
+  diagnostics:
+    status: done
+    comment: Full diagnostics with PII redaction (credentials, location, email)
+  discovery:
+    status: exempt
+    comment: Cloud API only, no local discovery possible
+  discovery-update-info:
+    status: exempt
+  docs-data-update:
+    status: todo
+  docs-examples:
+    status: todo
+  docs-known-limitations:
+    status: todo
+  docs-supported-devices:
+    status: todo
+  docs-supported-functions:
+    status: todo
+  docs-use-cases:
+    status: todo
+  dynamic-devices:
+    status: exempt
+    comment: Single pool device per config entry, statically configured
+  entity-translations:
+    status: done
+    comment: All 70 entities use translation_key with en, nl, da translations
+  exception-translations:
+    status: done
+    comment: Exception strings defined in strings.json
+  icon-translations:
+    status: done
+    comment: icons.json with per-entity icons and service icon
+  reconfiguration-flow:
+    status: done
+  repair-issues:
+    status: exempt
+    comment: No known repair scenarios
+  stale-devices:
+    status: exempt
+    comment: Single device per entry, no stale device scenario
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: aioaquarite is fully async
+  inject-websession:
+    status: done
+    comment: Uses async_get_clientsession(hass) for HTTP sessions
+  strict-typing:
+    status: done
+    comment: aioaquarite 0.2.0 ships py.typed with full type annotations

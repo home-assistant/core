@@ -1,0 +1,235 @@
+{
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "ph": {
+        "default": "mdi:ph"
+      },
+      "rx": {
+        "default": "mdi:gauge"
+      },
+      "cd": {
+        "default": "mdi:gauge"
+      },
+      "cl": {
+        "default": "mdi:gauge"
+      },
+      "uv": {
+        "default": "mdi:weather-sunny-alert"
+      },
+      "electrolysis": {
+        "default": "mdi:flash"
+      },
+      "hydrolysis": {
+        "default": "mdi:flash"
+      },
+      "filtration_intel_time": {
+        "default": "mdi:timer-outline"
+      },
+      "pool_name": {
+        "default": "mdi:pool"
+      },
+      "rssi": {
+        "default": "mdi:wifi"
+      },
+      "city": {
+        "default": "mdi:city"
+      },
+      "street": {
+        "default": "mdi:road"
+      },
+      "zipcode": {
+        "default": "mdi:numeric"
+      },
+      "country": {
+        "default": "mdi:earth"
+      },
+      "latitude": {
+        "default": "mdi:latitude"
+      },
+      "longitude": {
+        "default": "mdi:longitude"
+      }
+    },
+    "binary_sensor": {
+      "hidro_flow_status": {
+        "default": "mdi:water-alert"
+      },
+      "filtration_status": {
+        "default": "mdi:pump"
+      },
+      "backwash_status": {
+        "default": "mdi:pump"
+      },
+      "hidro_cover_reduction": {
+        "default": "mdi:shield-sun"
+      },
+      "ph_pump_alarm": {
+        "default": "mdi:alert"
+      },
+      "cd_module_installed": {
+        "default": "mdi:chip"
+      },
+      "cl_module_installed": {
+        "default": "mdi:chip"
+      },
+      "rx_module_installed": {
+        "default": "mdi:chip"
+      },
+      "ph_module_installed": {
+        "default": "mdi:chip"
+      },
+      "io_module_installed": {
+        "default": "mdi:chip"
+      },
+      "hidro_module_installed": {
+        "default": "mdi:chip"
+      },
+      "ph_acid_pump": {
+        "default": "mdi:pump"
+      },
+      "ph_base_pump": {
+        "default": "mdi:pump"
+      },
+      "cl_pump_status": {
+        "default": "mdi:pump"
+      },
+      "rx_pump_status": {
+        "default": "mdi:pump"
+      },
+      "heating_status": {
+        "default": "mdi:radiator"
+      },
+      "connected": {
+        "default": "mdi:cloud-check"
+      },
+      "hidro_fl2_status": {
+        "default": "mdi:water-alert"
+      },
+      "acid_tank": {
+        "default": "mdi:bottle-tonic"
+      },
+      "electrolysis_low": {
+        "default": "mdi:flash-alert"
+      },
+      "hydrolysis_low": {
+        "default": "mdi:flash-alert"
+      }
+    },
+    "switch": {
+      "electrolysis_cover": {
+        "default": "mdi:shield-sun"
+      },
+      "electrolysis_boost": {
+        "default": "mdi:flash-alert"
+      },
+      "relay_1": {
+        "default": "mdi:electric-switch"
+      },
+      "relay_2": {
+        "default": "mdi:electric-switch"
+      },
+      "relay_3": {
+        "default": "mdi:electric-switch"
+      },
+      "relay_4": {
+        "default": "mdi:electric-switch"
+      },
+      "filtration": {
+        "default": "mdi:pump"
+      },
+      "heating_climate": {
+        "default": "mdi:weather-partly-cloudy"
+      },
+      "smart_mode_freeze": {
+        "default": "mdi:snowflake-alert"
+      }
+    },
+    "number": {
+      "redox_setpoint": {
+        "default": "mdi:gauge"
+      },
+      "ph_low": {
+        "default": "mdi:ph"
+      },
+      "ph_max": {
+        "default": "mdi:ph"
+      },
+      "electrolysis_setpoint": {
+        "default": "mdi:flash"
+      },
+      "intel_mode_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "heating_mode_min_temperature": {
+        "default": "mdi:thermometer-low"
+      },
+      "heating_mode_max_temperature": {
+        "default": "mdi:thermometer-high"
+      },
+      "smart_mode_min_temperature": {
+        "default": "mdi:thermometer-low"
+      },
+      "smart_mode_max_temperature": {
+        "default": "mdi:thermometer-high"
+      }
+    },
+    "select": {
+      "pump_mode": {
+        "default": "mdi:pump"
+      },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
+      "filtration_timer_speed_1": {
+        "default": "mdi:speedometer"
+      },
+      "filtration_timer_speed_2": {
+        "default": "mdi:speedometer"
+      },
+      "filtration_timer_speed_3": {
+        "default": "mdi:speedometer"
+      }
+    },
+    "time": {
+      "filtration_interval_1_from": {
+        "default": "mdi:clock-start"
+      },
+      "filtration_interval_1_to": {
+        "default": "mdi:clock-end"
+      },
+      "filtration_interval_2_from": {
+        "default": "mdi:clock-start"
+      },
+      "filtration_interval_2_to": {
+        "default": "mdi:clock-end"
+      },
+      "filtration_interval_3_from": {
+        "default": "mdi:clock-start"
+      },
+      "filtration_interval_3_to": {
+        "default": "mdi:clock-end"
+      }
+    },
+    "light": {
+      "pool_light": {
+        "default": "mdi:pool"
+      }
+    },
+    "button": {
+      "led_pulse": {
+        "default": "mdi:palette"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:pool"
+      }
+    }
+  },
+  "services": {
+    "sync_pool_time": "mdi:clock-sync"
+  }
+}

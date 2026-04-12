@@ -1,0 +1,328 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "Hayward Username",
+          "password": "Password"
+        },
+        "description": "Enter your Hayward credentials.",
+        "title": "Authentication"
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Re-authenticate your Hayward account to continue.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "pool": {
+        "data": {
+          "pool_id": "Pool"
+        },
+        "description": "Please choose the pool for this integration.",
+        "title": "Select Pool"
+      },
+      "reconfigure": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Update your Hayward credentials.",
+        "title": "Reconfigure"
+      }
+    },
+    "error": {
+      "auth_error": "Authorization failed, check username and password.",
+      "no_pools_found": "No pools found for your account.",
+      "unknown_error": "Unexpected error. Please try again."
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "health_check_interval": "Health check interval (seconds)"
+        },
+        "description": "Configure the Aquarite integration.",
+        "title": "Options"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "cd": {
+        "name": "CD"
+      },
+      "cl": {
+        "name": "CL"
+      },
+      "ph": {
+        "name": "pH"
+      },
+      "rx": {
+        "name": "Rx"
+      },
+      "uv": {
+        "name": "UV"
+      },
+      "electrolysis": {
+        "name": "Electrolysis"
+      },
+      "hydrolysis": {
+        "name": "Hydrolysis"
+      },
+      "filtration_intel_time": {
+        "name": "Filtration intel time"
+      },
+      "city": {
+        "name": "City"
+      },
+      "street": {
+        "name": "Street"
+      },
+      "zipcode": {
+        "name": "Zipcode"
+      },
+      "country": {
+        "name": "Country"
+      },
+      "latitude": {
+        "name": "Latitude"
+      },
+      "longitude": {
+        "name": "Longitude"
+      },
+      "pool_name": {
+        "name": "Pool name"
+      },
+      "rssi": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
+    "binary_sensor": {
+      "hidro_flow_status": {
+        "name": "Hydrolysis flow status"
+      },
+      "filtration_status": {
+        "name": "Filtration status"
+      },
+      "backwash_status": {
+        "name": "Backwash status"
+      },
+      "hidro_cover_reduction": {
+        "name": "Hydrolysis cover reduction"
+      },
+      "ph_pump_alarm": {
+        "name": "pH pump alarm"
+      },
+      "cd_module_installed": {
+        "name": "CD module installed"
+      },
+      "cl_module_installed": {
+        "name": "CL module installed"
+      },
+      "rx_module_installed": {
+        "name": "RX module installed"
+      },
+      "ph_module_installed": {
+        "name": "pH module installed"
+      },
+      "io_module_installed": {
+        "name": "IO module installed"
+      },
+      "hidro_module_installed": {
+        "name": "Hydrolysis module installed"
+      },
+      "ph_acid_pump": {
+        "name": "pH acid pump"
+      },
+      "ph_base_pump": {
+        "name": "pH base pump"
+      },
+      "cl_pump_status": {
+        "name": "Chlorine pump status"
+      },
+      "rx_pump_status": {
+        "name": "Rx pump status"
+      },
+      "heating_status": {
+        "name": "Heating status"
+      },
+      "connected": {
+        "name": "Connected"
+      },
+      "hidro_fl2_status": {
+        "name": "Hydrolysis FL2 status"
+      },
+      "acid_tank": {
+        "name": "Acid tank"
+      },
+      "electrolysis_low": {
+        "name": "Electrolysis low"
+      },
+      "hydrolysis_low": {
+        "name": "Hydrolysis low"
+      }
+    },
+    "switch": {
+      "electrolysis_cover": {
+        "name": "Electrolysis cover"
+      },
+      "electrolysis_boost": {
+        "name": "Electrolysis boost"
+      },
+      "relay_1": {
+        "name": "Relay 1"
+      },
+      "relay_2": {
+        "name": "Relay 2"
+      },
+      "relay_3": {
+        "name": "Relay 3"
+      },
+      "relay_4": {
+        "name": "Relay 4"
+      },
+      "filtration": {
+        "name": "Filtration"
+      },
+      "heating_climate": {
+        "name": "Heating climate"
+      },
+      "smart_mode_freeze": {
+        "name": "Smart mode freeze protection"
+      }
+    },
+    "number": {
+      "redox_setpoint": {
+        "name": "Redox setpoint"
+      },
+      "ph_low": {
+        "name": "pH low"
+      },
+      "ph_max": {
+        "name": "pH max"
+      },
+      "electrolysis_setpoint": {
+        "name": "Electrolysis setpoint"
+      },
+      "intel_mode_temperature": {
+        "name": "Intel mode temperature"
+      },
+      "heating_mode_min_temperature": {
+        "name": "Heating mode min temperature"
+      },
+      "heating_mode_max_temperature": {
+        "name": "Heating mode max temperature"
+      },
+      "smart_mode_min_temperature": {
+        "name": "Smart mode min temperature"
+      },
+      "smart_mode_max_temperature": {
+        "name": "Smart mode max temperature"
+      }
+    },
+    "select": {
+      "pump_mode": {
+        "name": "Pump mode",
+        "state": {
+          "manual": "Manual",
+          "auto": "Auto",
+          "heat": "Heat",
+          "smart": "Smart",
+          "intel": "Intel"
+        }
+      },
+      "pump_speed": {
+        "name": "Pump speed",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "filtration_timer_speed_1": {
+        "name": "Filtration timer speed 1",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "filtration_timer_speed_2": {
+        "name": "Filtration timer speed 2",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "filtration_timer_speed_3": {
+        "name": "Filtration timer speed 3",
+        "state": {
+          "slow": "Slow",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    },
+    "time": {
+      "filtration_interval_1_from": {
+        "name": "Filtration interval 1 from"
+      },
+      "filtration_interval_1_to": {
+        "name": "Filtration interval 1 to"
+      },
+      "filtration_interval_2_from": {
+        "name": "Filtration interval 2 from"
+      },
+      "filtration_interval_2_to": {
+        "name": "Filtration interval 2 to"
+      },
+      "filtration_interval_3_from": {
+        "name": "Filtration interval 3 from"
+      },
+      "filtration_interval_3_to": {
+        "name": "Filtration interval 3 to"
+      }
+    },
+    "light": {
+      "pool_light": {
+        "name": "Light"
+      }
+    },
+    "button": {
+      "led_pulse": {
+        "name": "LED pulse"
+      }
+    },
+    "device_tracker": {
+      "location": {
+        "name": "Location"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Aquarite device: {error}"
+    },
+    "authentication_error": {
+      "message": "Authentication failed. Please check your credentials."
+    }
+  },
+  "services": {
+    "sync_pool_time": {
+      "name": "Sync pool time",
+      "description": "Sync the Home Assistant date and time to the pool controller."
+    }
+  }
+}
