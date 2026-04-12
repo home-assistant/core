@@ -26,6 +26,11 @@ def async_create_deprecation_issue_once(
     if issue_registry.async_get_issue(DOMAIN, issue_id) is not None:
         return
 
+    placeholders = {
+        "breaks_in_ha_version": breaks_in_ha_version,
+        **(translation_placeholders or {}),
+    }
+
     issue_registry.async_get_or_create(
         DOMAIN,
         issue_id,
@@ -35,5 +40,5 @@ def async_create_deprecation_issue_once(
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key=translation_key or issue_id,
-        translation_placeholders=translation_placeholders,
+        translation_placeholders=placeholders,
     )
