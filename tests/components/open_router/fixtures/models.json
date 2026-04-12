@@ -5,43 +5,48 @@
       "canonical_slug": "openai/gpt-3.5-turbo",
       "hugging_face_id": null,
       "name": "OpenAI: GPT-3.5 Turbo",
-      "created": 1695859200,
-      "description": "This model is a variant of GPT-3.5 Turbo tuned for instructional prompts and omitting chat-related optimizations. Training data: up to Sep 2021.",
-      "context_length": 4095,
+      "created": 1685232000,
+      "description": "GPT-3.5 Turbo is OpenAI's fastest model. It can understand and generate natural language or code, and is optimized for chat and traditional completion tasks.\n\nTraining data up to Sep 2021.",
+      "context_length": 16385,
       "architecture": {
         "modality": "text->text",
         "input_modalities": ["text"],
         "output_modalities": ["text"],
         "tokenizer": "GPT",
-        "instruct_type": "chatml"
+        "instruct_type": null
       },
       "pricing": {
-        "prompt": "0.0000015",
-        "completion": "0.000002",
-        "request": "0",
-        "image": "0",
-        "web_search": "0",
-        "internal_reasoning": "0"
+        "prompt": "0.0000005",
+        "completion": "0.0000015"
       },
       "top_provider": {
-        "context_length": 4095,
+        "context_length": 16385,
         "max_completion_tokens": 4096,
         "is_moderated": true
       },
       "per_request_limits": null,
       "supported_parameters": [
-        "max_tokens",
-        "temperature",
-        "top_p",
-        "stop",
         "frequency_penalty",
-        "presence_penalty",
-        "seed",
         "logit_bias",
         "logprobs",
+        "max_tokens",
+        "presence_penalty",
+        "response_format",
+        "seed",
+        "stop",
+        "structured_outputs",
+        "temperature",
+        "tool_choice",
+        "tools",
         "top_logprobs",
-        "response_format"
-      ]
+        "top_p"
+      ],
+      "default_parameters": {},
+      "knowledge_cutoff": "2021-09-30",
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/openai/gpt-3.5-turbo/endpoints"
+      }
     },
     {
       "id": "openai/gpt-4",
@@ -49,7 +54,7 @@
       "hugging_face_id": null,
       "name": "OpenAI: GPT-4",
       "created": 1685232000,
-      "description": "OpenAI's flagship model, GPT-4 is a large-scale multimodal language model capable of solving difficult problems with greater accuracy than previous models due to its broader general knowledge and advanced reasoning capabilities. Training data: up to Sep 2021.",
+      "description": "OpenAI's flagship model, GPT-4 is a large-scale multimodal language model capable of solving difficult problems with greater accuracy than previous models due to its broader general knowledge and advanced reasoning...",
       "context_length": 8191,
       "architecture": {
         "modality": "text->text",
@@ -60,11 +65,7 @@
       },
       "pricing": {
         "prompt": "0.00003",
-        "completion": "0.00006",
-        "request": "0",
-        "image": "0",
-        "web_search": "0",
-        "internal_reasoning": "0"
+        "completion": "0.00006"
       },
       "top_provider": {
         "context_length": 8191,
@@ -73,21 +74,28 @@
       },
       "per_request_limits": null,
       "supported_parameters": [
-        "max_tokens",
-        "temperature",
-        "top_p",
-        "tools",
-        "tool_choice",
-        "stop",
         "frequency_penalty",
-        "presence_penalty",
-        "seed",
         "logit_bias",
         "logprobs",
-        "top_logprobs",
+        "max_completion_tokens",
+        "max_tokens",
+        "presence_penalty",
+        "response_format",
+        "seed",
+        "stop",
         "structured_outputs",
-        "response_format"
-      ]
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_logprobs",
+        "top_p"
+      ],
+      "default_parameters": {},
+      "knowledge_cutoff": "2021-09-30",
+      "expiration_date": null,
+      "links": {
+        "details": "/api/v1/models/openai/gpt-4/endpoints"
+      }
     }
   ]
 }

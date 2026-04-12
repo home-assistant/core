@@ -5,12 +5,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from python_open_router import (
-    Model,
-    OpenRouterClient,
-    OpenRouterError,
-    SupportedParameter,
-)
+from openrouter import OpenRouter
+from openrouter.components.model import Model
+from openrouter.errors import OpenRouterError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -25,7 +22,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers import llm
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -40,9 +36,29 @@ from .const import (
     CONF_WEB_SEARCH,
     DOMAIN,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    Parameters,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _validate_api_key(api_key: str) -> str:
+    """Validate API key and return its label.
+
+    Raises OpenRouterError on invalid key or connection failure.
+    """
+    with OpenRouter(api_key=api_key) as client:
+        result = client.api_keys.get_current_key_metadata()
+
+    label: str = result.data.label
+    return label
+
+
+def _get_models_list(api_key: str) -> dict[str, Model]:
+    """Fetch models from OpenRouter."""
+    with OpenRouter(api_key=api_key) as client:
+        models_response = client.models.list()
+    return {model.id: model for model in models_response.data}
 
 
 class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -69,11 +85,10 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            client = OpenRouterClient(
-                user_input[CONF_API_KEY], async_get_clientsession(self.hass)
-            )
             try:
-                key_data = await client.get_key_data()
+                label = await self.hass.async_add_executor_job(
+                    _validate_api_key, user_input[CONF_API_KEY]
+                )
             except OpenRouterError:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -81,7 +96,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=key_data.label,
+                    title=label,
                     data=user_input,
                 )
         return self.async_show_form(
@@ -105,11 +120,9 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
     async def _get_models(self) -> None:
         """Fetch models from OpenRouter."""
         entry = self._get_entry()
-        client = OpenRouterClient(
-            entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
+        self.models = await self.hass.async_add_executor_job(
+            _get_models_list, entry.data[CONF_API_KEY]
         )
-        models = await client.get_models()
-        self.models = {model.id: model for model in models}
 
 
 class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
@@ -283,7 +296,7 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
         options = [
             SelectOptionDict(value=model.id, label=model.name)
             for model in self.models.values()
-            if SupportedParameter.STRUCTURED_OUTPUTS in model.supported_parameters
+            if Parameters.STRUCTURED_OUTPUTS in model.supported_parameters
         ]
 
         return self.async_show_form(
