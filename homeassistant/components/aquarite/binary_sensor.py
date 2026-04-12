@@ -23,9 +23,6 @@ TANK_MODULE_PATHS = (
     "modules.cd.tank",
 )
 
-PARALLEL_UPDATES = 0
-
-
 @dataclass(frozen=True)
 class AquariteBinarySensorConfig:
     """Configuration for an Aquarite binary sensor."""
