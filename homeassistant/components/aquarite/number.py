@@ -35,42 +35,39 @@ async def async_setup_entry(
     entities = [
         AquariteNumberEntity(
             dataservice, pool_id, pool_name,
-            500, 800, "Redox Setpoint", "redox_setpoint", "modules.rx.status.value",
+            500, 800, "redox_setpoint", "modules.rx.status.value",
         ),
         AquariteNumberEntity(
             dataservice, pool_id, pool_name,
-            6, 8, "pH Low", "ph_low", "modules.ph.status.low_value",
+            6, 8, "ph_low", "modules.ph.status.low_value",
         ),
         AquariteNumberEntity(
             dataservice, pool_id, pool_name,
-            6, 8, "pH Max", "ph_max", "modules.ph.status.high_value",
+            6, 8, "ph_max", "modules.ph.status.high_value",
         ),
         AquariteNumberEntity(
             dataservice, pool_id, pool_name,
-            0, max_electrolysis, "Electrolysis Setpoint", "electrolysis_setpoint", "hidro.level",
+            0, max_electrolysis, "electrolysis_setpoint", "hidro.level",
         ),
         # INTEL mode target temperature (matches the "Température" field shown
         # under the INTEL slider position in the Hayward app).
         AquariteNumberEntity(
             dataservice, pool_id, pool_name,
-            5, 40, "Intel Mode Temperature", "intel_mode_temperature", "filtration.intel.temp",
+            5, 40, "intel_mode_temperature", "filtration.intel.temp",
         ),
     ]
 
     # HEAT mode min/max range (the two arrows under "Température minimale" /
     # "Température maximale" when the HEAT slider position is selected).
-    # Translation keys are intentionally renamed from PR #62 to clarify they
-    # are bounds, not single setpoints. The Python `name` arguments are kept
-    # unchanged so existing unique_ids are preserved.
     if dataservice.get_value("filtration.hasHeat"):
         entities.extend([
             AquariteNumberEntity(
                 dataservice, pool_id, pool_name,
-                5, 40, "Heating Setpoint", "heating_mode_min_temperature", "filtration.heating.temp",
+                5, 40, "heating_mode_min_temperature", "filtration.heating.temp",
             ),
             AquariteNumberEntity(
                 dataservice, pool_id, pool_name,
-                5, 40, "Heating High Setpoint", "heating_mode_max_temperature", "filtration.heating.tempHi",
+                5, 40, "heating_mode_max_temperature", "filtration.heating.tempHi",
             ),
         ])
 
@@ -81,11 +78,11 @@ async def async_setup_entry(
         entities.extend([
             AquariteNumberEntity(
                 dataservice, pool_id, pool_name,
-                5, 40, "Smart Mode Min Temperature", "smart_mode_min_temperature", "filtration.smart.tempMin",
+                5, 40, "smart_mode_min_temperature", "filtration.smart.tempMin",
             ),
             AquariteNumberEntity(
                 dataservice, pool_id, pool_name,
-                5, 40, "Smart Mode Max Temperature", "smart_mode_max_temperature", "filtration.smart.tempHigh",
+                5, 40, "smart_mode_max_temperature", "filtration.smart.tempHigh",
             ),
         ])
 
@@ -128,7 +125,6 @@ class AquariteNumberEntity(AquariteEntity, NumberEntity):
         pool_name: str,
         value_min: float,
         value_max: float,
-        name: str,
         translation_key: str,
         value_path: str,
     ) -> None:
@@ -138,7 +134,7 @@ class AquariteNumberEntity(AquariteEntity, NumberEntity):
         self._attr_native_max_value = value_max
         self._value_path = value_path
         self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(name)
+        self._attr_unique_id = self.build_unique_id(translation_key)
         self._attr_native_unit_of_measurement = self.UNIT_MAP.get(value_path)
         self._attr_device_class = self.DEVICE_CLASS_MAP.get(value_path)
         self._attr_native_step = self._get_scaled_step()

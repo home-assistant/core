@@ -19,20 +19,19 @@ from .entity import AquariteEntity
 class AquariteSwitchConfig:
     """Configuration for an Aquarite switch."""
 
-    name: str
     translation_key: str
     value_path: str
     is_relay: bool = False
 
 
 SWITCH_DEFINITIONS: tuple[AquariteSwitchConfig, ...] = (
-    AquariteSwitchConfig("Electrolysis Cover", "electrolysis_cover", "hidro.cover_enabled"),
-    AquariteSwitchConfig("Electrolysis Boost", "electrolysis_boost", "hidro.cloration_enabled"),
-    AquariteSwitchConfig("Relay1", "relay_1", "relays.relay1.info.onoff", is_relay=True),
-    AquariteSwitchConfig("Relay2", "relay_2", "relays.relay2.info.onoff", is_relay=True),
-    AquariteSwitchConfig("Relay3", "relay_3", "relays.relay3.info.onoff", is_relay=True),
-    AquariteSwitchConfig("Relay4", "relay_4", "relays.relay4.info.onoff", is_relay=True),
-    AquariteSwitchConfig("Filtration Status", "filtration", "filtration.status"),
+    AquariteSwitchConfig("electrolysis_cover", "hidro.cover_enabled"),
+    AquariteSwitchConfig("electrolysis_boost", "hidro.cloration_enabled"),
+    AquariteSwitchConfig("relay_1", "relays.relay1.info.onoff", is_relay=True),
+    AquariteSwitchConfig("relay_2", "relays.relay2.info.onoff", is_relay=True),
+    AquariteSwitchConfig("relay_3", "relays.relay3.info.onoff", is_relay=True),
+    AquariteSwitchConfig("relay_4", "relays.relay4.info.onoff", is_relay=True),
+    AquariteSwitchConfig("filtration", "filtration.status"),
 )
 
 PARALLEL_UPDATES = 1
@@ -59,7 +58,7 @@ async def async_setup_entry(
             AquariteSwitchEntity(
                 dataservice, pool_id, pool_name,
                 AquariteSwitchConfig(
-                    "Heating Climate", "heating_climate", "filtration.heating.clima",
+                    "heating_climate", "filtration.heating.clima",
                 ),
             )
         )
@@ -72,7 +71,7 @@ async def async_setup_entry(
             AquariteSwitchEntity(
                 dataservice, pool_id, pool_name,
                 AquariteSwitchConfig(
-                    "Smart Mode Freeze", "smart_mode_freeze", "filtration.smart.freeze",
+                    "smart_mode_freeze", "filtration.smart.freeze",
                 ),
             )
         )
@@ -95,7 +94,7 @@ class AquariteSwitchEntity(AquariteEntity, SwitchEntity):
         self._value_path = config.value_path
         self._is_relay = config.is_relay
         self._attr_translation_key = config.translation_key
-        self._attr_unique_id = self.build_unique_id(config.name)
+        self._attr_unique_id = self.build_unique_id(config.translation_key)
 
     @property
     def is_on(self) -> bool:
