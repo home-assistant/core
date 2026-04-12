@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from guntamatic.heater import Heater
@@ -44,6 +45,8 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
             data: dict[str, list[str]] = await self.hass.async_add_executor_job(
                 self.heater.parse_data
             )
+        except asyncio.CancelledError:
+            raise
         except Exception as err:
             raise UpdateFailed(f"Error communicating with heater: {err}") from err
         if not data:

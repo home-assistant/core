@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -58,6 +59,8 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except NoSerialException:
                 errors["base"] = "bad_data"
+            except asyncio.CancelledError:
+                raise
 
             except Exception:
                 _LOGGER.exception("Unexpected exception")
