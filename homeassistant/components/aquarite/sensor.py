@@ -234,7 +234,7 @@ class AquariteTimeSensorEntity(AquariteEntity, SensorEntity):
 class AquariteHydrolyserSensorEntity(AquariteEntity, SensorEntity):
     """Hydrolyser sensor entity."""
 
-    _attr_native_unit_of_measurement = "gr/h"
+    _attr_native_unit_of_measurement = "g/h"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
