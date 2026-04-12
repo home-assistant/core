@@ -57,11 +57,7 @@ async def async_setup_entry(
         ),
     ]
 
-    # HEAT mode min/max range (the two arrows under "Température minimale" /
-    # "Température maximale" when the HEAT slider position is selected).
-    # Translation keys are intentionally renamed from PR #62 to clarify they
-    # are bounds, not single setpoints. The Python `name` arguments are kept
-    # unchanged so existing unique_ids are preserved.
+    # HEAT mode min/max range.
     if dataservice.get_value("filtration.hasHeat"):
         entities.extend([
             AquariteNumberEntity(
@@ -74,9 +70,7 @@ async def async_setup_entry(
             ),
         ])
 
-    # SMART mode min/max range (replaces the read-only sensors that previously
-    # exposed `filtration.smart.tempMin` / `tempHigh` — see PR description for
-    # the breaking-change note).
+    # SMART mode min/max range.
     if dataservice.get_value("filtration.hasSmart"):
         entities.extend([
             AquariteNumberEntity(
