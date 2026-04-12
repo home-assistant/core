@@ -915,7 +915,7 @@ async def test_set_target_temp_with_hvac_mode_off(hass: HomeAssistant) -> None:
 async def test_set_target_temp_with_hvac_ac(
     hass: HomeAssistant,
 ) -> None:
-    """Test that invalid hvac_mode is rejected from set_temperature."""
+    """Test that COOL is accepted from set_temperature when ac_mode is enabled."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(
         hass,
