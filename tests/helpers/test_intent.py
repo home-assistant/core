@@ -1001,7 +1001,7 @@ async def test_intent_response_dict() -> None:
     response_dict1 = response.as_dict()
     response_dict2 = deepcopy(response_dict1)
 
-    # Mutate the dict
+    # Mutate the original object
     response.async_set_speech(
         speech="Changed", speech_type="plain", extra_data={"key": "changed"}
     )
