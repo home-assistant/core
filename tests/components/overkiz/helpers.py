@@ -21,14 +21,14 @@ def assert_command_call(
     *,
     device_url: str,
     command_name: str,
-    parameters: tuple[Any, ...] = (),
+    parameters: list[Any] | None = None,
 ) -> None:
     """Assert the latest command sent through the mocked Overkiz client."""
     assert mock_client.execute_command.await_count == 1
     args = mock_client.execute_command.await_args.args
     assert args[0] == device_url
     assert args[1].name == command_name
-    assert args[1].parameters == list(parameters)
+    assert args[1].parameters == (parameters or [])
     assert args[2] == "Home Assistant"
 
 

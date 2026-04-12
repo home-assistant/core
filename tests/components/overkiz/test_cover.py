@@ -201,13 +201,13 @@ async def test_cover_service_actions(
         "position",
     ),
     [
-        (SHUTTER, "setClosure", SHUTTER.device_url, (75,), 25),
-        (AWNING, "setDeployment", AWNING.device_url, (80,), 80),
+        (SHUTTER, "setClosure", SHUTTER.device_url, [75], 25),
+        (AWNING, "setDeployment", AWNING.device_url, [80], 80),
         (
             LOW_SPEED,
             "setClosureAndLinearSpeed",
             f"{LOW_SPEED.device_url}_low_speed",
-            (65, OverkizCommandParam.LOWSPEED),
+            [65, OverkizCommandParam.LOWSPEED],
             35,
         ),
     ],
@@ -221,7 +221,7 @@ async def test_cover_set_position(
     device: FixtureDevice,
     command_name: str,
     unique_id: str,
-    parameters: tuple[Any, ...],
+    parameters: list[Any],
     position: int,
 ) -> None:
     """Test cover position services and mapping."""
@@ -334,7 +334,7 @@ async def test_cover_tilt_services(
         mock_client,
         device_url=PERGOLA.device_url,
         command_name="setOrientation",
-        parameters=(60,),
+        parameters=[60],
     )
 
 
@@ -653,7 +653,7 @@ async def test_awning_direct_position_mapping(
         mock_client,
         device_url=AWNING.device_url,
         command_name="setDeployment",
-        parameters=(35,),
+        parameters=[35],
     )
 
     await async_deliver_events(
