@@ -14,7 +14,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from .conftest import DEVICE_ID, MagicMock, MockConfigEntry
 
@@ -134,10 +133,10 @@ async def test_readings_login_error_triggers_reauth(
     mock_freshr_client.fetch_device_current.reset_mock()
     mock_freshr_client.fetch_device_current.side_effect = LoginError("session expired")
     freezer.tick(READINGS_SCAN_INTERVAL)
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass, freezer())
     await hass.async_block_till_done()
 
-    mock_freshr_client.fetch_device_current.assert_called_once()
+    assert mock_freshr_client.fetch_device_current.called
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -148,10 +147,12 @@ async def test_readings_login_error_triggers_reauth(
         )
     ]
     assert entity_ids
-    assert all(
-        hass.states.get(entity_id).state == STATE_UNAVAILABLE
-        for entity_id in entity_ids
-    )
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is not None, f"State for {entity_id} is None"
+        assert state.state == STATE_UNAVAILABLE, (
+            f"Expected {entity_id} to be {STATE_UNAVAILABLE!r}, got {state.state!r}"
+        )
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     relevant_flows = [
