@@ -146,6 +146,32 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
     assert entry.data[CONF_API_TOKEN] == "new-token-abc"
 
 
+async def test_flow_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test that reauthing with a different bot account aborts with unique_id_mismatch."""
+    entry = create_entry(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    different_bot = MagicMock()
+    different_bot.id = 9999999999
+    different_bot.name = "Different Bot"
+
+    with (
+        patch_discord_login(),
+        patch_discord_close(),
+        patch(
+            "homeassistant.components.discord.config_flow.nextcord.Client.application_info",
+            new_callable=AsyncMock,
+            return_value=different_bot,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_API_TOKEN: "other-token"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
 async def test_subentry_add_channel(hass: HomeAssistant) -> None:
     """Test adding a channel subentry."""
     entry = MockConfigEntry(

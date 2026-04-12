@@ -96,7 +96,7 @@ class DiscordFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Handle a reauthorisation flow request."""
+        """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
