@@ -146,6 +146,34 @@ async def test_with_existing_config(
     assert result["options"] == {"systems": ["SN001"]}
 
 
+async def test_user_step_relies_on_async_get_systems(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test the initial user step does not separately validate credentials."""
+    flow = config_flow.AqualinkFlowHandler()
+    flow.hass = hass
+
+    mock_system = MagicMock()
+    mock_system.serial = "SN001"
+    mock_system.name = "Pool System 1"
+
+    with (
+        patch.object(
+            config_flow.AqualinkFlowHandler,
+            "_async_test_credentials",
+            side_effect=AssertionError("should not be called"),
+        ),
+        patch(
+            "homeassistant.components.iaqualink.config_flow.async_get_systems",
+            return_value=({"SN001": mock_system}, None),
+        ),
+    ):
+        result = await flow.async_step_user(config_data)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "systems"
+
+
 async def test_with_no_systems(
     hass: HomeAssistant, config_data: dict[str, str]
 ) -> None:
@@ -242,6 +270,31 @@ async def test_async_get_systems_no_systems(
         patch(
             "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
             return_value={},
+        ),
+    ):
+        systems, error_reason = await config_flow.async_get_systems(
+            hass,
+            config_data[CONF_USERNAME],
+            config_data[CONF_PASSWORD],
+        )
+
+    assert systems == {}
+    assert error_reason is None
+
+
+async def test_async_get_systems_none_systems(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+) -> None:
+    """Test async_get_systems normalizes a missing systems payload."""
+    with (
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
+            return_value=None,
         ),
     ):
         systems, error_reason = await config_flow.async_get_systems(
@@ -455,6 +508,41 @@ async def test_options_flow_submit_systems_direct_init_call(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_SYSTEMS: ["SN001"]}
+
+
+async def test_options_flow_filters_stale_selected_systems(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test options flow excludes saved systems that are no longer available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        options={CONF_SYSTEMS: ["SN001", "STALE_SYSTEM"]},
+    )
+    entry.add_to_hass(hass)
+
+    mock_system1 = MagicMock()
+    mock_system1.serial = "SN001"
+    mock_system1.name = "Pool System 1"
+
+    mock_system2 = MagicMock()
+    mock_system2.serial = "SN002"
+    mock_system2.name = "Pool System 2"
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.async_get_systems",
+        return_value=(
+            {
+                "SN001": mock_system1,
+                "SN002": mock_system2,
+            },
+            None,
+        ),
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {CONF_SYSTEMS: ["SN001"]}
 
 
 @pytest.mark.parametrize(

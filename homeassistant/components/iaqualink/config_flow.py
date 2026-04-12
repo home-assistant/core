@@ -45,21 +45,7 @@ async def async_get_systems(
     except AqualinkServiceException, TimeoutError, httpx.HTTPError:
         return None, "cannot_connect"
 
-    return systems, None
-
-
-def _build_systems_schema(
-    system_keys: dict[str, str], selected_systems: list[str]
-) -> vol.Schema:
-    """Build the schema used by both config and options flow system selection."""
-    return vol.Schema(
-        {
-            vol.Optional(
-                CONF_SYSTEMS,
-                default=selected_systems,
-            ): cv.multi_select(system_keys),
-        }
-    )
+    return systems or {}, None
 
 
 class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -95,22 +81,20 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            errors = await self._async_test_credentials(user_input)
-            if not errors:
-                systems, systems_error = await async_get_systems(
-                    self.hass,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-                if systems is None:
-                    assert systems_error is not None
-                    errors = {"base": systems_error}
-                else:
-                    self._pending_user_input = user_input
-                    self._system_keys = {
-                        system.serial: system.name for system in systems.values()
-                    }
-                    return await self.async_step_systems()
+            systems, systems_error = await async_get_systems(
+                self.hass,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
+            if systems is None:
+                assert systems_error is not None
+                errors = {"base": systems_error}
+            else:
+                self._pending_user_input = user_input
+                self._system_keys = {
+                    system.serial: system.name for system in systems.values()
+                }
+                return await self.async_step_systems()
 
         return self.async_show_form(
             step_id="user",
@@ -134,9 +118,13 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="systems",
-            data_schema=_build_systems_schema(
-                self._system_keys,
-                list(self._system_keys.keys()),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SYSTEMS,
+                        default=list(self._system_keys.keys()),
+                    ): cv.multi_select(self._system_keys),
+                }
             ),
         )
 
@@ -203,7 +191,14 @@ class AqualinkOptionsFlowHandler(OptionsFlowWithReload):
             assert error_reason is not None
             return self.async_show_form(
                 step_id="init",
-                data_schema=_build_systems_schema({}, []),
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_SYSTEMS,
+                            default=[],
+                        ): cv.multi_select({}),
+                    }
+                ),
                 errors={"base": error_reason},
             )
 
@@ -214,11 +209,23 @@ class AqualinkOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         # Get currently selected systems from options (or default to all)
-        current_systems = self.config_entry.options.get(
-            CONF_SYSTEMS, list(self._system_keys.keys())
-        )
+        if CONF_SYSTEMS in self.config_entry.options:
+            current_systems = [
+                system_id
+                for system_id in self.config_entry.options[CONF_SYSTEMS]
+                if system_id in self._system_keys
+            ]
+        else:
+            current_systems = list(self._system_keys.keys())
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_build_systems_schema(self._system_keys, current_systems),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SYSTEMS,
+                        default=current_systems,
+                    ): cv.multi_select(self._system_keys),
+                }
+            ),
         )
