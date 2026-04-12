@@ -7,6 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["nextcord"],
-  "quality_scale": "silver",
   "requirements": ["nextcord==3.1.0"]
 }

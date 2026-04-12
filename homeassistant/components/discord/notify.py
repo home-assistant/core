@@ -16,11 +16,11 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DiscordConfigEntry
 from .const import CONF_CHANNEL_ID, DOMAIN
-from .entity import DiscordEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +40,10 @@ async def async_setup_entry(
         )
 
 
-class DiscordNotifyEntity(DiscordEntity, NotifyEntity):
+class DiscordNotifyEntity(NotifyEntity):
     """Discord notification entity for a single channel or DM."""
 
+    _attr_has_entity_name = True
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     def __init__(
@@ -51,13 +52,22 @@ class DiscordNotifyEntity(DiscordEntity, NotifyEntity):
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize the Discord notify entity."""
-        super().__init__(
-            config_entry,
-            subentry,
-            NotifyEntityDescription(key=str(subentry.data[CONF_CHANNEL_ID])),
+        self.config_entry = config_entry
+        self.entity_description = NotifyEntityDescription(
+            key=str(subentry.data[CONF_CHANNEL_ID])
         )
         self._channel_id: int = subentry.data[CONF_CHANNEL_ID]
         self._attr_name = subentry.title
+        self._attr_unique_id = (
+            f"{config_entry.unique_id or config_entry.entry_id}"
+            f"_{self.entity_description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            name=config_entry.title,
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Discord",
+            identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
+        )
 
     async def _async_get_messageable(self, discord_bot: nextcord.Client) -> Messageable:
         """Fetch the target channel or DM user for this entity."""
