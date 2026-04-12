@@ -163,10 +163,10 @@ async def test_readings_login_error_triggers_reauth(
         for flow in flows
     ]
     assert any(
-        flow.get("context", {}).get("entry_id") == mock_config_entry.entry_id
-        and flow.get("context", {}).get("source") == SOURCE_REAUTH
-        and flow.get("step_id") == "reauth_confirm"
-        for flow in flows
+        flow["entry_id"] == mock_config_entry.entry_id
+        and flow["source"] == SOURCE_REAUTH
+        and flow["step_id"] == "reauth_confirm"
+        for flow in relevant_flows
     ), (
         "Expected a reauth_confirm flow for the config entry, "
         f"but found flows: {relevant_flows}"
