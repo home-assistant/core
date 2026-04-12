@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.evohome.climate import PRESET_RESET
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import DOMAIN, RESET_BREAKS_IN_HA_VERSION
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -274,6 +274,9 @@ async def test_ctl_preset_reset_deprecated(
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_preset_reset")
     assert issue is not None
     assert issue.translation_key == "deprecated_preset_reset"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)

@@ -14,6 +14,7 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
+    RESET_BREAKS_IN_HA_VERSION,
     EvoService,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
@@ -81,6 +82,9 @@ async def test_reset_system_deprecated(
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_reset_system_service")
     assert issue is not None
     assert issue.translation_key == "deprecated_reset_system_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -183,6 +187,9 @@ async def test_clear_zone_override_deprecated(
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_clear_zone_override_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
