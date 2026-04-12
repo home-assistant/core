@@ -153,7 +153,7 @@ class AquariteNumberEntity(AquariteEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         scale = self.SCALE_MAP.get(self._value_path)
-        raw_value = int(value * scale) if scale else value
+        raw_value = int(round(value * scale)) if scale else value
         try:
             await self.coordinator.api.set_value(
                 self._pool_id, self._value_path, raw_value
