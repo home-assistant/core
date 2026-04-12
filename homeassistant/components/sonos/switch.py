@@ -378,6 +378,8 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
             self.speaker.tv_ungroup_autoplay = enable
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
+            return
+        self.speaker.write_entity_states()
 
 
 class SonosAlarmEntity(SonosEntity, SwitchEntity):

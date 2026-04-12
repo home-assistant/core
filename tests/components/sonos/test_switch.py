@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -416,12 +417,7 @@ async def test_tv_autoplay_poll_state(
     soco.deviceProperties.GetAutoplayRoomUUID = Mock(
         return_value={"RoomUUID": soco.uid, "Source": "TV"}
     )
-    switch_entry = entity_registry.entities[entity_id]
-    platform = hass.data["entity_components"]["switch"]
-    entity = platform.get_entity(switch_entry.entity_id)
-    assert entity is not None
-    await hass.async_add_executor_job(entity.poll_state)
-    entity.async_write_ha_state()
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -524,16 +520,10 @@ async def test_tv_ungroup_autoplay_available_independently_of_tv_autoplay(
 
     # Simulate the device reporting ungroup as off (e.g. after TV autoplay is
     # disabled on the device side). The switch should show OFF, not unavailable.
-    ungroup_platform = hass.data["entity_components"]["switch"]
-    ungroup_entry = entity_registry.entities[ungroup_id]
-    ungroup_entity = ungroup_platform.get_entity(ungroup_entry.entity_id)
-    assert ungroup_entity is not None
-
     soco.deviceProperties.GetAutoplayLinkedZones = Mock(
         return_value={"IncludeLinkedZones": "1", "Source": "TV"}
     )
-    await hass.async_add_executor_job(ungroup_entity.poll_state)
-    ungroup_entity.async_write_ha_state()
+    await async_update_entity(hass, ungroup_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(ungroup_id).state == STATE_OFF
