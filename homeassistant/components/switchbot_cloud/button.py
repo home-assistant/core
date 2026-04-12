@@ -12,12 +12,10 @@ from switchbot_api import (
 from switchbot_api.commands import ArtFrameCommands, BotCommands, CommonCommands
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 
@@ -58,11 +56,11 @@ BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     entities: list[SwitchBotCloudBot] = []
     for device, coordinator in data.devices.buttons:
         description_set = BUTTON_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
