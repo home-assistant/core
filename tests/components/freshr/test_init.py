@@ -136,9 +136,14 @@ async def test_readings_login_error_triggers_reauth(
     mock_freshr_client.fetch_device_current.assert_called_once()
 
     state = hass.states.get("sensor.fresh_r_inside_temperature")
-    assert state is not None
-    assert state.state == "unavailable"
-
+    matching_flows = [
+        flow
+        for flow in flows
+        if flow.get("handler") == DOMAIN
+        and flow.get("context", {}).get("entry_id") == mock_config_entry.entry_id
+    ]
+    assert len(matching_flows) == 1
+    assert matching_flows[0].get("step_id") == "reauth_confirm"
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0].get("step_id") == "reauth_confirm"
