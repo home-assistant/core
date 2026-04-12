@@ -214,7 +214,7 @@ class AquariteBinarySensorEntity(AquariteEntity, BinarySensorEntity):
         value = self.coordinator.get_value(self._value_path)
         if value is None:
             return None
-        return bool(value)
+        return bool(int(value))
 
 
 class AquariteBinarySensorTankEntity(AquariteEntity, BinarySensorEntity):

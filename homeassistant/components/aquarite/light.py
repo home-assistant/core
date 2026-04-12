@@ -59,7 +59,7 @@ class AquariteLightEntity(AquariteEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        actual_state = bool(self.coordinator.get_value(self._value_path))
+        actual_state = bool(int(self.coordinator.get_value(self._value_path) or 0))
 
         # If we aren't waiting for a change, show actual state
         if self._target_state is None:
