@@ -236,7 +236,7 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return output
 
         time_series = data["time_series"]
-        output: dict[str, Any] = {}
+        output = {}
         for key in ENERGY_HISTORY_FIELDS:
             values = [p[key] for p in time_series if key in p]
             output[key] = sum(values) if values else None
