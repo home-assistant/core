@@ -37,6 +37,13 @@ build.json @home-assistant/supervisor
 # Other code
 /homeassistant/scripts/check_config.py @kellerza
 
+# Agent Configurations
+AGENTS.md @home-assistant/core
+CLAUDE.md @home-assistant/core
+/.agent/ @home-assistant/core
+/.claude/ @home-assistant/core
+/.gemini/ @home-assistant/core
+
 # Integrations
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
@@ -222,8 +229,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @swistakm
-/tests/components/blebox/ @bbx-a @swistakm
+/homeassistant/components/blebox/ @bbx-a @swistakm @bkobus-bbx
+/tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
 /homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
@@ -411,6 +418,8 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /homeassistant/components/duckdns/ @tr4nt0r
 /tests/components/duckdns/ @tr4nt0r
+/homeassistant/components/duco/ @ronaldvdmeer
+/tests/components/duco/ @ronaldvdmeer
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192
@@ -496,6 +505,8 @@ build.json @home-assistant/supervisor
 /tests/components/essent/ @jaapp
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
+/homeassistant/components/eurotronic_cometblue/ @rikroe
+/tests/components/eurotronic_cometblue/ @rikroe
 /homeassistant/components/event/ @home-assistant/core
 /tests/components/event/ @home-assistant/core
 /homeassistant/components/evohome/ @zxdavb
@@ -1256,8 +1267,8 @@ build.json @home-assistant/supervisor
 /tests/components/openuv/ @bachya
 /homeassistant/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
 /tests/components/openweathermap/ @fabaff @freekode @nzapponi @wittypluck
-/homeassistant/components/opnsense/ @mtreinish
-/tests/components/opnsense/ @mtreinish
+/homeassistant/components/opnsense/ @HarlemSquirrel @Snuffy2
+/tests/components/opnsense/ @HarlemSquirrel @Snuffy2
 /homeassistant/components/opower/ @tronikos
 /tests/components/opower/ @tronikos
 /homeassistant/components/oralb/ @bdraco @Lash-L
@@ -1301,6 +1312,8 @@ build.json @home-assistant/supervisor
 /tests/components/pi_hole/ @shenxn
 /homeassistant/components/picnic/ @corneyl @codesalatdev
 /tests/components/picnic/ @corneyl @codesalatdev
+/homeassistant/components/picotts/ @rooggiieerr
+/tests/components/picotts/ @rooggiieerr
 /homeassistant/components/ping/ @jpbede
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
@@ -1866,6 +1879,8 @@ build.json @home-assistant/supervisor
 /tests/components/vicare/ @CFenner
 /homeassistant/components/victron_ble/ @rajlaud
 /tests/components/victron_ble/ @rajlaud
+/homeassistant/components/victron_gx/ @tomer-w
+/tests/components/victron_gx/ @tomer-w
 /homeassistant/components/victron_remote_monitoring/ @AndyTempel
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW

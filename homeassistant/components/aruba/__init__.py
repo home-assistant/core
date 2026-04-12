@@ -1,1 +1,1 @@
-"""The aruba component."""
+"""The Aruba integration."""

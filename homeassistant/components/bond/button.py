@@ -260,6 +260,14 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
     ),
 )
 
+PRESET_BUTTON = BondButtonEntityDescription(
+    key=Action.PRESET,
+    name="Preset",
+    translation_key="preset",
+    mutually_exclusive=None,
+    argument=None,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -285,6 +293,8 @@ async def async_setup_entry(
             # we only add the stop action button if we add actions
             # since its not so useful if there are no actions to stop
             device_entities.append(BondButtonEntity(data, device, STOP_BUTTON))
+        if device.has_action(PRESET_BUTTON.key):
+            device_entities.append(BondButtonEntity(data, device, PRESET_BUTTON))
         entities.extend(device_entities)
 
     async_add_entities(entities)
