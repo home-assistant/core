@@ -2046,7 +2046,7 @@
           "name": "Soaking"
         },
         "laundry_care_washer_option_speed_perfect": {
-          "description": "",
+          "description": "Shortens the program cycle to save time, at the cost of slightly higher energy use.",
           "name": "Speed perfect"
         },
         "laundry_care_washer_option_spin_speed": {
