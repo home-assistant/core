@@ -24,7 +24,10 @@ class DiscordEntity(Entity):
         """Initialize the entity."""
         self.config_entry = config_entry
         self.entity_description = entity_description
-        self._attr_unique_id = f"{config_entry.unique_id or config_entry.entry_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{config_entry.unique_id or config_entry.entry_id}"
+            f"_{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             name=config_entry.title,
             entry_type=DeviceEntryType.SERVICE,

@@ -1,7 +1,1 @@
-{
-  "services": {
-    "send_message": {
-      "service": "mdi:discord"
-    }
-  }
-}
+{}
