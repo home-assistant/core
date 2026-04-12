@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import nextcord
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.discord.const import (
@@ -29,10 +30,6 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 
 def _patch_init_login():
     """Patch the nextcord.Client used in __init__.async_setup_entry."""
@@ -43,11 +40,6 @@ def _patch_init_login():
         "homeassistant.components.discord.__init__.nextcord.Client",
         return_value=bot,
     )
-
-
-# ---------------------------------------------------------------------------
-# User flow
-# ---------------------------------------------------------------------------
 
 
 async def test_flow_user(hass: HomeAssistant) -> None:
@@ -84,8 +76,20 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
-    """Test an invalid token shows an error then lets the user retry."""
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (nextcord.LoginFailure, "invalid_auth"),
+        (nextcord.HTTPException(MagicMock(), ""), "cannot_connect"),
+        (Exception("boom"), "unknown"),
+    ],
+)
+async def test_flow_user_errors(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test that login errors show the correct error and allow retry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -94,13 +98,13 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
         patch_discord_login() as mock_login,
         patch_discord_close(),
     ):
-        mock_login.side_effect = nextcord.LoginFailure
+        mock_login.side_effect = side_effect
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONF_INPUT
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": expected_error}
 
     with mocked_discord_info(), patch_discord_login(), patch_discord_close():
         result = await hass.config_entries.flow.async_configure(
@@ -108,56 +112,6 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
-    """Test a connection failure shows an error then lets the user retry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        patch_discord_login() as mock_login,
-        patch_discord_close(),
-    ):
-        mock_login.side_effect = nextcord.HTTPException(MagicMock(), "")
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_INPUT
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with mocked_discord_info(), patch_discord_login(), patch_discord_close():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_INPUT
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
-    """Test an unexpected exception shows an 'unknown' error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        patch_discord_login() as mock_login,
-        patch_discord_close(),
-    ):
-        mock_login.side_effect = Exception("boom")
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=CONF_INPUT
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-# ---------------------------------------------------------------------------
-# Reauth flow
-# ---------------------------------------------------------------------------
 
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:
@@ -192,11 +146,6 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
     assert entry.data[CONF_API_TOKEN] == "new-token-abc"
 
 
-# ---------------------------------------------------------------------------
-# Channel subentry flow
-# ---------------------------------------------------------------------------
-
-
 async def test_subentry_add_channel(hass: HomeAssistant) -> None:
     """Test adding a channel subentry."""
     entry = MockConfigEntry(
@@ -208,7 +157,6 @@ async def test_subentry_add_channel(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    # Set up entry so it's LOADED and runtime_data is available.
     with _patch_init_login():
         await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -391,10 +339,7 @@ async def test_subentry_add_channel_entry_not_loaded(hass: HomeAssistant) -> Non
         minor_version=1,
     )
     entry.add_to_hass(hass)
-    # Do NOT call async_setup — entry stays in NOT_LOADED state.
 
-    # async_step_user checks the state immediately (even before showing the form)
-    # so async_init returns ABORT directly.
     result = await hass.config_entries.subentries.async_init(
         (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
         context={"source": config_entries.SOURCE_USER},
