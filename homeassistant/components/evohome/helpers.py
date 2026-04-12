@@ -10,7 +10,11 @@ from .const import DOMAIN
 
 @callback
 def async_create_deprecation_issue_once(
-    hass: HomeAssistant, issue_id: str, breaks_in_ha_version: str
+    hass: HomeAssistant,
+    issue_id: str,
+    breaks_in_ha_version: str,
+    translation_key: str | None = None,
+    translation_placeholders: dict[str, str] | None = None,
 ) -> None:
     """Create a deprecation issue only if it does not already exist.
 
@@ -30,5 +34,6 @@ def async_create_deprecation_issue_once(
         is_persistent=True,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
-        translation_key=issue_id,
+        translation_key=translation_key or issue_id,
+        translation_placeholders=translation_placeholders,
     )
