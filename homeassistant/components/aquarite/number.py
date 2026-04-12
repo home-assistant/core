@@ -148,7 +148,10 @@ class AquariteNumberEntity(AquariteEntity, NumberEntity):
         if raw_value is None:
             return None
         scale = self.SCALE_MAP.get(self._value_path)
-        return int(raw_value) / scale if scale else float(raw_value)
+        try:
+            return int(raw_value) / scale if scale else float(raw_value)
+        except (TypeError, ValueError):
+            return None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
