@@ -92,8 +92,8 @@ def mock_nodes() -> list[Node]:
             sensor=NodeSensorInfo(
                 co2=None,
                 iaq_co2=None,
-                rh=35.5,
-                iaq_rh=75,
+                rh=None,
+                iaq_rh=None,
             ),
         ),
         Node(
