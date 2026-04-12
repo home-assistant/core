@@ -12,7 +12,7 @@ import pytest
 
 from .conftest import MOCK_POOL_ID
 
-from custom_components.aquarite.coordinator import AquariteDataUpdateCoordinator
+from homeassistant.components.aquarite.coordinator import AquariteDataUpdateCoordinator
 
 
 @pytest.fixture
