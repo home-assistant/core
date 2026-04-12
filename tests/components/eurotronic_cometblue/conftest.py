@@ -12,8 +12,10 @@ from eurotronic_cometblue_ha import CometBlueBleakClient
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.eurotronic_cometblue import PLATFORMS
 from homeassistant.components.eurotronic_cometblue.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from . import (
@@ -235,14 +237,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-# async def setup_with_selected_platforms(
-#     hass: HomeAssistant, entry: MockConfigEntry, platforms: list[Platform] | None = None
-# ) -> None:
-#     """Set up the Eurotronic Comet Blue integration with the selected platforms."""
-#     entry.add_to_hass(hass)
-#     with patch(
-#         "homeassistant.components.eurotronic_cometblue.PLATFORMS",
-#         platforms or PLATFORMS,
-#     ):
-#         assert await hass.config_entries.async_setup(entry.entry_id)
-#         await hass.async_block_till_done()
+async def setup_with_selected_platforms(
+    hass: HomeAssistant, entry: MockConfigEntry, platforms: list[Platform] | None = None
+) -> None:
+    """Set up the Eurotronic Comet Blue integration with the selected platforms."""
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.eurotronic_cometblue.PLATFORMS",
+        platforms or PLATFORMS,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
