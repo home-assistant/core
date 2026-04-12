@@ -10,7 +10,7 @@ from homeassistant.components.freshr.coordinator import (
     DEVICES_SCAN_INTERVAL,
     READINGS_SCAN_INTERVAL,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -136,6 +136,10 @@ async def test_readings_login_error_triggers_reauth(
     mock_freshr_client.fetch_device_current.assert_called_once()
 
     state = hass.states.get("sensor.fresh_r_inside_temperature")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    flows = hass.config_entries.flow.async_progress()
     matching_flows = [
         flow
         for flow in flows
@@ -144,7 +148,4 @@ async def test_readings_login_error_triggers_reauth(
     ]
     assert len(matching_flows) == 1
     assert matching_flows[0].get("step_id") == "reauth_confirm"
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0].get("step_id") == "reauth_confirm"
-    assert flows[0].get("context", {}).get("entry_id") == mock_config_entry.entry_id
+    assert matching_flows[0].get("context", {}).get("source") == SOURCE_REAUTH
