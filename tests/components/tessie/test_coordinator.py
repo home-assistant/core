@@ -184,11 +184,14 @@ async def test_coordinator_energy_history_error(
 async def test_coordinator_energy_history_invalid_data(
     hass: HomeAssistant, mock_energy_history, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Tests that the energy history coordinator handles invalid data."""
+    """Tests that the energy history coordinator handles invalid data gracefully."""
 
     entry = await setup_platform(hass, [Platform.SENSOR])
     coordinator = entry.runtime_data.energysites[0].history_coordinator
     assert coordinator is not None
+
+    # Capture state after successful initial load
+    state_before = hass.states.get("sensor.energy_site_grid_imported").state
 
     mock_energy_history.reset_mock()
     mock_energy_history.side_effect = lambda *a, **kw: {"response": {}}
@@ -196,9 +199,10 @@ async def test_coordinator_energy_history_invalid_data(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_energy_history.assert_called_once()
+
+    # Sensor should retain last good state rather than becoming unavailable
     assert (
-        hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNAVAILABLE
+        hass.states.get("sensor.energy_site_grid_imported").state != STATE_UNAVAILABLE
     )
-    assert isinstance(coordinator.last_exception, UpdateFailed)
-    assert coordinator.last_exception.translation_domain == DOMAIN
-    assert coordinator.last_exception.translation_key == "invalid_energy_history_data"
+    assert hass.states.get("sensor.energy_site_grid_imported").state == state_before
+    assert coordinator.last_exception is None
