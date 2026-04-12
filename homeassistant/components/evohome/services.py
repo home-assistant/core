@@ -30,7 +30,7 @@ from .coordinator import EvoDataUpdateCoordinator
 from .helpers import async_create_deprecation_issue_once
 
 # Support for untargeted service calls to controllers is being deprecated
-BREAKS_IN_HA_VERSION: Final = "2026.7.0"
+SERVICE_BREAKS_IN_HA_VERSION: Final = "2026.7.0"
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
@@ -98,7 +98,7 @@ def _resolve_ctl_unique_id(
         async_create_deprecation_issue_once(
             hass,
             f"deprecated_{call.service}_service_call",
-            BREAKS_IN_HA_VERSION,
+            SERVICE_BREAKS_IN_HA_VERSION,
             translation_key="deprecated_controller_service_call",
             translation_placeholders={"service": call.service},
         )
