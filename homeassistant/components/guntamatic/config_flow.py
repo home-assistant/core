@@ -59,7 +59,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if not data or not data.get("Serial"):
+                if not data:
                     errors["base"] = "cannot_connect"
                 else:
                     return self.async_create_entry(

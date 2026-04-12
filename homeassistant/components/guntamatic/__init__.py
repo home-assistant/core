@@ -20,16 +20,16 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up guntamatic from a config entry."""
 
-    host = entry.data[CONF_HOST]
-    heater = Heater(host)
+    heater = Heater(entry.data[CONF_HOST])
 
     coordinator = GuntamaticCoordinator(hass, heater, entry)
 
     try:
-        # Fetch initial data
         await coordinator.async_config_entry_first_refresh()
     except Exception as err:
-        raise ConfigEntryNotReady(f"Error while connecting to {host}: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Error while connecting to {entry.data[CONF_HOST]}: {err}"
+        ) from err
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
