@@ -258,6 +258,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
     """Handle Tibber price sensor updates."""
 
     config_entry: TibberConfigEntry
+    _tibber_connection: tibber.Tibber | None
 
     def __init__(
         self,
@@ -272,6 +273,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             name=f"{DOMAIN} price",
             update_interval=timedelta(minutes=1),
         )
+        self._tibber_connection = None
 
     def _time_until_next_15_minute(self) -> timedelta:
         """Return time until the next 15-minute boundary (0, 15, 30, 45) in UTC."""
@@ -288,9 +290,12 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         return next_run - now
 
     async def _async_update_data(self) -> dict[str, TibberHomeData]:
-        tibber_connection = await self.config_entry.runtime_data.async_get_client(
-            self.hass
-        )
+        tibber_connection = self._tibber_connection
+        if tibber_connection is None:
+            tibber_connection = await self.config_entry.runtime_data.async_get_client(
+                self.hass
+            )
+            self._tibber_connection = tibber_connection
         active_homes = tibber_connection.get_homes(only_active=True)
 
         result = {home.home_id: _build_home_data(home) for home in active_homes}
