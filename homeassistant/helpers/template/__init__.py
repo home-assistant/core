@@ -1289,26 +1289,6 @@ def distance(hass: HomeAssistant, *args: Any) -> float | None:
     )
 
 
-def entity_name(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get the name of an entity from its entity ID."""
-    ent_reg = er.async_get(hass)
-    if (entry := ent_reg.async_get(entity_id)) is not None:
-        return er.async_get_unprefixed_name(hass, entry)
-
-    # Fall back to state for entities without a unique_id (not in the registry)
-    if (state := hass.states.get(entity_id)) is not None:
-        return state.name
-
-    return None
-
-
-def is_hidden_entity(hass: HomeAssistant, entity_id: str) -> bool:
-    """Test if an entity is hidden."""
-    entity_reg = er.async_get(hass)
-    entry = entity_reg.async_get(entity_id)
-    return entry is not None and entry.hidden
-
-
 def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> bool:
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
@@ -1482,6 +1462,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             "homeassistant.helpers.template.extensions.DateTimeExtension"
         )
         self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.EntityExtension")
         self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
         self.add_extension(
             "homeassistant.helpers.template.extensions.FunctionalExtension"
@@ -1537,10 +1518,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             hass_globals = [
                 "closest",
                 "distance",
-                "entity_name",
                 "expand",
                 "has_value",
-                "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
                 "state_attr",
@@ -1550,7 +1529,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             ]
             hass_filters = [
                 "closest",
-                "entity_name",
                 "expand",
                 "has_value",
                 "state_attr",
@@ -1560,7 +1538,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             ]
             hass_tests = [
                 "has_value",
-                "is_hidden_entity",
                 "is_state_attr",
                 "is_state",
             ]
@@ -1582,15 +1559,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["has_value"] = self.globals["has_value"]
 
         self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
-
-        # Entity extensions
-
-        self.globals["entity_name"] = hassfunction(entity_name)
-        self.filters["entity_name"] = self.globals["entity_name"]
-        self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
-        self.tests["is_hidden_entity"] = hassfunction(
-            is_hidden_entity, pass_eval_context
-        )
 
         # State extensions
 

@@ -7,6 +7,7 @@ from .config_entries import ConfigEntryExtension
 from .crypto import CryptoExtension
 from .datetime import DateTimeExtension
 from .devices import DeviceExtension
+from .entities import EntityExtension
 from .floors import FloorExtension
 from .functional import FunctionalExtension
 from .issues import IssuesExtension
@@ -26,6 +27,7 @@ __all__ = [
     "CryptoExtension",
     "DateTimeExtension",
     "DeviceExtension",
+    "EntityExtension",
     "FloorExtension",
     "FunctionalExtension",
     "IssuesExtension",
