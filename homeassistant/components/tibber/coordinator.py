@@ -333,7 +333,7 @@ class TibberFetchPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData
         """Return the non-negative time until a target datetime."""
         return max(target - dt_util.now(), timedelta(0))
 
-    async def _async_update_data(self) -> dict[str, TibberHomeData]:
+    async def _async_update_data(self) -> dict:
         """Fetch latest price data via API and return per-home data."""
         tibber_connection = await self.config_entry.runtime_data.async_get_client(
             self.hass
@@ -395,7 +395,7 @@ class TibberFetchPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData
             + timedelta(hours=24, seconds=self._tomorrow_price_poll_threshold_seconds)
         )
 
-        return {home.home_id: _build_home_data(home) for home in active_homes}
+        return {}
 
     async def async_fetch_price_data(self) -> dict[str, TibberHomeData]:
         """Fetch latest price data for active homes."""
