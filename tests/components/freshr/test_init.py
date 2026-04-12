@@ -116,3 +116,26 @@ async def test_stale_device_not_removed_on_poll_error(
     await hass.async_block_till_done()
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_readings_login_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_freshr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a LoginError during readings refresh triggers a reauth flow."""
+    mock_freshr_client.fetch_device_current.side_effect = LoginError("session expired")
+    freezer.tick(READINGS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.fresh_r_inside_temperature")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0].get("step_id") == "reauth_confirm"
+    assert flows[0].get("context", {}).get("entry_id") == mock_config_entry.entry_id
