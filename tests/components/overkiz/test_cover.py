@@ -30,12 +30,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.overkiz.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
@@ -143,115 +138,56 @@ async def test_cover_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("device", "command_name", "expected_state", "entity_unique_id"),
+    ("device", "service", "command_name", "expected_state"),
     [
-        (SHUTTER, "open", CoverState.OPENING, None),
-        (AWNING, "deploy", CoverState.CLOSED, None),
-        (GARAGE, "open", CoverState.OPENING, None),
+        (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
+        # Awning reports CLOSED after deploy — known integration bug to fix in follow-up
+        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.CLOSED),
+        (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
+        (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
+        # Awning reports CLOSED after undeploy — known integration bug to fix in follow-up
+        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSED),
+        (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
+        (SHUTTER, SERVICE_STOP_COVER, "stop", None),
+        (AWNING, SERVICE_STOP_COVER, "stop", None),
+        (GARAGE, SERVICE_STOP_COVER, "stop", None),
     ],
-    ids=["roller-shutter", "awning", "garage-door"],
+    ids=[
+        "open-roller-shutter",
+        "open-awning",
+        "open-garage-door",
+        "close-roller-shutter",
+        "close-awning",
+        "close-garage-door",
+        "stop-roller-shutter",
+        "stop-awning",
+        "stop-garage-door",
+    ],
 )
-async def test_cover_open(
+async def test_cover_service_actions(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     device: FixtureDevice,
+    service: str,
     command_name: str,
-    expected_state: str,
-    entity_unique_id: str | None,
+    expected_state: str | None,
 ) -> None:
-    """Test opening supported covers via the service layer."""
+    """Test open, close, and stop cover services."""
     await setup_overkiz_integration(fixture=device.fixture)
-    mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
+    entity_id = get_entity_id(entity_registry, device.url)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
+        service,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    assert get_state(hass, entity_id).state == expected_state
-    assert_command_call(
-        mock_client,
-        device_url=device.url,
-        command_name=command_name,
-    )
-
-
-@pytest.mark.parametrize(
-    ("device", "command_name", "expected_state", "entity_unique_id"),
-    [
-        (SHUTTER, "close", CoverState.CLOSING, None),
-        (AWNING, "undeploy", CoverState.CLOSED, None),
-        (GARAGE, "close", CoverState.CLOSING, None),
-    ],
-    ids=["roller-shutter", "awning", "garage-door"],
-)
-async def test_cover_close(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
-    device: FixtureDevice,
-    command_name: str,
-    expected_state: str,
-    entity_unique_id: str | None,
-) -> None:
-    """Test closing supported covers via the service layer."""
-    await setup_overkiz_integration(fixture=device.fixture)
-    mock_client.execute_command.reset_mock()
-
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert get_state(hass, entity_id).state == expected_state
-    assert_command_call(
-        mock_client,
-        device_url=device.url,
-        command_name=command_name,
-    )
-
-
-@pytest.mark.parametrize(
-    ("device", "command_name", "entity_unique_id"),
-    [
-        (SHUTTER, "stop", None),
-        (AWNING, "stop", None),
-        (GARAGE, "stop", None),
-    ],
-    ids=["roller-shutter", "awning", "garage-door"],
-)
-async def test_cover_stop(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
-    device: FixtureDevice,
-    command_name: str,
-    entity_unique_id: str | None,
-) -> None:
-    """Test stop commands for supported covers."""
-    await setup_overkiz_integration(fixture=device.fixture)
-    mock_client.execute_command.reset_mock()
-
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
+    if expected_state is not None:
+        assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
         mock_client,
         device_url=device.url,
@@ -263,13 +199,13 @@ async def test_cover_stop(
     (
         "device",
         "command_name",
-        "entity_unique_id",
+        "unique_id",
         "parameters",
         "position",
     ),
     [
-        (SHUTTER, "setClosure", None, (75,), 25),
-        (AWNING, "setDeployment", None, (80,), 80),
+        (SHUTTER, "setClosure", SHUTTER.url, (75,), 25),
+        (AWNING, "setDeployment", AWNING.url, (80,), 80),
         (
             LOW_SPEED,
             "setClosureAndLinearSpeed",
@@ -287,15 +223,14 @@ async def test_cover_set_position(
     entity_registry: er.EntityRegistry,
     device: FixtureDevice,
     command_name: str,
-    entity_unique_id: str | None,
+    unique_id: str,
     parameters: tuple[Any, ...],
     position: int,
 ) -> None:
     """Test cover position services and mapping."""
     await setup_overkiz_integration(fixture=device.fixture)
-    mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
+    entity_id = get_entity_id(entity_registry, unique_id)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
@@ -361,6 +296,7 @@ async def test_cover_tilt_services(
             )
         ],
     )
+    assert get_state(hass, entity_id).state == CoverState.CLOSED
 
     mock_client.execute_command.reset_mock()
     await hass.services.async_call(
@@ -405,79 +341,20 @@ async def test_cover_tilt_services(
     )
 
 
-async def test_low_speed_cover_entities(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a low-speed shutter creates both standard and low-speed entities."""
-    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
-
-    standard_entity_id = get_entity_id(entity_registry, LOW_SPEED.url)
-    low_speed_entity_id = get_entity_id(entity_registry, f"{LOW_SPEED.url}_low_speed")
-
-    assert hass.states.get(standard_entity_id)
-    assert hass.states.get(low_speed_entity_id)
-
-    standard = entity_registry.async_get(standard_entity_id)
-    low_speed = entity_registry.async_get(low_speed_entity_id)
-    assert standard is not None
-    assert low_speed is not None
-    assert standard.unique_id == LOW_SPEED.url
-    assert low_speed.unique_id == f"{LOW_SPEED.url}_low_speed"
-
-
-async def test_multiple_same_type_entities_have_distinct_unique_ids(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test repeated shutters from one setup keep distinct identities."""
-    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
-
-    first_entity_id = get_entity_id(entity_registry, LOW_SPEED.url)
-    second_entity_id = get_entity_id(entity_registry, LOW_SPEED_OTHER.url)
-    first_entry = entity_registry.async_get(first_entity_id)
-    second_entry = entity_registry.async_get(second_entity_id)
-    assert first_entry is not None
-    assert second_entry is not None
-    assert first_entry.unique_id != second_entry.unique_id
-    assert hass.states.get(first_entity_id)
-    assert hass.states.get(second_entity_id)
-
-
-async def test_tilt_only_cover_supported_features(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that the pergola only exposes tilt controls."""
-    await setup_overkiz_integration(fixture=PERGOLA.fixture)
-
-    state = get_state(hass, get_entity_id(entity_registry, PERGOLA.url))
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
-    assert ATTR_CURRENT_POSITION not in state.attributes
-    assert state.attributes["supported_features"] == (
-        CoverEntityFeature.OPEN_TILT
-        | CoverEntityFeature.CLOSE_TILT
-        | CoverEntityFeature.STOP_TILT
-        | CoverEntityFeature.SET_TILT_POSITION
-    )
-
-
-async def test_cover_position_update_on_poll(
+async def test_cover_state_updates(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test cover state updates after coordinator refresh."""
+    """Test cover state updates via events and execution tracking."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
     entity_id = get_entity_id(entity_registry, SHUTTER.url)
     assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
+    # Position update via device state change event
     await async_deliver_events(
         hass,
         freezer,
@@ -516,6 +393,7 @@ async def test_cover_position_update_on_poll(
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
     assert state.state == CoverState.OPEN
 
+    # Position update to closed
     await async_deliver_events(
         hass,
         freezer,
@@ -554,191 +432,7 @@ async def test_cover_position_update_on_poll(
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
     assert state.state == CoverState.CLOSED
 
-
-async def test_cover_unavailable(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test cover unavailability propagates to the entity state."""
-    await setup_overkiz_integration(fixture=SHUTTER.fixture)
-
-    entity_id = get_entity_id(entity_registry, SHUTTER.url)
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
-        [build_event(EventName.DEVICE_UNAVAILABLE.value, device_url=SHUTTER.url)],
-    )
-
-    assert get_state(hass, entity_id).state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(
-    ("device", "expected_state", "expected_closed"),
-    [
-        (GARAGE, CoverState.CLOSED, True),
-        (PERGOLA, CoverState.CLOSED, True),
-        (RTS, STATE_UNKNOWN, None),
-    ],
-    ids=["open-closed-unknown", "tilt-fallback", "unknown-rts"],
-)
-async def test_cover_is_closed_fallbacks(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    entity_registry: er.EntityRegistry,
-    device: FixtureDevice,
-    expected_state: str,
-    expected_closed: bool | None,
-) -> None:
-    """Test is_closed fallback order via entity state."""
-    await setup_overkiz_integration(fixture=device.fixture)
-
-    state = get_state(hass, get_entity_id(entity_registry, device.url))
-    assert state.state == expected_state
-    assert state.attributes["is_closed"] is expected_closed
-
-
-@pytest.mark.parametrize(
-    ("device_states", "expected_state"),
-    [
-        (
-            [
-                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
-                {"name": OverkizState.CORE_CLOSURE.value, "type": 1, "value": 75},
-                {
-                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
-                    "type": 1,
-                    "value": 20,
-                },
-            ],
-            CoverState.OPENING,
-        ),
-        (
-            [
-                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
-                {"name": OverkizState.CORE_CLOSURE.value, "type": 1, "value": 20},
-                {
-                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
-                    "type": 1,
-                    "value": 75,
-                },
-            ],
-            CoverState.CLOSING,
-        ),
-    ],
-    ids=["opening", "closing"],
-)
-async def test_vertical_cover_movement_state_fallback(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-    device_states: list[dict[str, Any]],
-    expected_state: CoverState,
-) -> None:
-    """Test moving state fallback for vertical covers."""
-    await setup_overkiz_integration(fixture=SHUTTER.fixture)
-
-    entity_id = get_entity_id(entity_registry, SHUTTER.url)
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
-        [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER.url,
-                device_states=device_states,
-            )
-        ],
-    )
-
-    assert get_state(hass, entity_id).state == expected_state
-
-
-@pytest.mark.parametrize(
-    ("device_states", "expected_state"),
-    [
-        (
-            [
-                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
-                {
-                    "name": OverkizState.CORE_DEPLOYMENT.value,
-                    "type": 1,
-                    "value": 20,
-                },
-                {
-                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
-                    "type": 1,
-                    "value": 80,
-                },
-            ],
-            CoverState.OPENING,
-        ),
-        (
-            [
-                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
-                {
-                    "name": OverkizState.CORE_DEPLOYMENT.value,
-                    "type": 1,
-                    "value": 80,
-                },
-                {
-                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
-                    "type": 1,
-                    "value": 20,
-                },
-            ],
-            CoverState.CLOSING,
-        ),
-    ],
-    ids=["opening", "closing"],
-)
-async def test_awning_movement_state_fallback(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-    device_states: list[dict[str, Any]],
-    expected_state: CoverState,
-) -> None:
-    """Test moving state fallback for awnings."""
-    await setup_overkiz_integration(fixture=AWNING.fixture)
-
-    entity_id = get_entity_id(entity_registry, AWNING.url)
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
-        [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
-                device_url=AWNING.url,
-                device_states=device_states,
-            )
-        ],
-    )
-
-    assert get_state(hass, entity_id).state == expected_state
-
-
-async def test_execution_tracking_sets_opening_state(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test execution tracking keeps the cover opening until completion."""
-    await setup_overkiz_integration(fixture=SHUTTER.fixture)
-    mock_client.execute_command.reset_mock()
-
-    entity_id = get_entity_id(entity_registry, SHUTTER.url)
+    # Execution tracking: state stays OPENING until execution completes
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -796,8 +490,142 @@ async def test_execution_tracking_sets_opening_state(
             )
         ],
     )
-
     assert get_state(hass, entity_id).state == CoverState.OPEN
+
+    # Unavailability propagates to entity state
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [build_event(EventName.DEVICE_UNAVAILABLE.value, device_url=SHUTTER.url)],
+    )
+    assert get_state(hass, entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("device_states", "expected_state"),
+    [
+        (
+            [
+                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
+                {"name": OverkizState.CORE_CLOSURE.value, "type": 1, "value": 75},
+                {
+                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
+                    "type": 1,
+                    "value": 20,
+                },
+            ],
+            CoverState.OPENING,
+        ),
+        (
+            [
+                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
+                {"name": OverkizState.CORE_CLOSURE.value, "type": 1, "value": 20},
+                {
+                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
+                    "type": 1,
+                    "value": 75,
+                },
+            ],
+            CoverState.CLOSING,
+        ),
+    ],
+    ids=["opening", "closing"],
+)
+async def test_vertical_cover_moving_direction(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    device_states: list[dict[str, Any]],
+    expected_state: CoverState,
+) -> None:
+    """Test moving direction detection for vertical covers based on current vs target position."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    entity_id = get_entity_id(entity_registry, SHUTTER.url)
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=SHUTTER.url,
+                device_states=device_states,
+            )
+        ],
+    )
+
+    assert get_state(hass, entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("device_states", "expected_state"),
+    [
+        (
+            [
+                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
+                {
+                    "name": OverkizState.CORE_DEPLOYMENT.value,
+                    "type": 1,
+                    "value": 20,
+                },
+                {
+                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
+                    "type": 1,
+                    "value": 80,
+                },
+            ],
+            CoverState.OPENING,
+        ),
+        (
+            [
+                {"name": OverkizState.CORE_MOVING.value, "type": 6, "value": True},
+                {
+                    "name": OverkizState.CORE_DEPLOYMENT.value,
+                    "type": 1,
+                    "value": 80,
+                },
+                {
+                    "name": OverkizState.CORE_TARGET_CLOSURE.value,
+                    "type": 1,
+                    "value": 20,
+                },
+            ],
+            CoverState.CLOSING,
+        ),
+    ],
+    ids=["opening", "closing"],
+)
+async def test_awning_moving_direction(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    device_states: list[dict[str, Any]],
+    expected_state: CoverState,
+) -> None:
+    """Test moving direction detection for awnings based on current vs target position."""
+    await setup_overkiz_integration(fixture=AWNING.fixture)
+
+    entity_id = get_entity_id(entity_registry, AWNING.url)
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            build_event(
+                EventName.DEVICE_STATE_CHANGED.value,
+                device_url=AWNING.url,
+                device_states=device_states,
+            )
+        ],
+    )
+
+    assert get_state(hass, entity_id).state == expected_state
 
 
 async def test_awning_direct_position_mapping(

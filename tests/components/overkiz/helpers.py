@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -54,9 +55,10 @@ async def async_deliver_events(
     freezer: FrozenDateTimeFactory,
     mock_client: MockOverkizClient,
     *event_batches: list[Event],
+    update_interval: timedelta = UPDATE_INTERVAL,
 ) -> None:
     """Queue event batches and advance time to trigger a coordinator refresh."""
     mock_client.queue_events(*event_batches)
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(update_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

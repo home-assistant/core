@@ -10,7 +10,6 @@ from pyoverkiz.models import Event, OverkizServer, Setup
 import pytest
 
 from homeassistant.components.overkiz.const import DOMAIN
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import DEFAULT_SETUP_FIXTURE, load_setup_fixture
@@ -127,7 +126,6 @@ def setup_overkiz_integration(
     async def _setup(
         *,
         fixture: str = DEFAULT_SETUP_FIXTURE,
-        platforms: list[Platform] | None = None,
     ) -> MockConfigEntry:
         mock_config_entry.add_to_hass(hass)
 
@@ -143,12 +141,7 @@ def setup_overkiz_integration(
                 return_value=mock_client,
             ),
         ):
-            if platforms is None:
-                await hass.config_entries.async_setup(mock_config_entry.entry_id)
-            else:
-                with patch("homeassistant.components.overkiz.PLATFORMS", platforms):
-                    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
+            await hass.config_entries.async_setup(mock_config_entry.entry_id)
             await hass.async_block_till_done()
 
         return mock_config_entry
