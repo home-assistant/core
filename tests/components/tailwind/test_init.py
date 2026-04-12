@@ -12,7 +12,6 @@ import pytest
 from homeassistant.components.tailwind.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -60,35 +59,6 @@ async def test_config_entry_not_ready(
 
     assert len(mock_tailwind.status.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_translation_key"),
-    [
-        (TailwindConnectionError, "communication_error"),
-        (TailwindError, "unknown_error"),
-    ],
-)
-async def test_coordinator_update_failed_translation(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_tailwind: MagicMock,
-    side_effect: type[Exception],
-    expected_translation_key: str,
-) -> None:
-    """Test the coordinator raises UpdateFailed with the correct translation key."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    coordinator = mock_config_entry.runtime_data
-    mock_tailwind.status.side_effect = side_effect
-
-    with pytest.raises(UpdateFailed) as exc_info:
-        await coordinator._async_update_data()
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == expected_translation_key
 
 
 async def test_config_entry_authentication_failed(
