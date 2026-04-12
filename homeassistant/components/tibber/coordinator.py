@@ -397,10 +397,6 @@ class TibberFetchPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData
 
         return {}
 
-    async def async_fetch_price_data(self) -> dict[str, TibberHomeData]:
-        """Fetch latest price data for active homes."""
-        return await self._async_update_data()
-
 
 class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
     """Fetch and cache Tibber Data API device capabilities."""

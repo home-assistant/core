@@ -45,6 +45,7 @@ class TibberRuntimeData:
     session: OAuth2Session
     data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
     data_coordinator: TibberDataCoordinator | None = field(default=None)
+    price_fetch_coordinator: TibberFetchPriceCoordinator | None = field(default=None)
     price_coordinator: TibberPriceCoordinator | None = field(default=None)
     _client: tibber.Tibber | None = None
 
@@ -133,6 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
 
     if tibber_connection.get_homes(only_active=True):
         price_fetch_coordinator = TibberFetchPriceCoordinator(hass, entry)
+        entry.runtime_data.price_fetch_coordinator = price_fetch_coordinator
         await price_fetch_coordinator.async_config_entry_first_refresh()
 
         price_coordinator = TibberPriceCoordinator(hass, entry)
