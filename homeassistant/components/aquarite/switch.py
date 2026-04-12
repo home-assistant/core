@@ -52,8 +52,7 @@ async def async_setup_entry(
         for config in SWITCH_DEFINITIONS
     ]
 
-    # HEAT mode "Climat" toggle (visible under the HEAT slider position in
-    # the Hayward app).
+    # HEAT mode "Climat" toggle
     if dataservice.get_value("filtration.hasHeat"):
         entities.append(
             AquariteSwitchEntity(
@@ -64,9 +63,7 @@ async def async_setup_entry(
             )
         )
 
-    # SMART mode "Antigel" (freeze protection) toggle. Replaces the read-only
-    # binary sensor that previously exposed `filtration.smart.freeze` —
-    # see PR description for the breaking-change note.
+    # SMART mode "Antigel" (freeze protection) toggle.
     if dataservice.get_value("filtration.hasSmart"):
         entities.append(
             AquariteSwitchEntity(
