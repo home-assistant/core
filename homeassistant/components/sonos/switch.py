@@ -313,6 +313,17 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
             self.speaker.tv_autoplay = enable
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
+            return
+        # Refresh ungroup state: the device may change it as a side effect
+        # (e.g. disabling TV autoplay automatically disables ungroup on autoplay).
+        try:
+            result = self.soco.deviceProperties.GetAutoplayLinkedZones(
+                [("Source", "TV")]
+            )
+            self.speaker.tv_ungroup_autoplay = result.get("IncludeLinkedZones") == "0"
+        except SoCoUPnPException:
+            pass
+        self.speaker.write_entity_states()
 
 
 class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
