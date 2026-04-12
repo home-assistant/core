@@ -6,6 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/discord",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "loggers": ["discord"],
-  "requirements": ["nextcord==3.1.0"]
+  "loggers": ["nextcord"],
+  "quality_scale": "silver",
+  "requirements": ["nextcord==3.1.1"]
 }

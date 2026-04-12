@@ -1,97 +1,129 @@
-"""Test Discord notify."""
+"""Test the Discord notify entity."""
 
-import logging
+from unittest.mock import AsyncMock, MagicMock
 
+import nextcord
 import pytest
 
-from homeassistant.components.discord.notify import DiscordNotificationService
+from homeassistant.components.notify import (
+    ATTR_MESSAGE,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import CONTENT, MESSAGE, URL_ATTACHMENT
+from . import CHANNEL_NAME
 
-from tests.test_util.aiohttp import AiohttpClientMocker
+# The entity_id is generated from the bot title + channel name.
+# With has_entity_name=True: "Mock Discord Bot General"  → notify.mock_discord_bot_general
+ENTITY_ID = f"notify.mock_discord_bot_{CHANNEL_NAME}"
 
 
-async def test_send_message_without_target_logs_error(
-    discord_notification_service: DiscordNotificationService,
-    discord_aiohttp_mock_factory: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
+async def test_send_message(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
 ) -> None:
-    """Test send message."""
-    discord_aiohttp_mock = discord_aiohttp_mock_factory()
-    with caplog.at_level(
-        logging.ERROR, logger="homeassistant.components.discord.notify"
-    ):
-        await discord_notification_service.async_send_message(MESSAGE)
-    assert "No target specified" in caplog.text
-    assert discord_aiohttp_mock.call_count == 0
-
-
-async def test_get_file_from_url(
-    discord_notification_service: DiscordNotificationService,
-    discord_aiohttp_mock_factory: AiohttpClientMocker,
-) -> None:
-    """Test getting a file from a URL."""
-    headers = {"Content-Length": str(len(CONTENT))}
-    discord_aiohttp_mock = discord_aiohttp_mock_factory(headers)
-    result = await discord_notification_service.async_get_file_from_url(
-        URL_ATTACHMENT, True, len(CONTENT)
+    """Test sending a basic text message to a Discord channel."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MESSAGE: "Hello Discord!",
+        },
+        blocking=True,
     )
 
-    assert discord_aiohttp_mock.call_count == 1
-    assert result == bytearray(CONTENT)
+    mock_channel.send.assert_called_once_with("Hello Discord!")
 
 
-async def test_get_file_from_url_not_on_allowlist(
-    discord_notification_service: DiscordNotificationService,
-    caplog: pytest.LogCaptureFixture,
+async def test_send_message_with_title(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
 ) -> None:
-    """Test getting file from URL that isn't on the allowlist."""
-    url = "http://dodgyurl.com"
-    with caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.discord.notify"
-    ):
-        result = await discord_notification_service.async_get_file_from_url(
-            url, True, len(CONTENT)
-        )
+    """Test that a title is prepended in bold to the message."""
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Alert",
+        },
+        blocking=True,
+    )
 
-    assert f"URL not allowed: {url}" in caplog.text
-    assert result is None
+    mock_channel.send.assert_called_once_with("**Alert**\nHello")
 
 
-async def test_get_file_from_url_with_large_attachment(
-    discord_notification_service: DiscordNotificationService,
-    discord_aiohttp_mock_factory: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
+async def test_send_message_channel_not_found(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
 ) -> None:
-    """Test getting file from URL with large attachment (per Content-Length header) throws error."""
-    headers = {"Content-Length": str(len(CONTENT) + 1)}
-    discord_aiohttp_mock = discord_aiohttp_mock_factory(headers)
-    with caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.discord.notify"
-    ):
-        result = await discord_notification_service.async_get_file_from_url(
-            URL_ATTACHMENT, True, len(CONTENT)
+    """Test that a HomeAssistantError is raised when the channel is not found."""
+    mock_discord_bot.fetch_channel = AsyncMock(
+        side_effect=nextcord.NotFound(MagicMock(), "")
+    )
+    mock_discord_bot.fetch_user = AsyncMock(
+        side_effect=nextcord.NotFound(MagicMock(), "")
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MESSAGE: "test"},
+            blocking=True,
         )
-
-    assert discord_aiohttp_mock.call_count == 1
-    assert "Attachment too large (Content-Length reports" in caplog.text
-    assert result is None
+    assert exc_info.value.translation_key == "channel_not_found"
 
 
-async def test_get_file_from_url_with_large_attachment_no_header(
-    discord_notification_service: DiscordNotificationService,
-    discord_aiohttp_mock_factory: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
+async def test_send_message_falls_back_to_dm(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
 ) -> None:
-    """Test getting file from URL with large attachment (per content length) throws error."""
-    discord_aiohttp_mock = discord_aiohttp_mock_factory()
-    with caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.discord.notify"
-    ):
-        result = await discord_notification_service.async_get_file_from_url(
-            URL_ATTACHMENT, True, len(CONTENT) - 1
-        )
+    """Test that an unknown channel ID falls back to a DM user lookup."""
+    mock_discord_bot.fetch_channel = AsyncMock(
+        side_effect=nextcord.NotFound(MagicMock(), "")
+    )
+    mock_discord_bot.fetch_user = AsyncMock(return_value=mock_channel)
 
-    assert discord_aiohttp_mock.call_count == 1
-    assert "Attachment too large (Stream reports" in caplog.text
-    assert result is None
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MESSAGE: "DM!"},
+        blocking=True,
+    )
+
+    mock_channel.send.assert_called_once()
+
+
+async def test_send_message_http_error_raises(
+    hass: HomeAssistant,
+    setup_discord: None,
+    mock_discord_bot: MagicMock,
+    mock_channel: MagicMock,
+) -> None:
+    """Test that an HTTP error during send raises HomeAssistantError."""
+    mock_channel.send = AsyncMock(
+        side_effect=nextcord.HTTPException(MagicMock(), "rate limited")
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MESSAGE: "oops"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "send_message_failed"
