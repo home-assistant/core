@@ -14,9 +14,9 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
+    SERVICE_BREAKS_IN_HA_VERSION,
     EvoService,
 )
-from homeassistant.components.evohome.services import SERVICE_BREAKS_IN_HA_VERSION
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError

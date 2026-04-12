@@ -27,6 +27,9 @@ ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 
 ATTR_SETPOINT: Final = "setpoint"
 
+# Support for untargeted service calls to controllers is being deprecated
+SERVICE_BREAKS_IN_HA_VERSION: Final = "2026.7.0"
+
 
 @unique
 class EvoService(StrEnum):

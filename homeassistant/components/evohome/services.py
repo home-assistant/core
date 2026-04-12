@@ -25,12 +25,16 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
+    DOMAIN,
+    SERVICE_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
 from .helpers import async_create_deprecation_issue_once
-
-# Support for untargeted service calls to controllers is being deprecated
-SERVICE_BREAKS_IN_HA_VERSION: Final = "2026.7.0"
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
