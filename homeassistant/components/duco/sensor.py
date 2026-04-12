@@ -65,7 +65,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda node: node.sensor.rh if node.sensor else None,
-        node_types=(NodeType.BSRH, NodeType.BOX),
+        node_types=(NodeType.BSRH,),
     ),
     DucoSensorEntityDescription(
         key="iaq_rh",
@@ -74,7 +74,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_rh if node.sensor else None,
-        node_types=(NodeType.BSRH, NodeType.BOX),
+        node_types=(NodeType.BSRH,),
     ),
 )
 

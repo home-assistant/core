@@ -50,7 +50,6 @@ async def test_iaq_sensor_entities_disabled_by_default(
     """Test that IAQ sensor entities are disabled by default."""
     for entity_id in (
         "sensor.bathroom_rh_humidity_air_quality_index",
-        "sensor.living_humidity_air_quality_index",
         "sensor.office_co2_co2_air_quality_index",
     ):
         entry = entity_registry.async_get(entity_id)
