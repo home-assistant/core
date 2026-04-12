@@ -83,6 +83,9 @@
     },
     "door_locked_out": {
       "message": "The door is locked out and cannot be operated."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Tailwind device."
     }
   }
 }
