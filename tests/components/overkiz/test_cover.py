@@ -53,9 +53,6 @@ AWNING = FixtureDevice(
 LOW_SPEED = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json", "io://1234-5678-1698/141613"
 )
-LOW_SPEED_OTHER = FixtureDevice(
-    "setup/cloud_nexity_rail_din_europe.json", "io://1234-5678-1698/4080031"
-)
 PERGOLA = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json", "io://1234-5678-3293/7614902"
 )
