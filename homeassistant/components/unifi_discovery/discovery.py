@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_INTERVAL = timedelta(minutes=60)
 
-DATA_DISCOVERY_STARTED: HassKey[bool] = HassKey(f"{DOMAIN}_started")
+DATA_DISCOVERY_STARTED: HassKey[bool] = HassKey(DOMAIN)
 
 
 @callback
