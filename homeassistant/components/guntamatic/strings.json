@@ -5,7 +5,7 @@
       "not_implemented": "Not Implemented"
     },
     "error": {
-      "bad_data": "Bad data received from heater (No Serial present in output)",
+      "bad_data": "The heater did not provide the required identification information. Verify that the host points to a supported controller and the correct endpoint.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

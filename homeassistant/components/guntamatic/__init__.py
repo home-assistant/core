@@ -9,7 +9,6 @@ from guntamatic.heater import Heater
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import GuntamaticCoordinator
 
@@ -24,12 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = GuntamaticCoordinator(hass, heater, entry)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        raise ConfigEntryNotReady(
-            f"Error while connecting to {entry.data[CONF_HOST]}: {err}"
-        ) from err
+    await coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
