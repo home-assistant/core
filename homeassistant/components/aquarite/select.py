@@ -7,6 +7,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AquariteConfigEntry
+from .const import DOMAIN
 from .coordinator import AquariteDataUpdateCoordinator
 from .entity import AquariteEntity
 
@@ -86,4 +87,8 @@ class AquariteSelectEntity(AquariteEntity, SelectEntity):
                 self._pool_id, self._value_path, self._options_map.index(option)
             )
         except Exception as err:
-            raise HomeAssistantError(f"Failed to select option: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

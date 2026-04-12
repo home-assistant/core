@@ -11,6 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AquariteConfigEntry
+from .const import DOMAIN
 from .coordinator import AquariteDataUpdateCoordinator
 from .entity import AquariteEntity
 
@@ -109,11 +110,19 @@ class AquariteSwitchEntity(AquariteEntity, SwitchEntity):
         try:
             await self.coordinator.api.set_value(self._pool_id, self._value_path, 1)
         except Exception as err:
-            raise HomeAssistantError(f"Failed to turn on: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.coordinator.api.set_value(self._pool_id, self._value_path, 0)
         except Exception as err:
-            raise HomeAssistantError(f"Failed to turn off: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

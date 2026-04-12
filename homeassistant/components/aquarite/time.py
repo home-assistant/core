@@ -9,6 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AquariteConfigEntry
+from .const import DOMAIN
 from .coordinator import AquariteDataUpdateCoordinator
 from .entity import AquariteEntity
 
@@ -80,4 +81,8 @@ class AquariteTimeEntity(AquariteEntity, TimeEntity):
                 self._pool_id, self._value_path, seconds,
             )
         except Exception as err:
-            raise HomeAssistantError(f"Failed to set time: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
