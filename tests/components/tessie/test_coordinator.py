@@ -7,14 +7,14 @@ import pytest
 from tesla_fleet_api.exceptions import Forbidden, InvalidToken, MissingToken
 
 from homeassistant.components.tessie import PLATFORMS
-from homeassistant.components.tessie.const import DOMAIN
+from homeassistant.components.tessie.const import DOMAIN, ENERGY_HISTORY_FIELDS
 from homeassistant.components.tessie.coordinator import (
     TESSIE_ENERGY_HISTORY_INTERVAL,
     TESSIE_FLEET_API_SYNC_INTERVAL,
     TESSIE_SYNC_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -206,3 +206,25 @@ async def test_coordinator_energy_history_invalid_data(
     )
     assert hass.states.get("sensor.energy_site_grid_imported").state == state_before
     assert coordinator.last_exception is None
+
+
+async def test_coordinator_energy_history_cold_start_invalid_data(
+    hass: HomeAssistant, mock_energy_history, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tests cold-start fallback when the very first energy history fetch has invalid data."""
+
+    mock_energy_history.side_effect = lambda *a, **kw: {"response": {}}
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    coordinator = entry.runtime_data.energysites[0].history_coordinator
+    assert coordinator is not None
+
+    # Coordinator should not have raised an exception
+    assert coordinator.last_exception is None
+
+    # All energy history fields should be None in the fallback output
+    for key in ENERGY_HISTORY_FIELDS:
+        assert coordinator.data[key] is None
+    assert "_period_start" in coordinator.data
+
+    # Sensor should be unknown (None native value), not unavailable
+    assert hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNKNOWN
