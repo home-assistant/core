@@ -335,8 +335,7 @@
         "name": "Offset"
       },
       "temperature_scale": {
-        "name": "Scale factor",
-        "unit_of_measurement": "factor"
+        "name": "Scale factor"
       },
       "transfer_switch_generator_current_limit": {
         "name": "Generator AC current limit"
