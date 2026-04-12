@@ -377,7 +377,7 @@ async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
     assert mock_config.data.get("password") == PASSWORD
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_setup_entry.assert_called_once()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
