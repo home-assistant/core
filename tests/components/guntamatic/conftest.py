@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.guntamatic_sensor.const import DOMAIN
+from homeassistant.components.guntamatic.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -26,7 +26,7 @@ MOCK_DATA = {
 def mock_heater() -> Generator[MagicMock]:
     """Mock the Heater class."""
     with patch(
-        "homeassistant.components.guntamatic_sensor.Heater",
+        "homeassistant.components.guntamatic.Heater",
         autospec=True,
     ) as mock:
         mock.return_value.parse_data = MagicMock(return_value=MOCK_DATA)
@@ -47,7 +47,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.guntamatic_sensor.async_setup_entry",
+        "homeassistant.components.guntamatic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry

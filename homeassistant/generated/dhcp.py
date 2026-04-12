@@ -294,7 +294,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "30AEA4*",
     },
     {
-        "domain": "guntamatic_sensor",
+        "domain": "guntamatic",
         "hostname": "kessel*",
         "macaddress": "0024BD*",
     },

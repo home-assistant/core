@@ -1,6 +1,6 @@
 {
-  "domain": "guntamatic_sensor",
-  "name": "guntamatic",
+  "domain": "guntamatic",
+  "name": "Guntamatic",
   "codeowners": ["@JensTimmerman"],
   "config_flow": true,
   "dependencies": [],
@@ -11,8 +11,7 @@
     }
   ],
 
-  "documentation": "https://www.home-assistant.io/integrations/guntamatic_sensor",
-  "homekit": {},
+  "documentation": "https://www.home-assistant.io/integrations/guntamatic",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",

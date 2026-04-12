@@ -282,7 +282,7 @@ FLOWS = {
         "green_planet_energy",
         "growatt_server",
         "guardian",
-        "guntamatic_sensor",
+        "guntamatic",
         "habitica",
         "hanna",
         "harmony",
