@@ -12,10 +12,7 @@ import pytest
 
 from .conftest import MOCK_POOL_ID
 
-# Skip the entire module if Home Assistant is not installed
-pytest.importorskip("homeassistant")
-
-from custom_components.aquarite.coordinator import AquariteDataUpdateCoordinator  # noqa: E402
+from custom_components.aquarite.coordinator import AquariteDataUpdateCoordinator
 
 
 @pytest.fixture
