@@ -49,8 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
 
         coordinator = AquariteDataUpdateCoordinator(hass, entry, auth, api, pool_id)
 
-        # Initial data fetch and subscription
-        coordinator.async_set_updated_data(await api.fetch_pool_data(pool_id))
+        # Initial coordinator refresh and subscription
+        await coordinator.async_config_entry_first_refresh()
         await coordinator.subscribe()
 
         # Start background tasks (token refresh and health check)
