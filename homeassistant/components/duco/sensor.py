@@ -40,7 +40,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         value_fn=lambda node: (
             node.ventilation.state.lower() if node.ventilation else None
         ),
-        node_types=(NodeType.BOX, NodeType.UCCO2, NodeType.BSRH),
+        node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
         key="co2",
