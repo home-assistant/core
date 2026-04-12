@@ -16,11 +16,20 @@ from .const import DOMAIN
 class HiveEntity(Entity):
     """Initiate Hive Base Class."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
-        self._attr_name = self.device["haName"]
+        ha_name: str = hive_device["haName"]
+        device_name: str = hive_device["device_name"]
+        if ha_name == device_name:
+            self._attr_name = None
+        elif ha_name.startswith(device_name + " "):
+            self._attr_name = ha_name[len(device_name) + 1 :]
+        else:
+            self._attr_name = ha_name
         self._attr_unique_id = f"{self.device['hiveID']}-{self.device['hiveType']}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device["device_id"])},
