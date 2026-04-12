@@ -20,7 +20,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
-    issue_registry as ir,
     service,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -28,6 +27,7 @@ from homeassistant.helpers.service import verify_domain_control
 
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
+from .helpers import async_create_deprecation_issue_once
 
 # Support for untargeted service calls to controllers is being deprecated
 BREAKS_IN_HA_VERSION: Final = "2026.7.0"
@@ -84,24 +84,6 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
     )
 
 
-@callback
-def _create_legacy_ctl_service_issue(hass: HomeAssistant, service_name: str) -> None:
-    """Create a repair issue for the deprecated untargeted controller service."""
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_{service_name}_service_call",
-        breaks_in_ha_version=BREAKS_IN_HA_VERSION,
-        is_fixable=False,
-        is_persistent=True,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_controller_service_call",
-        translation_placeholders={"service": service_name},
-    )
-
-
 def _resolve_ctl_unique_id(
     hass: HomeAssistant,
     call: ServiceCall,
@@ -113,7 +95,13 @@ def _resolve_ctl_unique_id(
     """
 
     if (entity_id := call.data.get(ATTR_ENTITY_ID)) is None:
-        _create_legacy_ctl_service_issue(hass, call.service)
+        async_create_deprecation_issue_once(
+            hass,
+            f"deprecated_{call.service}_service_call",
+            BREAKS_IN_HA_VERSION,
+            translation_key="deprecated_controller_service_call",
+            translation_placeholders={"service": call.service},
+        )
         return tcs_id
 
     entry = er.async_get(hass).async_get(entity_id)
