@@ -13,19 +13,18 @@ import pytest
 from .conftest import MOCK_PASSWORD, MOCK_POOL_ID, MOCK_POOL_NAME, MOCK_USERNAME
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
-from custom_components.aquarite.const import (
+from homeassistant.components.aquarite.const import (
     CONF_HEALTH_CHECK_INTERVAL,
     DEFAULT_HEALTH_CHECK_INTERVAL,
     DOMAIN,
 )
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-PATCH_AUTH = "custom_components.aquarite.config_flow.AquariteAuth"
-PATCH_CLIENT = "custom_components.aquarite.config_flow.AquariteClient"
-PATCH_SETUP = "custom_components.aquarite.async_setup_entry"
+PATCH_AUTH = "homeassistant.components.aquarite.config_flow.AquariteAuth"
+PATCH_CLIENT = "homeassistant.components.aquarite.config_flow.AquariteClient"
+PATCH_SETUP = "homeassistant.components.aquarite.async_setup_entry"
 
 
 @pytest.fixture
