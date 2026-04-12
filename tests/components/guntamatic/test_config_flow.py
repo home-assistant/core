@@ -167,5 +167,31 @@ async def test_dhcp_discovery(
         )
         await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.FORM
+
+
+async def test_dhcp_discovery_confirm(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_heater: MagicMock
+) -> None:
+    """Test DHCP discovery confirmation."""
+    with patch(
+        "homeassistant.components.guntamatic.config_flow.Heater.parse_data",
+        return_value=mock_heater,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.1.1.1",
+                hostname="kessel0001",
+                macaddress="0024bd123456",
+            ),
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+        await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "1.1.1.1"}

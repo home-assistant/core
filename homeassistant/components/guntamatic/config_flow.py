@@ -28,17 +28,17 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for guntamatic."""
 
     VERSION = 1
-    _discovered_host: str | None = None
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        await self.async_set_unique_id(discovery_info.macaddress)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
-
-        self._discovered_host = discovery_info.ip
-        return await self.async_step_user()
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, {CONF_HOST: discovery_info.ip}
+            ),
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -46,8 +46,6 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        if user_input is None and self._discovered_host is not None:
-            user_input = {CONF_HOST: self._discovered_host}
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:

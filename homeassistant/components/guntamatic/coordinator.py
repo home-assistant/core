@@ -34,9 +34,9 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
 
         Expected return format:
             {
-                "Boiler Temperature": [68.5, "°C"],
-                "Flue Temperature": [115.2, "°C"],
-                "Power Output": [12.4, "kW"],
+                "Boiler Temperature": ["68.5", "°C"],
+                "Flue Temperature": ["115.2", "°C"],
+                "Power Output": ["12.4", "kW"],
             }
 
         """
