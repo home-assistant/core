@@ -832,6 +832,7 @@ async def test_set_target_temp_with_hvac_mode_heat(hass: HomeAssistant) -> None:
                 "heater": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "initial_hvac_mode": HVACMode.OFF,
+                "target_temp": 20,
             }
         },
     )
@@ -841,6 +842,98 @@ async def test_set_target_temp_with_hvac_mode_heat(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY)
     assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
     assert state.state == HVACMode.HEAT
+
+
+async def test_set_target_temp_with_hvac_mode_off(hass: HomeAssistant) -> None:
+    """Test setting a temperature while switching the climate mode to OFF."""
+    hass.config.units = METRIC_SYSTEM
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": HVACMode.HEAT,
+                "target_temp": 20,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.OFF)
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
+    assert state.state == HVACMode.OFF
+
+
+async def test_set_target_temp_with_invalid_hvac_mode_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test that invalid hvac_mode is rejected from set_temperature."""
+    hass.config.units = METRIC_SYSTEM
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": HVACMode.OFF,
+                "target_temp": 20,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await common.async_set_temperature(
+            hass, temperature=30, hvac_mode=HVACMode.COOL
+        )
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 20.0
+    assert state.state == HVACMode.OFF
+
+
+async def test_set_target_temp_with_hvac_ac(
+    hass: HomeAssistant,
+) -> None:
+    """Test that invalid hvac_mode is rejected from set_temperature."""
+    hass.config.units = METRIC_SYSTEM
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": HVACMode.OFF,
+                "target_temp": 20,
+                "ac_mode": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.COOL)
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
+    assert state.state == HVACMode.COOL
 
 
 async def _setup_thermostat_with_min_cycle_duration(
