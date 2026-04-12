@@ -32,20 +32,6 @@ from . import (
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_ble_device
 
-
-class MockGattCharacteristics(dict[uuid.UUID, bytearray]):
-    """Dict-like GATT store with helper update methods for tests."""
-
-    def update_characteristic(
-        self,
-        characteristic: BleakGATTCharacteristic | int | str | uuid.UUID,
-        value: Any,
-    ) -> None:
-        """Update a characteristic and auto-convert value to bytearray."""
-        normalized = _normalize_characteristic(characteristic)
-        self[normalized] = bytearray(value)
-
-
 # CometBlue device specific mocks and fixtures
 
 FAKE_BLE_DEVICE = generate_ble_device(
@@ -92,7 +78,7 @@ def _normalize_characteristic(
 class MockCometBlueBleakClient(CometBlueBleakClient):
     """Mock BleakClient."""
 
-    characteristics: MockGattCharacteristics = MockGattCharacteristics()
+    characteristics: dict[uuid.UUID, bytearray] = {}
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock init."""
@@ -150,18 +136,16 @@ class MockCometBlueBleakClient(CometBlueBleakClient):
             for i, byte in enumerate(data):
                 if byte == 128:
                     data[i] = self.characteristics[char_specifier][i]
-        self.characteristics.update_characteristic(char_specifier, data)
+        self.characteristics[char_specifier] = data
 
 
 @pytest.fixture
-def mock_gatt_characteristics() -> MockGattCharacteristics:
+def mock_gatt_characteristics() -> dict[uuid.UUID, bytearray]:
     """Provide a mutable per-test GATT characteristic store."""
-    return MockGattCharacteristics(
-        {
-            characteristic: bytearray(value)
-            for characteristic, value in FIXTURE_DEFAULT_CHARACTERISTICS.items()
-        }
-    )
+    return {
+        characteristic: bytearray(value)
+        for characteristic, value in FIXTURE_DEFAULT_CHARACTERISTICS.items()
+    }
 
 
 @pytest.fixture
@@ -193,7 +177,7 @@ def mock_ble_device() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def mock_bluetooth(
     enable_bluetooth: None,
-    mock_gatt_characteristics: MockGattCharacteristics,
+    mock_gatt_characteristics: dict[uuid.UUID, bytearray],
 ) -> Generator[None]:
     """Auto mock bluetooth."""
 
@@ -210,7 +194,7 @@ def mock_bluetooth(
         patch("eurotronic_cometblue_ha.CometBlueBleakClient", MockCometBlueBleakClient),
     ):
         yield
-    MockCometBlueBleakClient.characteristics = MockGattCharacteristics()
+    MockCometBlueBleakClient.characteristics = {}
 
 
 # Home Assistant related fixtures

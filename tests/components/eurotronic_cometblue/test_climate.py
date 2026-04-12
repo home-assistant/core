@@ -1,6 +1,7 @@
 """Test the eurotronic_cometblue climate platform."""
 
 from unittest.mock import patch
+import uuid
 
 from eurotronic_cometblue_ha import const as cometblue_const
 import pytest
@@ -28,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockGattCharacteristics, setup_with_selected_platforms
+from .conftest import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -60,15 +61,14 @@ async def test_climate_state(
 async def test_climate_hvac_and_preset_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gatt_characteristics: MockGattCharacteristics,
+    mock_gatt_characteristics: dict[uuid.UUID, bytearray],
     temperature_values: list[int],
     expected_hvac_mode: HVACMode,
     expected_preset: str,
 ) -> None:
     """Test climate state mapping from device temperatures."""
-    mock_gatt_characteristics.update_characteristic(
-        cometblue_const.CHARACTERISTIC_TEMPERATURE,
-        temperature_values,
+    mock_gatt_characteristics[cometblue_const.CHARACTERISTIC_TEMPERATURE] = bytearray(
+        temperature_values
     )
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -103,18 +103,16 @@ async def test_set_temperature(
 async def test_climate_preset_away_active(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gatt_characteristics: MockGattCharacteristics,
+    mock_gatt_characteristics: dict[uuid.UUID, bytearray],
 ) -> None:
     """Test away preset detection from holiday data."""
     # Holiday active if start hour >= 128 and end hour < 128
-    mock_gatt_characteristics.update_characteristic(
-        cometblue_const.CHARACTERISTIC_HOLIDAY_1,
-        [128, 1, 1, 26, 10, 2, 1, 26, 34],
+    mock_gatt_characteristics[cometblue_const.CHARACTERISTIC_HOLIDAY_1] = bytearray(
+        [128, 1, 1, 26, 10, 2, 1, 26, 34]
     )
     # Current target temperature must match holiday temperature for away preset to be active
-    mock_gatt_characteristics.update_characteristic(
-        cometblue_const.CHARACTERISTIC_TEMPERATURE,
-        [47, 34, 34, 42, 0, 4, 10],
+    mock_gatt_characteristics[cometblue_const.CHARACTERISTIC_TEMPERATURE] = bytearray(
+        [47, 34, 34, 42, 0, 4, 10]
     )
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
