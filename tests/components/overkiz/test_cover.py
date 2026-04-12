@@ -142,12 +142,24 @@ async def test_cover_entities_snapshot(
     ("device", "service", "command_name", "expected_state"),
     [
         (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        # Awning reports CLOSED after deploy — known integration bug to fix in follow-up
-        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.CLOSED),
+        pytest.param(
+            AWNING,
+            SERVICE_OPEN_COVER,
+            "deploy",
+            CoverState.OPENING,
+            marks=pytest.mark.xfail(reason="Awning deploy not mapped to opening state"),
+        ),
         (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        # Awning reports CLOSED after undeploy — known integration bug to fix in follow-up
-        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSED),
+        pytest.param(
+            AWNING,
+            SERVICE_CLOSE_COVER,
+            "undeploy",
+            CoverState.CLOSING,
+            marks=pytest.mark.xfail(
+                reason="Awning undeploy not mapped to closing state"
+            ),
+        ),
         (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", None),
         (AWNING, SERVICE_STOP_COVER, "stop", None),
