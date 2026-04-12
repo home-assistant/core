@@ -84,7 +84,7 @@ async def test_set_pool_time_to_now(
     coordinator: AquariteDataUpdateCoordinator,
 ) -> None:
     """Test set_pool_time_to_now writes a local timestamp."""
-    with patch("custom_components.aquarite.coordinator.dt_util") as mock_dt:
+    with patch("homeassistant.components.aquarite.coordinator.dt_util") as mock_dt:
         tz = timezone(timedelta(hours=2))
         fake_now = datetime(2026, 4, 12, 14, 30, 0, tzinfo=tz)
         mock_dt.now.return_value = fake_now

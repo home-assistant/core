@@ -26,17 +26,17 @@ async def async_setup_entry(
 
     entities: list[AquariteTimeEntity] = []
 
-    for name, translation_key, path in (
-        ("Filtration Interval 1 From", "filtration_interval_1_from", "filtration.interval1.from"),
-        ("Filtration Interval 1 To", "filtration_interval_1_to", "filtration.interval1.to"),
-        ("Filtration Interval 2 From", "filtration_interval_2_from", "filtration.interval2.from"),
-        ("Filtration Interval 2 To", "filtration_interval_2_to", "filtration.interval2.to"),
-        ("Filtration Interval 3 From", "filtration_interval_3_from", "filtration.interval3.from"),
-        ("Filtration Interval 3 To", "filtration_interval_3_to", "filtration.interval3.to"),
+    for translation_key, path in (
+        ("filtration_interval_1_from", "filtration.interval1.from"),
+        ("filtration_interval_1_to", "filtration.interval1.to"),
+        ("filtration_interval_2_from", "filtration.interval2.from"),
+        ("filtration_interval_2_to", "filtration.interval2.to"),
+        ("filtration_interval_3_from", "filtration.interval3.from"),
+        ("filtration_interval_3_to", "filtration.interval3.to"),
     ):
         entities.append(
             AquariteTimeEntity(
-                dataservice, pool_id, pool_name, name, translation_key, path,
+                dataservice, pool_id, pool_name, translation_key, path,
             )
         )
 
@@ -51,7 +51,6 @@ class AquariteTimeEntity(AquariteEntity, TimeEntity):
         dataservice: AquariteDataUpdateCoordinator,
         pool_id: str,
         pool_name: str,
-        name: str,
         translation_key: str,
         value_path: str,
     ) -> None:
@@ -59,7 +58,7 @@ class AquariteTimeEntity(AquariteEntity, TimeEntity):
         super().__init__(dataservice, pool_id, pool_name)
         self._value_path = value_path
         self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(name)
+        self._attr_unique_id = self.build_unique_id(translation_key)
 
     @property
     def native_value(self) -> datetime.time | None:

@@ -28,7 +28,7 @@ async def async_setup_entry(
     pool_id, pool_name = dataservice.pool_id, entry.title
 
     async_add_entities([
-        AquariteLightEntity(dataservice, pool_id, pool_name, "Light", "pool_light", "light.status")
+        AquariteLightEntity(dataservice, pool_id, pool_name, "pool_light", "light.status")
     ])
 
 
@@ -43,7 +43,6 @@ class AquariteLightEntity(AquariteEntity, LightEntity):
         dataservice: AquariteDataUpdateCoordinator,
         pool_id: str,
         pool_name: str,
-        name: str,
         translation_key: str,
         value_path: str,
     ) -> None:
@@ -51,7 +50,7 @@ class AquariteLightEntity(AquariteEntity, LightEntity):
         super().__init__(dataservice, pool_id, pool_name)
         self._value_path = value_path
         self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(name)
+        self._attr_unique_id = self.build_unique_id(translation_key)
 
         # Reconciliation logic
         self._target_state: bool | None = None
