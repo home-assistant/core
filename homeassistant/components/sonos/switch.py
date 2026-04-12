@@ -22,8 +22,6 @@ from .const import (
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
     DOMAIN,
     MODEL_SONOS_ARC_ULTRA,
-    MODELS_LINEIN_AND_TV,
-    MODELS_TV_ONLY,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
@@ -168,38 +166,35 @@ async def async_setup_entry(
                 )
             )
 
-        model = speaker.model_name.split()[-1].upper()
-        if model in (*MODELS_TV_ONLY, *MODELS_LINEIN_AND_TV):
-            initial_autoplay, initial_ungroup = await hass.async_add_executor_job(
-                lambda: (
-                    _get_tv_autoplay_state(speaker),
-                    _get_tv_ungroup_autoplay_state(speaker),
+        initial_autoplay = await hass.async_add_executor_job(
+            _get_tv_autoplay_state, speaker
+        )
+        if initial_autoplay is not None:
+            speaker.tv_autoplay = initial_autoplay
+            _LOGGER.debug(
+                "Creating %s switch on %s",
+                ATTR_TV_AUTOPLAY,
+                speaker.zone_name,
+            )
+            entities.append(
+                SonosTVAutoplaySwitchEntity(speaker=speaker, config_entry=config_entry)
+            )
+
+        initial_ungroup = await hass.async_add_executor_job(
+            _get_tv_ungroup_autoplay_state, speaker
+        )
+        if initial_ungroup is not None:
+            speaker.tv_ungroup_autoplay = initial_ungroup
+            _LOGGER.debug(
+                "Creating %s switch on %s",
+                ATTR_TV_UNGROUP_AUTOPLAY,
+                speaker.zone_name,
+            )
+            entities.append(
+                SonosTVUngroupAutoplaySwitchEntity(
+                    speaker=speaker, config_entry=config_entry
                 )
             )
-            if initial_autoplay is not None:
-                speaker.tv_autoplay = initial_autoplay
-                _LOGGER.debug(
-                    "Creating %s switch on %s",
-                    ATTR_TV_AUTOPLAY,
-                    speaker.zone_name,
-                )
-                entities.append(
-                    SonosTVAutoplaySwitchEntity(
-                        speaker=speaker, config_entry=config_entry
-                    )
-                )
-            if initial_ungroup is not None:
-                speaker.tv_ungroup_autoplay = initial_ungroup
-                _LOGGER.debug(
-                    "Creating %s switch on %s",
-                    ATTR_TV_UNGROUP_AUTOPLAY,
-                    speaker.zone_name,
-                )
-                entities.append(
-                    SonosTVUngroupAutoplaySwitchEntity(
-                        speaker=speaker, config_entry=config_entry
-                    )
-                )
 
         async_add_entities(entities)
 

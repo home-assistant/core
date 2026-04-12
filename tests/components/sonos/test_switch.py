@@ -2,9 +2,10 @@
 
 from copy import copy
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
@@ -432,10 +433,20 @@ async def test_tv_autoplay_poll_state(
 
 async def test_tv_autoplay_not_created_for_non_ht(
     hass: HomeAssistant,
-    async_autosetup_sonos,
+    async_setup_sonos,
+    soco: MockSoCo,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that TV autoplay switch is not created for non-HT devices."""
+    """Test that TV autoplay switch is not created when device raises SoCoUPnPException.
+
+    Non-HT devices don't support the GetAutoplayRoomUUID action and raise
+    SoCoUPnPException, which is the capability check we rely on.
+    """
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        side_effect=SoCoUPnPException("Not supported", "714", "")
+    )
+    await async_setup_sonos()
+
     entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
     assert entity_id not in entity_registry.entities
 
@@ -543,10 +554,20 @@ async def test_tv_ungroup_autoplay_available_independently_of_tv_autoplay(
 
 async def test_tv_ungroup_autoplay_not_created_for_non_ht(
     hass: HomeAssistant,
-    async_autosetup_sonos,
+    async_setup_sonos,
+    soco: MockSoCo,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that ungroup-on-autoplay switch is not created for non-HT devices."""
+    """Test that ungroup-on-autoplay switch is not created when device raises SoCoUPnPException.
+
+    Non-HT devices don't support the GetAutoplayLinkedZones action and raise
+    SoCoUPnPException, which is the capability check we rely on.
+    """
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        side_effect=SoCoUPnPException("Not supported", "714", "")
+    )
+    await async_setup_sonos()
+
     entity_id = "switch.zone_a_ungroup_on_autoplay"
     assert entity_id not in entity_registry.entities
 
