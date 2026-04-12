@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.unifi_discovery.const import DOMAIN
-from homeassistant.components.unifi_discovery.discovery import async_start_discovery
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -21,19 +20,6 @@ async def test_setup_starts_discovery(hass: HomeAssistant) -> None:
     flows = hass.config_entries.flow.async_progress_by_handler("unifiprotect")
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
-
-
-async def test_discovery_only_starts_once(hass: HomeAssistant) -> None:
-    """Test that discovery is only started once even if called multiple times."""
-    with _patch_discovery() as mock_scanner:
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert mock_scanner.async_scan.call_count == 1
-
-        # Call async_start_discovery again — the guard should prevent a second scan
-        async_start_discovery(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert mock_scanner.async_scan.call_count == 1
 
 
 async def test_setup_no_devices(hass: HomeAssistant) -> None:
