@@ -119,7 +119,10 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 _LOGGER.debug("2FA successful")
                 if self.source == SOURCE_REAUTH:
-                    return await self.async_setup_hive_entry()
+                    device_registered = await self.hive_auth.is_device_registered()
+                    if device_registered:
+                        return await self.async_setup_hive_entry()
+
                 self.device_registration = True
                 return await self.async_step_configuration()
 
