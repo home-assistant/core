@@ -57,7 +57,7 @@ async def async_migrate_entry(
     if entry.version == 1:
         new_data = {**entry.data}
         new_data[CONF_IGNORE_HOSTNAME] = False
-        new_data[CONF_CA_DATA] = ""
+        new_data[CONF_CA_DATA] = None
         hass.config_entries.async_update_entry(entry, data=new_data, version=2)
 
     return True

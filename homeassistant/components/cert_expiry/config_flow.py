@@ -30,7 +30,7 @@ def _iter_pem_certs(pem_data: str) -> list[str]:
     """Split the string into individual certificate blocks."""
 
     pem_data = pem_data.strip()
-    if not pem_data:
+    if not pem_data or pem_data == "":
         return []
     begin_marker = "-----BEGIN CERTIFICATE-----"
     end_marker = "-----END CERTIFICATE-----"
@@ -47,10 +47,6 @@ def _iter_pem_certs(pem_data: str) -> list[str]:
         end += len(end_marker)
         certs.append(pem_data[start:end])
         pos = end
-    # If no separate BEGIN/END markers were found but data is present,
-    # fall back to treating the whole content as a single PEM block.
-    if not certs and pem_data:
-        certs.append(pem_data)
     return certs
 
 
@@ -68,10 +64,14 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: Mapping[str, Any],
     ) -> bool:
         """Test connection to the server and try to get the certificate."""
-        ca_data = user_input.get(CONF_CA_DATA)
+        ca_data = user_input.get(CONF_CA_DATA) or None
         if ca_data:
             try:
-                for pem_block in _iter_pem_certs(ca_data):
+                pem_blocks = _iter_pem_certs(ca_data)
+                if not pem_blocks:
+                    self._errors[CONF_CA_DATA] = "invalid_pem"
+                    return False
+                for pem_block in pem_blocks:
                     ssl.PEM_cert_to_DER_cert(pem_block)
             except ValueError:
                 self._errors[CONF_CA_DATA] = "invalid_pem"
@@ -109,7 +109,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
             ignore_hostname = user_input.get(CONF_IGNORE_HOSTNAME, False)
-            ca_data = user_input[CONF_CA_DATA] or None
+            ca_data = user_input.get(CONF_CA_DATA, None)
 
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
@@ -134,7 +134,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = ""
             user_input[CONF_PORT] = DEFAULT_PORT
             user_input[CONF_IGNORE_HOSTNAME] = False
-            user_input[CONF_CA_DATA] = ""
+            user_input[CONF_CA_DATA] = None
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -147,9 +147,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_IGNORE_HOSTNAME,
                         default=user_input.get(CONF_IGNORE_HOSTNAME, False),
                     ): bool,
-                    vol.Optional(
-                        CONF_CA_DATA, default=user_input.get(CONF_CA_DATA)
-                    ): selector.TextSelector(
+                    vol.Optional(CONF_CA_DATA): selector.TextSelector(
                         selector.TextSelectorConfig(multiline=True)
                     ),
                 }
