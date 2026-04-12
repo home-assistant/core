@@ -33,7 +33,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     AUTH_RETRIES,
@@ -51,10 +50,6 @@ from .utils import async_get_devices_by_type
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
-
-
-# Typed key for per-entry auth retry tracking during setup
-DATA_AUTH_RETRIES: HassKey[dict[str, int]] = HassKey(f"{DOMAIN}_auth_retries")
 
 
 @callback
@@ -91,6 +86,7 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
+        self.auth_retries = 0
         self.last_update_success = False
         self.api = protect
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
