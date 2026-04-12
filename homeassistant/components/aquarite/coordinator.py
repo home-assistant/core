@@ -46,6 +46,10 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
 
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch latest pool data (fallback for manual refresh)."""
+        return await self.api.fetch_pool_data(self.pool_id)
+
     async def subscribe(self) -> None:
         """Subscribe to Firestore real-time updates via the library."""
 
