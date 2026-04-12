@@ -375,7 +375,6 @@ async def test_set_dhw_override_advance(
     """
 
     freezer.move_to("2024-05-10T12:15:00+00:00")
-
     expected_until = datetime(2024, 5, 10, 15, 30, tzinfo=UTC)
 
     # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
