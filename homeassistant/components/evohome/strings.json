@@ -40,7 +40,7 @@
           "name": "Duration"
         },
         "state": {
-          "description": "The DHW state: on or off.",
+          "description": "The DHW state: True (on: heat the water up to the setpoint) or False (off).",
           "name": "State"
         }
       },
