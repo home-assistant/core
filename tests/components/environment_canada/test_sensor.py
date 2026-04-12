@@ -58,19 +58,19 @@ async def test_alert_sensor_xml_fallback_fields(
     hass: HomeAssistant,
     ec_data: dict[str, Any],
 ) -> None:
-    """Test that None-valued fields are omitted from alert attributes.
+    """Test that WFS-only fields absent in XML responses are omitted from attributes.
 
-    Simulates the XML fallback path where only title, date, and a subset of
-    v0.13.0 fields are populated.
+    The XML path populates only a subset of fields (title, date, alertColourLevel,
+    expiryTime, url) and omits WFS-only fields such as text, area, status, etc.
     """
     local_ec_data = copy.deepcopy(ec_data)
     local_ec_data["alerts"]["advisories"]["value"] = []
     local_ec_data["alerts"]["warnings"]["value"] = [
         {
             "title": "Winter Storm Warning",
-            "date": "Tuesday February 25, 2025 at 10:00 UTC",
+            "date": "2025-02-25T10:00:00+00:00",
             "alertColourLevel": "red",
-            "expiryTime": "20250226060000",
+            "expiryTime": "2025-02-26T06:00:00+00:00",
             "url": "https://weather.gc.ca/warnings/report_e.html?on61",
             # WFS-only fields absent (XML fallback)
         }
@@ -90,7 +90,7 @@ async def test_alert_sensor_xml_fallback_fields(
     # Fields present in XML fallback should appear
     assert alert["title"] == "Winter Storm Warning"
     assert alert["color"] == "red"
-    assert alert["expiry"] == "20250226060000"
+    assert alert["expiry"] == "2025-02-26T06:00:00+00:00"
     assert alert["url"] == "https://weather.gc.ca/warnings/report_e.html?on61"
     assert alert["type"] == "warning"
     # WFS-only fields should be absent (not just None)

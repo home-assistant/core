@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from env_canada import ECWeather
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,7 +24,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -238,7 +239,7 @@ def _get_all_alerts(data: ECWeather) -> list[dict[str, Any]]:
 ALERTS_SENSOR = ECSensorEntityDescription(
     key="alerts",
     translation_key="alerts",
-    value_fn=lambda data: len(_get_all_alerts(data)),
+    value_fn=lambda data: None,  # overridden by ECAlertSensorEntity.native_value
 )
 
 
@@ -309,15 +310,34 @@ class ECSensorEntity[DataT: ECSensorDataType](ECBaseSensorEntity[DataT]):
 class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
     """Environment Canada sensor for alerts."""
 
+    def __init__(
+        self,
+        coordinator: ECDataUpdateCoordinator[ECWeather],
+        description: ECSensorEntityDescription,
+    ) -> None:
+        """Initialize the alert sensor."""
+        super().__init__(coordinator, description)
+        self._alerts: list[dict[str, Any]] = _get_all_alerts(self._ec_data)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._alerts = _get_all_alerts(self._ec_data)
+        super()._handle_coordinator_update()
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of active alerts."""
+        return len(self._alerts)
+
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
-        all_alerts = _get_all_alerts(self._ec_data)
-        if not all_alerts:
+        if not self._alerts:
             return None
 
         alerts: list[dict[str, Any]] = []
-        for alert in all_alerts:
+        for alert in self._alerts:
             alert_attrs: dict[str, Any] = {
                 "title": alert.get("title"),
                 "issued": alert.get("date"),
