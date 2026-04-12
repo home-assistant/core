@@ -155,14 +155,14 @@
   },
   "services": {
     "delete": {
-      "description": "Deletes a file from OneDrive and optionally from the local filesystem.",
+      "description": "Deletes one or more files from OneDrive and optionally from the local filesystem.",
       "fields": {
         "config_entry_id": {
           "description": "The config entry representing the OneDrive you want to delete from.",
           "name": "Config entry ID"
         },
         "destination_path": {
-          "description": "One or more paths to files inside the Home Assistant app folder (Apps/Home Assistant) to delete.",
+          "description": "One or more paths to files inside the OneDrive app folder (Apps/Home Assistant) to delete.",
           "example": "[\"photos/snapshots/image.jpg\", \"photos/snapshots/image2.jpg\"]",
           "name": "Destination path"
         },
@@ -172,7 +172,7 @@
           "name": "Local filename"
         }
       },
-      "name": "Delete file"
+      "name": "Delete files"
     },
     "upload": {
       "description": "Uploads files to OneDrive.",
@@ -182,7 +182,7 @@
           "name": "Config entry ID"
         },
         "destination_folder": {
-          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
+          "description": "Folder inside the OneDrive app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
           "example": "photos/snapshots",
           "name": "Destination folder"
         },

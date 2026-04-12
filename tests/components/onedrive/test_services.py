@@ -443,6 +443,25 @@ async def test_delete_local_path_not_allowed(
     mock_onedrive_client.delete_drive_item.assert_not_called()
 
 
+async def test_delete_empty_destination_path(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test delete service raises when destination_path is an empty list."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises((HomeAssistantError, ServiceValidationError)):
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [],
+            },
+            blocking=True,
+        )
+
+
 @pytest.mark.parametrize(
     "bad_path",
     [
@@ -502,3 +521,41 @@ async def test_delete_local_file_not_found(
         )
 
     mock_onedrive_client.delete_drive_item.assert_not_called()
+
+
+async def test_delete_local_file_vanishes_after_validation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test that FileNotFoundError during unlink is silently ignored.
+
+    A file may disappear between pre-validation and the actual unlink call
+    (e.g. removed by another process). Since the remote deletion already
+    succeeded, this should not raise an error.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch(
+            "homeassistant.components.onedrive.services.Path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.onedrive.services.Path.unlink",
+            side_effect=FileNotFoundError,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CONF_FILENAME: [TEST_LOCAL_FILENAME],
+            },
+            blocking=True,
+        )
+
+    mock_onedrive_client.delete_drive_item.assert_called_once()

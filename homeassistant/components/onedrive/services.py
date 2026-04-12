@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 from typing import cast
@@ -41,7 +42,9 @@ DELETE_SERVICE = "delete"
 DELETE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_DESTINATION_PATH): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_DESTINATION_PATH): vol.All(
+            cv.ensure_list, vol.Length(min=1), [cv.string]
+        ),
         vol.Optional(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
     }
 )
@@ -82,6 +85,14 @@ def _read_file_contents(
     return results
 
 
+def _raise_invalid_destination_path(destination_path: str) -> None:
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_destination_path",
+        translation_placeholders={"destination_path": destination_path},
+    )
+
+
 def _validate_destination_path(destination_path: str) -> str:
     """Validate and normalize a remote destination path.
 
@@ -89,37 +100,30 @@ def _validate_destination_path(destination_path: str) -> str:
     """
     normalized = destination_path.strip("/")
     if not normalized:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_destination_path",
-            translation_placeholders={"destination_path": destination_path},
-        )
+        _raise_invalid_destination_path(destination_path)
     parts = PurePosixPath(normalized).parts
     for part in parts:
-        if part == "..":
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_destination_path",
-                translation_placeholders={"destination_path": destination_path},
-            )
-        if ":" in part:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_destination_path",
-                translation_placeholders={"destination_path": destination_path},
-            )
+        if part == ".." or ":" in part:
+            _raise_invalid_destination_path(destination_path)
     return str(PurePosixPath(normalized))
 
 
-def _validate_local_files(hass: HomeAssistant, filenames: list[str]) -> None:
-    """Validate local files are accessible and exist before any deletion occurs."""
+def _check_local_files_allowed(
+    is_allowed_path: Callable[[str], bool], filenames: list[str]
+) -> None:
+    """Raise HomeAssistantError if any filename is not in the allowlist."""
     for filename in filenames:
-        if not hass.config.is_allowed_path(filename):
+        if not is_allowed_path(filename):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="no_delete_access_to_path",
                 translation_placeholders={"filename": filename},
             )
+
+
+def _check_local_files_exist(filenames: list[str]) -> None:
+    """Raise HomeAssistantError if any filename does not exist."""
+    for filename in filenames:
         if not Path(filename).exists():
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -129,10 +133,12 @@ def _validate_local_files(hass: HomeAssistant, filenames: list[str]) -> None:
 
 
 def _delete_local_files(filenames: list[str]) -> None:
-    """Delete local files."""
+    """Delete local files, ignoring files that no longer exist."""
     for filename in filenames:
         try:
             Path(filename).unlink()
+        except FileNotFoundError:
+            pass
         except OSError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -200,11 +206,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ]
         local_filenames = cast(list[str], call.data.get(CONF_FILENAME, []))
 
-        # Pre-validate all local paths before any remote deletion occurs
+        # allowlist check runs on the event loop (thread-safe); existence check
+        # is offloaded to an executor because it performs blocking I/O
         if local_filenames:
-            await hass.async_add_executor_job(
-                _validate_local_files, hass, local_filenames
-            )
+            _check_local_files_allowed(hass.config.is_allowed_path, local_filenames)
+            await hass.async_add_executor_job(_check_local_files_exist, local_filenames)
 
         try:
             approot_id = (await client.get_approot()).id
