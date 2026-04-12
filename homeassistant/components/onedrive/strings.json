@@ -94,7 +94,7 @@
       "message": "Failed to create folder: {message}"
     },
     "delete_error": {
-      "message": "Failed to delete file: {message}"
+      "message": "Failed to delete file from OneDrive: {message}"
     },
     "delete_local_file_error": {
       "message": "Failed to delete local file `{filename}`: {message}"
