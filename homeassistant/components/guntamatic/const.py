@@ -2,5 +2,5 @@
 
 from datetime import timedelta
 
-DOMAIN = "guntamatic_sensor"
+DOMAIN = "guntamatic"
 SCAN_INTERVAL = timedelta(seconds=30)
