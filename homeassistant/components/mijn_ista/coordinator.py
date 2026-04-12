@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, DOMAIN
+from .const import DOMAIN, UPDATE_INTERVAL_HOURS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -292,14 +292,16 @@ class MijnIstaCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize the coordinator."""
         self.api = api
+        # Use quick MonthValues polling on the very first fetch so HA startup
+        # is not blocked for a full minute. Subsequent scheduled updates use
+        # full polling for complete history.
+        self._first_refresh_done = False
         super().__init__(
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN}-{entry.entry_id}",
             update_method=self._async_update_data,
-            update_interval=timedelta(
-                hours=entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
-            ),
+            update_interval=timedelta(hours=UPDATE_INTERVAL_HOURS),
         )
 
     async def _async_update_data(self) -> dict[str, CustomerData]:
@@ -323,7 +325,9 @@ class MijnIstaCoordinator(DataUpdateCoordinator):
 
                 if cur_period:
                     month_data, avg_data = await asyncio.gather(
-                        self.api.get_month_values(cuid),
+                        self.api.get_month_values(
+                            cuid, quick=not self._first_refresh_done
+                        ),
                         self.api.get_consumption_averages(
                             cuid,
                             cur_period["s"][:10],
@@ -331,7 +335,9 @@ class MijnIstaCoordinator(DataUpdateCoordinator):
                         ),
                     )
                 else:
-                    month_data = await self.api.get_month_values(cuid)
+                    month_data = await self.api.get_month_values(
+                        cuid, quick=not self._first_refresh_done
+                    )
                     avg_data = {"Averages": []}
 
                 result[cuid] = _parse_customer(cus, month_data, avg_data)
@@ -346,4 +352,5 @@ class MijnIstaCoordinator(DataUpdateCoordinator):
         except MijnIstaConnectionError as exc:
             raise UpdateFailed(str(exc)) from exc
         else:
+            self._first_refresh_done = True
             return result

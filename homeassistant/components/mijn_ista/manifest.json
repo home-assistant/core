@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["mijn-ista-api==0.1.1"]
+  "requirements": ["mijn-ista-api==0.1.7"]
 }
