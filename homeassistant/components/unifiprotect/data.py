@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
@@ -33,6 +34,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     AUTH_RETRIES,
@@ -50,6 +52,17 @@ from .utils import async_get_devices_by_type
 _LOGGER = logging.getLogger(__name__)
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
+
+
+@dataclass
+class UniFiProtectRuntimeData:
+    """Runtime data stored in hass.data[DOMAIN]."""
+
+    auth_retries: dict[str, int] = field(default_factory=dict)
+
+
+# Typed key for hass.data access at DOMAIN level
+DATA_UNIFIPROTECT: HassKey[UniFiProtectRuntimeData] = HassKey(DOMAIN)
 
 
 @callback

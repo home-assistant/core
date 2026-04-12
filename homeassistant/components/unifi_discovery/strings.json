@@ -1,0 +1,12 @@
+{
+  "config": {
+    "abort": {
+      "discovery_started": "Discovery started"
+    },
+    "step": {
+      "user": {
+        "description": "UniFi Discovery is set up automatically."
+      }
+    }
+  }
+}

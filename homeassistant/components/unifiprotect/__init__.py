@@ -39,8 +39,12 @@ from .const import (
     MIN_REQUIRED_PROTECT_V,
     PLATFORMS,
 )
-from .data import ProtectData, UFPConfigEntry
-from .discovery import DATA_UNIFIPROTECT, UniFiProtectRuntimeData, async_start_discovery
+from .data import (
+    DATA_UNIFIPROTECT,
+    ProtectData,
+    UFPConfigEntry,
+    UniFiProtectRuntimeData,
+)
 from .migrate import async_migrate_data
 from .services import async_setup_services
 from .utils import (
@@ -64,11 +68,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
-    # Initialize domain data structure (setdefault in case discovery already started)
     hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
-    # Only start discovery once regardless of how many entries they have
     async_setup_services(hass)
-    async_start_discovery(hass)
     return True
 
 
