@@ -24,8 +24,10 @@ delete:
     destination_path:
       required: true
       selector:
-        object:
+        text:
+          multiple: true
     filename:
       required: false
       selector:
-        object:
+        text:
+          multiple: true
