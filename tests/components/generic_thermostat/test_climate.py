@@ -839,7 +839,7 @@ async def test_set_target_temp_with_hvac_mode_heat(hass: HomeAssistant) -> None:
 
     await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.HEAT)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("temperature") == 30.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
     assert state.state == HVACMode.HEAT
 
 
