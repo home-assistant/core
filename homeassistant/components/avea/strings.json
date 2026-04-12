@@ -11,10 +11,14 @@
     },
     "flow_title": "{name}",
     "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
       "user": {
         "data": {
-          "address": "Bluetooth address"
-        }
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
     }
   }

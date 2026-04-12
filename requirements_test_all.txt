@@ -550,6 +550,9 @@ autoskope_client==1.4.1
 # homeassistant.components.stream
 av==16.0.1
 
+# homeassistant.components.avea
+avea==1.6.1
+
 # homeassistant.components.axis
 axis==68
 

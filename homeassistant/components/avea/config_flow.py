@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 
 from .const import AVEA_SERVICE_UUID, DOMAIN
 
@@ -66,7 +66,42 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": discovery_info.name or discovery_info.address
         }
-        return await self.async_step_user()
+        return await self.async_step_bluetooth_confirm()
+
+    async def async_step_bluetooth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the discovered device before creating the entry."""
+        assert self._discovery_info is not None
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                title = await self.hass.async_add_executor_job(
+                    _validate_device, self._discovery_info
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error while validating Avea device")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=title,
+                    data={CONF_ADDRESS: self._discovery_info.address},
+                )
+
+        placeholders = {
+            CONF_NAME: self._discovery_info.name or self._discovery_info.address
+        }
+        self.context["title_placeholders"] = placeholders
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            description_placeholders=placeholders,
+            errors=errors,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

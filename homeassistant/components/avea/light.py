@@ -74,7 +74,7 @@ class AveaLight(LightEntity):
             brightness = self._light.get_brightness()
             rgb = self._light.get_rgb()
         finally:
-            self._light.disconnect()
+            self._light.close()
 
         return brightness, rgb
 
@@ -99,7 +99,7 @@ class AveaLight(LightEntity):
                 if brightness is None and not self._attr_is_on:
                     self._light.set_brightness(4095)
         finally:
-            self._light.disconnect()
+            self._light.close()
 
     def _sync_turn_off(self) -> None:
         """Instruct the light to turn off."""
@@ -109,7 +109,7 @@ class AveaLight(LightEntity):
         try:
             self._light.set_brightness(0)
         finally:
-            self._light.disconnect()
+            self._light.close()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -117,9 +117,7 @@ class AveaLight(LightEntity):
         hs_color: tuple[float, float] | None = kwargs.get(ATTR_HS_COLOR)
         self._update_ble_device()
 
-        await self.hass.async_add_executor_job(
-            self._sync_turn_on, brightness, hs_color
-        )
+        await self.hass.async_add_executor_job(self._sync_turn_on, brightness, hs_color)
 
         if not kwargs:
             self._attr_brightness = 255
@@ -151,7 +149,7 @@ class AveaLight(LightEntity):
         except ConnectionError:
             self._attr_available = False
             return
-        except (BleakError, OSError, RuntimeError):
+        except BleakError, OSError, RuntimeError:
             _LOGGER.warning(
                 "Unexpected error while updating Avea device %s",
                 self._address,

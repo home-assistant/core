@@ -125,7 +125,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "bluetooth_confirm"
     assert result["errors"] == {}
 
     with (
@@ -137,7 +137,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_ADDRESS: AVEA_DISCOVERY_INFO.address},
+            {},
         )
         await hass.async_block_till_done()
 

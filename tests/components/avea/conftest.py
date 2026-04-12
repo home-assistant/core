@@ -7,9 +7,7 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(
-    mock_bluetooth_history: None, enable_bluetooth: None
-) -> None:
+def mock_bluetooth(mock_bluetooth_history: None, enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 

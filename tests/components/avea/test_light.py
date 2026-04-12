@@ -1,6 +1,6 @@
 """Test the Avea light platform."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -53,7 +53,7 @@ def mock_entry() -> MockConfigEntry:
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant, mock_entry: MockConfigEntry, mock_bulb: MagicMock
-) -> Generator[MagicMock]:
+) -> AsyncGenerator[MagicMock]:
     """Set up the integration."""
     with (
         patch(
@@ -123,9 +123,7 @@ async def test_turn_on_and_off(
     bulb.set_brightness.assert_called_with(0)
 
 
-async def test_update_state(
-    hass: HomeAssistant, setup_integration: MagicMock
-) -> None:
+async def test_update_state(hass: HomeAssistant, setup_integration: MagicMock) -> None:
     """Test updating the entity state."""
     bulb = setup_integration
     bulb.get_brightness.return_value = 2048
@@ -165,6 +163,7 @@ async def test_remove_entry_closes_bulb(
 ) -> None:
     """Test removing the entry closes the bulb."""
     bulb = setup_integration
+    bulb.close.reset_mock()
 
     await hass.config_entries.async_remove(mock_entry.entry_id)
 
