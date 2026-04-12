@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -117,7 +116,7 @@ class FreshrReadingsCoordinator(DataUpdateCoordinator[DeviceReadings]):
         )
         self._device = device
         self._client = client
-        self.device_info = DeviceInfo(
+        self.device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, device.id)},
             name=_DEVICE_TYPE_NAMES.get(device.device_type, "Fresh-r"),
             serial_number=device.id,
