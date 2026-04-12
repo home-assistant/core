@@ -320,7 +320,6 @@ class TibberFetchPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData
             _LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN} price fetch",
-            update_interval=timedelta(minutes=1),
         )
         self._tomorrow_price_poll_threshold_seconds = random.uniform(
             3600 * 14, 3600 * 23
