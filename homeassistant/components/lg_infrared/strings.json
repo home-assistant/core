@@ -35,6 +35,42 @@
       "bs": {
         "name": "BS"
       },
+      "bs_num_1": {
+        "name": "BS 1"
+      },
+      "bs_num_2": {
+        "name": "BS 2"
+      },
+      "bs_num_3": {
+        "name": "BS 3"
+      },
+      "bs_num_4": {
+        "name": "BS 4"
+      },
+      "bs_num_5": {
+        "name": "BS 5"
+      },
+      "bs_num_6": {
+        "name": "BS 6"
+      },
+      "bs_num_7": {
+        "name": "BS 7"
+      },
+      "bs_num_8": {
+        "name": "BS 8"
+      },
+      "bs_num_9": {
+        "name": "BS 9"
+      },
+      "bs_num_10": {
+        "name": "BS 10"
+      },
+      "bs_num_11": {
+        "name": "BS 11"
+      },
+      "bs_num_12": {
+        "name": "BS 12"
+      },
       "channel_down": {
         "name": "Channel down"
       },
@@ -44,11 +80,83 @@
       "cs": {
         "name": "CS"
       },
+      "cs_num_1": {
+        "name": "CS 1"
+      },
+      "cs_num_2": {
+        "name": "CS 2"
+      },
+      "cs_num_3": {
+        "name": "CS 3"
+      },
+      "cs_num_4": {
+        "name": "CS 4"
+      },
+      "cs_num_5": {
+        "name": "CS 5"
+      },
+      "cs_num_6": {
+        "name": "CS 6"
+      },
+      "cs_num_7": {
+        "name": "CS 7"
+      },
+      "cs_num_8": {
+        "name": "CS 8"
+      },
+      "cs_num_9": {
+        "name": "CS 9"
+      },
+      "cs_num_10": {
+        "name": "CS 10"
+      },
+      "cs_num_11": {
+        "name": "CS 11"
+      },
+      "cs_num_12": {
+        "name": "CS 12"
+      },
       "down": {
         "name": "Down"
       },
       "dtv": {
         "name": "DTV"
+      },
+      "dtv_num_1": {
+        "name": "DTV 1"
+      },
+      "dtv_num_2": {
+        "name": "DTV 2"
+      },
+      "dtv_num_3": {
+        "name": "DTV 3"
+      },
+      "dtv_num_4": {
+        "name": "DTV 4"
+      },
+      "dtv_num_5": {
+        "name": "DTV 5"
+      },
+      "dtv_num_6": {
+        "name": "DTV 6"
+      },
+      "dtv_num_7": {
+        "name": "DTV 7"
+      },
+      "dtv_num_8": {
+        "name": "DTV 8"
+      },
+      "dtv_num_9": {
+        "name": "DTV 9"
+      },
+      "dtv_num_10": {
+        "name": "DTV 10"
+      },
+      "dtv_num_11": {
+        "name": "DTV 11"
+      },
+      "dtv_num_12": {
+        "name": "DTV 12"
       },
       "exit": {
         "name": "Exit"
@@ -169,6 +277,9 @@
       },
       "text": {
         "name": "Teletext"
+      },
+      "data": {
+        "name": "d Button"
       },
       "tv": {
         "name": "TV"
