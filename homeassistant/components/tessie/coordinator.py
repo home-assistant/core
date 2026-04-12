@@ -229,7 +229,7 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             # Return last good data if we have it, otherwise zeros
             if self.data:
-                return self.data
+                return self.data.copy()
             output: dict[str, Any] = {key: 0 for key in ENERGY_HISTORY_FIELDS}
             output["_period_start"] = dt_util.utcnow()
             return output
