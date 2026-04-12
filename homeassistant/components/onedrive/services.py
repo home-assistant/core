@@ -111,29 +111,34 @@ def _validate_destination_path(destination_path: str) -> str:
     return str(PurePosixPath(normalized))
 
 
-def _delete_local_file(hass: HomeAssistant, filename: str) -> None:
-    """Delete a local file after validating access."""
-    if not hass.config.is_allowed_path(filename):
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="no_access_to_path",
-            translation_placeholders={"filename": filename},
-        )
-    filename_path = Path(filename)
-    if not filename_path.exists():
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="filename_does_not_exist",
-            translation_placeholders={"filename": filename},
-        )
-    try:
-        filename_path.unlink()
-    except OSError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="delete_local_file_error",
-            translation_placeholders={"filename": filename, "message": str(err)},
-        ) from err
+def _validate_local_files(hass: HomeAssistant, filenames: list[str]) -> None:
+    """Validate local files are accessible and exist before any deletion occurs."""
+    for filename in filenames:
+        if not hass.config.is_allowed_path(filename):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_delete_access_to_path",
+                translation_placeholders={"filename": filename},
+            )
+        if not Path(filename).exists():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="filename_does_not_exist",
+                translation_placeholders={"filename": filename},
+            )
+
+
+def _delete_local_files(filenames: list[str]) -> None:
+    """Delete local files."""
+    for filename in filenames:
+        try:
+            Path(filename).unlink()
+        except OSError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="delete_local_file_error",
+                translation_placeholders={"filename": filename, "message": str(err)},
+            ) from err
 
 
 @callback
@@ -193,6 +198,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
             _validate_destination_path(p)
             for p in cast(list[str], call.data[CONF_DESTINATION_PATH])
         ]
+        local_filenames = cast(list[str], call.data.get(CONF_FILENAME, []))
+
+        # Pre-validate all local paths before any remote deletion occurs
+        if local_filenames:
+            await hass.async_add_executor_job(
+                _validate_local_files, hass, local_filenames
+            )
 
         try:
             approot_id = (await client.get_approot()).id
@@ -211,8 +223,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_placeholders={"message": str(err)},
             ) from err
 
-        for local_filename in cast(list[str], call.data.get(CONF_FILENAME, [])):
-            await hass.async_add_executor_job(_delete_local_file, hass, local_filename)
+        if local_filenames:
+            await hass.async_add_executor_job(_delete_local_files, local_filenames)
 
     hass.services.async_register(
         DOMAIN,

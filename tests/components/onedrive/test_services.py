@@ -440,6 +440,8 @@ async def test_delete_local_path_not_allowed(
             blocking=True,
         )
 
+    mock_onedrive_client.delete_drive_item.assert_not_called()
+
 
 @pytest.mark.parametrize(
     "bad_path",
@@ -498,3 +500,5 @@ async def test_delete_local_file_not_found(
             },
             blocking=True,
         )
+
+    mock_onedrive_client.delete_drive_item.assert_not_called()
