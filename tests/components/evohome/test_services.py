@@ -16,6 +16,7 @@ from homeassistant.components.evohome.const import (
     DOMAIN,
     EvoService,
 )
+from homeassistant.components.evohome.services import SERVICE_BREAKS_IN_HA_VERSION
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -69,7 +70,10 @@ async def test_reset_system_deprecated(
     )
     assert issue
     assert issue.translation_key == "deprecated_controller_service_call"
-    assert issue.translation_placeholders == {"service": EvoService.RESET_SYSTEM}
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": SERVICE_BREAKS_IN_HA_VERSION,
+        "service": EvoService.RESET_SYSTEM,
+    }
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -133,7 +137,10 @@ async def test_set_system_mode_deprecated(
     )
     assert issue
     assert issue.translation_key == "deprecated_controller_service_call"
-    assert issue.translation_placeholders == {"service": EvoService.SET_SYSTEM_MODE}
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": SERVICE_BREAKS_IN_HA_VERSION,
+        "service": EvoService.SET_SYSTEM_MODE,
+    }
 
     freezer.move_to("2024-07-10T12:00:00+00:00")
 
