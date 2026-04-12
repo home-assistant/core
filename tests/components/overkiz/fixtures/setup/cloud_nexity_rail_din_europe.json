@@ -8,7 +8,7 @@
     "city": "**",
     "country": "**",
     "postalCode": "**",
-    "addressLine1": "** **",
+    "addressLine1": "**",
     "timezone": "Europe/Paris",
     "longitude": "**",
     "latitude": "**",
@@ -45,7 +45,7 @@
     {
       "creationTime": 1611818018000,
       "lastUpdateTime": 1611818018000,
-      "label": "**",
+      "label": "Bathroom Hub",
       "deviceURL": "internal://1234-5678-1698/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodMiniComponent",
@@ -141,7 +141,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**"
+          "value": "Bathroom Hub"
         },
         {
           "name": "internal:LightingLedPodModeState",
@@ -170,7 +170,7 @@
     {
       "creationTime": 1621256516000,
       "lastUpdateTime": 1621256516000,
-      "label": "** *",
+      "label": "Terrace Ceiling Light",
       "deviceURL": "io://1234-5678-1698/11944017",
       "shortcut": false,
       "controllableName": "io:LightMicroModuleSomfyIOComponent",
@@ -373,7 +373,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**"
+          "value": "Terrace Ceiling Light"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -738,7 +738,7 @@
     {
       "creationTime": 1628156593000,
       "lastUpdateTime": 1628156593000,
-      "label": "** ** **",
+      "label": "Garden Radiator",
       "deviceURL": "io://1234-5678-1698/15702199#1",
       "shortcut": false,
       "controllableName": "io:HeatingValveIOComponent",
@@ -998,7 +998,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Garden Radiator"
         },
         {
           "name": "core:StatusState",
@@ -1687,7 +1687,7 @@
     {
       "creationTime": 1628156593000,
       "lastUpdateTime": 1628156593000,
-      "label": "** ** **É** * ** ** ** *",
+      "label": "Bathroom Temperature Sensor",
       "deviceURL": "io://1234-5678-1698/15702199#2",
       "shortcut": false,
       "controllableName": "io:TemperatureIOSystemSensor",
@@ -1796,7 +1796,7 @@
     {
       "creationTime": 1621256516000,
       "lastUpdateTime": 1621256516000,
-      "label": "**É** *",
+      "label": "Study Ceiling Light",
       "deviceURL": "io://1234-5678-1698/2867634",
       "shortcut": false,
       "controllableName": "io:LightMicroModuleSomfyIOComponent",
@@ -1999,7 +1999,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**É**"
+          "value": "Study Ceiling Light"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2060,7 +2060,7 @@
     {
       "creationTime": 1621256336000,
       "lastUpdateTime": 1621256336000,
-      "label": "** *(**)*",
+      "label": "Living Room Protocol Gateway",
       "deviceURL": "io://1234-5678-1698/3887120",
       "shortcut": false,
       "controllableName": "io:StackComponent",
@@ -2422,7 +2422,7 @@
     {
       "creationTime": 1621256516000,
       "lastUpdateTime": 1621256516000,
-      "label": "**É** *",
+      "label": "Garage Ceiling Light",
       "deviceURL": "io://1234-5678-1698/82173",
       "shortcut": false,
       "controllableName": "io:LightMicroModuleSomfyIOComponent",
@@ -2625,7 +2625,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**É**"
+          "value": "Garage Ceiling Light"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2686,7 +2686,7 @@
     {
       "creationTime": 1621256411000,
       "lastUpdateTime": 1621256411000,
-      "label": "** *",
+      "label": "Living Room Smoke Detector",
       "deviceURL": "io://1234-5678-1698/8907539",
       "shortcut": false,
       "controllableName": "io:SomfySmokeIOSystemSensor",
@@ -2811,7 +2811,7 @@
     {
       "creationTime": 1628155896000,
       "lastUpdateTime": 1628155896000,
-      "label": "** **",
+      "label": "Study Radiator",
       "deviceURL": "io://1234-5678-1698/9187218#1",
       "shortcut": false,
       "controllableName": "io:HeatingValveIOComponent",
@@ -3071,7 +3071,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** **"
+          "value": "Study Radiator"
         },
         {
           "name": "core:StatusState",
@@ -3760,7 +3760,7 @@
     {
       "creationTime": 1628155896000,
       "lastUpdateTime": 1628155896000,
-      "label": "** ** **É** ** **",
+      "label": "Nursery Temp Probe",
       "deviceURL": "io://1234-5678-1698/9187218#2",
       "shortcut": false,
       "controllableName": "io:TemperatureIOSystemSensor",
@@ -3869,7 +3869,7 @@
     {
       "creationTime": 1628156011000,
       "lastUpdateTime": 1628156011000,
-      "label": "** **",
+      "label": "Living Room Radiator",
       "deviceURL": "io://1234-5678-1698/9253412#1",
       "shortcut": false,
       "controllableName": "io:HeatingValveIOComponent",
@@ -4129,7 +4129,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** **"
+          "value": "Living Room Radiator"
         },
         {
           "name": "core:StatusState",
@@ -4818,7 +4818,7 @@
     {
       "creationTime": 1628156011000,
       "lastUpdateTime": 1628156011000,
-      "label": "** ** **É** ** **",
+      "label": "Study Temp Probe",
       "deviceURL": "io://1234-5678-1698/9253412#2",
       "shortcut": false,
       "controllableName": "io:TemperatureIOSystemSensor",
@@ -5231,7 +5231,7 @@
     {
       "creationTime": 1621256312000,
       "lastUpdateTime": 1621256312000,
-      "label": "** *",
+      "label": "Terrace Radiator",
       "deviceURL": "ovp://1234-5678-1698/374762#1",
       "shortcut": false,
       "controllableName": "ovp:SomfyHeatingTemperatureInterfaceOVPComponent",
@@ -5392,7 +5392,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Terrace Radiator"
         },
         {
           "name": "core:VersionState",
@@ -5461,7 +5461,7 @@
     {
       "creationTime": 1621256312000,
       "lastUpdateTime": 1621256312000,
-      "label": "** **É** *",
+      "label": "Garage Temp Probe",
       "deviceURL": "ovp://1234-5678-1698/374762#2",
       "shortcut": false,
       "controllableName": "ovp:HeatingTemperatureInterfaceTemperatureSensor",
@@ -5504,7 +5504,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Garage Temp Probe"
         },
         {
           "name": "core:StatusState",

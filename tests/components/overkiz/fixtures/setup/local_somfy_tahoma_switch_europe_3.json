@@ -21,7 +21,7 @@
           "value": "available"
         }
       ],
-      "label": "** *(**/**)*",
+      "label": "Guest Room Network Module",
       "subsystemId": 0,
       "attributes": [
         {
@@ -764,7 +764,7 @@
           }
         }
       ],
-      "label": "** ** ** ** ** **",
+      "label": "Garage Radiator",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -1850,7 +1850,7 @@
           }
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Garden Radiator",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -2740,7 +2740,7 @@
           }
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Hallway Radiator",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -2982,7 +2982,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "Guest Room Ceiling Light"
         },
         {
           "type": 1,
@@ -2990,7 +2990,7 @@
           "value": 50
         }
       ],
-      "label": "**",
+      "label": "Guest Room Ceiling Light",
       "subsystemId": 0,
       "attributes": [
         {
@@ -3221,7 +3221,7 @@
           "value": 24.1
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Garden Temperature Sensor",
       "subsystemId": 2,
       "attributes": [
         {
@@ -3979,7 +3979,7 @@
           }
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Garage Thermostat",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -4214,7 +4214,7 @@
           "value": 24.2
         }
       ],
-      "label": "** ** ** ** ** **",
+      "label": "Garden Temp Probe",
       "subsystemId": 2,
       "attributes": [
         {
@@ -4631,7 +4631,7 @@
           "value": 24.7
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Kitchen Temp Probe",
       "subsystemId": 2,
       "attributes": [
         {
@@ -4729,7 +4729,7 @@
           "value": "Milky Way"
         }
       ],
-      "label": "** *(**/**)*",
+      "label": "Bathroom Wi-Fi Module",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -4805,7 +4805,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "Dining Room Wall Light"
         },
         {
           "type": 1,
@@ -4813,7 +4813,7 @@
           "value": -5
         }
       ],
-      "label": "**",
+      "label": "Dining Room Wall Light",
       "subsystemId": 0,
       "attributes": [
         {
@@ -5044,7 +5044,7 @@
           "value": 23.9
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Garage Temp Probe",
       "subsystemId": 2,
       "attributes": [
         {
@@ -5147,7 +5147,7 @@
           "value": 24.6
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Terrace Temp Probe",
       "subsystemId": 2,
       "attributes": [
         {
@@ -5250,7 +5250,7 @@
           "value": 24.2
         }
       ],
-      "label": "** ** ** ** ** **",
+      "label": "Bathroom Temp Probe",
       "subsystemId": 2,
       "attributes": [
         {
@@ -5332,7 +5332,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "** *(**)*",
+      "label": "Garden Bridge",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -6028,7 +6028,7 @@
           }
         }
       ],
-      "label": "** ** ** ** ** **",
+      "label": "Dining Room Thermostat",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -6242,7 +6242,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "** *(**/**)*",
+      "label": "Bedroom Bridge",
       "subsystemId": 0,
       "attributes": [
         {
@@ -6420,7 +6420,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "** *(**)*",
+      "label": "Garage Protocol Gateway",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -6477,7 +6477,7 @@
       "synced": true,
       "type": 5,
       "states": [],
-      "label": "** *(**/**)*",
+      "label": "Guest Room Bridge",
       "subsystemId": 0,
       "attributes": [
         {
@@ -6780,7 +6780,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "Kitchen Ceiling Light"
         },
         {
           "type": 1,
@@ -6788,7 +6788,7 @@
           "value": 0
         }
       ],
-      "label": "**",
+      "label": "Kitchen Ceiling Light",
       "subsystemId": 0,
       "attributes": [
         {
@@ -7340,7 +7340,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "Living Room Ceiling Light"
         },
         {
           "type": 1,
@@ -7348,7 +7348,7 @@
           "value": 30
         }
       ],
-      "label": "**",
+      "label": "Living Room Ceiling Light",
       "subsystemId": 0,
       "attributes": [
         {
@@ -8234,7 +8234,7 @@
           }
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Patio Thermostat",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -9124,7 +9124,7 @@
           "value": "manual"
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Living Room Thermostat",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -9655,7 +9655,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "**"
+          "value": "Patio Gateway"
         },
         {
           "type": 3,
@@ -9678,7 +9678,7 @@
           "value": "192.168.178.32"
         }
       ],
-      "label": "**",
+      "label": "Patio Gateway",
       "subsystemId": 0,
       "attributes": [],
       "enabled": true,
@@ -10459,7 +10459,7 @@
           }
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Attic Heater",
       "subsystemId": 1,
       "attributes": [],
       "enabled": true,
@@ -10694,7 +10694,7 @@
           "value": 24
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Bathroom Temperature Sensor",
       "subsystemId": 2,
       "attributes": [
         {
@@ -10797,7 +10797,7 @@
           "value": 23.2
         }
       ],
-      "label": "** ** ** ** **",
+      "label": "Hallway Temperature Sensor",
       "subsystemId": 2,
       "attributes": [
         {

@@ -5,10 +5,10 @@
   "location": {
     "creationTime": 1665238624000,
     "lastUpdateTime": 1667054735000,
-    "city": "** **",
+    "city": "**",
     "country": "**",
-    "postalCode": "** **",
-    "addressLine1": "** **",
+    "postalCode": "**",
+    "addressLine1": "**",
     "addressLine2": "*",
     "timezone": "Europe/Amsterdam",
     "longitude": "**",
@@ -47,7 +47,7 @@
     {
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
-      "label": "** *(**)*",
+      "label": "Study Protocol Gateway",
       "deviceURL": "homekit://1234-5678-6867/stack",
       "shortcut": false,
       "controllableName": "homekit:StackComponent",
@@ -70,12 +70,12 @@
         {
           "name": "homekit:SetupPayload",
           "type": 3,
-          "value": "**:*/*/**"
+          "value": "X-HM://0024YABC1234"
         },
         {
           "name": "homekit:SetupCode",
           "type": 3,
-          "value": "**"
+          "value": "012-34-567"
         }
       ],
       "available": true,
@@ -89,7 +89,7 @@
     {
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
-      "label": "**",
+      "label": "Nursery Hub",
       "deviceURL": "internal://1234-5678-6867/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodV3Component",
@@ -227,7 +227,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**"
+          "value": "Nursery Hub"
         }
       ],
       "available": true,
@@ -241,7 +241,7 @@
     {
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
-      "label": "** *(**/**)*",
+      "label": "Terrace Wifi",
       "deviceURL": "internal://1234-5678-6867/wifi/0",
       "shortcut": false,
       "controllableName": "internal:WifiComponent",
@@ -309,7 +309,7 @@
     {
       "creationTime": 1665238924000,
       "lastUpdateTime": 1665238924000,
-      "label": "** *(**)*",
+      "label": "Bathroom Bridge",
       "deviceURL": "io://1234-5678-6867/4167385",
       "shortcut": false,
       "controllableName": "io:StackComponent",
@@ -367,7 +367,7 @@
     {
       "creationTime": 1665238637000,
       "lastUpdateTime": 1665238637000,
-      "label": "** ** **",
+      "label": "Garage Protocol Gateway",
       "deviceURL": "ogp://1234-5678-6867/00000BE8",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -452,7 +452,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Garage Protocol Gateway"
         }
       ],
       "attributes": [
@@ -495,7 +495,7 @@
     {
       "creationTime": 1665238799000,
       "lastUpdateTime": 1665238799000,
-      "label": "** ** **",
+      "label": "Dining Room Protocol Gateway",
       "deviceURL": "ogp://1234-5678-6867/0003FEF3",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -536,7 +536,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Dining Room Protocol Gateway"
         }
       ],
       "attributes": [
@@ -583,7 +583,7 @@
     {
       "creationTime": 1665238637000,
       "lastUpdateTime": 1665238637000,
-      "label": "** ** **",
+      "label": "Living Room Bridge",
       "deviceURL": "ogp://1234-5678-6867/039575E9",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -628,7 +628,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Living Room Bridge"
         }
       ],
       "attributes": [
@@ -671,7 +671,7 @@
     {
       "creationTime": 1665238637000,
       "lastUpdateTime": 1665238637000,
-      "label": "** ** **",
+      "label": "Patio Protocol Gateway",
       "deviceURL": "ogp://1234-5678-6867/09E45393",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -716,7 +716,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** ** **"
+          "value": "Patio Protocol Gateway"
         }
       ],
       "attributes": [
@@ -837,7 +837,7 @@
     {
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
-      "label": "** *(**)*",
+      "label": "Attic Side Bridge",
       "deviceURL": "zigbee://1234-5678-6867/65535",
       "shortcut": false,
       "controllableName": "zigbee:TransceiverV3_0Component",
