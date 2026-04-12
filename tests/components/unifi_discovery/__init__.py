@@ -21,6 +21,15 @@ UNIFI_DISCOVERY_PROTECT = UnifiDevice(
     direct_connect_domain=DIRECT_CONNECT_DOMAIN,
 )
 
+UNIFI_DISCOVERY_NO_MAC = UnifiDevice(
+    source_ip=DEVICE_IP_ADDRESS,
+    hw_addr=None,
+    platform=DEVICE_HOSTNAME,
+    hostname=DEVICE_HOSTNAME,
+    services={UnifiService.Protect: True},
+    direct_connect_domain=DIRECT_CONNECT_DOMAIN,
+)
+
 
 def _patch_discovery(
     device: UnifiDevice | None = None, no_device: bool = False
