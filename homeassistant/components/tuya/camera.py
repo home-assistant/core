@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.camera import (
+    CameraQuirk,
     TuyaCameraDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature
+from homeassistant.components.camera import (
+    Camera as CameraEntity,
+    CameraEntityDescription,
+    CameraEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,10 +24,24 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .entity import TuyaEntity
 
-CAMERAS: tuple[DeviceCategory, ...] = (
-    DeviceCategory.DGHSXJ,
-    DeviceCategory.SP,
-)
+CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
+    DeviceCategory.DGHSXJ: CameraEntityDescription(key=""),
+    DeviceCategory.SP: CameraEntityDescription(key=""),
+}
+
+
+def _get_quirk_entities(
+    manager: Manager, device: CustomerDevice
+) -> list[TuyaCameraEntity] | None:
+    if (quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)) is None or (
+        entity_quirks := quirk.camera_quirks
+    ) is None:
+        return None
+    return [
+        TuyaCameraEntity(device, manager, definition, quirk=entity_quirk)
+        for entity_quirk in entity_quirks
+        if (definition := entity_quirk.definition_fn(device))
+    ]
 
 
 async def async_setup_entry(
@@ -38,9 +58,14 @@ async def async_setup_entry(
         entities: list[TuyaCameraEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if device.category in CAMERAS:
+            if (quirk_entities := _get_quirk_entities(manager, device)) is not None:
+                entities.extend(quirk_entities)
+                continue
+            if description := CAMERAS.get(device.category):
                 entities.append(
-                    TuyaCameraEntity(device, manager, get_default_definition(device))
+                    TuyaCameraEntity(
+                        device, manager, get_default_definition(device), description
+                    )
                 )
 
         async_add_entities(entities)
@@ -64,13 +89,18 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         device: CustomerDevice,
         device_manager: Manager,
         definition: TuyaCameraDefinition,
+        description: CameraEntityDescription | None = None,
+        *,
+        quirk: CameraQuirk | None = None,
     ) -> None:
         """Init Tuya Camera."""
-        super().__init__(device, device_manager)
+        super().__init__(device, device_manager, description)
         CameraEntity.__init__(self)
         self._attr_model = device.product_name
         self._motion_detection_switch = definition.motion_detection_switch
         self._recording_status = definition.recording_status
+        if quirk and quirk.key:
+            self._attr_unique_id = f"tuya.{device.id}_{quirk.key}"
 
     @property
     def is_recording(self) -> bool:
