@@ -19,8 +19,6 @@ STORAGE_KEY: Final = DOMAIN
 
 CONF_LOCATION_IDX: Final = "location_idx"
 
-USER_DATA: Final = "user_data"
-
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 

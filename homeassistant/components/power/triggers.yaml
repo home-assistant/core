@@ -1,0 +1,60 @@
+.trigger_common_fields:
+  behavior: &trigger_behavior
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+.power_units: &power_units
+  - "mW"
+  - "W"
+  - "kW"
+  - "MW"
+  - "GW"
+  - "TW"
+  - "BTU/h"
+
+.power_threshold_entity: &power_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *power_units
+  - domain: sensor
+    device_class: power
+  - domain: number
+    device_class: power
+
+.trigger_target: &trigger_target
+  entity:
+    - domain: sensor
+      device_class: power
+
+changed:
+  target: *trigger_target
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *power_threshold_entity
+          mode: changed
+          number:
+            mode: box
+          unit_of_measurement: *power_units
+
+crossed_threshold:
+  target: *trigger_target
+  fields:
+    behavior: *trigger_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *power_threshold_entity
+          mode: crossed
+          number:
+            mode: box
+          unit_of_measurement: *power_units

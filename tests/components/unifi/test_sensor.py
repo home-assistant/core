@@ -1779,6 +1779,75 @@ async def test_device_temperatures(
     [
         [
             {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "has_fan": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+                "temperatures": [
+                    {"name": "CPU", "type": "cpu", "value": 66.0},
+                ],
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_temperature_with_missing_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that device temperatures sensors are working as expected."""
+    entity_id = "sensor.device_device_cpu_temperature"
+
+    temperature_entity = entity_registry.async_get(entity_id)
+    assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    # Enable entity
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Verify sensor state
+    assert hass.states.get(entity_id).state == "66.0"
+
+    # Remove temperature value from payload
+    device = deepcopy(device_payload[0])
+    device["temperatures"][0].pop("value")
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # Send original payload again to verify sensor recovers
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
+
+    assert hass.states.get(entity_id).state == "66.0"
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
                 "board_rev": 2,
                 "device_id": "mock-id",
                 "ip": "10.0.1.1",

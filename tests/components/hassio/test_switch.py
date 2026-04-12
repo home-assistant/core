@@ -56,7 +56,6 @@ async def enable_entity(
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
     store_info: AsyncMock,
     addon_changelog: AsyncMock,
@@ -72,13 +71,9 @@ def mock_all(
     os_info: AsyncMock,
     homeassistant_stats: AsyncMock,
     supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
     addons_list.return_value[1] = replace(
         addons_list.return_value[1], name="test-two", slug="test-two"
     )

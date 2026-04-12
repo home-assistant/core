@@ -1564,14 +1564,19 @@ Q7_B01_PROPS = B01Props(
     main_sensor=500,
     mop_life=1200,
     real_clean_time=3000,
+    quantity=100,
 )
 
 Q10_STATUS = Q10Status(
-    clean_time=120,
+    clean_time=1800,
     clean_area=15,
     battery=100,
-    status=YXDeviceState.CHARGING_STATE,
+    status=YXDeviceState.CHARGING,
     fan_level=YXFanLevel.BALANCED,
-    water_level=YXWaterLevel.MIDDLE,
+    water_level=YXWaterLevel.MEDIUM,
     clean_count=1,
+    main_brush_life=81,
+    side_brush_life=90,
+    filter_life=90,
+    sensor_life=28,
 )

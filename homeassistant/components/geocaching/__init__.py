@@ -2,11 +2,14 @@
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
+from .const import DOMAIN
 from .coordinator import GeocachingConfigEntry, GeocachingDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -14,7 +17,13 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -> bool:
     """Set up Geocaching from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
     oauth_session = OAuth2Session(hass, entry, implementation)
     coordinator = GeocachingDataUpdateCoordinator(

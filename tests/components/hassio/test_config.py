@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -25,7 +24,6 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     supervisor_is_connected: AsyncMock,
     resolution_info: AsyncMock,
     addon_info: AsyncMock,
@@ -36,17 +34,13 @@ def mock_all(
     addons_list: AsyncMock,
     network_info: AsyncMock,
     os_info: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     supervisor_root_info.return_value = replace(
         supervisor_root_info.return_value, hassos=None
     )
     addons_list.return_value.pop(1)
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
 
 
 @pytest.fixture
