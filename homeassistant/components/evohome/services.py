@@ -10,7 +10,6 @@ from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_M
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
     S2_PERIOD as SZ_PERIOD,
-    DhwState as EvoDhwState,
 )
 import voluptuous as vol
 
@@ -53,7 +52,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
 
 # DHW service schemas (registered as entity services)
 SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(ATTR_STATE): vol.Coerce(EvoDhwState),
+    vol.Required(ATTR_STATE): cv.boolean,
     vol.Optional(ATTR_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=0), max=timedelta(days=1)),

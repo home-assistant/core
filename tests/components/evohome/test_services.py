@@ -337,7 +337,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: "Off",
+                ATTR_STATE: False,
             },
             target={ATTR_ENTITY_ID: dhw_id},
             blocking=True,
@@ -351,7 +351,7 @@ async def test_set_dhw_override(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: "On",
+                ATTR_STATE: True,
                 ATTR_DURATION: {"minutes": 135},
             },
             target={ATTR_ENTITY_ID: dhw_id},
@@ -392,7 +392,7 @@ async def test_set_dhw_override_advance(
             DOMAIN,
             EvoService.SET_DHW_OVERRIDE,
             {
-                ATTR_STATE: "On",
+                ATTR_STATE: True,
                 ATTR_DURATION: {"minutes": 0},
             },
             target={ATTR_ENTITY_ID: dhw_id},
