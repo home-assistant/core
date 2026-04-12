@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -81,13 +82,13 @@ async def test_climate_hvac_and_preset_states(
 async def test_set_temperature(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test setting target temperature."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state == snapshot(name="before")
+    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.5
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -97,7 +98,8 @@ async def test_set_temperature(
     )
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state == snapshot(name="after")
+    assert state.attributes[ATTR_TEMPERATURE] == 21.0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.5
 
 
 async def test_climate_preset_away_active(
@@ -133,19 +135,19 @@ async def test_climate_preset_away_active(
 
 
 @pytest.mark.parametrize(
-    ("preset_mode", "expected_temperature"),
+    ("preset_mode", "expected_temperature", "expected_state"),
     [
-        (PRESET_ECO, 17.0),
-        (PRESET_COMFORT, 21.0),
-        (PRESET_BOOST, MAX_TEMP),
+        (PRESET_ECO, 17.0, HVACMode.AUTO),
+        (PRESET_COMFORT, 21.0, HVACMode.AUTO),
+        (PRESET_BOOST, MAX_TEMP, HVACMode.HEAT),
     ],
 )
 async def test_set_preset_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
     preset_mode: str,
     expected_temperature: float,
+    expected_state: HVACMode,
 ) -> None:
     """Test setting preset modes."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -158,7 +160,8 @@ async def test_set_preset_mode(
     )
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
-    assert state == snapshot()
+    assert state.attributes[ATTR_PRESET_MODE] == preset_mode
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize("preset_mode", [PRESET_NONE, PRESET_AWAY])
@@ -180,19 +183,19 @@ async def test_set_preset_mode_display_only_raises(
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode", "expected_temperature"),
+    ("hvac_mode", "expected_temperature", "expected_preset"),
     [
-        (HVACMode.OFF, MIN_TEMP),
-        (HVACMode.HEAT, MAX_TEMP),
-        (HVACMode.AUTO, 17.0),
+        (HVACMode.OFF, MIN_TEMP, PRESET_NONE),
+        (HVACMode.HEAT, MAX_TEMP, PRESET_BOOST),
+        (HVACMode.AUTO, 17.0, PRESET_ECO),
     ],
 )
 async def test_set_hvac_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
     hvac_mode: HVACMode,
     expected_temperature: float,
+    expected_preset: str,
 ) -> None:
     """Test setting HVAC modes."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -206,7 +209,8 @@ async def test_set_hvac_mode(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
-    assert state == snapshot()
+    assert state.attributes[ATTR_PRESET_MODE] == expected_preset
+    assert state.state == hvac_mode
 
 
 @pytest.mark.parametrize(
