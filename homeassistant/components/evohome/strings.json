@@ -33,7 +33,7 @@
       "name": "Reset system"
     },
     "set_dhw_override": {
-      "description": "Overrides a DHW state, either indefinitely, or for a specified period of time, after which it will revert to following its schedule.",
+      "description": "Overrides a DHW state, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
       "fields": {
         "duration": {
           "description": "The DHW will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",
@@ -47,7 +47,7 @@
       "name": "Set DHW override"
     },
     "set_system_mode": {
-      "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to `Auto`. Not all systems support all modes.",
+      "description": "Sets the system mode, either indefinitely or until a specified end time, after which it will revert to `Auto`. Not all systems support all modes.",
       "fields": {
         "duration": {
           "description": "The duration in hours; used only with `AutoWithEco` mode (up to 24 hours).",
@@ -65,7 +65,7 @@
       "name": "Set system mode"
     },
     "set_zone_override": {
-      "description": "Overrides the zone's setpoint, either indefinitely, or for a specified period of time, after which it will revert to following its schedule.",
+      "description": "Overrides the zone's setpoint, either indefinitely or until for a specified duration, after which it will revert to following its schedule.",
       "fields": {
         "duration": {
           "description": "The zone will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",
