@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
     except AuthenticationError as exc:
         raise ConfigEntryAuthFailed from exc
     except Exception as exc:
-        _LOGGER.error("Error setting up entry %s: %s", entry.entry_id, exc)
+        _LOGGER.exception("Error setting up entry %s", entry.entry_id)
         raise ConfigEntryNotReady from exc
 
 
