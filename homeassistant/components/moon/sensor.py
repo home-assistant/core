@@ -149,7 +149,7 @@ class MoonSensorEntity(CoordinatorEntity[MoonUpdateCoordinator], SensorEntity):
         """Initialize the moon sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.entity_id = f"{SENSOR_DOMAIN}.moon_{description.key}"
+        self._attr_suggested_object_id = f"moon_{description.key}"
         self._attr_unique_id = (
             entry.entry_id
             if description.key == "phase"
