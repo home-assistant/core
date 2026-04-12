@@ -224,10 +224,13 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             or not isinstance(data.get("time_series"), list)
             or not data["time_series"]
         ):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_energy_history_data",
-            )
+            _LOGGER.warning("Tessie returned no energy history time_series; skipping update")
+            # Return last good data if we have it, otherwise zeros
+            if self.data:
+                return self.data
+            output: dict[str, Any] = {key: None for key in ENERGY_HISTORY_FIELDS}
+            output["_period_start"] = dt_util.utcnow()
+            return output
 
         time_series = data["time_series"]
         output: dict[str, Any] = {}
