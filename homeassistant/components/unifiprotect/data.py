@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
@@ -54,15 +53,8 @@ type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
 
 
-@dataclass
-class UniFiProtectRuntimeData:
-    """Runtime data stored in hass.data[DOMAIN]."""
-
-    auth_retries: dict[str, int] = field(default_factory=dict)
-
-
-# Typed key for hass.data access at DOMAIN level
-DATA_UNIFIPROTECT: HassKey[UniFiProtectRuntimeData] = HassKey(DOMAIN)
+# Typed key for per-entry auth retry tracking during setup
+DATA_AUTH_RETRIES: HassKey[dict[str, int]] = HassKey(f"{DOMAIN}_auth_retries")
 
 
 @callback

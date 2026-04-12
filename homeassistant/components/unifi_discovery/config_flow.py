@@ -30,7 +30,8 @@ class UnifiDiscoveryFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery via DHCP."""
         _LOGGER.debug("Starting discovery via DHCP: %s", discovery_info)
-        await self.async_set_unique_id(DOMAIN)
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
         async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
@@ -39,6 +40,7 @@ class UnifiDiscoveryFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery via SSDP."""
         _LOGGER.debug("Starting discovery via SSDP: %s", discovery_info)
-        await self.async_set_unique_id(DOMAIN)
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
         async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")

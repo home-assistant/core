@@ -39,12 +39,7 @@ from .const import (
     MIN_REQUIRED_PROTECT_V,
     PLATFORMS,
 )
-from .data import (
-    DATA_UNIFIPROTECT,
-    ProtectData,
-    UFPConfigEntry,
-    UniFiProtectRuntimeData,
-)
+from .data import DATA_AUTH_RETRIES, ProtectData, UFPConfigEntry
 from .migrate import async_migrate_data
 from .services import async_setup_services
 from .utils import (
@@ -68,7 +63,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
-    hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
     async_setup_services(hass)
     return True
 
@@ -82,11 +76,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     try:
         await protect.update()
     except NotAuthorized as err:
-        domain_data = hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
-        retries = domain_data.auth_retries.get(entry.entry_id, 0)
+        auth_retries = hass.data.setdefault(DATA_AUTH_RETRIES, {})
+        retries = auth_retries.get(entry.entry_id, 0)
         if retries < AUTH_RETRIES:
             retries += 1
-            domain_data.auth_retries[entry.entry_id] = retries
+            auth_retries[entry.entry_id] = retries
             raise ConfigEntryNotReady from err
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
