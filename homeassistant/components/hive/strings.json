@@ -39,8 +39,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "username": "The email address associated with your Hive account.",
-          "password": "The password for your Hive account."
+          "password": "The password for your Hive account.",
+          "username": "The email address associated with your Hive account."
         },
         "description": "Re-enter your Hive login information.",
         "title": "[%key:component::hive::config::step::user::title%]"
@@ -52,9 +52,9 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "username": "The email address associated with your Hive account.",
           "password": "The password for your Hive account.",
-          "scan_interval": "How often (in seconds) Home Assistant reads from the local Hive data cache. The Hive library refreshes cloud data at most every 2 minutes."
+          "scan_interval": "How often (in seconds) Home Assistant reads from the local Hive data cache. The Hive library refreshes cloud data at most every 2 minutes.",
+          "username": "The email address associated with your Hive account."
         },
         "description": "Enter your Hive login information.",
         "title": "Hive login"
