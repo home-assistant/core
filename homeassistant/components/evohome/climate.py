@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Final
+from typing import Any
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
@@ -40,14 +40,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DURATION, ATTR_PERIOD, DOMAIN, EVOHOME_DATA, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    DOMAIN,
+    EVOHOME_DATA,
+    RESET_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, is_valid_zone
 
 _LOGGER = logging.getLogger(__name__)
-
-# Support for the reset service calls/presets is being deprecated
-BREAKS_IN_HA_VERSION: Final = "2026.7.0"
 
 PRESET_RESET = "Reset"  # reset all child zones to EvoZoneMode.FOLLOW_SCHEDULE
 PRESET_CUSTOM = "Custom"
@@ -193,7 +197,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             self.hass,
             DOMAIN,
             "deprecated_clear_zone_override_service",
-            breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+            breaks_in_ha_version=RESET_BREAKS_IN_HA_VERSION,
             is_fixable=False,
             is_persistent=True,
             issue_domain=DOMAIN,
@@ -467,7 +471,7 @@ class EvoController(EvoClimateEntity):
                 self.hass,
                 DOMAIN,
                 "deprecated_preset_reset",
-                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                breaks_in_ha_version=RESET_BREAKS_IN_HA_VERSION,
                 is_fixable=False,
                 is_persistent=True,
                 issue_domain=DOMAIN,

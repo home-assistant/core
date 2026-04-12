@@ -21,8 +21,14 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir,
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .climate import BREAKS_IN_HA_VERSION
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
+    DOMAIN,
+    RESET_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
 
 # System service schemas (registered as domain services)
@@ -141,7 +147,7 @@ def setup_service_functions(
                 hass,
                 DOMAIN,
                 "deprecated_reset_system_service",
-                breaks_in_ha_version=BREAKS_IN_HA_VERSION,
+                breaks_in_ha_version=RESET_BREAKS_IN_HA_VERSION,
                 is_fixable=False,
                 is_persistent=True,
                 issue_domain=DOMAIN,
