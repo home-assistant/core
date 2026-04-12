@@ -10,7 +10,7 @@ from homeassistant.components.freshr.coordinator import (
     DEVICES_SCAN_INTERVAL,
     READINGS_SCAN_INTERVAL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
