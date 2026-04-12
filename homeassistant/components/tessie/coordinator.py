@@ -224,7 +224,9 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             or not isinstance(data.get("time_series"), list)
             or not data["time_series"]
         ):
-            _LOGGER.warning("Tessie returned no energy history time_series; skipping update")
+            _LOGGER.warning(
+                "Tessie returned no energy history time_series; skipping update"
+            )
             # Return last good data if we have it, otherwise zeros
             if self.data:
                 return self.data
