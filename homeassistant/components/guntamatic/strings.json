@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_implemented": "Not Implemented"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "bad_data": "The heater did not provide the required identification information. Verify that the host points to a supported controller and the correct endpoint.",
