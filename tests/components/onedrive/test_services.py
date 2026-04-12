@@ -299,7 +299,7 @@ async def test_delete_service(
         DELETE_SERVICE,
         {
             CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
+            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
         },
         blocking=True,
     )
@@ -326,7 +326,7 @@ async def test_delete_service_delete_permanently(
         DELETE_SERVICE,
         {
             CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
+            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
         },
         blocking=True,
     )
@@ -357,14 +357,43 @@ async def test_delete_service_with_local_file(
             DELETE_SERVICE,
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
-                CONF_FILENAME: TEST_LOCAL_FILENAME,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CONF_FILENAME: [TEST_LOCAL_FILENAME],
             },
             blocking=True,
         )
 
     mock_onedrive_client.delete_drive_item.assert_called_once()
     mock_unlink.assert_called_once()
+
+
+async def test_delete_service_multiple_files(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service removes multiple remote files in parallel."""
+    await setup_integration(hass, mock_config_entry)
+    second_path = "photos/snapshots/image2.jpg"
+
+    await hass.services.async_call(
+        DOMAIN,
+        DELETE_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+        },
+        blocking=True,
+    )
+
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
+    called_paths = {
+        c.args[0] for c in mock_onedrive_client.delete_drive_item.call_args_list
+    }
+    assert called_paths == {
+        f"id:/{TEST_DESTINATION_PATH}:",
+        f"id:/{second_path}:",
+    }
 
 
 async def test_delete_service_fails(
@@ -382,7 +411,7 @@ async def test_delete_service_fails(
             DELETE_SERVICE,
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
             },
             blocking=True,
         )
@@ -405,8 +434,8 @@ async def test_delete_local_path_not_allowed(
             DELETE_SERVICE,
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
-                CONF_FILENAME: TEST_LOCAL_FILENAME,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CONF_FILENAME: [TEST_LOCAL_FILENAME],
             },
             blocking=True,
         )
@@ -464,8 +493,8 @@ async def test_delete_local_file_not_found(
             DELETE_SERVICE,
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: TEST_DESTINATION_PATH,
-                CONF_FILENAME: TEST_LOCAL_FILENAME,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+                CONF_FILENAME: [TEST_LOCAL_FILENAME],
             },
             blocking=True,
         )

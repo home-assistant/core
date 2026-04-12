@@ -41,8 +41,8 @@ DELETE_SERVICE = "delete"
 DELETE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_DESTINATION_PATH): cv.string,
-        vol.Optional(CONF_FILENAME): cv.string,
+        vol.Required(CONF_DESTINATION_PATH): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -189,14 +189,20 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
         client = config_entry.runtime_data.client
         delete_permanently = config_entry.options.get(CONF_DELETE_PERMANENTLY, False)
-        file_path = _validate_destination_path(
-            cast(str, call.data[CONF_DESTINATION_PATH])
-        )
+        file_paths = [
+            _validate_destination_path(p)
+            for p in cast(list[str], call.data[CONF_DESTINATION_PATH])
+        ]
 
         try:
             approot_id = (await client.get_approot()).id
-            await client.delete_drive_item(
-                f"{approot_id}:/{file_path}:", delete_permanently
+            await asyncio.gather(
+                *[
+                    client.delete_drive_item(
+                        f"{approot_id}:/{file_path}:", delete_permanently
+                    )
+                    for file_path in file_paths
+                ]
             )
         except OneDriveException as err:
             raise HomeAssistantError(
@@ -205,7 +211,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_placeholders={"message": str(err)},
             ) from err
 
-        if local_filename := call.data.get(CONF_FILENAME):
+        for local_filename in cast(list[str], call.data.get(CONF_FILENAME, [])):
             await hass.async_add_executor_job(_delete_local_file, hass, local_filename)
 
     hass.services.async_register(

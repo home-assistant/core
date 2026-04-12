@@ -24,8 +24,8 @@ delete:
     destination_path:
       required: true
       selector:
-        text:
+        object:
     filename:
       required: false
       selector:
-        text:
+        object:

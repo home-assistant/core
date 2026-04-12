@@ -159,13 +159,13 @@
           "name": "Config entry ID"
         },
         "destination_path": {
-          "description": "Path to the file inside the Home Assistant app folder (Apps/Home Assistant) to delete.",
-          "example": "photos/snapshots/image.jpg",
+          "description": "One or more paths to files inside the Home Assistant app folder (Apps/Home Assistant) to delete.",
+          "example": "[\"photos/snapshots/image.jpg\", \"photos/snapshots/image2.jpg\"]",
           "name": "Destination path"
         },
         "filename": {
-          "description": "Path to the local file to also delete. If omitted, only the OneDrive copy is removed.",
-          "example": "/media/snapshots/image.jpg",
+          "description": "One or more local file paths to also delete. If omitted, only the OneDrive copies are removed.",
+          "example": "[\"/media/snapshots/image.jpg\"]",
           "name": "Local filename"
         }
       },
