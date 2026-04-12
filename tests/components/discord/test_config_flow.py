@@ -349,8 +349,22 @@ async def test_subentry_add_channel_entry_not_loaded(hass: HomeAssistant) -> Non
     assert result["reason"] == "entry_not_loaded"
 
 
-async def test_subentry_channel_forbidden(hass: HomeAssistant) -> None:
-    """Test that a Forbidden error shows a cannot_access_channel error."""
+@pytest.mark.parametrize(
+    ("login_side_effect", "fetch_side_effect", "expected_error"),
+    [
+        (None, nextcord.Forbidden(MagicMock(), ""), "cannot_access_channel"),
+        (None, nextcord.HTTPException(MagicMock(), "rate limited"), "cannot_connect"),
+        (nextcord.LoginFailure, None, "invalid_auth"),
+        (Exception("unexpected"), None, "cannot_connect"),
+    ],
+)
+async def test_subentry_channel_errors(
+    hass: HomeAssistant,
+    login_side_effect: Exception | None,
+    fetch_side_effect: Exception | None,
+    expected_error: str,
+) -> None:
+    """Test that subentry channel lookup errors show the correct error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
@@ -370,9 +384,9 @@ async def test_subentry_channel_forbidden(hass: HomeAssistant) -> None:
     )
 
     bot = MagicMock()
-    bot.login = AsyncMock()
+    bot.login = AsyncMock(side_effect=login_side_effect)
     bot.close = AsyncMock()
-    bot.fetch_channel = AsyncMock(side_effect=nextcord.Forbidden(MagicMock(), ""))
+    bot.fetch_channel = AsyncMock(side_effect=fetch_side_effect)
 
     with patch(
         "homeassistant.components.discord.config_flow.nextcord.Client",
@@ -383,115 +397,4 @@ async def test_subentry_channel_forbidden(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_access_channel"}
-
-
-async def test_subentry_channel_http_error(hass: HomeAssistant) -> None:
-    """Test that an HTTP error shows a cannot_connect error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_DATA,
-        unique_id=BOT_ID,
-        title=BOT_NAME,
-        minor_version=1,
-    )
-    entry.add_to_hass(hass)
-
-    with _patch_init_login():
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    bot = MagicMock()
-    bot.login = AsyncMock()
-    bot.close = AsyncMock()
-    bot.fetch_channel = AsyncMock(
-        side_effect=nextcord.HTTPException(MagicMock(), "rate limited")
-    )
-
-    with patch(
-        "homeassistant.components.discord.config_flow.nextcord.Client",
-        return_value=bot,
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], user_input={CONF_CHANNEL_ID: str(CHANNEL_ID)}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_subentry_channel_login_failure(hass: HomeAssistant) -> None:
-    """Test that a login failure during channel lookup shows an invalid_auth error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_DATA,
-        unique_id=BOT_ID,
-        title=BOT_NAME,
-        minor_version=1,
-    )
-    entry.add_to_hass(hass)
-
-    with _patch_init_login():
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    bot = MagicMock()
-    bot.login = AsyncMock(side_effect=nextcord.LoginFailure)
-    bot.close = AsyncMock()
-
-    with patch(
-        "homeassistant.components.discord.config_flow.nextcord.Client",
-        return_value=bot,
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], user_input={CONF_CHANNEL_ID: str(CHANNEL_ID)}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_subentry_channel_unexpected_error(hass: HomeAssistant) -> None:
-    """Test that an unexpected error during channel lookup shows a cannot_connect error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_DATA,
-        unique_id=BOT_ID,
-        title=BOT_NAME,
-        minor_version=1,
-    )
-    entry.add_to_hass(hass)
-
-    with _patch_init_login():
-        await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    bot = MagicMock()
-    bot.login = AsyncMock(side_effect=Exception("unexpected"))
-    bot.close = AsyncMock()
-
-    with patch(
-        "homeassistant.components.discord.config_flow.nextcord.Client",
-        return_value=bot,
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], user_input={CONF_CHANNEL_ID: str(CHANNEL_ID)}
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
