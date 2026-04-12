@@ -48,7 +48,39 @@
   "entity": {
     "binary_sensor": {
       "warning": {
-        "name": "Warning: {region_name} {slot_id}"
+        "name": "Warning {slot_id}"
+      }
+    },
+    "sensor": {
+      "affected_areas": {
+        "name": "Affected areas {slot_id}"
+      },
+      "expires": {
+        "name": "Expires {slot_id}"
+      },
+      "headline": {
+        "name": "Headline {slot_id}"
+      },
+      "more_info_url": {
+        "name": "More information URL {slot_id}"
+      },
+      "sender": {
+        "name": "Sender {slot_id}"
+      },
+      "sent": {
+        "name": "Sent {slot_id}"
+      },
+      "severity": {
+        "name": "Severity {slot_id}",
+        "state": {
+          "extreme": "Extreme",
+          "minor": "Minor",
+          "moderate": "Moderate",
+          "severe": "Severe"
+        }
+      },
+      "start": {
+        "name": "Start {slot_id}"
       }
     }
   },

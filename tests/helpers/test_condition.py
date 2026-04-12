@@ -2830,6 +2830,8 @@ async def test_async_get_all_descriptions(
     # Verify the cache returns the same object
     assert await condition.async_get_all_descriptions(hass) is new_descriptions
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 @pytest.mark.parametrize(
     ("yaml_error", "expected_message"),
@@ -2870,6 +2872,8 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     assert expected_message in caplog.text
 
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
+
 
 async def test_async_get_all_descriptions_with_bad_description(
     hass: HomeAssistant,
@@ -2903,6 +2907,8 @@ async def test_async_get_all_descriptions_with_bad_description(
         "Unable to parse conditions.yaml for the sun integration: "
         "expected a dictionary for dictionary value @ data['_']['fields']"
     ) in caplog.text
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 async def test_invalid_condition_platform(
@@ -2960,6 +2966,8 @@ async def test_subscribe_conditions(
 
     assert condition_events == [{"sun"}]
     assert "Error while notifying condition platform listener" in caplog.text
+
+    await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
 
 
 @patch("annotatedyaml.loader.load_yaml")

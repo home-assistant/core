@@ -239,7 +239,7 @@
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     },
     "low_temp_higher_than_high_temp": {
-      "message": "'Lower target temperature' can not be higher than 'Upper target temperature'."
+      "message": "'Lower target temperature' cannot be higher than 'Upper target temperature'."
     },
     "missing_target_temperature_entity_feature": {
       "message": "Set temperature action was used with the 'Target temperature' parameter but the entity does not support it."
