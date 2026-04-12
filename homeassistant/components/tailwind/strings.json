@@ -3,8 +3,10 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "different_device": "The entered information is for a different Tailwind device.",
       "no_device_id": "The discovered Tailwind device did not provide a device ID.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_firmware": "The firmware of your Tailwind device is not supported. Please update your Tailwind device to the latest firmware version using the Tailwind app."
     },
@@ -22,6 +24,17 @@
           "token": "[%key:component::tailwind::config::step::user::data_description::token%]"
         },
         "description": "Reauthenticate with your Tailwind garage door opener.\n\nTo do so, you will need to get your new local control key of your Tailwind device. For more details, see the description below the field down below."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "token": "[%key:component::tailwind::config::step::user::data::token%]"
+        },
+        "data_description": {
+          "host": "[%key:component::tailwind::config::step::user::data_description::host%]",
+          "token": "[%key:component::tailwind::config::step::user::data_description::token%]"
+        },
+        "description": "Reconfigure your Tailwind garage door opener.\n\nThis allows you to change the IP address and local control key of your Tailwind device."
       },
       "user": {
         "data": {
