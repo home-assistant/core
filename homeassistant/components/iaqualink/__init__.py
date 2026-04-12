@@ -100,6 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             f"Error while attempting to retrieve systems list: {svc_exception}"
         ) from svc_exception
 
+    systems = systems or {}
+
     runtime_data = AqualinkRuntimeData(
         aqualink,
         coordinators={},
@@ -114,6 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     systems_list = list(systems.values())
     if not systems_list:
         entry.runtime_data = runtime_data
+        await aqualink.close()
         _LOGGER.warning("No systems detected or supported")
         return True
 
@@ -125,12 +128,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     entry.runtime_data = runtime_data
 
     if not selected_systems:
+        await aqualink.close()
         _LOGGER.warning("No systems selected")
         return True
 
     systems_list = [sys for sys in systems_list if sys.serial in selected_systems]
 
     if not systems_list:
+        await aqualink.close()
         _LOGGER.warning("No selected systems detected or supported")
         return True
 
@@ -150,7 +155,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             raise ConfigEntryAuthFailed(
                 "Invalid credentials for iAqualink"
             ) from auth_exception
-        except AqualinkServiceException as svc_exception:
+        except (
+            AqualinkServiceException,
+            TimeoutError,
+            httpx.HTTPError,
+        ) as svc_exception:
             await aqualink.close()
             raise ConfigEntryNotReady(
                 f"Error while attempting to retrieve devices list: {svc_exception}"
@@ -209,6 +218,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) ->
         await entry.runtime_data.client.close()
 
     return unload_ok
+
+
 def refresh_system[_AqualinkEntityT: AqualinkEntity, **_P](
     func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
