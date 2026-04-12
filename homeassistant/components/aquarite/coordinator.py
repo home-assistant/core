@@ -126,5 +126,10 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         offset = now.utcoffset()
         utc_offset = int(offset.total_seconds()) if offset else 0
         timestamp = int(now.timestamp()) + utc_offset
-        _LOGGER.info("Syncing pool localTime to: %s (%s, UTC offset %+ds)", timestamp, now.isoformat(), utc_offset)
+        _LOGGER.info(
+            "Syncing pool localTime to: %s (%s, UTC offset %+ds)",
+            timestamp,
+            now.isoformat(),
+            utc_offset,
+        )
         await self.api.set_value(self.pool_id, "main.localTime", timestamp)

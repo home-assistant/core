@@ -17,7 +17,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the pool location tracker."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     pool_id = coordinator.pool_id
     pool_name = entry.title
 

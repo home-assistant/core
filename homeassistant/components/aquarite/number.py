@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Aquarite number entities."""
-    dataservice = entry.runtime_data.coordinator
+    dataservice = entry.runtime_data
     pool_id, pool_name = dataservice.pool_id, entry.title
 
     # Safely determine max electrolysis

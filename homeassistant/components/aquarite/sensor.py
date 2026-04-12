@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Aquarite sensors."""
-    dataservice = entry.runtime_data.coordinator
+    dataservice = entry.runtime_data
     pool_id = dataservice.pool_id
     pool_name = entry.title
 

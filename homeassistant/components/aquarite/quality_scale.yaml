@@ -40,7 +40,7 @@ rules:
     comment: _attr_has_entity_name = True on base entity
   runtime-data:
     status: done
-    comment: Uses entry.runtime_data with typed AquariteRuntimeData dataclass
+    comment: Uses entry.runtime_data typed as AquariteDataUpdateCoordinator
   test-before-configure:
     status: done
     comment: Auth tested before creating entry in async_step_pool

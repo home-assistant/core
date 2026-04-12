@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aquarite button platform."""
-    dataservice = entry.runtime_data.coordinator
+    dataservice = entry.runtime_data
     pool_id, pool_name = dataservice.pool_id, entry.title
 
     if not dataservice.get_value(PATH_HASLED):

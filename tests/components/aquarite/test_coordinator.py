@@ -1,7 +1,7 @@
 """Tests for the Aquarite coordinator.
 
-These tests require the Home Assistant test framework (pytest-homeassistant-custom-component).
-Run with: pytest tests/test_coordinator.py (requires HA test environment)
+These tests run in the Home Assistant Core test environment.
+Run with: pytest tests/components/aquarite/test_coordinator.py
 """
 from __future__ import annotations
 
