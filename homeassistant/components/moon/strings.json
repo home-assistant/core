@@ -7,7 +7,42 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "above_horizon": {
+        "name": "Above horizon"
+      }
+    },
     "sensor": {
+      "azimuth": {
+        "name": "Azimuth"
+      },
+      "elevation": {
+        "name": "Elevation"
+      },
+      "illumination": {
+        "name": "Illumination"
+      },
+      "next_first_quarter_moon": {
+        "name": "Next first quarter"
+      },
+      "next_full_moon": {
+        "name": "Next full moon"
+      },
+      "next_last_quarter_moon": {
+        "name": "Next last quarter"
+      },
+      "next_new_moon": {
+        "name": "Next new moon"
+      },
+      "next_rising": {
+        "name": "Next rising"
+      },
+      "next_setting": {
+        "name": "Next setting"
+      },
+      "next_transit": {
+        "name": "Next transit"
+      },
       "phase": {
         "name": "Phase",
         "state": {
