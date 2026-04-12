@@ -27,7 +27,8 @@ class HiveEntity(Entity):
         if ha_name == device_name:
             self._attr_name = None
         elif ha_name.startswith(device_name + " "):
-            self._attr_name = ha_name[len(device_name) + 1 :]
+            suffix = ha_name[len(device_name) + 1 :].strip()
+            self._attr_name = suffix or None
         else:
             self._attr_name = ha_name
         self._attr_unique_id = f"{self.device['hiveID']}-{self.device['hiveType']}"
