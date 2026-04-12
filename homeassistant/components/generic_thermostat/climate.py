@@ -13,6 +13,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_NONE,
@@ -451,6 +452,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             return
         self._attr_preset_mode = self._presets_inv.get(temperature, PRESET_NONE)
         self._target_temp = temperature
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_set_hvac_mode(hvac_mode)
         await self._async_control_heating(force=True)
         self.async_write_ha_state()
 
