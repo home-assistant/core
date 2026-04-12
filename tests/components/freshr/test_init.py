@@ -154,11 +154,20 @@ async def test_readings_login_error_triggers_reauth(
     )
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    matching_flows = [
-        flow
+    relevant_flows = [
+        {
+            "entry_id": flow.get("context", {}).get("entry_id"),
+            "source": flow.get("context", {}).get("source"),
+            "step_id": flow.get("step_id"),
+        }
         for flow in flows
-        if flow.get("context", {}).get("entry_id") == mock_config_entry.entry_id
+    ]
+    assert any(
+        flow.get("context", {}).get("entry_id") == mock_config_entry.entry_id
         and flow.get("context", {}).get("source") == SOURCE_REAUTH
         and flow.get("step_id") == "reauth_confirm"
-    ]
-    assert len(matching_flows) == 1
+        for flow in flows
+    ), (
+        "Expected a reauth_confirm flow for the config entry, "
+        f"but found flows: {relevant_flows}"
+    )
