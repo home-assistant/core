@@ -912,7 +912,7 @@ async def test_set_target_temp_with_hvac_mode_off(hass: HomeAssistant) -> None:
     assert state.state == HVACMode.OFF
 
 
-async def test_set_target_temp_with_hvac_ac(
+async def test_set_target_temp_with_hvac_mode_cool_when_ac_mode_enabled(
     hass: HomeAssistant,
 ) -> None:
     """Test that COOL is accepted from set_temperature when ac_mode is enabled."""
