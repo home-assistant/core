@@ -33,6 +33,6 @@ async def test_sensor_native_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.guntamatic_heater_outside_temp")
+    state = hass.states.get("sensor.guntamatic_heater_outdoor_temperature")
     assert state is not None
     assert state.state == "15.95"

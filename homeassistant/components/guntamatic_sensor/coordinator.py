@@ -42,7 +42,7 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
         """
         try:
             data: dict[str, list[str]] = await self.hass.async_add_executor_job(
-                self.heater.get_data
+                self.heater.parse_data
             )
         except Exception as err:
             raise UpdateFailed(f"Error communicating with heater: {err}") from err

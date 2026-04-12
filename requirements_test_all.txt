@@ -1028,7 +1028,7 @@ growattServer==1.9.0
 gspread==5.5.0
 
 # homeassistant.components.guntamatic_sensor
-guntamatic==1.0.3
+guntamatic==1.1.0
 
 # homeassistant.components.profiler
 guppy3==3.1.6

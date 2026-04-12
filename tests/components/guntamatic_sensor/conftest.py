@@ -12,11 +12,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 MOCK_DATA = {
-    "Boiler temperature": ["14.09", "°C"],
-    "Outside Temp.": ["15.95", "°C"],
-    "Buffer load.": ["22", "%"],
+    "Boiler Temperature": ["14.09", "°C"],
+    "Outdoor Temperature": ["15.95", "°C"],
+    "Buffer Load": ["22", "%"],
     "Program": ["HEAT", ""],
-    "Running": ["Service Ign.", ""],
+    "Status": ["Service Ign.", ""],
     "Serial": ["959103", ""],
     "Version": ["32a", ""],
 }
@@ -29,7 +29,7 @@ def mock_heater() -> Generator[MagicMock]:
         "homeassistant.components.guntamatic_sensor.Heater",
         autospec=True,
     ) as mock:
-        mock.return_value.get_data = MagicMock(return_value=MOCK_DATA)
+        mock.return_value.parse_data = MagicMock(return_value=MOCK_DATA)
         mock.return_value.host = "1.1.1.1"
         yield mock
 

@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
     StateType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,36 +16,82 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DIAGNOSTIC_SENSORS, DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 
 # Mapping from unit of measurement to sensor description.
-UNIT_TO_DESCRIPTION: dict[str, SensorEntityDescription] = {
-    "°C": SensorEntityDescription(
-        key="temperature",
+GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="Status",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    SensorEntityDescription(
+        key="Program",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    SensorEntityDescription(
+        key="Serial",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    SensorEntityDescription(
+        key="Version",
+        device_class=SensorDeviceClass.ENUM,
+    ),
+    SensorEntityDescription(
+        key="Boiler Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="°C",
     ),
-    "%": SensorEntityDescription(
-        key="percentage",
+    SensorEntityDescription(
+        key="Outdoor Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    SensorEntityDescription(
+        key="Buffer Top Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    SensorEntityDescription(
+        key="Buffer Center Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    SensorEntityDescription(
+        key="Buffer Bottom Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    SensorEntityDescription(
+        key="Domestic Home Water Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    SensorEntityDescription(
+        key="Room 1 Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    SensorEntityDescription(
+        key="Room 2 Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="°C",
+    ),
+    SensorEntityDescription(
+        key="Buffer Load",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="%",
     ),
-    "h": SensorEntityDescription(
-        key="duration_hours",
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="h",
-    ),
-    "d": SensorEntityDescription(
-        key="duration_days",
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="d",
-    ),
-}
+]
 
 type GuntamaticCoordinator = DataUpdateCoordinator[dict[str, list[str]]]
 
@@ -58,13 +103,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Guntamatic sensors from config entry."""
 
-    data = entry.runtime_data
-    coordinator = data.coordinator
-    heater = data.heater
+    coordinator = entry.runtime_data
 
-    # Create one entity per sensor
     sensors = [
-        GuntamaticSensor(coordinator, name, heater.host) for name in coordinator.data
+        GuntamaticSensor(coordinator, description)
+        for description in GUNTAMATIC_SENSORS
+        if description.key in coordinator.data
     ]
 
     async_add_entities(sensors)
@@ -78,31 +122,20 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: GuntamaticCoordinator,
-        name: str,
-        host: str,
+        entitydescription: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._name = name
-        self._attr_name = name
+        self.entity_description = entitydescription
+
+        self._name = entitydescription.key
+        self._attr_name = entitydescription.key
+
         serial = coordinator.data["Serial"][0]
 
-        self._attr_unique_id = f"{serial.replace('.', '_')}_{name.replace(' ', '_')}"
-
-        unit = coordinator.data[name][1]
-        description = UNIT_TO_DESCRIPTION.get(unit)
-        if description is not None:
-            self.entity_description = description
-
-        self._attr_entity_category = (
-            EntityCategory.DIAGNOSTIC if name in DIAGNOSTIC_SENSORS else None
+        self._attr_unique_id = (
+            f"{serial.replace('.', '_')}_{entitydescription.key.replace(' ', '_')}"
         )
-
-        # if no unit is given by the guntamatic, it's a string, so set None
-        if not unit:
-            self._attr_native_unit_of_measurement = None
-            self._attr_state_class = None
-            self._attr_device_class = SensorDeviceClass.ENUM
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},

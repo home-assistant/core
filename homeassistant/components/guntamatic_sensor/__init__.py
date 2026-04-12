@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from guntamatic.heater import Heater
@@ -18,14 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-@dataclass
-class GuntamaticData:
-    """Data for the Guntamatic integration."""
-
-    heater: Heater
-    coordinator: GuntamaticCoordinator
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up guntamatic from a config entry."""
 
@@ -39,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_config_entry_first_refresh()
     except Exception as err:
         raise ConfigEntryNotReady(f"Error while connecting to {host}: {err}") from err
-    entry.runtime_data = GuntamaticData(heater=heater, coordinator=coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True

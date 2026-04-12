@@ -20,8 +20,8 @@ async def test_coordinator_update_failed(
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    mock_heater.return_value.get_data.side_effect = Exception("Connection lost")
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    mock_heater.return_value.parse_data.side_effect = Exception("Connection lost")
+    await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")
@@ -38,8 +38,8 @@ async def test_coordinator_empty_data(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_heater.return_value.get_data.return_value = {}
-    await mock_config_entry.runtime_data.coordinator.async_refresh()
+    mock_heater.return_value.parse_data.return_value = {}
+    await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")
