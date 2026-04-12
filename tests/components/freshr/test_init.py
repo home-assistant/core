@@ -128,9 +128,12 @@ async def test_readings_login_error_triggers_reauth(
 ) -> None:
     """Test that a LoginError during readings refresh triggers a reauth flow."""
     mock_freshr_client.fetch_device_current.side_effect = LoginError("session expired")
+    mock_freshr_client.fetch_device_current.reset_mock()
     freezer.tick(READINGS_SCAN_INTERVAL)
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
+
+    mock_freshr_client.fetch_device_current.assert_called_once()
 
     state = hass.states.get("sensor.fresh_r_inside_temperature")
     assert state is not None
