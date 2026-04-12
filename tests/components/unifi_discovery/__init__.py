@@ -25,7 +25,7 @@ UNIFI_DISCOVERY_PROTECT = UnifiDevice(
 def _patch_discovery(
     device: UnifiDevice | None = None, no_device: bool = False
 ) -> Generator[None]:
-    mock_aio_discovery = MagicMock(auto_spec=AIOUnifiScanner)
+    mock_aio_discovery = MagicMock(spec=AIOUnifiScanner)
     scanner_return = [] if no_device else [device or UNIFI_DISCOVERY_PROTECT]
     mock_aio_discovery.async_scan = AsyncMock(return_value=scanner_return)
     mock_aio_discovery.found_devices = scanner_return
@@ -36,6 +36,6 @@ def _patch_discovery(
             "homeassistant.components.unifi_discovery.discovery.AIOUnifiScanner",
             return_value=mock_aio_discovery,
         ):
-            yield
+            yield mock_aio_discovery
 
     return _patcher()

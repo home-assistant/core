@@ -22,6 +22,7 @@ class UnifiDiscoveryFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a user-initiated flow."""
+        async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
     async def async_step_dhcp(

@@ -22,14 +22,15 @@ async def test_setup_starts_discovery(hass: HomeAssistant) -> None:
 
 async def test_setup_only_starts_discovery_once(hass: HomeAssistant) -> None:
     """Test that discovery is only started once even if setup is called multiple times."""
-    with _patch_discovery():
+    with _patch_discovery() as mock_scanner:
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_scanner.async_scan.call_count == 1
 
-    flows_after_first = hass.config_entries.flow.async_progress_by_handler(
-        "unifiprotect"
-    )
-    assert len(flows_after_first) == 1
+        # Call setup again — discovery should not run a second time
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_scanner.async_scan.call_count == 1
 
 
 async def test_setup_no_devices(hass: HomeAssistant) -> None:
