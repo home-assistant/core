@@ -1,13 +1,12 @@
 {
-    "domain": "aquarite",
-    "name": "Aquarite",
-    "codeowners": ["@fdebrus"],
-    "config_flow": true,
-    "documentation": "https://www.home-assistant.io/integrations/aquarite",
-    "homeassistant": "2025.8.0",
-    "iot_class": "cloud_push",
-    "loggers": ["aioaquarite"],
-    "requirements": [
-        "aioaquarite==0.2.0"
-    ]
+  "domain": "aquarite",
+  "name": "Aquarite",
+  "codeowners": ["@fdebrus"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aquarite",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["aioaquarite"],
+  "quality_scale": "bronze",
+  "requirements": ["aioaquarite==0.2.0"]
 }

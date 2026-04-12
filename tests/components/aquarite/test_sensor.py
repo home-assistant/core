@@ -20,7 +20,6 @@ from homeassistant.components.aquarite.sensor import (
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
 
-
 # ── Entity-level tests with mocked coordinator ──────────────────
 
 
@@ -256,9 +255,7 @@ def test_rssi_native_value_missing() -> None:
     """Test returns None when RSSI is missing."""
     coord = _make_coordinator({"main": {}})
     with _patch_entity_init():
-        entity = AquariteRssiSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME
-        )
+        entity = AquariteRssiSensorEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
     assert entity.native_value is None
 
 

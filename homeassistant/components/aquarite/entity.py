@@ -1,4 +1,5 @@
 """Shared base entity helpers for Aquarite."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo

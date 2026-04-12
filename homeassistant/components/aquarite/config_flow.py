@@ -1,13 +1,13 @@
 """Config Flow for the Aquarite integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from aioaquarite import AquariteAuth, AquariteClient, AuthenticationError
+import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -46,9 +46,9 @@ class AquariteOptionsFlow(OptionsFlow):
         )
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_HEALTH_CHECK_INTERVAL, default=current
-                ): vol.All(int, vol.Range(min=60, max=3600)),
+                vol.Required(CONF_HEALTH_CHECK_INTERVAL, default=current): vol.All(
+                    int, vol.Range(min=60, max=3600)
+                ),
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)

@@ -1,4 +1,5 @@
 """Aquarite Sensor entities."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -43,12 +44,14 @@ async def async_setup_entry(
 
     entities: list[AquariteEntity] = []
 
-    # Pool water temperature (the only read-only temperature; all setpoints
-    # are exposed as Number entities — see number.py)
+    # Pool water temperature
     entities.append(
         AquariteTemperatureSensorEntity(
-            dataservice, pool_id, pool_name,
-            "temperature", "main.temperature",
+            dataservice,
+            pool_id,
+            pool_name,
+            "temperature",
+            "main.temperature",
         )
     )
 
@@ -70,7 +73,10 @@ async def async_setup_entry(
     if dataservice.get_value(PATH_HASPH):
         entities.append(
             AquariteValueSensorEntity(
-                dataservice, pool_id, pool_name, "ph",
+                dataservice,
+                pool_id,
+                pool_name,
+                "ph",
                 "modules.ph.current",
                 device_class=SensorDeviceClass.PH,
             )
@@ -100,14 +106,14 @@ async def async_setup_entry(
         )
 
     # Wi-Fi signal strength (diagnostic, off by default — only useful on Wi-Fi controllers)
-    entities.append(
-        AquariteRssiSensorEntity(dataservice, pool_id, pool_name)
-    )
+    entities.append(AquariteRssiSensorEntity(dataservice, pool_id, pool_name))
 
     # Time and Interval Sensors
     entities.append(
         AquariteTimeSensorEntity(
-            dataservice, pool_id, pool_name,
+            dataservice,
+            pool_id,
+            pool_name,
             "filtration_intel_time",
             "filtration.intel.time",
             native_unit_of_measurement=UnitOfTime.HOURS,
@@ -129,9 +135,7 @@ async def async_setup_entry(
             )
         )
 
-    entities.append(
-        AquaritePoolNameSensorEntity(dataservice, pool_id, pool_name)
-    )
+    entities.append(AquaritePoolNameSensorEntity(dataservice, pool_id, pool_name))
 
     async_add_entities(entities)
 
@@ -163,7 +167,7 @@ class AquariteTemperatureSensorEntity(AquariteEntity, SensorEntity):
         value = self.coordinator.get_value(self._value_path)
         try:
             return float(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
 
@@ -196,7 +200,7 @@ class AquariteValueSensorEntity(AquariteEntity, SensorEntity):
         value = self.coordinator.get_value(self._value_path)
         try:
             return float(value) / 100
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
 
@@ -227,7 +231,7 @@ class AquariteTimeSensorEntity(AquariteEntity, SensorEntity):
         value = self.coordinator.get_value(self._value_path)
         try:
             return float(value) / 60
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
 
@@ -257,7 +261,7 @@ class AquariteHydrolyserSensorEntity(AquariteEntity, SensorEntity):
         value = self.coordinator.get_value(self._value_path)
         try:
             return float(value) / 10
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
 
@@ -287,7 +291,7 @@ class AquariteRxValueSensorEntity(AquariteEntity, SensorEntity):
         value = self.coordinator.get_value(self._value_path)
         try:
             return int(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
 
@@ -365,5 +369,5 @@ class AquariteRssiSensorEntity(AquariteEntity, SensorEntity):
         value = self.coordinator.get_value("main.RSSI")
         try:
             return int(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None

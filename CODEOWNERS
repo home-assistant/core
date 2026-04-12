@@ -160,6 +160,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
 /homeassistant/components/aquacell/ @Jordi1990
 /tests/components/aquacell/ @Jordi1990
+/homeassistant/components/aquarite/ @fdebrus
+/tests/components/aquarite/ @fdebrus
 /homeassistant/components/aranet/ @aschmitz @thecode @anrijs
 /tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus

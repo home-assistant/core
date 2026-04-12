@@ -3,21 +3,24 @@
 These tests run in the Home Assistant Core test environment.
 Run with: pytest tests/components/aquarite/test_coordinator.py
 """
+
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from .conftest import MOCK_POOL_ID
-
 from homeassistant.components.aquarite.coordinator import AquariteDataUpdateCoordinator
+from homeassistant.core import HomeAssistant
+
+from .conftest import MOCK_POOL_ID
 
 
 @pytest.fixture
 def coordinator(
-    hass,
-    mock_pool_data,
+    hass: HomeAssistant,
+    mock_pool_data: dict[str, Any],
 ) -> AquariteDataUpdateCoordinator:
     """Create a coordinator with mock dependencies."""
     mock_auth = AsyncMock()

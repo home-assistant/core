@@ -21,14 +21,17 @@ rules:
     status: done
     comment: aioaquarite published on PyPI
   docs-actions:
-    status: todo
-    comment: Need documentation page on home-assistant.io
+    status: exempt
+    comment: No service actions in initial sensor-only platform
   docs-high-level-description:
-    status: todo
+    status: done
+    comment: Documentation provided in home-assistant/home-assistant.io#44725
   docs-installation-instructions:
-    status: todo
+    status: done
+    comment: Documentation provided in home-assistant/home-assistant.io#44725
   docs-removal-instructions:
-    status: todo
+    status: done
+    comment: Documentation provided in home-assistant/home-assistant.io#44725
   entity-event-setup:
     status: done
     comment: Uses async_add_entities in all platform setup functions

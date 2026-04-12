@@ -4,13 +4,15 @@ These tests run in the Home Assistant Core test environment.
 They validate the config flow, reauth, reconfigure, and options flow steps.
 Run with: pytest tests/components/aquarite/test_config_flow.py
 """
+
 from __future__ import annotations
 
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aioaquarite import AuthenticationError
 import pytest
-
-from .conftest import MOCK_PASSWORD, MOCK_POOL_ID, MOCK_POOL_NAME, MOCK_USERNAME
 
 from homeassistant import config_entries
 from homeassistant.components.aquarite.const import (
@@ -22,19 +24,23 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import MOCK_PASSWORD, MOCK_POOL_ID, MOCK_POOL_NAME, MOCK_USERNAME
+
 PATCH_AUTH = "homeassistant.components.aquarite.config_flow.AquariteAuth"
 PATCH_CLIENT = "homeassistant.components.aquarite.config_flow.AquariteClient"
 PATCH_SETUP = "homeassistant.components.aquarite.async_setup_entry"
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent actual setup during config flow tests."""
     with patch(PATCH_SETUP, return_value=True) as mock:
         yield mock
 
 
-def _mock_auth_and_client(pools=None):
+def _mock_auth_and_client(
+    pools: dict[str, str] | None = None,
+) -> tuple[Any, Any, AsyncMock]:
     """Return patched auth and client context managers."""
     if pools is None:
         pools = {MOCK_POOL_ID: MOCK_POOL_NAME}
@@ -76,7 +82,7 @@ async def test_user_step_to_pool_step(hass: HomeAssistant) -> None:
 
 
 async def test_full_flow_creates_entry(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test the full config flow creates an entry."""
     patch_auth, patch_client, _ = _mock_auth_and_client()
@@ -107,8 +113,6 @@ async def test_full_flow_creates_entry(
 
 async def test_auth_error(hass: HomeAssistant) -> None:
     """Test authentication error is handled."""
-    from aioaquarite import AuthenticationError
-
     with patch(PATCH_AUTH) as mock_auth_cls:
         mock_auth = AsyncMock()
         mock_auth.authenticate.side_effect = AuthenticationError
@@ -162,7 +166,7 @@ async def test_no_pools_found(hass: HomeAssistant) -> None:
 
 
 async def test_duplicate_pool_aborts(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that adding a pool that already exists aborts."""
     patch_auth, patch_client, _ = _mock_auth_and_client()
@@ -205,7 +209,7 @@ async def test_duplicate_pool_aborts(
 
 
 async def test_reauth_flow_shows_form(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reauth flow shows credential form."""
     patch_auth, patch_client, _ = _mock_auth_and_client()
@@ -233,7 +237,7 @@ async def test_reauth_flow_shows_form(
 
 
 async def test_reauth_flow_success(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reauth flow succeeds with valid credentials."""
     patch_auth, patch_client, _ = _mock_auth_and_client()
@@ -269,11 +273,9 @@ async def test_reauth_flow_success(
 
 
 async def test_reauth_flow_auth_error(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reauth flow handles auth error."""
-    from aioaquarite import AuthenticationError
-
     patch_auth, patch_client, _ = _mock_auth_and_client()
 
     with patch_auth, patch_client:
@@ -336,7 +338,7 @@ async def test_reconfigure_flow_shows_form(
 
 
 async def test_reconfigure_flow_success(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test reconfigure flow succeeds with valid credentials."""
     patch_auth, patch_client, _ = _mock_auth_and_client()
@@ -375,8 +377,6 @@ async def test_reconfigure_flow_auth_error(
     hass: HomeAssistant, mock_setup_entry
 ) -> None:
     """Test reconfigure flow handles auth error."""
-    from aioaquarite import AuthenticationError
-
     patch_auth, patch_client, _ = _mock_auth_and_client()
 
     with patch_auth, patch_client:
@@ -412,7 +412,7 @@ async def test_reconfigure_flow_auth_error(
 # ── Options Flow ──────────────────────────────────────────────────
 
 
-async def test_options_flow(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_options_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the options flow allows changing health check interval."""
     patch_auth, patch_client, _ = _mock_auth_and_client()
 
@@ -444,7 +444,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry) -> None:
 
 
 async def test_options_flow_default(
-    hass: HomeAssistant, mock_setup_entry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test options flow uses default health check interval."""
     patch_auth, patch_client, _ = _mock_auth_and_client()

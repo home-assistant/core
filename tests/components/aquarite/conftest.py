@@ -1,4 +1,5 @@
 """Shared fixtures for Aquarite tests."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -88,15 +89,3 @@ def mock_pool_data() -> dict[str, Any]:
         },
         "present": True,
     }
-
-
-def get_value(data: dict[str, Any], path: str, default: Any = None) -> Any:
-    """Navigate nested dicts using dot-notation path (mirrors AquariteClient.get_value)."""
-    keys = path.split(".")
-    current = data
-    for key in keys:
-        if isinstance(current, dict) and key in current:
-            current = current[key]
-        else:
-            return default
-    return current

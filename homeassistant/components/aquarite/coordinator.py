@@ -1,18 +1,21 @@
 """Data coordinator for the Aquarite integration."""
+
 from __future__ import annotations
 
 import asyncio
 import contextlib
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioaquarite import AquariteAuth, AquariteClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_INTERVAL
+
+if TYPE_CHECKING:
+    from . import AquariteConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,10 +23,12 @@ _LOGGER = logging.getLogger(__name__)
 class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Aquarite coordinator using Firestore real-time snapshots."""
 
+    config_entry: AquariteConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: AquariteConfigEntry,
         auth: AquariteAuth,
         api: AquariteClient,
         pool_id: str,
@@ -80,7 +85,7 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 retry_delay = 10
                 sleep_time = self.auth.calculate_sleep_duration()
                 await asyncio.sleep(sleep_time)
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.error(
                     "Error maintaining token: %s. Retrying in %ss", err, retry_delay
                 )
@@ -96,7 +101,7 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await asyncio.sleep(interval)
             try:
                 await self.auth.get_client()
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.error("Health check failed, resubscribing: %s", err)
                 await self.refresh_subscription()
 
