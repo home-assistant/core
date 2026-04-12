@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import httpx
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
@@ -47,58 +48,34 @@ async def test_without_config(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_with_invalid_credentials(
-    hass: HomeAssistant, config_data: dict[str, str]
+@pytest.mark.parametrize(
+    ("exception", "error_reason"),
+    [
+        (AqualinkServiceUnauthorizedException(), "invalid_auth"),
+        (AqualinkServiceException(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
+        (httpx.HTTPError("request failed"), "cannot_connect"),
+    ],
+)
+async def test_user_step_exception_handling(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    exception: Exception,
+    error_reason: str,
 ) -> None:
-    """Test config flow with invalid username and/or password."""
+    """Test config flow maps login exceptions to the expected error."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
     with patch(
         "homeassistant.components.iaqualink.utils.AqualinkClient.login",
-        side_effect=AqualinkServiceUnauthorizedException,
+        side_effect=exception,
     ):
         result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_service_exception(
-    hass: HomeAssistant, config_data: dict[str, str]
-) -> None:
-    """Test config flow encountering service exception."""
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.iaqualink.utils.AqualinkClient.login",
-        side_effect=AqualinkServiceException,
-    ):
-        result = await flow.async_step_user(config_data)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_timeout_during_credential_check(
-    hass: HomeAssistant, config_data: dict[str, str]
-) -> None:
-    """Test config flow maps login timeout to cannot_connect."""
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-
-    with patch(
-        "homeassistant.components.iaqualink.utils.AqualinkClient.login",
-        side_effect=TimeoutError,
-    ):
-        result = await flow.async_step_user(config_data)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_reason}
 
 
 async def test_with_existing_config(
@@ -204,10 +181,22 @@ async def test_with_no_systems(
     assert result["options"] == {CONF_SYSTEMS: []}
 
 
-async def test_timeout_during_system_fetch(
-    hass: HomeAssistant, config_data: dict[str, str]
+@pytest.mark.parametrize(
+    ("exception", "error_reason"),
+    [
+        (AqualinkServiceUnauthorizedException(), "invalid_auth"),
+        (AqualinkServiceException(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
+        (httpx.HTTPError("request failed"), "cannot_connect"),
+    ],
+)
+async def test_system_fetch_exception_handling(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    exception: Exception,
+    error_reason: str,
 ) -> None:
-    """Test config flow maps system fetch timeout to cannot_connect."""
+    """Test config flow maps system fetch exceptions to the expected error."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
 
@@ -218,14 +207,14 @@ async def test_timeout_during_system_fetch(
         ),
         patch(
             "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
-            side_effect=TimeoutError,
+            side_effect=exception,
         ),
     ):
         result = await flow.async_step_user(config_data)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_reason}
 
 
 async def test_async_get_systems_success(
@@ -365,10 +354,22 @@ async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) 
     }
 
 
-async def test_reauth_invalid_auth(
-    hass: HomeAssistant, config_data: dict[str, str]
+@pytest.mark.parametrize(
+    ("exception", "error_reason"),
+    [
+        (AqualinkServiceUnauthorizedException(), "invalid_auth"),
+        (AqualinkServiceException(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
+        (httpx.HTTPError("request failed"), "cannot_connect"),
+    ],
+)
+async def test_reauth_exception_handling(
+    hass: HomeAssistant,
+    config_data: dict[str, str],
+    exception: Exception,
+    error_reason: str,
 ) -> None:
-    """Test reauthentication with invalid credentials."""
+    """Test reauthentication maps exceptions to the expected flow errors."""
     entry = MockConfigEntry(domain=DOMAIN, data=config_data)
     entry.add_to_hass(hass)
 
@@ -376,7 +377,7 @@ async def test_reauth_invalid_auth(
 
     with patch(
         "homeassistant.components.iaqualink.utils.AqualinkClient.login",
-        side_effect=AqualinkServiceUnauthorizedException,
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -385,30 +386,7 @@ async def test_reauth_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_reauth_cannot_connect(
-    hass: HomeAssistant, config_data: dict[str, str]
-) -> None:
-    """Test reauthentication when the service cannot be reached."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-
-    with patch(
-        "homeassistant.components.iaqualink.utils.AqualinkClient.login",
-        side_effect=AqualinkServiceException,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_reason}
 
 
 async def test_options_flow_init_success(
@@ -546,38 +524,33 @@ async def test_options_flow_filters_stale_selected_systems(
 
 
 @pytest.mark.parametrize(
-    ("get_systems_result", "reason"),
+    ("exception", "reason"),
     [
-        (AqualinkServiceUnauthorizedException, "invalid_auth"),
-        (AqualinkServiceException, "cannot_connect"),
+        (AqualinkServiceUnauthorizedException(), "invalid_auth"),
+        (AqualinkServiceException(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
+        (httpx.HTTPError("request failed"), "cannot_connect"),
     ],
 )
 async def test_options_flow_init_abort_reasons(
     hass: HomeAssistant,
     config_data: dict[str, str],
-    get_systems_result: type[Exception] | dict[str, str],
+    exception: Exception,
     reason: str,
 ) -> None:
     """Test options flow displays errors when systems cannot be loaded."""
     entry = MockConfigEntry(domain=DOMAIN, data=config_data)
     entry.add_to_hass(hass)
 
-    get_systems_patch = patch(
-        "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
-        side_effect=get_systems_result,
-    )
-    if isinstance(get_systems_result, dict):
-        get_systems_patch = patch(
-            "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
-            return_value=get_systems_result,
-        )
-
     with (
         patch(
             "homeassistant.components.iaqualink.utils.AqualinkClient.login",
             return_value=None,
         ),
-        get_systems_patch,
+        patch(
+            "homeassistant.components.iaqualink.utils.AqualinkClient.get_systems",
+            side_effect=exception,
+        ),
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
 
