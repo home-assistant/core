@@ -212,22 +212,23 @@ def async_setup_services(hass: HomeAssistant) -> None:
             _check_local_files_allowed(hass.config.is_allowed_path, local_filenames)
             await hass.async_add_executor_job(_check_local_files_exist, local_filenames)
 
-        try:
-            approot_id = (await client.get_approot()).id
-            await asyncio.gather(
-                *[
-                    client.delete_drive_item(
-                        f"{approot_id}:/{file_path}:", delete_permanently
-                    )
-                    for file_path in file_paths
-                ]
-            )
-        except OneDriveException as err:
+        approot_id = (await client.get_approot()).id
+        results = await asyncio.gather(
+            *[
+                client.delete_drive_item(
+                    f"{approot_id}:/{file_path}:", delete_permanently
+                )
+                for file_path in file_paths
+            ],
+            return_exceptions=True,
+        )
+        errors = [r for r in results if isinstance(r, OneDriveException)]
+        if errors:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="delete_error",
-                translation_placeholders={"message": str(err)},
-            ) from err
+                translation_placeholders={"message": "; ".join(str(e) for e in errors)},
+            ) from errors[0]
 
         if local_filenames:
             await hass.async_add_executor_job(_delete_local_files, local_filenames)

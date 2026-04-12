@@ -428,7 +428,7 @@ async def test_delete_local_path_not_allowed(
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=False),
-        pytest.raises(HomeAssistantError, match="no access to path"),
+        pytest.raises(HomeAssistantError, match="allowlist_external_dirs"),
     ):
         await hass.services.async_call(
             DOMAIN,
