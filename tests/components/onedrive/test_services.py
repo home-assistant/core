@@ -316,8 +316,10 @@ async def test_delete_service_delete_permanently(
     mock_onedrive_client: MagicMock,
 ) -> None:
     """Test delete service passes delete_permanently=True when option is set."""
-    mock_config_entry.options = {"delete_permanently": True}
     await setup_integration(hass, mock_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={"delete_permanently": True}
+    )
 
     await hass.services.async_call(
         DOMAIN,
