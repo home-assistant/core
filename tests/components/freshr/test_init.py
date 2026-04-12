@@ -129,6 +129,8 @@ async def test_readings_login_error_triggers_reauth(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a LoginError during readings refresh triggers a reauth flow."""
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
     mock_freshr_client.fetch_device_current.reset_mock()
     mock_freshr_client.fetch_device_current.side_effect = LoginError("session expired")
     freezer.tick(READINGS_SCAN_INTERVAL)
@@ -139,21 +141,24 @@ async def test_readings_login_error_triggers_reauth(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID}_t1")
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    entity_ids = [
+        entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    ]
+    assert entity_ids
+    assert all(
+        hass.states.get(entity_id).state == STATE_UNAVAILABLE
+        for entity_id in entity_ids
+    )
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    reauth_flow = next(
-        (
-            flow
-            for flow in flows
-            if flow.get("context", {}).get("entry_id") == mock_config_entry.entry_id
-            and flow.get("step_id") == "reauth_confirm"
-        ),
-        None,
-    )
-    assert reauth_flow is not None
-    assert reauth_flow.get("context", {}).get("source") == SOURCE_REAUTH
+    matching_flows = [
+        flow
+        for flow in flows
+        if flow.get("context", {}).get("entry_id") == mock_config_entry.entry_id
+        and flow.get("context", {}).get("source") == SOURCE_REAUTH
+        and flow.get("step_id") == "reauth_confirm"
+    ]
+    assert len(matching_flows) == 1
