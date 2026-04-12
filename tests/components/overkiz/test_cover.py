@@ -185,8 +185,10 @@ async def test_cover_service_actions(
     )
     await hass.async_block_till_done()
 
+    # Stop does not change the cover state, so expected_state is None for stop cases
     if expected_state is not None:
         assert hass.states.get(device.entity_id).state == expected_state
+
     assert_command_call(
         mock_client,
         device_url=device.device_url,
