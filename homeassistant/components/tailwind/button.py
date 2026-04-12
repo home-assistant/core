@@ -22,6 +22,8 @@ from .const import DOMAIN
 from .coordinator import TailwindConfigEntry
 from .entity import TailwindEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class TailwindButtonEntityDescription(ButtonEntityDescription):

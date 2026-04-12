@@ -6,17 +6,14 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, get_device_info
+from . import get_device_info
 from .const import (
     ATTR_DOOR,
-    ENTRY_CONTROLLER,
-    ENTRY_VEHICLES,
     SERVICE_UNLOCK_SPECIFIC_DOOR,
     UNLOCK_DOOR_ALL,
     UNLOCK_VALID_DOORS,
@@ -24,6 +21,7 @@ from .const import (
     VEHICLE_NAME,
     VEHICLE_VIN,
 )
+from .coordinator import SubaruConfigEntry
 from .remote_service import async_call_remote_service
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,13 +29,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SubaruConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Subaru locks by config_entry."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
-    controller = entry[ENTRY_CONTROLLER]
-    vehicle_info = entry[ENTRY_VEHICLES]
+    controller = config_entry.runtime_data.controller
+    vehicle_info = config_entry.runtime_data.vehicles
     async_add_entities(
         SubaruLock(vehicle, controller)
         for vehicle in vehicle_info.values()
