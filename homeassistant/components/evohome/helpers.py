@@ -16,7 +16,7 @@ def async_create_deprecation_issue_once(
     translation_key: str | None = None,
     translation_placeholders: dict[str, str] | None = None,
 ) -> None:
-    """Create a deprecation issue only if it does not already exist."""
+    """Create or update a deprecation issue entry."""
 
     placeholders = {
         **(translation_placeholders or {}),
