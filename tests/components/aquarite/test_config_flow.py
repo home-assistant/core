@@ -12,15 +12,12 @@ import pytest
 
 from .conftest import MOCK_PASSWORD, MOCK_POOL_ID, MOCK_POOL_NAME, MOCK_USERNAME
 
-# Skip the entire module if Home Assistant is not installed
-pytest.importorskip("homeassistant")
+from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from homeassistant import config_entries  # noqa: E402
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME  # noqa: E402
-from homeassistant.core import HomeAssistant  # noqa: E402
-from homeassistant.data_entry_flow import FlowResultType  # noqa: E402
-
-from custom_components.aquarite.const import (  # noqa: E402
+from custom_components.aquarite.const import (
     CONF_HEALTH_CHECK_INTERVAL,
     DEFAULT_HEALTH_CHECK_INTERVAL,
     DOMAIN,
