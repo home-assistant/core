@@ -3,9 +3,6 @@ from __future__ import annotations
 
 import datetime
 
-import pytest
-
-
 def test_temperature_conversion() -> None:
     """Test temperature sensor returns raw float."""
     raw_value = 25.5
