@@ -1,9 +1,10 @@
 """Test the Ruckus config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+from aioruckus import RuckusAjaxApi
 from aioruckus.const import ERROR_CONNECT_TIMEOUT, ERROR_LOGIN_INCORRECT
-from aioruckus.exceptions import AuthenticationError
+from aioruckus.exceptions import AuthenticationError, SchemaError
 
 from homeassistant.components.ruckus_unleashed.const import (
     API_AP_DEVNAME,
@@ -90,3 +91,43 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_connection_error_post_login(
+    hass: HomeAssistant,
+) -> None:
+    """Test entry setup retries when get_system_info raises ConnectionError."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with (
+        RuckusAjaxApiPatchContext(),
+        patch.object(
+            RuckusAjaxApi,
+            "get_system_info",
+            new=AsyncMock(side_effect=ConnectionError("connection lost")),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_schema_error_post_login(
+    hass: HomeAssistant,
+) -> None:
+    """Test entry setup retries when get_aps raises SchemaError."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with (
+        RuckusAjaxApiPatchContext(),
+        patch.object(
+            RuckusAjaxApi,
+            "get_aps",
+            new=AsyncMock(side_effect=SchemaError("unexpected schema")),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
