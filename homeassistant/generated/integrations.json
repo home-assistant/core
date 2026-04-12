@@ -508,6 +508,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "aquarite": {
+      "name": "Aquarite",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "aquostv": {
       "name": "Sharp Aquos TV",
       "integration_type": "hub",
