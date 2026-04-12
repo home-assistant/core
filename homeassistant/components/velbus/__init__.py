@@ -66,6 +66,19 @@ async def velbus_scan_task(
         raise PlatformNotReady(
             f"Connection error while connecting to Velbus {entry_id}: {ex}"
         ) from ex
+    except Exception:  # noqa: BLE001
+        # The cache may be stale or incompatible with the current velbusaio version.
+        # Clear it and signal HA to retry on next startup so the scan runs cleanly.
+        _LOGGER.warning(
+            "Velbus scan failed, cache cleared — will retry on next startup",
+            exc_info=True,
+        )
+        cache_path = hass.config.path(STORAGE_DIR, f"velbuscache-{entry_id}")
+        if await hass.async_add_executor_job(os.path.isdir, cache_path):
+            await hass.async_add_executor_job(shutil.rmtree, cache_path)
+        raise PlatformNotReady(
+            f"Velbus cache was corrupted and has been cleared for {entry_id}, retrying on next startup"
+        ) from None
     # create all modules
     dev_reg = dr.async_get(hass)
     found_addresses: set[str] = set()
