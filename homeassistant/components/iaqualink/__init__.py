@@ -201,12 +201,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.client.close()
     if not entry.runtime_data.platforms_loaded:
         return True
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        await entry.runtime_data.client.close()
 
+    return unload_ok
 def refresh_system[_AqualinkEntityT: AqualinkEntity, **_P](
     func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
