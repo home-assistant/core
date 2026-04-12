@@ -1856,11 +1856,11 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 3508,
+      'color_temp_kelvin': 3502,
       'friendly_name': 'Ieskas',
       'hs_color': tuple(
-        27.165,
-        44.6,
+        27.171,
+        44.73,
       ),
       'max_color_temp_kelvin': 6500,
       'min_color_temp_kelvin': 2000,
@@ -2792,17 +2792,17 @@
     'attributes': ReadOnlyDict({
       'brightness': 241,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 3832,
+      'color_temp_kelvin': 3824,
       'friendly_name': 'Plafond bureau ',
       'hs_color': tuple(
-        26.903,
-        38.001,
+        26.908,
+        38.154,
       ),
       'max_color_temp_kelvin': 6500,
       'min_color_temp_kelvin': 2000,
       'rgb_color': tuple(
         255,
-        202,
+        201,
         158,
       ),
       'supported_color_modes': list([
@@ -2811,8 +2811,8 @@
       ]),
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
-        0.43,
-        0.368,
+        0.431,
+        0.367,
       ),
     }),
     'context': <ANY>,

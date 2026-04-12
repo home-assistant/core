@@ -142,7 +142,7 @@ jobs:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
+          wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
           env-file: true
           apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
@@ -200,7 +200,7 @@ jobs:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
+          wheels-key: ${{ secrets.WHEELS_KEY }} # zizmor: ignore[secrets-outside-env]
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl

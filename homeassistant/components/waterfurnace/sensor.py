@@ -157,10 +157,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Waterfurnace sensors from a config entry."""
-    coordinator = config_entry.runtime_data
-
     async_add_entities(
-        WaterFurnaceSensor(coordinator, description) for description in SENSORS
+        WaterFurnaceSensor(coordinator, description)
+        for coordinator in config_entry.runtime_data.values()
+        for description in SENSORS
     )
 
 

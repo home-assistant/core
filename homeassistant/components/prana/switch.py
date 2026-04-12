@@ -1,20 +1,16 @@
 """Switch platform for Prana integration."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
-from aioesphomeapi import dataclass
-
-from homeassistant.components.switch import (
-    StrEnum,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PranaConfigEntry, PranaCoordinator
-from .entity import PranaBaseEntity, PranaEntityDescription
+from .entity import PranaBaseEntity
 
 PARALLEL_UPDATES = 1
 
@@ -32,13 +28,14 @@ class PranaSwitchType(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class PranaSwitchEntityDescription(SwitchEntityDescription, PranaEntityDescription):
+class PranaSwitchEntityDescription(SwitchEntityDescription):
     """Description of a Prana switch entity."""
 
+    key: PranaSwitchType
     value_fn: Callable[[PranaCoordinator], bool]
 
 
-ENTITIES: tuple[PranaEntityDescription, ...] = (
+ENTITIES: tuple[PranaSwitchEntityDescription, ...] = (
     PranaSwitchEntityDescription(
         key=PranaSwitchType.BOUND,
         translation_key="bound",

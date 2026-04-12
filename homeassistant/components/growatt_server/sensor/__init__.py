@@ -15,6 +15,7 @@ from ..coordinator import GrowattConfigEntry, GrowattCoordinator
 from .inverter import INVERTER_SENSOR_TYPES
 from .mix import MIX_SENSOR_TYPES
 from .sensor_entity_description import GrowattSensorEntityDescription
+from .sph import SPH_SENSOR_TYPES
 from .storage import STORAGE_SENSOR_TYPES
 from .tlx import TLX_SENSOR_TYPES
 from .total import TOTAL_SENSOR_TYPES
@@ -57,6 +58,8 @@ async def async_setup_entry(
             sensor_descriptions = list(STORAGE_SENSOR_TYPES)
         elif device_coordinator.device_type == "mix":
             sensor_descriptions = list(MIX_SENSOR_TYPES)
+        elif device_coordinator.device_type == "sph":
+            sensor_descriptions = list(SPH_SENSOR_TYPES)
         else:
             _LOGGER.debug(
                 "Device type %s was found but is not supported right now",

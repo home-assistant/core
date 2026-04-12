@@ -8,10 +8,13 @@ from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
 )
-from tuya_device_handlers.type_information import IntegerTypeInformation
-from tuya_device_handlers.utils import RemapHelper
+from tuya_device_handlers.device_wrapper.fan import (
+    FanDirectionEnumWrapper,
+    FanSpeedEnumWrapper,
+    FanSpeedIntegerWrapper,
+)
+from tuya_device_handlers.helpers.homeassistant import TuyaFanDirection
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.fan import (
@@ -23,10 +26,6 @@ from homeassistant.components.fan import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.percentage import (
-    ordered_list_item_to_percentage,
-    percentage_to_ordered_list_item,
-)
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
@@ -53,18 +52,13 @@ TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
     DeviceCategory.KS,
 }
 
-
-class _DirectionEnumWrapper(DPCodeEnumWrapper):
-    """Wrapper for fan direction DP code."""
-
-    def read_device_status(self, device: CustomerDevice) -> str | None:
-        """Read the device status and return the direction string."""
-        if (value := self._read_dpcode_value(device)) and value in {
-            DIRECTION_FORWARD,
-            DIRECTION_REVERSE,
-        }:
-            return value
-        return None
+_TUYA_TO_HA_DIRECTION_MAPPINGS = {
+    TuyaFanDirection.FORWARD: DIRECTION_FORWARD,
+    TuyaFanDirection.REVERSE: DIRECTION_REVERSE,
+}
+_HA_TO_TUYA_DIRECTION_MAPPINGS = {
+    v: k for k, v in _TUYA_TO_HA_DIRECTION_MAPPINGS.items()
+}
 
 
 def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
@@ -80,50 +74,15 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
     return any(get_dpcode(device, code) for code in properties_to_check)
 
 
-class _FanSpeedEnumWrapper(DPCodeEnumWrapper[int]):
-    """Wrapper for fan speed DP code (from an enum)."""
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        """Get the current speed as a percentage."""
-        if (value := self._read_dpcode_value(device)) is None:
-            return None
-        return ordered_list_item_to_percentage(self.options, value)
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        """Convert a Home Assistant value back to a raw device value."""
-        return percentage_to_ordered_list_item(self.options, value)
-
-
-class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper[int]):
-    """Wrapper for fan speed DP code (from an integer)."""
-
-    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
-        """Init DPCodeIntegerWrapper."""
-        super().__init__(dpcode, type_information)
-        self._remap_helper = RemapHelper.from_type_information(type_information, 1, 100)
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        """Get the current speed as a percentage."""
-        if (value := self._read_dpcode_value(device)) is None:
-            return None
-        return round(self._remap_helper.remap_value_to(value))
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        """Convert a Home Assistant value back to a raw device value."""
-        return round(self._remap_helper.remap_value_from(value))
-
-
 def _get_speed_wrapper(
     device: CustomerDevice,
-) -> _FanSpeedEnumWrapper | _FanSpeedIntegerWrapper | None:
+) -> DeviceWrapper[int] | None:
     """Get the speed wrapper for the device."""
-    if int_wrapper := _FanSpeedIntegerWrapper.find_dpcode(
+    if int_wrapper := FanSpeedIntegerWrapper.find_dpcode(
         device, _SPEED_DPCODES, prefer_function=True
     ):
         return int_wrapper
-    return _FanSpeedEnumWrapper.find_dpcode(
-        device, _SPEED_DPCODES, prefer_function=True
-    )
+    return FanSpeedEnumWrapper.find_dpcode(device, _SPEED_DPCODES, prefer_function=True)
 
 
 async def async_setup_entry(
@@ -145,7 +104,7 @@ async def async_setup_entry(
                     TuyaFanEntity(
                         device,
                         manager,
-                        direction_wrapper=_DirectionEnumWrapper.find_dpcode(
+                        direction_wrapper=FanDirectionEnumWrapper.find_dpcode(
                             device, _DIRECTION_DPCODES, prefer_function=True
                         ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
@@ -179,7 +138,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        direction_wrapper: DeviceWrapper[str] | None,
+        direction_wrapper: DeviceWrapper[TuyaFanDirection] | None,
         mode_wrapper: DeviceWrapper[str] | None,
         oscillate_wrapper: DeviceWrapper[bool] | None,
         speed_wrapper: DeviceWrapper[int] | None,
@@ -220,7 +179,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        await self._async_send_wrapper_updates(self._direction_wrapper, direction)
+        if tuya_value := _HA_TO_TUYA_DIRECTION_MAPPINGS.get(direction):
+            await self._async_send_wrapper_updates(self._direction_wrapper, tuya_value)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -265,7 +225,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
-        return self._read_wrapper(self._direction_wrapper)
+        tuya_value = self._read_wrapper(self._direction_wrapper)
+        return _TUYA_TO_HA_DIRECTION_MAPPINGS.get(tuya_value) if tuya_value else None
 
     @property
     def oscillating(self) -> bool | None:

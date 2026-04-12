@@ -27,9 +27,26 @@ from .const import (
     VICARE_TOKEN_FILENAME,
 )
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
-from .utils import get_device, get_device_serial, login
+from .utils import get_device_serial, login
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: ViCareConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if config_entry.version > 1:
+        return False
+
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        _LOGGER.debug("Migrating ViCare config entry from version 1.1 to 1.2")
+        data = {**config_entry.data}
+        data.pop("heating_type", None)
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
+        _LOGGER.debug("Migration to version 1.2 successful")
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
@@ -74,7 +91,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
         )
 
     devices = [
-        ViCareDevice(config=device_config, api=get_device(entry, device_config))
+        ViCareDevice(config=device_config, api=device_config.asAutoDetectDevice())
         for device_config in device_config_list
         if bool(device_config.isOnline())
     ]

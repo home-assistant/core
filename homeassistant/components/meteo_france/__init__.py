@@ -1,72 +1,38 @@
 """Support for Meteo-France weather data."""
 
-from datetime import timedelta
 import logging
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.helpers import is_valid_warning_department
-from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
 from requests import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_CITY,
     COORDINATOR_ALERT,
     COORDINATOR_FORECAST,
     COORDINATOR_RAIN,
     DOMAIN,
     PLATFORMS,
 )
+from .coordinator import (
+    MeteoFranceAlertUpdateCoordinator,
+    MeteoFranceForecastUpdateCoordinator,
+    MeteoFranceRainUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL_RAIN = timedelta(minutes=5)
-SCAN_INTERVAL = timedelta(minutes=15)
-
-
-CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up an Meteo-France account from a config entry."""
+    """Set up a Meteo-France account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     client = MeteoFranceClient()
-    latitude = entry.data[CONF_LATITUDE]
-    longitude = entry.data[CONF_LONGITUDE]
 
-    async def _async_update_data_forecast_forecast() -> Forecast:
-        """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(
-            client.get_forecast, latitude, longitude
-        )
-
-    async def _async_update_data_rain() -> Rain:
-        """Fetch data from API endpoint."""
-        return await hass.async_add_executor_job(client.get_rain, latitude, longitude)
-
-    async def _async_update_data_alert() -> CurrentPhenomenons:
-        """Fetch data from API endpoint."""
-        assert isinstance(department, str)
-        return await hass.async_add_executor_job(
-            client.get_warning_current_phenomenons, department, 0, True
-        )
-
-    coordinator_forecast = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Météo-France forecast for city {entry.title}",
-        config_entry=entry,
-        update_method=_async_update_data_forecast_forecast,
-        update_interval=SCAN_INTERVAL,
-    )
+    coordinator_forecast = MeteoFranceForecastUpdateCoordinator(hass, entry, client)
     coordinator_rain = None
     coordinator_alert = None
 
@@ -77,14 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     # Check rain forecast.
-    coordinator_rain = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Météo-France rain for city {entry.title}",
-        config_entry=entry,
-        update_method=_async_update_data_rain,
-        update_interval=SCAN_INTERVAL_RAIN,
-    )
+    coordinator_rain = MeteoFranceRainUpdateCoordinator(hass, entry, client)
     try:
         await coordinator_rain._async_refresh(log_failures=False)  # noqa: SLF001
     except RequestException:
@@ -101,13 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if department is not None and is_valid_warning_department(department):
         if not hass.data[DOMAIN].get(department):
-            coordinator_alert = DataUpdateCoordinator(
+            coordinator_alert = MeteoFranceAlertUpdateCoordinator(
                 hass,
-                _LOGGER,
-                name=f"Météo-France alert for department {department}",
-                config_entry=entry,
-                update_method=_async_update_data_alert,
-                update_interval=SCAN_INTERVAL,
+                entry,
+                client,
+                department,
             )
 
             await coordinator_alert.async_refresh()

@@ -1,0 +1,24 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'pets': list([
+    ]),
+    'robots': list([
+      dict({
+        'cleanCycleWaitTimeMinutes': '7',
+        'cycleCapacity': '30',
+        'cycleCount': '15',
+        'cyclesAfterDrawerFull': '0',
+        'lastSeen': '2022-09-17T13:06:37.884Z',
+        'litterRobotId': '**REDACTED**',
+        'litterRobotNickname': 'Test',
+        'litterRobotSerial': '**REDACTED**',
+        'nightLightActive': '1',
+        'panelLockActive': '0',
+        'powerStatus': 'AC',
+        'sleepModeActive': '112:50:19',
+        'unitStatus': 'RDY',
+      }),
+    ]),
+  })
+# ---

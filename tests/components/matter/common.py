@@ -96,6 +96,7 @@ FIXTURES = [
     "secuyou_smart_lock",
     "silabs_dishwasher",
     "silabs_evse_charging",
+    "silabs_fan",
     "silabs_laundrywasher",
     "silabs_light_switch",
     "silabs_refrigerator",

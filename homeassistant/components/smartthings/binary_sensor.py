@@ -200,6 +200,14 @@ CAPABILITY_TO_SENSORS: dict[
             supported_states_attributes=Attribute.SUPPORTED_STATUS,
         )
     },
+    Capability.CUSTOM_COOKTOP_OPERATING_STATE: {
+        Attribute.COOKTOP_OPERATING_STATE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.COOKTOP_OPERATING_STATE,
+            translation_key="cooktop_operating_state",
+            is_on_key="run",
+            supported_states_attributes=Attribute.SUPPORTED_COOKTOP_OPERATING_STATE,
+        )
+    },
 }
 
 

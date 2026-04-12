@@ -239,6 +239,7 @@ async def test_services(
     # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
     await call_service(hass, SERVICE_TOGGLE, ent2)
+    await hass.async_block_till_done()
 
     # entities without stop should be closed and with stop should be closing
     assert is_closed(hass, ent1)
@@ -258,6 +259,7 @@ async def test_services(
     # call basic toggle services
     await call_service(hass, SERVICE_TOGGLE, ent1)
     await call_service(hass, SERVICE_TOGGLE, ent2)
+    await hass.async_block_till_done()
 
     # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
     assert is_closed(hass, ent1)
@@ -266,6 +268,7 @@ async def test_services(
     assert is_closed(hass, ent2)
 
     await call_service(hass, SERVICE_SET_VALVE_POSITION, ent2, 50)
+    await hass.async_block_till_done()
     assert is_opening(hass, ent2)
 
 

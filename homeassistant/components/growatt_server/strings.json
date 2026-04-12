@@ -58,14 +58,14 @@
           "region": "[%key:component::growatt_server::config::step::password_auth::data_description::region%]",
           "token": "The API token for your Growatt account. You can generate one via the Growatt web portal or ShinePhone app."
         },
-        "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
+        "description": "Token authentication is only supported for MIN/SPH devices. For other device types, please use username/password authentication.",
         "title": "Enter your API token"
       },
       "user": {
-        "description": "Note: Token authentication is currently only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
+        "description": "Note: Token authentication is currently only supported for MIN/SPH devices. For other device types, please use username/password authentication.",
         "menu_options": {
           "password_auth": "Username/password",
-          "token_auth": "API token (MIN/TLX only)"
+          "token_auth": "API token (MIN/SPH only)"
         },
         "title": "Choose authentication method"
       }
@@ -242,6 +242,24 @@
       },
       "mix_wattage_pv_all": {
         "name": "All PV wattage"
+      },
+      "sph_grid_frequency": {
+        "name": "AC frequency"
+      },
+      "sph_temperature_1": {
+        "name": "Temperature 1"
+      },
+      "sph_temperature_2": {
+        "name": "Temperature 2"
+      },
+      "sph_temperature_3": {
+        "name": "Temperature 3"
+      },
+      "sph_temperature_4": {
+        "name": "Temperature 4"
+      },
+      "sph_temperature_5": {
+        "name": "Temperature 5"
       },
       "storage_ac_input_frequency_out": {
         "name": "AC input frequency"
@@ -576,6 +594,26 @@
     }
   },
   "services": {
+    "read_ac_charge_times": {
+      "description": "Read AC charge time periods from an SPH device.",
+      "fields": {
+        "device_id": {
+          "description": "The Growatt SPH device to read from.",
+          "name": "Device"
+        }
+      },
+      "name": "Read AC charge times"
+    },
+    "read_ac_discharge_times": {
+      "description": "Read AC discharge time periods from an SPH device.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+        }
+      },
+      "name": "Read AC discharge times"
+    },
     "read_time_segments": {
       "description": "Read all time segments from a supported inverter.",
       "fields": {
@@ -615,6 +653,118 @@
         }
       },
       "name": "Update time segment"
+    },
+    "write_ac_charge_times": {
+      "description": "Write AC charge time periods to an SPH device.",
+      "fields": {
+        "charge_power": {
+          "description": "Charge power limit (%).",
+          "name": "Charge power"
+        },
+        "charge_stop_soc": {
+          "description": "Stop charging at this state of charge (%).",
+          "name": "Charge stop SOC"
+        },
+        "device_id": {
+          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+        },
+        "mains_enabled": {
+          "description": "Enable AC (mains) charging.",
+          "name": "Mains charging enabled"
+        },
+        "period_1_enabled": {
+          "description": "Enable time period 1.",
+          "name": "Period 1 enabled"
+        },
+        "period_1_end": {
+          "description": "End time for period 1 (HH:MM or HH:MM:SS).",
+          "name": "Period 1 end"
+        },
+        "period_1_start": {
+          "description": "Start time for period 1 (HH:MM or HH:MM:SS).",
+          "name": "Period 1 start"
+        },
+        "period_2_enabled": {
+          "description": "Enable time period 2.",
+          "name": "Period 2 enabled"
+        },
+        "period_2_end": {
+          "description": "End time for period 2 (HH:MM or HH:MM:SS).",
+          "name": "Period 2 end"
+        },
+        "period_2_start": {
+          "description": "Start time for period 2 (HH:MM or HH:MM:SS).",
+          "name": "Period 2 start"
+        },
+        "period_3_enabled": {
+          "description": "Enable time period 3.",
+          "name": "Period 3 enabled"
+        },
+        "period_3_end": {
+          "description": "End time for period 3 (HH:MM or HH:MM:SS).",
+          "name": "Period 3 end"
+        },
+        "period_3_start": {
+          "description": "Start time for period 3 (HH:MM or HH:MM:SS).",
+          "name": "Period 3 start"
+        }
+      },
+      "name": "Write AC charge times"
+    },
+    "write_ac_discharge_times": {
+      "description": "Write AC discharge time periods to an SPH device.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::description%]",
+          "name": "[%key:component::growatt_server::services::read_ac_charge_times::fields::device_id::name%]"
+        },
+        "discharge_power": {
+          "description": "Discharge power limit (%).",
+          "name": "Discharge power"
+        },
+        "discharge_stop_soc": {
+          "description": "Stop discharging at this state of charge (%).",
+          "name": "Discharge stop SOC"
+        },
+        "period_1_enabled": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_1_enabled::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_1_enabled::name%]"
+        },
+        "period_1_end": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_1_end::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_1_end::name%]"
+        },
+        "period_1_start": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_1_start::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_1_start::name%]"
+        },
+        "period_2_enabled": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_2_enabled::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_2_enabled::name%]"
+        },
+        "period_2_end": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_2_end::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_2_end::name%]"
+        },
+        "period_2_start": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_2_start::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_2_start::name%]"
+        },
+        "period_3_enabled": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_3_enabled::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_3_enabled::name%]"
+        },
+        "period_3_end": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_3_end::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_3_end::name%]"
+        },
+        "period_3_start": {
+          "description": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_3_start::description%]",
+          "name": "[%key:component::growatt_server::services::write_ac_charge_times::fields::period_3_start::name%]"
+        }
+      },
+      "name": "Write AC discharge times"
     }
   },
   "title": "Growatt Server"

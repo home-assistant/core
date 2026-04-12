@@ -78,6 +78,7 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
     },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "xiaomi_miio": {
         "python-miio": {"zeroconf"},
     },

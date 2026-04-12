@@ -619,12 +619,64 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         description_placeholders["bot_username"] = f"@{service.bot.username}"
         description_placeholders["bot_url"] = f"https://t.me/{service.bot.username}"
 
+        # suggest chat id based on the most recent chat
+        suggested_values = {}
+        description_placeholders["most_recent_chat"] = "Not available"
+        try:
+            most_recent_chat = await _get_most_recent_chat(service)
+        except TelegramError as err:
+            _LOGGER.warning("Error occurred while fetching recent chat: %s", err)
+            most_recent_chat = None
+        if most_recent_chat is not None:
+            suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
+
+            description_placeholders["most_recent_chat"] = (
+                f"{most_recent_chat[1]} ({most_recent_chat[0]})"
+                if most_recent_chat[1]
+                else str(most_recent_chat[0])
+            )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+                suggested_values,
+            ),
             description_placeholders=description_placeholders,
             errors=errors,
         )
+
+
+async def _get_most_recent_chat(
+    service: TelegramNotificationService,
+) -> tuple[int, str | None] | None:
+    """Get the most recent chat ID and name.
+
+    For broadcast bot, this is retrieved using get_updates() to find the most recent message received.
+    For polling or webhook bot, this is retrieved from the runtime data which is updated whenever a message is received.
+    """
+
+    if service.app is not None:
+        # this is either polling or webhook bot
+
+        if service.app.most_recent_chat_id is None:
+            return None
+
+        chat = await service.bot.get_chat(service.app.most_recent_chat_id)
+        return (service.app.most_recent_chat_id, chat.effective_name)
+
+    # broadcast bot
+    updates = await service.bot.get_updates(offset=0)
+    if updates:
+        last_update = updates[-1]
+        if last_update.effective_chat:
+            chat_name = last_update.effective_chat.effective_name
+            return (
+                last_update.effective_chat.id,
+                chat_name,
+            )
+
+    return None
 
 
 async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:

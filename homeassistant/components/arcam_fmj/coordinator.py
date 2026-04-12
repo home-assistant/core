@@ -66,6 +66,7 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
             model="Arcam FMJ AVR",
             name=name,
         )
+        self.zone_unique_id = f"{unique_id}-{zone}"
 
         if zone != 1:
             self.device_info["via_device"] = (DOMAIN, unique_id)

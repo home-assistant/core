@@ -225,10 +225,6 @@
       "description": "System is unsupported because Home Assistant cannot determine when an Internet connection is available. For troubleshooting information, select Learn more.",
       "title": "Unsupported system - Connectivity check disabled"
     },
-    "unsupported_content_trust": {
-      "description": "System is unsupported because Home Assistant cannot verify content being run is trusted and not modified by attackers. For troubleshooting information, select Learn more.",
-      "title": "Unsupported system - Content-trust check disabled"
-    },
     "unsupported_dbus": {
       "description": "System is unsupported because D-Bus is working incorrectly. Many things fail without this as Supervisor cannot communicate with the host. For troubleshooting information, select Learn more.",
       "title": "Unsupported system - D-Bus issues"
@@ -280,10 +276,6 @@
     "unsupported_software": {
       "description": "System is unsupported because additional software outside the Home Assistant ecosystem has been detected. For troubleshooting information, select Learn more.",
       "title": "Unsupported system - Unsupported software"
-    },
-    "unsupported_source_mods": {
-      "description": "System is unsupported because Supervisor source code has been modified. For troubleshooting information, select Learn more.",
-      "title": "Unsupported system - Supervisor source modifications"
     },
     "unsupported_supervisor_version": {
       "description": "System is unsupported because an out-of-date version of Supervisor is in use and auto-update has been disabled. For troubleshooting information, select Learn more.",

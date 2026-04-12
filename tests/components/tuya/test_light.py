@@ -128,7 +128,7 @@ async def test_platform_setup_and_discovery(
             },
             [
                 {"code": "switch_led", "value": True},
-                {"code": "temp_value", "value": 220},
+                {"code": "temp_value", "value": 221},
                 {"code": "bright_value", "value": 255},
             ],
         ),
