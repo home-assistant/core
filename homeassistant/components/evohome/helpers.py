@@ -19,8 +19,8 @@ def async_create_deprecation_issue_once(
     """Create a deprecation issue only if it does not already exist."""
 
     placeholders = {
-        "breaks_in_ha_version": breaks_in_ha_version,
         **(translation_placeholders or {}),
+        "breaks_in_ha_version": breaks_in_ha_version,
     }
 
     ir.async_get(hass).async_get_or_create(
