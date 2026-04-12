@@ -199,6 +199,9 @@ aioaseko==1.0.0
 # homeassistant.components.asuswrt
 aioasuswrt==1.5.4
 
+# homeassistant.components.aquarite
+aioaquarite==0.2.0
+
 # homeassistant.components.husqvarna_automower
 aioautomower==2.7.3
 
