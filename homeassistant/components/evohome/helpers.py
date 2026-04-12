@@ -16,22 +16,14 @@ def async_create_deprecation_issue_once(
     translation_key: str | None = None,
     translation_placeholders: dict[str, str] | None = None,
 ) -> None:
-    """Create a deprecation issue only if it does not already exist.
-
-    Deprecated actions can be triggered repeatedly (for example by automations).
-    This helper avoids repeated issue updates for the same issue_id.
-    """
-
-    issue_registry = ir.async_get(hass)
-    if issue_registry.async_get_issue(DOMAIN, issue_id) is not None:
-        return
+    """Create a deprecation issue only if it does not already exist."""
 
     placeholders = {
         "breaks_in_ha_version": breaks_in_ha_version,
         **(translation_placeholders or {}),
     }
 
-    issue_registry.async_get_or_create(
+    ir.async_get(hass).async_get_or_create(
         DOMAIN,
         issue_id,
         breaks_in_ha_version=breaks_in_ha_version,
