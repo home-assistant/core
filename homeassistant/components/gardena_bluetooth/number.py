@@ -142,6 +142,7 @@ DESCRIPTIONS = (
         native_min_value=0.0,
         native_max_value=359.0,
         native_step=1.0,
+        entity_category=EntityCategory.CONFIG,
         char=Spray.sector,
     ),
     GardenaBluetoothNumberEntityDescription(
@@ -153,6 +154,7 @@ DESCRIPTIONS = (
         native_max_value=100.0,
         native_step=0.1,
         char=Spray.distance,
+        entity_category=EntityCategory.CONFIG,
         scale=10.0,
     ),
 )
