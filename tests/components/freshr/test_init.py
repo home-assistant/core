@@ -10,7 +10,8 @@ from homeassistant.components.freshr.coordinator import (
     DEVICES_SCAN_INTERVAL,
     READINGS_SCAN_INTERVAL,
 )
-from homeassistant.config_entries import ConfigEntryState, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -124,6 +125,7 @@ async def test_readings_login_error_triggers_reauth(
     hass: HomeAssistant,
     mock_freshr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a LoginError during readings refresh triggers a reauth flow."""
@@ -135,9 +137,13 @@ async def test_readings_login_error_triggers_reauth(
 
     mock_freshr_client.fetch_device_current.assert_called_once()
 
-    state = hass.states.get("sensor.fresh_r_inside_temperature")
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID}_t1")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     reauth_flow = next(
