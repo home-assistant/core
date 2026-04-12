@@ -1,15 +1,15 @@
 """Fixtures for OpenRouter integration tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from dataclasses import dataclass
+import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from openai.types import CompletionUsage
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
+from openrouter.components.model import Model
 import pytest
-from python_open_router import KeyData, ModelsDataWrapper
 
 from homeassistant.components.open_router.const import (
     CONF_PROMPT,
@@ -100,14 +100,6 @@ def mock_config_entry(
     )
 
 
-@dataclass
-class Model:
-    """Mock model data."""
-
-    id: str
-    name: str
-
-
 @pytest.fixture
 async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
     """Initialize integration."""
@@ -144,19 +136,20 @@ async def mock_openai_client() -> AsyncGenerator[AsyncMock]:
 async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
     """Initialize integration."""
     with patch(
-        "homeassistant.components.open_router.config_flow.OpenRouterClient",
+        "homeassistant.components.open_router.config_flow.OpenRouter",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.get_key_data.return_value = KeyData(
-            label="Test account",
-            usage=0,
-            is_provisioning_key=False,
-            limit_remaining=None,
-            is_free_tier=True,
+        client.__enter__.return_value = client
+        client.__exit__.return_value = None
+        client.api_keys = MagicMock()
+        client.models = MagicMock()
+        client.api_keys.get_current_key_metadata = MagicMock(
+            return_value=MagicMock(data=MagicMock(label="Test account"))
         )
         models = await async_load_fixture(hass, "models.json", DOMAIN)
-        client.get_models.return_value = ModelsDataWrapper.from_json(models).data
+        model_list = [Model.model_validate(m) for m in json.loads(models)["data"]]
+        client.models.list = MagicMock(return_value=MagicMock(data=model_list))
         yield client
 
 
