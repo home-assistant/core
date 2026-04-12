@@ -99,9 +99,9 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         )
 
     async def async_set_dhw_override(
-        self, state: EvoDhwState, duration: timedelta | None = None
+        self, state: bool, duration: timedelta | None = None
     ) -> None:
-        """Override the DHW zone's state, either permanently or for a duration."""
+        """Override the DHW zone's on/off state, either permanently or for a duration."""
 
         if duration is None:
             until = None  # indefinitely, aka permanent override
