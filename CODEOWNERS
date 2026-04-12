@@ -489,8 +489,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50 @roberty99
-/homeassistant/components/epic_games_store/ @hacf-fr @Quentame
-/tests/components/epic_games_store/ @hacf-fr @Quentame
+/homeassistant/components/epic_games_store/ @Quentame
+/tests/components/epic_games_store/ @Quentame
 /homeassistant/components/epion/ @lhgravendeel
 /tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
