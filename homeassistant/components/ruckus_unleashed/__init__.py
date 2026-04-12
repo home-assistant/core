@@ -47,9 +47,9 @@ async def async_setup_entry(
 
     coordinator = RuckusDataUpdateCoordinator(hass, entry, ruckus)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
+    try:
         system_info = await ruckus.api.get_system_info()
         aps = await ruckus.api.get_aps()
     except (ConnectionError, SchemaError) as err:
