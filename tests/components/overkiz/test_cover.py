@@ -44,7 +44,7 @@ class FixtureDevice(NamedTuple):
     """Test device binding a fixture file to a device URL."""
 
     fixture: str
-    url: str
+    device_url: str
 
 
 AWNING = FixtureDevice(
@@ -177,7 +177,7 @@ async def test_cover_service_actions(
     """Test open, close, and stop cover services."""
     await setup_overkiz_integration(fixture=device.fixture)
 
-    entity_id = get_entity_id(entity_registry, device.url)
+    entity_id = get_entity_id(entity_registry, device.device_url)
     await hass.services.async_call(
         COVER_DOMAIN,
         service,
@@ -190,7 +190,7 @@ async def test_cover_service_actions(
         assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
         mock_client,
-        device_url=device.url,
+        device_url=device.device_url,
         command_name=command_name,
     )
 
@@ -204,12 +204,12 @@ async def test_cover_service_actions(
         "position",
     ),
     [
-        (SHUTTER, "setClosure", SHUTTER.url, (75,), 25),
-        (AWNING, "setDeployment", AWNING.url, (80,), 80),
+        (SHUTTER, "setClosure", SHUTTER.device_url, (75,), 25),
+        (AWNING, "setDeployment", AWNING.device_url, (80,), 80),
         (
             LOW_SPEED,
             "setClosureAndLinearSpeed",
-            f"{LOW_SPEED.url}_low_speed",
+            f"{LOW_SPEED.device_url}_low_speed",
             (65, OverkizCommandParam.LOWSPEED),
             35,
         ),
@@ -240,7 +240,7 @@ async def test_cover_set_position(
 
     assert_command_call(
         mock_client,
-        device_url=device.url,
+        device_url=device.device_url,
         command_name=command_name,
         parameters=parameters,
     )
@@ -256,7 +256,7 @@ async def test_cover_tilt_services(
     """Test tilt services for a pergola from a full user setup."""
     await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
-    entity_id = get_entity_id(entity_registry, PERGOLA.url)
+    entity_id = get_entity_id(entity_registry, PERGOLA.device_url)
     state = get_state(hass, entity_id)
 
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
@@ -279,7 +279,7 @@ async def test_cover_tilt_services(
     assert get_state(hass, entity_id).state == CoverState.OPENING
     assert_command_call(
         mock_client,
-        device_url=PERGOLA.url,
+        device_url=PERGOLA.device_url,
         command_name="openSlats",
     )
 
@@ -290,7 +290,7 @@ async def test_cover_tilt_services(
         [
             build_event(
                 EventName.EXECUTION_STATE_CHANGED.value,
-                device_url=PERGOLA.url,
+                device_url=PERGOLA.device_url,
                 exec_id="exec-1",
                 new_state=ExecutionState.COMPLETED.value,
             )
@@ -309,7 +309,7 @@ async def test_cover_tilt_services(
     assert get_state(hass, entity_id).state == CoverState.CLOSING
     assert_command_call(
         mock_client,
-        device_url=PERGOLA.url,
+        device_url=PERGOLA.device_url,
         command_name="closeSlats",
     )
 
@@ -322,7 +322,7 @@ async def test_cover_tilt_services(
     )
     assert_command_call(
         mock_client,
-        device_url=PERGOLA.url,
+        device_url=PERGOLA.device_url,
         command_name="stop",
     )
 
@@ -335,7 +335,7 @@ async def test_cover_tilt_services(
     )
     assert_command_call(
         mock_client,
-        device_url=PERGOLA.url,
+        device_url=PERGOLA.device_url,
         command_name="setOrientation",
         parameters=(60,),
     )
@@ -351,7 +351,7 @@ async def test_cover_state_updates(
     """Test cover state updates via events and execution tracking."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    entity_id = get_entity_id(entity_registry, SHUTTER.url)
+    entity_id = get_entity_id(entity_registry, SHUTTER.device_url)
     assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
     # Position update via device state change event
@@ -362,7 +362,7 @@ async def test_cover_state_updates(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER.url,
+                device_url=SHUTTER.device_url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_CLOSURE.value,
@@ -401,7 +401,7 @@ async def test_cover_state_updates(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER.url,
+                device_url=SHUTTER.device_url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_CLOSURE.value,
@@ -449,7 +449,7 @@ async def test_cover_state_updates(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER.url,
+                device_url=SHUTTER.device_url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_CLOSURE.value,
@@ -484,7 +484,7 @@ async def test_cover_state_updates(
         [
             build_event(
                 EventName.EXECUTION_STATE_CHANGED.value,
-                device_url=SHUTTER.url,
+                device_url=SHUTTER.device_url,
                 exec_id="exec-1",
                 new_state=ExecutionState.COMPLETED.value,
             )
@@ -497,7 +497,11 @@ async def test_cover_state_updates(
         hass,
         freezer,
         mock_client,
-        [build_event(EventName.DEVICE_UNAVAILABLE.value, device_url=SHUTTER.url)],
+        [
+            build_event(
+                EventName.DEVICE_UNAVAILABLE.value, device_url=SHUTTER.device_url
+            )
+        ],
     )
     assert get_state(hass, entity_id).state == STATE_UNAVAILABLE
 
@@ -544,7 +548,7 @@ async def test_vertical_cover_moving_direction(
     """Test moving direction detection for vertical covers based on current vs target position."""
     await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    entity_id = get_entity_id(entity_registry, SHUTTER.url)
+    entity_id = get_entity_id(entity_registry, SHUTTER.device_url)
     await async_deliver_events(
         hass,
         freezer,
@@ -552,7 +556,7 @@ async def test_vertical_cover_moving_direction(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER.url,
+                device_url=SHUTTER.device_url,
                 device_states=device_states,
             )
         ],
@@ -611,7 +615,7 @@ async def test_awning_moving_direction(
     """Test moving direction detection for awnings based on current vs target position."""
     await setup_overkiz_integration(fixture=AWNING.fixture)
 
-    entity_id = get_entity_id(entity_registry, AWNING.url)
+    entity_id = get_entity_id(entity_registry, AWNING.device_url)
     await async_deliver_events(
         hass,
         freezer,
@@ -619,7 +623,7 @@ async def test_awning_moving_direction(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=AWNING.url,
+                device_url=AWNING.device_url,
                 device_states=device_states,
             )
         ],
@@ -638,7 +642,7 @@ async def test_awning_direct_position_mapping(
     """Test awning deployment uses direct mapping while vertical covers invert."""
     await setup_overkiz_integration(fixture=AWNING.fixture)
 
-    entity_id = get_entity_id(entity_registry, AWNING.url)
+    entity_id = get_entity_id(entity_registry, AWNING.device_url)
     assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
     mock_client.execute_command.reset_mock()
@@ -650,7 +654,7 @@ async def test_awning_direct_position_mapping(
     )
     assert_command_call(
         mock_client,
-        device_url=AWNING.url,
+        device_url=AWNING.device_url,
         command_name="setDeployment",
         parameters=(35,),
     )
@@ -662,7 +666,7 @@ async def test_awning_direct_position_mapping(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=AWNING.url,
+                device_url=AWNING.device_url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_DEPLOYMENT.value,
