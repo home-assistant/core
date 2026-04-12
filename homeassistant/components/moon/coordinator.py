@@ -110,7 +110,7 @@ def _get_next_event(
     """Safely fetch the next moon event."""
     try:
         return ephem_date_to_datetime(event(ephem.Moon()))
-    except ephem.AlwaysUpError, ephem.NeverUpError:
+    except (ephem.AlwaysUpError, ephem.NeverUpError):
         return None
 
 
