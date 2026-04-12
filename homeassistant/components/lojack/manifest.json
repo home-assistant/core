@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["lojack_api"],
   "quality_scale": "silver",
-  "requirements": ["lojack-api==0.7.1"]
+  "requirements": ["lojack-api==0.7.2"]
 }

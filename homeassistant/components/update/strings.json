@@ -1,7 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted updates to become available.",
-    "trigger_behavior_name": "Behavior"
+    "trigger_behavior_name": "Trigger when"
   },
   "device_automation": {
     "extra_fields": {
@@ -88,7 +87,7 @@
       "name": "Install update"
     },
     "skip": {
-      "description": "Marks currently available update as skipped.",
+      "description": "Marks a currently available update as skipped.",
       "name": "Skip update"
     }
   },
@@ -98,7 +97,6 @@
       "description": "Triggers after one or more updates become available.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::update::common::trigger_behavior_description%]",
           "name": "[%key:component::update::common::trigger_behavior_name%]"
         }
       },

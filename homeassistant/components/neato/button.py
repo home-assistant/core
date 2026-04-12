@@ -5,22 +5,21 @@ from __future__ import annotations
 from pybotvac import Robot
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import NEATO_ROBOTS
+from . import NeatoConfigEntry
 from .entity import NeatoEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NeatoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Neato button from config entry."""
-    entities = [NeatoDismissAlertButton(robot) for robot in hass.data[NEATO_ROBOTS]]
+    entities = [NeatoDismissAlertButton(robot) for robot in entry.runtime_data.robots]
 
     async_add_entities(entities, True)
 

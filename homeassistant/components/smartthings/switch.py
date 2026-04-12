@@ -80,6 +80,13 @@ SWITCH = SmartThingsSwitchEntityDescription(
 CAPABILITY_TO_COMMAND_SWITCHES: dict[
     Capability | str, SmartThingsCommandSwitchEntityDescription
 ] = {
+    Capability.CUSTOM_SPI_MODE: SmartThingsCommandSwitchEntityDescription(
+        key=Capability.CUSTOM_SPI_MODE,
+        translation_key="purify",
+        status_attribute=Attribute.SPI_MODE,
+        command=Command.SET_SPI_MODE,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsCommandSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
         translation_key="display_lighting",
@@ -187,6 +194,14 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         on_key="enabled",
         on_command=Command.ENABLE_SOUND_DETECTION,
         off_command=Command.DISABLE_SOUND_DETECTION,
+    ),
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS,
+        translation_key="empty_dustbin",
+        status_attribute=Attribute.OPERATING_STATE,
+        on_key="emptying",
+        on_command=Command.START_EMPTYING,
+        off_command=Command.STOP_EMPTYING,
     ),
 }
 DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[

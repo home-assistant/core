@@ -19,7 +19,11 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -80,23 +84,23 @@ Q7_STATE_CODE_TO_STATE = {
 }
 
 Q10_STATE_CODE_TO_STATE = {
-    YXDeviceState.SLEEP_STATE: VacuumActivity.IDLE,
-    YXDeviceState.STANDBY_STATE: VacuumActivity.IDLE,
-    YXDeviceState.CLEANING_STATE: VacuumActivity.CLEANING,
-    YXDeviceState.TO_CHARGE_STATE: VacuumActivity.RETURNING,
-    YXDeviceState.REMOTEING_STATE: VacuumActivity.CLEANING,
-    YXDeviceState.CHARGING_STATE: VacuumActivity.DOCKED,
-    YXDeviceState.PAUSE_STATE: VacuumActivity.PAUSED,
-    YXDeviceState.FAULT_STATE: VacuumActivity.ERROR,
-    YXDeviceState.UPGRADE_STATE: VacuumActivity.DOCKED,
-    YXDeviceState.DUSTING: VacuumActivity.DOCKED,
-    YXDeviceState.CREATING_MAP_STATE: VacuumActivity.CLEANING,
-    YXDeviceState.RE_LOCATION_STATE: VacuumActivity.CLEANING,
-    YXDeviceState.ROBOT_SWEEPING: VacuumActivity.CLEANING,
-    YXDeviceState.ROBOT_MOPING: VacuumActivity.CLEANING,
-    YXDeviceState.ROBOT_SWEEP_AND_MOPING: VacuumActivity.CLEANING,
-    YXDeviceState.ROBOT_TRANSITIONING: VacuumActivity.CLEANING,
-    YXDeviceState.ROBOT_WAIT_CHARGE: VacuumActivity.DOCKED,
+    YXDeviceState.SLEEPING: VacuumActivity.IDLE,
+    YXDeviceState.IDLE: VacuumActivity.IDLE,
+    YXDeviceState.CLEANING: VacuumActivity.CLEANING,
+    YXDeviceState.RETURNING_HOME: VacuumActivity.RETURNING,
+    YXDeviceState.REMOTE_CONTROL_ACTIVE: VacuumActivity.CLEANING,
+    YXDeviceState.CHARGING: VacuumActivity.DOCKED,
+    YXDeviceState.PAUSED: VacuumActivity.PAUSED,
+    YXDeviceState.ERROR: VacuumActivity.ERROR,
+    YXDeviceState.UPDATING: VacuumActivity.DOCKED,
+    YXDeviceState.EMPTYING_THE_BIN: VacuumActivity.DOCKED,
+    YXDeviceState.MAPPING: VacuumActivity.CLEANING,
+    YXDeviceState.RELOCATING: VacuumActivity.CLEANING,
+    YXDeviceState.SWEEPING: VacuumActivity.CLEANING,
+    YXDeviceState.MOPPING: VacuumActivity.CLEANING,
+    YXDeviceState.SWEEP_AND_MOP: VacuumActivity.CLEANING,
+    YXDeviceState.TRANSITIONING: VacuumActivity.CLEANING,
+    YXDeviceState.WAITING_TO_CHARGE: VacuumActivity.DOCKED,
 }
 
 PARALLEL_UPDATES = 0
@@ -150,6 +154,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             coordinator.duid_slug,
             coordinator,
         )
+        self._status_trait = coordinator.properties_api.status
         self._home_trait = coordinator.properties_api.home
         self._maps_trait = coordinator.properties_api.maps
 
@@ -176,31 +181,37 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     @property
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speeds."""
-        return [mode.value for mode in self._device_status.fan_speed_options]
+        if self.coordinator.data is None:
+            return []
+        return [mode.value for mode in self._status_trait.fan_speed_options]
 
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        assert self._device_status.state is not None
-        return STATE_CODE_TO_STATE.get(self._device_status.state)
+        if self.coordinator.data is None or self._status_trait.state is None:
+            return None
+        return STATE_CODE_TO_STATE.get(self._status_trait.state)
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self._device_status.fan_speed_name
+        if self.coordinator.data is None:
+            return None
+        return self._status_trait.fan_speed_name
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        if self._device_status.in_returning == 1:
-            await self.send(RoborockCommand.APP_CHARGE)
-        elif self._device_status.in_cleaning == 2:
-            await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
-        elif self._device_status.in_cleaning == 3:
-            await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
-        elif self._device_status.in_cleaning == 4:
-            await self.send(RoborockCommand.APP_RESUME_BUILD_MAP)
-        else:
-            await self.send(RoborockCommand.APP_START)
+        command = RoborockCommand.APP_START
+        if self.coordinator.data is not None:
+            if self._status_trait.in_returning == 1:
+                command = RoborockCommand.APP_CHARGE
+            elif self._status_trait.in_cleaning == 2:
+                command = RoborockCommand.RESUME_ZONED_CLEAN
+            elif self._status_trait.in_cleaning == 3:
+                command = RoborockCommand.RESUME_SEGMENT_CLEAN
+            elif self._status_trait.in_cleaning == 4:
+                command = RoborockCommand.APP_RESUME_BUILD_MAP
+        await self.send(command)
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -224,10 +235,15 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
+        if self.coordinator.data is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            )
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
             [
-                {v: k for k, v in self._device_status.fan_speed_mapping.items()}[
+                {v: k for k, v in self._status_trait.fan_speed_mapping.items()}[
                     fan_speed
                 ]
             ],
@@ -472,6 +488,18 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 },
             ) from err
 
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
+        """Set the vacuum to go to a specific position."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)
+
 
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
@@ -642,3 +670,15 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
                     "command": command,
                 },
             ) from err
+
+    async def get_maps(self) -> ServiceResponse:
+        """Get map information such as map id and room ids."""
+        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+
+    async def get_vacuum_current_position(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
+        """Set the vacuum to go to a specific position."""
+        raise ServiceNotSupported(DOMAIN, "set_vacuum_goto_position", self.entity_id)

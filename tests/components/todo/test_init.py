@@ -1239,9 +1239,9 @@ async def test_async_subscribe_updates(
     """Test async_subscribe_updates delivers list updates to listeners."""
     await create_mock_platform(hass, [test_entity])
 
-    received_updates: list[list[TodoItem]] = []
+    received_updates: list[list[TodoItem] | None] = []
 
-    def listener(items: list[TodoItem]) -> None:
+    def listener(items: list[TodoItem] | None) -> None:
         received_updates.append(items)
 
     unsub = test_entity.async_subscribe_updates(listener)
@@ -1277,7 +1277,25 @@ async def test_async_subscribe_updates(
     assert len(items) == 3
     assert items[2].summary == "Item #3"
 
+    # Set items to None and trigger update
+    test_entity._attr_todo_items = None
+    test_entity.async_write_ha_state()
+    assert len(received_updates) == 3
+    assert received_updates[2] is None
+
+    # Add a new item to make it available again and trigger update
+    test_entity._attr_todo_items = [
+        TodoItem(summary="New item", uid="4", status=TodoItemStatus.NEEDS_ACTION)
+    ]
+    test_entity.async_write_ha_state()
+    assert len(received_updates) == 4
+    items = received_updates[3]
+    assert len(items) == 1
+    assert items[0].summary == "New item"
+    assert items[0].uid == "4"
+    assert items[0].status == TodoItemStatus.NEEDS_ACTION
+
     # Unsubscribe and verify no more updates
     unsub()
     test_entity.async_write_ha_state()
-    assert len(received_updates) == 2
+    assert len(received_updates) == 4

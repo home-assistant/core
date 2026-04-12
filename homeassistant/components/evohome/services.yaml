@@ -4,6 +4,8 @@
 set_system_mode:
   fields:
     mode:
+      required: true
+      default: Auto
       example: Away
       selector:
         select:
@@ -19,9 +21,10 @@ set_system_mode:
       selector:
         object:
     duration:
-      example: '{"hours": 18}'
+      example: "18:00"
       selector:
-        object:
+        duration:
+          enable_second: false
 
 reset_system:
 
@@ -32,6 +35,8 @@ set_zone_override:
     entity:
       integration: evohome
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
   fields:
     setpoint:
       required: true
@@ -41,12 +46,15 @@ set_zone_override:
           max: 35.0
           step: 0.1
     duration:
-      example: '{"minutes": 135}'
+      example: "02:15"
       selector:
-        object:
+        duration:
+          enable_second: false
 
 clear_zone_override:
   target:
     entity:
       integration: evohome
       domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
