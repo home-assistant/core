@@ -26,6 +26,7 @@ from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEn
 from .coordinator import (
     TibberDataAPICoordinator,
     TibberDataCoordinator,
+    TibberFetchPriceCoordinator,
     TibberPriceCoordinator,
 )
 from .services import async_setup_services
@@ -131,6 +132,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
         raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
 
     if tibber_connection.get_homes(only_active=True):
+        price_fetch_coordinator = TibberFetchPriceCoordinator(hass, entry)
+        await price_fetch_coordinator.async_config_entry_first_refresh()
+
         price_coordinator = TibberPriceCoordinator(hass, entry)
         await price_coordinator.async_config_entry_first_refresh()
         entry.runtime_data.price_coordinator = price_coordinator
