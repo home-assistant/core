@@ -24,7 +24,7 @@ UNIFI_DISCOVERY_PROTECT = UnifiDevice(
 
 def _patch_discovery(
     device: UnifiDevice | None = None, no_device: bool = False
-) -> Generator[None]:
+) -> Generator[MagicMock]:
     mock_aio_discovery = MagicMock(spec=AIOUnifiScanner)
     scanner_return = [] if no_device else [device or UNIFI_DISCOVERY_PROTECT]
     mock_aio_discovery.async_scan = AsyncMock(return_value=scanner_return)

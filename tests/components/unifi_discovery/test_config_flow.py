@@ -46,6 +46,7 @@ async def test_dhcp_ssdp_abort_with_discovery_started(
             context={"source": source},
             data=data,
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_started"
@@ -58,6 +59,7 @@ async def test_user_flow_aborts(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_started"
