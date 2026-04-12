@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_get_feeder_meal_plan[cwwsq_wfkzyy0evslzsmoi]
   dict({
-    'data': list([
+    'meal_plan': list([
       dict({
         'days': list([
           'monday',

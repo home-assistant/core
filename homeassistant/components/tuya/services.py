@@ -104,7 +104,7 @@ async def async_get_feeder_meal_plan(
             translation_key="invalid_meal_plan_data",
         )
 
-    return {"data": meal_plan}
+    return {"meal_plan": meal_plan}
 
 
 async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
