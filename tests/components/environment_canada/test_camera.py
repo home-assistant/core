@@ -40,7 +40,7 @@ async def test_set_radar_type_rain(
     )
 
     assert radar_mock.layer == "rain"
-    radar_mock.update.assert_called()
+    radar_mock.update.assert_awaited()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -60,7 +60,7 @@ async def test_set_radar_type_snow(
     )
 
     assert radar_mock.layer == "snow"
-    radar_mock.update.assert_called()
+    radar_mock.update.assert_awaited()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -83,7 +83,7 @@ async def test_set_radar_type_precip_type(
     )
 
     assert radar_mock.layer == "precip_type"
-    radar_mock.update.assert_called()
+    radar_mock.update.assert_awaited()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -127,7 +127,7 @@ async def test_set_radar_type_auto(
         )
 
     assert radar_mock.layer == expected_layer
-    radar_mock.update.assert_called()
+    radar_mock.update.assert_awaited()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
