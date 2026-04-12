@@ -93,6 +93,9 @@
     "create_folder_error": {
       "message": "Failed to create folder: {message}"
     },
+    "delete_error": {
+      "message": "Failed to delete file: {message}"
+    },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
@@ -142,6 +145,26 @@
     }
   },
   "services": {
+    "delete": {
+      "description": "Deletes a file from OneDrive and optionally from the local filesystem.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry representing the OneDrive you want to delete from.",
+          "name": "Config entry ID"
+        },
+        "destination_path": {
+          "description": "Path to the file inside the Home Assistant app folder (Apps/Home Assistant) to delete.",
+          "example": "photos/snapshots/image.jpg",
+          "name": "Destination path"
+        },
+        "filename": {
+          "description": "Path to the local file to also delete. If omitted, only the OneDrive copy is removed.",
+          "example": "/media/snapshots/image.jpg",
+          "name": "Local filename"
+        }
+      },
+      "name": "Delete file"
+    },
     "upload": {
       "description": "Uploads files to OneDrive.",
       "fields": {

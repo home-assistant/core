@@ -21,11 +21,12 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN
+from .const import CONF_DELETE_PERMANENTLY, DOMAIN
 from .coordinator import OneDriveConfigEntry
 
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_DESTINATION_FOLDER = "destination_folder"
+CONF_DESTINATION_PATH = "destination_path"
 
 UPLOAD_SERVICE = "upload"
 UPLOAD_SERVICE_SCHEMA = vol.Schema(
@@ -35,6 +36,16 @@ UPLOAD_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONF_DESTINATION_FOLDER): cv.string,
     }
 )
+
+DELETE_SERVICE = "delete"
+DELETE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(CONF_DESTINATION_PATH): cv.string,
+        vol.Optional(CONF_FILENAME): cv.string,
+    }
+)
+
 CONTENT_SIZE_LIMIT = 250 * 1024 * 1024
 
 
@@ -69,6 +80,24 @@ def _read_file_contents(
             )
         results.append((filename_path.name, filename_path.read_bytes()))
     return results
+
+
+def _delete_local_file(hass: HomeAssistant, filename: str) -> None:
+    """Delete a local file after validating access."""
+    if not hass.config.is_allowed_path(filename):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_access_to_path",
+            translation_placeholders={"filename": filename},
+        )
+    filename_path = Path(filename)
+    if not filename_path.exists():
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="filename_does_not_exist",
+            translation_placeholders={"filename": filename},
+        )
+    filename_path.unlink()
 
 
 @callback
@@ -117,6 +146,30 @@ def async_setup_services(hass: HomeAssistant) -> None:
             return {"files": [asdict(item_result) for item_result in upload_results]}
         return None
 
+    async def async_handle_delete(call: ServiceCall) -> None:
+        """Delete a file from OneDrive and optionally from the local filesystem."""
+        config_entry: OneDriveConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[CONF_CONFIG_ENTRY_ID]
+        )
+        client = config_entry.runtime_data.client
+        delete_permanently = config_entry.options.get(CONF_DELETE_PERMANENTLY, False)
+        file_path = cast(str, call.data[CONF_DESTINATION_PATH]).strip("/")
+
+        try:
+            approot_id = (await client.get_approot()).id
+            await client.delete_drive_item(
+                f"{approot_id}:/{file_path}:", delete_permanently
+            )
+        except OneDriveException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="delete_error",
+                translation_placeholders={"message": str(err)},
+            ) from err
+
+        if local_filename := call.data.get(CONF_FILENAME):
+            await hass.async_add_executor_job(_delete_local_file, hass, local_filename)
+
     hass.services.async_register(
         DOMAIN,
         UPLOAD_SERVICE,
@@ -124,4 +177,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=UPLOAD_SERVICE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
         description_placeholders={"example_image_path": "/config/www/image.jpg"},
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        DELETE_SERVICE,
+        async_handle_delete,
+        schema=DELETE_SERVICE_SCHEMA,
     )
