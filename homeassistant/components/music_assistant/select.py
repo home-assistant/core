@@ -105,10 +105,9 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
     @catch_musicassistant_error
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        if option_key := self._option_translation_key_to_key_mapping.get(option):
-            await self.mass.players.set_option(
-                self.player_id, self.mass_option_key, option_key
-            )
+        await self.mass.players.set_option(
+            self.player_id, self.mass_option_key, self._option_translation_key_to_key_mapping[option]
+        )
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
