@@ -572,9 +572,9 @@ DISCOVERY_SCHEMAS = [
             translation_key="sensitivity_level",
             options=["10 mm", "20 mm", "30 mm"],
             device_to_ha={
-                0: "10 mm",
-                1: "20 mm",
-                2: "30 mm",
+                0: "10 mm",  # 10 mm => CurrentSensitivityLevel=0 / highest sensitivity level
+                1: "20 mm",  # 20 mm => CurrentSensitivityLevel=1 / medium sensitivity level
+                2: "30 mm",  # 30 mm => CurrentSensitivityLevel=2 / lowest sensitivity level
             }.get,
             ha_to_device={
                 "10 mm": 0,
@@ -615,9 +615,8 @@ DISCOVERY_SCHEMAS = [
         ),
         vendor_id=(4447,),
         product_id=(
-            8195,
             8197,
-            8201,
+            8195,
         ),
         allow_multi=True,
     ),
