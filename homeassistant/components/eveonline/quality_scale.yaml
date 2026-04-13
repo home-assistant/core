@@ -4,7 +4,9 @@ rules:
     status: exempt
     comment: Integration does not provide service actions.
   appropriate-polling: done
-  brands: done
+  brands:
+    status: done
+    comment: "Brands PR submitted: https://github.com/home-assistant/brands/pull/10133"
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -12,9 +14,15 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not provide service actions.
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-high-level-description:
+    status: done
+    comment: "Docs PR submitted: https://github.com/home-assistant/home-assistant.io/pull/44762"
+  docs-installation-instructions:
+    status: done
+    comment: "Docs PR submitted: https://github.com/home-assistant/home-assistant.io/pull/44762"
+  docs-removal-instructions:
+    status: done
+    comment: "Docs PR submitted: https://github.com/home-assistant/home-assistant.io/pull/44762"
   entity-event-setup:
     status: exempt
     comment: Integration uses DataUpdateCoordinator; entities do not subscribe to events directly.

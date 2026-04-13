@@ -52,6 +52,7 @@ async def test_sensor_wallet_updated(
 ) -> None:
     """Test that wallet balance updates on coordinator refresh."""
 
+    freezer.tick(61)
     mock_eveonline_client.async_get_wallet_balance.return_value = WalletBalance(
         balance=9999999.99
     )
