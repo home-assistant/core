@@ -292,6 +292,7 @@ async def make_device_data(
         "RGBIC Neon Rope Light",
         "RGBIC Neon Wire Rope Light",
         "Candle Warmer Lamp",
+        "Permanent Outdoor Lights",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
