@@ -32,7 +32,4 @@ class EveOnlineCharacterEntity[_CoordT: _EveOnlineBaseCoordinator[Any]](
             manufacturer="CCP Games",
             model="Eve Online Character",
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url=(
-                f"https://evewho.com/character/{coordinator.character_id}"
-            ),
         )

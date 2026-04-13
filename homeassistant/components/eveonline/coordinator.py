@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -173,11 +174,11 @@ class EveOnlineCoordinator(_EveOnlineBaseCoordinator[EveOnlineData]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        wallet_balance = await self._fetch_optional(
-            self.client.async_get_wallet_balance, self.character_id
-        )
-        mail_labels = await self._fetch_optional(
-            self.client.async_get_mail_labels, self.character_id
+        wallet_balance, mail_labels = await asyncio.gather(
+            self._fetch_optional(
+                self.client.async_get_wallet_balance, self.character_id
+            ),
+            self._fetch_optional(self.client.async_get_mail_labels, self.character_id),
         )
 
         # Skip location and ship when the character is offline — those values
@@ -186,11 +187,13 @@ class EveOnlineCoordinator(_EveOnlineBaseCoordinator[EveOnlineData]):
         location = None
         ship = None
         if character_online.online:
-            location = await self._fetch_optional(
-                self.client.async_get_character_location, self.character_id
-            )
-            ship = await self._fetch_optional(
-                self.client.async_get_character_ship, self.character_id
+            location, ship = await asyncio.gather(
+                self._fetch_optional(
+                    self.client.async_get_character_location, self.character_id
+                ),
+                self._fetch_optional(
+                    self.client.async_get_character_ship, self.character_id
+                ),
             )
 
         name_ids: set[int] = set()
@@ -235,14 +238,10 @@ class EveOnlineIndustryCoordinator(_EveOnlineBaseCoordinator[EveOnlineIndustryDa
 
     async def _async_update_data(self) -> EveOnlineIndustryData:
         """Fetch industry jobs, jump fatigue, and skill queue from ESI."""
-        industry_jobs = await self._fetch_list(
-            self.client.async_get_industry_jobs, self.character_id
-        )
-        jump_fatigue = await self._fetch_optional(
-            self.client.async_get_jump_fatigue, self.character_id
-        )
-        skill_queue = await self._fetch_list(
-            self.client.async_get_skill_queue, self.character_id
+        industry_jobs, jump_fatigue, skill_queue = await asyncio.gather(
+            self._fetch_list(self.client.async_get_industry_jobs, self.character_id),
+            self._fetch_optional(self.client.async_get_jump_fatigue, self.character_id),
+            self._fetch_list(self.client.async_get_skill_queue, self.character_id),
         )
 
         name_ids: set[int] = set()

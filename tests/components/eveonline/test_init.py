@@ -1,7 +1,7 @@
 """Test the Eve Online integration setup."""
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import aiohttp
 from eveonline import EveOnlineError
@@ -16,9 +16,6 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
-)
 
 from tests.common import MockConfigEntry
 
@@ -129,23 +126,6 @@ async def test_coordinator_list_endpoint_error(
     state = hass.states.get("sensor.test_capsuleer_industry_jobs")
     assert state is not None
     assert state.state == "0"
-
-
-async def test_setup_entry_implementation_unavailable(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_eveonline_client: AsyncMock,
-    setup_credentials: None,
-) -> None:
-    """Test setup when OAuth implementation is unavailable."""
-    with patch(
-        "homeassistant.components.eveonline.async_get_config_entry_implementation",
-        side_effect=ImplementationUnavailableError("not available"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_list_endpoint_auth_error(

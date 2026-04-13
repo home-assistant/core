@@ -15,7 +15,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration uses DataUpdateCoordinator; entities do not subscribe to events directly.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
