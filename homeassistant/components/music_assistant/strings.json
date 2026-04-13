@@ -215,7 +215,7 @@
         "name": "Tone control mode",
         "state": {
           "auto": "[%key:common::state::auto%]",
-          "bypass": "[%key:component::music_assistant::entity::select::equalizer_mode::state::bypass%]",
+          "bypass": "Bypass",
           "manual": "[%key:common::state::manual%]"
         }
       }

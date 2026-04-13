@@ -90,27 +90,32 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         """Initialize MusicAssistantPlayerConfigSelect."""
         # this was verified already in the entry callback
         assert player_option.options is not None
+        # we have to define the dicts before initializing the parent, as this
+        # then calls self.on_player_option_update
         self._option_translation_key_to_key_mapping = {
             option.translation_key: option.key for option in player_option.options
         }
         self._option_key_to_translation_key_mapping = {
             option.key: option.translation_key for option in player_option.options
         }
-        self._attr_options = list(self._option_translation_key_to_key_mapping.keys())
-
-        self.entity_description = entity_description
-
         super().__init__(mass, player_id, player_option)
+
+        self._attr_options = list(self._option_translation_key_to_key_mapping.keys())
+        self.entity_description = entity_description
 
     @catch_musicassistant_error
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await self.mass.players.set_option(
-            self.player_id, self.mass_option_key, self._option_translation_key_to_key_mapping[option]
+            self.player_id,
+            self.mass_option_key,
+            self._option_translation_key_to_key_mapping[option],
         )
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
-        self._attr_current_option = self._option_key_to_translation_key_mapping.get(
-            player_option.value
-        ) if isinstance(player_option.value, str) else None
+        self._attr_current_option = (
+            self._option_key_to_translation_key_mapping.get(player_option.value)
+            if isinstance(player_option.value, str)
+            else None
+        )
