@@ -16,6 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PRECISION_HALVES, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .climate import MAX_TEMP, MIN_TEMP
@@ -48,6 +49,7 @@ DESCRIPTIONS = [
         cometblue_key="tempOffset",
         translation_key="offset",
         device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
         native_min_value=-5.0,
@@ -60,6 +62,7 @@ DESCRIPTIONS = [
         cometblue_key="targetTempLow",
         translation_key="target_temp_low",
         device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
         native_min_value=MIN_TEMP,
@@ -72,6 +75,7 @@ DESCRIPTIONS = [
         cometblue_key="targetTempHigh",
         translation_key="target_temp_high",
         device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
         native_min_value=MIN_TEMP,
@@ -84,6 +88,7 @@ DESCRIPTIONS = [
         cometblue_key="windowOpenMinutes",
         translation_key="window_open_minutes",
         device_class=NumberDeviceClass.DURATION,
+        entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         set_fn=lambda x: x.set_temperature_async,
         native_min_value=5.0,
@@ -136,7 +141,7 @@ class CometBlueNumberEntity(CometBlueBluetoothEntity, NumberEntity):
         """Update to the device."""
 
         await self.coordinator.send_command(
-            self.coordinator.device.set_temperature_async,
+            self.entity_description.set_fn(self.coordinator.device),
             {
                 "values": {
                     # manual temperature always needs to be set, otherwise TRV will turn OFF
