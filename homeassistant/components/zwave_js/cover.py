@@ -500,7 +500,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
             (cv := self._current_position_value) is not None
             and cv.value is not None
             and (tpv := self._target_position_value) is not None
-            and tpv.value == cv.value == 99
+            and tpv.value == cv.value == self._fully_open_position
         )
         result = await self._async_set_value(self._up_value, True)
         # StartLevelChange: SUCCESS means the device started moving in the desired direction
@@ -521,7 +521,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
             (cv := self._current_position_value) is not None
             and cv.value is not None
             and (tpv := self._target_position_value) is not None
-            and tpv.value == cv.value == 0
+            and tpv.value == cv.value == self._fully_closed_position
         )
         result = await self._async_set_value(self._down_value, True)
         # StartLevelChange: SUCCESS means the device started moving in the desired direction
