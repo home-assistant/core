@@ -18,6 +18,7 @@ from homeassistant.components.aquarite.sensor import (
     AquariteValueSensorEntity,
     async_setup_entry,
 )
+from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
 
@@ -322,7 +323,9 @@ def test_rssi_native_value_non_numeric() -> None:
 # ── Platform setup ──────────────────────────────────────────────
 
 
-async def _setup_sensor_platform(hass: Any, mock_pool_data: dict[str, Any]) -> list:
+async def _setup_sensor_platform(
+    hass: HomeAssistant, mock_pool_data: dict[str, Any]
+) -> list:
     """Set up the sensor platform with a mock coordinator and capture entities."""
     coord = _make_coordinator(mock_pool_data)
     entry = MagicMock()
@@ -340,7 +343,7 @@ async def _setup_sensor_platform(hass: Any, mock_pool_data: dict[str, Any]) -> l
 
 
 async def test_async_setup_entry_full_modules(
-    hass: Any, mock_pool_data: dict[str, Any]
+    hass: HomeAssistant, mock_pool_data: dict[str, Any]
 ) -> None:
     """Test setup creates entities for every module flagged as present."""
     entities = await _setup_sensor_platform(hass, mock_pool_data)
@@ -366,7 +369,7 @@ async def test_async_setup_entry_full_modules(
     )
 
 
-async def test_async_setup_entry_hydrolysis_branch(hass: Any) -> None:
+async def test_async_setup_entry_hydrolysis_branch(hass: HomeAssistant) -> None:
     """Test the hydrolysis (non-electrolysis) branch."""
     data = {
         "main": {"hasHidro": 1, "version": 1},
@@ -379,7 +382,7 @@ async def test_async_setup_entry_hydrolysis_branch(hass: Any) -> None:
     assert "electrolysis" not in translation_keys
 
 
-async def test_async_setup_entry_all_modules_enabled(hass: Any) -> None:
+async def test_async_setup_entry_all_modules_enabled(hass: HomeAssistant) -> None:
     """Test setup when every module flag is enabled."""
     data = {
         "main": {

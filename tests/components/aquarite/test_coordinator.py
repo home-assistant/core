@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -118,7 +118,7 @@ async def test_token_refresh_loop_refreshes_when_expiring(
     # Stop after one iteration
     with (
         patch.object(
-            type(coordinator.hass), "is_stopping", new_callable=MagicMock
+            type(coordinator.hass), "is_stopping", new_callable=PropertyMock
         ) as mock_stop,
         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
     ):
@@ -139,7 +139,7 @@ async def test_token_refresh_loop_no_refresh_needed(
 
     with (
         patch.object(
-            type(coordinator.hass), "is_stopping", new_callable=MagicMock
+            type(coordinator.hass), "is_stopping", new_callable=PropertyMock
         ) as mock_stop,
         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
     ):
@@ -159,7 +159,7 @@ async def test_token_refresh_loop_handles_exception(
 
     with (
         patch.object(
-            type(coordinator.hass), "is_stopping", new_callable=MagicMock
+            type(coordinator.hass), "is_stopping", new_callable=PropertyMock
         ) as mock_stop,
         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
     ):
@@ -181,7 +181,7 @@ async def test_periodic_health_check_success(
 
     with (
         patch.object(
-            type(coordinator.hass), "is_stopping", new_callable=MagicMock
+            type(coordinator.hass), "is_stopping", new_callable=PropertyMock
         ) as mock_stop,
         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
     ):
@@ -201,7 +201,7 @@ async def test_periodic_health_check_uses_options_interval(
 
     with (
         patch.object(
-            type(coordinator.hass), "is_stopping", new_callable=MagicMock
+            type(coordinator.hass), "is_stopping", new_callable=PropertyMock
         ) as mock_stop,
         patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
     ):
@@ -220,7 +220,7 @@ async def test_periodic_health_check_resubscribes_on_error(
 
     with (
         patch.object(
-            type(coordinator.hass), "is_stopping", new_callable=MagicMock
+            type(coordinator.hass), "is_stopping", new_callable=PropertyMock
         ) as mock_stop,
         patch("asyncio.sleep", new_callable=AsyncMock),
     ):
