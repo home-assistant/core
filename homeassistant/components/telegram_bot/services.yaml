@@ -1248,7 +1248,7 @@ send_message_draft:
             config_entry:
               integration: telegram_bot
         chat_id:
-          example: "12345"
+          example: "[12345, 67890] or 12345"
           selector:
             text:
               multiple: true
