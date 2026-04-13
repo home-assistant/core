@@ -57,6 +57,4 @@ class CometBlueSensorEntity(CometBlueBluetoothEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
-        if self.entity_description.key == "battery":
-            return self.coordinator.data.battery
-        return None
+        return getattr(self.coordinator.data, self.entity_description.key, None)
