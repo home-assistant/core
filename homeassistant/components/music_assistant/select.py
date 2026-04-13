@@ -112,9 +112,6 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
-        self._attr_current_option = None
-        # the value in that case is the key, which is always a string
-        if isinstance(player_option.value, str):
-            self._attr_current_option = self._option_key_to_translation_key_mapping.get(
-                player_option.value
-            )
+        self._attr_current_option = self._option_key_to_translation_key_mapping.get(
+            player_option.value
+        ) if isinstance(player_option.value, str) else None
