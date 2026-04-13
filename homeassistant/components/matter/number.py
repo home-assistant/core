@@ -445,7 +445,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterRangeNumberEntityDescription(
             key="BooleanStateConfigurationCurrentSensitivityLevel",
-            name="Sensitivity",
             entity_category=EntityCategory.CONFIG,
             translation_key="sensitivity_level",
             native_min_value=1,
