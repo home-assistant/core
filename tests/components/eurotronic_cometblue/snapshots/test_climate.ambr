@@ -1,0 +1,88 @@
+# serializer version: 1
+# name: test_climate_state[climate.comet_blue_aa_bb_cc_dd_ee_ff-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.5,
+      'min_temp': 7.5,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'boost',
+        'away',
+        'none',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.comet_blue_aa_bb_cc_dd_ee_ff',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'eurotronic_cometblue',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 403>,
+    'translation_key': None,
+    'unique_id': 'aa:bb:cc:dd:ee:ff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_state[climate.comet_blue_aa_bb_cc_dd_ee_ff-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff',
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.5,
+      'min_temp': 7.5,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'boost',
+        'away',
+        'none',
+      ]),
+      'supported_features': <ClimateEntityFeature: 403>,
+      'target_temp_high': 21.0,
+      'target_temp_low': 17.0,
+      'target_temp_step': 0.5,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.comet_blue_aa_bb_cc_dd_ee_ff',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---

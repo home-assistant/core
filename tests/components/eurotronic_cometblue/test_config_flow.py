@@ -16,8 +16,8 @@ from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import FIXTURE_DEVICE_NAME, FIXTURE_MAC, FIXTURE_USER_INPUT
 from .conftest import FAKE_SERVICE_INFO
-from .const import FIXTURE_DEVICE_NAME, FIXTURE_MAC, FIXTURE_USER_INPUT
 
 from tests.common import MockConfigEntry
 

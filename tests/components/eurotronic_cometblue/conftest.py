@@ -1,6 +1,6 @@
 """Session fixtures."""
 
-from collections.abc import Generator
+from collections.abc import Buffer, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 import uuid
@@ -12,17 +12,21 @@ from eurotronic_cometblue_ha import CometBlueBleakClient
 import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from homeassistant.components.eurotronic_cometblue import PLATFORMS
 from homeassistant.components.eurotronic_cometblue.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
+from . import (
+    FIXTURE_DEFAULT_CHARACTERISTICS,
     FIXTURE_DEVICE_NAME,
-    FIXTURE_GATT_CHARACTERISTICS,
     FIXTURE_MAC,
     FIXTURE_RSSI,
     FIXTURE_SERVICE_UUID,
     FIXTURE_USER_INPUT,
+    WRITEABLE_CHARACTERISTICS,
+    WRITEABLE_CHARACTERISTICS_ALLOW_UNCHANGED,
 )
 
 from tests.common import MockConfigEntry
@@ -58,8 +62,23 @@ FAKE_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+def _normalize_characteristic(
+    char_specifier: BleakGATTCharacteristic | int | str | uuid.UUID,
+) -> uuid.UUID:
+    """Normalize a characteristic specifier to UUID."""
+    if not isinstance(char_specifier, (BleakGATTCharacteristic, str, uuid.UUID)):
+        raise BleakCharacteristicNotFoundError(char_specifier)
+    if isinstance(char_specifier, BleakGATTCharacteristic):
+        char_specifier = char_specifier.uuid
+    if not isinstance(char_specifier, uuid.UUID):
+        char_specifier = uuid.UUID(char_specifier)
+    return char_specifier
+
+
 class MockCometBlueBleakClient(CometBlueBleakClient):
     """Mock BleakClient."""
+
+    characteristics: dict[uuid.UUID, bytearray] = {}
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Mock init."""
@@ -94,16 +113,39 @@ class MockCometBlueBleakClient(CometBlueBleakClient):
         **kwargs: Any,
     ) -> bytearray:
         """Mock read_gatt_char."""
-        if not isinstance(char_specifier, (BleakGATTCharacteristic, str, uuid.UUID)):
-            raise BleakCharacteristicNotFoundError(char_specifier)
-        if isinstance(char_specifier, BleakGATTCharacteristic):
-            char_specifier = char_specifier.uuid
-        if not isinstance(char_specifier, uuid.UUID):
-            char_specifier = uuid.UUID(char_specifier)
+        char_specifier = _normalize_characteristic(char_specifier)
         try:
-            return FIXTURE_GATT_CHARACTERISTICS[char_specifier]
+            return bytearray(self.characteristics[char_specifier])
         except KeyError:
             raise BleakCharacteristicNotFoundError(char_specifier)
+
+    async def write_gatt_char(
+        self,
+        char_specifier: BleakGATTCharacteristic | int | str | uuid.UUID,
+        data: Buffer,
+        response: bool | None = None,
+    ) -> None:
+        """Mock write_gatt_char."""
+        char_specifier = _normalize_characteristic(char_specifier)
+        if char_specifier not in WRITEABLE_CHARACTERISTICS:
+            raise BleakCharacteristicNotFoundError(char_specifier)
+        data = bytearray(data)
+        # when writing temperature it is possible that 128 will be sent, meaning "no change"
+        # we have to restore the original value in this case to keep tests working
+        if char_specifier in WRITEABLE_CHARACTERISTICS_ALLOW_UNCHANGED:
+            for i, byte in enumerate(data):
+                if byte == 128:
+                    data[i] = self.characteristics[char_specifier][i]
+        self.characteristics[char_specifier] = data
+
+
+@pytest.fixture
+def mock_gatt_characteristics() -> dict[uuid.UUID, bytearray]:
+    """Provide a mutable per-test GATT characteristic store."""
+    return {
+        characteristic: bytearray(value)
+        for characteristic, value in FIXTURE_DEFAULT_CHARACTERISTICS.items()
+    }
 
 
 @pytest.fixture
@@ -133,13 +175,26 @@ def mock_ble_device() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
+def mock_bluetooth(
+    enable_bluetooth: None,
+    mock_gatt_characteristics: dict[uuid.UUID, bytearray],
+) -> Generator[None]:
     """Auto mock bluetooth."""
 
-    with patch(
-        "eurotronic_cometblue_ha.CometBlueBleakClient", MockCometBlueBleakClient
+    MockCometBlueBleakClient.characteristics = mock_gatt_characteristics
+    with (
+        patch(
+            "homeassistant.components.eurotronic_cometblue.entity.bluetooth.async_address_present",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.eurotronic_cometblue.coordinator.COMMAND_RETRY_INTERVAL",
+            0,
+        ),
+        patch("eurotronic_cometblue_ha.CometBlueBleakClient", MockCometBlueBleakClient),
     ):
         yield
+    MockCometBlueBleakClient.characteristics = {}
 
 
 # Home Assistant related fixtures
@@ -164,3 +219,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup:
         yield mock_setup
+
+
+async def setup_with_selected_platforms(
+    hass: HomeAssistant, entry: MockConfigEntry, platforms: list[Platform] | None = None
+) -> None:
+    """Set up the Eurotronic Comet Blue integration with the selected platforms."""
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.eurotronic_cometblue.PLATFORMS",
+        platforms or PLATFORMS,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
