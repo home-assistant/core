@@ -35,4 +35,13 @@ async def async_get_config_entry_diagnostics(
             }
             for device in hub.devices
         ],
+        "groups": [
+            {
+                "group_id": group.group_id,
+                "props": group.props,
+                "attrs": group._attrs,  # noqa: SLF001
+                "supported_actions": group._supported_actions,  # noqa: SLF001
+            }
+            for group in hub.groups
+        ],
     }

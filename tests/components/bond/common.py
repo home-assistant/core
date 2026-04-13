@@ -55,6 +55,7 @@ async def setup_bond_entity(
         patch_bond_token(enabled=patch_token),
         patch_bond_version(enabled=patch_version),
         patch_bond_device_ids(enabled=patch_device_ids),
+        patch_bond_supports_groups(),
         patch_setup_entry("cover", enabled=patch_platforms),
         patch_setup_entry("fan", enabled=patch_platforms),
         patch_setup_entry("light", enabled=patch_platforms),
@@ -88,10 +89,59 @@ async def setup_platform(
         patch_bond_bridge(return_value=bridge),
         patch_bond_token(return_value=token),
         patch_bond_device_ids(return_value=[bond_device_id]),
+        patch_bond_supports_groups(),
         patch_start_bpup(),
         patch_bond_device(return_value=discovered_device),
         patch_bond_device_properties(return_value=props),
         patch_bond_device_state(return_value=state),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    return mock_entry
+
+
+async def setup_group_platform(
+    hass: core.HomeAssistant,
+    platform: str,
+    discovered_group: dict[str, Any],
+    *,
+    bond_group_id: str = "bond-group-id",
+    bond_version: dict[str, Any] | None = None,
+    props: dict[str, Any] | None = None,
+    state: dict[str, Any] | None = None,
+    bridge: dict[str, Any] | None = None,
+    token: dict[str, Any] | None = None,
+):
+    """Set up the specified Bond platform using a Bond group."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+    )
+    mock_entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.bond.PLATFORMS", [platform]),
+        patch_bond_version(return_value=bond_version),
+        patch_bond_bridge(return_value=bridge),
+        patch_bond_token(return_value=token),
+        patch_bond_device_ids(return_value=[]),
+        patch(
+            "homeassistant.components.bond.Bond.supports_groups", return_value=True
+        ),
+        patch(
+            "homeassistant.components.bond.Bond.groups", return_value=[bond_group_id]
+        ),
+        patch_start_bpup(),
+        patch(
+            "homeassistant.components.bond.Bond.group",
+            return_value=discovered_group,
+        ),
+        patch(
+            "homeassistant.components.bond.Bond.group_properties",
+            return_value=props if props is not None else {},
+        ),
+        patch_bond_group_state(return_value=state),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -174,6 +224,14 @@ def patch_bond_device_ids(enabled: bool = True, return_value=None, side_effect=N
     )
 
 
+def patch_bond_supports_groups(return_value: bool = False):
+    """Patch Bond API groups support endpoint."""
+    return patch(
+        "homeassistant.components.bond.Bond.supports_groups",
+        return_value=return_value,
+    )
+
+
 def patch_bond_device(return_value=None):
     """Patch Bond API device endpoint."""
     return patch(
@@ -193,6 +251,11 @@ def patch_start_bpup():
 def patch_bond_action():
     """Patch Bond API action endpoint."""
     return patch("homeassistant.components.bond.Bond.action")
+
+
+def patch_bond_group_action():
+    """Patch Bond API group action endpoint."""
+    return patch("homeassistant.components.bond.Bond.group_action")
 
 
 def patch_bond_action_returns_clientresponseerror():
@@ -223,6 +286,18 @@ def patch_bond_device_state(return_value=None, side_effect=None):
 
     return patch(
         "homeassistant.components.bond.Bond.device_state",
+        return_value=return_value,
+        side_effect=side_effect,
+    )
+
+
+def patch_bond_group_state(return_value=None, side_effect=None):
+    """Patch Bond API group state endpoint."""
+    if return_value is None:
+        return_value = {}
+
+    return patch(
+        "homeassistant.components.bond.Bond.group_state",
         return_value=return_value,
         side_effect=side_effect,
     )

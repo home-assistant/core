@@ -7,6 +7,7 @@ from bond_async import DeviceType
 import pytest
 
 from homeassistant.components.bond import DOMAIN, BondData
+from homeassistant.components.bond.const import GROUP_DEVICE_IDENTIFIER
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
@@ -25,10 +26,12 @@ from .common import (
     patch_bond_device_ids,
     patch_bond_device_properties,
     patch_bond_device_state,
+    patch_bond_supports_groups,
     patch_bond_version,
     patch_setup_entry,
     patch_start_bpup,
     setup_bond_entity,
+    setup_group_platform,
     setup_platform,
 )
 
@@ -183,6 +186,7 @@ async def test_old_identifiers_are_removed(
                 "fw_ver": "test-version",
             }
         ),
+        patch_bond_supports_groups(),
         patch_start_bpup(),
         patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
         patch_bond_device(
@@ -227,6 +231,7 @@ async def test_smart_by_bond_device_suggested_area(
                 "fw_ver": "test-version",
             }
         ),
+        patch_bond_supports_groups(),
         patch_start_bpup(),
         patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
         patch_bond_device(
@@ -277,6 +282,7 @@ async def test_bridge_device_suggested_area(
                 "fw_ver": "test-version",
             }
         ),
+        patch_bond_supports_groups(),
         patch_start_bpup(),
         patch_bond_device_ids(return_value=["bond-device-id", "device_id"]),
         patch_bond_device(
@@ -337,6 +343,62 @@ async def test_device_remove_devices(
         identifiers={(DOMAIN, "wrong-hub-id", "test-device-id")},
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
+
+    hub_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test-hub-id")},
+    )
+    response = await client.remove_device(hub_device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+
+async def test_group_remove_devices(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test we can only remove a group that no longer exists."""
+    assert await async_setup_component(hass, "config", {})
+
+    config_entry = await setup_group_platform(
+        hass,
+        FAN_DOMAIN,
+        {
+            "name": "name-1",
+            "types": [DeviceType.CEILING_FAN],
+            "locations": ["Den"],
+            "actions": ["SetSpeed", "SetDirection"],
+        },
+        bond_version={"bondid": "test-hub-id"},
+        bond_group_id="test-group-id",
+    )
+
+    entity = entity_registry.entities["fan.name_1"]
+    assert entity.unique_id == "test-hub-id_group_test-group-id"
+
+    device_entry = device_registry.async_get(entity.device_id)
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    dead_group_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={
+            (DOMAIN, "test-hub-id", GROUP_DEVICE_IDENTIFIER, "remove-group-id")
+        },
+    )
+    response = await client.remove_device(dead_group_entry.id, config_entry.entry_id)
+    assert response["success"]
+
+    dead_group_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={
+            (DOMAIN, "wrong-hub-id", GROUP_DEVICE_IDENTIFIER, "test-group-id")
+        },
+    )
+    response = await client.remove_device(dead_group_entry.id, config_entry.entry_id)
     assert response["success"]
 
     hub_device_entry = device_registry.async_get_or_create(

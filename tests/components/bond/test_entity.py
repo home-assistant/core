@@ -8,11 +8,12 @@ from bond_async.bpup import BPUP_ALIVE_TIMEOUT
 
 from homeassistant.components import fan
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util import utcnow
 
-from .common import patch_bond_device_state, setup_platform
+from .common import patch_bond_device_state, setup_group_platform, setup_platform
 
 from tests.common import async_fire_time_changed
 
@@ -23,6 +24,16 @@ def ceiling_fan(name: str):
         "name": name,
         "type": DeviceType.CEILING_FAN,
         "actions": ["SetSpeed", "SetDirection"],
+    }
+
+
+def generic_group(name: str):
+    """Create a generic group with given name."""
+    return {
+        "name": name,
+        "types": [DeviceType.GENERIC_DEVICE],
+        "locations": ["Den"],
+        "actions": ["TurnOn", "TurnOff"],
     }
 
 
@@ -107,6 +118,34 @@ async def test_bpup_goes_offline_and_recovers_same_entity(hass: HomeAssistant) -
     state = hass.states.get("fan.name_1")
     assert state.state == STATE_ON
     assert state.attributes[fan.ATTR_PERCENTAGE] == 66
+
+
+async def test_group_bpup_update(hass: HomeAssistant) -> None:
+    """Test group state updates are processed from BPUP group topics."""
+    bpup_subs = BPUPSubscriptions()
+    with patch(
+        "homeassistant.components.bond.BPUPSubscriptions",
+        return_value=bpup_subs,
+    ):
+        await setup_group_platform(
+            hass,
+            SWITCH_DOMAIN,
+            generic_group("name-1"),
+            bond_group_id="test-group-id",
+        )
+
+    # BondEntity historically only matched devices/<id>/state. This verifies
+    # the group topic is accepted and updates entity state without polling.
+    bpup_subs.notify(
+        {
+            "s": 200,
+            "t": "groups/test-group-id/state",
+            "b": {"power": 1},
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.name_1").state == STATE_ON
 
 
 async def test_bpup_goes_offline_and_recovers_different_entity(

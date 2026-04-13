@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 from homeassistant.helpers.typing import ConfigType
 
-from .const import BRIDGE_MAKE, DOMAIN
+from .const import BRIDGE_MAKE, DOMAIN, GROUP_DEVICE_IDENTIFIER
 from .models import BondData
 from .services import async_setup_services
 from .utils import BondHub
@@ -134,16 +134,27 @@ async def async_remove_config_entry_device(
     data = config_entry.runtime_data
     hub = data.hub
     for identifier in device_entry.identifiers:
-        if identifier[0] != DOMAIN or len(identifier) != 3:
+        if identifier[0] != DOMAIN:
             continue
-        bond_id: str = identifier[1]  # type: ignore[unreachable]
-        # Bond still uses the 3 arg tuple before
-        # the identifiers were typed
-        device_id: str = identifier[2]
-        # If device_id is no longer present on
-        # the hub, we allow removal.
-        if hub.bond_id != bond_id or not any(
-            device_id == device.device_id for device in hub.devices
-        ):
-            return True
+
+        if len(identifier) == 3:
+            bond_id: str = identifier[1]  # type: ignore[unreachable]
+            # Bond still uses the 3 arg tuple before
+            # the identifiers were typed
+            device_id: str = identifier[2]
+            # If device_id is no longer present on
+            # the hub, we allow removal.
+            if hub.bond_id != bond_id or not any(
+                device_id == device.device_id for device in hub.devices
+            ):
+                return True
+            continue
+
+        if len(identifier) == 4 and identifier[2] == GROUP_DEVICE_IDENTIFIER:
+            bond_id = identifier[1]
+            group_id = identifier[3]
+            if hub.bond_id != bond_id or not any(
+                group_id == group.group_id for group in hub.groups
+            ):
+                return True
     return False

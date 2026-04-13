@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 
 from aiohttp import ClientError
+from bond_async import Action
 
 from homeassistant.const import (
     ATTR_HW_VERSION,
@@ -18,13 +19,14 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN
+from .const import DOMAIN, GROUP_DEVICE_IDENTIFIER
 from .models import BondData
-from .utils import BondDevice
+from .utils import BondDevice, BondGroup
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +35,14 @@ _BPUP_ALIVE_SCAN_INTERVAL = 60
 
 
 class BondEntity(Entity):
-    """Generic Bond entity encapsulating common features of any Bond controlled device."""
+    """Generic Bond entity encapsulating common features of any Bond target."""
 
     _attr_should_poll = False
 
     def __init__(
         self,
         data: BondData,
-        device: BondDevice,
+        device: BondDevice | BondGroup,
         sub_device: str | None = None,
         sub_device_id: str | None = None,
     ) -> None:
@@ -49,7 +51,7 @@ class BondEntity(Entity):
         self._hub = hub
         self._bond = hub.bond
         self._device = device
-        self._device_id = device.device_id
+        self._device_id = device.target_id
         self._sub_device = sub_device
         self._attr_available = True
         self._bpup_subs = data.bpup_subs
@@ -61,7 +63,11 @@ class BondEntity(Entity):
             sub_device_id = f"_{sub_device}"
         else:
             sub_device_id = ""
-        self._attr_unique_id = f"{hub.bond_id}_{device.device_id}{sub_device_id}"
+        if isinstance(device, BondGroup):
+            target_id = f"group_{device.group_id}"
+        else:
+            target_id = device.device_id
+        self._attr_unique_id = f"{hub.bond_id}_{target_id}{sub_device_id}"
         if sub_device:
             sub_device_name = sub_device.replace("_", " ").title()
             self._attr_name = f"{device.name} {sub_device_name}"
@@ -76,13 +82,27 @@ class BondEntity(Entity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Get a an HA device representing this Bond controlled device."""
-        device_info = DeviceInfo(
-            manufacturer=self._hub.make,
-            # type ignore: tuple items should not be Optional
-            identifiers={(DOMAIN, self._hub.bond_id, self._device_id)},  # type: ignore[arg-type]
-            configuration_url=f"http://{self._hub.host}",
-        )
+        """Get an HA device representing this Bond controlled device."""
+        if isinstance(self._device, BondGroup):
+            device_info = DeviceInfo(
+                manufacturer=self._hub.make,
+                identifiers={
+                    (
+                        DOMAIN,
+                        self._hub.bond_id,
+                        GROUP_DEVICE_IDENTIFIER,
+                        self._device.group_id,
+                    )
+                },
+                configuration_url=f"http://{self._hub.host}",
+            )
+        else:
+            device_info = DeviceInfo(
+                manufacturer=self._hub.make,
+                # type ignore: tuple items should not be Optional
+                identifiers={(DOMAIN, self._hub.bond_id, self._device_id)},  # type: ignore[arg-type]
+                configuration_url=f"http://{self._hub.host}",
+            )
         if self.name is not None:
             device_info[ATTR_NAME] = self._device.name
         if self._hub.bond_id is not None:
@@ -136,10 +156,30 @@ class BondEntity(Entity):
             await self._async_update_from_api()
             self.async_write_ha_state()
 
+    def _async_ensure_device_only(self, action_name: str) -> None:
+        """Raise if an action is only supported for devices."""
+        if isinstance(self._device, BondGroup):
+            raise HomeAssistantError(
+                f"{self.entity_id} does not support {action_name} for Bond groups"
+            )
+
+    async def _async_action(self, action: Action) -> None:
+        """Execute an action against the Bond API."""
+        if isinstance(self._device, BondGroup):
+            await self._bond.group_action(self._device_id, action)
+            return
+        await self._bond.action(self._device_id, action)
+
+    async def _async_fetch_state(self) -> dict:
+        """Fetch the latest state for this entity target."""
+        if isinstance(self._device, BondGroup):
+            return await self._bond.group_state(self._device_id)
+        return await self._bond.device_state(self._device_id)
+
     async def _async_update_from_api(self) -> None:
         """Fetch via the API."""
         try:
-            state: dict = await self._bond.device_state(self._device_id)
+            state: dict = await self._async_fetch_state()
         except (ClientError, TimeoutError, OSError) as error:
             if self.available:
                 _LOGGER.warning(
@@ -161,7 +201,7 @@ class BondEntity(Entity):
             _LOGGER.info("Entity %s has come back", self.entity_id)
         self._attr_available = True
         _LOGGER.debug(
-            "Device state for %s (%s) is:\n%s", self.name, self.entity_id, state
+            "Bond state for %s (%s) is:\n%s", self.name, self.entity_id, state
         )
         self._device.state = state
         self._apply_state()
@@ -169,8 +209,11 @@ class BondEntity(Entity):
     @callback
     def _async_bpup_callback(self, json_msg: dict) -> None:
         """Process a state change from BPUP."""
-        topic = json_msg["t"]
-        if topic != f"devices/{self._device_id}/state":
+        if isinstance(self._device, BondGroup):
+            state_topic = f"groups/{self._device.group_id}/state"
+        else:
+            state_topic = f"devices/{self._device.device_id}/state"
+        if json_msg["t"] != state_topic:
             return
 
         self._async_state_callback(json_msg["b"])

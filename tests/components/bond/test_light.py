@@ -38,6 +38,9 @@ from .common import (
     patch_bond_action,
     patch_bond_action_returns_clientresponseerror,
     patch_bond_device_state,
+    patch_bond_group_action,
+    patch_bond_group_state,
+    setup_group_platform,
     setup_platform,
 )
 
@@ -151,6 +154,16 @@ def light_brightness_increase_decrease_only(name: str):
     }
 
 
+def light_group(name: str):
+    """Create a light group."""
+    return {
+        "name": name,
+        "types": [DeviceType.LIGHT],
+        "locations": ["Den"],
+        "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF, Action.SET_BRIGHTNESS],
+    }
+
+
 async def test_fan_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -253,6 +266,23 @@ async def test_light_entity_registry(
 
     entity = entity_registry.entities["light.light_name"]
     assert entity.unique_id == "test-hub-id_test-device-id"
+
+
+async def test_group_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests that Bond light groups are registered in the entity registry."""
+    await setup_group_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_group("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_group_id="test-group-id",
+    )
+
+    entity = entity_registry.entities["light.name_1"]
+    assert entity.unique_id == "test-hub-id_group_test-group-id"
 
 
 async def test_sbb_trust_state(hass: HomeAssistant) -> None:
@@ -475,6 +505,21 @@ async def test_light_set_power_belief(hass: HomeAssistant) -> None:
     )
 
 
+async def test_group_light_set_power_belief_not_supported(
+    hass: HomeAssistant,
+) -> None:
+    """Tests that belief services are not supported for groups."""
+    await setup_group_platform(hass, LIGHT_DOMAIN, light_group("name-1"))
+
+    with pytest.raises(HomeAssistantError, match="Bond groups"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            blocking=True,
+        )
+
+
 async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light throws HomeAssistantError in the event of an api error."""
     await setup_platform(
@@ -684,6 +729,41 @@ async def test_light_stop_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
+
+
+async def test_turn_on_light_group(hass: HomeAssistant) -> None:
+    """Tests that turn on command for a group delegates to the group API."""
+    await setup_group_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_group("name-1"),
+        bond_group_id="test-group-id",
+    )
+
+    with patch_bond_group_action() as mock_turn_on, patch_bond_group_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_on.assert_called_once_with(
+        "test-group-id", Action(Action.SET_BRIGHTNESS, 50)
+    )
+
+
+async def test_group_reports_unknown(hass: HomeAssistant) -> None:
+    """Tests that group state is unknown when Bond reports indeterminate power."""
+    await setup_group_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_group("name-1"),
+        state={"light": None},
+    )
+
+    assert hass.states.get("light.name_1").state == "unknown"
 
 
 async def test_turn_on_light(hass: HomeAssistant) -> None:

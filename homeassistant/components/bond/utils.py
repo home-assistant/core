@@ -17,8 +17,127 @@ MAX_REQUESTS = 6
 _LOGGER = logging.getLogger(__name__)
 
 
-class BondDevice:
+class BondBaseTarget:
+    """Common functionality shared by Bond devices and groups."""
+
+    _id_name = "id"
+
+    def __init__(
+        self,
+        target_id: str,
+        attrs: dict[str, Any],
+        props: dict[str, Any],
+        state: dict[str, Any],
+    ) -> None:
+        """Create a helper target from ID and attributes returned by API."""
+        self.target_id = target_id
+        self.props = props
+        self.state = state
+        self._attrs = attrs or {}
+        self._supported_actions: set[str] = set(self._attrs.get("actions", []))
+
+    def __repr__(self) -> str:
+        """Return readable representation of a bond target."""
+        return {
+            self._id_name: self.target_id,
+            "props": self.props,
+            "attrs": self._attrs,
+            "state": self.state,
+        }.__repr__()
+
+    @property
+    def name(self) -> str:
+        """Get the name of this target."""
+        return cast(str, self._attrs["name"])
+
+    @property
+    def type(self) -> str | None:
+        """Get the primary type of this target if it has one."""
+        return None
+
+    @property
+    def location(self) -> str | None:
+        """Get the location of this target."""
+        return None
+
+    @property
+    def template(self) -> str | None:
+        """Return this model template."""
+        return None
+
+    @property
+    def branding_profile(self) -> str | None:
+        """Return this branding profile."""
+        return None
+
+    @property
+    def trust_state(self) -> bool:
+        """Check if Trust State is turned on."""
+        return True
+
+    def has_action(self, action: str) -> bool:
+        """Check to see if the target supports an action."""
+        return action in self._supported_actions
+
+    def _has_any_action(self, actions: set[str]) -> bool:
+        """Check to see if the target supports any of the actions."""
+        return bool(self._supported_actions.intersection(actions))
+
+    def supports_speed(self) -> bool:
+        """Return True if this target supports any of the speed related commands."""
+        return self._has_any_action({Action.SET_SPEED})
+
+    def supports_direction(self) -> bool:
+        """Return True if this target supports any of the direction related commands."""
+        return self._has_any_action({Action.SET_DIRECTION})
+
+    def supports_set_position(self) -> bool:
+        """Return True if this target supports setting the position."""
+        return self._has_any_action({Action.SET_POSITION})
+
+    def supports_open(self) -> bool:
+        """Return True if this target supports opening."""
+        return self._has_any_action({Action.OPEN})
+
+    def supports_close(self) -> bool:
+        """Return True if this target supports closing."""
+        return self._has_any_action({Action.CLOSE})
+
+    def supports_tilt_open(self) -> bool:
+        """Return True if this target supports tilt opening."""
+        return self._has_any_action({Action.TILT_OPEN})
+
+    def supports_tilt_close(self) -> bool:
+        """Return True if this target supports tilt closing."""
+        return self._has_any_action({Action.TILT_CLOSE})
+
+    def supports_hold(self) -> bool:
+        """Return True if this target supports hold aka stop."""
+        return self._has_any_action({Action.HOLD})
+
+    def supports_light(self) -> bool:
+        """Return True if this target supports any of the light related commands."""
+        return self._has_any_action({Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF})
+
+    def supports_up_light(self) -> bool:
+        """Return true if the target has an up light."""
+        return self._has_any_action({Action.TURN_UP_LIGHT_ON, Action.TURN_UP_LIGHT_OFF})
+
+    def supports_down_light(self) -> bool:
+        """Return true if the target has a down light."""
+        return self._has_any_action(
+            {Action.TURN_DOWN_LIGHT_ON, Action.TURN_DOWN_LIGHT_OFF}
+        )
+
+    def supports_set_brightness(self) -> bool:
+        """Return True if this target supports setting a light brightness."""
+        return self._has_any_action({Action.SET_BRIGHTNESS})
+
+
+class BondDevice(BondBaseTarget):
     """Helper device class to hold ID and attributes together."""
+
+    _id_name = "device_id"
 
     def __init__(
         self,
@@ -29,24 +148,7 @@ class BondDevice:
     ) -> None:
         """Create a helper device from ID and attributes returned by API."""
         self.device_id = device_id
-        self.props = props
-        self.state = state
-        self._attrs = attrs or {}
-        self._supported_actions: set[str] = set(self._attrs.get("actions", []))
-
-    def __repr__(self) -> str:
-        """Return readable representation of a bond device."""
-        return {
-            "device_id": self.device_id,
-            "props": self.props,
-            "attrs": self._attrs,
-            "state": self.state,
-        }.__repr__()
-
-    @property
-    def name(self) -> str:
-        """Get the name of this device."""
-        return cast(str, self._attrs["name"])
+        super().__init__(device_id, attrs, props, state)
 
     @property
     def type(self) -> str:
@@ -73,63 +175,42 @@ class BondDevice:
         """Check if Trust State is turned on."""
         return self.props.get("trust_state", False)  # type: ignore[no-any-return]
 
-    def has_action(self, action: str) -> bool:
-        """Check to see if the device supports an actions."""
-        return action in self._supported_actions
 
-    def _has_any_action(self, actions: set[str]) -> bool:
-        """Check to see if the device supports any of the actions."""
-        return bool(self._supported_actions.intersection(actions))
+class BondGroup(BondBaseTarget):
+    """Helper group class to hold ID and attributes together."""
 
-    def supports_speed(self) -> bool:
-        """Return True if this device supports any of the speed related commands."""
-        return self._has_any_action({Action.SET_SPEED})
+    _id_name = "group_id"
 
-    def supports_direction(self) -> bool:
-        """Return True if this device supports any of the direction related commands."""
-        return self._has_any_action({Action.SET_DIRECTION})
+    def __init__(
+        self,
+        group_id: str,
+        attrs: dict[str, Any],
+        props: dict[str, Any],
+        state: dict[str, Any],
+    ) -> None:
+        """Create a helper group from ID and attributes returned by API."""
+        self.group_id = group_id
+        super().__init__(group_id, attrs, props, state)
 
-    def supports_set_position(self) -> bool:
-        """Return True if this device supports setting the position."""
-        return self._has_any_action({Action.SET_POSITION})
+    @property
+    def types(self) -> list[str]:
+        """Get all types of this group."""
+        return cast(list[str], self._attrs.get("types", []))
 
-    def supports_open(self) -> bool:
-        """Return True if this device supports opening."""
-        return self._has_any_action({Action.OPEN})
+    @property
+    def type(self) -> str | None:
+        """Get the group type when the group is homogeneous."""
+        return self.types[0] if len(self.types) == 1 else None
 
-    def supports_close(self) -> bool:
-        """Return True if this device supports closing."""
-        return self._has_any_action({Action.CLOSE})
+    @property
+    def locations(self) -> list[str]:
+        """Get all locations of this group."""
+        return cast(list[str], self._attrs.get("locations", []))
 
-    def supports_tilt_open(self) -> bool:
-        """Return True if this device supports tilt opening."""
-        return self._has_any_action({Action.TILT_OPEN})
-
-    def supports_tilt_close(self) -> bool:
-        """Return True if this device supports tilt closing."""
-        return self._has_any_action({Action.TILT_CLOSE})
-
-    def supports_hold(self) -> bool:
-        """Return True if this device supports hold aka stop."""
-        return self._has_any_action({Action.HOLD})
-
-    def supports_light(self) -> bool:
-        """Return True if this device supports any of the light related commands."""
-        return self._has_any_action({Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF})
-
-    def supports_up_light(self) -> bool:
-        """Return true if the device has an up light."""
-        return self._has_any_action({Action.TURN_UP_LIGHT_ON, Action.TURN_UP_LIGHT_OFF})
-
-    def supports_down_light(self) -> bool:
-        """Return true if the device has a down light."""
-        return self._has_any_action(
-            {Action.TURN_DOWN_LIGHT_ON, Action.TURN_DOWN_LIGHT_OFF}
-        )
-
-    def supports_set_brightness(self) -> bool:
-        """Return True if this device supports setting a light brightness."""
-        return self._has_any_action({Action.SET_BRIGHTNESS})
+    @property
+    def location(self) -> str | None:
+        """Get the location of this group when unambiguous."""
+        return self.locations[0] if len(self.locations) == 1 else None
 
 
 class BondHub:
@@ -142,6 +223,7 @@ class BondHub:
         self._bridge: dict[str, Any] = {}
         self._version: dict[str, Any] = {}
         self._devices: list[BondDevice] = []
+        self._groups: list[BondGroup] = []
 
     async def setup(self, max_devices: int | None = None) -> None:
         """Read hub version information."""
@@ -150,6 +232,7 @@ class BondHub:
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
         self._devices = []
+        self._groups = []
         setup_device_ids = []
         tasks = []
         for idx, device_id in enumerate(device_ids):
@@ -163,6 +246,18 @@ class BondHub:
                     self.bond.device_state(device_id),
                 ]
             )
+
+        setup_group_ids: list[str] = []
+        if max_devices is None and await self.bond.supports_groups():
+            setup_group_ids = await self.bond.groups()
+            for group_id in setup_group_ids:
+                tasks.extend(
+                    [
+                        self.bond.group(group_id),
+                        self.bond.group_properties(group_id),
+                        self.bond.group_state(group_id),
+                    ]
+                )
 
         responses = await gather_with_limited_concurrency(MAX_REQUESTS, *tasks)
         response_idx = 0
@@ -178,6 +273,19 @@ class BondHub:
             response_idx += 3
 
         _LOGGER.debug("Discovered Bond devices: %s", self._devices)
+
+        for group_id in setup_group_ids:
+            self._groups.append(
+                BondGroup(
+                    group_id,
+                    responses[response_idx],
+                    responses[response_idx + 1],
+                    responses[response_idx + 2],
+                )
+            )
+            response_idx += 3
+
+        _LOGGER.debug("Discovered Bond groups: %s", self._groups)
         try:
             # Smart by bond devices do not have a bridge api call
             self._bridge = await self.bond.bridge()
@@ -234,6 +342,11 @@ class BondHub:
     def devices(self) -> list[BondDevice]:
         """Return a list of all devices controlled by this hub."""
         return self._devices
+
+    @property
+    def groups(self) -> list[BondGroup]:
+        """Return a list of all groups controlled by this hub."""
+        return self._groups
 
     @property
     def is_bridge(self) -> bool:

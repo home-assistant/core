@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
 from .entity import BondEntity
+from .utils import BondGroup
 
 
 async def async_setup_entry(
@@ -24,9 +25,10 @@ async def async_setup_entry(
     """Set up Bond generic devices."""
     data = entry.runtime_data
 
+    devices = data.hub.devices + data.hub.groups
     async_add_entities(
         BondSwitch(data, device)
-        for device in data.hub.devices
+        for device in devices
         if DeviceType.is_generic(device.type)
     )
 
@@ -35,22 +37,25 @@ class BondSwitch(BondEntity, SwitchEntity):
     """Representation of a Bond generic device."""
 
     def _apply_state(self) -> None:
-        self._attr_is_on = self._device.state.get("power") == 1
+        power = self._device.state.get("power")
+        if isinstance(self._device, BondGroup):
+            self._attr_is_on = None if power is None else power == 1
+        else:
+            self._attr_is_on = power == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._bond.action(self._device_id, Action.turn_on())
+        await self._async_action(Action.turn_on())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._bond.action(self._device_id, Action.turn_off())
+        await self._async_action(Action.turn_off())
 
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set switch power belief."""
+        self._async_ensure_device_only(Action.SET_STATE_BELIEF)
         try:
-            await self._bond.action(
-                self._device_id, Action.set_power_state_belief(power_state)
-            )
+            await self._async_action(Action.set_power_state_belief(power_state))
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_power_state_belief for"

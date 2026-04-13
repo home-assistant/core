@@ -32,6 +32,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,6 +45,9 @@ from .common import (
     patch_bond_action,
     patch_bond_action_returns_clientresponseerror,
     patch_bond_device_state,
+    patch_bond_group_action,
+    patch_bond_group_state,
+    setup_group_platform,
     setup_platform,
 )
 
@@ -56,6 +60,16 @@ def ceiling_fan_with_breeze(name: str):
         "name": name,
         "type": DeviceType.CEILING_FAN,
         "actions": ["SetSpeed", "SetDirection", "BreezeOn"],
+    }
+
+
+def ceiling_fan_group(name: str):
+    """Create a ceiling fan group."""
+    return {
+        "name": name,
+        "types": [DeviceType.CEILING_FAN],
+        "locations": ["Den"],
+        "actions": [Action.TURN_ON, Action.TURN_OFF, Action.SET_SPEED],
     }
 
 
@@ -101,6 +115,23 @@ async def test_entity_registry(
     assert device.configuration_url == "http://some host"
 
 
+async def test_group_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests that Bond fan groups are registered in the entity registry."""
+    await setup_group_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan_group("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_group_id="test-group-id",
+    )
+
+    entity = entity_registry.entities["fan.name_1"]
+    assert entity.unique_id == "test-hub-id_group_test-group-id"
+
+
 async def test_non_standard_speed_list(hass: HomeAssistant) -> None:
     """Tests that the device is registered with custom speed list if number of supported speeds differs form 3."""
     await setup_platform(
@@ -143,6 +174,34 @@ async def test_fan_speed_with_no_max_speed(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("fan.name_1").attributes["percentage"] == 100
+
+
+async def test_turn_on_fan_group_with_speed(hass: HomeAssistant) -> None:
+    """Tests that turn on group command delegates to group set speed API."""
+    await setup_group_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan_group("name-1"),
+        bond_group_id="test-group-id",
+        props={"max_speed": 6},
+    )
+
+    with patch_bond_group_action() as mock_set_speed, patch_bond_group_state():
+        await turn_fan_on(hass, "fan.name_1", percentage=50)
+
+    mock_set_speed.assert_called_once_with("test-group-id", Action.set_speed(3))
+
+
+async def test_group_reports_unknown(hass: HomeAssistant) -> None:
+    """Tests that group state is unknown when Bond reports indeterminate power."""
+    await setup_group_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan_group("name-1"),
+        state={"power": None, "speed": 1},
+    )
+
+    assert hass.states.get("fan.name_1").state == STATE_UNKNOWN
 
 
 async def test_turn_on_fan_with_speed(hass: HomeAssistant) -> None:
@@ -413,6 +472,13 @@ async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
 
     mock_action.assert_any_call("test-device-id", Action.set_power_state_belief(True))
     mock_action.assert_called_with("test-device-id", Action.set_speed_belief(3))
+
+
+async def test_initial_state_defaults_off(hass: HomeAssistant) -> None:
+    """Tests that a device defaults to off when Bond has no initial power state."""
+    await setup_platform(hass, FAN_DOMAIN, ceiling_fan("name-1"))
+
+    assert hass.states.get("fan.name_1").state == "off"
 
 
 async def test_update_reports_fan_on(hass: HomeAssistant) -> None:

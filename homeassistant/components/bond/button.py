@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import BondConfigEntry
 from .entity import BondEntity
 from .models import BondData
-from .utils import BondDevice
+from .utils import BondDevice, BondGroup
 
 # The api requires a step size even though it does not
 # seem to matter what is is as the underlying device is likely
@@ -278,7 +278,9 @@ async def async_setup_entry(
     data = entry.runtime_data
     entities: list[BondButtonEntity] = []
 
-    for device in data.hub.devices:
+    devices = data.hub.devices + data.hub.groups
+
+    for device in devices:
         device_entities = [
             BondButtonEntity(data, device, description)
             for description in BUTTONS
@@ -308,7 +310,7 @@ class BondButtonEntity(BondEntity, ButtonEntity):
     def __init__(
         self,
         data: BondData,
-        device: BondDevice,
+        device: BondDevice | BondGroup,
         description: BondButtonEntityDescription,
     ) -> None:
         """Init Bond button."""
@@ -323,7 +325,7 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             action = Action(key, argument)
         else:
             action = Action(key)
-        await self._bond.action(self._device_id, action)
+        await self._async_action(action)
 
     def _apply_state(self) -> None:
         """Apply the state."""

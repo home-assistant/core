@@ -29,6 +29,9 @@ from .common import (
     help_test_entity_available,
     patch_bond_action,
     patch_bond_device_state,
+    patch_bond_group_action,
+    patch_bond_group_state,
+    setup_group_platform,
     setup_platform,
 )
 
@@ -49,6 +52,26 @@ def shades_with_position(name: str):
     return {
         "name": name,
         "type": DeviceType.MOTORIZED_SHADES,
+        "actions": [Action.OPEN, Action.CLOSE, Action.HOLD, Action.SET_POSITION],
+    }
+
+
+def shade_group(name: str):
+    """Create a motorized shades group."""
+    return {
+        "name": name,
+        "types": [DeviceType.MOTORIZED_SHADES],
+        "locations": ["Den"],
+        "actions": [Action.OPEN, Action.CLOSE, Action.HOLD],
+    }
+
+
+def shade_group_with_position(name: str):
+    """Create a motorized shades group that supports set position."""
+    return {
+        "name": name,
+        "types": [DeviceType.MOTORIZED_SHADES],
+        "locations": ["Den"],
         "actions": [Action.OPEN, Action.CLOSE, Action.HOLD, Action.SET_POSITION],
     }
 
@@ -88,6 +111,23 @@ async def test_entity_registry(
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 
+async def test_group_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests that Bond groups are registered in the entity registry."""
+    await setup_group_platform(
+        hass,
+        COVER_DOMAIN,
+        shade_group("name-1"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_group_id="test-group-id",
+    )
+
+    entity = entity_registry.entities["cover.name_1"]
+    assert entity.unique_id == "test-hub-id_group_test-group-id"
+
+
 async def test_open_cover(hass: HomeAssistant) -> None:
     """Tests that open cover command delegates to API."""
     await setup_platform(
@@ -104,6 +144,69 @@ async def test_open_cover(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     mock_open.assert_called_once_with("test-device-id", Action.open())
+
+
+async def test_open_cover_group(hass: HomeAssistant) -> None:
+    """Tests that open cover group command delegates to the group API."""
+    await setup_group_platform(
+        hass,
+        COVER_DOMAIN,
+        shade_group("name-1"),
+        bond_group_id="test-group-id",
+    )
+
+    with patch_bond_group_action() as mock_open, patch_bond_group_state():
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_open.assert_called_once_with("test-group-id", Action.open())
+
+
+async def test_stop_cover_group(hass: HomeAssistant) -> None:
+    """Tests that stop cover group command delegates to the group API."""
+    await setup_group_platform(
+        hass,
+        COVER_DOMAIN,
+        shade_group("name-1"),
+        bond_group_id="test-group-id",
+    )
+
+    with patch_bond_group_action() as mock_hold, patch_bond_group_state():
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_STOP_COVER,
+            {ATTR_ENTITY_ID: "cover.name_1"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_hold.assert_called_once_with("test-group-id", Action.hold())
+
+
+async def test_set_position_cover_group(hass: HomeAssistant) -> None:
+    """Tests that set position cover group command delegates to the group API."""
+    await setup_group_platform(
+        hass,
+        COVER_DOMAIN,
+        shade_group_with_position("name-1"),
+        bond_group_id="test-group-id",
+    )
+
+    with patch_bond_group_action() as mock_action, patch_bond_group_state():
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: "cover.name_1", ATTR_POSITION: 60},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-group-id", Action.set_position(40))
 
 
 async def test_close_cover(hass: HomeAssistant) -> None:
