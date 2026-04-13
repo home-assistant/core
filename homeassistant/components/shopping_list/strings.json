@@ -26,7 +26,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
-      "name": "Add item"
+      "name": "Add shopping list item"
     },
     "clear_completed_items": {
       "description": "Removes completed items from the shopping list.",

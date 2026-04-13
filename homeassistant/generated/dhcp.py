@@ -174,6 +174,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "dsp-w215",
     },
     {
+        "domain": "elgato",
+        "registered_devices": True,
+    },
+    {
         "domain": "elkm1",
         "registered_devices": True,
     },
@@ -435,6 +439,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "motion_blinds",
         "hostname": "connector_*",
+    },
+    {
+        "domain": "mystrom",
+        "hostname": "mystrom-*",
+    },
+    {
+        "domain": "mystrom",
+        "registered_devices": True,
     },
     {
         "domain": "nest",
