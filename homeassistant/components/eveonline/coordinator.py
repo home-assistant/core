@@ -8,7 +8,7 @@ import logging
 
 import aiohttp
 from eveonline import EveOnlineClient, EveOnlineError
-from eveonline.models import CharacterLocation, WalletBalance
+from eveonline.models import CharacterLocation, CharacterShip
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -27,10 +27,10 @@ class EveOnlineData:
 
     character_id: int
     character_name: str
-    online: bool = False
-    wallet_balance: WalletBalance | None = None
+    wallet_balance: float | None = None
     location: CharacterLocation | None = None
     solar_system_name: str | None = None
+    ship: CharacterShip | None = None
 
 
 class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
@@ -59,23 +59,11 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
     async def _async_update_data(self) -> EveOnlineData:
         """Fetch character data from ESI."""
         try:
-            character_online = await self.client.async_get_character_online(
-                self.character_id
-            )
+            wallet = await self.client.async_get_wallet_balance(self.character_id)
         except (EveOnlineError, aiohttp.ClientError) as err:
             raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"error": str(err)},
+                f"Error communicating with Eve Online API: {err}"
             ) from err
-
-        wallet_balance: WalletBalance | None = None
-        try:
-            wallet_balance = await self.client.async_get_wallet_balance(
-                self.character_id
-            )
-        except (EveOnlineError, aiohttp.ClientError) as err:
-            _LOGGER.debug("Failed to fetch wallet balance: %s", err)
 
         location: CharacterLocation | None = None
         solar_system_name: str | None = None
@@ -94,13 +82,19 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
             except (EveOnlineError, aiohttp.ClientError) as err:
                 _LOGGER.debug("Failed to resolve solar system name: %s", err)
 
+        ship: CharacterShip | None = None
+        try:
+            ship = await self.client.async_get_character_ship(self.character_id)
+        except (EveOnlineError, aiohttp.ClientError) as err:
+            _LOGGER.debug("Failed to fetch ship: %s", err)
+
         return EveOnlineData(
             character_id=self.character_id,
             character_name=self.character_name,
-            online=character_online.online,
-            wallet_balance=wallet_balance,
+            wallet_balance=wallet.balance,
             location=location,
             solar_system_name=solar_system_name,
+            ship=ship,
         )
 
 

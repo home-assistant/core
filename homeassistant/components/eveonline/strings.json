@@ -21,27 +21,12 @@
       "location": {
         "name": "Location"
       },
-      "online": {
-        "name": "Status",
-        "state": {
-          "offline": "Offline",
-          "online": "Online"
-        }
+      "ship": {
+        "name": "Ship"
       },
       "wallet_balance": {
         "name": "Wallet balance"
       }
-    }
-  },
-  "exceptions": {
-    "authentication_failed": {
-      "message": "Authentication failed. Please reauthenticate"
-    },
-    "token_refresh_failed": {
-      "message": "Failed to refresh OAuth token: {error}"
-    },
-    "update_failed": {
-      "message": "Error communicating with Eve Online API: {error}"
     }
   }
 }

@@ -12,6 +12,6 @@ OAUTH2_TOKEN: Final = "https://login.eveonline.com/v2/oauth/token"
 
 SCOPES: Final[list[str]] = [
     "esi-location.read_location.v1",
-    "esi-location.read_online.v1",
+    "esi-location.read_ship_type.v1",
     "esi-wallet.read_character_wallet.v1",
 ]

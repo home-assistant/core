@@ -49,18 +49,13 @@
     'state': 'Jita',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_capsuleer_status-entry]
+# name: test_sensor_snapshot[sensor.test_capsuleer_ship-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'online',
-        'offline',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -68,7 +63,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_capsuleer_status',
+    'entity_id': 'sensor.test_capsuleer_ship',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -76,37 +71,32 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Ship',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Ship',
     'platform': 'eveonline',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'online',
-    'unique_id': '12345678_online',
+    'translation_key': 'ship',
+    'unique_id': '12345678_ship',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_capsuleer_status-state]
+# name: test_sensor_snapshot[sensor.test_capsuleer_ship-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Capsuleer Status',
-      'options': list([
-        'online',
-        'offline',
-      ]),
+      'friendly_name': 'Test Capsuleer Ship',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_capsuleer_status',
+    'entity_id': 'sensor.test_capsuleer_ship',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'online',
+    'state': 'Rifter',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_capsuleer_wallet_balance-entry]

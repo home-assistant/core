@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -16,8 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EveOnlineConfigEntry, EveOnlineCoordinator, EveOnlineData
 from .entity import EveOnlineCharacterEntity
-
-PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -29,26 +26,22 @@ class EveOnlineSensorDescription(SensorEntityDescription):
 
 SENSORS: tuple[EveOnlineSensorDescription, ...] = (
     EveOnlineSensorDescription(
-        key="online",
-        translation_key="online",
-        device_class=SensorDeviceClass.ENUM,
-        options=["online", "offline"],
-        value_fn=lambda data: "online" if data.online else "offline",
-    ),
-    EveOnlineSensorDescription(
         key="wallet_balance",
         translation_key="wallet_balance",
         native_unit_of_measurement="ISK",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
-        value_fn=lambda data: (
-            data.wallet_balance.balance if data.wallet_balance else None
-        ),
+        value_fn=lambda data: data.wallet_balance,
     ),
     EveOnlineSensorDescription(
         key="location",
         translation_key="location",
         value_fn=lambda data: data.solar_system_name,
+    ),
+    EveOnlineSensorDescription(
+        key="ship",
+        translation_key="ship",
+        value_fn=lambda data: data.ship.ship_name if data.ship else None,
     ),
 )
 

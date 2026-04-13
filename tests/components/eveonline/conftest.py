@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from eveonline.models import (
     CharacterLocation,
-    CharacterOnlineStatus,
+    CharacterShip,
     UniverseName,
     WalletBalance,
 )
@@ -79,9 +79,6 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_client_class:
         client = mock_client_class.return_value
-        client.async_get_character_online.return_value = CharacterOnlineStatus(
-            online=True
-        )
         client.async_get_wallet_balance.return_value = WalletBalance(balance=1234567.89)
         client.async_get_character_location.return_value = CharacterLocation(
             solar_system_id=SOLAR_SYSTEM_ID
@@ -91,6 +88,9 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
                 id=SOLAR_SYSTEM_ID, name=SOLAR_SYSTEM_NAME, category="solar_system"
             )
         ]
+        client.async_get_character_ship.return_value = CharacterShip(
+            ship_type_id=587, ship_item_id=1000000, ship_name="Rifter"
+        )
         yield client
 
 

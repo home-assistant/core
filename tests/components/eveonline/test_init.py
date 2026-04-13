@@ -35,7 +35,7 @@ async def test_setup_entry_error(
     exception: Exception,
 ) -> None:
     """Test setup failure when the primary endpoint is unavailable."""
-    mock_eveonline_client.async_get_character_online.side_effect = exception
+    mock_eveonline_client.async_get_wallet_balance.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -63,9 +63,6 @@ async def test_optional_endpoint_error_does_not_fail_setup(
     setup_credentials: None,
 ) -> None:
     """Test that errors on optional endpoints don't prevent the entry from loading."""
-    mock_eveonline_client.async_get_wallet_balance.side_effect = EveOnlineError(
-        "Endpoint down"
-    )
     mock_eveonline_client.async_get_character_location.side_effect = EveOnlineError(
         "Endpoint down"
     )

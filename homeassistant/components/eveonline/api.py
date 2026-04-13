@@ -15,8 +15,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DOMAIN
-
 
 class AsyncConfigEntryAuth(AbstractAuth):
     """Provide Eve Online authentication tied to an OAuth2 based config entry."""
@@ -36,13 +34,8 @@ class AsyncConfigEntryAuth(AbstractAuth):
             await self._oauth_session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
             raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
+                "Authentication failed, please reauthenticate"
             ) from err
         except (OAuth2TokenRequestTransientError, ClientError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="token_refresh_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            raise UpdateFailed(f"Failed to refresh OAuth token: {err}") from err
         return cast(str, self._oauth_session.token["access_token"])
