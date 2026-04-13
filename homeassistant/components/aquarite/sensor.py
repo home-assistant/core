@@ -299,6 +299,7 @@ class AquariteLocationSensorEntity(AquariteEntity, SensorEntity):
     """Location sensor entity."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
