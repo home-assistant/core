@@ -6,12 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sunricher_dali.diagnostics import (
-    ALLOWED_ENTRY_KEYS,
-    _serialize_device,
-    _serialize_scene,
-    _strip_gw_sn,
-)
+from homeassistant.components.sunricher_dali.diagnostics import ALLOWED_ENTRY_KEYS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -51,18 +46,13 @@ EXPECTED_SCENE_KEYS = frozenset(
 
 @pytest.fixture
 def platforms() -> list[Platform]:
-    """Override platforms used during init_integration to keep setup minimal."""
+    """Keep init_integration setup minimal."""
     return []
 
 
 @pytest.fixture
 def mock_devices() -> list[MagicMock]:
-    """Override the shared fixture with a unique, duplicate-free device list.
-
-    The shared conftest fixture intentionally appends a duplicate device to
-    exercise duplicate-handling in other tests. For the diagnostics snapshot,
-    a clean unique list keeps the output easier to reason about.
-    """
+    """Return a unique device list for a clean snapshot."""
     return [_create_mock_device(data) for data in DEVICE_DATA]
 
 
@@ -84,11 +74,10 @@ async def test_diagnostics_structure(
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Diagnostics output must contain exactly entry_data, devices, scenes."""
+    """Test top-level structure."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert set(result.keys()) == {"entry_data", "devices", "scenes"}
-    assert "gateway" not in result
     assert isinstance(result["devices"], list)
     assert isinstance(result["scenes"], list)
     assert len(result["devices"]) > 0
@@ -100,7 +89,7 @@ async def test_diagnostics_redacts_entry_data(
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Credentials and host must be redacted in entry_data."""
+    """Test credentials and host are redacted in entry_data."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     entry_data = result["entry_data"]
@@ -115,14 +104,34 @@ async def test_diagnostics_entry_data_is_whitelisted(
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
-    """entry_data must only contain keys from ALLOWED_ENTRY_KEYS.
-
-    This turns the key whitelist into a mechanical contract: any new
-    field added to entry.data must be explicitly opted in.
-    """
+    """Test entry_data only contains whitelisted keys."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     assert set(result["entry_data"]).issubset(ALLOWED_ENTRY_KEYS)
+
+
+async def test_diagnostics_device_keys_are_exact(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test each device entry exposes exactly the whitelisted keys."""
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    for device in result["devices"]:
+        assert set(device.keys()) == EXPECTED_DEVICE_KEYS
+
+
+async def test_diagnostics_scene_keys_are_exact(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test each scene entry exposes exactly the whitelisted keys."""
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    for scene in result["scenes"]:
+        assert set(scene.keys()) == EXPECTED_SCENE_KEYS
 
 
 async def test_diagnostics_redacts_device_dev_sn(
@@ -130,7 +139,7 @@ async def test_diagnostics_redacts_device_dev_sn(
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
-    """dev_sn must be redacted in each device entry."""
+    """Test dev_sn is redacted in each device entry."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     for device in result["devices"]:
@@ -142,17 +151,10 @@ async def test_diagnostics_preserves_unique_id(
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
-    """dev_id and unique_id must keep their structural prefix for traceability.
-
-    The gw_sn suffix is stripped by the post-processing redactor, but the
-    dev_type/channel/address prefix is preserved so developers can still
-    correlate diagnostics entries with HA entity registry records.
-    """
+    """Test dev_id and unique_id keep their structural prefix."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     for device in result["devices"]:
-        assert device["dev_id"] is not None
-        assert device["unique_id"] is not None
         assert device["dev_id"] == device["unique_id"]
         assert "**REDACTED**" in device["dev_id"]
         assert device["dev_id"] != "**REDACTED**"
@@ -163,52 +165,9 @@ async def test_diagnostics_strips_gw_sn(
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
-    """The gateway serial number must never appear anywhere in the output.
-
-    This is a hard anti-leak guarantee: even though dev_id / unique_id are
-    preserved for traceability, their gw_sn suffix must be stripped by the
-    post-processing redactor before the payload is returned.
-    """
+    """Test gateway serial number never appears anywhere in the output."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
     assert GATEWAY_SERIAL not in json.dumps(result)
-
-
-async def test_diagnostics_no_private_attrs(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Serialized devices and scenes must not expose private attributes."""
-    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
-
-    for device in result["devices"]:
-        assert not any(key.startswith("_") for key in device)
-    for scene in result["scenes"]:
-        assert not any(key.startswith("_") for key in scene)
-        assert "gw_sn_obj" not in scene
-        assert "property" not in scene
-
-
-def test_serialized_device_keys_are_exact(mock_devices: list[MagicMock]) -> None:
-    """The device whitelist must be exactly EXPECTED_DEVICE_KEYS.
-
-    Any addition or removal must be deliberate and update both
-    _serialize_device and EXPECTED_DEVICE_KEYS together.
-    """
-    serialized = _serialize_device(mock_devices[0])
-    assert set(serialized.keys()) == EXPECTED_DEVICE_KEYS
-
-
-def test_serialized_scene_keys_are_exact(mock_scenes: list[MagicMock]) -> None:
-    """The scene whitelist must be exactly EXPECTED_SCENE_KEYS."""
-    serialized = _serialize_scene(mock_scenes[0])
-    assert set(serialized.keys()) == EXPECTED_SCENE_KEYS
-
-
-def test_strip_gw_sn_noop_on_empty_serial() -> None:
-    """_strip_gw_sn must return the input unchanged when gw_sn is empty."""
-    payload = {"devices": [{"dev_id": "0101000002ABC123"}]}
-    assert _strip_gw_sn(payload, "") is payload
 
 
 async def test_diagnostics_empty_runtime(
@@ -217,7 +176,7 @@ async def test_diagnostics_empty_runtime(
     mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
 ) -> None:
-    """Diagnostics handles a gateway with zero devices and zero scenes."""
+    """Test diagnostics handles a gateway with zero devices and zero scenes."""
     mock_gateway.discover_devices.return_value = []
     mock_gateway.discover_scenes.return_value = []
 
