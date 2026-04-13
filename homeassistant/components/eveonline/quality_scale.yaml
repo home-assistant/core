@@ -73,8 +73,8 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Will be added in a follow-up PR.
+    status: exempt
+    comment: Integration is OAuth2-only with no user-configurable parameters; reconfiguration is not applicable.
   repair-issues:
     status: exempt
     comment: Integration does not raise repair issues.

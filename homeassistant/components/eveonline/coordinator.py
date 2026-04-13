@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Poll intervals aligned with ESI server-side cache times.
 # Polling faster than the cache window wastes API quota and quota is limited.
-FAST_SCAN_INTERVAL = 60  # location/ship: 5s, wallet: 120s, mail: 30s
+FAST_SCAN_INTERVAL = 60
 INDUSTRY_SCAN_INTERVAL = 300  # industry jobs, jump fatigue: 300s, skill_queue: 120s
 MARKET_SCAN_INTERVAL = 3600  # market orders: 3600s
 SKILLS_SCAN_INTERVAL = 86400  # character skills / total SP: 86400s
