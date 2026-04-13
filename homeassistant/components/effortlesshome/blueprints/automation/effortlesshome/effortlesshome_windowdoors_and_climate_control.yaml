@@ -1,0 +1,102 @@
+blueprint:
+  name: Windows/Doors and Climate Control
+  description:
+    This automation helps manage your heating or cooling systems based
+    on window or door sensor activity, conserving energy by suspending climate control
+    when a window/door is open and restoring settings after user-defined delays for
+    opening and closing the window/door(s).
+  domain: automation
+  author: EffortlessHome
+  input:
+    window_sensor:
+      name: Window/Door Sensor
+      default: binary_sensor.door_group_sensor
+      description:
+        Select the sensor that monitors your windows. Useful for controlling
+        heating or cooling based on window status.
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+          device_class:
+            - window
+            - door
+          multiple: true
+    target_climate:
+      name: Climate Control Entity
+      description: Choose the climate control entity(s) to manage.
+      selector:
+        entity:
+          domain:
+            - climate
+          multiple: true
+
+    window_open_delay:
+      name: Delay After Window Opens
+      description:
+        Time to wait after the door or window opens before suspending climate
+        control.
+      default: 300
+      selector:
+        number:
+          min: 0.0
+          max: 900.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    window_close_delay:
+      name: Delay After Door or Window Closes
+      description:
+        Time to wait after the door or window closes before restoring climate
+        control settings.
+      default: 0
+      selector:
+        number:
+          min: 0.0
+          max: 900.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    notification_message:
+      name: Notification message
+      description: "Climate Control Disabled Message"
+      default: "Climate Control Temporarily Disabled Due to Open Window/Door"
+    data_clickaction_url:
+      name: URL to Navigate (Optional)
+      description:
+        The URL to navigate to when clicking on the notification. (default
+        = /lovelace)
+      default: /lovelace
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input window_sensor
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input window_sensor
+            state: "on"
+        sequence:
+          - delay: !input window_open_delay
+          - service: climate.turn_off
+            target:
+              entity_id: !input target_climate
+
+          - service: notify.effortlesshome
+            data:
+              title: Climate Control Disabled
+              message: !input notification_message
+              data:
+                clickAction: !input data_clickaction_url
+                ttl: 0
+                priority: high
+                url: !input data_clickaction_url
+
+  - choose: []
+    default: !input additional_actions

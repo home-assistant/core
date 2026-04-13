@@ -1,0 +1,70 @@
+[MASTER]
+ignore=tests
+ignore-patterns=app_vars
+ignored-modules=homeassistant
+# Use a conservative default here; 2 should speed up most setups and not hurt
+# any too bad. Override on command line as appropriate.
+jobs=2
+persistent=no
+suggestion-mode=yes
+extension-pkg-whitelist=taglib
+
+[BASIC]
+good-names=id,i,j,k,ex,Run,_,fp,T,ev
+
+[MESSAGES CONTROL]
+# Reasons disabled:
+# format - handled by black
+# locally-disabled - it spams too much
+# duplicate-code - unavoidable
+# cyclic-import - doesn't test if both import on load
+# abstract-class-little-used - prevents from setting right foundation
+# unused-argument - generic callbacks and setup methods create a lot of warnings
+# too-many-* - are not enforced for the sake of readability
+# too-few-* - same as too-many-*
+# abstract-method - with intro of async there are always methods missing
+# inconsistent-return-statements - doesn't handle raise
+# too-many-ancestors - it's too strict.
+# wrong-import-order - isort guards this
+# fixme - project is in development phase
+disable=
+  format,
+  abstract-class-little-used,
+  abstract-method,
+  cyclic-import,
+  duplicate-code,
+  inconsistent-return-statements,
+  locally-disabled,
+  not-context-manager,
+  too-few-public-methods,
+  too-many-ancestors,
+  too-many-arguments,
+  too-many-branches,
+  too-many-instance-attributes,
+  too-many-lines,
+  too-many-locals,
+  too-many-public-methods,
+  too-many-return-statements,
+  too-many-statements,
+  too-many-boolean-expressions,
+  unused-argument,
+  wrong-import-order,
+  fixme
+# enable useless-suppression temporarily every now and then to clean them up
+enable=
+  use-symbolic-message-instead
+
+[REPORTS]
+score=no
+
+[REFACTORING]
+
+# Maximum number of nested blocks for function / method body
+max-nested-blocks=15
+
+[TYPECHECK]
+# For attrs
+ignored-classes=_CountingAttr
+
+[FORMAT]
+expected-line-ending-format=LFf

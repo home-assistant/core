@@ -1,0 +1,45 @@
+blueprint:
+  name: Disarm Security Alarm on Door Unlock
+  description:
+    Disarm the security alarm when the door is unlocked (to prevent unintentional
+    alarm triggers). Use this automation only if this functionality is desired.
+  domain: automation
+  author: EffortlessHome
+  input:
+    securityalarm:
+      name: Security Alarm
+      description: The security alarm to disarm
+      default: alarm_control_panel.effortlesshome
+      selector:
+        entity:
+          filter:
+            - domain:
+                - alarm_control_panel
+          multiple: false
+    doorlock:
+      name: Door Lock
+      description: The door lock
+      default: {}
+      selector:
+        entity:
+          filter:
+            - domain:
+                - lock
+          multiple: false
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input doorlock
+    from: locked
+    to: unlocked
+action:
+  - service: alarm_control_panel.alarm_disarm
+    data:
+      entity_id: !input securityalarm
+  - choose: []
+    default: !input additional_actions

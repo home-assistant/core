@@ -1,0 +1,219 @@
+EffortlessHome:
+  ########################################################
+  ############### Default global variables ###############
+  ########################################################
+
+  # Spacings and radius
+  horizontal-stack-card-margin: 0px 8px
+  vertical-stack-card-margin: 8px 0px
+  grid-card-gap: 16px
+  ha-card-border-width: "0px" # Removes default 1px line
+  ha-card-border-radius: 24px
+  masonry-view-card-margin: 40px 20px
+  # Main Interface Colors
+  primary-color: var(--blue)
+  accent-color: var(--blue)
+  primary-background-color: var(--contrast1)
+  secondary-background-color: var(--contrast2)
+  divider-color: var(--contrast3)
+  # Text
+  primary-text-color: var(--contrast20)
+  secondary-text-color: var(--contrast9)
+  text-primary-color: var(--contrast20)
+  disabled-text-color: var(--contrast6)
+  text-accent-color: var(--contrast1)
+  # Header:
+  app-header-background-color: var(--contrast1)
+  app-header-text-color: var(--contrast20)
+  app-header-selection-bar-color: transparant
+  app-header-edit-background-color: var(--contrast2)
+  app-header-edit-text-color: var(--contrast20)
+  # Cards
+  card-background-color: var(--contrast2)
+  ha-card-background: var(--contrast2)
+  ha-card-border-color: var(--contrast6)
+  paper-listbox-background-color: var(--contrast3)
+  # Tile card
+  state-unavailable-color: var(--contrast6)
+  state-light-off-color: var(--contrast10)
+  state-light-on-color: var(--yellow)
+  # Sidebar Menu
+  sidebar-icon-color: var(--contrast6)
+  sidebar-text-color: var(--contrast20)
+  sidebar-background-color: var(--contrast2)
+  sidebar-selected-icon-color: var(--blue)
+  sidebar-selected-text-color: var(--blue)
+  # Buttons
+  paper-item-icon-color: var(--contrast9)
+  mdc-button-outline-color: var(--contrast6)
+  # States and Badges
+  state-icon-color: var(--contrast9)
+  # Sliders
+  paper-slider-knob-color: var(--contrast20)
+  paper-slider-knob-start-color: var(--contrast15)
+  paper-slider-pin-color: var(--contrast5)
+  paper-slider-pin-start-color: var(--contrast4)
+  paper-slider-active-color: var(--contrast15)
+  paper-slider-secondary-color: var(--contrast7)
+  paper-slider-container-color: var(--contrast5)
+  # Switches
+  switch-checked-button-color: var(--green)
+  switch-checked-track-color: var(--green)
+  switch-unchecked-button-color: var(--contrast9)
+  switch-unchecked-track-color: var(--contrast6)
+  # Toggles
+  paper-toggle-button-checked-button-color: var(--switch-checked-button-color)
+  paper-toggle-button-checked-bar-color: var(--switch-checked-track-color)
+  paper-toggle-button-unchecked-button-color: var(--switch-unchecked-button-color)
+  paper-toggle-button-unchecked-bar-color: var(--switch-unchecked-track-color)
+  # Table
+  table-row-background-color: var(--contrast2)
+  table-row-alternative-background-color: var(--contrast3)
+  data-table-background-color: var(--contrast1)
+  mdc-text-field-fill-color: var(--contrast3)
+  # Input
+  input-fill-color: var(--contrast3)
+  input-dropdown-icon-color: var(--contrast9)
+  material-background-color: var(--contrast2)
+  input-ink-color: var(--contrast20)
+  input-label-ink-color: var(--contrast9)
+  input-idle-line-color: var(--contrast7)
+  input-hover-line-color: var(--contrast20)
+  mdc-select-fill-color: var(--input-fill-color)
+  mdc-select-ink-color: var(--input-ink-color)
+  mdc-select-label-ink-color: var(--input-label-ink-color)
+  mdc-select-idle-line-color: var(--input-idle-line-color)
+  mdc-select-dropdown-icon-color: var(--input-dropdown-icon-color)
+  mdc-select-hover-line-color: var(--input-hover-line-color)
+  mdc-text-field-disabled-fill-color: var(--contrast3)
+  # Modal screen
+  mdc-theme-surface: var(--contrast2)
+  # Checkboxes
+  mdc-checkbox-unchecked-color: var(--contrast15)
+  # Colors
+  orange-color: var(--orange)
+  green-color: var(--green)
+  blue-color: var(--blue)
+  red-color: var(--red)
+  purple-color: var(--purple)
+  yellow-color: var(--yellow)
+  grey-color: var(--contrast10)
+
+  #######################################################
+  ############### Custom global variables ###############
+  #######################################################
+
+  # Black / White
+  black: "#000000"
+  white: "#FFFFFF"
+  # Colors
+  purple: rgb(var(--purple-rgb))
+  yellow: rgb(var(--yellow-rgb))
+  orange: rgb(var(--orange-rgb))
+  red: rgb(var(--red-rgb))
+  green: rgb(var(--green-rgb))
+  blue: rgb(var(--blue-rgb))
+  # Color tints
+  purple-tint: rgba(var(--purple-rgb),var(--color-tint))
+  yellow-tint: rgba(var(--yellow-rgb),var(--color-tint))
+  orange-tint: rgba(var(--orange-rgb),var(--color-tint))
+  red-tint: rgba(var(--red-rgb),var(--color-tint))
+  green-tint: rgba(var(--green-rgb),var(--color-tint))
+  blue-tint: rgba(var(--blue-rgb),var(--color-tint))
+  # Gradients
+  brightness: linear-gradient(90deg, rgba(var(--brightness-low-rgb), 0.4) 0%, rgba(var(--brightness-high-rgb), 1) 100%)
+  brightness-tint: linear-gradient(90deg, rgba(var(--brightness-low-rgb), 0.06) 0%, rgba(var(--brightness-high-rgb), var(--color-tint)) 100%)
+  temperature: linear-gradient(90deg, rgba(var(--temperature-low-rgb), 01) 0%, rgba(var(--temperature-high-rgb), 1) 100%)
+  temperature-tint: linear-gradient(90deg, rgba(var(--temperature-low-rgb), var(--color-tint)) 0%, rgba(var(--temperature-high-rgb), var(--color-tint)) 100%)
+  # Color RGB variables
+  purple-rgb: 239, 177, 255
+  yellow-rgb: 255, 218, 120
+  orange-rgb: 255, 181, 129
+  red-rgb: 255, 145, 138
+  green-rgb: 206, 245, 149
+  blue-rgb: 144, 191, 255
+  # Gradient RGB variables
+  brightness-low-rgb: 232, 176, 29
+  brightness-high-rgb: 255, 211, 94
+  temperature-low-rgb: 177, 197, 255
+  temperature-high-rgb: 255, 175, 131
+  # Contrast variables
+  black1: "#000000"
+  black2: "#111318"
+  black3: "#171A21"
+  black4: "#1C1F27"
+  black5: "#262A35"
+  black6: "#353946"
+  black7: "#434856"
+  black8: "#535865"
+  black9: "#636774"
+  black10: "#777A83"
+  white10: "#898C94"
+  white9: "#969AA6"
+  white8: "#A4A9B6"
+  white7: "#B3B8C6"
+  white6: "#C3C8D5"
+  white5: "#D4D8E2"
+  white4: "#E1E5EF"
+  white3: "#EAEDF6"
+  white2: "#F4F6FB"
+  white1: "#FFFFFF"
+
+  ########################################################
+  ############### Variables based on modes ###############
+  ########################################################
+
+  modes:
+    dark:
+      # Black white contrats
+      contrast1: var(--black1)
+      contrast2: var(--black2)
+      contrast3: var(--black3)
+      contrast4: var(--black4)
+      contrast5: var(--black5)
+      contrast6: var(--black6)
+      contrast7: var(--black7)
+      contrast8: var(--black8)
+      contrast9: var(--black9)
+      contrast10: var(--black10)
+      contrast11: var(--white10)
+      contrast12: var(--white9)
+      contrast13: var(--white8)
+      contrast14: var(--white7)
+      contrast15: var(--white6)
+      contrast16: var(--white5)
+      contrast17: var(--white4)
+      contrast18: var(--white3)
+      contrast19: var(--white2)
+      contrast20: var(--white1)
+      # Color tint transparancy
+      color-tint: "0.15"
+      # Contrast RGB variables
+      contrast1-RGB: 0,0,0
+
+    light:
+      # Black white contrats
+      contrast1: var(--white1)
+      contrast2: var(--white2)
+      contrast3: var(--white3)
+      contrast4: var(--white4)
+      contrast5: var(--white5)
+      contrast6: var(--white6)
+      contrast7: var(--white7)
+      contrast8: var(--white8)
+      contrast9: var(--white9)
+      contrast10: var(--white10)
+      contrast11: var(--black10)
+      contrast12: var(--black9)
+      contrast13: var(--black8)
+      contrast14: var(--black7)
+      contrast15: var(--black6)
+      contrast16: var(--black5)
+      contrast17: var(--black4)
+      contrast18: var(--black3)
+      contrast19: var(--black2)
+      contrast20: var(--black1)
+      # Color tint transparancy
+      color-tint: "0.20"
+      # Contrast RGB variables
+      contrast1-RGB: 255,255,255

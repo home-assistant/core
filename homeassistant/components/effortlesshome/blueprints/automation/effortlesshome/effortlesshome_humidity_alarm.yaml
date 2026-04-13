@@ -1,0 +1,64 @@
+blueprint:
+  name: Humidity Alarm Triggered
+  description: Set the actions to take when a humidity alarm is triggered
+  domain: automation
+  author: EffortlessHome
+  input:
+    humidsensor:
+      name: Humidity Sensor
+      description: The triggering humidity sensor(s)
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+          multiple: true
+    high_sensor:
+      name: High Humidity Value Sensor
+      description: The sensor that provides the level of humidity configured to trigger an alert.
+      default: sensor.config_highhumidity
+      selector:
+        entity:
+          domain: sensor
+    low_sensor:
+      name: Low Humidity Value Sensor
+      description: The sensor that provides the level of humidity configured to trigger an alert.
+      default: sensor.config_lowhumidity
+      selector:
+        entity:
+          domain: sensor
+
+    notification_message:
+      name: Notification message
+      description: "Humidity Sensor Activated Message"
+      default: "Humidity Sensor Activated."
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+trigger:
+  - platform: numeric_state
+    entity_id: !input humidsensor
+    above: !input high_sensor
+  - platform: numeric_state
+    entity_id: !input humidsensor
+    below: !input low_sensor
+
+action:
+  - service: notify.effortlesshome
+    data:
+      title: Humidity Sensor Activated
+      message: !input notification_message
+
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: Humidity Sensor Activated
+      alert_description: !input notification_message
+      status: Active
+
+  - choose: []
+    default: !input additional_actions

@@ -1,0 +1,51 @@
+blueprint:
+  name: Calendar Event Reminder
+  description: >
+    Announces upcoming calendar events. You can customize the offset time before the event starts.
+  domain: automation
+  input:
+    calendar_entity:
+      name: Calendar Entity
+      selector:
+        entity:
+          domain: calendar
+
+    offset_time:
+      name: Offset Before Event
+      description: Time before the event start to trigger the reminder (e.g., -00:15:00 for 15 minutes before)
+      default: "-00:15:00"
+      selector:
+        text:
+
+    message:
+      name: Message
+      description: Use `{{ trigger.calendar_event.summary }}` to reference the event title.
+      default: Your event '{{ trigger.calendar_event.summary }}' starts soon.
+      selector:
+        text:
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+trigger:
+  - platform: calendar
+    event: start
+    offset: !input offset_time
+    entity_id: !input calendar_entity
+
+condition: []
+
+action:
+  - service: notify.effortlesshome
+    data:
+      title: !input message
+      message: !input message
+
+  - choose: []
+    default: !input additional_actions
+
+mode: single

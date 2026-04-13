@@ -1,0 +1,56 @@
+blueprint:
+  name: Security Alarm Triggered Notification
+  description: Set the actions to take when the security alarm is triggered.
+  domain: automation
+  author: EffortlessHome
+  input:
+
+    notification_message:
+      name: Notification message
+      description: The notification message to send when the Security Alarm has been triggered.
+      default: Security Alarm has been triggered.
+    timeout_seconds:
+      name: Timeout in seconds
+      description: Time after which the confirm action will be automatically triggered if no response is received
+      default: 300
+      selector:
+        number:
+          min: 100
+          max: 600
+          unit_of_measurement: seconds
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: alarm_control_panel.effortlesshome
+    to: "triggered"
+action:
+  - service: notify.effortlesshome
+    data:
+      message: !input notification_message
+      title: "Security Alarm Triggered"
+  - alias: Awaiting response
+    wait_for_trigger:
+      - platform: state
+        entity_id: alarm_control_panel.effortlesshome
+        from: "pending"
+        to: "active"
+    timeout:
+      seconds: !input timeout_seconds
+  - choose:
+      - conditions: "{{ wait.trigger is not none }}"
+        sequence:
+          - action: effortlesshome.confirmpendingalarmservice
+            data: {}
+
+    default: # If timeout occurs
+      - sequence:
+          - action: effortlesshome.confirmpendingalarmservice
+            data: {}
+
+  - choose: []
+    default: !input additional_actions

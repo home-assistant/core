@@ -1,0 +1,132 @@
+blueprint:
+  name: Low Battery Notifications & Actions
+  description: This automation detects low batteries proactively and lets you take action before the batteries die and functionality breaks.
+  domain: automation
+  author: EffortlessHome
+  input:
+    time:
+      name: Time
+      description: Set the time you would like to run the automation.
+      default: 00:00:00
+      selector:
+        time: {}
+
+    battery_level:
+      name: Battery Low Warning Level
+      description:
+        Set the battery low warning percentage to identify all batteries
+        below this level.
+      default: 20
+      selector:
+        number:
+          min: 1.0
+          max: 100.0
+          step: 1.0
+          unit_of_measurement: "%"
+          mode: slider
+
+    exclude_sensors:
+      name: Excluded Battery Sensors (Optional)
+      description:
+        "Choose the battery sensors to be excluded when the automation
+        runs. The automation will attempt to detect all battery sensors and some like phones may not be desirable to  You can only use entities. Areas and devices are not supported."
+      default:
+        entity_id: []
+      selector:
+        target:
+          entity:
+            - device_class:
+                - battery
+
+    notification_title:
+      name: Notification title
+      description: 'Default: "Battery Check Notification"'
+      default: Battery Check Notification
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+        else.
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+max_exceeded: silent
+variables:
+  time: !input time
+
+  battery_level: !input battery_level
+  exclude_sensors: !input exclude_sensors
+
+
+  additional_actions: !input additional_actions
+
+  all_sensors:
+    "{% set low_battery = namespace(sensors=[]) %} {% for state in states.sensor
+    | rejectattr('attributes.device_class', 'undefined') | selectattr('attributes.device_class',
+    '==', 'battery') %}\n  {% if 0 <= state.state | int(-1) <= battery_level | int
+    and not state.entity_id in exclude_sensors.entity_id %}\n    {% set low_battery.sensors
+    = low_battery.sensors + [state.name ~ ' @ ' ~ state.state ~ '%'] %}\n  {% endif
+    %}\n{% endfor %} {% for state in states.binary_sensor | rejectattr('attributes.device_class',
+    'undefined') | selectattr('attributes.device_class', '==', 'battery') | selectattr('state',
+    'in', ['on', 'low']) %}\n  {% if not state.entity_id in exclude_sensors.entity_id
+    %}\n    {% set low_battery.sensors = low_battery.sensors + [state.name ~ ' is
+    low' ~ '!'] %}\n  {% endif %}\n{% endfor %} {% for state in states.sensor | rejectattr('attributes.device_class',
+    'undefined') | selectattr('attributes.device_class', '==', 'battery') %}\n  {%
+    if \"unavailable\" in state | string and not state.entity_id in exclude_sensors.entity_id
+    %}\n    {% set low_battery.sensors = low_battery.sensors + [state.name ~ ' is
+    ' ~ state.state ~ '!'] %}\n  {% endif %}\n{% endfor %} {{low_battery.sensors |
+    sort(attribute='battery_level') | join(', ')}}"
+  sensors:
+    "{% set low_battery = namespace(sensors=[]) %} {% for state in states.sensor
+    | rejectattr('attributes.device_class', 'undefined') | selectattr('attributes.device_class',
+    '==', 'battery') %}\n  {% if 0 <= state.state | int(-1) <= battery_level | int
+    and not state.entity_id in exclude_sensors.entity_id %}\n    {% set low_battery.sensors
+    = low_battery.sensors + [state.name ~ ' @ ' ~ state.state ~ '%'] %}\n  {% endif
+    %}\n{% endfor %} {% for state in states.binary_sensor | rejectattr('attributes.device_class',
+    'undefined') | selectattr('attributes.device_class', '==', 'battery') | selectattr('state',
+    'in', ['on', 'low']) %}\n  {% if not state.entity_id in exclude_sensors.entity_id
+    %}\n    {% set low_battery.sensors = low_battery.sensors + [state.name ~ ' is
+    low' ~ '!'] %}\n  {% endif %}\n{% endfor %} {{low_battery.sensors |sort(attribute='battery_level')
+    | join(', ')}}"
+  unavailable_sensors:
+    "{% set low_battery = namespace(sensors=[]) %} {% for state
+    in states.sensor | rejectattr('attributes.device_class', 'undefined') | selectattr('attributes.device_class',
+    '==', 'battery') %}\n  {% if \"unavailable\" in state | string and not state.entity_id
+    in exclude_sensors.entity_id %}\n    {% set low_battery.sensors = low_battery.sensors
+    + [state.name ~ ' is ' ~ state.state ~ '!'] %}\n  {% endif %}\n{% endfor %} {{low_battery.sensors
+    |sort(attribute='battery_level') | join(', ')}}"
+  sensors_names:
+    "{% set low_battery = namespace(sensors=[]) %} {% for state in states.sensor
+    | rejectattr('attributes.device_class', 'undefined') | selectattr('attributes.device_class',
+    '==', 'battery') %}\n  {% if 0 <= state.state | int(-1) <= battery_level | int
+    and not state.entity_id in exclude_sensors.entity_id %}\n    {% set low_battery.sensors
+    = low_battery.sensors + [state.name] %}\n  {% endif %}\n{% endfor %} {% for state
+    in states.binary_sensor | rejectattr('attributes.device_class', 'undefined') |
+    selectattr('attributes.device_class', '==', 'battery') | selectattr('state', 'in',
+    ['on', 'low']) %}\n  {% if not state.entity_id in exclude_sensors.entity_id %}\n
+    \   {% set low_battery.sensors = low_battery.sensors + [state.name] %}\n  {% endif
+    %}\n{% endfor %} {{low_battery.sensors | sort(attribute='battery_level') | join(',
+    ')}}"
+  unavailable_sensors_names:
+    "{% set low_battery = namespace(sensors=[]) %} {% for
+    state in states.sensor | rejectattr('attributes.device_class', 'undefined') |
+    selectattr('attributes.device_class', '==', 'battery') %}\n  {% if \"unavailable\"
+    in state | string and not state.entity_id in exclude_sensors.entity_id %}\n    {%
+    set low_battery.sensors = low_battery.sensors + [state.name] %}\n  {% endif %}\n{%
+    endfor %} {{low_battery.sensors |sort(attribute='battery_level') | join(', ')}}"
+
+trigger:
+  - platform: time
+    at: !input time
+    id: t1
+
+action:
+  - service: notify.effortlesshome
+    data:
+      title: !input notification_title
+      message: "Battery and Sensor Check Result. Sensors: {{ sensors_names }} and Unavailable: {{ unavailable_sensors_names}}"
+
+  - choose: []
+    default: !input additional_actions

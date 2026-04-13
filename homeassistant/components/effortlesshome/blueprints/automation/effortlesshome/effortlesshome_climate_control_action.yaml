@@ -1,0 +1,40 @@
+blueprint:
+  name: Climate Control Turn Off Notification Action
+  description: Climate Control Turn Off Notification Action
+  domain: automation
+  author: EffortlessHome
+  input:
+    target_climate:
+      name: Climate Control Entity
+      description: Choose the climate control entity(s) to manage.
+      selector:
+        entity:
+          domain:
+            - climate
+          multiple: true
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+        else.
+      default: []
+      selector:
+        action: {}
+
+trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: TURNOFFCLIMATE
+
+action:
+  - action: climate.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: !input target_climate
+
+  - choose: []
+    default: !input additional_actions
+
+mode: single

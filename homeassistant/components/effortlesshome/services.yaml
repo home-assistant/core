@@ -1,0 +1,107 @@
+# Service to clean motion files older than specified age
+clean_motion_files:
+  target: {}
+  fields:
+    age:
+      description: The age of the files to remove in days. Default is 30 days.
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 365
+          unit_of_measurement: days
+
+# Get Firebase configuration from Oasira for mobile_app setup
+get_firebase_config:
+  target: {}
+
+# Add a label to an entity
+add_label_to_entity:
+  target: {}
+  fields:
+    entity_id:
+      description: The entity to update
+      example: "binary_sensor.front_door"
+      required: true
+      selector:
+        entity:
+
+    label:
+      description: The label to apply to the entity
+      example: "favorite"
+      required: true
+      selector:
+        label:
+
+# Create an alert record
+create_alert:
+  target: {}
+  fields:
+    alert_type:
+      description: The type of the alert
+      example: "Humidity Alert"
+      required: true
+      selector:
+        text:
+    alert_description:
+      description: Details about the alert
+      example: "High humidity detected in basement"
+      required: true
+      selector:
+        text:
+          multiline: true
+    status:
+      description: The status of the alert
+      example: "Active"
+      required: true
+      selector:
+        select:
+          options:
+            - "Active"
+            - "Resolved"
+            - "Acknowledged"
+
+# Confirm pending EffortlessHome alarm
+confirm_pending_alarm:
+  target: {}
+
+# Cancel EffortlessHome alarm
+cancel_alarm:
+  target: {}
+
+# Get EffortlessHome alarm status
+get_alarm_status:
+  target: {}
+
+# Update entity area
+update_entity:
+  target: {}
+  fields:
+    entity_id:
+      description: The entity to update
+      example: "binary_sensor.front_door"
+      required: true
+      selector:
+        entity:
+
+    area_id:
+      description: The new area to assign to the entity
+      example: "living_room"
+      required: true
+      selector:
+        area:
+
+# Deploy latest EffortlessHome config
+deploy_latest_config:
+  target: {}
+
+# Create event service
+create_event:
+  target: {}
+  fields:
+    entity_id:
+      description: The entity that triggered the event
+      example: "binary_sensor.front_door"
+      required: true
+      selector:
+        entity:

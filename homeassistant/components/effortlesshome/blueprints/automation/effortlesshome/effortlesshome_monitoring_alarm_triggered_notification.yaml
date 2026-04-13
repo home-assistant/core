@@ -1,0 +1,81 @@
+blueprint:
+  name: Monitoring Alarm Triggered Notification
+  description: Set the actions to take when the monitoring alarm is triggered.
+  domain: automation
+  author: EffortlessHome
+  input:
+
+    notification_message:
+      name: Notification message
+      description: The notification message to send when the Monitoring Alarm has been triggered.
+      default: Monitoring Alarm has been triggered.
+    timeout_seconds:
+      name: Timeout in seconds
+      description: Time after which the confirm action will be automatically triggered if no response is received
+      default: 300
+      selector:
+        number:
+          min: 100
+          max: 600
+          unit_of_measurement: seconds
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: binary_sensor.monitoring_alarm_sensor
+    to: "triggered"
+action:
+  - alias: Set up variables
+    variables:
+      action_confirm: "{{ 'CONFIRM_' ~ context.id }}"
+      action_dismiss: "{{ 'DISMISS_' ~ context.id }}"
+  - service: notify.effortlesshome
+    data:
+      message: !input notification_message
+      title: "Security Alarm Triggered"
+      data:
+        actions:
+          - action: "{{ action_confirm }}"
+            title: "Confirm Alarm"
+          - action: "{{ action_dismiss }}"
+            title: "Disarm Alarm"
+  - alias: Awaiting response
+    wait_for_trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ action_confirm }}"
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "{{ action_dismiss }}"
+    timeout:
+      seconds: !input timeout_seconds
+  - choose:
+      - conditions: "{{ wait.trigger.event.data.action == action_confirm }}"
+        sequence:
+          - action: effortlesshome.confirmpendingalarmservice
+            data: {}
+
+      - conditions: "{{ wait.trigger.event.data.action == action_dismiss }}"
+        sequence:
+          - action: effortlesshome.cancelalarmservice
+            metadata: {}
+            data: {}
+          - action: switch.turn_off
+            metadata: {}
+            data: {}
+            target:
+              entity_id: switch.monitoringalarm
+
+    default: # If timeout occurs
+      - sequence:
+          - action: effortlesshome.confirmpendingalarmservice
+            data: {}
+
+  - choose: []
+    default: !input additional_actions

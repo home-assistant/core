@@ -1,0 +1,63 @@
+blueprint:
+  name: Weather and Heating Climate Control
+  description: This automation helps manage your heating systems based
+    on upcoming weather, conserving energy by suspending climate control when unnecessary.
+  domain: automation
+  author: EffortlessHome
+  input:
+    indoortempsensor:
+      name: Indoor Temperature Sensor
+      description: The indoor temperature sensor
+      default: sensor.average_temperature_sensor
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+          multiple: false
+
+    upcomingweathertempsensor:
+      name: Upcoming Weather Temperature Sensor
+      description: The upcoming weather temperature sensor. We recommend using this sensor for this purpose = sensor.high_temperature_tomorrow_sensor
+      default: sensor.high_temperature_tomorrow_sensor
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+          multiple: false
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: numeric_state
+    entity_id: !input indoortempsensor
+    below: !input upcomingweathertempsensor
+
+variables:
+  indoortemp: !input indoortempsensor
+  upcomingtemp: !input upcomingweathertempsensor
+  displaytempupcoming: "{{ states(upcomingtemp)  }}"
+  displaytempindoor: "{{ states(indoortemp)  }}"
+
+action:
+  - service: notify.effortlesshome
+    data:
+      title: Climate Control Suggestion
+      message: >
+        The forecasted temperature for tomorrow is expected to be {{
+        displaytempupcoming }}°F, which is higher than the current indoor temperature
+        of {{ displaytempindoor }}°F. You may want to turn off the climate control.
+      data:
+        ttl: 0
+        priority: high
+        actions:
+          - action: TURNOFFCLIMATE
+            title: Turn Off Climate Device(s)
+
+  - choose: []
+    default: !input additional_actions

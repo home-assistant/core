@@ -1,0 +1,25 @@
+blueprint:
+  name: Add Event To Active Alarm
+  description:
+    Adds an event (e.g. door sensor, smoke alarm, motion, etc) to the active
+    alarm
+  domain: automation
+  author: EffortlessHome
+  input:
+    triggeringsensor:
+      name: Binary Sensor
+      description: The triggering sensor(s)
+      selector:
+        entity:
+          filter:
+            - domain:
+                - binary_sensor
+          multiple: true
+triggers:
+  - trigger: state
+    entity_id: !input triggeringsensor
+    to: "on"
+action:
+  - action: effortlesshome.createeventservice
+    data:
+      entity_id: "{{ trigger.entity_id }}"

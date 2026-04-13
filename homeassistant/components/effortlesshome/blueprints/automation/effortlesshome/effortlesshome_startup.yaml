@@ -1,0 +1,36 @@
+blueprint:
+  name: Startup 
+  description: >
+    On startup, apply a selected frontend theme and take any other configured actions.
+  domain: automation
+  input:
+    theme_name:
+      name: Theme Name
+      description: Name of the theme to apply
+      default: effortlesshome
+      selector:
+        text:
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+trigger:
+  - platform: homeassistant
+    event: start
+
+condition: []
+
+action:
+  - alias: Set Theme
+    service: frontend.set_theme
+    data:
+      name: !input theme_name
+
+  - choose: []
+    default: !input additional_actions
+
+mode: single

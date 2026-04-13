@@ -1,0 +1,129 @@
+blueprint:
+  name: Leave Home
+  description: Actions to take a predetermined amount of time after no one is at the home
+  domain: automation
+  author: EffortlessHome
+  input:
+    trigger:
+      name: Departure Trigger
+      description: The sensor that indicates everyone has left home
+      default: binary_sensor.someone_home_sensor
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+    leave_trigger_delay:
+      name: Delay After Determination of No One At Home To Trigger Actions
+      description: Delay After Determination of No One At Home To Trigger Actions
+      default: 300
+      selector:
+        number:
+          min: 0.0
+          max: 900.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    securityalarm:
+      name: Security Alarm
+      description: The security alarm to arm in away mode
+      default: alarm_control_panel.effortlesshome
+      selector:
+        entity:
+          filter:
+            - domain:
+                - alarm_control_panel
+          multiple: false
+    doorlock:
+      name: Door Lock
+      description: The door lock to lock (optional)
+      default: []
+      selector:
+        entity:
+          filter:
+            - domain:
+                - lock
+          multiple: true
+    off_target:
+      name: Lights and switches to turn off
+      description: Turn off these lights and switches (optional)
+      default: light.all_lights 
+      selector:
+        target:
+          entity:
+            - domain:
+                - light
+                - switch
+    door_sensor:
+      name: Window/Door Sensor
+      description: Select door or window sensor(s) that you want to check is open.
+      default: binary_sensor.door_group_sensor
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+
+    presence_simulation_enabled:
+      name: Use presence simulation
+      description: Turn on presence simulation when leaving home.
+      default: false
+      selector:
+        boolean: {}
+
+    notification_message:
+      name: Notification message
+      description: Door or window left open message
+      default: Door or Window Left Open When Leaving Home
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input trigger
+    from: "on"
+    to: "off"
+    for:
+      hours: 0
+      minutes: 0
+      seconds: !input leave_trigger_delay
+action:
+  - service: alarm_control_panel.alarm_arm_away
+    target:
+      entity_id: !input securityalarm
+  - alias: Set presence simulation flag
+    variables:
+      presence_simulation_enabled: !input presence_simulation_enabled
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ presence_simulation_enabled }}"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: switch.presence_simulation
+    default:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.presence_simulation
+  - service: homeassistant.turn_off
+    data: {}
+    target: !input off_target
+  - service: lock.lock
+    target:
+      entity_id: !input doorlock
+  - if:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: !input door_sensor
+            state: "on"
+    then:
+      - service: notify.effortlesshome
+        data:
+          title: "Door or Window Left Open"
+          message: !input notification_message
+
+  - choose: []
+    default: !input additional_actions

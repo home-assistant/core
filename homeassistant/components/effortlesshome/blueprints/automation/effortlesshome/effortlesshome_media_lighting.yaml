@@ -1,0 +1,120 @@
+blueprint:
+  name: Media Playback Lighting Scene
+  description: >
+    Dim or change lights when media starts playing and restore a scene when paused or stopped.
+  domain: automation
+  author: EffortlessHome
+
+  input:
+
+    media_player:
+      name: Media Player
+      description: Media player that triggers the automation
+      selector:
+        entity:
+          domain: media_player
+
+    play_scene:
+      name: Scene when media starts playing
+      description: Scene to activate when playback begins
+      selector:
+        entity:
+          domain: scene
+
+    stop_scene:
+      name: Scene when media stops or pauses
+      description: Scene to restore when playback ends
+      selector:
+        entity:
+          domain: scene
+
+    delay_seconds:
+      name: Trigger delay
+      description: Delay before activating scene (seconds)
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 30
+          unit_of_measurement: seconds
+
+    lux_entity:
+      name: Illuminance Sensor
+      selector:
+        entity:
+          domain:
+            - sensor
+          #device_class:
+          #  - illuminance
+          multiple: false
+    lux_level:
+      name: Illuminance level
+      description:
+        If lux is below this value and motion is detected, the light will
+        turn on.
+      default: 100
+      selector:
+        number:
+          min: 0.0
+          max: 1000.0
+          step: 1.0
+          mode: slider
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input media_player
+    to: "playing"
+
+  - platform: state
+    entity_id: !input media_player
+    to: "paused"
+
+  - platform: state
+    entity_id: !input media_player
+    to: "idle"
+
+variables:
+  delay_seconds: !input delay_seconds
+  player: !input media_player
+
+action:
+  - delay:
+      seconds: "{{ delay_seconds }}"
+
+  - choose:
+
+      - conditions:
+          - condition: state
+            entity_id: !input media_player
+            state: "playing"
+          - condition: numeric_state
+            entity_id: !input lux_entity
+            below: !input lux_level            
+        sequence:
+          - service: scene.turn_on
+            target:
+              entity_id: !input play_scene
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ states(player) in ['paused','idle','off'] }}
+          - condition: numeric_state
+            entity_id: !input lux_entity
+            below: !input lux_level                
+        sequence:
+          - service: scene.turn_on
+            target:
+              entity_id: !input stop_scene
+
+  - choose: []
+    default: !input additional_actions

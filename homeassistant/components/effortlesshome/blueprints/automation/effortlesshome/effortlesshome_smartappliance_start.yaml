@@ -1,0 +1,90 @@
+blueprint:
+  name: Smart Appliance Conversion Start Automation
+  description: Set the start run action(s) to take to convert a dumb appliance to smart
+  domain: automation
+  author: EffortlessHome
+  input:
+    powermonitoringsensor:
+      name: Power Monitoring Sensor
+      description:
+        The power monitoring sensor attached to the appliance. Typically
+        a smart plug.
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+          multiple: false
+    trigger_poweruseage:
+      description: The amount of power usage to trigger the running state
+      name: Trigger Power Usage
+      default: 40
+      selector:
+        number:
+          min: 1.0
+          max: 99.0
+          unit_of_measurement: watts
+          step: 1.0
+          mode: slider
+    powerusagelevel_time:
+      name: Power Usage Time At Level
+      description:
+        How long in seconds should the power usage be at that amount to
+        confirm appliance started?
+      default: 300
+      selector:
+        number:
+          min: 0.0
+          max: 900.0
+          unit_of_measurement: seconds
+          mode: slider
+          step: 1.0
+    appliance_switch:
+      name: Dedicated appliance switch
+      description: Use one of the effortlesshome defined Appliance Switches to convert the appliance to smart.
+      default: switch.smartappliance1
+      selector:
+        entity:
+          domain:
+            - switch
+          multiple: false
+
+    notification_message:
+      name: Notification message
+      description: "Default: Appliance Started"
+      default: Appliance Started
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+
+
+trigger:
+  - platform: numeric_state
+    entity_id: !input powermonitoringsensor
+    above: !input trigger_poweruseage
+    for:
+      hours: 0
+      minutes: 0
+      seconds: !input powerusagelevel_time
+condition:
+  - condition: state
+    entity_id: !input appliance_switch
+    state: "off"
+
+action:
+  - service: notify.effortlesshome
+    data:
+      title: !input notification_message
+      message: !input notification_message
+
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: !input appliance_switch
+
+  - choose: []
+    default: !input additional_actions

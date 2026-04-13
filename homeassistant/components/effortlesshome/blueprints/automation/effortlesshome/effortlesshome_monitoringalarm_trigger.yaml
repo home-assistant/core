@@ -1,0 +1,40 @@
+blueprint:
+  name: Monitoring Alarm Trigger
+  description: Define the devices what will trigger the monitoring alarm (e.g. Smoke, CO, Moisture)
+  domain: automation
+  author: EffortlessHome
+  input:
+    monitoringdevice:
+      name: Monitoring Devices
+      description: The triggering monitoring device(s)
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+            - group
+          device_class:
+            - smoke
+            - moisture
+            - carbon_monoxide
+          multiple: true
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input monitoringdevice
+    to: "on"
+variables:
+  triggering_sensor: "{{ trigger }}"
+action:
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.monitoringalarm
+  - choose: []
+    default: !input additional_actions

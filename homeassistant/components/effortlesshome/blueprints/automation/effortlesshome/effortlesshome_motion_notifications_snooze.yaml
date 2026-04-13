@@ -1,0 +1,53 @@
+blueprint:
+  name: Snooze Motion Notifications
+  description:
+    This automation blueprint handles snooze notifications actions from motion notifications to mobile devices.
+    The notifications are snoozed for the configured timeframe. During the snooze the motion snapshots are still captured.
+  domain: automation
+  author: EffortlessHome
+  input:
+    snooze_time:
+      name: Snooze time
+      description: The amount of time in seconds to snooze notifications
+      default: 3000
+      selector:
+        number:
+          min: 0.0
+          max: 30000.0
+          unit_of_measurement: seconds
+          step: 1.0
+          mode: slider
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+        else.
+      default: []
+      selector:
+        action: {}
+
+trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: SNOOZEMOTIONNOTIFY
+
+action:
+  - action: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.motion_notifications
+
+  - delay: !input snooze_time
+
+  - action: switch.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.motion_notifications
+
+  - choose: []
+    default: !input additional_actions
+
+mode: single

@@ -1,0 +1,68 @@
+blueprint:
+  name: Door Left Open or Unlocked When No One Home
+  description: Notification and actions to take if no one is at home but door open or unlocked
+  domain: automation
+  author: EffortlessHome
+  input:
+    trigger:
+      name: Departure Trigger
+      description: The sensor that indicates everyone has left home
+      default: binary_sensor.someone_home_sensor
+      selector:
+        entity:
+          domain:
+            - binary_sensor  
+    doorlock:
+      name: Door Lock
+      description: The door lock to lock (optional)
+      default: []
+      selector:
+        entity:
+          filter:
+            - domain:
+                - lock
+          multiple: false
+
+    door_sensor:
+      name: Door Sensor Group
+      description: Select the doors that you want to check for open.
+      default: binary_sensor.door_group_sensor
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+
+    additional_actions:
+      name: Additional Actions
+      description: Add additional actions to execute (Optional)
+      default: []
+      selector:
+        action: {}
+trigger:
+  - platform: state
+    entity_id: !input trigger
+    from: "on"
+    to: "off"
+
+condition:
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: !input door_sensor
+        state: "open"
+      - condition: state
+        entity_id: !input doorlock
+        state: "unlocked"
+action:
+  - service: notify.effortlesshome
+    data:
+      message: Door or Window Left Open Or Unlocked When No One Home
+      data:
+        priority: high
+  - service: effortlesshome.create_alert_service
+    data:
+      alert_type: Door or Window left open or unlocked
+      alert_description: Door or Window Left Open Or Unlocked When No One Home
+      status: Active
+  - choose: []
+    default: !input additional_actions
