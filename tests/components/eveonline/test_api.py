@@ -9,10 +9,10 @@ from homeassistant.components.eveonline.api import AsyncConfigEntryAuth
 from homeassistant.components.eveonline.const import DOMAIN
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 def _make_auth(
@@ -43,16 +43,16 @@ async def test_get_access_token_reauth_error() -> None:
 
 
 async def test_get_access_token_transient_error() -> None:
-    """Test that OAuth2TokenRequestTransientError raises ConfigEntryNotReady."""
+    """Test that OAuth2TokenRequestTransientError raises UpdateFailed."""
     auth = _make_auth(
         OAuth2TokenRequestTransientError(domain=DOMAIN, request_info=Mock())
     )
-    with pytest.raises(ConfigEntryNotReady):
+    with pytest.raises(UpdateFailed):
         await auth.async_get_access_token()
 
 
 async def test_get_access_token_client_error() -> None:
-    """Test that aiohttp.ClientError raises ConfigEntryNotReady."""
+    """Test that aiohttp.ClientError raises UpdateFailed."""
     auth = _make_auth(aiohttp.ClientError("network"))
-    with pytest.raises(ConfigEntryNotReady):
+    with pytest.raises(UpdateFailed):
         await auth.async_get_access_token()

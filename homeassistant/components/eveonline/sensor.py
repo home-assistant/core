@@ -164,20 +164,10 @@ async def async_setup_entry(
     )
 
 
-class EveOnlineSensor(SensorEntity):
-    """Base class for Eve Online sensors."""
+class EveOnlineCharacterSensor(EveOnlineCharacterEntity, SensorEntity):
+    """Eve Online character sensor (per-character device)."""
 
     entity_description: EveOnlineSensorDescription
-    coordinator: EveOnlineCoordinator
-
-    @property
-    def native_value(self) -> str | int | float | datetime | None:
-        """Return the sensor value."""
-        return self.entity_description.value_fn(self.coordinator.data)
-
-
-class EveOnlineCharacterSensor(EveOnlineCharacterEntity, EveOnlineSensor):
-    """Eve Online character sensor (per-character device)."""
 
     def __init__(
         self,
@@ -187,3 +177,8 @@ class EveOnlineCharacterSensor(EveOnlineCharacterEntity, EveOnlineSensor):
         """Initialize the sensor."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
+
+    @property
+    def native_value(self) -> str | int | float | datetime | None:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self.coordinator.data)

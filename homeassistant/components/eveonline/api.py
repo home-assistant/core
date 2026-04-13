@@ -9,11 +9,11 @@ from eveonline.auth import AbstractAuth
 
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN
 
@@ -40,7 +40,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
                 translation_key="authentication_failed",
             ) from err
         except (OAuth2TokenRequestTransientError, ClientError) as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="token_refresh_failed",
                 translation_placeholders={"error": str(err)},
