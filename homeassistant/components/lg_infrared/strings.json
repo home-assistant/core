@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "select": {
+      "tuner_select": {
+        "name": "Current Tuner"
+      }
+    },    
     "button": {
       "aspect": {
         "name": "Aspect"
