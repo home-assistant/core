@@ -54,6 +54,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
         )
         self.device = cometblue
         self.address = cometblue.client.address
+        self.data = CometBlueCoordinatorData()
 
     async def send_command(
         self,
@@ -89,7 +90,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
 
     async def _async_update_data(self) -> CometBlueCoordinatorData:
         """Poll the device."""
-        data: CometBlueCoordinatorData = CometBlueCoordinatorData()
+        data = CometBlueCoordinatorData()
 
         retry_count = 0
 
@@ -132,8 +133,8 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
 
         # If one value was not retrieved correctly, keep the old value
         if not data.holiday:
-            data.holiday = self.data.holiday if self.data else {}
+            data.holiday = self.data.holiday
         if not data.battery:
-            data.battery = self.data.battery if self.data else None
+            data.battery = self.data.battery
         LOGGER.debug("Received data for %s: %s", self.name, data)
         return data
