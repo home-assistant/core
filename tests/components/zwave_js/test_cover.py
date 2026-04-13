@@ -1959,6 +1959,26 @@ async def test_window_covering_cover_moving_state_position_support(
                     "commandClassName": "Window Covering",
                     "commandClass": 106,
                     "endpoint": 0,
+                    "property": "targetValue",
+                    "propertyKey": 13,
+                    "newValue": 99,
+                    "prevValue": 52,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
                     "property": "currentValue",
                     "propertyKey": 13,
                     "newValue": 99,
@@ -2011,10 +2031,30 @@ async def test_window_covering_cover_moving_state_position_support(
                     "commandClassName": "Window Covering",
                     "commandClass": 106,
                     "endpoint": 0,
+                    "property": "targetValue",
+                    "propertyKey": 13,
+                    "newValue": 0,
+                    "prevValue": 99,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
                     "property": "currentValue",
                     "propertyKey": 13,
                     "newValue": 0,
-                    "prevValue": 52,
+                    "prevValue": 99,
                     "propertyName": "currentValue",
                 },
             },
@@ -2032,6 +2072,126 @@ async def test_window_covering_cover_moving_state_position_support(
     )
     state = hass.states.get(entity_id)
     assert state.state not in (CoverState.OPENING, CoverState.CLOSING)
+
+    # From fully closed, open_cover SHOULD set OPENING (not at fully open endpoint).
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPENING
+
+    # Simulate the device moving: targetValue arrives first (early report), then
+    # currentValue catches up to halfway. Moving state must stay OPENING throughout.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "propertyKey": 13,
+                    "newValue": 99,
+                    "prevValue": 0,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "propertyKey": 13,
+                    "newValue": 52,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPENING
+
+    # Reverse halfway: close_cover while mid-travel MUST set CLOSING (not at endpoint).
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.CLOSING
+
+    # Simulate the device moving back down: targetValue=0 arrives first (early report),
+    # then currentValue reaches halfway. Moving state must stay CLOSING throughout.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "propertyKey": 13,
+                    "newValue": 0,
+                    "prevValue": 99,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Window Covering",
+                    "commandClass": 106,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "propertyKey": 13,
+                    "newValue": 52,
+                    "prevValue": 99,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.CLOSING
+
+    # Reverse halfway: open_cover while mid-travel MUST set OPENING (not at endpoint).
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.state == CoverState.OPENING
 
 
 async def test_window_covering_cover_moving_state_no_position(

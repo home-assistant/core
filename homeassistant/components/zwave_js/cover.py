@@ -47,8 +47,6 @@ from .entity import ZWaveBaseEntity
 from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
-FULLY_CLOSED_COVER_POSITION = 0
-FULLY_OPEN_COVER_POSITION = 100
 
 
 async def async_setup_entry(
@@ -497,13 +495,20 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
+        # Check before issuing the command in case targetValue report arrives early.
+        already_open = (
+            (cv := self._current_position_value) is not None
+            and cv.value is not None
+            and (tpv := self._target_position_value) is not None
+            and tpv.value == cv.value == 99
+        )
         result = await self._async_set_value(self._up_value, True)
         # StartLevelChange: SUCCESS means the device started moving in the desired direction
         if (
             result is not None
             and result.status in SET_VALUE_SUCCESS
             and self.supported_features & CoverEntityFeature.SET_POSITION
-            and self.current_cover_position not in (None, FULLY_OPEN_COVER_POSITION)
+            and not already_open
         ):
             self._attr_is_opening = True
             self._attr_is_closing = False
@@ -511,13 +516,20 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
+        # Check before issuing the command in case targetValue report arrives early.
+        already_closed = (
+            (cv := self._current_position_value) is not None
+            and cv.value is not None
+            and (tpv := self._target_position_value) is not None
+            and tpv.value == cv.value == 0
+        )
         result = await self._async_set_value(self._down_value, True)
         # StartLevelChange: SUCCESS means the device started moving in the desired direction
         if (
             result is not None
             and result.status in SET_VALUE_SUCCESS
             and self.supported_features & CoverEntityFeature.SET_POSITION
-            and self.current_cover_position not in (None, FULLY_CLOSED_COVER_POSITION)
+            and not already_closed
         ):
             self._attr_is_opening = False
             self._attr_is_closing = True
