@@ -7,13 +7,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sunricher_dali.diagnostics import (
+    ALLOWED_ENTRY_KEYS,
     _serialize_device,
     _serialize_scene,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .conftest import GATEWAY_SERIAL
+from .conftest import DEVICE_DATA, GATEWAY_SERIAL, _create_mock_device
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -51,6 +52,17 @@ EXPECTED_SCENE_KEYS = frozenset(
 def platforms() -> list[Platform]:
     """Override platforms used during init_integration to keep setup minimal."""
     return []
+
+
+@pytest.fixture
+def mock_devices() -> list[MagicMock]:
+    """Override the shared fixture with a unique, duplicate-free device list.
+
+    The shared conftest fixture intentionally appends a duplicate device to
+    exercise duplicate-handling in other tests. For the diagnostics snapshot,
+    a clean unique list keeps the output easier to reason about.
+    """
+    return [_create_mock_device(data) for data in DEVICE_DATA]
 
 
 async def test_diagnostics(
@@ -95,6 +107,21 @@ async def test_diagnostics_redacts_entry_data(
     assert entry_data["username"] == "**REDACTED**"
     assert entry_data["password"] == "**REDACTED**"
     assert entry_data["serial_number"] == "**REDACTED**"
+
+
+async def test_diagnostics_entry_data_is_whitelisted(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """entry_data must only contain keys from ALLOWED_ENTRY_KEYS.
+
+    This turns the key whitelist into a mechanical contract: any new
+    field added to entry.data must be explicitly opted in.
+    """
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+
+    assert set(result["entry_data"]).issubset(ALLOWED_ENTRY_KEYS)
 
 
 async def test_diagnostics_redacts_device_dev_sn(

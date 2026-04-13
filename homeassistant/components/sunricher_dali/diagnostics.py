@@ -7,18 +7,47 @@ from typing import Any
 from PySrDaliGateway import Device, Scene
 from PySrDaliGateway.types import SceneDeviceType
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_SERIAL_NUMBER
 from .types import DaliCenterConfigEntry
 
 TO_REDACT = {
-    "host",
-    "username",
-    "password",
-    "serial_number",
+    CONF_HOST,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_SERIAL_NUMBER,
     "dev_sn",
 }
+
+ALLOWED_ENTRY_KEYS = frozenset(
+    {
+        CONF_HOST,
+        CONF_PORT,
+        CONF_NAME,
+        CONF_USERNAME,
+        CONF_PASSWORD,
+        CONF_SERIAL_NUMBER,
+    }
+)
+
+
+def _serialize_entry_data(entry: DaliCenterConfigEntry) -> dict[str, Any]:
+    """Serialize config entry data using an explicit key whitelist.
+
+    Only keys listed in ``ALLOWED_ENTRY_KEYS`` are exported; any other
+    keys added to ``entry.data`` in the future must be explicitly opted
+    in here after a PII/secrets review.
+    """
+    return {key: entry.data[key] for key in ALLOWED_ENTRY_KEYS if key in entry.data}
 
 
 def _serialize_device(device: Device) -> dict[str, Any]:
@@ -78,7 +107,7 @@ def _strip_gw_sn(data: Any, gw_sn: str) -> Any:
     if isinstance(data, list):
         return [_strip_gw_sn(item, gw_sn) for item in data]
     if isinstance(data, str):
-        return data.replace(gw_sn, "**REDACTED**")
+        return data.replace(gw_sn, REDACTED)
     return data
 
 
@@ -88,7 +117,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data = entry.runtime_data
     payload = {
-        "entry_data": dict(entry.data),
+        "entry_data": _serialize_entry_data(entry),
         "devices": [_serialize_device(device) for device in data.devices],
         "scenes": [_serialize_scene(scene) for scene in data.scenes],
     }
