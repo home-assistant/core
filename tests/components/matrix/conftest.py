@@ -6,6 +6,7 @@ from collections.abc import Generator
 from pathlib import Path
 import re
 import tempfile
+from typing import Any
 from unittest.mock import patch
 
 from nio import (
@@ -52,9 +53,11 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 TEST_NOTIFIER_NAME = "matrix_notify"
+FIXED_ENTRY_ID = "01JQ2GJ0KWGKRXQRHFA9FMZW8A"
+MATRIX_STORE_KEY = f"matrix.{FIXED_ENTRY_ID}"
 
 TEST_HOMESERVER = "example.com"
 TEST_DEFAULT_ROOM = RoomID("!DefaultNotificationRoom:example.com")
@@ -138,37 +141,38 @@ class _MockAsyncClient(AsyncClient):
 
 
 MOCK_CONFIG_DATA = {
-    DOMAIN: {
-        CONF_HOMESERVER: "https://matrix.example.com",
-        CONF_USERNAME: TEST_MXID,
-        CONF_PASSWORD: TEST_PASSWORD,
-        CONF_VERIFY_SSL: True,
-        CONF_ROOMS: list(TEST_JOINABLE_ROOMS),
-        CONF_COMMANDS: [
-            {
-                CONF_WORD: "WordTrigger",
-                CONF_NAME: "WordTriggerEventName",
-            },
-            {
-                CONF_EXPRESSION: "My name is (?P<name>.*)",
-                CONF_NAME: "ExpressionTriggerEventName",
-            },
-            {
-                CONF_REACTION: "😄",
-                CONF_NAME: "ReactionTriggerEventName",
-            },
-            {
-                CONF_WORD: "WordTriggerSubset",
-                CONF_NAME: "WordTriggerSubsetEventName",
-                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
-            },
-            {
-                CONF_EXPRESSION: "Your name is (?P<name>.*)",
-                CONF_NAME: "ExpressionTriggerSubsetEventName",
-                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
-            },
-        ],
-    },
+    CONF_HOMESERVER: "https://matrix.example.com",
+    CONF_USERNAME: TEST_MXID,
+    CONF_PASSWORD: TEST_PASSWORD,
+    CONF_VERIFY_SSL: True,
+    CONF_ROOMS: list(TEST_JOINABLE_ROOMS),
+    CONF_COMMANDS: [
+        {
+            CONF_WORD: "WordTrigger",
+            CONF_NAME: "WordTriggerEventName",
+        },
+        {
+            CONF_EXPRESSION: "My name is (?P<name>.*)",
+            CONF_NAME: "ExpressionTriggerEventName",
+        },
+        {
+            CONF_REACTION: "😄",
+            CONF_NAME: "ReactionTriggerEventName",
+        },
+        {
+            CONF_WORD: "WordTriggerSubset",
+            CONF_NAME: "WordTriggerSubsetEventName",
+            CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
+        },
+        {
+            CONF_EXPRESSION: "Your name is (?P<name>.*)",
+            CONF_NAME: "ExpressionTriggerSubsetEventName",
+            CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
+        },
+    ],
+}
+
+MOCK_NOTIFY_CONFIG = {
     NOTIFY_DOMAIN: {
         CONF_NAME: TEST_NOTIFIER_NAME,
         CONF_PLATFORM: DOMAIN,
@@ -277,20 +281,14 @@ def mock_client():
 
 
 @pytest.fixture
-def mock_save_json():
-    """Prevent saving test access_tokens."""
-    with patch("homeassistant.components.matrix.save_json") as mock:
-        yield mock
-
-
-@pytest.fixture
-def mock_load_json():
-    """Mock loading access_tokens from a file."""
-    with patch(
-        "homeassistant.components.matrix.load_json_object",
-        return_value={TEST_MXID: TEST_TOKEN},
-    ) as mock:
-        yield mock
+def mock_store(hass_storage: dict[str, Any]) -> None:
+    """Pre-populate the persistent token storage with a valid access token."""
+    hass_storage[MATRIX_STORE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": MATRIX_STORE_KEY,
+        "data": {TEST_MXID: TEST_TOKEN},
+    }
 
 
 @pytest.fixture
@@ -304,24 +302,25 @@ def mock_allowed_path():
 
 @pytest.fixture
 async def matrix_bot(
-    hass: HomeAssistant, mock_client, mock_save_json, mock_allowed_path
+    hass: HomeAssistant, mock_client, mock_store, mock_allowed_path
 ) -> MatrixBot:
     """Set up Matrix and Notify component.
 
     The resulting MatrixBot will have a mocked _client.
     """
-
-    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG_DATA)
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+        unique_id=TEST_MXID,
+        entry_id=FIXED_ENTRY_ID,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_NOTIFY_CONFIG)
     await hass.async_block_till_done()
 
-    # Accessing hass.data in tests is not desirable, but all the tests here
-    # currently do this.
-    assert isinstance(matrix_bot := hass.data[DOMAIN], MatrixBot)
-
-    await hass.async_start()
-
-    return matrix_bot
+    assert isinstance(bot := entry.runtime_data, MatrixBot)
+    return bot
 
 
 @pytest.fixture

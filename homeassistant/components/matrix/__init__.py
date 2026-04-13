@@ -29,20 +29,12 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import save_json
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import JsonObjectType, load_json_object
+from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_FORMAT,
@@ -51,6 +43,7 @@ from .const import (
     ATTR_REACTION,
     ATTR_ROOM,
     ATTR_THREAD_ID,
+    CONF_HOMESERVER,
     CONF_ROOMS_REGEX,
     DOMAIN,
     FORMAT_HTML,
@@ -59,9 +52,8 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-SESSION_FILE = ".matrix.conf"
+STORAGE_VERSION = 1
 
-CONF_HOMESERVER: Final = "homeserver"
 CONF_ROOMS: Final = "rooms"
 CONF_COMMANDS: Final = "commands"
 CONF_WORD: Final = "word"
@@ -108,42 +100,46 @@ COMMAND_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION, CONF_REACTION),
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOMESERVER): cv.url,
-                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-                vol.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_ROOMS, default=[]): vol.All(
-                    cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
-                ),
-                vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA],
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+type MatrixConfigEntry = ConfigEntry[MatrixBot]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Matrix bot component."""
-    config = config[DOMAIN]
-
-    hass.data[DOMAIN] = MatrixBot(
-        hass,
-        os.path.join(hass.config.path(), SESSION_FILE),
-        config[CONF_HOMESERVER],
-        config[CONF_VERIFY_SSL],
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_ROOMS],
-        config[CONF_COMMANDS],
+async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
+    """Set up Matrix from a config entry."""
+    store: Store[dict[str, str]] = Store(
+        hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"
     )
+    bot = MatrixBot(
+        hass,
+        store,
+        entry.data[CONF_HOMESERVER],
+        entry.data.get(CONF_VERIFY_SSL, True),
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        entry.data.get(CONF_ROOMS, []),
+        entry.data.get(CONF_COMMANDS, []),
+    )
+    try:
+        await bot.async_start()
+    except ConfigEntryAuthFailed:
+        raise
+    except Exception as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to Matrix homeserver: {err}"
+        ) from err
 
-    async_setup_services(hass)
+    entry.runtime_data = bot
 
+    if not hass.services.has_service(DOMAIN, "send_message"):
+        async_setup_services(hass)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
+    """Unload a Matrix config entry."""
+    await entry.runtime_data.async_stop()
     return True
 
 
@@ -155,7 +151,7 @@ class MatrixBot:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_file: str,
+        store: Store,
         homeserver: str,
         verify_ssl: bool,
         username: str,
@@ -166,8 +162,8 @@ class MatrixBot:
         """Set up the client."""
         self.hass = hass
 
-        self._session_filepath = config_file
-        self._access_tokens: JsonObjectType = {}
+        self._store = store
+        self._access_tokens: dict[str, str] = {}
 
         self._homeserver = homeserver
         self._verify_tls = verify_ssl
@@ -183,44 +179,47 @@ class MatrixBot:
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
         self._reaction_commands: dict[RoomID, dict[ReactionCommand, ConfigCommand]] = {}
         self._unparsed_commands = commands
+        self._bg_task: asyncio.Task | None = None
+        self._initial_listening_rooms = listening_rooms
+        self._initial_commands = commands
 
-        async def stop_client(event: HassEvent) -> None:
-            """Run once when Home Assistant stops."""
-            if self._client is not None:
-                await self._client.close()
+    async def async_start(self) -> None:
+        """Log in, join rooms and start syncing."""
+        self._access_tokens = await self._get_auth_tokens()
+        await self._login()
+        await self._resolve_room_aliases(self._initial_listening_rooms)
+        self._load_commands(self._initial_commands)
+        await self._join_rooms()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
+        # Sync once so that we don't respond to past events.
+        _LOGGER.debug("Starting initial sync for %s", self._mx_id)
+        await self._client.sync(timeout=30_000)
+        _LOGGER.debug("Finished initial sync for %s", self._mx_id)
 
-        async def handle_startup(event: HassEvent) -> None:
-            """Run once when Home Assistant finished startup."""
-            self._access_tokens = await self._get_auth_tokens()
-            await self._login()
-            await self._resolve_room_aliases(listening_rooms)
-            self._load_commands(commands)
-            await self._join_rooms()
+        self._client.add_event_callback(
+            self._handle_room_message, (ReactionEvent, RoomMessageText)
+        )
 
-            # Sync once so that we don't respond to past events.
-            _LOGGER.debug("Starting initial sync for %s", self._mx_id)
-            await self._client.sync(timeout=30_000)
-            _LOGGER.debug("Finished initial sync for %s", self._mx_id)
+        _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
+        self._bg_task = self.hass.async_create_background_task(
+            self._client.sync_forever(
+                timeout=30_000,
+                loop_sleep_time=1_000,
+            ),  # milliseconds.
+            name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
+        )
 
-            self._client.add_event_callback(
-                self._handle_room_message, (ReactionEvent, RoomMessageText)
-            )
-
-            _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
-            self.hass.async_create_background_task(
-                self._client.sync_forever(
-                    timeout=30_000,
-                    loop_sleep_time=1_000,
-                ),  # milliseconds.
-                name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
-            )
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
+    async def async_stop(self) -> None:
+        """Stop syncing and close the client."""
+        if self._bg_task is not None:
+            self._bg_task.cancel()
+            self._bg_task = None
+        if self._client is not None:
+            await self._client.close()
 
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
-        for command in commands:
+        for raw_command in commands:
+            command: ConfigCommand = dict(raw_command)  # type: ignore[assignment]
             # Set the command for all listening_rooms, unless otherwise specified.
             if rooms := command.get(CONF_ROOMS):
                 command[CONF_ROOMS] = [self._listening_rooms[room] for room in rooms]
@@ -237,6 +236,10 @@ class MatrixBot:
                     self._reaction_commands.setdefault(room_id, {})
                     self._reaction_commands[room_id][reaction_command] = command
             else:
+                if isinstance(command.get(CONF_EXPRESSION), str):
+                    command[CONF_EXPRESSION] = ExpressionCommand(
+                        re.compile(command[CONF_EXPRESSION])
+                    )
                 for room_id in command[CONF_ROOMS]:
                     self._expression_commands.setdefault(room_id, [])
                     self._expression_commands[room_id].append(command)
@@ -373,6 +376,8 @@ class MatrixBot:
 
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
+        if not self._listening_rooms:
+            return
         rooms = [
             self.hass.async_create_task(
                 self._join_room(room_id, room_alias_or_id), eager_start=False
@@ -381,30 +386,17 @@ class MatrixBot:
         ]
         await asyncio.wait(rooms)
 
-    async def _get_auth_tokens(self) -> JsonObjectType:
-        """Read sorted authentication tokens from disk."""
-        try:
-            return await self.hass.async_add_executor_job(
-                load_json_object, self._session_filepath
-            )
-        except HomeAssistantError as ex:
-            _LOGGER.warning(
-                "Loading authentication tokens from file '%s' failed: %s",
-                self._session_filepath,
-                str(ex),
-            )
-            return {}
+    async def _get_auth_tokens(self) -> dict[str, str]:
+        """Read authentication tokens from storage."""
+        data = await self._store.async_load()
+        if isinstance(data, dict):
+            return {k: v for k, v in data.items() if isinstance(v, str)}
+        return {}
 
     async def _store_auth_token(self, token: str) -> None:
-        """Store authentication token to session and persistent storage."""
+        """Store authentication token to persistent storage."""
         self._access_tokens[self._mx_id] = token
-
-        await self.hass.async_add_executor_job(
-            save_json,
-            self._session_filepath,
-            self._access_tokens,
-            True,  # private=True
-        )
+        await self._store.async_save(dict(self._access_tokens))
 
     async def _login(self) -> None:
         """Log in to the Matrix homeserver.

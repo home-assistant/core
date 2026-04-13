@@ -2,6 +2,8 @@
 
 DOMAIN = "matrix"
 
+CONF_HOMESERVER = "homeserver"
+
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_REACT = "react"
 
