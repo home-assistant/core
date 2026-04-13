@@ -45,7 +45,10 @@ def mock_zone_2():
 
 
 def test_zone_unique_ids(
-    mock_coordinator, mock_device, mock_zone_1, mock_zone_2
+    mock_coordinator: MagicMock,
+    mock_device: MagicMock,
+    mock_zone_1: MagicMock,
+    mock_zone_2: MagicMock,
 ) -> None:
     """Test unique id generation correctness."""
     sensor_1 = AtwZoneSensor(
@@ -61,3 +64,47 @@ def test_zone_unique_ids(
         ATW_ZONE_SENSORS[0],  # room_temperature
     )
     assert sensor_2.unique_id == "1234-11:11:11:11:11:11-room_temperature-zone-2"
+
+
+def test_zone_flow_temperature_unique_ids(
+    mock_coordinator: MagicMock,
+    mock_device: MagicMock,
+    mock_zone_1: MagicMock,
+    mock_zone_2: MagicMock,
+) -> None:
+    """Test unique id generation for zone flow temperature."""
+    sensor_1 = AtwZoneSensor(
+        mock_device,
+        mock_zone_1,
+        ATW_ZONE_SENSORS[1],  # zone_flow_temperature
+    )
+    assert sensor_1.unique_id == "1234-11:11:11:11:11:11-flow_temperature"
+
+    sensor_2 = AtwZoneSensor(
+        mock_device,
+        mock_zone_2,
+        ATW_ZONE_SENSORS[1],  # zone_flow_temperature
+    )
+    assert sensor_2.unique_id == "1234-11:11:11:11:11:11-flow_temperature-zone-2"
+
+
+def test_zone_return_temperature_unique_ids(
+    mock_coordinator: MagicMock,
+    mock_device: MagicMock,
+    mock_zone_1: MagicMock,
+    mock_zone_2: MagicMock,
+) -> None:
+    """Test unique id generation for zone return temperature."""
+    sensor_1 = AtwZoneSensor(
+        mock_device,
+        mock_zone_1,
+        ATW_ZONE_SENSORS[2],  # zone_return_temperature
+    )
+    assert sensor_1.unique_id == "1234-11:11:11:11:11:11-return_temperature"
+
+    sensor_2 = AtwZoneSensor(
+        mock_device,
+        mock_zone_2,
+        ATW_ZONE_SENSORS[2],  # zone_return_temperature
+    )
+    assert sensor_2.unique_id == "1234-11:11:11:11:11:11-return_temperature-zone-2"
