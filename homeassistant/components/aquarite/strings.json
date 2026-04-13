@@ -1,22 +1,15 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "auth_error": "Authorization failed, check username and password.",
+      "no_pools_found": "No pools found for your account.",
+      "unknown_error": "Unexpected error. Please try again."
+    },
     "step": {
-      "user": {
-        "data": {
-          "username": "Hayward Username",
-          "password": "Password"
-        },
-        "description": "Enter your Hayward credentials.",
-        "title": "Authentication"
-      },
-      "reauth_confirm": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "description": "Re-authenticate your Hayward account to continue.",
-        "title": "[%key:common::config_flow::title::reauth%]"
-      },
       "pool": {
         "data": {
           "pool_id": "Pool"
@@ -24,23 +17,85 @@
         "description": "Please choose the pool for this integration.",
         "title": "Select Pool"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "Re-authenticate your Hayward account to continue.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reconfigure": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Update your Hayward credentials.",
         "title": "Reconfigure"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Hayward Username"
+        },
+        "description": "Enter your Hayward credentials.",
+        "title": "Authentication"
       }
-    },
-    "error": {
-      "auth_error": "Authorization failed, check username and password.",
-      "no_pools_found": "No pools found for your account.",
-      "unknown_error": "Unexpected error. Please try again."
-    },
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cd": {
+        "name": "CD"
+      },
+      "city": {
+        "name": "City"
+      },
+      "cl": {
+        "name": "CL"
+      },
+      "country": {
+        "name": "Country"
+      },
+      "electrolysis": {
+        "name": "Electrolysis"
+      },
+      "filtration_intel_time": {
+        "name": "Filtration intel time"
+      },
+      "hydrolysis": {
+        "name": "Hydrolysis"
+      },
+      "latitude": {
+        "name": "Latitude"
+      },
+      "longitude": {
+        "name": "Longitude"
+      },
+      "ph": {
+        "name": "pH"
+      },
+      "pool_name": {
+        "name": "Pool name"
+      },
+      "rssi": {
+        "name": "Wi-Fi signal strength"
+      },
+      "rx": {
+        "name": "Rx"
+      },
+      "street": {
+        "name": "Street"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "uv": {
+        "name": "UV"
+      },
+      "zipcode": {
+        "name": "Zipcode"
+      }
     }
   },
   "options": {
@@ -51,61 +106,6 @@
         },
         "description": "Configure the Aquarite integration.",
         "title": "Options"
-      }
-    }
-  },
-  "entity": {
-    "sensor": {
-      "temperature": {
-        "name": "Temperature"
-      },
-      "cd": {
-        "name": "CD"
-      },
-      "cl": {
-        "name": "CL"
-      },
-      "ph": {
-        "name": "pH"
-      },
-      "rx": {
-        "name": "Rx"
-      },
-      "uv": {
-        "name": "UV"
-      },
-      "electrolysis": {
-        "name": "Electrolysis"
-      },
-      "hydrolysis": {
-        "name": "Hydrolysis"
-      },
-      "filtration_intel_time": {
-        "name": "Filtration intel time"
-      },
-      "city": {
-        "name": "City"
-      },
-      "street": {
-        "name": "Street"
-      },
-      "zipcode": {
-        "name": "Zipcode"
-      },
-      "country": {
-        "name": "Country"
-      },
-      "latitude": {
-        "name": "Latitude"
-      },
-      "longitude": {
-        "name": "Longitude"
-      },
-      "pool_name": {
-        "name": "Pool name"
-      },
-      "rssi": {
-        "name": "Wi-Fi signal strength"
       }
     }
   }

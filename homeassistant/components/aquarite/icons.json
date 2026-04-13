@@ -1,32 +1,35 @@
 {
   "entity": {
     "sensor": {
-      "temperature": {
-        "default": "mdi:thermometer"
-      },
-      "ph": {
-        "default": "mdi:ph"
-      },
-      "rx": {
-        "default": "mdi:gauge"
-      },
       "cd": {
         "default": "mdi:gauge"
+      },
+      "city": {
+        "default": "mdi:city"
       },
       "cl": {
         "default": "mdi:gauge"
       },
-      "uv": {
-        "default": "mdi:weather-sunny-alert"
+      "country": {
+        "default": "mdi:earth"
       },
       "electrolysis": {
         "default": "mdi:flash"
       },
+      "filtration_intel_time": {
+        "default": "mdi:timer-outline"
+      },
       "hydrolysis": {
         "default": "mdi:flash"
       },
-      "filtration_intel_time": {
-        "default": "mdi:timer-outline"
+      "latitude": {
+        "default": "mdi:latitude"
+      },
+      "longitude": {
+        "default": "mdi:longitude"
+      },
+      "ph": {
+        "default": "mdi:ph"
       },
       "pool_name": {
         "default": "mdi:pool"
@@ -34,23 +37,20 @@
       "rssi": {
         "default": "mdi:wifi"
       },
-      "city": {
-        "default": "mdi:city"
+      "rx": {
+        "default": "mdi:gauge"
       },
       "street": {
         "default": "mdi:road"
       },
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "uv": {
+        "default": "mdi:weather-sunny-alert"
+      },
       "zipcode": {
         "default": "mdi:numeric"
-      },
-      "country": {
-        "default": "mdi:earth"
-      },
-      "latitude": {
-        "default": "mdi:latitude"
-      },
-      "longitude": {
-        "default": "mdi:longitude"
       }
     }
   }
