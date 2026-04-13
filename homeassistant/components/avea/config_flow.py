@@ -49,7 +49,6 @@ def _is_avea_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
 class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Avea."""
 
-    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
