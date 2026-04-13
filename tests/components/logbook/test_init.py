@@ -3185,7 +3185,6 @@ async def test_context_user_ids_lru_eviction(
         include_entity_name=True,
         timestamp=False,
         memoize_new_contexts=False,
-        for_live_stream=True,
     )
     context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
     ent_reg = er.async_get(hass)
@@ -3198,55 +3197,29 @@ async def test_context_user_ids_lru_eviction(
     processor.logbook_run = logbook_run
     processor.context_augmenter = context_augmenter
 
+    context_user_ids = logbook_run.context_user_ids
+
     hass.states.async_set("switch.heater", STATE_OFF)
     await hass.async_block_till_done()
 
-    # Seed: the early parent SERVICE_CALL event populates the cache.
-    parent_row = MockRow(
-        EVENT_CALL_SERVICE,
-        {
-            ATTR_DOMAIN: "climate",
-            ATTR_SERVICE: "set_hvac_mode",
-            "service_data": {ATTR_ENTITY_ID: "climate.living_room"},
-        },
-        context=early_parent_context,
-    )
-    parent_row.context_only = True
-    parent_row.icon = None
-    processor.humanify([parent_row])
-    assert (
-        ulid_to_bytes_or_none(early_parent_context.id) in logbook_run.context_user_ids
-    )
+    # Seed: populate the cache with the early parent's user_id.
+    early_parent_id_bin = ulid_to_bytes_or_none(early_parent_context.id)
+    early_parent_user_id_bin = ulid_to_bytes_or_none(early_parent_context.user_id)
+    context_user_ids[early_parent_id_bin] = early_parent_user_id_bin
+    assert early_parent_id_bin in context_user_ids
 
     # Flood the cache with MAX+1 unrelated parent contexts so the early
     # parent is evicted from the front of the LRU.
-    filler_rows = []
     for index in range(logbook.processor.MAX_CONTEXT_USER_IDS_CACHE + 1):
         filler_context = ha.Context(
             user_id=f"ffffffff{index:024x}"[:32],
         )
-        filler_row = MockRow(
-            EVENT_CALL_SERVICE,
-            {
-                ATTR_DOMAIN: "test",
-                ATTR_SERVICE: "noop",
-                "service_data": {},
-            },
-            context=filler_context,
-        )
-        filler_row.context_only = True
-        filler_row.icon = None
-        filler_rows.append(filler_row)
-    processor.humanify(filler_rows)
+        filler_id_bin = ulid_to_bytes_or_none(filler_context.id)
+        filler_user_id_bin = ulid_to_bytes_or_none(filler_context.user_id)
+        context_user_ids[filler_id_bin] = filler_user_id_bin
 
-    assert (
-        len(logbook_run.context_user_ids)
-        == logbook.processor.MAX_CONTEXT_USER_IDS_CACHE
-    )
-    assert (
-        ulid_to_bytes_or_none(early_parent_context.id)
-        not in logbook_run.context_user_ids
-    )
+    assert len(context_user_ids) == logbook.processor.MAX_CONTEXT_USER_IDS_CACHE
+    assert early_parent_id_bin not in context_user_ids
 
     # The child state change can no longer inherit the early parent's user_id
     # because that entry was evicted.
