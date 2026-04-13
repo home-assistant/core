@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CLIENT_ID, DOMAIN
-from .oauth2 import OAUTH2_CALLBACK_URL, HisenseOAuth2Implementation
+from .oauth2 import HisenseOAuth2Implementation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,12 +52,6 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                     errors["base"] = "no_coordinator"
                 else:
                     try:
-                        # Record token before refresh
-                        old_token = coordinator.api_client.oauth_session.token.get(
-                            "access_token", ""
-                        )[-10:]
-                        _LOGGER.debug("Token before refresh: ...%s", old_token)
-
                         # Force token refresh
                         _LOGGER.debug("Forcing token refresh")
                         token_data = coordinator.api_client.oauth_session.token
@@ -139,10 +133,7 @@ class OAuth2FlowHandler(
         _LOGGER.debug("Starting user step with input: %s", user_input)
 
         await self.async_set_unique_id(DOMAIN)
-
-        if self._async_current_entries():
-            _LOGGER.debug("Aborting due to single instance allowed")
-            return self.async_abort(reason="single_instance_allowed")
+        self._abort_if_unique_id_configured()
 
         if user_input is None:
             # Show initial form
@@ -154,7 +145,7 @@ class OAuth2FlowHandler(
                     }
                 ),
                 description_placeholders={
-                    "oauth_callback_url": OAUTH2_CALLBACK_URL,
+                    "oauth_callback_url": "uri",
                     "app_name": "Hisense AC",
                     "app_id": CLIENT_ID,
                 },
@@ -171,10 +162,6 @@ class OAuth2FlowHandler(
             return self.async_external_step(step_id="auth", url=url)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to generate authorize URL: %s", err)
-            return self.async_abort(reason="authorize_url_fail")
-        else:
-            await self.async_set_unique_id(DOMAIN)
-            self._abort_if_unique_id_configured()
             return self.async_abort(reason="authorize_url_fail")
 
     async def async_step_creation(
