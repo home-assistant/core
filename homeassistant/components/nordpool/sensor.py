@@ -54,7 +54,7 @@ def get_prices(
     current_price_entries: dict[str, float] = {}
     next_price_entries: dict[str, float] = {}
     current_time = dt_util.utcnow()
-    LOGGER.debug("Price data: %s", data)
+    # LOGGER.debug("Price data: %s", data)
     for entry in data:
         resolution = entry.end - entry.start
         previous_time = current_time - resolution
