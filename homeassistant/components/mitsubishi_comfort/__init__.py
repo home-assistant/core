@@ -44,14 +44,14 @@ async def async_setup_entry(
     )
 
     try:
-        if not await account.login():
-            raise ConfigEntryNotReady("Failed to authenticate with Mitsubishi cloud")
-    except ConfigEntryNotReady:
-        await account.close()
-        raise
+        login_ok = await account.login()
     except Exception as err:
         await account.close()
         raise ConfigEntryNotReady("Failed to connect to Mitsubishi cloud") from err
+
+    if not login_ok:
+        await account.close()
+        raise ConfigEntryNotReady("Failed to authenticate with Mitsubishi cloud")
 
     try:
         devices = await account.discover_devices()
