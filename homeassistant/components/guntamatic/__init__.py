@@ -16,8 +16,10 @@ from .coordinator import GuntamaticCoordinator
 _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
+type GuntamaticConfigEntry = ConfigEntry[GuntamaticCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
     """Set up guntamatic from a config entry."""
 
     heater = Heater(entry.data[CONF_HOST])
