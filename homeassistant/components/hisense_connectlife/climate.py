@@ -104,7 +104,7 @@ async def async_setup_entry(
 class HisenseClimate(CoordinatorEntity, ClimateEntity):
     """Hisense AC Climate entity."""
 
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -122,7 +122,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         super().__init__(coordinator)
         self._device_id: str | None = device.puid
         self._attr_unique_id = f"{device.device_id}_climate"
-        self._attr_name = device.name
+        self._attr_name = None
+        self._attr_translation_key = "climate"
 
         # Set device-specific attributes
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -546,7 +547,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         # Update cache and timestamp
         self._cached_hvac_mode = hvac_mode
         fan_mode = self.fan_mode
-        self._cached_fan_mode = fan_mode if fan_mode else None
+        self._cached_fan_mode = fan_mode or None
         swing_mode = self.swing_mode
         self._cached_swing_mode = swing_mode if swing_mode else SWING_OFF
         target_temp = self.target_temperature
@@ -617,7 +618,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_fan_mode = fan_mode
         self._cached_hvac_mode = self.hvac_mode
         swing_mode_val = self.swing_mode
-        self._cached_swing_mode = swing_mode_val if swing_mode_val else SWING_OFF
+        self._cached_swing_mode = swing_mode_val or SWING_OFF
         target_temp_val = self.target_temperature
         self._cached_target_temp = (
             target_temp_val if target_temp_val is not None else None
@@ -665,7 +666,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_swing_mode = swing_mode
         self._cached_hvac_mode = self.hvac_mode
         fan_mode_val = self.fan_mode
-        self._cached_fan_mode = fan_mode_val if fan_mode_val else None
+        self._cached_fan_mode = fan_mode_val or None
         target_temp_val = self.target_temperature
         self._cached_target_temp = (
             target_temp_val if target_temp_val is not None else None
