@@ -81,7 +81,10 @@ rules:
     status: exempt
     comment: |
       No entities disabled by default.
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: |
+      Entities explicitly set `_attr_name` to `None`, so entity name translations are not used.
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

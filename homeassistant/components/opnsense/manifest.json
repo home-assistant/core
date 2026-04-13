@@ -1,11 +1,11 @@
 {
   "domain": "opnsense",
   "name": "OPNsense",
-  "codeowners": ["@mtreinish"],
+  "codeowners": ["@HarlemSquirrel", "@Snuffy2"],
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pbr", "pyopnsense"],
+  "loggers": ["aiopnsense"],
   "quality_scale": "legacy",
-  "requirements": ["pyopnsense==0.4.0"]
+  "requirements": ["aiopnsense==1.0.8"]
 }
