@@ -109,12 +109,26 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-VACUUM_YAML_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(
-    make_template_entity_common_modern_attributes_schema(
-        VACUUM_DOMAIN, DEFAULT_NAME
-    ).schema
+
+def validate_clean_area_config(config: ConfigType) -> ConfigType:
+    """Validate clean area configuration."""
+    if CONF_SEGMENTS_TEMPLATE not in config:
+        return config
+    if not config.get(CONF_UNIQUE_ID):
+        raise vol.Invalid(
+            f"Option `{CONF_SEGMENTS_TEMPLATE}` requires `{CONF_UNIQUE_ID}` to be configured"
+        )
+
+    return config
+
+
+VACUUM_YAML_SCHEMA = vol.All(
+    VACUUM_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+        make_template_entity_common_modern_attributes_schema(
+            VACUUM_DOMAIN, DEFAULT_NAME
+        ).schema
+    ),
+    validate_clean_area_config,
 )
 
 VACUUM_LEGACY_YAML_SCHEMA = vol.All(
@@ -331,9 +345,6 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         """Save segment templates and create issue when segments changed."""
 
         self._segments = result or []
-
-        if self.registry_entry is None:
-            return
 
         if (last_seen := self.last_seen_segments) is not None and {
             s.id: s for s in last_seen

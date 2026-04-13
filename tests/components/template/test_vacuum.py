@@ -7,6 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
+from homeassistant.components.template.vacuum import CONF_SEGMENTS_TEMPLATE
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
@@ -14,7 +15,13 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_UNIQUE_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -1096,6 +1103,7 @@ async def test_clean_area(
     [
         (
             {
+                "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ ["
                 "{'id': '1', 'name': 'Kitchen'}, "
                 "{'id': '2', 'name': 'Bedroom', 'group': 'Upstairs'}"
@@ -1150,12 +1158,14 @@ async def test_get_segments(
     [
         (
             {
+                "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {'id': '1'} ] }}",
             },
             "missing 1 required positional argument: 'name'",
         ),
         (
             {
+                "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
             },
             "unexpected keyword argument 'extra_key'",
@@ -1225,6 +1235,50 @@ async def test_raise_segments_changed_issue(
 
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) != 0
+
+
+@pytest.mark.parametrize(
+    "vacuum_config",
+    [
+        {
+            "start": [],
+            **CLEAN_AREA_ACTION,
+            "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'} ] }}",
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("count", "extra_config", "err_msg"),
+    [
+        (
+            0,
+            {},
+            f"Option `{CONF_SEGMENTS_TEMPLATE}` requires `{CONF_UNIQUE_ID}` to be configured",
+        ),
+        (
+            1,
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+            },
+            "",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_segments_unique_id(
+    hass: HomeAssistant,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    count: int,
+    err_msg: str,
+) -> None:
+    """Test segments_template requires unique_id."""
+    assert len(hass.states.async_all(vacuum.DOMAIN)) == count
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
 
 
 async def test_setup_config_entry(
