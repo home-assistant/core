@@ -1,5 +1,6 @@
 """Tests for the diagnostics data provided by the Sunricher DALI integration."""
 
+import json
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,6 +12,8 @@ from homeassistant.components.sunricher_dali.diagnostics import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+
+from .conftest import GATEWAY_SERIAL
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -111,14 +114,35 @@ async def test_diagnostics_preserves_unique_id(
     hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
 ) -> None:
-    """dev_id and unique_id must NOT be redacted (intentional design)."""
+    """dev_id and unique_id must keep their structural prefix for traceability.
+
+    The gw_sn suffix is stripped by the post-processing redactor, but the
+    dev_type/channel/address prefix is preserved so developers can still
+    correlate diagnostics entries with HA entity registry records.
+    """
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
     for device in result["devices"]:
+        assert device["dev_id"] is not None
+        assert device["unique_id"] is not None
+        assert device["dev_id"] == device["unique_id"]
+        assert "**REDACTED**" in device["dev_id"]
         assert device["dev_id"] != "**REDACTED**"
-        assert device["unique_id"] != "**REDACTED**"
-        assert device["dev_id"]
-        assert device["unique_id"]
+
+
+async def test_diagnostics_strips_gw_sn(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """The gateway serial number must never appear anywhere in the output.
+
+    This is a hard anti-leak guarantee: even though dev_id / unique_id are
+    preserved for traceability, their gw_sn suffix must be stripped by the
+    post-processing redactor before the payload is returned.
+    """
+    result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+    assert GATEWAY_SERIAL not in json.dumps(result)
 
 
 async def test_diagnostics_no_private_attrs(
