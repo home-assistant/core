@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import avea
+from bleak.exc import BleakError
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -31,7 +32,15 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
     try:
         if not bulb.connect():
             raise CannotConnect
-        name = bulb.get_name()
+        try:
+            name = bulb.get_name()
+        except (BleakError, OSError, RuntimeError):
+            _LOGGER.debug(
+                "Failed to get name for Avea device %s",
+                discovery_info.address,
+                exc_info=True,
+            )
+            name = None
         bulb.get_brightness()
     finally:
         bulb.close()

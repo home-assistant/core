@@ -1,9 +1,9 @@
 """Test the Avea config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.avea.config_flow import CannotConnect
+from homeassistant.components.avea.config_flow import CannotConnect, _validate_device
 from homeassistant.components.avea.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS
@@ -13,6 +13,17 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import AVEA_DISCOVERY_INFO, NOT_AVEA_DISCOVERY_INFO
 
 from tests.common import MockConfigEntry
+
+
+def test_validate_device_falls_back_to_discovery_name() -> None:
+    """Test the validator falls back when obtaining the name fails."""
+    bulb = MagicMock()
+    bulb.connect.return_value = True
+    bulb.get_name.side_effect = RuntimeError
+    bulb.get_brightness.return_value = 0
+
+    with patch("homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb):
+        assert _validate_device(AVEA_DISCOVERY_INFO) == AVEA_DISCOVERY_INFO.name
 
 
 async def test_user_step_success(hass: HomeAssistant) -> None:
