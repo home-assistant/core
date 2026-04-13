@@ -1991,7 +1991,7 @@ pynintendoparental==2.3.4
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.3.2
+pynordpool==0.4.0
 
 # homeassistant.components.nuki
 pynuki==1.6.3
