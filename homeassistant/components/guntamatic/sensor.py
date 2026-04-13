@@ -141,7 +141,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
             name="Guntamatic Heater",
             manufacturer="Guntamatic",
             serial_number=serial,
-            sw_version=coordinator.data.get("Version", [""])[0] or None,
+            sw_version=coordinator.data["Version"][0],
         )
 
     @property
