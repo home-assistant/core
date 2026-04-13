@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.avea.const import DOMAIN
+from homeassistant.components.avea.light import AveaLight
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -21,7 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_component import DATA_INSTANCES, async_update_entity
 
 from . import AVEA_DISCOVERY_INFO
 
@@ -154,6 +155,43 @@ async def test_update_unavailable(
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_state"),
+    [("turn_on", STATE_ON), ("turn_off", STATE_OFF)],
+)
+async def test_command_restores_availability(
+    hass: HomeAssistant,
+    setup_integration: MagicMock,
+    service: str,
+    expected_state: str,
+) -> None:
+    """Test a successful command restores availability."""
+    bulb = setup_integration
+    bulb.connect.return_value = False
+
+    await async_update_entity(hass, "light.bedroom")
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    bulb.connect.return_value = True
+    entity_comp = hass.data[DATA_INSTANCES]["light"]
+    entity: AveaLight | None = entity_comp.get_entity("light.bedroom")
+    assert entity is not None
+
+    if service == "turn_on":
+        await entity.async_turn_on()
+    else:
+        await entity.async_turn_off()
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == expected_state
 
 
 async def test_remove_entry_closes_bulb(

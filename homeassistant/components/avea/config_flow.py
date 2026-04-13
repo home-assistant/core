@@ -106,7 +106,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            description_placeholders=placeholders,
+            description_placeholders=self.context["title_placeholders"],
             errors=errors,
         )
 

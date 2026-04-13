@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Any
 
+from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 
 from homeassistant.components import bluetooth
@@ -48,6 +50,7 @@ class AveaLight(LightEntity):
         self.hass = hass
         self._light = entry.runtime_data
         self._address: str = entry.data[CONF_ADDRESS]
+        self._operation_lock = threading.Lock()
         self._attr_unique_id = self._address
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._address)},
@@ -57,67 +60,88 @@ class AveaLight(LightEntity):
             name=entry.title,
         )
 
-    def _update_ble_device(self) -> None:
-        """Update the library with the latest BLE device if available."""
-        if ble_device := bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
-        ):
-            self._light.addr = ble_device
-
-    def _sync_update(self) -> tuple[int, tuple[int, int, int]]:
+    def _sync_update(
+        self, ble_device: BLEDevice | None
+    ) -> tuple[int, tuple[int, int, int]]:
         """Fetch the latest state from the device."""
-        if not self._light.connect():
-            raise ConnectionError(f"Could not connect to Avea device {self._address}")
+        with self._operation_lock:
+            if ble_device is not None:
+                self._light.addr = ble_device
 
-        try:
-            self._light.get_name()
-            brightness = self._light.get_brightness()
-            rgb = self._light.get_rgb()
-        finally:
-            self._light.close()
+            if not self._light.connect():
+                raise ConnectionError(
+                    f"Could not connect to Avea device {self._address}"
+                )
+
+            try:
+                self._light.get_name()
+                brightness = self._light.get_brightness()
+                rgb = self._light.get_rgb()
+            finally:
+                self._light.close()
 
         return brightness, rgb
 
     def _sync_turn_on(
-        self, brightness: int | None, hs_color: tuple[float, float] | None
+        self,
+        ble_device: BLEDevice | None,
+        brightness: int | None,
+        hs_color: tuple[float, float] | None,
     ) -> None:
         """Instruct the light to turn on."""
-        if not self._light.connect():
-            raise ConnectionError(f"Could not connect to Avea device {self._address}")
+        with self._operation_lock:
+            if ble_device is not None:
+                self._light.addr = ble_device
 
-        try:
-            if brightness is None and hs_color is None:
-                self._light.set_brightness(4095)
-                return
+            if not self._light.connect():
+                raise ConnectionError(
+                    f"Could not connect to Avea device {self._address}"
+                )
 
-            if brightness is not None:
-                self._light.set_brightness(round((brightness / 255) * 4095))
-
-            if hs_color is not None:
-                rgb = color_util.color_hs_to_RGB(*hs_color)
-                self._light.set_rgb(rgb[0], rgb[1], rgb[2])
-                if brightness is None and not self._attr_is_on:
+            try:
+                if brightness is None and hs_color is None:
                     self._light.set_brightness(4095)
-        finally:
-            self._light.close()
+                    return
 
-    def _sync_turn_off(self) -> None:
+                if brightness is not None:
+                    self._light.set_brightness(round((brightness / 255) * 4095))
+
+                if hs_color is not None:
+                    rgb = color_util.color_hs_to_RGB(*hs_color)
+                    self._light.set_rgb(rgb[0], rgb[1], rgb[2])
+                    if brightness is None and not self._attr_is_on:
+                        self._light.set_brightness(4095)
+            finally:
+                self._light.close()
+
+    def _sync_turn_off(self, ble_device: BLEDevice | None) -> None:
         """Instruct the light to turn off."""
-        if not self._light.connect():
-            raise ConnectionError(f"Could not connect to Avea device {self._address}")
+        with self._operation_lock:
+            if ble_device is not None:
+                self._light.addr = ble_device
 
-        try:
-            self._light.set_brightness(0)
-        finally:
-            self._light.close()
+            if not self._light.connect():
+                raise ConnectionError(
+                    f"Could not connect to Avea device {self._address}"
+                )
+
+            try:
+                self._light.set_brightness(0)
+            finally:
+                self._light.close()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness: int | None = kwargs.get(ATTR_BRIGHTNESS)
         hs_color: tuple[float, float] | None = kwargs.get(ATTR_HS_COLOR)
-        self._update_ble_device()
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        )
 
-        await self.hass.async_add_executor_job(self._sync_turn_on, brightness, hs_color)
+        await self.hass.async_add_executor_job(
+            self._sync_turn_on, ble_device, brightness, hs_color
+        )
+        self._attr_available = True
 
         if not kwargs:
             self._attr_brightness = 255
@@ -136,16 +160,23 @@ class AveaLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        self._update_ble_device()
-        await self.hass.async_add_executor_job(self._sync_turn_off)
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        )
+        await self.hass.async_add_executor_job(self._sync_turn_off, ble_device)
+        self._attr_available = True
         self._attr_is_on = False
         self._attr_brightness = 0
 
     async def async_update(self) -> None:
         """Fetch new state data for this light."""
-        self._update_ble_device()
+        ble_device = bluetooth.async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        )
         try:
-            brightness, rgb = await self.hass.async_add_executor_job(self._sync_update)
+            brightness, rgb = await self.hass.async_add_executor_job(
+                self._sync_update, ble_device
+            )
         except ConnectionError:
             self._attr_available = False
             return
