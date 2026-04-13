@@ -5,7 +5,20 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from grandstream_home_api import GNSNasAPI
+from grandstream_home_api import (
+    GNSNasAPI,
+    create_api_instance,
+    determine_device_type_from_product,
+    extract_port_from_txt,
+    generate_unique_id,
+    get_device_info_from_txt,
+    get_device_model_from_product,
+    is_grandstream_device,
+)
+from grandstream_home_api.error import (
+    GrandstreamError,
+    GrandstreamHAControlDisabledError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -22,11 +35,6 @@ from homeassistant.components.grandstream_home.const import (
     DEVICE_TYPE_GSC,
     DOMAIN,
 )
-from homeassistant.components.grandstream_home.error import (
-    GrandstreamError,
-    GrandstreamHAControlDisabledError,
-)
-from homeassistant.components.grandstream_home.utils import generate_unique_id
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -51,14 +59,17 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test Device",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test Device",
+            },
+        )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "auth"
@@ -71,14 +82,17 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test Device",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test Device",
+            },
+        )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "auth"
@@ -101,14 +115,17 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test Device 2",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test Device 2",
+            },
+        )
 
     assert result2["type"] == FlowResultType.FORM
 
@@ -116,115 +133,68 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 # New comprehensive tests
 
 
-async def test_is_grandstream_gds(hass: HomeAssistant) -> None:
-    """Test _is_grandstream with GDS device."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_is_grandstream_gds() -> None:
+    """Test is_grandstream_device with GDS device."""
 
-    assert flow._is_grandstream("GDS3710")
-    assert flow._is_grandstream("gds3710")
-    assert flow._is_grandstream("GDS")
+    assert is_grandstream_device("GDS3710")
+    assert is_grandstream_device("gds3710")
+    assert is_grandstream_device("GDS")
 
 
-async def test_is_grandstream_gns(hass: HomeAssistant) -> None:
-    """Test _is_grandstream with GNS device."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_is_grandstream_gns() -> None:
+    """Test is_grandstream_device with GNS device."""
 
-    assert flow._is_grandstream("GNS_NAS")
-    assert flow._is_grandstream("gns_nas")
-    assert flow._is_grandstream("GNS5004")
+    assert is_grandstream_device("GNS_NAS")
+    assert is_grandstream_device("gns_nas")
+    assert is_grandstream_device("GNS5004")
 
 
-async def test_is_grandstream_non_grandstream(hass: HomeAssistant) -> None:
-    """Test _is_grandstream with non-Grandstream device."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_is_grandstream_non_grandstream() -> None:
+    """Test is_grandstream_device with non-Grandstream device."""
 
-    assert not flow._is_grandstream("SomeOtherDevice")
-    assert not flow._is_grandstream("Unknown")
-    assert not flow._is_grandstream("")
+    assert not is_grandstream_device("SomeOtherDevice")
+    assert not is_grandstream_device("Unknown")
+    assert not is_grandstream_device("")
 
 
-async def test_determine_device_type_from_product_gds(hass: HomeAssistant) -> None:
-    """Test _determine_device_type_from_product with GDS."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_determine_device_type_from_product_gds() -> None:
+    """Test determine_device_type_from_product with GDS."""
 
-    txt_properties = {"product_name": "GDS3710"}
-    device_type = flow._determine_device_type_from_product(txt_properties)
-    assert device_type == DEVICE_TYPE_GDS
+    assert determine_device_type_from_product("GDS3710") == DEVICE_TYPE_GDS
 
 
-async def test_determine_device_type_from_product_gns(hass: HomeAssistant) -> None:
-    """Test _determine_device_type_from_product with GNS."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_determine_device_type_from_product_gns() -> None:
+    """Test determine_device_type_from_product with GNS."""
 
-    txt_properties = {"product_name": "GNS_NAS"}
-    device_type = flow._determine_device_type_from_product(txt_properties)
-    assert device_type == DEVICE_TYPE_GNS_NAS
+    assert determine_device_type_from_product("GNS_NAS") == DEVICE_TYPE_GNS_NAS
 
 
-async def test_determine_device_type_from_product_unknown(hass: HomeAssistant) -> None:
-    """Test _determine_device_type_from_product with unknown device."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_determine_device_type_from_product_unknown() -> None:
+    """Test determine_device_type_from_product with unknown device."""
 
-    txt_properties = {"product_name": "Unknown"}
-    device_type = flow._determine_device_type_from_product(txt_properties)
-    assert device_type == DEVICE_TYPE_GDS  # Default
+    assert determine_device_type_from_product("Unknown") == DEVICE_TYPE_GDS  # Default
 
 
-async def test_extract_port_and_protocol_http(hass: HomeAssistant) -> None:
-    """Test _extract_port_and_protocol with HTTP."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_extract_port_from_txt_http() -> None:
+    """Test extract_port_from_txt with HTTP."""
 
     txt_properties = {"http_port": "80"}
-    flow._extract_port_and_protocol(txt_properties, is_https_default=False)
-    assert flow._port == 80
-    assert flow._use_https is False
+    assert extract_port_from_txt(txt_properties, 443) == 80
 
 
-async def test_extract_port_and_protocol_https(hass: HomeAssistant) -> None:
-    """Test _extract_port_and_protocol with HTTPS."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_extract_port_from_txt_https() -> None:
+    """Test extract_port_from_txt with HTTPS."""
 
     txt_properties = {"https_port": "443"}
-    flow._extract_port_and_protocol(txt_properties)
-    assert flow._port == 443
-    assert flow._use_https is True
+    assert extract_port_from_txt(txt_properties, 443) == 443
 
 
-async def test_extract_port_and_protocol_default(hass: HomeAssistant) -> None:
-    """Test _extract_port_and_protocol with defaults."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_extract_port_from_txt_default() -> None:
+    """Test extract_port_from_txt with defaults."""
 
     txt_properties = {}
-    flow._extract_port_and_protocol(txt_properties, is_https_default=True)
-    # Should use HTTPS default
-    assert flow._use_https is True
+    # Should return default port
+    assert extract_port_from_txt(txt_properties, 443) == 443
 
 
 async def test_build_auth_schema_gds(hass: HomeAssistant) -> None:
@@ -234,14 +204,17 @@ async def test_build_auth_schema_gds(hass: HomeAssistant) -> None:
     )
 
     # Configure user step first to set device type
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     # Auth form should be shown
     assert result2["type"] == FlowResultType.FORM
@@ -255,14 +228,17 @@ async def test_build_auth_schema_gns(hass: HomeAssistant) -> None:
     )
 
     # Configure user step first to set device type
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.101",
-            CONF_NAME: "Test GNS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GNS_NAS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GNS_NAS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.101",
+                CONF_NAME: "Test GNS",
+            },
+        )
 
     # Auth form should be shown
     assert result2["type"] == FlowResultType.FORM
@@ -412,13 +388,8 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_log_device_info(hass: HomeAssistant) -> None:
-    """Test _log_device_info method."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
-
+def test_log_device_info() -> None:
+    """Test get_device_info_from_txt from library."""
     txt_properties = {
         "product_name": "GDS3710",
         "hostname": "TestDevice",
@@ -426,34 +397,27 @@ async def test_log_device_info(hass: HomeAssistant) -> None:
         "http_port": "80",
     }
 
-    # Should not raise
-    flow._log_device_info(txt_properties)
+    device_info = get_device_info_from_txt(txt_properties)
+    assert device_info["product_model"] == "GDS3710"
+    assert device_info["hostname"] == "TestDevice"
+    assert device_info["mac"] == "AA:BB:CC:DD:EE:FF"
 
 
-async def test_extract_port_invalid(hass: HomeAssistant) -> None:
-    """Test _extract_port_and_protocol with invalid port."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_extract_port_invalid() -> None:
+    """Test extract_port_from_txt with invalid port."""
 
     txt_properties = {"http_port": "invalid"}
-    flow._extract_port_and_protocol(txt_properties, is_https_default=False)
-    # Should use default port
-    assert flow._use_https is False
+    port = extract_port_from_txt(txt_properties, 80)
+    # Should use default port when invalid
+    assert port == 80
 
 
-async def test_determine_device_type_empty_properties(hass: HomeAssistant) -> None:
-    """Test _determine_device_type_from_product with empty properties."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_determine_device_type_empty_properties() -> None:
+    """Test determine_device_type_from_product with empty properties."""
 
-    txt_properties = {}
-    device_type = flow._determine_device_type_from_product(txt_properties)
-    # Should return default (GDS)
-    assert device_type in [DEVICE_TYPE_GDS, DEVICE_TYPE_GNS_NAS]
+    # Empty string should return default (GDS)
+    device_type = determine_device_type_from_product("")
+    assert device_type == DEVICE_TYPE_GDS
 
 
 async def test_process_device_info_service_no_hostname(hass: HomeAssistant) -> None:
@@ -593,7 +557,7 @@ async def test_process_standard_service_fallback_to_gds_default(
 ) -> None:
     """Test _process_standard_service fallback to GDS default (covers lines 256-258)."""
     with patch(
-        "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._is_grandstream",
+        "homeassistant.components.grandstream_home.config_flow.is_grandstream_device",
         return_value=True,
     ):
         discovery_info = MagicMock()
@@ -621,7 +585,7 @@ async def test_process_device_info_service_fallback_to_discovery_name(
 ) -> None:
     """Test _process_device_info_service fallback to discovery name (covers line 210)."""
     with patch(
-        "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._is_grandstream",
+        "homeassistant.components.grandstream_home.config_flow.is_grandstream_device",
         return_value=True,
     ):
         discovery_info = MagicMock()
@@ -646,38 +610,21 @@ async def test_process_device_info_service_fallback_to_discovery_name(
         assert result["step_id"] == "auth"
 
 
-async def test_extract_port_and_protocol_https_valid(hass: HomeAssistant) -> None:
-    """Test _extract_port_and_protocol with valid HTTPS port (covers lines 441-442)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    flow = hass.config_entries.flow._progress[result["flow_id"]]
+def test_extract_port_and_protocol_https_valid() -> None:
+    """Test extract_port_from_txt with valid HTTPS port."""
 
     txt_properties = {"https_port": "8443"}
-    flow._extract_port_and_protocol(txt_properties, is_https_default=False)
-    assert flow._port == 8443
-    assert flow._use_https is True
+    port = extract_port_from_txt(txt_properties, 443)
+    assert port == 8443
 
 
-async def test_extract_port_and_protocol_https_invalid_warning(
-    hass: HomeAssistant,
-) -> None:
-    """Test _extract_port_and_protocol logs warning for invalid HTTPS port (covers lines 442-443)."""
-    # Create a flow instance
-    flow = GrandstreamConfigFlow()
-    flow.hass = hass
+def test_extract_port_and_protocol_https_invalid_warning() -> None:
+    """Test extract_port_from_txt with invalid HTTPS port returns default."""
 
-    # Patch the logger to capture warning calls
-    with patch(
-        "homeassistant.components.grandstream_home.config_flow._LOGGER.warning"
-    ) as mock_warning:
-        txt_properties = {"https_port": "invalid_port"}
-        flow._extract_port_and_protocol(txt_properties, is_https_default=False)
-
-        # Verify warning was logged
-        mock_warning.assert_called_once_with(
-            "Invalid https_port value: %s", "invalid_port"
-        )
+    txt_properties = {"https_port": "invalid_port"}
+    port = extract_port_from_txt(txt_properties, 443)
+    # Should return default port for invalid value
+    assert port == 443
 
 
 async def test_zeroconf_gsc_device(hass: HomeAssistant) -> None:
@@ -697,17 +644,16 @@ async def test_zeroconf_gsc_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "auth"  # Zeroconf discovery goes to auth step
 
 
-async def test_determine_device_type_from_product_gsc(hass: HomeAssistant) -> None:
+def test_determine_device_type_from_product_gsc() -> None:
     """Test device type determination from GSC product name."""
-    # Create a flow instance to test the method directly
-    flow = GrandstreamConfigFlow()
-    flow.hass = hass
-
-    # Test GSC product name detection - this should hit lines 451-453
-    txt_properties = {"product_name": "GSC3570"}
-    device_type = flow._determine_device_type_from_product(txt_properties)
+    # Test GSC product name detection
+    # GSC uses GDS API internally, so determine_device_type_from_product returns GDS
+    device_type = determine_device_type_from_product("GSC3570")
     assert device_type == DEVICE_TYPE_GDS  # Should return GDS internally
-    assert flow._device_model == DEVICE_TYPE_GSC  # Original model should be GSC
+
+    # get_device_model_from_product returns the actual device model (GSC)
+    device_model = get_device_model_from_product("GSC3570")
+    assert device_model == DEVICE_TYPE_GSC  # Original model should be GSC
 
 
 async def test_zeroconf_standard_service_gsc_detection(hass: HomeAssistant) -> None:
@@ -778,7 +724,7 @@ async def test_reconfigure_gns_success(hass: HomeAssistant) -> None:
             hass, "async_add_executor_job", side_effect=mock_async_add_executor_job
         ),
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
     ):
@@ -823,7 +769,7 @@ async def test_reconfigure_connection_error(hass: HomeAssistant) -> None:
             hass, "async_add_executor_job", side_effect=mock_async_add_executor_job
         ),
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
     ):
@@ -846,14 +792,17 @@ async def test_user_step_gsc_device_mapping(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_NAME: "Test GSC",
-            CONF_HOST: "192.168.1.100",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GSC,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "Test GSC",
+                CONF_HOST: "192.168.1.100",
+            },
+        )
 
     # Should proceed to auth step
     assert result2["type"] == FlowResultType.FORM
@@ -945,14 +894,17 @@ async def test_user_step_invalid_ip(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "invalid_ip",
-            CONF_NAME: "Test Device",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "invalid_ip",
+                CONF_NAME: "Test Device",
+            },
+        )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["host"] == "invalid_host"
@@ -964,14 +916,17 @@ async def test_auth_step_invalid_port(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test Device",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test Device",
+            },
+        )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1059,7 +1014,7 @@ async def test_reauth_flow_successful_completion(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GDSPhoneAPI",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
         patch.object(
@@ -1108,7 +1063,7 @@ async def test_reauth_flow_entry_not_found(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GDSPhoneAPI",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
         patch.object(
@@ -1156,7 +1111,7 @@ async def test_reauth_flow_with_gns_username(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
         patch.object(
@@ -1248,7 +1203,7 @@ async def test_validate_credentials_os_error(hass: HomeAssistant) -> None:
     flow._device_type = DEVICE_TYPE_GDS
 
     with patch(
-        "homeassistant.components.grandstream_home.config_flow.GDSPhoneAPI"
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
     ) as mock_api_class:
         mock_api = MagicMock()
         mock_api.login.side_effect = OSError("Connection failed")
@@ -1266,14 +1221,14 @@ async def test_validate_credentials_value_error(hass: HomeAssistant) -> None:
     flow._device_type = DEVICE_TYPE_GDS
 
     with patch(
-        "homeassistant.components.grandstream_home.config_flow.GDSPhoneAPI"
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
     ) as mock_api_class:
         mock_api = MagicMock()
         mock_api.login.side_effect = ValueError("Invalid data")
         mock_api_class.return_value = mock_api
 
         result = await flow._validate_credentials("admin", "password", 443, False)
-        assert result == "invalid_auth"
+        assert result == "cannot_connect"
 
 
 async def test_zeroconf_concurrent_discovery(hass: HomeAssistant) -> None:
@@ -1399,7 +1354,7 @@ async def test_reauth_entry_not_found(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GDSPhoneAPI",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
         patch.object(
@@ -1431,7 +1386,9 @@ async def test_validate_credentials_ha_control_disabled(hass: HomeAssistant) -> 
     flow._host = "192.168.1.100"
     flow._device_type = DEVICE_TYPE_GDS
 
-    with patch.object(flow, "_create_api_for_validation") as mock_create_api:
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
+    ) as mock_create_api:
         mock_api = MagicMock()
         mock_api.login.side_effect = GrandstreamHAControlDisabledError(
             "HA control disabled"
@@ -1498,7 +1455,9 @@ async def test_async_step_reauth_confirm_ha_control_disabled(
     flow._reauth_entry.add_to_hass(hass)
     flow.context = {"entry_id": flow._reauth_entry.entry_id}
 
-    with patch.object(flow, "_create_api_for_validation") as mock_create_api:
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
+    ) as mock_create_api:
         mock_api = MagicMock()
         mock_api.login.side_effect = GrandstreamHAControlDisabledError(
             "HA control disabled"
@@ -1523,7 +1482,9 @@ async def test_async_step_reauth_confirm_entry_not_found(hass: HomeAssistant) ->
     flow._host = "192.168.1.100"
     flow.context = {"entry_id": "nonexistent_entry_id"}
 
-    with patch.object(flow, "_create_api_for_validation") as mock_create_api:
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
+    ) as mock_create_api:
         mock_api = MagicMock()
         mock_api.login.return_value = True
         mock_create_api.return_value = mock_api
@@ -1552,7 +1513,9 @@ async def test_async_step_reauth_confirm_oserror(hass: HomeAssistant) -> None:
     flow._reauth_entry.add_to_hass(hass)
     flow.context = {"entry_id": flow._reauth_entry.entry_id}
 
-    with patch.object(flow, "_create_api_for_validation") as mock_create_api:
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
+    ) as mock_create_api:
         mock_api = MagicMock()
         mock_api.login.side_effect = OSError("Connection refused")
         mock_create_api.return_value = mock_api
@@ -1565,34 +1528,22 @@ async def test_async_step_reauth_confirm_oserror(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
+    assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_reconfigure_create_api_gns_https_port(hass: HomeAssistant) -> None:
-    """Test reconfigure flow API creation for GNS with HTTPS port - covers lines 1086-1087."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test",
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "encrypted:pass",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GNS_NAS,
-            CONF_PORT: 5001,  # HTTPS port
-            CONF_VERIFY_SSL: False,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    flow = GrandstreamConfigFlow()
-    flow.hass = hass
+def test_reconfigure_create_api_gns_https_port() -> None:
+    """Test create_api_instance for GNS with HTTPS port."""
 
     # Test API creation with HTTPS port
-    api = flow._create_api_for_validation(
-        "192.168.1.100", "admin", "password", 5001, DEVICE_TYPE_GNS_NAS, False
+    api = create_api_instance(
+        device_type=DEVICE_TYPE_GNS_NAS,
+        host="192.168.1.100",
+        username="admin",
+        password="password",
+        port=5001,
+        verify_ssl=False,
     )
 
-    # Should create GNSNasAPI with use_https=True
     assert isinstance(api, GNSNasAPI)
 
 
@@ -1612,23 +1563,27 @@ async def test_reconfigure_create_api_auth_failed(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    # Create flow instance and test the validation directly
-    flow = GrandstreamConfigFlow()
-    flow.hass = hass
-
-    with patch.object(flow, "_create_api_for_validation") as mock_create:
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
+    ) as mock_create:
         mock_api = MagicMock()
         mock_api.login.return_value = False  # Auth failed
         mock_create.return_value = mock_api
 
-        # Test the validation method directly
-        api = flow._create_api_for_validation(
-            "192.168.1.100", "admin", "wrong_pass", 443, DEVICE_TYPE_GDS, False
+        # Test using the mocked create_api_instance
+        api = mock_create(
+            device_type=DEVICE_TYPE_GDS,
+            host="192.168.1.100",
+            username="admin",
+            password="wrong_pass",
+            port=443,
+            verify_ssl=False,
         )
         success = api.login()
         assert success is False
 
 
+@pytest.mark.enable_socket
 async def test_reconfigure_create_api_ha_control_disabled(hass: HomeAssistant) -> None:
     """Test reconfigure flow API creation with HA control disabled - covers line 1155."""
 
@@ -1646,20 +1601,23 @@ async def test_reconfigure_create_api_ha_control_disabled(hass: HomeAssistant) -
     )
     entry.add_to_hass(hass)
 
-    # Create flow instance
-    flow = GrandstreamConfigFlow()
-    flow.hass = hass
-
-    with patch.object(flow, "_create_api_for_validation") as mock_create:
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
+    ) as mock_create:
         mock_api = MagicMock()
         mock_api.login.side_effect = GrandstreamHAControlDisabledError(
             "HA control disabled"
         )
         mock_create.return_value = mock_api
 
-        # Test the validation method directly
-        api = flow._create_api_for_validation(
-            "192.168.1.100", "admin", "password", 443, DEVICE_TYPE_GDS, False
+        # Test using the mocked create_api_instance
+        api = mock_create(
+            device_type=DEVICE_TYPE_GDS,
+            host="192.168.1.100",
+            username="admin",
+            password="password",
+            port=443,
+            verify_ssl=False,
         )
         try:
             api.login()
@@ -1715,7 +1673,7 @@ async def test_reconfigure_invalid_auth(hass: HomeAssistant) -> None:
             hass, "async_add_executor_job", side_effect=mock_async_add_executor_job
         ),
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
     ):
@@ -1760,7 +1718,7 @@ async def test_reconfigure_ha_control_disabled(hass: HomeAssistant) -> None:
             hass, "async_add_executor_job", side_effect=mock_async_add_executor_job
         ),
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
     ):
@@ -1787,42 +1745,21 @@ async def test_abort_all_flows_for_device_same_unique_id(hass: HomeAssistant) ->
     await flow._abort_all_flows_for_device("AA:BB:CC:DD:EE:FF", "192.168.1.100")
 
 
+@pytest.mark.enable_socket
 @pytest.mark.asyncio
 async def test_abort_all_flows_for_device_abort_exception(hass: HomeAssistant) -> None:
     """Test _abort_all_flows_for_device handles abort exceptions."""
-    # Create a flow to abort
-    with patch(
-        "homeassistant.components.grandstream_home.config_flow.GDSPhoneAPI"
-    ) as mock_api_class:
-        mock_api = MagicMock()
-        mock_api_class.return_value = mock_api
-        mock_api.get_device_info.return_value = {
-            "mac": "AA:BB:CC:DD:EE:FF",
-            "model": "GDS3710",
-        }
+    flow = GrandstreamConfigFlow()
+    flow.hass = hass
+    flow.flow_id = "test_flow_id_2"
 
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "user"},
-            data={
-                "device_type": DEVICE_TYPE_GDS,
-                "host": "192.168.1.100",
-                "name": "Test Device",
-            },
-        )
-
-        # Create another flow and mock abort to raise exception
-        flow = GrandstreamConfigFlow()
-        flow.hass = hass
-        flow.flow_id = "test_flow_id_2"
-
-        with patch.object(
-            hass.config_entries.flow,
-            "async_abort",
-            side_effect=ValueError("Test error"),
-        ):
-            # Should handle exception gracefully
-            await flow._abort_all_flows_for_device("AA:BB:CC:DD:EE:FF", "192.168.1.100")
+    with patch.object(
+        hass.config_entries.flow,
+        "async_abort",
+        side_effect=ValueError("Test error"),
+    ):
+        # Should handle exception gracefully
+        await flow._abort_all_flows_for_device("AA:BB:CC:DD:EE:FF", "192.168.1.100")
 
 
 @pytest.mark.asyncio
@@ -1838,35 +1775,13 @@ async def test_abort_all_flows_for_device_no_hass(hass: HomeAssistant) -> None:
 @pytest.mark.asyncio
 async def test_abort_existing_flow_host_in_unique_id(hass: HomeAssistant) -> None:
     """Test _abort_existing_flow aborts flows with host in unique_id."""
-    # Create a flow
-    with patch(
-        "homeassistant.components.grandstream_home.config_flow.GDSPhoneAPI"
-    ) as mock_api_class:
-        mock_api = MagicMock()
-        mock_api_class.return_value = mock_api
-        mock_api.get_device_info.return_value = {
-            "mac": "AA:BB:CC:DD:EE:FF",
-            "model": "GDS3710",
-        }
+    flow = GrandstreamConfigFlow()
+    flow.hass = hass
+    flow.flow_id = "test_flow_id_2"
+    flow._host = "192.168.1.100"
 
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "user"},
-            data={
-                "device_type": DEVICE_TYPE_GDS,
-                "host": "192.168.1.100",
-                "name": "Test Device",
-            },
-        )
-
-        # Create another flow
-        flow = GrandstreamConfigFlow()
-        flow.hass = hass
-        flow.flow_id = "test_flow_id_2"
-        flow._host = "192.168.1.100"
-
-        # Call abort existing flow
-        await flow._abort_existing_flow("AA:BB:CC:DD:EE:FF")
+    # Call abort existing flow - should not raise exception
+    await flow._abort_existing_flow("AA:BB:CC:DD:EE:FF")
 
 
 async def test_abort_existing_flow_with_exception(hass: HomeAssistant) -> None:
@@ -2071,7 +1986,7 @@ async def test_validate_credentials_mac_same_as_zeroconf(hass: HomeAssistant) ->
 
     with (
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
         patch.object(
@@ -2105,7 +2020,7 @@ async def test_validate_credentials_mac_updated_from_zeroconf(
 
     with (
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
         patch.object(
@@ -2270,14 +2185,17 @@ async def test_create_config_entry_with_product_and_firmware(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -2319,14 +2237,17 @@ async def test_auth_missing_data_abort(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     # Simulate missing data by clearing flow internals
     flow = hass.config_entries.flow._progress[result["flow_id"]]
@@ -2394,14 +2315,17 @@ async def test_auth_verify_ssl_option(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -2438,14 +2362,17 @@ async def test_auth_validation_failed(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with patch(
         "grandstream_home_api.GDSPhoneAPI.login",
@@ -2469,14 +2396,17 @@ async def test_auth_gns_without_username_uses_default(hass: HomeAssistant) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.101",
-            CONF_NAME: "Test GNS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GNS_NAS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GNS_NAS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.101",
+                CONF_NAME: "Test GNS",
+            },
+        )
 
     with (
         patch(
@@ -2513,14 +2443,17 @@ async def test_auth_gds_without_username_uses_default(hass: HomeAssistant) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -2557,14 +2490,17 @@ async def test_auth_custom_port(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -2604,14 +2540,17 @@ async def test_create_entry_default_username_gds(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -2667,7 +2606,7 @@ async def test_reconfigure_ha_control_disabled_error(hass: HomeAssistant) -> Non
             hass, "async_add_executor_job", side_effect=mock_async_add_executor_job
         ),
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
     ):
@@ -2718,7 +2657,7 @@ async def test_reconfigure_unknown_error(hass: HomeAssistant) -> None:
             hass, "async_add_executor_job", side_effect=mock_async_add_executor_job
         ),
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
     ):
@@ -2946,14 +2885,17 @@ async def test_create_entry_no_auth_info_username_gds(hass: HomeAssistant) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -2990,14 +2932,17 @@ async def test_create_entry_no_auth_info_username_gns(hass: HomeAssistant) -> No
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GNS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GNS_NAS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GNS_NAS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GNS",
+            },
+        )
 
     with (
         patch(
@@ -3094,14 +3039,17 @@ async def test_user_flow_mac_updates_existing_entry_ip(hass: HomeAssistant) -> N
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",  # New IP
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",  # New IP
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     # Mock API to return MAC that matches existing entry
     mock_api = MagicMock()
@@ -3116,7 +3064,7 @@ async def test_user_flow_mac_updates_existing_entry_ip(hass: HomeAssistant) -> N
             hass, "async_add_executor_job", side_effect=mock_async_add_executor_job
         ),
         patch(
-            "homeassistant.components.grandstream_home.config_flow.GrandstreamConfigFlow._create_api_for_validation",
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
             return_value=mock_api,
         ),
         patch(
@@ -3148,14 +3096,17 @@ async def test_create_entry_empty_username_gns(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GNS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GNS_NAS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GNS_NAS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GNS",
+            },
+        )
 
     with (
         patch(
@@ -3195,14 +3146,17 @@ async def test_create_config_entry_fallback_unique_id_with_mac(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -3255,14 +3209,17 @@ async def test_create_config_entry_fallback_unique_id_no_mac(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_NAME: "Test GDS",
-            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
-        },
-    )
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=DEVICE_TYPE_GDS,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test GDS",
+            },
+        )
 
     with (
         patch(
@@ -3304,3 +3261,85 @@ async def test_create_config_entry_fallback_unique_id_no_mac(
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     # Should have generated name-based unique_id in fallback
     assert result3["result"].unique_id is not None
+
+
+@pytest.mark.enable_socket
+async def test_user_step_device_type_detection_failed(hass: HomeAssistant) -> None:
+    """Test user step when device type detection fails (covers lines 105-109)."""
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.detect_device_type",
+        return_value=None,  # Detection fails
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "Test Device",
+            },
+        )
+
+    # Should proceed to auth step with default GDS type
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "auth"
+
+
+@pytest.mark.enable_socket
+async def test_validate_credentials_oserror_direct(hass: HomeAssistant) -> None:
+    """Test _validate_credentials with OSError (covers lines 557-559)."""
+    flow = GrandstreamConfigFlow()
+    flow.hass = hass
+    flow._host = "192.168.1.100"
+    flow._device_type = DEVICE_TYPE_GDS
+
+    # Create API that raises OSError during creation
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance",
+        side_effect=OSError("Connection refused"),
+    ):
+        result = await flow._validate_credentials("admin", "password", 443, False)
+
+    assert result == "cannot_connect"
+
+
+@pytest.mark.enable_socket
+async def test_reauth_confirm_grandstream_error(hass: HomeAssistant) -> None:
+    """Test reauth confirm with GrandstreamError (covers lines 957-958)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "encrypted:test_password",
+            CONF_DEVICE_TYPE: DEVICE_TYPE_GDS,
+        },
+        unique_id="00:0B:82:12:34:56",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    with patch(
+        "homeassistant.components.grandstream_home.config_flow.create_api_instance"
+    ) as mock_create:
+        mock_api = MagicMock()
+        mock_api.login.side_effect = GrandstreamError("Device error")
+        mock_create.return_value = mock_api
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "new_password"},
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "invalid_auth"

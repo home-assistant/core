@@ -93,7 +93,6 @@ def mock_config_entry():
             "password": "password",
             "device_type": "GDS",
             "port": 80,
-            "use_https": False,
         },
         entry_id="test_entry_id",
     )
@@ -111,7 +110,6 @@ def mock_gds_entry():
             "password": "password",
             "device_type": "GDS",
             "port": 80,
-            "use_https": False,
         },
         entry_id="test_gds_entry_id",
     )
@@ -129,7 +127,6 @@ def mock_gns_entry():
             "password": "password",
             "device_type": "GNS",
             "port": 80,
-            "use_https": False,
         },
         entry_id="test_gns_entry_id",
     )

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+
+from grandstream_home_api import get_by_path
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import GrandstreamConfigEntry
-from .const import DEVICE_TYPE_GNS_NAS, DOMAIN
+from .const import DEVICE_TYPE_GNS_NAS
 from .coordinator import GrandstreamCoordinator
 from .device import GrandstreamDevice
 
@@ -259,50 +260,6 @@ class GrandstreamSensor(SensorEntity):
             self.coordinator.async_add_listener(self._handle_coordinator_update)
         )
 
-    @staticmethod
-    def _get_by_path(data: dict[str, Any], path: str, index: int | None = None):
-        """Resolve nested value by path like 'disks[0].temperature_c' or 'fans[0]'."""
-        if index is not None and "{index}" in path:
-            path = path.replace("{index}", str(index))
-
-        cur = data
-        parts = path.split(".")
-        for part in parts:
-            # Handle list index like key[0]
-            while "[" in part and "]" in part:
-                base = part[: part.index("[")]
-                idx_str = part[part.index("[") + 1 : part.index("]")]
-                if base:
-                    if isinstance(cur, dict):
-                        temp = cur.get(base)
-                        if temp is None:
-                            return None
-                        cur = temp
-                    else:
-                        return None
-                try:
-                    idx = int(idx_str)
-                except ValueError:
-                    return None
-                if isinstance(cur, list) and 0 <= idx < len(cur):
-                    cur = cur[idx]
-                else:
-                    return None
-                # fully processed this bracketed segment
-                if part.endswith("]"):
-                    part = ""
-                else:
-                    part = part[part.index("]") + 1 :]
-            if part:
-                if isinstance(cur, dict):
-                    temp = cur.get(part)
-                    if temp is None:
-                        return None
-                    cur = temp
-                else:
-                    return None
-        return cur
-
 
 class GrandstreamSystemSensor(GrandstreamSensor):
     """Representation of a Grandstream system sensor."""
@@ -313,30 +270,25 @@ class GrandstreamSystemSensor(GrandstreamSensor):
         if not self.entity_description.key_path:
             return None
 
-        return self._get_by_path(
-            self.coordinator.data, self.entity_description.key_path
-        )
+        return get_by_path(self.coordinator.data, self.entity_description.key_path)
 
 
 class GrandstreamDeviceSensor(GrandstreamSensor):
     """Representation of a Grandstream device sensor."""
-
-    def _get_api_instance(self):
-        """Get API instance from hass.data."""
-
-        if DOMAIN in self.hass.data and hasattr(self._device, "config_entry_id"):
-            entry_data = self.hass.data[DOMAIN].get(self._device.config_entry_id)
-            if entry_data and "api" in entry_data:
-                return entry_data["api"]
-        return None
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         # For phone_status sensor, check connection state first
         if self.entity_description.key == "phone_status":
-            api = self._get_api_instance()
-            if api:
+            # Get API from config entry runtime_data
+            config_entry = self.coordinator.config_entry
+            if (
+                config_entry
+                and hasattr(config_entry, "runtime_data")
+                and config_entry.runtime_data
+            ):
+                api = config_entry.runtime_data.api
                 # Return connection status key if there's any issue
                 # Translation keys: ha_control_disabled, offline, account_locked, auth_failed
                 if (
@@ -352,13 +304,11 @@ class GrandstreamDeviceSensor(GrandstreamSensor):
                     return "auth_failed"
 
         if self.entity_description.key_path and self._index is not None:
-            value = self._get_by_path(
+            value = get_by_path(
                 self.coordinator.data, self.entity_description.key_path, self._index
             )
         elif self.entity_description.key_path:
-            value = self._get_by_path(
-                self.coordinator.data, self.entity_description.key_path
-            )
+            value = get_by_path(self.coordinator.data, self.entity_description.key_path)
         else:
             return None
 
@@ -429,7 +379,7 @@ class GrandstreamSipAccountSensor(GrandstreamSensor):
         if current_index is None:
             return None
 
-        return self._get_by_path(
+        return get_by_path(
             self.coordinator.data, self.entity_description.key_path, current_index
         )
 
@@ -440,8 +390,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    runtime_data = config_entry.runtime_data
+    coordinator = runtime_data.coordinator
+    device = runtime_data.device
 
     entities: list[GrandstreamSensor] = []
 

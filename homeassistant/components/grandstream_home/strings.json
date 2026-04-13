@@ -68,16 +68,14 @@
       },
       "user": {
         "data": {
-          "device_type": "Device Type",
           "host": "IP Address",
           "name": "Device Name"
         },
         "data_description": {
-          "device_type": "Select device type: GDS/GSC (Access Control Device) or GNS (Network Storage)",
           "host": "IP address or hostname of the device",
           "name": "Friendly name for the device"
         },
-        "description": "Please enter your device information",
+        "description": "Please enter your device information. Device type will be auto-detected.",
         "title": "Add Grandstream Device"
       }
     }

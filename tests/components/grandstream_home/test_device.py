@@ -17,41 +17,28 @@ from homeassistant.components.grandstream_home.device import (
 from homeassistant.core import HomeAssistant
 
 
-def test_device_register_create(hass: HomeAssistant) -> None:
-    """Test Device register create."""
-    device_registry = MagicMock()
-    device_registry.devices = {}
-
-    with patch(
-        "homeassistant.helpers.device_registry.async_get",
-        return_value=device_registry,
-    ):
-        device = GDSDevice(hass, "Front Door", "uid-1", "entry-1")
-        device.set_ip_address("192.168.1.100")
-        device.set_mac_address("AA:BB:CC:DD:EE:FF")
-        device.set_firmware_version("1.0.0")
+def test_device_info_gds_device(hass: HomeAssistant) -> None:
+    """Test GDS device info."""
+    device = GDSDevice(hass, "Front Door", "uid-1", "entry-1")
+    device.set_ip_address("192.168.1.100")
+    device.set_mac_address("AA:BB:CC:DD:EE:FF")
+    device.set_firmware_version("1.0.0")
 
     assert device.device_type == DEVICE_TYPE_GDS
-    assert device_registry.async_get_or_create.called
+    info = device.device_info
+    assert info["name"] == "Front Door"
+    assert info["manufacturer"] == "Grandstream"
 
 
-def test_device_register_update_existing(hass: HomeAssistant) -> None:
-    """Test Device register update existing."""
-    existing_device = MagicMock()
-    existing_device.id = "existing"
-    existing_device.identifiers = {(DOMAIN, "uid-2")}
-    device_registry = MagicMock()
-    device_registry.devices = {"existing": existing_device}
-
-    with patch(
-        "homeassistant.helpers.device_registry.async_get",
-        return_value=device_registry,
-    ):
-        device = GNSNASDevice(hass, "NAS", "uid-2", "entry-2")
-        device.set_mac_address("AA-BB-CC-DD-EE-FF")
+def test_device_info_gns_device(hass: HomeAssistant) -> None:
+    """Test GNS device info."""
+    device = GNSNASDevice(hass, "NAS", "uid-2", "entry-2")
+    device.set_mac_address("AA:BB:CC:DD:EE:FF")
 
     assert device.device_type == DEVICE_TYPE_GNS_NAS
-    assert device_registry.async_get_or_create.called
+    info = device.device_info
+    assert info["name"] == "NAS"
+    assert info["manufacturer"] == "Grandstream"
 
 
 def test_device_info_connections(hass: HomeAssistant) -> None:

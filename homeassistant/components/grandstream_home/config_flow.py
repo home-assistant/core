@@ -6,7 +6,24 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from grandstream_home_api import GDSPhoneAPI, GNSNasAPI
+from grandstream_home_api import (
+    attempt_login,
+    create_api_instance,
+    detect_device_type,
+    determine_device_type_from_product,
+    encrypt_password,
+    extract_mac_from_name,
+    extract_port_from_txt,
+    generate_unique_id,
+    get_default_port,
+    get_default_username,
+    get_device_info_from_txt,
+    get_device_model_from_product,
+    is_grandstream_device,
+    validate_ip_address,
+    validate_port,
+)
+from grandstream_home_api.error import GrandstreamError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,27 +39,15 @@ from .const import (
     CONF_FIRMWARE_VERSION,
     CONF_PASSWORD,
     CONF_PRODUCT_MODEL,
-    CONF_USE_HTTPS,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    DEFAULT_HTTP_PORT,
     DEFAULT_HTTPS_PORT,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DEFAULT_USERNAME_GNS,
     DEVICE_TYPE_GDS,
     DEVICE_TYPE_GNS_NAS,
-    DEVICE_TYPE_GSC,
     DOMAIN,
-)
-from .error import GrandstreamError, GrandstreamHAControlDisabledError
-from .utils import (
-    encrypt_password,
-    extract_mac_from_name,
-    generate_unique_id,
-    mask_sensitive_data,
-    validate_ip_address,
-    validate_port,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +69,6 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             None  # Specific product model (e.g., GDS3725, GDS3727, GSC3560)
         )
         self._auth_info: dict[str, Any] | None = None
-        self._use_https: bool = True  # Track if using HTTPS protocol
         self._mac: str | None = None  # MAC address from discovery
         self._firmware_version: str | None = None  # Firmware version from discovery
 
@@ -90,45 +94,39 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 self._host = user_input[CONF_HOST].strip()
                 self._name = user_input[CONF_NAME].strip()
-                self._device_type = user_input[CONF_DEVICE_TYPE]
 
-                # Save original device model and map GSC to GDS internally
-                if self._device_type == DEVICE_TYPE_GSC:
-                    self._device_model = DEVICE_TYPE_GSC
-                    self._device_type = DEVICE_TYPE_GDS  # GSC uses GDS internally
-                else:
-                    self._device_model = self._device_type
+                # Auto-detect device type
+                detected_type = await self.hass.async_add_executor_job(
+                    detect_device_type, self._host
+                )
 
-                # Set default port based on device type
-                # GNS NAS devices default to DEFAULT_HTTPS_PORT (5001), GDS devices default to 443 (HTTPS)
-                if self._device_type == DEVICE_TYPE_GNS_NAS:
-                    self._port = DEFAULT_HTTPS_PORT
-                    self._use_https = True
-                else:
-                    # GDS/GSC devices default to HTTPS (port 443)
-                    self._port = DEFAULT_PORT  # 443
-                    self._use_https = True
+                if detected_type is None:
+                    # Could not detect, default to GDS
+                    _LOGGER.warning(
+                        "Could not auto-detect device type for %s, defaulting to GDS",
+                        self._host,
+                    )
+                    detected_type = DEVICE_TYPE_GDS
 
-                # For manual addition, DON'T set a unique_id yet
-                # It will be set later in _update_unique_id_for_mac after we get the MAC address
-                # This prevents name-based unique_id conflicts with future zeroconf discovery
+                self._device_type = detected_type
+                self._device_model = detected_type
+                self._port = get_default_port(detected_type)
+
                 _LOGGER.info(
-                    "Manual device addition: %s (Type: %s), waiting for MAC to set unique_id",
+                    "Manual device addition: %s (Auto-detected type: %s)",
                     self._name,
                     self._device_type,
                 )
+
                 return await self.async_step_auth()
 
-        # Show form with input fields
+        # Show form with input fields (removed device type selection)
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): cv.string,
                     vol.Required(CONF_NAME): cv.string,
-                    vol.Required(CONF_DEVICE_TYPE, default=DEVICE_TYPE_GDS): vol.In(
-                        [DEVICE_TYPE_GDS, DEVICE_TYPE_GSC, DEVICE_TYPE_GNS_NAS]
-                    ),
                 }
             ),
             errors=errors,
@@ -177,14 +175,13 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.context["title_placeholders"] = {"name": self._name}
 
         _LOGGER.info(
-            "Zeroconf device discovery: %s (Type: %s) at %s:%s, use_https=%s, "
+            "Zeroconf device discovery: %s (Type: %s) at %s:%s, "
             "discovery_info.port=%s, discovery_info.type=%s, discovery_info.name=%s, "
             "properties=%s",
             self._name,
             self._device_type,
             self._host,
             self._port,
-            self._use_https,
             discovery_info.port,
             discovery_info.type,
             discovery_info.name,
@@ -451,280 +448,131 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     err,
                 )
 
-    def _is_grandstream(self, product_name):
-        """Check if the device is a Grandstream device.
-
-        Args:
-            product_name: Product name to check
-
-        Returns:
-            bool: True if it's a Grandstream device
-
-        """
-        return any(
-            prefix in str(product_name).upper()
-            for prefix in (DEVICE_TYPE_GNS_NAS, DEVICE_TYPE_GDS, DEVICE_TYPE_GSC)
-        )
-
     async def _process_device_info_service(
         self, discovery_info: Any, txt_properties: dict[str, Any]
     ) -> config_entries.ConfigFlowResult | None:
-        """Process device info service discovery.
-
-        Args:
-            discovery_info: Zeroconf discovery information
-            txt_properties: TXT record properties
-
-        Returns:
-            ConfigFlowResult if device should be ignored, None otherwise
-
-        """
-        _LOGGER.debug("txt_properties:%s", txt_properties)
-
-        # Check if this is a Grandstream device by examining TXT records
+        """Process device info service discovery."""
+        # Check if this is a Grandstream device
         product_name = txt_properties.get("product_name", "")
-        product = txt_properties.get("product", "")  # Also check 'product' field
+        product = txt_properties.get("product", "")
         hostname = txt_properties.get("hostname", "")
-        # Also check discovery_info.name for device type
         service_name = discovery_info.name.split(".")[0] if discovery_info.name else ""
 
-        # Check if this is a Grandstream device by product_name, product, hostname, or service name
         is_grandstream = (
-            self._is_grandstream(product_name)
-            or self._is_grandstream(product)
-            or self._is_grandstream(hostname)
-            or self._is_grandstream(service_name)
+            is_grandstream_device(product_name)
+            or is_grandstream_device(product)
+            or is_grandstream_device(hostname)
+            or is_grandstream_device(service_name)
         )
 
         if not is_grandstream:
             _LOGGER.debug(
-                "Ignoring non-Grandstream device: %s (product: %s, hostname: %s, service: %s)",
-                hostname,
-                product_name or product,
-                hostname,
-                service_name,
+                "Ignoring non-Grandstream device: %s", hostname or product_name
             )
             return self.async_abort(reason="not_grandstream_device")
 
-        # Extract product model from 'product' field first, then 'product_name' field
-        # GDS devices use 'product' field (e.g., product=GDS3725)
-        # GNS devices use 'product_name' field (e.g., product_name=GNS5004E)
-        if product:
-            self._product_model = str(product).strip().upper()
-            _LOGGER.info(
-                "Product model from TXT record 'product': %s", self._product_model
-            )
-        elif product_name:
-            self._product_model = str(product_name).strip().upper()
-            _LOGGER.info(
-                "Product model from TXT record 'product_name': %s", self._product_model
-            )
+        # Extract device info using library function
+        device_info = get_device_info_from_txt(txt_properties)
 
-        # Determine device type and name based on product_name or product
-        self._device_type = self._determine_device_type_from_product(txt_properties)
+        self._product_model = device_info["product_model"]
+        self._device_type = device_info["device_type"]
+        self._device_model = device_info["device_model"]
+        self._mac = device_info["mac"]
 
-        # Extract device name - prefer hostname for device-info service
-        if hostname:
-            self._name = str(hostname).strip().upper()
-        elif product_name:
-            self._name = str(product_name).strip().upper()
-        else:
-            self._name = (
-                discovery_info.name.split(".")[0] if discovery_info.name else ""
-            )
+        # Device name - prefer hostname
+        self._name = hostname or product_name or service_name
+        if self._name:
+            self._name = self._name.strip().upper()
 
-        # Extract port and protocol from TXT records
-        self._extract_port_and_protocol(txt_properties, is_https_default=True)
+        # Extract port
+        self._port = extract_port_from_txt(txt_properties, DEFAULT_HTTPS_PORT)
 
-        # GDS/GSC devices always use HTTPS
-        if self._device_type == DEVICE_TYPE_GDS:
-            self._use_https = True
-
-        # Extract MAC address if available
-        # GNS devices may have multiple MACs separated by comma, use the first one
-        mac = txt_properties.get("mac")
-        if mac:
-            mac_str = str(mac).strip()
-            # Handle multiple MACs (e.g., "ec:74:d7:61:a6:85,ec:74:d7:61:a6:86,...")
-            if "," in mac_str:
-                mac_str = mac_str.split(",", maxsplit=1)[0].strip()
-            self._mac = mac_str
-            _LOGGER.debug(
-                "Zeroconf provided MAC: %s (will be verified/updated after login)",
-                self._mac,
-            )
-
-        # Log additional device information
-        self._log_device_info(txt_properties)
+        _LOGGER.debug(
+            "Device info - hostname: %s, product: %s, version: %s",
+            device_info["hostname"],
+            self._product_model,
+            device_info["version"],
+        )
         return None
 
     async def _process_standard_service(
         self, discovery_info: Any
     ) -> config_entries.ConfigFlowResult | None:
-        """Process standard service discovery.
-
-        Args:
-            discovery_info: Zeroconf discovery information
-
-        Returns:
-            ConfigFlowResult if device should be ignored, None otherwise
-
-        """
-        # Only process HTTPS services (_https._tcp.local.)
-        # Ignore other services like SSH, HTTP, Web Site, etc.
+        """Process standard service discovery."""
+        # Only process HTTPS services
         service_type = discovery_info.type or ""
         if "_https._tcp" not in service_type:
-            _LOGGER.debug(
-                "Ignoring non-HTTPS service for %s: %s",
-                discovery_info.name,
-                service_type,
-            )
+            _LOGGER.debug("Ignoring non-HTTPS service: %s", service_type)
             return self.async_abort(reason="not_grandstream_device")
 
-        # Get TXT properties
+        # Get TXT properties and extract device info
         txt_properties = discovery_info.properties or {}
+        device_info = get_device_info_from_txt(txt_properties)
 
-        # For HTTP/HTTPS services or services without valid TXT records
+        # Device name from service name
         self._name = (
             discovery_info.name.split(".")[0].upper() if discovery_info.name else ""
         )
 
         # Check if this is a Grandstream device
-        is_grandstream = self._is_grandstream(self._name)
-
-        if not is_grandstream:
+        if not is_grandstream_device(self._name):
             _LOGGER.debug("Ignoring non-Grandstream device: %s", self._name)
             return self.async_abort(reason="not_grandstream_device")
 
-        # Extract product model from TXT records (e.g., product=GDS3725)
-        product = txt_properties.get("product")
-        if product:
-            self._product_model = str(product).strip().upper()
-            _LOGGER.info("Product model from TXT record: %s", self._product_model)
-
-        # Set device type based on product model first, then name
-        if self._product_model:
-            # Use product model to determine device type
-            if self._product_model.startswith(DEVICE_TYPE_GSC):
-                self._device_model = DEVICE_TYPE_GSC
-                self._device_type = DEVICE_TYPE_GDS  # GSC uses GDS internally
-            elif self._product_model.startswith(DEVICE_TYPE_GNS_NAS):
-                self._device_model = DEVICE_TYPE_GNS_NAS
-                self._device_type = DEVICE_TYPE_GNS_NAS
-            else:
-                # GDS models (GDS3725, GDS3727, etc.)
-                self._device_model = DEVICE_TYPE_GDS
-                self._device_type = DEVICE_TYPE_GDS
-        elif DEVICE_TYPE_GNS_NAS in self._name.upper():
-            self._device_type = DEVICE_TYPE_GNS_NAS
-            self._device_model = DEVICE_TYPE_GNS_NAS
-        elif DEVICE_TYPE_GSC in self._name.upper():
-            self._device_model = DEVICE_TYPE_GSC  # Save original model
-            self._device_type = DEVICE_TYPE_GDS  # GSC uses GDS internally
-        elif DEVICE_TYPE_GDS in self._name.upper():
-            self._device_type = DEVICE_TYPE_GDS
-            self._device_model = DEVICE_TYPE_GDS
+        # Use device info from TXT if available, otherwise fallback to name
+        if device_info["product_model"]:
+            self._product_model = device_info["product_model"]
+            self._device_type = device_info["device_type"]
+            self._device_model = device_info["device_model"]
         else:
-            # Default fallback
-            self._device_type = DEVICE_TYPE_GDS
-            self._device_model = DEVICE_TYPE_GDS
+            # Fallback to name-based detection
+            self._product_model = None
+            self._device_type = determine_device_type_from_product(self._name)
+            self._device_model = get_device_model_from_product(self._name)
 
-        # Set port and protocol
+        # Set port
         self._port = discovery_info.port or DEFAULT_PORT
-        self._use_https = True  # GDS/GSC always uses HTTPS
 
         return None
-
-    def _is_gns_device(self) -> bool:
-        """Check if current device is GNS type."""
-        return self._device_type == DEVICE_TYPE_GNS_NAS
-
-    def _get_default_username(self) -> str:
-        """Get default username based on device type."""
-        return DEFAULT_USERNAME_GNS if self._is_gns_device() else DEFAULT_USERNAME
-
-    def _create_api_for_validation(
-        self,
-        host: str,
-        username: str,
-        password: str,
-        port: int,
-        device_type: str,
-        verify_ssl: bool = False,
-    ) -> GDSPhoneAPI | GNSNasAPI:
-        """Create API instance for credential validation."""
-        if device_type == DEVICE_TYPE_GNS_NAS:
-            use_https = port == DEFAULT_HTTPS_PORT
-            return GNSNasAPI(
-                host,
-                username,
-                password,
-                port=port,
-                use_https=use_https,
-                verify_ssl=verify_ssl,
-            )
-        return GDSPhoneAPI(
-            host=host,
-            username=username,
-            password=password,
-            port=port,
-            verify_ssl=verify_ssl,
-        )
 
     async def _validate_credentials(
         self, username: str, password: str, port: int, verify_ssl: bool
     ) -> str | None:
-        """Validate credentials by attempting to connect to the device.
-
-        Args:
-            username: Username for authentication
-            password: Password for authentication
-            port: Port number
-            verify_ssl: Whether to verify SSL certificate
-
-        Returns:
-            Error message key if validation failed, None if successful
-
-        """
+        """Validate credentials by attempting to connect to the device."""
         if not self._host or not self._device_type:
             return "missing_data"
 
         try:
-            api = self._create_api_for_validation(
-                self._host, username, password, port, self._device_type, verify_ssl
+            api = create_api_instance(
+                device_type=self._device_type,
+                host=self._host,
+                username=username,
+                password=password,
+                port=port,
+                verify_ssl=verify_ssl,
             )
-            # Attempt login
-            success = await self.hass.async_add_executor_job(api.login)
-        except GrandstreamHAControlDisabledError:
-            # HA control is disabled on the device
-            _LOGGER.warning("Home Assistant control is disabled on the device")
-            return "ha_control_disabled"
+            success, error_type = await self.hass.async_add_executor_job(
+                attempt_login, api
+            )
         except OSError as err:
             _LOGGER.warning("Connection error during credential validation: %s", err)
             return "cannot_connect"
-        except (ValueError, KeyError, AttributeError) as err:
-            _LOGGER.warning("Unexpected error during credential validation: %s", err)
-            return "invalid_auth"
+
+        if error_type == "ha_control_disabled":
+            _LOGGER.warning("Home Assistant control is disabled on the device")
+            return "ha_control_disabled"
+
+        if error_type == "offline":
+            _LOGGER.warning("Device is offline or unreachable")
+            return "cannot_connect"
 
         if not success:
             return "invalid_auth"
 
         # Get MAC address from API after successful login
-        # Both GDS and GNS APIs populate device_mac during login:
-        # - GDS: Gets MAC from login response body
-        # - GNS: Calls _fetch_device_mac() to get primary interface MAC
-        zeroconf_mac = self._mac  # Save Zeroconf MAC for comparison
-
         if hasattr(api, "device_mac") and api.device_mac:
             self._mac = api.device_mac
-            if zeroconf_mac and zeroconf_mac != self._mac:
-                _LOGGER.info(
-                    "MAC address updated from Zeroconf (%s) to device API (%s)",
-                    zeroconf_mac,
-                    self._mac,
-                )
-            else:
-                _LOGGER.info("Got MAC address from device API: %s", self._mac)
+            _LOGGER.info("Got MAC address from device API: %s", self._mac)
 
         return None
 
@@ -801,10 +649,9 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         """
         errors: dict[str, str] = {}
-        _LOGGER.info("Async_step_auth %s", mask_sensitive_data(user_input))
 
         # Determine if device is GNS type
-        default_username = self._get_default_username()
+        default_username = get_default_username(self._device_type or DEVICE_TYPE_GDS)
 
         # Get current form values (preserve on validation error)
         current_username = (
@@ -864,10 +711,7 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors,
             )
 
-        # Validation successful - update protocol and port
-        # GDS/GSC devices always use HTTPS
-        if self._device_type == DEVICE_TYPE_GDS:
-            self._use_https = True
+        # Validation successful - update port
         self._port = port
 
         # Update unique_id to MAC-based if available
@@ -908,11 +752,10 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Build form schema
         schema_dict = self._build_auth_schema(
-            self._is_gns_device(),
+            self._device_type == DEVICE_TYPE_GNS_NAS,
             current_username,
             current_password,
             current_port,
-            None,
         )
 
         # Build description placeholders
@@ -939,7 +782,6 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         current_username: str,
         current_password: str,
         current_port: int,
-        user_input: dict[str, Any] | None,
     ) -> dict:
         """Build authentication form schema.
 
@@ -948,7 +790,6 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             current_username: Current username value
             current_password: Current password value
             current_port: Current port value
-            user_input: User input data (for preserving form fields)
 
         Returns:
             dict: Form schema dictionary
@@ -971,108 +812,6 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return schema_dict
-
-    def _determine_device_type_from_product(
-        self, txt_properties: dict[str, Any]
-    ) -> str:
-        """Determine device type based on product_name or product from TXT records.
-
-        Args:
-            txt_properties: TXT record properties from Zeroconf discovery
-
-        Returns:
-            str: Device type constant (DEVICE_TYPE_GNS_NAS or DEVICE_TYPE_GDS)
-
-        """
-        # Prefer already extracted product model (from 'product' field)
-        if self._product_model:
-            product_name = self._product_model
-        else:
-            product_name = txt_properties.get("product_name", "").strip().upper()
-
-        if not product_name:
-            _LOGGER.debug(
-                "No product_name or product found in TXT records, defaulting to GDS"
-            )
-            self._device_model = DEVICE_TYPE_GDS
-            return DEVICE_TYPE_GDS
-
-        _LOGGER.debug("Determining device type from product: %s", product_name)
-
-        # Check if product name starts with GNS
-        if product_name.startswith(DEVICE_TYPE_GNS_NAS):
-            _LOGGER.debug("Matched GNS device from product")
-            self._device_model = DEVICE_TYPE_GNS_NAS
-            return DEVICE_TYPE_GNS_NAS
-
-        # Check if product name starts with GSC
-        if product_name.startswith(DEVICE_TYPE_GSC):
-            _LOGGER.debug("Matched GSC device from product")
-            self._device_model = DEVICE_TYPE_GSC
-            return DEVICE_TYPE_GDS  # GSC uses GDS internally
-
-        # Default to GDS for all other cases
-        _LOGGER.debug("Defaulting to GDS device type")
-        self._device_model = DEVICE_TYPE_GDS
-        return DEVICE_TYPE_GDS
-
-    def _extract_port_and_protocol(
-        self, txt_properties: dict[str, Any], is_https_default: bool = True
-    ) -> None:
-        """Extract port and protocol information from TXT records.
-
-        Args:
-            txt_properties: TXT record properties
-            is_https_default: Whether to default to HTTPS if no port found
-
-        """
-        https_port = txt_properties.get("https_port")
-        http_port = txt_properties.get("http_port")
-
-        if https_port:
-            try:
-                self._port = int(https_port)
-                self._use_https = True
-            except (ValueError, TypeError) as _:
-                _LOGGER.warning("Invalid https_port value: %s", https_port)
-            else:
-                return
-
-        if http_port:
-            try:
-                self._port = int(http_port)
-                self._use_https = False
-            except (ValueError, TypeError) as _:
-                _LOGGER.warning("Invalid http_port value: %s", http_port)
-            else:
-                return
-
-        # Default values if no valid port found
-        if is_https_default:
-            self._port = DEFAULT_HTTPS_PORT
-            self._use_https = True
-        else:
-            self._port = DEFAULT_HTTP_PORT
-            self._use_https = False
-
-    def _log_device_info(self, txt_properties: dict[str, Any]) -> None:
-        """Log device information from TXT records.
-
-        Args:
-            txt_properties: TXT record properties
-
-        """
-        info_fields = {
-            "hostname": "Device hostname",
-            "product_name": "Device product",
-            "version": "Firmware version",
-            "mac": "MAC address",
-        }
-
-        for field, label in info_fields.items():
-            value = txt_properties.get(field)
-            if value:
-                _LOGGER.debug("%s: %s", label, value)
 
     async def _create_config_entry(self) -> config_entries.ConfigFlowResult:
         """Create the config entry.
@@ -1126,7 +865,6 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: self._auth_info[CONF_PASSWORD],
             CONF_DEVICE_TYPE: device_type,
             CONF_DEVICE_MODEL: self._device_model or device_type,
-            CONF_USE_HTTPS: self._use_https,
             CONF_VERIFY_SSL: self._auth_info.get(CONF_VERIFY_SSL, False),
         }
 
@@ -1166,7 +904,6 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._device_type = entry_data.get(CONF_DEVICE_TYPE)
         self._device_model = entry_data.get(CONF_DEVICE_MODEL)
         self._product_model = entry_data.get(CONF_PRODUCT_MODEL)
-        self._use_https = entry_data.get(CONF_USE_HTTPS, True)
 
         return await self.async_step_reauth_confirm()
 
@@ -1197,24 +934,27 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Test connection with new credentials
             try:
-                # Create API instance to test credentials
-                api = self._create_api_for_validation(
-                    self._host or "",
-                    username,
-                    password,
-                    self._port,
-                    self._device_type or "",
-                    False,
+                api = create_api_instance(
+                    device_type=self._device_type or "",
+                    host=self._host or "",
+                    username=username,
+                    password=password,
+                    port=self._port,
+                    verify_ssl=False,
                 )
 
-                # Test login
-                success = await self.hass.async_add_executor_job(api.login)
-                if not success:
+                success, error_type = await self.hass.async_add_executor_job(
+                    attempt_login, api
+                )
+
+                if error_type == "ha_control_disabled":
+                    errors["base"] = "ha_control_disabled"
+                elif error_type == "offline":
+                    errors["base"] = "cannot_connect"
+                elif not success:
                     errors["base"] = "invalid_auth"
 
-            except GrandstreamHAControlDisabledError:
-                errors["base"] = "ha_control_disabled"
-            except (GrandstreamError, OSError, TimeoutError) as _:
+            except GrandstreamError, OSError, TimeoutError:
                 errors["base"] = "invalid_auth"
 
             if not errors:
@@ -1324,17 +1064,27 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     device_type = current_data.get(CONF_DEVICE_TYPE, "")
                     host = user_input[CONF_HOST].strip()
 
-                    api = self._create_api_for_validation(
-                        host, username or "", password, port, device_type, verify_ssl
+                    api = create_api_instance(
+                        device_type=device_type,
+                        host=host,
+                        username=username or "",
+                        password=password,
+                        port=port,
+                        verify_ssl=verify_ssl,
                     )
 
-                    success = await self.hass.async_add_executor_job(api.login)
-                    if not success:
+                    success, error_type = await self.hass.async_add_executor_job(
+                        attempt_login, api
+                    )
+
+                    if error_type == "ha_control_disabled":
+                        errors["base"] = "ha_control_disabled"
+                    elif error_type == "offline":
+                        errors["base"] = "cannot_connect"
+                    elif not success:
                         errors["base"] = "invalid_auth"
 
-                except GrandstreamHAControlDisabledError:
-                    errors["base"] = "ha_control_disabled"
-                except (GrandstreamError, OSError, TimeoutError) as _:
+                except GrandstreamError, OSError, TimeoutError:
                     errors["base"] = "cannot_connect"
 
             if not errors:

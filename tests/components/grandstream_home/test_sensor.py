@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
+from grandstream_home_api import get_by_path
 import pytest
 
 from homeassistant.components.grandstream_home.const import (
@@ -17,7 +18,6 @@ from homeassistant.components.grandstream_home.sensor import (
     DEVICE_SENSORS,
     SYSTEM_SENSORS,
     GrandstreamDeviceSensor,
-    GrandstreamSensor,
     GrandstreamSensorEntityDescription,
     GrandstreamSipAccountSensor,
     GrandstreamSystemSensor,
@@ -46,17 +46,30 @@ def mock_coordinator():
     return coordinator
 
 
+@pytest.fixture
+def mock_runtime_data(mock_coordinator):
+    """Mock runtime data."""
+    mock_api = MagicMock()
+    mock_device = MagicMock()
+    mock_device.device_type = DEVICE_TYPE_GDS
+
+    runtime_data = MagicMock()
+    runtime_data.api = mock_api
+    runtime_data.coordinator = mock_coordinator
+    runtime_data.device = mock_device
+    runtime_data.device_type = DEVICE_TYPE_GDS
+    return runtime_data
+
+
 async def test_setup_entry_gds(
-    hass: HomeAssistant, mock_config_entry, mock_coordinator
+    hass: HomeAssistant, mock_config_entry, mock_coordinator, mock_runtime_data
 ) -> None:
     """Test sensor setup for GDS device."""
     mock_device = MagicMock()
     mock_device.device_type = DEVICE_TYPE_GDS
     mock_config_entry.data = {"device_type": DEVICE_TYPE_GDS}
-
-    hass.data[DOMAIN] = {
-        "test_entry_id": {"coordinator": mock_coordinator, "device": mock_device}
-    }
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_runtime_data.device = mock_device
 
     mock_add_entities = MagicMock()
 
@@ -70,12 +83,14 @@ async def test_setup_entry_gds(
 
 
 async def test_setup_entry_gns(
-    hass: HomeAssistant, mock_config_entry, mock_coordinator
+    hass: HomeAssistant, mock_config_entry, mock_coordinator, mock_runtime_data
 ) -> None:
     """Test sensor setup for GNS device."""
     mock_device = MagicMock()
     mock_device.device_type = DEVICE_TYPE_GNS_NAS
     mock_config_entry.data = {"device_type": DEVICE_TYPE_GNS_NAS}
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_runtime_data.device = mock_device
     mock_coordinator.data = {
         "cpu_usage_percent": 25.5,
         "memory_usage_percent": 45.2,
@@ -83,10 +98,6 @@ async def test_setup_entry_gns(
         "fans": [{"status": "normal"}],
         "disks": [{"temperature_c": 40.0}],
         "pools": [{"usage_percent": 60.0}],
-    }
-
-    hass.data[DOMAIN] = {
-        "test_entry_id": {"coordinator": mock_coordinator, "device": mock_device}
     }
 
     mock_add_entities = MagicMock()
@@ -120,16 +131,15 @@ def test_device_sensor(mock_coordinator, hass: HomeAssistant) -> None:
     """Test device sensor."""
     mock_coordinator.data = {"phone_status": "idle"}
     mock_coordinator.last_update_success = True
+    mock_coordinator.config_entry = MagicMock()
+
     device = MagicMock()
     device.unique_id = "test_device"
     device.device_info = {"test": "info"}
-    device.config_entry_id = "test_entry_id"
 
     description = DEVICE_SENSORS[0]  # phone_status
 
     sensor = GrandstreamDeviceSensor(mock_coordinator, device, description)
-
-    # Set hass attribute
     sensor.hass = hass
 
     # Create a mock API with proper attributes
@@ -139,8 +149,12 @@ def test_device_sensor(mock_coordinator, hass: HomeAssistant) -> None:
     mock_api.is_account_locked = False
     mock_api.is_authenticated = True
 
-    # Set up hass.data for the sensor
-    hass.data = {DOMAIN: {"test_entry_id": {"api": mock_api}}}
+    # Set up config_entry with runtime_data
+    mock_config_entry = MagicMock()
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_coordinator.config_entry = mock_config_entry
 
     assert sensor._attr_unique_id == f"test_device_{description.key}"
     assert sensor.available is True
@@ -183,6 +197,7 @@ def test_sensor_missing_data(hass: HomeAssistant, mock_coordinator) -> None:
     """Test sensor with missing data."""
     mock_coordinator.data = {}  # No phone_status
     mock_coordinator.hass = hass
+    mock_coordinator.config_entry = None  # No config entry
     device = MagicMock()
     device.unique_id = "test_device"
     device.device_info = {"test": "info"}
@@ -199,6 +214,7 @@ def test_sensor_none_data(hass: HomeAssistant, mock_coordinator) -> None:
     """Test sensor with None data."""
     mock_coordinator.data = {"phone_status": None}
     mock_coordinator.hass = hass
+    mock_coordinator.config_entry = None  # No config entry
     device = MagicMock()
     device.unique_id = "test_device"
     device.device_info = {"test": "info"}
@@ -221,26 +237,26 @@ def test_get_by_path() -> None:
     }
 
     # Simple path
-    assert GrandstreamSensor._get_by_path(data, "simple") == "value"
+    assert get_by_path(data, "simple") == "value"
 
     # Nested path
-    assert GrandstreamSensor._get_by_path(data, "nested.key") == "nested_value"
+    assert get_by_path(data, "nested.key") == "nested_value"
 
     # Array with index
-    assert GrandstreamSensor._get_by_path(data, "array[0].temp") == 25.0
-    assert GrandstreamSensor._get_by_path(data, "array[1].temp") == 30.0
+    assert get_by_path(data, "array[0].temp") == 25.0
+    assert get_by_path(data, "array[1].temp") == 30.0
 
     # Array with placeholder
-    assert GrandstreamSensor._get_by_path(data, "fans[{index}].status", 0) == "normal"
-    assert GrandstreamSensor._get_by_path(data, "fans[{index}].status", 1) == "warning"
+    assert get_by_path(data, "fans[{index}].status", 0) == "normal"
+    assert get_by_path(data, "fans[{index}].status", 1) == "warning"
 
     # Non-existent path
-    assert GrandstreamSensor._get_by_path(data, "nonexistent") is None
-    assert GrandstreamSensor._get_by_path(data, "array[5].temp") is None
+    assert get_by_path(data, "nonexistent") is None
+    assert get_by_path(data, "array[5].temp") is None
 
     # Invalid index (covers line 270-271)
-    assert GrandstreamSensor._get_by_path(data, "array[invalid].temp") is None
-    assert GrandstreamSensor._get_by_path(data, "fans[abc].status") is None
+    assert get_by_path(data, "array[invalid].temp") is None
+    assert get_by_path(data, "fans[abc].status") is None
 
     # Complex path with multiple brackets (covers line 280)
     data_complex = {
@@ -249,10 +265,7 @@ def test_get_by_path() -> None:
             {"name": "item2", "nested": [{"value": "val2"}]},
         ]
     }
-    assert (
-        GrandstreamSensor._get_by_path(data_complex, "items[0].nested[0].value")
-        == "val1"
-    )
+    assert get_by_path(data_complex, "items[0].nested[0].value") == "val1"
 
 
 def test_handle_coordinator_update(mock_coordinator) -> None:
@@ -357,10 +370,10 @@ def test_get_by_path_invalid_base_type() -> None:
     device.device_info = {"test": "info"}
 
     description = SYSTEM_SENSORS[0]
-    sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
+    _sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
 
     # Call _get_by_path with a path where base is not a dict (covers line 267)
-    result = sensor._get_by_path(["not", "a", "dict"], "fans[0]")
+    result = get_by_path(["not", "a", "dict"], "fans[0]")
     assert result is None
 
 
@@ -374,10 +387,10 @@ def test_get_by_path_unprocessed_bracket_content() -> None:
     device.device_info = {"test": "info"}
 
     description = SYSTEM_SENSORS[0]
-    sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
+    _sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
 
     # Test with nested path that requires processing after bracket (covers line 280)
-    result = sensor._get_by_path({"disks": [{"temp": 45}]}, "disks[0].temp")
+    result = get_by_path({"disks": [{"temp": 45}]}, "disks[0].temp")
     assert result == 45
 
 
@@ -391,7 +404,7 @@ def test_get_by_path_malformed_path_with_remaining_bracket() -> None:
     device.device_info = {"test": "info"}
 
     description = SYSTEM_SENSORS[0]
-    sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
+    _sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
 
     # To trigger line 280, we need a path where after extracting the first bracketed segment,
     # the remaining part still contains "[" but doesn't end with "]"
@@ -408,7 +421,7 @@ def test_get_by_path_malformed_path_with_remaining_bracket() -> None:
     # But our actual data structure won't match this, so it will return None
     # The important thing is that we execute the code path
 
-    result = sensor._get_by_path(
+    result = get_by_path(
         {"key1": [{"key2": [{"value": "test"}]}]}, "key1[0].key2[0].value"
     )
     assert result == "test"
@@ -424,10 +437,10 @@ def test_get_by_path_final_part_not_dict() -> None:
     device.device_info = {"test": "info"}
 
     description = SYSTEM_SENSORS[0]
-    sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
+    _sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
 
     # Call _get_by_path where final cur is not a dict (covers line 285)
-    result = sensor._get_by_path({"disks": "not_a_dict"}, "disks.temp")
+    result = get_by_path({"disks": "not_a_dict"}, "disks.temp")
     assert result is None
 
 
@@ -467,7 +480,7 @@ def test_get_by_path_multiple_brackets_in_same_part() -> None:
     device.device_info = {"test": "info"}
 
     description = SYSTEM_SENSORS[0]
-    sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
+    _sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
 
     # Create data with nested arrays: {"nested": [[{"value": "test"}]]}
     data = {"nested": [[{"value": "test"}]]}
@@ -485,14 +498,14 @@ def test_get_by_path_multiple_brackets_in_same_part() -> None:
     # So line 280 was executed
 
     # Let's fix the assertion based on actual behavior
-    result = sensor._get_by_path(data, "nested[0][0]")
+    result = get_by_path(data, "nested[0][0]")
     # Actually returns [{'value': 'test'}] - the second [0] isn't applied
     # This might be a bug in the implementation, but for coverage we need to test it
     assert result == [{"value": "test"}]
 
     # Test a simpler case: "key[0].sub" - this should also trigger line 280
     # when processing "key[0]" (before the dot)
-    result = sensor._get_by_path({"key": [{"sub": "value"}]}, "key[0].sub")
+    result = get_by_path({"key": [{"sub": "value"}]}, "key[0].sub")
     assert result == "value"
 
 
@@ -506,12 +519,12 @@ def test_get_by_path_part_with_trailing_chars() -> None:
     device.device_info = {"test": "info"}
 
     description = SYSTEM_SENSORS[0]
-    sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
+    _sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
 
     # Test path where part has characters after closing bracket
     # This should execute line 280: part = part[part.index("]") + 1:]
     data = {"key": [{"sub": "value"}]}
-    result = sensor._get_by_path(data, "key[0]sub")
+    result = get_by_path(data, "key[0]sub")
     assert result == "value"
 
 
@@ -525,12 +538,12 @@ def test_get_by_path_missing_base_key_returns_none() -> None:
     device.device_info = {"test": "info"}
 
     description = SYSTEM_SENSORS[0]
-    sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
+    _sensor = GrandstreamSystemSensor(mock_coordinator, device, description)
 
     # Test when the base key before [index] does not exist in cur
     # This should trigger line 267-268: temp = cur.get(base); if temp is None: return None
     data = {"other_key": [{"sub": "value"}]}  # "key" is missing
-    result = sensor._get_by_path(data, "key[0].sub")
+    result = get_by_path(data, "key[0].sub")
     assert result is None
 
 
@@ -754,10 +767,15 @@ async def test_async_setup_entry_gns_device(hass: HomeAssistant) -> None:
     mock_device = MagicMock()
     mock_device.device_type = DEVICE_TYPE_GNS_NAS
 
-    # Setup hass.data
-    hass.data[DOMAIN] = {
-        "test_entry_id": {"coordinator": mock_coordinator, "device": mock_device}
-    }
+    # Create mock API
+    mock_api = MagicMock()
+
+    # Setup runtime_data
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.coordinator = mock_coordinator
+    mock_runtime_data.device = mock_device
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
 
     # Mock async_add_entities
     added_entities = []
@@ -801,10 +819,15 @@ async def test_async_setup_entry_gds_device_with_sip_accounts(
     mock_device = MagicMock()
     mock_device.device_type = DEVICE_TYPE_GDS
 
-    # Setup hass.data
-    hass.data[DOMAIN] = {
-        "test_entry_id": {"coordinator": mock_coordinator, "device": mock_device}
-    }
+    # Create mock API
+    mock_api = MagicMock()
+
+    # Setup runtime_data
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.coordinator = mock_coordinator
+    mock_runtime_data.device = mock_device
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
 
     # Mock async_add_entities
     added_entities = []
@@ -846,10 +869,15 @@ async def test_async_setup_entry_gds_device_no_sip_accounts(
     mock_device = MagicMock()
     mock_device.device_type = DEVICE_TYPE_GDS
 
-    # Setup hass.data
-    hass.data[DOMAIN] = {
-        "test_entry_id": {"coordinator": mock_coordinator, "device": mock_device}
-    }
+    # Create mock API
+    mock_api = MagicMock()
+
+    # Setup runtime_data
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.coordinator = mock_coordinator
+    mock_runtime_data.device = mock_device
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
 
     # Mock async_add_entities
     added_entities = []
@@ -955,6 +983,7 @@ def test_grandstream_device_sensor_native_value_no_index(hass: HomeAssistant) ->
     mock_coordinator = MagicMock()
     mock_coordinator.data = {"phone_status": "idle"}
     mock_coordinator.hass = hass
+    mock_coordinator.config_entry = None  # No config entry
 
     mock_device = MagicMock()
     mock_device.unique_id = "test_device"
@@ -980,7 +1009,6 @@ def test_device_sensor_phone_status_ha_control_disabled(hass: HomeAssistant) -> 
     mock_device = MagicMock()
     mock_device.unique_id = "test_device"
     mock_device.device_info = {"test": "info"}
-    mock_device.config_entry_id = "test_entry_id"
 
     description = DEVICE_SENSORS[0]  # phone_status
     sensor = GrandstreamDeviceSensor(mock_coordinator, mock_device, description)
@@ -993,8 +1021,12 @@ def test_device_sensor_phone_status_ha_control_disabled(hass: HomeAssistant) -> 
     mock_api.is_account_locked = False
     mock_api.is_authenticated = True
 
-    # Set up hass.data for the sensor
-    hass.data = {DOMAIN: {"test_entry_id": {"api": mock_api}}}
+    # Set up config_entry with runtime_data
+    mock_config_entry = MagicMock()
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_coordinator.config_entry = mock_config_entry
 
     # Should return "ha_control_disabled"
     assert sensor.native_value == "ha_control_disabled"
@@ -1009,7 +1041,6 @@ def test_device_sensor_phone_status_offline(hass: HomeAssistant) -> None:
     mock_device = MagicMock()
     mock_device.unique_id = "test_device"
     mock_device.device_info = {"test": "info"}
-    mock_device.config_entry_id = "test_entry_id"
 
     description = DEVICE_SENSORS[0]  # phone_status
     sensor = GrandstreamDeviceSensor(mock_coordinator, mock_device, description)
@@ -1022,7 +1053,12 @@ def test_device_sensor_phone_status_offline(hass: HomeAssistant) -> None:
     mock_api.is_account_locked = False
     mock_api.is_authenticated = True
 
-    hass.data = {DOMAIN: {"test_entry_id": {"api": mock_api}}}
+    # Set up config_entry with runtime_data
+    mock_config_entry = MagicMock()
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_coordinator.config_entry = mock_config_entry
 
     # Should return "offline"
     assert sensor.native_value == "offline"
@@ -1037,7 +1073,6 @@ def test_device_sensor_phone_status_account_locked(hass: HomeAssistant) -> None:
     mock_device = MagicMock()
     mock_device.unique_id = "test_device"
     mock_device.device_info = {"test": "info"}
-    mock_device.config_entry_id = "test_entry_id"
 
     description = DEVICE_SENSORS[0]  # phone_status
     sensor = GrandstreamDeviceSensor(mock_coordinator, mock_device, description)
@@ -1050,7 +1085,12 @@ def test_device_sensor_phone_status_account_locked(hass: HomeAssistant) -> None:
     mock_api.is_account_locked = True
     mock_api.is_authenticated = True
 
-    hass.data = {DOMAIN: {"test_entry_id": {"api": mock_api}}}
+    # Set up config_entry with runtime_data
+    mock_config_entry = MagicMock()
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_coordinator.config_entry = mock_config_entry
 
     # Should return "account_locked"
     assert sensor.native_value == "account_locked"
@@ -1065,7 +1105,6 @@ def test_device_sensor_phone_status_auth_failed(hass: HomeAssistant) -> None:
     mock_device = MagicMock()
     mock_device.unique_id = "test_device"
     mock_device.device_info = {"test": "info"}
-    mock_device.config_entry_id = "test_entry_id"
 
     description = DEVICE_SENSORS[0]  # phone_status
     sensor = GrandstreamDeviceSensor(mock_coordinator, mock_device, description)
@@ -1078,7 +1117,12 @@ def test_device_sensor_phone_status_auth_failed(hass: HomeAssistant) -> None:
     mock_api.is_account_locked = False
     mock_api.is_authenticated = False
 
-    hass.data = {DOMAIN: {"test_entry_id": {"api": mock_api}}}
+    # Set up config_entry with runtime_data
+    mock_config_entry = MagicMock()
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_coordinator.config_entry = mock_config_entry
 
     # Should return "auth_failed"
     assert sensor.native_value == "auth_failed"
@@ -1093,7 +1137,6 @@ def test_device_sensor_phone_status_normal(hass: HomeAssistant) -> None:
     mock_device = MagicMock()
     mock_device.unique_id = "test_device"
     mock_device.device_info = {"test": "info"}
-    mock_device.config_entry_id = "test_entry_id"
 
     description = DEVICE_SENSORS[0]  # phone_status
     sensor = GrandstreamDeviceSensor(mock_coordinator, mock_device, description)
@@ -1106,7 +1149,12 @@ def test_device_sensor_phone_status_normal(hass: HomeAssistant) -> None:
     mock_api.is_account_locked = False
     mock_api.is_authenticated = True
 
-    hass.data = {DOMAIN: {"test_entry_id": {"api": mock_api}}}
+    # Set up config_entry with runtime_data
+    mock_config_entry = MagicMock()
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.api = mock_api
+    mock_config_entry.runtime_data = mock_runtime_data
+    mock_coordinator.config_entry = mock_config_entry
 
     # Should return the normal value
     assert sensor.native_value == "idle"
@@ -1161,14 +1209,17 @@ async def test_async_setup_entry_dynamic_sip_sensor_addition(
     mock_device.manufacturer = "Grandstream"
     mock_device.model = "GDS3710"
     mock_device.name = "Test Device"
+    mock_device.device_type = DEVICE_TYPE_GDS
 
-    # Mock the coordinator and device in hass.data
-    hass.data[DOMAIN] = {
-        config_entry.entry_id: {
-            "coordinator": mock_coordinator,
-            "device": mock_device,
-        }
-    }
+    # Create mock API
+    mock_api = MagicMock()
+
+    # Setup runtime_data
+    mock_runtime_data = MagicMock()
+    mock_runtime_data.coordinator = mock_coordinator
+    mock_runtime_data.device = mock_device
+    mock_runtime_data.api = mock_api
+    config_entry.runtime_data = mock_runtime_data
 
     # Track added entities
     added_entities = []
