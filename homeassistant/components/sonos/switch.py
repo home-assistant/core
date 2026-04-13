@@ -74,6 +74,8 @@ POLL_REQUIRED = (
 
 WEEKEND_DAYS = (0, 6)
 
+_TV_SOURCE = [("Source", "TV")]
+
 # Mapping of model names to feature attributes that need to be substituted.
 # This is used to handle differences in attributes across Sonos models.
 MODEL_FEATURE_SUBSTITUTIONS: dict[str, dict[str, str]] = {
@@ -124,9 +126,7 @@ async def async_setup_entry(
     def _get_tv_autoplay_state(speaker: SonosSpeaker) -> bool | None:
         """Return initial TV autoplay state, or None if not supported."""
         try:
-            result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(
-                [("Source", "TV")]
-            )
+            result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
             return bool(result.get("RoomUUID", ""))
         except SoCoUPnPException:
             return None
@@ -134,9 +134,7 @@ async def async_setup_entry(
     def _get_tv_ungroup_autoplay_state(speaker: SonosSpeaker) -> bool | None:
         """Return initial TV ungroup-on-autoplay state, or None if not supported."""
         try:
-            result = speaker.soco.deviceProperties.GetAutoplayLinkedZones(
-                [("Source", "TV")]
-            )
+            result = speaker.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
             # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
             return result.get("IncludeLinkedZones") == "0"
         except SoCoUPnPException:
@@ -281,12 +279,13 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Handle polling for TV autoplay state when subscriptions fail."""
-        await self.hass.async_add_executor_job(self.poll_state)
+        if not self.should_poll:
+            await self.hass.async_add_executor_job(self.poll_state)
 
     @soco_error()
     def poll_state(self) -> None:
         """Poll the current TV autoplay state from the device."""
-        result = self.soco.deviceProperties.GetAutoplayRoomUUID([("Source", "TV")])
+        result = self.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
         self.speaker.tv_autoplay = bool(result.get("RoomUUID", ""))
 
     @property
@@ -308,7 +307,7 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         room_uuid = self.soco.uid if enable else ""
         try:
             self.soco.deviceProperties.SetAutoplayRoomUUID(
-                [("RoomUUID", room_uuid), ("Source", "TV")]
+                [("RoomUUID", room_uuid), *_TV_SOURCE]
             )
             self.speaker.tv_autoplay = enable
         except SoCoUPnPException as exc:
@@ -317,9 +316,7 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         # Refresh ungroup state: the device may change it as a side effect
         # (e.g. disabling TV autoplay automatically disables ungroup on autoplay).
         try:
-            result = self.soco.deviceProperties.GetAutoplayLinkedZones(
-                [("Source", "TV")]
-            )
+            result = self.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
             self.speaker.tv_ungroup_autoplay = result.get("IncludeLinkedZones") == "0"
         except SoCoUPnPException:
             pass
@@ -345,12 +342,13 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Handle polling for ungroup-on-autoplay state when subscriptions fail."""
-        await self.hass.async_add_executor_job(self.poll_state)
+        if not self.should_poll:
+            await self.hass.async_add_executor_job(self.poll_state)
 
     @soco_error()
     def poll_state(self) -> None:
         """Poll the current ungroup-on-autoplay state from the device."""
-        result = self.soco.deviceProperties.GetAutoplayLinkedZones([("Source", "TV")])
+        result = self.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
         # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
         self.speaker.tv_ungroup_autoplay = result.get("IncludeLinkedZones") == "0"
 
@@ -373,7 +371,7 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         try:
             self.soco.deviceProperties.SetAutoplayLinkedZones(
                 # enable=True (ungroup) → IncludeLinkedZones=0 (don't include linked zones)
-                [("IncludeLinkedZones", "0" if enable else "1"), ("Source", "TV")]
+                [("IncludeLinkedZones", "0" if enable else "1"), *_TV_SOURCE]
             )
             self.speaker.tv_ungroup_autoplay = enable
         except SoCoUPnPException as exc:
