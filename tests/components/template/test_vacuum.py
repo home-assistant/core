@@ -1166,6 +1166,20 @@ async def test_get_segments(
         (
             {
                 "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {'name': 'kitchen'} ] }}",
+            },
+            "missing 1 required positional argument: 'id'",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {} ] }}",
+            },
+            "missing 2 required positional arguments",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
                 "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen', 'extra_key': 'value'} ] }}",
             },
             "unexpected keyword argument 'extra_key'",
