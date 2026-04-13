@@ -6,12 +6,15 @@ import logging
 
 from mitsubishi_comfort import IndoorUnit, KumoStation
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+type MitsubishiComfortConfigEntry = ConfigEntry[dict[str, MitsubishiComfortCoordinator]]
 
 
 class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStation]):

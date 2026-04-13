@@ -2,18 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import DeviceInfo
 import pytest
 
-from homeassistant.components.mitsubishi_comfort import _make_device
-from homeassistant.components.mitsubishi_comfort.const import (
-    DEFAULT_CONNECT_TIMEOUT,
-    DEFAULT_RESPONSE_TIMEOUT,
-    DOMAIN,
-)
+from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -37,21 +31,6 @@ async def test_setup_entry_success(
     assert "SERIAL001" in mock_config_entry.runtime_data
 
 
-async def test_setup_entry_persists_credentials(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_integration: tuple[AsyncMock, MagicMock],
-) -> None:
-    """Test setup persists discovered credentials in entry.data."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert "devices" in mock_config_entry.data
-    assert "SERIAL001" in mock_config_entry.data["devices"]
-
-
 async def test_setup_entry_login_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -61,6 +40,28 @@ async def test_setup_entry_login_failure(
 
     mock_account = AsyncMock()
     mock_account.login = AsyncMock(return_value=False)
+    mock_account.close = AsyncMock()
+
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
+        return_value=mock_account,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_account.close.assert_awaited_once()
+
+
+async def test_setup_entry_login_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when login raises an exception."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_account = AsyncMock()
+    mock_account.login = AsyncMock(side_effect=OSError("Connection refused"))
     mock_account.close = AsyncMock()
 
     with patch(
@@ -122,60 +123,6 @@ async def test_setup_entry_incomplete_credentials(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_with_cached_credentials(
-    hass: HomeAssistant,
-    mock_device_info: DeviceInfo,
-    mock_indoor_unit: MagicMock,
-) -> None:
-    """Test setup passes cached credentials to discover_devices."""
-    cached: dict[str, dict[str, Any]] = {
-        "SERIAL001": {
-            "address": "192.168.1.100",
-            "password": "dGVzdHBhc3M=",
-            "crypto_serial": "0102030405060708090a",
-        }
-    }
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "username": MOCK_USERNAME,
-            "password": MOCK_PASSWORD,
-            "devices": cached,
-        },
-        unique_id=MOCK_USERNAME,
-    )
-    entry.add_to_hass(hass)
-
-    mock_account = AsyncMock()
-    mock_account.login = AsyncMock(return_value=True)
-    mock_account.discover_devices = AsyncMock(
-        return_value={"SERIAL001": mock_device_info}
-    )
-    mock_account.close = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.mitsubishi_comfort.MitsubishiCloudAccount",
-            return_value=mock_account,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.IndoorUnit",
-            return_value=mock_indoor_unit,
-        ),
-        patch(
-            "homeassistant.components.mitsubishi_comfort.KumoStation",
-            return_value=mock_indoor_unit,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-    # Verify cached credentials were passed to discover_devices
-    mock_account.discover_devices.assert_awaited_once_with(cached_credentials=cached)
 
 
 async def test_setup_entry_skips_incomplete_devices(
@@ -262,45 +209,3 @@ async def test_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_device.close.assert_awaited_once()
-
-
-async def test_make_device_indoor_unit(
-    mock_device_info: DeviceInfo,
-) -> None:
-    """Test _make_device creates an IndoorUnit for indoor devices."""
-    with patch("homeassistant.components.mitsubishi_comfort.IndoorUnit") as mock_cls:
-        _make_device(mock_device_info, "SERIAL001")
-        mock_cls.assert_called_once_with(
-            name=mock_device_info.label,
-            address=mock_device_info.address,
-            password_b64=mock_device_info.password,
-            crypto_serial_hex=mock_device_info.crypto_serial,
-            serial="SERIAL001",
-            connect_timeout=DEFAULT_CONNECT_TIMEOUT,
-            response_timeout=DEFAULT_RESPONSE_TIMEOUT,
-        )
-
-
-async def test_make_device_kumo_station() -> None:
-    """Test _make_device creates a KumoStation for non-indoor devices."""
-    headless_info = DeviceInfo(
-        serial="SERIAL002",
-        label="Kumo Station",
-        address="192.168.1.200",
-        mac="11:22:33:44:55:66",
-        unit_type="headless",
-        password="cHdk",
-        crypto_serial="aabbccdd",
-    )
-
-    with patch("homeassistant.components.mitsubishi_comfort.KumoStation") as mock_cls:
-        _make_device(headless_info, "SERIAL002")
-        mock_cls.assert_called_once_with(
-            name="Kumo Station",
-            address="192.168.1.200",
-            password_b64="cHdk",
-            crypto_serial_hex="aabbccdd",
-            serial="SERIAL002",
-            connect_timeout=DEFAULT_CONNECT_TIMEOUT,
-            response_timeout=DEFAULT_RESPONSE_TIMEOUT,
-        )

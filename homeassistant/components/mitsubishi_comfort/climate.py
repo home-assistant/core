@@ -17,8 +17,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MitsubishiComfortConfigEntry
-from .coordinator import MitsubishiComfortCoordinator
+from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
 from .entity import MitsubishiComfortEntity
 
 
