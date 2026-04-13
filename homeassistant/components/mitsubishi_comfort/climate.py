@@ -8,6 +8,8 @@ from typing import Any
 from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -122,7 +124,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
-        mode = self._device.status.mode
+        mode = self._effective_mode
         if mode and self._device.status.standby:
             return HVACAction.IDLE
         return _MODE_TO_ACTION.get(mode) if mode else None
@@ -265,14 +267,14 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         mode = self._effective_mode
         wrote = False
 
-        if "target_temp_high" in kwargs:
-            result = await self._device.set_cool_setpoint(kwargs["target_temp_high"])
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            result = await self._device.set_cool_setpoint(kwargs[ATTR_TARGET_TEMP_HIGH])
             if result.success:
                 self._optimistic_cool_setpoint = result.value
                 wrote = True
 
-        if "target_temp_low" in kwargs:
-            result = await self._device.set_heat_setpoint(kwargs["target_temp_low"])
+        if ATTR_TARGET_TEMP_LOW in kwargs:
+            result = await self._device.set_heat_setpoint(kwargs[ATTR_TARGET_TEMP_LOW])
             if result.success:
                 self._optimistic_heat_setpoint = result.value
                 wrote = True

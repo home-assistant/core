@@ -78,6 +78,9 @@ async def async_setup_entry(
     if not coordinators:
         raise ConfigEntryNotReady("No devices have complete credentials yet")
 
+    for coordinator in coordinators.values():
+        await coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
