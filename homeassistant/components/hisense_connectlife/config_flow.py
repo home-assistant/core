@@ -89,7 +89,6 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                         _LOGGER.error("Failed to refresh token: %s", err)
                         errors["base"] = "token_refresh_failed"
 
-            # Always create entry, even if there were errors (errors are shown in description_placeholders)
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(

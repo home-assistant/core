@@ -14,8 +14,6 @@ from .const import CLIENT_ID, CLIENT_SECRET, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TO
 
 _LOGGER = logging.getLogger(__name__)
 
-OAUTH2_CALLBACK_URL = "http://homeassistant.local:8123/auth/external/callback"
-
 
 class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Hisense OAuth2 implementation."""
@@ -39,10 +37,6 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
             OAUTH2_TOKEN,
         )
 
-    @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        return OAUTH2_CALLBACK_URL
 
     @property
     def name(self) -> str:

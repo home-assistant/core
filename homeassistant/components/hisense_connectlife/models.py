@@ -51,7 +51,7 @@ class DeviceInfo:
         self.onOff = self.status.get("t_power")
         self.seq = data.get("seq")
         self.create_time = data.get("createTime")
-        self._is_online = self.offline_state == 1
+        self._is_online = self.offline_state in (1, "1")
         self._is_onOff = self.onOff in {1, "1"}
 
         _LOGGER.debug(

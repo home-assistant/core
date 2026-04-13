@@ -1,24 +1,55 @@
 rules:
-  action-setup: done
+  action-setup:
+    status: done
+    comment: Service actions are registered in async_setup
   appropriate-polling:
     status: done
     comment: Uses WebSocket for real-time updates with 30-second polling fallback
-  brands: done
-  common-modules: done
-  config-flow-test-coverage: done
-  config-flow: done
-  dependency-transparency: done
+  brands:
+    status: done
+    comment: Has branding assets available for the integration
+  common-modules:
+    status: done
+    comment: Place common patterns in common modules
+  config-flow-test-coverage:
+    status: done
+    comment: Full test coverage for the config flow
+  config-flow:
+    status: done
+    comment: Integration can be set up via the UI
+  dependency-transparency:
+    status: done
+    comment: Dependency transparency
   docs-actions:
     status: exempt
-    comment: |
-      This integration does not register any custom service actions beyond standard climate services.
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
-  entity-event-setup: done
-  entity-unique-id: done
-  has-entity-name: done
-  runtime-data: done
-  test-before-configure: done
-  test-before-setup: done
-  unique-config-entry: done
+    comment: No custom service actions beyond standard climate services
+  docs-high-level-description:
+    status: done
+    comment: Documentation includes a high-level description of the integration brand, product, or service
+  docs-installation-instructions:
+    status: done
+    comment: Documentation provides step-by-step installation instructions including prerequisites
+  docs-removal-instructions:
+    status: done
+    comment: Documentation provides removal instructions
+  entity-event-setup:
+    status: done
+    comment: Entity events are subscribed in the correct lifecycle methods
+  entity-unique-id:
+    status: done
+    comment: Entities have a unique ID
+  has-entity-name:
+    status: done
+    comment: Entities use has_entity_name = True
+  runtime-data:
+    status: done
+    comment: Use ConfigEntry.runtime_data to store runtime data
+  test-before-configure:
+    status: done
+    comment: Test a connection in the config flow
+  test-before-setup:
+    status: done
+    comment: Check during integration initialization if setup is possible
+  unique-config-entry:
+    status: done
+    comment: Do not allow the same device or service to be set up twice

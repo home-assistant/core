@@ -52,7 +52,7 @@ CLIENT_SECRET = "7h1m3gZVlILyBvIFBNmzXwoFYLhkGqG9NQd2jBzuZCqJKCTyCtYwQtXi4tVBjg9
 TOKEN_EXPIRY_MARGIN = 60  # seconds before token expiry to refresh
 
 # Update interval
-UPDATE_INTERVAL = 30  # seconds
+UPDATE_INTERVAL = 60  # seconds
 
 # Temperature settings
 MIN_TEMP = 16
