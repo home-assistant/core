@@ -1937,6 +1937,12 @@
         "matter"
       ]
     },
+    "eveonline": {
+      "name": "Eve Online",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "evergy": {
       "name": "Evergy",
       "integration_type": "virtual",

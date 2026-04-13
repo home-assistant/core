@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "location": {
+        "name": "Location"
+      },
+      "online": {
+        "name": "Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
+      "wallet_balance": {
+        "name": "Wallet balance"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed. Please reauthenticate"
+    },
+    "token_refresh_failed": {
+      "message": "Failed to refresh OAuth token: {error}"
+    },
+    "update_failed": {
+      "message": "Error communicating with Eve Online API: {error}"
+    }
+  }
+}
