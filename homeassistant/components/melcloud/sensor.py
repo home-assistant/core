@@ -35,7 +35,7 @@ from .entity import MelCloudEntity
 class MelcloudSensorEntityDescription(SensorEntityDescription):
     """Describes Melcloud sensor entity."""
 
-    value_fn: Callable[[Any], float]
+    value_fn: Callable[[Any], float | None]
     enabled: Callable[[Any], bool]
 
 

@@ -57,17 +57,23 @@ async def test_binary_sensors_not_created_when_none(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_atw_device: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test binary sensors are not created when property is None."""
     # booster_heater2, booster_heater2plus, water_pump3, water_pump4, valve_2way
     # are already None in conftest and should not be created
     await setup_platform(hass, mock_config_entry, [Platform.BINARY_SENSOR])
 
-    assert hass.states.get("binary_sensor.ecodan_booster_heater_2") is None
-    assert hass.states.get("binary_sensor.ecodan_booster_heater_2_") is None
-    assert hass.states.get("binary_sensor.ecodan_water_pump_3") is None
-    assert hass.states.get("binary_sensor.ecodan_water_pump_4") is None
-    assert hass.states.get("binary_sensor.ecodan_2_way_valve") is None
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    entity_original_names = {entry.original_name for entry in entity_entries}
+
+    assert "Booster heater 2" not in entity_original_names
+    assert "Booster heater 2+" not in entity_original_names
+    assert "Water pump 3" not in entity_original_names
+    assert "Water pump 4" not in entity_original_names
+    assert "2-way valve" not in entity_original_names
 
 
 @pytest.mark.usefixtures("mock_get_devices")
