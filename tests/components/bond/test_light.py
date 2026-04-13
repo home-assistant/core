@@ -326,6 +326,27 @@ async def test_no_trust_state(hass: HomeAssistant) -> None:
     assert device.attributes.get(ATTR_ASSUMED_STATE) is not True
 
 
+async def test_group_trust_state_not_specified(hass: HomeAssistant) -> None:
+    """Assumed state should be True if group Trust State is not specified."""
+    await setup_group_platform(hass, LIGHT_DOMAIN, light_group("name-1"))
+
+    device = hass.states.get("light.name_1")
+    assert device.attributes.get(ATTR_ASSUMED_STATE) is True
+
+
+async def test_group_trust_state(hass: HomeAssistant) -> None:
+    """Assumed state should be False if group Trust State is True."""
+    await setup_group_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light_group("name-1"),
+        props={"trust_state": True},
+    )
+
+    device = hass.states.get("light.name_1")
+    assert device.attributes.get(ATTR_ASSUMED_STATE) is not True
+
+
 async def test_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
     """Tests that the set brightness belief function of a light delegates to API."""
     await setup_platform(

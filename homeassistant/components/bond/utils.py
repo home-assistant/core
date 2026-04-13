@@ -181,6 +181,11 @@ class BondGroup(BondBaseTarget):
 
     _id_name = "group_id"
 
+    @property
+    def trust_state(self) -> bool:
+        """Check if Trust State is turned on."""
+        return self.props.get("trust_state", False)  # type: ignore[no-any-return]
+
     def __init__(
         self,
         group_id: str,
