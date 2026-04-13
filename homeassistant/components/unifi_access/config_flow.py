@@ -44,7 +44,11 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await client.authenticate()
         except ApiAuthError:
-            errors["base"] = "invalid_auth"
+            try:
+                is_protect = await client.is_protect_api_key()
+            except Exception:  # noqa: BLE001
+                is_protect = False
+            errors["base"] = "protect_api_key" if is_protect else "invalid_auth"
         except ApiConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:
