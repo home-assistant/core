@@ -137,7 +137,7 @@ async def test_browse_media_get_root(
     result = await source.async_browse_media(item)
 
     assert result
-    assert len(result.children) == 3
+    assert len(result.children) == 4
 
     media_file = result.children[0]
     assert isinstance(media_file, BrowseMedia)
@@ -148,12 +148,19 @@ async def test_browse_media_get_root(
 
     media_file = result.children[1]
     assert isinstance(media_file, BrowseMedia)
+    assert media_file.title == "favorites"
+    assert media_file.media_content_id == (
+        "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e|favorites|favorites"
+    )
+
+    media_file = result.children[2]
+    assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "people"
     assert media_file.media_content_id == (
         "media-source://immich/e7ef5713-9dab-4bd4-b899-715b0ca4379e|people"
     )
 
-    media_file = result.children[2]
+    media_file = result.children[3]
     assert isinstance(media_file, BrowseMedia)
     assert media_file.title == "tags"
     assert media_file.media_content_id == (
@@ -227,6 +234,7 @@ async def test_browse_media_collections(
     ("collection", "mocked_get_fn"),
     [
         ("albums", ("albums", "async_get_all_albums")),
+        ("favorites|favorites", ("search", "async_get_all_favorites")),
         ("people", ("people", "async_get_all_people")),
         ("tags", ("tags", "async_get_all_tags")),
     ],
@@ -271,6 +279,7 @@ async def test_browse_media_collections_error(
     ("collection", "mocked_get_fn"),
     [
         ("albums", ("albums", "async_get_album_info")),
+        ("favorites", ("search", "async_get_all_favorites")),
         ("people", ("search", "async_get_all_by_person_ids")),
         ("tags", ("search", "async_get_all_by_tag_ids")),
     ],
@@ -335,6 +344,28 @@ async def test_browse_media_collection_items_error(
                     "media_content_type": "video/mp4",
                     "thumb_mime_type": "image/jpeg",
                     "can_play": True,
+                },
+            ],
+        ),
+        (
+            "favorites",
+            "favorites",
+            [
+                {
+                    "original_file_name": "20260406_133809.jpg",
+                    "asset_id": "70af6d9d-097b-4b22-8684-dc2fe0d5e167",
+                    "media_class": MediaClass.IMAGE,
+                    "media_content_type": "image/jpeg",
+                    "thumb_mime_type": "image/jpeg",
+                    "can_play": False,
+                },
+                {
+                    "original_file_name": "20260319_192209.jpg",
+                    "asset_id": "eee5aa96-0943-48e9-ae11-992216485c6d",
+                    "media_class": MediaClass.IMAGE,
+                    "media_content_type": "image/jpeg",
+                    "thumb_mime_type": "image/jpeg",
+                    "can_play": False,
                 },
             ],
         ),
@@ -435,11 +466,11 @@ async def test_media_view(
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test SynologyDsmMediaView returning albums."""
+    """Test ImmichMediaView returning albums."""
     view = ImmichMediaView(hass)
     request = MockRequest(b"", DOMAIN)
 
-    # immich noch configured
+    # immich not configured
     with pytest.raises(web.HTTPNotFound):
         await view.get(request, "", "")
 

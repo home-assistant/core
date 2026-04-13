@@ -9,6 +9,8 @@ from datetime import timedelta
 import logging
 
 from pyportainer import (
+    DockerContainerState,
+    EndpointStatus,
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -29,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ContainerState, EndpointStatus
+from .const import DOMAIN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -168,14 +170,33 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     docker_version,
                     docker_info,
                     docker_system_df,
-                    stacks,
                 ) = await asyncio.gather(
                     self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
                     self.portainer.docker_system_df(endpoint.id),
-                    self.portainer.get_stacks(endpoint.id),
                 )
+
+                stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
+                swarm_id = (
+                    docker_info.swarm.cluster.get("ID")
+                    if docker_info.swarm
+                    and docker_info.swarm.control_available
+                    and docker_info.swarm.cluster
+                    else None
+                )
+                if swarm_id:
+                    stack_requests.append(
+                        self.portainer.get_stacks(
+                            endpoint_id=endpoint.id, swarm_id=swarm_id
+                        )
+                    )
+
+                stacks = [
+                    stack
+                    for result in await asyncio.gather(*stack_requests)
+                    for stack in result
+                ]
 
                 prev_endpoint = self.data.get(endpoint.id) if self.data else None
                 container_map: dict[str, PortainerContainerData] = {}
@@ -212,18 +233,19 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         else None,
                     )
 
-                # Separately fetch stats for running containers
-                running_containers = [
+                # Separately fetch stats for active containers
+                active_containers = [
                     container
                     for container in containers
-                    if container.state == ContainerState.RUNNING
+                    if container.state
+                    in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
                 ]
-                if running_containers:
+                if active_containers:
                     container_stats = dict(
                         zip(
                             (
                                 self._get_container_name(container.names[0])
-                                for container in running_containers
+                                for container in active_containers
                             ),
                             await asyncio.gather(
                                 *(
@@ -231,7 +253,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                                         endpoint_id=endpoint.id,
                                         container_id=container.id,
                                     )
-                                    for container in running_containers
+                                    for container in active_containers
                                 )
                             ),
                             strict=False,

@@ -1,0 +1,593 @@
+# serializer version: 1
+# name: test_setup_platform[botched][button.reset_bathroom_dn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Bathroom Dn',
+      'status': dict({
+        'zone_id': '3432579',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_bathroom_dn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_dead_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Dead Zone',
+      'status': dict({
+        'zone_id': '3432521',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_dead_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Domestic Hot Water',
+      'status': dict({
+        'dhw_id': '3933910',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_front_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Front Room',
+      'status': dict({
+        'zone_id': '3432577',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_front_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_kids_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kids Room',
+      'status': dict({
+        'zone_id': '3449703',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kids_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kitchen',
+      'status': dict({
+        'zone_id': '3432578',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_main_bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Bedroom',
+      'status': dict({
+        'zone_id': '3432580',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Room',
+      'status': dict({
+        'zone_id': '3432576',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[botched][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+      'status': dict({
+        'system_id': '3432522',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_bathroom_dn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Bathroom Dn',
+      'status': dict({
+        'zone_id': '3432579',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_bathroom_dn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_dead_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Dead Zone',
+      'status': dict({
+        'zone_id': '3432521',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_dead_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Domestic Hot Water',
+      'status': dict({
+        'dhw_id': '3933910',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_front_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Front Room',
+      'status': dict({
+        'zone_id': '3432577',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_front_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_kids_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kids Room',
+      'status': dict({
+        'zone_id': '3449703',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kids_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kitchen',
+      'status': dict({
+        'zone_id': '3432578',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_main_bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Bedroom',
+      'status': dict({
+        'zone_id': '3432580',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Room',
+      'status': dict({
+        'zone_id': '3432576',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+      'status': dict({
+        'system_id': '3432522',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_spare_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Spare Room',
+      'status': dict({
+        'zone_id': '3450733',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_spare_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h032585][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+      'status': dict({
+        'system_id': '416856',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h032585][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset THERMOSTAT',
+      'status': dict({
+        'zone_id': '416856',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+      'status': dict({
+        'system_id': '8557535',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset THERMOSTAT',
+      'status': dict({
+        'zone_id': '8557539',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.reset_thermostat_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset THERMOSTAT',
+      'status': dict({
+        'zone_id': '8557541',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Thermostat',
+      'status': dict({
+        'zone_id': '3454854',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.reset_thermostat_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Thermostat 2',
+      'status': dict({
+        'zone_id': '3454855',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h139906][button.reset_vr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Vr**********',
+      'status': dict({
+        'system_id': '3454856',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_vr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_ba-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Ba******',
+      'status': dict({
+        'zone_id': '10090505',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_ba',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_ka-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Ka*********',
+      'status': dict({
+        'zone_id': '10090507',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_ka',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_ka_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Ka*****',
+      'status': dict({
+        'zone_id': '10090508',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_ka_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_kl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Kl********',
+      'status': dict({
+        'system_id': '10090510',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_kl',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_sl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Sl********',
+      'status': dict({
+        'zone_id': '10090506',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_sl',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.reset_wo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Wo*******',
+      'status': dict({
+        'zone_id': '10090509',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_wo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[minimal][button.reset_main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Main Room',
+      'status': dict({
+        'zone_id': '3432576',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[minimal][button.reset_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home',
+      'status': dict({
+        'system_id': '3432522',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_004][button.reset_living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Living room',
+      'status': dict({
+        'system_id': '4187769',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_004][button.reset_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset Thermostat',
+      'status': dict({
+        'zone_id': '4187768',
+      }),
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
