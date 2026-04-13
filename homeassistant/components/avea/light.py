@@ -40,7 +40,7 @@ async def async_setup_entry(
 class AveaLight(LightEntity):
     """Representation of an Avea."""
 
-    _attr_color_mode = ColorMode.HS
+    _attr_color_mode = None
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.HS}
@@ -142,6 +142,7 @@ class AveaLight(LightEntity):
             self._sync_turn_on, ble_device, brightness, hs_color
         )
         self._attr_available = True
+        self._attr_color_mode = ColorMode.HS
 
         if not kwargs:
             self._attr_brightness = 255
@@ -167,6 +168,7 @@ class AveaLight(LightEntity):
         self._attr_available = True
         self._attr_is_on = False
         self._attr_brightness = 0
+        self._attr_color_mode = None
 
     async def async_update(self) -> None:
         """Fetch new state data for this light."""
@@ -192,4 +194,5 @@ class AveaLight(LightEntity):
         self._attr_available = True
         self._attr_is_on = brightness != 0
         self._attr_brightness = round(255 * (brightness / 4095))
+        self._attr_color_mode = ColorMode.HS if self._attr_is_on else None
         self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)

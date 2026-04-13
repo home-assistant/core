@@ -34,7 +34,7 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
             raise CannotConnect
         try:
             name = bulb.get_name()
-        except (BleakError, OSError, RuntimeError):
+        except BleakError, OSError, RuntimeError:
             _LOGGER.debug(
                 "Failed to get name for Avea device %s",
                 discovery_info.address,
@@ -57,7 +57,6 @@ def _is_avea_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
 
 class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Avea."""
-
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -155,7 +154,18 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovery_info:
             data_schema = vol.Schema(
-                {vol.Required(CONF_ADDRESS): self._discovery_info.address}
+                {
+                    vol.Required(
+                        CONF_ADDRESS, default=self._discovery_info.address
+                    ): vol.In(
+                        {
+                            self._discovery_info.address: (
+                                f"{self._discovery_info.name or self._discovery_info.address}"
+                                f" ({self._discovery_info.address})"
+                            )
+                        }
+                    )
+                }
             )
         else:
             data_schema = vol.Schema(
