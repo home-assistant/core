@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import entity_registry as er, location as loc_helper
+from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import convert, location as location_util
