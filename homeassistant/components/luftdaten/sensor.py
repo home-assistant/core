@@ -27,6 +27,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ATTR_SENSOR_ID, CONF_SENSOR_ID, DOMAIN
 from .coordinator import LuftdatenConfigEntry, LuftdatenDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
