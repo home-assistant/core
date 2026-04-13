@@ -30,7 +30,7 @@ class AquariteEntity(CoordinatorEntity[AquariteDataUpdateCoordinator]):
             name=pool_name,
             manufacturer=BRAND,
             model=MODEL,
-            sw_version=str(sw_version) if sw_version else None,
+            sw_version=str(sw_version) if sw_version is not None else None,
         )
 
     @property
