@@ -9,7 +9,6 @@ import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -40,5 +39,5 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
         except requests.exceptions.ConnectionError as err:
             raise UpdateFailed(f"Cannot connect to heater: {err}") from err
         except NoSerialException as err:
-            raise ConfigEntryError(f"Unexpected data from heater: {err}") from err
+            raise UpdateFailed(f"Unexpected data from heater: {err}") from err
         return data
