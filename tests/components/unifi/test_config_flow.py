@@ -32,7 +32,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import ConfigEntryFactoryType
 
@@ -477,124 +476,6 @@ async def test_simple_option_flow(
     }
 
 
-async def test_form_ssdp(hass: HomeAssistant) -> None:
-    """Test we get the form with ssdp source."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "e0:63:da:20:14:a9",
-            },
-        ),
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-
-    assert (
-        flows[0].get("context", {}).get("configuration_url")
-        == "https://192.168.208.1:443"
-    )
-
-    context = next(
-        flow["context"]
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert context["title_placeholders"] == {
-        "host": "192.168.208.1",
-        "site": "default",
-    }
-
-
-@pytest.mark.usefixtures("config_entry")
-async def test_form_ssdp_aborts_if_host_already_exists(hass: HomeAssistant) -> None:
-    """Test we abort if the host is already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "e0:63:da:20:14:a9",
-            },
-        ),
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("config_entry")
-async def test_form_ssdp_aborts_if_serial_already_exists(hass: HomeAssistant) -> None:
-    """Test we abort if the serial is already configured."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "1",
-            },
-        ),
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_form_ssdp_gets_form_with_ignored_entry(hass: HomeAssistant) -> None:
-    """Test we can still setup if there is an ignored never configured entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"not_controller_key": None},
-        source=config_entries.SOURCE_IGNORE,
-    )
-    entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            ssdp_location="http://1.2.3.4:1234/rootDesc.xml",
-            upnp={
-                "friendlyName": "UniFi Dream Machine New",
-                "modelDescription": "UniFi Dream Machine Pro",
-                "serialNumber": "1",
-            },
-        ),
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-    context = next(
-        flow["context"]
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert context["title_placeholders"] == {
-        "host": "1.2.3.4",
-        "site": "default",
-    }
-
-
 async def test_discover_unifi_positive(hass: HomeAssistant) -> None:
     """Verify positive run of UniFi discovery."""
     with patch("socket.gethostbyname", return_value=True):
@@ -605,3 +486,109 @@ async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
     """Verify negative run of UniFi discovery."""
     with patch("socket.gethostbyname", side_effect=socket.gaierror):
         assert await _async_discover_unifi(hass) is None
+
+
+INTEGRATION_DISCOVERY_INFO = {
+    "source_ip": "10.0.0.1",
+    "hw_addr": "e0:63:da:20:14:a9",
+    "hostname": "UniFi-Dream-Machine",
+    "platform": "UCG-Ultra",
+    "services": {"Protect": True, "Network": True},
+    "direct_connect_domain": "x.ui.direct",
+}
+
+
+async def test_flow_integration_discovery(hass: HomeAssistant) -> None:
+    """Test we get the form with integration discovery source."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": "10.0.0.1",
+        "site": "default",
+    }
+
+
+@pytest.mark.usefixtures("config_entry")
+async def test_flow_integration_discovery_aborts_if_host_already_exists(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort if the host is already configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "1.2.3.4",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_integration_discovery_updates_host_for_known_mac(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery updates host when MAC matches but IP changed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="e0:63:da:20:14:a9",
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 443,
+            CONF_VERIFY_SSL: False,
+            CONF_SITE_ID: "default",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "10.0.0.1"
+
+
+async def test_flow_integration_discovery_gets_form_with_ignored_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can still set up if there is an ignored never configured entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"not_controller_key": None},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=INTEGRATION_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": "10.0.0.1",
+        "site": "default",
+    }
