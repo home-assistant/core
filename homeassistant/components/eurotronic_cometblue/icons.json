@@ -6,14 +6,14 @@
       }
     },
     "number": {
-      "target_temperature_high": {
+      "offset": {
+        "default": "mdi:thermometer-check"
+      },
+      "target_temp_high": {
         "default": "mdi:thermometer-chevron-up"
       },
-      "target_temperature_low": {
+      "target_temp_low": {
         "default": "mdi:thermometer-chevron-down"
-      },
-      "temperature_offset": {
-        "default": "mdi:thermometer-check"
       },
       "window_open_minutes": {
         "default": "mdi:timer-sand"
