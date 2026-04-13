@@ -3186,7 +3186,7 @@ uiprotect==10.2.6
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
 
-# homeassistant.components.unifiprotect
+# homeassistant.components.unifi_discovery
 unifi-discovery==1.4.0
 
 # homeassistant.components.unifi_direct
