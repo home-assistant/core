@@ -396,6 +396,9 @@ def _humanify(
 
         # Fall back to the parent context for child contexts that inherit
         # user attribution (e.g., generic_thermostat -> switch turn_on).
+        # Read from context_lookup directly instead of get_context() to
+        # avoid the origin_event fallback which would return the *child*
+        # row's origin event, not the parent's.
         if CONTEXT_USER_ID not in data and (
             context_parent_id_bin := row[CONTEXT_PARENT_ID_BIN_POS]
         ):
@@ -404,8 +407,10 @@ def _humanify(
             )
             if parent_user_id_bin is None and query_parent_user_ids is not None:
                 parent_user_id_bin = query_parent_user_ids.get(context_parent_id_bin)
-            if parent_user_id_bin is None and (
-                parent_row := get_context(context_parent_id_bin, row)
+            if (
+                parent_user_id_bin is None
+                and (parent_row := context_lookup.get(context_parent_id_bin))
+                is not None
             ):
                 parent_user_id_bin = parent_row[CONTEXT_USER_ID_BIN_POS]
             if parent_user_id_bin:

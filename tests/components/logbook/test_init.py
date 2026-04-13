@@ -42,7 +42,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
@@ -3261,4 +3261,94 @@ async def test_context_user_ids_lru_eviction(
 
     heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
     assert len(heater_entries) == 1
+    assert "context_user_id" not in heater_entries[0]
+
+
+async def test_parent_user_attribution_does_not_use_origin_event_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test that parent context lookup doesn't fall back to origin_event.
+
+    ContextAugmenter.get_context() has a fallback: when a context_id isn't in
+    context_lookup, it returns async_event_to_row(row.context.origin_event).
+    This fallback uses the *child row's* origin event, not the parent's,
+    so it can attribute the wrong user_id to a child context.
+
+    In practice this scenario is unlikely — child contexts don't carry a
+    user_id, so the origin_event fallback would return None for user_id
+    anyway. We guard against it nevertheless to ensure the lookup is
+    semantically correct: the parent context should only be resolved via
+    context_lookup, never via an unrelated fallback path.
+
+    Scenario:
+    - A user_id is set directly on child_context (not realistic, but
+      exercises the fallback path).
+    - Creating an Event with that context sets context.origin_event,
+      which carries the user_id.
+    - A state change for switch.heater uses that same child_context.
+    - The parent context is NOT in context_lookup (simulating live stream).
+    - The parent user_id should NOT be resolved via the origin_event fallback.
+    """
+    wrong_user_id = "aaaaaaaaaaa711eaa9308bfd3d19e474"
+    parent_context = Context(id="01GTDGKBCH00GW0X476W5TVAAA")
+
+    # Child context whose origin_event will carry wrong_user_id
+    child_context = Context(
+        id="01GTDGKBCH00GW0X476W5TVDDD",
+        parent_id=parent_context.id,
+        user_id=wrong_user_id,
+    )
+    # Creating an Event sets context.origin_event = self, which carries
+    # wrong_user_id via child_context.user_id.
+    Event(EVENT_CALL_SERVICE, {}, context=child_context)
+    assert child_context.origin_event is not None
+
+    hass.states.async_set("switch.heater", STATE_OFF)
+    await hass.async_block_till_done()
+
+    logbook_run = logbook.processor.LogbookRun(
+        context_lookup={None: None},
+        external_events={},
+        event_cache=logbook.processor.EventCache({}),
+        entity_name_cache=logbook.processor.EntityNameCache(hass),
+        include_entity_name=True,
+        timestamp=False,
+        memoize_new_contexts=False,
+    )
+    context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
+    ent_reg = er.async_get(hass)
+
+    processor = logbook.processor.EventProcessor.__new__(
+        logbook.processor.EventProcessor
+    )
+    processor.hass = hass
+    processor.ent_reg = ent_reg
+    processor.logbook_run = logbook_run
+    processor.context_augmenter = context_augmenter
+
+    # Build a child state-change EventAsRow with the child_context.
+    # The row itself has no user_id (context_user_id_bin=None) but
+    # the child_context.origin_event carries wrong_user_id.
+    child_row = EventAsRow(
+        row_id=1,
+        event_type=PSEUDO_EVENT_STATE_CHANGED,
+        event_data=None,
+        time_fired_ts=dt_util.utcnow().timestamp(),
+        context_id_bin=ulid_to_bytes_or_none(child_context.id),
+        context_user_id_bin=None,
+        context_parent_id_bin=ulid_to_bytes_or_none(child_context.parent_id),
+        state=STATE_ON,
+        entity_id="switch.heater",
+        icon=None,
+        context_only=False,
+        data={},
+        context=child_context,
+    )
+
+    results = processor.humanify([child_row])
+
+    heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
+    assert len(heater_entries) == 1
+    # The parent context is unknown — no user should be attributed.
+    # If get_context's origin_event fallback is used, wrong_user_id leaks in.
     assert "context_user_id" not in heater_entries[0]
