@@ -273,7 +273,6 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             name=f"{DOMAIN} price",
             update_interval=timedelta(minutes=1),
         )
-        self._tibber_connection = None
         self._tomorrow_price_poll_threshold_seconds = random.uniform(
             3600 * 14, 3600 * 23
         )
