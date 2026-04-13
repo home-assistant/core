@@ -200,7 +200,7 @@ def statistics_during_period(
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: set[str] | None = None,
-    period: Literal["5minute", "day", "hour", "week", "month"] = "hour",
+    period: Literal["5minute", "day", "hour", "week", "month", "year"] = "hour",
     units: dict[str, str] | None = None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]]
     | None = None,

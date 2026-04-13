@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.raven_device_energy_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -56,8 +57,9 @@
 # ---
 # name: test_sensors[sensor.raven_device_power_demand-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -113,8 +115,9 @@
 # ---
 # name: test_sensors[sensor.raven_device_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -167,8 +170,9 @@
 # ---
 # name: test_sensors[sensor.raven_device_total_energy_delivered-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -224,8 +228,9 @@
 # ---
 # name: test_sensors[sensor.raven_device_total_energy_received-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,

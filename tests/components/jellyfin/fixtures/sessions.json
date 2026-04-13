@@ -21,7 +21,7 @@
     ],
     "Capabilities": {
       "PlayableMediaTypes": ["Video"],
-      "SupportedCommands": ["VolumeSet", "Mute", "PlayMediaSource"],
+      "SupportedCommands": ["VolumeSet", "Mute", "Unmute", "PlayMediaSource"],
       "SupportsMediaControl": true,
       "SupportsContentUploading": true,
       "MessageCallbackUrl": "string",
@@ -1781,7 +1781,7 @@
     ],
     "Capabilities": {
       "PlayableMediaTypes": ["Video"],
-      "SupportedCommands": ["VolumeSet", "Mute"],
+      "SupportedCommands": ["VolumeSet", "Mute", "Unmute"],
       "SupportsMediaControl": true,
       "SupportsContentUploading": true,
       "MessageCallbackUrl": "string",
@@ -4548,5 +4548,133 @@
       "PlayMediaSource",
       "PlayTrailers"
     ]
+  },
+  {
+    "PlayState": {
+      "PositionTicks": 100000000,
+      "CanSeek": true,
+      "IsPaused": false,
+      "IsMuted": false,
+      "VolumeLevel": 50,
+      "AudioStreamIndex": 0,
+      "SubtitleStreamIndex": 0,
+      "MediaSourceId": "string",
+      "PlayMethod": "Transcode",
+      "RepeatMode": "RepeatNone",
+      "LiveStreamId": "string"
+    },
+    "AdditionalUsers": [],
+    "Capabilities": {
+      "PlayableMediaTypes": ["Video"],
+      "SupportedCommands": ["Mute", "VolumeSet", "PlayMediaSource"],
+      "SupportsMediaControl": true,
+      "SupportsContentUploading": false,
+      "MessageCallbackUrl": "string",
+      "SupportsPersistentIdentifier": false,
+      "SupportsSync": false,
+      "DeviceProfile": null
+    },
+    "RemoteEndPoint": "192.168.1.1",
+    "PlayableMediaTypes": ["Video"],
+    "Id": "SESSION-UUID-FIVE",
+    "UserId": "USER-UUID",
+    "UserName": "USER",
+    "Client": "Test Client Five",
+    "LastActivityDate": "2021-05-21T06:09:06.919Z",
+    "LastPlaybackCheckIn": "2021-05-21T06:09:06.919Z",
+    "DeviceName": "JELLYFIN-DEVICE-FIVE",
+    "DeviceId": "DEVICE-UUID-FIVE",
+    "ApplicationVersion": "1.0.0",
+    "IsActive": true,
+    "SupportsMediaControl": true,
+    "SupportsRemoteControl": true,
+    "HasCustomDeviceName": false,
+    "ServerId": "SERVER-UUID",
+    "SupportedCommands": ["MoveUp"],
+    "NowPlayingItem": {
+      "Name": "TEST VIDEO",
+      "ServerId": "SERVER-UUID",
+      "Id": "VIDEO-UUID-FIVE",
+      "RunTimeTicks": 600000000,
+      "Type": "Episode",
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "string"
+      },
+      "PrimaryImageAspectRatio": 1,
+      "SeriesName": "TEST SERIES",
+      "ParentIndexNumber": 1,
+      "IndexNumber": 1,
+      "ImageTags": {
+        "Primary": "tag"
+      }
+    }
+  },
+  {
+    "PlayState": {
+      "PositionTicks": 100000000,
+      "CanSeek": true,
+      "IsPaused": false,
+      "IsMuted": false,
+      "VolumeLevel": 50,
+      "AudioStreamIndex": 0,
+      "SubtitleStreamIndex": 0,
+      "MediaSourceId": "string",
+      "PlayMethod": "Transcode",
+      "RepeatMode": "RepeatNone",
+      "LiveStreamId": "string"
+    },
+    "AdditionalUsers": [],
+    "Capabilities": {
+      "PlayableMediaTypes": ["Video"],
+      "SupportedCommands": ["Unmute", "VolumeSet", "PlayMediaSource"],
+      "SupportsMediaControl": true,
+      "SupportsContentUploading": false,
+      "MessageCallbackUrl": "string",
+      "SupportsPersistentIdentifier": false,
+      "SupportsSync": false,
+      "DeviceProfile": null
+    },
+    "RemoteEndPoint": "192.168.1.1",
+    "PlayableMediaTypes": ["Video"],
+    "Id": "SESSION-UUID-SIX",
+    "UserId": "USER-UUID",
+    "UserName": "USER",
+    "Client": "Test Client Six",
+    "LastActivityDate": "2021-05-21T06:09:06.919Z",
+    "LastPlaybackCheckIn": "2021-05-21T06:09:06.919Z",
+    "DeviceName": "JELLYFIN-DEVICE-SIX",
+    "DeviceId": "DEVICE-UUID-SIX",
+    "ApplicationVersion": "1.0.0",
+    "IsActive": true,
+    "SupportsMediaControl": true,
+    "SupportsRemoteControl": true,
+    "HasCustomDeviceName": false,
+    "ServerId": "SERVER-UUID",
+    "SupportedCommands": ["MoveUp"],
+    "NowPlayingItem": {
+      "Name": "TEST VIDEO",
+      "ServerId": "SERVER-UUID",
+      "Id": "VIDEO-UUID-SIX",
+      "RunTimeTicks": 600000000,
+      "Type": "Episode",
+      "UserData": {
+        "PlaybackPositionTicks": 0,
+        "PlayCount": 0,
+        "IsFavorite": false,
+        "Played": false,
+        "Key": "string"
+      },
+      "PrimaryImageAspectRatio": 1,
+      "SeriesName": "TEST SERIES",
+      "ParentIndexNumber": 1,
+      "IndexNumber": 1,
+      "ImageTags": {
+        "Primary": "tag"
+      }
+    }
   }
 ]

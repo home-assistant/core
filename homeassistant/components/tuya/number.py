@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.definition.number import (
+    TuyaNumberDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
@@ -25,7 +29,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DeviceWrapper, DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -462,13 +465,9 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
                 entities.extend(
-                    TuyaNumberEntity(device, manager, description, dpcode_wrapper)
+                    TuyaNumberEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (
-                        dpcode_wrapper := DPCodeIntegerWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
-                        )
-                    )
+                    if (definition := get_default_definition(device, description.key))
                 )
 
         async_add_entities(entities)
@@ -488,19 +487,19 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
-        dpcode_wrapper: DeviceWrapper[float],
+        definition: TuyaNumberDefinition,
     ) -> None:
-        """Init Tuya sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
+        """Initialize a Tuya number entity."""
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.number_wrapper
 
-        self._attr_native_max_value = dpcode_wrapper.max_value
-        self._attr_native_min_value = dpcode_wrapper.min_value
-        self._attr_native_step = dpcode_wrapper.value_step
+        self._attr_native_max_value = definition.number_wrapper.max_value
+        self._attr_native_min_value = definition.number_wrapper.min_value
+        self._attr_native_step = definition.number_wrapper.value_step
         if description.native_unit_of_measurement is None:
-            self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
+            self._attr_native_unit_of_measurement = (
+                definition.number_wrapper.native_unit
+            )
 
         self._validate_device_class_unit()
 
@@ -551,15 +550,19 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         """Return the entity value to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
-    ) -> None:
-        """Handle state update, only if this entity's dpcode was actually updated."""
-        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
-            return
-        self.async_write_ha_state()
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""

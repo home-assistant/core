@@ -15,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import TouchlineSLConfigEntry, TouchlineSLModuleCoordinator
 from .entity import TouchlineSLZoneEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

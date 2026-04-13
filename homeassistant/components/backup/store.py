@@ -29,12 +29,17 @@ class StoredBackupData(TypedDict):
 class _BackupStore(Store[StoredBackupData]):
     """Class to help storing backup data."""
 
+    # Maximum version we support reading for forward compatibility.
+    # This allows reading data written by a newer HA version after downgrade.
+    _MAX_READABLE_VERSION = 2
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize storage class."""
         super().__init__(
             hass,
             STORAGE_VERSION,
             STORAGE_KEY,
+            max_readable_version=self._MAX_READABLE_VERSION,
             minor_version=STORAGE_VERSION_MINOR,
         )
 
@@ -86,8 +91,8 @@ class _BackupStore(Store[StoredBackupData]):
         # data["config"]["schedule"]["state"] will be removed. The bump to 2 is
         # planned to happen after a 6 month quiet period with no minor version
         # changes.
-        # Reject if major version is higher than 2.
-        if old_major_version > 2:
+        # Reject if major version is higher than _MAX_READABLE_VERSION.
+        if old_major_version > self._MAX_READABLE_VERSION:
             raise NotImplementedError
         return data
 

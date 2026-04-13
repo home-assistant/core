@@ -57,6 +57,7 @@ RESOURCE_UPDATE_FIELDS: VolDictType = {
 SERVICE_RELOAD_RESOURCES = "reload_resources"
 RESOURCE_RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
+CONF_RESOURCE_MODE = "resource_mode"
 CONF_TITLE = "title"
 CONF_REQUIRE_ADMIN = "require_admin"
 CONF_SHOW_IN_SIDEBAR = "show_in_sidebar"

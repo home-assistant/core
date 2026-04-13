@@ -111,7 +111,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 pan_id = generate_random_pan_id()
                 await api.create_active_dataset(
                     python_otbr_api.ActiveDataSet(
-                        channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
+                        channel=allowed_channel or DEFAULT_CHANNEL,
                         network_name=compose_default_network_name(pan_id),
                         pan_id=pan_id,
                     )

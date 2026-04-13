@@ -67,13 +67,13 @@ async def test_set_temperature(
     )
 
 
-async def test_set_temperature_triggers_fast_polling(
+async def test_fast_polling(
     hass: HomeAssistant,
     mock_watts_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that setting temperature triggers fast polling."""
+    """Test that setting temperature triggers fast polling and it stops after duration."""
     await setup_integration(hass, mock_config_entry)
 
     # Trigger fast polling
@@ -87,10 +87,9 @@ async def test_set_temperature_triggers_fast_polling(
         blocking=True,
     )
 
-    # Reset mock to count only fast polling calls
     mock_watts_client.get_device.reset_mock()
 
-    # Advance time by 5 seconds (fast polling interval)
+    # Fast polling should be active
     freezer.tick(timedelta(seconds=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -98,33 +97,9 @@ async def test_set_temperature_triggers_fast_polling(
     assert mock_watts_client.get_device.called
     mock_watts_client.get_device.assert_called_with("thermostat_123", refresh=True)
 
-
-async def test_fast_polling_stops_after_duration(
-    hass: HomeAssistant,
-    mock_watts_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test that fast polling stops after the duration expires."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Trigger fast polling
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: "climate.living_room_thermostat",
-            ATTR_TEMPERATURE: 23.5,
-        },
-        blocking=True,
-    )
-
-    # Reset mock to count only fast polling calls
+    # Should still be in fast polling after 55s
     mock_watts_client.get_device.reset_mock()
-
-    # Should be in fast polling 55s after
-    mock_watts_client.get_device.reset_mock()
-    freezer.tick(timedelta(seconds=55))
+    freezer.tick(timedelta(seconds=50))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -134,8 +109,6 @@ async def test_fast_polling_stops_after_duration(
     freezer.tick(timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    # Should be called one last time to check if duration expired, then stop
 
     # Fast polling should be done now
     mock_watts_client.get_device.reset_mock()

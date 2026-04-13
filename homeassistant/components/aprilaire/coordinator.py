@@ -168,7 +168,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         name = data.get(Attribute.NAME) if data else None
 
-        return name if name else "Aprilaire"
+        return name or "Aprilaire"
 
     def get_hw_version(self, data: dict[str, Any]) -> str:
         """Get the hardware version."""

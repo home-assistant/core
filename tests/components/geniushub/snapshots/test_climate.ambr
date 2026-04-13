@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cloud_all_sensors[climate.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -83,8 +84,9 @@
 # ---
 # name: test_cloud_all_sensors[climate.ensuite-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -168,8 +170,9 @@
 # ---
 # name: test_cloud_all_sensors[climate.guest_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -253,8 +256,9 @@
 # ---
 # name: test_cloud_all_sensors[climate.hall-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -338,8 +342,9 @@
 # ---
 # name: test_cloud_all_sensors[climate.kitchen-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -423,8 +428,9 @@
 # ---
 # name: test_cloud_all_sensors[climate.lounge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -505,8 +511,9 @@
 # ---
 # name: test_cloud_all_sensors[climate.study-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncIterator
 from io import BytesIO, StringIO
 import json
+from pathlib import Path
 import re
 import tarfile
 from typing import Any
@@ -23,7 +24,12 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_BACKUP_ABC123, aiter_from_iter, setup_backup_integration
+from .common import (
+    TEST_BACKUP_ABC123,
+    TEST_BACKUP_PATH_ABC123,
+    aiter_from_iter,
+    setup_backup_integration,
+)
 
 from tests.common import MockUser, get_fixture_path
 from tests.typing import ClientSessionGenerator
@@ -43,6 +49,7 @@ PROTECTED_BACKUP = AgentBackup(
 )
 
 
+@pytest.mark.parametrize("available_backups", [[TEST_BACKUP_PATH_ABC123]])
 async def test_downloading_local_backup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -52,22 +59,8 @@ async def test_downloading_local_backup(
 
     client = await hass_client()
 
-    with (
-        patch(
-            "homeassistant.components.backup.backup.CoreLocalBackupAgent.async_get_backup",
-            return_value=TEST_BACKUP_ABC123,
-        ),
-        patch(
-            "homeassistant.components.backup.backup.CoreLocalBackupAgent.get_backup_path",
-        ),
-        patch("pathlib.Path.exists", return_value=True),
-        patch(
-            "homeassistant.components.backup.http.FileResponse",
-            return_value=web.Response(text=""),
-        ),
-    ):
-        resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
-        assert resp.status == 200
+    resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
+    assert resp.status == 200
 
 
 async def test_downloading_remote_backup(
@@ -87,27 +80,21 @@ async def test_downloading_remote_backup(
     assert await resp.content.read() == b"backup data"
 
 
+@pytest.mark.parametrize("available_backups", [[TEST_BACKUP_PATH_ABC123]])
 async def test_downloading_local_encrypted_backup_file_not_found(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test downloading a local backup file."""
+    """Test downloading a missing local backup file."""
     await setup_backup_integration(hass)
     client = await hass_client()
 
-    with (
-        patch(
-            "homeassistant.components.backup.backup.CoreLocalBackupAgent.async_get_backup",
-            return_value=TEST_BACKUP_ABC123,
-        ),
-        patch(
-            "homeassistant.components.backup.backup.CoreLocalBackupAgent.get_backup_path",
-        ),
-    ):
-        resp = await client.get(
-            "/api/backup/download/abc123?agent_id=backup.local&password=blah"
-        )
-        assert resp.status == 404
+    Path(hass.config.path("backups/abc123.tar")).unlink()
+
+    resp = await client.get(
+        "/api/backup/download/abc123?agent_id=backup.local&password=blah"
+    )
+    assert resp.status == 404
 
 
 @pytest.mark.usefixtures("mock_backups")
@@ -241,7 +228,7 @@ async def test_downloading_backup_not_found(
 
     client = await hass_client()
 
-    resp = await client.get("/api/backup/download/abc123?agent_id=backup.local")
+    resp = await client.get("/api/backup/download/abc1234?agent_id=backup.local")
     assert resp.status == 404
 
 

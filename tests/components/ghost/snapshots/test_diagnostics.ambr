@@ -1,0 +1,74 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinator_data': dict({
+      'activitypub': dict({
+        'followers': 150,
+        'following': 25,
+      }),
+      'arr': dict({
+        'usd': 60000,
+      }),
+      'comments': 156,
+      'latest_email': dict({
+        'click_rate': 10,
+        'clicked_count': 50,
+        'delivered_count': 490,
+        'email_count': 500,
+        'failed_count': 10,
+        'open_rate': 40,
+        'opened_count': 200,
+        'subject': 'Newsletter #1',
+        'submitted_at': '2026-01-15T10:00:00Z',
+        'title': 'Newsletter #1',
+      }),
+      'latest_post': dict({
+        'published_at': '2026-01-15T10:00:00Z',
+        'slug': 'latest-post',
+        'title': 'Latest Post',
+        'url': 'https://test.ghost.io/latest-post/',
+      }),
+      'members': dict({
+        'comped': 50,
+        'free': 850,
+        'paid': 100,
+        'total': 1000,
+      }),
+      'mrr': dict({
+        'usd': 5000,
+      }),
+      'newsletters': dict({
+        'nl1': dict({
+          'count': dict({
+            'members': 800,
+          }),
+          'id': 'nl1',
+          'name': 'Weekly',
+          'status': 'active',
+        }),
+        'nl2': dict({
+          'count': dict({
+            'members': 200,
+          }),
+          'id': 'nl2',
+          'name': 'Archive',
+          'status': 'archived',
+        }),
+      }),
+      'posts': dict({
+        'drafts': 5,
+        'published': 42,
+        'scheduled': 2,
+      }),
+      'site': dict({
+        'site_uuid': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+        'title': 'Test Ghost',
+        'url': 'https://test.ghost.io',
+      }),
+    }),
+    'entry_data': dict({
+      'admin_api_key': '**REDACTED**',
+      'api_url': 'https://test.ghost.io',
+    }),
+  })
+# ---

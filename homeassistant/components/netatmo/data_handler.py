@@ -27,7 +27,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    AUTH,
     CAMERA_CONNECTION_WEBHOOKS,
     DATA_PERSONS,
     DATA_SCHEDULES,
@@ -38,9 +37,11 @@ from .const import (
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
+    NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
     NETATMO_CREATE_COVER,
     NETATMO_CREATE_FAN,
     NETATMO_CREATE_LIGHT,
+    NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
@@ -86,6 +87,8 @@ DEFAULT_INTERVALS = {
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
+
+type NetatmoConfigEntry = ConfigEntry[NetatmoDataHandler]
 
 
 @dataclass
@@ -136,11 +139,16 @@ class NetatmoDataHandler:
     account: pyatmo.AsyncAccount
     _interval_factor: int
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: NetatmoConfigEntry,
+        auth: pyatmo.AbstractAsyncAuth,
+    ) -> None:
         """Initialize self."""
         self.hass = hass
         self.config_entry = config_entry
-        self._auth = hass.data[DOMAIN][config_entry.entry_id][AUTH]
+        self.auth = auth
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
         self._webhook: bool = False
@@ -169,7 +177,7 @@ class NetatmoDataHandler:
             )
         )
 
-        self.account = pyatmo.AsyncAccount(self._auth)
+        self.account = pyatmo.AsyncAccount(self.auth)
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
@@ -367,6 +375,10 @@ class NetatmoDataHandler:
             ],
             NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
             NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
+            NetatmoDeviceCategory.opening: [
+                NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
+                NETATMO_CREATE_OPENING_BINARY_SENSOR,
+            ],
         }
         for module in home.modules.values():
             if not module.device_category:

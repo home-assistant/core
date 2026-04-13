@@ -4,12 +4,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from genie_partner_sdk.client import AladdinConnectClient
 import jwt
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
+from .api import AsyncConfigFlowAuth
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
 
 
@@ -52,11 +54,25 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        # Extract the user ID from the JWT token's 'sub' field
-        token = jwt.decode(
-            data["token"]["access_token"], options={"verify_signature": False}
+        try:
+            token = jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
+            )
+            user_id = token["sub"]
+        except jwt.DecodeError, KeyError:
+            return self.async_abort(reason="oauth_error")
+
+        client = AladdinConnectClient(
+            AsyncConfigFlowAuth(
+                aiohttp_client.async_get_clientsession(self.hass),
+                data["token"]["access_token"],
+            )
         )
-        user_id = token["sub"]
+        try:
+            await client.get_doors()
+        except Exception:  # noqa: BLE001
+            return self.async_abort(reason="cannot_connect")
+
         await self.async_set_unique_id(user_id)
 
         if self.source == SOURCE_REAUTH:

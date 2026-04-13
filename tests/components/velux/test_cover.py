@@ -4,7 +4,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 from pyvlx.exception import PyVLXException
-from pyvlx.opening_device import Awning, GarageDoor, Gate, RollerShutter, Window
+from pyvlx.opening_device import (
+    Awning,
+    DualRollerShutter,
+    GarageDoor,
+    Gate,
+    RollerShutter,
+    Window,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -64,7 +71,9 @@ async def test_blind_entity_setup(
 
 @pytest.mark.usefixtures("mock_cover_type")
 @pytest.mark.parametrize(
-    "mock_cover_type", [Awning, GarageDoor, Gate, RollerShutter, Window], indirect=True
+    "mock_cover_type",
+    [Awning, DualRollerShutter, GarageDoor, Gate, RollerShutter, Window],
+    indirect=True,
 )
 @pytest.mark.parametrize(
     "mock_pyvlx",
@@ -103,7 +112,13 @@ async def test_cover_device_association(
         assert entry.device_id is not None
         device_entry = device_registry.async_get(entry.device_id)
         assert device_entry is not None
-        assert (DOMAIN, entry.unique_id) in device_entry.identifiers
+
+        # For dual roller shutters, the unique_id is suffixed with "_upper" or "_lower",
+        # so remove that suffix to get the domain_id for device registry lookup
+        domain_id = entry.unique_id
+        if entry.unique_id.endswith("_upper") or entry.unique_id.endswith("_lower"):
+            domain_id = entry.unique_id.rsplit("_", 1)[0]
+        assert (DOMAIN, domain_id) in device_entry.identifiers
         assert device_entry.via_device_id is not None
         via_device_entry = device_registry.async_get(device_entry.via_device_id)
         assert via_device_entry is not None
@@ -218,6 +233,165 @@ async def test_window_current_position_and_opening_closing_states(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_CLOSING
+
+
+# Dual roller shutter command tests
+async def test_dual_roller_shutter_open_close_services(
+    hass: HomeAssistant, mock_dual_roller_shutter: AsyncMock
+) -> None:
+    """Verify open/close services map to device calls with correct part."""
+
+    dual_entity_id = "cover.test_dual_roller_shutter"
+    upper_entity_id = "cover.test_dual_roller_shutter_upper_shutter"
+    lower_entity_id = "cover.test_dual_roller_shutter_lower_shutter"
+
+    # Open upper part
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": upper_entity_id}, blocking=True
+    )
+    mock_dual_roller_shutter.open.assert_awaited_with(
+        curtain="upper", wait_for_completion=False
+    )
+
+    # Open lower part
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": lower_entity_id}, blocking=True
+    )
+    mock_dual_roller_shutter.open.assert_awaited_with(
+        curtain="lower", wait_for_completion=False
+    )
+
+    # Open dual
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": dual_entity_id}, blocking=True
+    )
+    mock_dual_roller_shutter.open.assert_awaited_with(
+        curtain="dual", wait_for_completion=False
+    )
+
+    # Close upper part
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": upper_entity_id}, blocking=True
+    )
+    mock_dual_roller_shutter.close.assert_awaited_with(
+        curtain="upper", wait_for_completion=False
+    )
+
+    # Close lower part
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": lower_entity_id}, blocking=True
+    )
+    mock_dual_roller_shutter.close.assert_awaited_with(
+        curtain="lower", wait_for_completion=False
+    )
+
+    # Close dual
+    await hass.services.async_call(
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": dual_entity_id}, blocking=True
+    )
+    mock_dual_roller_shutter.close.assert_awaited_with(
+        curtain="dual", wait_for_completion=False
+    )
+
+
+async def test_dual_shutter_set_cover_position_inversion(
+    hass: HomeAssistant, mock_dual_roller_shutter: AsyncMock
+) -> None:
+    """HA position is inverted for device's Position."""
+
+    entity_id = "cover.test_dual_roller_shutter"
+    # Call with position 30 (=70% for device)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {"entity_id": entity_id, ATTR_POSITION: 30},
+        blocking=True,
+    )
+
+    # Expect device Position 70%
+    args, kwargs = mock_dual_roller_shutter.set_position.await_args
+    position_obj = args[0]
+    assert position_obj.position_percent == 70
+    assert kwargs.get("wait_for_completion") is False
+    assert kwargs.get("curtain") == "dual"
+
+    entity_id = "cover.test_dual_roller_shutter_upper_shutter"
+    # Call with position 30 (=70% for device)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {"entity_id": entity_id, ATTR_POSITION: 30},
+        blocking=True,
+    )
+
+    # Expect device Position 70%
+    args, kwargs = mock_dual_roller_shutter.set_position.await_args
+    position_obj = args[0]
+    assert position_obj.position_percent == 70
+    assert kwargs.get("wait_for_completion") is False
+    assert kwargs.get("curtain") == "upper"
+
+    entity_id = "cover.test_dual_roller_shutter_lower_shutter"
+    # Call with position 30 (=70% for device)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {"entity_id": entity_id, ATTR_POSITION: 30},
+        blocking=True,
+    )
+
+    # Expect device Position 70%
+    args, kwargs = mock_dual_roller_shutter.set_position.await_args
+    position_obj = args[0]
+    assert position_obj.position_percent == 70
+    assert kwargs.get("wait_for_completion") is False
+    assert kwargs.get("curtain") == "lower"
+
+
+async def test_dual_roller_shutter_position_tests(
+    hass: HomeAssistant, mock_dual_roller_shutter: AsyncMock
+) -> None:
+    """Validate current_position and open/closed state."""
+
+    entity_id_dual = "cover.test_dual_roller_shutter"
+    entity_id_lower = "cover.test_dual_roller_shutter_lower_shutter"
+    entity_id_upper = "cover.test_dual_roller_shutter_upper_shutter"
+
+    # device position is inverted (100 - x)
+    mock_dual_roller_shutter.position.position_percent = 29
+    mock_dual_roller_shutter.position_upper_curtain.position_percent = 28
+    mock_dual_roller_shutter.position_lower_curtain.position_percent = 27
+    await update_callback_entity(hass, mock_dual_roller_shutter)
+    state = hass.states.get(entity_id_dual)
+    assert state is not None
+    assert state.attributes.get("current_position") == 71
+    assert state.state == STATE_OPEN
+
+    state = hass.states.get(entity_id_upper)
+    assert state is not None
+    assert state.attributes.get("current_position") == 72
+    assert state.state == STATE_OPEN
+
+    state = hass.states.get(entity_id_lower)
+    assert state is not None
+    assert state.attributes.get("current_position") == 73
+    assert state.state == STATE_OPEN
+
+    mock_dual_roller_shutter.position.closed = True
+    mock_dual_roller_shutter.position_upper_curtain.closed = True
+    mock_dual_roller_shutter.position_lower_curtain.closed = True
+    await update_callback_entity(hass, mock_dual_roller_shutter)
+    state = hass.states.get(entity_id_dual)
+    assert state is not None
+    assert state.state == STATE_CLOSED
+
+    state = hass.states.get(entity_id_upper)
+    assert state is not None
+    assert state.state == STATE_CLOSED
+
+    state = hass.states.get(entity_id_lower)
+    assert state is not None
+    assert state.state == STATE_CLOSED
 
 
 # Blind command tests

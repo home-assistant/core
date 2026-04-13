@@ -30,9 +30,9 @@ async def test_switch(
     assert test_entity.attributes["device_class"] == "switch"
 
     # test config switch to enable/disable a behavior_instance resource (=builtin automation)
-    test_entity = hass.states.get("switch.automation_timer_test")
+    test_entity = hass.states.get("switch.philips_hue_automation_timer_test")
     assert test_entity is not None
-    assert test_entity.name == "Automation: Timer Test"
+    assert test_entity.name == "Philips hue Automation: Timer Test"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 

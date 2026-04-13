@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tuya_device_handlers.definition.binary_sensor import (
+    TuyaBinarySensorDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.binary_sensor import (
@@ -19,12 +23,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBitmapBitWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeWrapper,
-)
 
 
 @dataclass(frozen=True)
@@ -77,6 +75,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
     ),
     DeviceCategory.CS: (
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_water_full",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="water_full",
+            translation_key="tankfull",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="tankfull",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
@@ -106,6 +112,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             key=DPCode.FEED_STATE,
             translation_key="feeding",
             on_value="feeding",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
     DeviceCategory.DGNBJ: (
@@ -312,6 +323,11 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             entity_category=EntityCategory.DIAGNOSTIC,
             on_value="alarm",
         ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
     ),
     DeviceCategory.WK: (
         TuyaBinarySensorEntityDescription(
@@ -371,50 +387,6 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
 }
 
 
-class _CustomDPCodeWrapper(DPCodeWrapper):
-    """Custom DPCode Wrapper to check for values in a set."""
-
-    _valid_values: set[bool | float | int | str]
-
-    def __init__(
-        self, dpcode: str, valid_values: set[bool | float | int | str]
-    ) -> None:
-        """Init CustomDPCodeBooleanWrapper."""
-        super().__init__(dpcode)
-        self._valid_values = valid_values
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := device.status.get(self.dpcode)) is None:
-            return None
-        return raw_value in self._valid_values
-
-
-def _get_dpcode_wrapper(
-    device: CustomerDevice,
-    description: TuyaBinarySensorEntityDescription,
-) -> DPCodeWrapper | None:
-    """Get DPCode wrapper for an entity description."""
-    dpcode = description.dpcode or description.key
-    if description.bitmap_key is not None:
-        return DPCodeBitmapBitWrapper.find_dpcode(
-            device, dpcode, bitmap_key=description.bitmap_key
-        )
-
-    if bool_type := DPCodeBooleanWrapper.find_dpcode(device, dpcode):
-        return bool_type
-
-    # Legacy / compatibility
-    if dpcode not in device.status:
-        return None
-    return _CustomDPCodeWrapper(
-        dpcode,
-        description.on_value
-        if isinstance(description.on_value, set)
-        else {description.on_value},
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -431,9 +403,16 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := BINARY_SENSORS.get(device.category):
                 entities.extend(
-                    TuyaBinarySensorEntity(device, manager, description, dpcode_wrapper)
+                    TuyaBinarySensorEntity(device, manager, description, definition)
                     for description in descriptions
-                    if (dpcode_wrapper := _get_dpcode_wrapper(device, description))
+                    if (
+                        definition := get_default_definition(
+                            device,
+                            description.dpcode or description.key,
+                            description.bitmap_key,
+                            description.on_value,
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -455,25 +434,27 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        dpcode_wrapper: DeviceWrapper[bool],
+        definition: TuyaBinarySensorDefinition,
     ) -> None:
         """Init Tuya binary sensor."""
-        super().__init__(device, device_manager)
-        self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._dpcode_wrapper = dpcode_wrapper
+        super().__init__(device, device_manager, description)
+        self._dpcode_wrapper = definition.binary_sensor_wrapper
 
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
-    ) -> None:
-        """Handle state update, only if this entity's dpcode was actually updated."""
-        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
-            return
-        self.async_write_ha_state()
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )

@@ -1,6 +1,5 @@
 """Tests for Search integration."""
 
-import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.search import ItemType, Searcher
@@ -17,11 +16,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_search(
@@ -609,6 +603,7 @@ async def test_search(
     assert not search(ItemType.CONFIG_ENTRY, "unknown")
     assert search(ItemType.CONFIG_ENTRY, hue_config_entry.entry_id) == {
         ItemType.AREA: {kitchen_area.id},
+        ItemType.AUTOMATION: {"automation.area", "automation.floor"},
         ItemType.DEVICE: {hue_device.id},
         ItemType.ENTITY: {
             hue_segment_1_entity.entity_id,
@@ -622,7 +617,12 @@ async def test_search(
     }
     assert search(ItemType.CONFIG_ENTRY, wled_config_entry.entry_id) == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id},
-        ItemType.AUTOMATION: {"automation.wled_entity", "automation.wled_device"},
+        ItemType.AUTOMATION: {
+            "automation.floor",
+            "automation.label",
+            "automation.wled_entity",
+            "automation.wled_device",
+        },
         ItemType.DEVICE: {wled_device.id},
         ItemType.ENTITY: {
             wled_segment_1_entity.entity_id,
@@ -638,7 +638,12 @@ async def test_search(
     assert not search(ItemType.DEVICE, "unknown")
     assert search(ItemType.DEVICE, wled_device.id) == {
         ItemType.AREA: {bedroom_area.id, living_room_area.id},
-        ItemType.AUTOMATION: {"automation.wled_entity", "automation.wled_device"},
+        ItemType.AUTOMATION: {
+            "automation.floor",
+            "automation.label",
+            "automation.wled_entity",
+            "automation.wled_device",
+        },
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.ENTITY: {
             wled_segment_1_entity.entity_id,
@@ -653,6 +658,7 @@ async def test_search(
     }
     assert search(ItemType.DEVICE, hue_device.id) == {
         ItemType.AREA: {kitchen_area.id},
+        ItemType.AUTOMATION: {"automation.floor", "automation.area"},
         ItemType.CONFIG_ENTRY: {hue_config_entry.entry_id},
         ItemType.ENTITY: {
             hue_segment_1_entity.entity_id,
@@ -993,6 +999,7 @@ async def test_search(
     assert response["success"]
     assert response["result"] == {
         ItemType.AREA: [kitchen_area.id],
+        ItemType.AUTOMATION: unordered(["automation.area", "automation.floor"]),
         ItemType.ENTITY: unordered(
             [
                 hue_segment_1_entity.entity_id,

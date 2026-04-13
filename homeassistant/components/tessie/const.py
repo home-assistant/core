@@ -32,14 +32,6 @@ class TessieState(StrEnum):
     ONLINE = "online"
 
 
-class TessieStatus(StrEnum):
-    """Tessie status."""
-
-    ASLEEP = "asleep"
-    AWAKE = "awake"
-    WAITING = "waiting_for_sleep"
-
-
 class TessieSeatHeaterOptions(StrEnum):
     """Tessie seat heater options."""
 
@@ -100,6 +92,12 @@ TessieChargeStates = {
     "NoPower": "no_power",
 }
 
+TessieChargePortLatchStates = {
+    "Engaged": "engaged",
+    "Disengaged": "disengaged",
+    "Blocking": "blocking",
+}
+
 
 class TessieWallConnectorStates(IntEnum):
     """Tessie Wall Connector states."""
@@ -114,3 +112,28 @@ class TessieWallConnectorStates(IntEnum):
     CHARGING_FINISHED = 8
     WAITING_CAR = 9
     CHARGING_REDUCED = 10
+
+
+ENERGY_HISTORY_FIELDS = (
+    "solar_energy_exported",
+    "generator_energy_exported",
+    "grid_energy_imported",
+    "grid_services_energy_imported",
+    "grid_services_energy_exported",
+    "grid_energy_exported_from_solar",
+    "grid_energy_exported_from_generator",
+    "grid_energy_exported_from_battery",
+    "battery_energy_exported",
+    "battery_energy_imported_from_grid",
+    "battery_energy_imported_from_solar",
+    "battery_energy_imported_from_generator",
+    "consumer_energy_imported_from_grid",
+    "consumer_energy_imported_from_solar",
+    "consumer_energy_imported_from_battery",
+    "consumer_energy_imported_from_generator",
+    "total_home_usage",
+    "total_battery_charge",
+    "total_battery_discharge",
+    "total_solar_generation",
+    "total_grid_energy_exported",
+)

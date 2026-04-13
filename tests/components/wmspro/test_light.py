@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.components.wmspro.light import SCAN_INTERVAL
 from homeassistant.const import (
@@ -14,7 +14,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -97,7 +96,7 @@ async def test_light_turn_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -116,7 +115,7 @@ async def test_light_turn_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -155,7 +154,7 @@ async def test_light_dimm_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
@@ -174,7 +173,7 @@ async def test_light_dimm_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity.entity_id, ATTR_BRIGHTNESS: 128},
             blocking=True,
@@ -193,7 +192,7 @@ async def test_light_dimm_on_and_off(
         before = len(mock_hub_status_prod_dimmer.mock_calls)
 
         await hass.services.async_call(
-            Platform.LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,

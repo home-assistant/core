@@ -13,6 +13,8 @@ from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
 from .controller import OmadaClientsCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

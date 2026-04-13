@@ -63,9 +63,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await slide.slide_info(user_input[CONF_HOST])
-        except (ClientConnectionError, ClientTimeoutError):
+        except ClientConnectionError, ClientTimeoutError:
             return {"base": "cannot_connect"}
-        except (AuthenticationFailed, DigestAuthCalcError):
+        except AuthenticationFailed, DigestAuthCalcError:
             return {"base": "invalid_auth"}
         except Exception:
             _LOGGER.exception("Exception occurred during connection test")
@@ -85,9 +85,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await slide.slide_info(user_input[CONF_HOST])
-        except (ClientConnectionError, ClientTimeoutError):
+        except ClientConnectionError, ClientTimeoutError:
             return {"base": "cannot_connect"}
-        except (AuthenticationFailed, DigestAuthCalcError):
+        except AuthenticationFailed, DigestAuthCalcError:
             return {"base": "invalid_auth"}
         except Exception:
             _LOGGER.exception("Exception occurred during connection test")

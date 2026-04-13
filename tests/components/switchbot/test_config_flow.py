@@ -8,6 +8,7 @@ from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationEr
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.switchbot.const import (
+    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
@@ -33,6 +34,7 @@ from . import (
     WOHAND_SERVICE_INFO,
     WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
     WOLOCK_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
     WORELAY_SWITCH_1PM_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
     init_integration,
@@ -219,6 +221,113 @@ async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_bluetooth_discovery_encrypted_key_back_navigation(
+    hass: HomeAssistant,
+) -> None:
+    """Test that resuming an abandoned encrypted_key flow resets to the method menu."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOLOCK_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    # User selects encrypted_key
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    # Simulate user closing dialog and re-opening: call the step with no input
+    # (as HA does when resuming an in-progress flow)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=None
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    # User can now pick a method again and complete the flow
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotLock.verify_encryption_key",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_encrypted_auth_back_navigation(
+    hass: HomeAssistant,
+) -> None:
+    """Test that resuming an abandoned encrypted_auth flow resets to the method menu."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOLOCK_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    # User selects encrypted_auth
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_auth"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_auth"
+
+    # Simulate user closing dialog and re-opening: call the step with no input
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=None
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    # User can switch to encrypted_key and complete the flow
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotLock.verify_encryption_key",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device when already setup."""
     entry = MockConfigEntry(
@@ -261,6 +370,35 @@ async def test_async_step_bluetooth_not_connectable(hass: HomeAssistant) -> None
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
+
+
+async def test_async_step_bluetooth_meter_pro_co2_not_connectable(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery via bluetooth for Meter Pro CO2 from a non-connectable source."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Meter Pro CO2 EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "hygrometer_co2",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
@@ -756,6 +894,87 @@ async def test_user_setup_woencrypted_auth_switchbot_api_down(
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
+async def test_user_setup_woencrypted_auth_unknown_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test the encrypted auth step shows unknown error for unexpected exceptions."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+        return_value=[WOLOCK_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "select_device"},
+        )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_auth"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_auth"
+
+    with patch(
+        "switchbot.SwitchbotLock.async_retrieve_encryption_key",
+        side_effect=Exception("Unexpected network failure"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "user@example.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_auth"
+    assert result["errors"] == {"base": "unknown"}
+
+    # Recover: re-submit with valid credentials and successful key retrieval
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotLock.verify_encryption_key",
+            return_value=True,
+        ),
+        patch(
+            "switchbot.SwitchbotLock.async_retrieve_encryption_key",
+            return_value={
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "user@example.com",
+                CONF_PASSWORD: "password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Lock EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "lock",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
     """Test the user initiated form for a lock."""
 
@@ -985,6 +1204,73 @@ async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
+async def test_user_cloud_login_unknown_error(hass: HomeAssistant) -> None:
+    """Test the cloud login step shows unknown error for unexpected exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "cloud_login"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_login"
+
+    with patch(
+        "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+        side_effect=Exception("Unexpected network failure"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_login"
+    assert result["errors"] == {"base": "unknown"}
+
+    # Recover: re-submit with valid credentials and successful cloud login
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bot EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "bot",
+    }
+
+
+@pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> None:
     """Test cloud login followed by encrypted device setup using saved credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -1029,12 +1315,22 @@ async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encrypted_auth"
 
+    # Simulate the user navigating away and re-opening the dialog.
+    # The failed auto-auth cleared credentials, so calling with None now
+    # redirects back to the method selection menu.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         None,
     )
     await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    # User selects encrypted_auth again and manually enters credentials
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_auth"}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encrypted_auth"
 
@@ -1263,6 +1559,45 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 0
 
     assert entry.options[CONF_LOCK_NIGHTLATCH] is True
+
+
+async def test_options_flow_curtain_speed(hass: HomeAssistant) -> None:
+    """Test updating curtain speed option."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "curtain",
+        },
+        options={CONF_RETRY_COUNT: 2, CONF_CURTAIN_SPEED: 255},
+        unique_id="aabbccddeeff",
+    )
+    entry.add_to_hass(hass)
+
+    with patch_async_setup_entry() as mock_setup_entry:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] is None
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RETRY_COUNT: 4,
+                CONF_CURTAIN_SPEED: 100,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_RETRY_COUNT] == 4
+    assert result["data"][CONF_CURTAIN_SPEED] == 100
+    assert entry.options[CONF_CURTAIN_SPEED] == 100
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")

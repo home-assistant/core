@@ -47,6 +47,13 @@ SENSOR_TYPES: dict[str, dict[str, SensorSpecs]] = {
             0,
             SensorDeviceClass.TEMPERATURE,
         ),
+        "FlowTemperature": (
+            "Hc1FlowTemp",
+            UnitOfTemperature.CELSIUS,
+            None,
+            0,
+            SensorDeviceClass.TEMPERATURE,
+        ),
         "PumpStatus": ("Hc1PumpStatus", None, "mdi:toggle-switch", 2, None),
         "HCSummerTemperatureLimit": (
             "Hc1SummerTempLimit",
@@ -127,6 +134,13 @@ SENSOR_TYPES: dict[str, dict[str, SensorSpecs]] = {
             0,
             SensorDeviceClass.TEMPERATURE,
         ),
+        "OutsideTemperature": (
+            "DisplayedOutsideTemp",
+            UnitOfTemperature.CELSIUS,
+            None,
+            0,
+            SensorDeviceClass.TEMPERATURE,
+        ),
         "Zone1TimerMonday": ("z1Timer.Monday", None, "mdi:timer-outline", 1, None),
         "Zone1TimerTuesday": ("z1Timer.Tuesday", None, "mdi:timer-outline", 1, None),
         "Zone1TimerWednesday": (
@@ -157,6 +171,13 @@ SENSOR_TYPES: dict[str, dict[str, SensorSpecs]] = {
         ),
         "PowerEnergyConsumptionThisMonth": (
             "PrEnergySumHcThisMonth",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            "mdi:flash",
+            0,
+            SensorDeviceClass.ENERGY,
+        ),
+        "TotalEnergyConsumption": (
+            "PrEnergySum",
             UnitOfEnergy.KILO_WATT_HOUR,
             "mdi:flash",
             0,

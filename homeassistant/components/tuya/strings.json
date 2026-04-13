@@ -490,9 +490,9 @@
         }
       },
       "relay_status": {
-        "name": "Power on behavior",
+        "name": "Power-on behavior",
         "state": {
-          "last": "Remember last state",
+          "last": "Previous state",
           "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
@@ -755,6 +755,9 @@
           "standby": "[%key:common::state::standby%]",
           "work": "Working"
         }
+      },
+      "oxydo_reduction_potential": {
+        "name": "Oxydo reduction potential"
       },
       "phase_a_current": {
         "name": "Phase A current"
@@ -1096,12 +1099,6 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
-    }
-  },
-  "issues": {
-    "deprecated_entity_new_valve": {
-      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
-      "title": "{name} is deprecated"
     }
   }
 }

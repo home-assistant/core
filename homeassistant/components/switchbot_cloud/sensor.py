@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -26,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudConfigEntry
 from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
@@ -169,6 +168,7 @@ LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
+    "Standing Fan": (BATTERY_DESCRIPTION,),
     "Meter": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
@@ -225,6 +225,11 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Smart Lock Vision": (BATTERY_DESCRIPTION,),
+    "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
+    "Lock Vision": (BATTERY_DESCRIPTION,),
+    "Lock Vision Pro": (BATTERY_DESCRIPTION,),
+    "Smart Lock Pro Wifi": (BATTERY_DESCRIPTION,),
     "Relay Switch 2PM": (
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,
         RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION,
@@ -250,16 +255,22 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         BATTERY_DESCRIPTION,
     ),
     "Smart Radiator Thermostat": (BATTERY_DESCRIPTION,),
+    "AI Art Frame": (BATTERY_DESCRIPTION,),
+    "WeatherStation": (
+        BATTERY_DESCRIPTION,
+        TEMPERATURE_DESCRIPTION,
+        HUMIDITY_DESCRIPTION,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     entities: list[SwitchBotCloudSensor] = []
     for device, coordinator in data.devices.sensors:
         for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:

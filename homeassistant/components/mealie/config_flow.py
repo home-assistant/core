@@ -50,7 +50,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         """Check connection to the Mealie API."""
         assert self.host is not None
 
-        if "/hassio/ingress/" in self.host:
+        if "/app/" in self.host:
             return {"base": "ingress_url"}, None
 
         client = MealieClient(
@@ -161,7 +161,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Prepare configuration for a Mealie add-on.
+        """Prepare configuration for a Mealie app.
 
         This flow is triggered by the discovery component.
         """

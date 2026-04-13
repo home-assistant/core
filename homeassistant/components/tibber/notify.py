@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import tibber
+
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     NotifyEntity,
@@ -37,7 +39,9 @@ class TibberNotificationEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
-        tibber_connection = self._entry.runtime_data.tibber_connection
+        tibber_connection: tibber.Tibber = (
+            await self._entry.runtime_data.async_get_client(self.hass)
+        )
         try:
             await tibber_connection.send_notification(
                 title or ATTR_TITLE_DEFAULT, message
