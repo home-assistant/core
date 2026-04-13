@@ -16,6 +16,7 @@ from homeassistant.components.aquarite.sensor import (
     AquariteTemperatureSensorEntity,
     AquariteTimeSensorEntity,
     AquariteValueSensorEntity,
+    async_setup_entry,
 )
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
@@ -271,3 +272,128 @@ def test_pool_name_native_value(
             mock_coordinator, MOCK_POOL_ID, MOCK_POOL_NAME
         )
     assert entity.native_value == MOCK_POOL_NAME
+
+
+# ── Additional edge cases ───────────────────────────────────────
+
+
+def test_value_sensor_native_value_non_numeric() -> None:
+    """Test value sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"modules": {"ph": {"current": "bad"}}})
+    with _patch_entity_init():
+        entity = AquariteValueSensorEntity(
+            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "ph", "modules.ph.current"
+        )
+    assert entity.native_value is None
+
+
+def test_rx_native_value_non_numeric() -> None:
+    """Test Rx sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"modules": {"rx": {"current": "bad"}}})
+    with _patch_entity_init():
+        entity = AquariteRxValueSensorEntity(
+            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "rx", "modules.rx.current"
+        )
+    assert entity.native_value is None
+
+
+def test_time_sensor_native_value_non_numeric() -> None:
+    """Test time sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"filtration": {"intel": {"time": "bad"}}})
+    with _patch_entity_init():
+        entity = AquariteTimeSensorEntity(
+            coord,
+            MOCK_POOL_ID,
+            MOCK_POOL_NAME,
+            "filtration_intel_time",
+            "filtration.intel.time",
+        )
+    assert entity.native_value is None
+
+
+def test_rssi_native_value_non_numeric() -> None:
+    """Test RSSI sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"main": {"RSSI": "bad"}})
+    with _patch_entity_init():
+        entity = AquariteRssiSensorEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+    assert entity.native_value is None
+
+
+# ── Platform setup ──────────────────────────────────────────────
+
+
+async def _setup_sensor_platform(hass: Any, mock_pool_data: dict[str, Any]) -> list:
+    """Set up the sensor platform with a mock coordinator and capture entities."""
+    coord = _make_coordinator(mock_pool_data)
+    entry = MagicMock()
+    entry.runtime_data = coord
+    entry.title = MOCK_POOL_NAME
+
+    captured: list = []
+
+    def _add_entities(entities: list, *_args: Any, **_kwargs: Any) -> None:
+        captured.extend(entities)
+
+    with _patch_entity_init():
+        await async_setup_entry(hass, entry, _add_entities)
+    return captured
+
+
+async def test_async_setup_entry_full_modules(
+    hass: Any, mock_pool_data: dict[str, Any]
+) -> None:
+    """Test setup creates entities for every module flagged as present."""
+    entities = await _setup_sensor_platform(hass, mock_pool_data)
+
+    translation_keys = {e._attr_translation_key for e in entities}
+    # Always-on entities
+    assert "temperature" in translation_keys
+    assert "rssi" in translation_keys
+    assert "filtration_intel_time" in translation_keys
+    assert "pool_name" in translation_keys
+    # Module-gated (mock_pool_data has hasPH=1, hasRX=1, hasHidro=1)
+    assert "ph" in translation_keys
+    assert "rx" in translation_keys
+    # Electrolysis branch (is_electrolysis=True in fixture)
+    assert "electrolysis" in translation_keys
+    # Disabled modules in the fixture
+    assert "cd" not in translation_keys
+    assert "cl" not in translation_keys
+    assert "uv" not in translation_keys
+    # Location sensors (always added)
+    assert {"city", "street", "zipcode", "country", "latitude", "longitude"} <= (
+        translation_keys
+    )
+
+
+async def test_async_setup_entry_hydrolysis_branch(hass: Any) -> None:
+    """Test the hydrolysis (non-electrolysis) branch."""
+    data = {
+        "main": {"hasHidro": 1, "version": 1},
+        "hidro": {"is_electrolysis": False, "current": 50},
+        "form": {},
+    }
+    entities = await _setup_sensor_platform(hass, data)
+    translation_keys = {e._attr_translation_key for e in entities}
+    assert "hydrolysis" in translation_keys
+    assert "electrolysis" not in translation_keys
+
+
+async def test_async_setup_entry_all_modules_enabled(hass: Any) -> None:
+    """Test setup when every module flag is enabled."""
+    data = {
+        "main": {
+            "hasCD": 1,
+            "hasCL": 1,
+            "hasPH": 1,
+            "hasRX": 1,
+            "hasUV": 1,
+            "hasHidro": 1,
+            "version": 1,
+        },
+        "hidro": {"is_electrolysis": True, "current": 50},
+        "form": {},
+    }
+    entities = await _setup_sensor_platform(hass, data)
+    translation_keys = {e._attr_translation_key for e in entities}
+    assert {"cd", "cl", "ph", "rx", "uv", "electrolysis"} <= translation_keys
