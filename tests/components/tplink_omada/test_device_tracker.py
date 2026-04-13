@@ -83,7 +83,7 @@ async def test_device_scanner_update_to_away_nulls_properties(
     assert not updated_entity.disabled
     await hass.async_block_till_done(wait_background_tasks=True)
     async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
     await _setup_client_disconnect(
@@ -91,7 +91,7 @@ async def test_device_scanner_update_to_away_nulls_properties(
     )
 
     async_fire_time_changed(hass, utcnow() + (POLL_INTERVAL * 2))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
