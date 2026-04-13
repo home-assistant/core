@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._system_id = None
         self._available_systems = []
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(self, user_input: dict | None = None) -> Any:
         """Handle the initial step - collect email and password for Firebase auth."""
         errors = {}
 
@@ -121,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_system(
         self, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> Any:
         """Handle system selection when user has multiple systems."""
         errors = {}
 
@@ -182,7 +182,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual_entry(
         self, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> Any:
         """Handle manual entry of customer_id and system_id if API lookup fails."""
         errors = {}
 

@@ -43,11 +43,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up entities."""
 
-    auto_area = AutoArea(hass=hass, areaid="unknown")
-
     async_add_entities(
         [
-            # PresenceLockSwitch(auto_area),
+            # PresenceLockSwitch(AutoArea(hass=hass, areaid="unknown")),
             SleepModeSwitch(),
             MotionNotificationsSwitch(),
             MonitoringAlarmSwitch("monitoringalarm"),

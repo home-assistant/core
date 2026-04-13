@@ -3,40 +3,24 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 import json
 import logging
 import math
-import mimetypes
-import os
-from os import path, walk
-from pathlib import Path
 import shutil
 import subprocess
 import time
-from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
-import aiohttp
-
-from google.api_core.exceptions import GoogleAPIError
-from google import genai
 from google.auth import jwt
 from google.auth.crypt import rsa
 import voluptuous as vol
 
-from homeassistant.components.recorder import get_instance
-from homeassistant.components import frontend
-from homeassistant.components.alarm_control_panel import DOMAIN as PLATFORM
+from homeassistant.components import webhook
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.config import get_default_config_dir
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.components import webhook
-from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components.persistent_notification import create as notify_create
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -47,15 +31,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 import homeassistant.util.dt as dt_util
-from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.components.frontend import add_extra_js_url
-from homeassistant.components import conversation
 
 ATTR_TITLE = "title"
 ATTR_DATA = "data"
@@ -458,7 +439,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN]["entry_id"] = entry.entry_id
 
-    token_store = storage.Store(
+    token_store: Store = storage.Store(
         hass, PUSH_TOKEN_STORAGE_VERSION, PUSH_TOKEN_STORAGE_KEY
     )
     hass.data[DOMAIN]["token_store"] = token_store
@@ -557,7 +538,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Failed to fetch customer/system data: %s", e)
             if "401" in str(e):
                 _LOGGER.info("Token expired, requesting reauth")
-                await hass.config_entries.async_request_reauth(hass, entry)
+                await entry.async_request_reauth(hass)
                 return False
             raise HomeAssistantError(
                 f"Failed to fetch customer/system data: {e}"

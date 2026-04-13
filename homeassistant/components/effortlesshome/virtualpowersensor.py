@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
@@ -43,6 +43,7 @@ class VirtualPowerSensor(SensorEntity, RestoreEntity):
     # Router	5 - 15
 
     def __init__(self, hass: HomeAssistant, entity_id: str, watts: float):
+        """Initialize the virtual power sensor."""
         self.hass = hass
         self._entity_id = entity_id
 
@@ -65,8 +66,8 @@ class VirtualPowerSensor(SensorEntity, RestoreEntity):
         return self._attr_unique_id
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def native_value(self):
+        """Return the native value of the sensor."""
         return self._state
 
     @property
@@ -79,8 +80,8 @@ class VirtualPowerSensor(SensorEntity, RestoreEntity):
         }
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    def native_unit_of_measurement(self):
+        """Return the native unit of measurement."""
         return "W"
 
     @callback
@@ -127,6 +128,7 @@ class VirtualPowerSensorAlwaysOn(SensorEntity, RestoreEntity):
     """Representation of a Virtual Power Sensor."""
 
     def __init__(self, hass: HomeAssistant, entity_id: str, watts: float):
+        """Initialize the always-on virtual power sensor."""
         self.hass = hass
         self._entity_id = entity_id
         self._attr_name = f"{entity_id}_virtual_power"
@@ -154,13 +156,13 @@ class VirtualPowerSensorAlwaysOn(SensorEntity, RestoreEntity):
         }
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def native_value(self):
+        """Return the native value of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    def native_unit_of_measurement(self):
+        """Return the native unit of measurement."""
         return "W"
 
     @callback
@@ -226,13 +228,13 @@ class FakeDeviceVirtualPowerSensor(SensorEntity, RestoreEntity):
         }
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current power usage."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    def native_unit_of_measurement(self):
+        """Return the native unit of measurement."""
         return "W"
 
     def update(self):
@@ -279,23 +281,23 @@ class TotalEnergySensor(SensorEntity, RestoreEntity):
         return self._attr_unique_id
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the total energy usage in kWh."""
         return self._state
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> SensorDeviceClass:
         """Return the device_class of the sensor."""
-        return "energy"
+        return SensorDeviceClass.ENERGY
 
     @property
-    def state_class(self) -> str:
+    def state_class(self) -> SensorStateClass:
         """Return the state_class of the sensor."""
-        return "total"
+        return SensorStateClass.TOTAL
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
+    def native_unit_of_measurement(self) -> str:
+        """Return the native unit of measurement."""
         return "kWh"
 
     def update(self):

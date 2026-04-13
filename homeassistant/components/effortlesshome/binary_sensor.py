@@ -134,9 +134,9 @@ class SecurityMotionGroup(BinarySensorEntity, RestoreEntity):
         sensor_state = self.hass.states.get(entity_id)
 
         if sensor_state is not None:
-            self._state = sensor_state.state  # type: ignore  # noqa: PGH003
+            self._state = sensor_state.state
         else:
-            sensor_state = "unknown"
+            self._state = "unknown"
 
 
 class WindowGroup(BinarySensorEntity, RestoreEntity):
@@ -176,8 +176,8 @@ class WindowGroup(BinarySensorEntity, RestoreEntity):
         return "mdi:door-sliding"
 
     @property
-    def state(self):  # noqa: ANN201
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     def update(self) -> None:
@@ -189,9 +189,9 @@ class WindowGroup(BinarySensorEntity, RestoreEntity):
         sensor_state = self.hass.states.get(entity_id)
 
         if sensor_state is not None:
-            self._state = sensor_state.state  # type: ignore  # noqa: PGH003
+            self._state = sensor_state.state
         else:
-            sensor_state = "unknown"
+            self._state = "unknown"
 
 
 class DoorGroup(BinarySensorEntity, RestoreEntity):
@@ -231,8 +231,8 @@ class DoorGroup(BinarySensorEntity, RestoreEntity):
         return "mdi:door"
 
     @property
-    def state(self):  # noqa: ANN201
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     def update(self) -> None:
@@ -244,9 +244,9 @@ class DoorGroup(BinarySensorEntity, RestoreEntity):
         sensor_state = self.hass.states.get(entity_id)
 
         if sensor_state is not None:
-            self._state = sensor_state.state  # type: ignore  # noqa: PGH003
+            self._state = sensor_state.state
         else:
-            sensor_state = "unknown"
+            self._state = "unknown"
 
 
 class CarbonMonoxideGroup(BinarySensorEntity, RestoreEntity):
@@ -286,8 +286,8 @@ class CarbonMonoxideGroup(BinarySensorEntity, RestoreEntity):
         return "mdi:smoke-detector-variant"
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     def update(self) -> None:
@@ -301,7 +301,7 @@ class CarbonMonoxideGroup(BinarySensorEntity, RestoreEntity):
         if sensor_state is not None:
             self._state = sensor_state.state
         else:
-            sensor_state = "unknown"
+            self._state = "unknown"
 
 
 class MoistureGroup(BinarySensorEntity, RestoreEntity):
@@ -341,8 +341,8 @@ class MoistureGroup(BinarySensorEntity, RestoreEntity):
         return "mdi:water"
 
     @property
-    def state(self):  # noqa: ANN201
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     def update(self) -> None:
@@ -354,9 +354,9 @@ class MoistureGroup(BinarySensorEntity, RestoreEntity):
         sensor_state = self.hass.states.get(entity_id)
 
         if sensor_state is not None:
-            self._state = sensor_state.state  # type: ignore  # noqa: PGH003
+            self._state = sensor_state.state
         else:
-            sensor_state = "unknown"
+            self._state = "unknown"
 
 
 class SmokeGroup(BinarySensorEntity, RestoreEntity):
@@ -396,8 +396,8 @@ class SmokeGroup(BinarySensorEntity, RestoreEntity):
         return "mdi:smoke-detector-variant"
 
     @property
-    def state(self):  # noqa: ANN201
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     def update(self) -> None:
@@ -409,9 +409,9 @@ class SmokeGroup(BinarySensorEntity, RestoreEntity):
         sensor_state = self.hass.states.get(entity_id)
 
         if sensor_state is not None:
-            self._state = sensor_state.state  # type: ignore  # noqa: PGH003
+            self._state = sensor_state.state
         else:
-            sensor_state = "unknown"
+            self._state = "unknown"
 
 
 class BinaryMedAlertSensor(BinarySensorEntity, RestoreEntity):
@@ -462,8 +462,8 @@ class BinaryMedAlertSensor(BinarySensorEntity, RestoreEntity):
         return "mdi:ambulance"
 
     @property
-    def state(self):  # noqa: ANN201
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     async def async_update(self) -> None:
@@ -474,6 +474,9 @@ class BinaryMedAlertSensor(BinarySensorEntity, RestoreEntity):
 
         entity_id = "switch.medicalalertalarm"
         switch_state = self.hass.states.get(entity_id)
+
+        if switch_state is None:
+            return
 
         turnOn = self._state == "off" and switch_state.state == "on"
         turnOff = self._state == "on" and switch_state.state == "off"
@@ -535,8 +538,8 @@ class MonitoringAlarm(BinarySensorEntity, RestoreEntity):
         return "mdi:shield-account-outline"
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     async def async_update(self) -> None:
@@ -546,6 +549,9 @@ class MonitoringAlarm(BinarySensorEntity, RestoreEntity):
         """
         entity_id = "switch.monitoringalarm"
         switch_state = self.hass.states.get(entity_id)
+
+        if switch_state is None:
+            return
 
         turnOn = self._state == "off" and switch_state.state == "on"
         turnOff = self._state == "on" and switch_state.state == "off"
@@ -597,8 +603,8 @@ class SleepingSensor(BinarySensorEntity, RestoreEntity):
         return "sleeping_sensor"
 
     @property
-    def state(self):  # noqa: ANN201
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     @property
@@ -706,8 +712,8 @@ class SomeoneHomeSensor(BinarySensorEntity, RestoreEntity):
             _LOGGER.error(f"[SomeoneHomeSensor] Error in set_state: {e}")
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     def update(self) -> None:
@@ -802,8 +808,8 @@ class SmartApplianceSensor(BinarySensorEntity, RestoreEntity):
         return self.name
 
     @property
-    def state(self):  # noqa: ANN201
-        """Return the state of the sensor."""
+    def is_on(self) -> bool | None:
+        """Return true if entity is on."""
         return self._state
 
     @property

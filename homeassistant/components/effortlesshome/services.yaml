@@ -20,7 +20,6 @@ add_label_to_entity:
   target: {}
   fields:
     entity_id:
-      description: The entity to update
       example: "binary_sensor.front_door"
       required: true
       selector:
@@ -78,7 +77,6 @@ update_entity:
   target: {}
   fields:
     entity_id:
-      description: The entity to update
       example: "binary_sensor.front_door"
       required: true
       selector:
@@ -100,7 +98,6 @@ create_event:
   target: {}
   fields:
     entity_id:
-      description: The entity that triggered the event
       example: "binary_sensor.front_door"
       required: true
       selector:

@@ -1,9 +1,7 @@
 {
   "entity": {
     "light": {
-      "default": {
-        "icon": "mdi:ceiling-light-multiple-outline"
-      }
+      "default": "mdi:ceiling-light-multiple-outline"
     }
   }
 }

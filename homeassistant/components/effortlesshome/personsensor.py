@@ -79,7 +79,7 @@ class eh_personSensor(Entity):
 
     @property
     def unique_id(self) -> str:
-        return self._attr_unique_id
+        return self._attr_unique_id or f"effortlesshome_person_{self._email.lower().replace('@', '_').replace('.', '_')}"
 
     @property
     def icon(self) -> str:
@@ -109,13 +109,13 @@ class eh_personSensor(Entity):
         return self._email
 
     @property
-    def remote_tracker_entity(self) -> str:
-        """Return the value"""
+    def remote_tracker_entity(self) -> str | None:
+        """Return the remote tracker entity ID."""
         return self._remote_tracker_entity_id
 
     @property
-    def local_tracker_entity(self) -> str:
-        """Return the value"""
+    def local_tracker_entity(self) -> str | None:
+        """Return the local tracker entity ID."""
         return self._local_tracker_entity_id
 
     @property

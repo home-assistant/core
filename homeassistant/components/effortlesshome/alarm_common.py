@@ -39,7 +39,7 @@ class PendingAlarmComponent:
     _pendingalarm = None
 
     @classmethod
-    def set_pendingalarm(cls, alarm: PendingAlarm) -> None:
+    def set_pendingalarm(cls, alarm: PendingAlarm | None) -> None:
         cls._pendingalarm = alarm
 
     @classmethod
@@ -164,7 +164,7 @@ async def async_creatependingalarm(
         _LOGGER.debug("sensor_device_name" + sensor_device_name)
 
     alarm = PendingAlarm(
-        hass, open_sensors, sensor_device_class, sensor_device_name, alarmtype
+        hass, open_sensors or {}, sensor_device_class or "", sensor_device_name or "", alarmtype
     )
 
     PendingAlarmComponent.set_pendingalarm(alarm)

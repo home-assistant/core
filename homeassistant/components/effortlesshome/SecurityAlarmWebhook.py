@@ -1,9 +1,14 @@
+"""Security Alarm Webhook module for EffortlessHome."""
+
 from __future__ import annotations
+
 import logging
-from .const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.components import webhook
+
 from aiohttp import web
+from homeassistant.components import webhook
+from homeassistant.core import HomeAssistant
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,6 +21,7 @@ class SecurityAlarmWebhook:
         self.hass = hass
 
     async def async_setup_webhook(self) -> bool:
+        """Set up security alarm webhook."""
         _LOGGER.info("Setting up Security Alarm Webhook")
 
         try:
@@ -26,8 +32,8 @@ class SecurityAlarmWebhook:
                 "alarmwebhook",
                 self.handle_webhook,
             )
-        except Exception as e:
-            _LOGGER.info(f"Error setting up Security Alarm Webhook: {e}")
+        except ValueError as e:
+            _LOGGER.info("Error setting up Security Alarm Webhook: %s", e)
 
         return True
 

@@ -42,4 +42,4 @@ class HumiditySensor(AutoEntity[SensorEntity, SensorDeviceClass], SensorEntity):
         await super().async_added_to_hass()
 
         if (last_state := await self.async_get_last_state()) is not None:
-            self._attr_native_value = last_state.state  # type: ignore[assignment]
+            self._attr_native_value = last_state.state

@@ -1,11 +1,13 @@
-import logging  # noqa: D100, EXE002, N999
+"""Siren grouper for EffortlessHome."""
 
+import logging
 from functools import cached_property
-from homeassistant.helpers import entity_registry
-from .const import DOMAIN, NAME
-_LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "siren_groups"
+from homeassistant.helpers import entity_registry as er
+
+from .const import DOMAIN, NAME
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SirenGrouper:
@@ -27,7 +29,7 @@ class SirenGrouper:
         }
 
     @cached_property
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._attr_name
 

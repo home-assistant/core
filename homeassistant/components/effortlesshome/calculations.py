@@ -133,6 +133,11 @@ def get_calculation(
     sensor_type: SensorDeviceClass | BinarySensorDeviceClass,
 ) -> Callable[[list[State]], StateType] | None:
     """Get the configured calculation for the sensor provided."""
+    # Handle CoverDeviceClass by returning None (covers don't need aggregation)
+    from homeassistant.components.cover import CoverDeviceClass
+    if isinstance(sensor_type, CoverDeviceClass):
+        return None
+    
     if sensor_type == SensorDeviceClass.ILLUMINANCE:
         return CALCULATE.get(DEFAULT_CALCULATION_ILLUMINANCE)
 

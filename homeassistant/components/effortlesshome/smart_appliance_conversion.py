@@ -1,3 +1,5 @@
+"""Smart Appliance Conversion module for EffortlessHome."""
+
 from __future__ import annotations
 
 from functools import cached_property
@@ -6,6 +8,7 @@ import logging
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.restore_state import RestoreEntity
+
 from .auto_area import AutoArea
 from .const import NAME, DOMAIN
 
@@ -18,7 +21,7 @@ class SmartApplianceConversionSwitch(SwitchEntity, RestoreEntity):
     _attr_should_poll = False
 
     def __init__(self, name) -> None:
-        """Initialize SmartApplianceConversionSwitch"""
+        """Initialize SmartApplianceConversionSwitch."""
 
         self._is_on: bool = False
         self.name = name

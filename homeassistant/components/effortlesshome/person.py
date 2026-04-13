@@ -14,6 +14,8 @@ from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import StateType
+from homeassistant.const import STATE_UNKNOWN
 
 from oasira import OasiraAPIClient, OasiraAPIError
 from .const import DOMAIN, NAME, ATTR_LATITUDE, ATTR_LONGITUDE
@@ -33,7 +35,7 @@ class eh_person(SensorEntity, RestoreEntity):
     """A persistent, sensor-like representation of an EffortlessHome Person with tracking and notifications."""
 
     def __init__(self, hass: Optional[HomeAssistant], email: str):
-        self.hass = hass
+        self.hass: Optional[HomeAssistant] = hass
         self._email = email
         self._attr_name = email
         self._attr_unique_id = (
@@ -44,6 +46,8 @@ class eh_person(SensorEntity, RestoreEntity):
 
         self._local_tracker_entity_id: Optional[str] = None
         self._remote_tracker_entity_id: Optional[str] = None
+        self._local_tracker_state: str = STATE_UNKNOWN
+        self._remote_tracker_state: str = STATE_UNKNOWN
         self._notification_devices: List[effortlesshomenotificationdevice] = []
         self._health_data: Dict[str, Any] = {}
 
@@ -54,14 +58,20 @@ class eh_person(SensorEntity, RestoreEntity):
     # ---- Standard HA Properties ----
     @property
     def unique_id(self) -> str:
-        return self._attr_unique_id
+        return self._attr_unique_id or f"effortlesshome_person_{self._email.lower().replace('@', '_').replace('.', '_')}"
 
     @property
     def icon(self) -> str:
         return "mdi:account-group"
 
     @property
-    def state(self) -> str:
+    def available(self) -> bool:
+        """Return true if entity is available."""
+        return True
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state value."""
         return self.remotetracker + "|" + self.localtracker
 
     @property
@@ -73,7 +83,7 @@ class eh_person(SensorEntity, RestoreEntity):
         return self._notification_devices
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> Dict[str, Any] | None:
         return {
             "identifiers": {(DOMAIN, NAME)},
             "name": NAME,
@@ -407,7 +417,7 @@ class eh_person(SensorEntity, RestoreEntity):
             google_firebase_raw = firebase_config.get("Google_Firebase")
             if not google_firebase_raw:
                 _LOGGER.error("Missing Google_Firebase in response")
-                return None
+                raise ValueError("Missing Google_Firebase in response")
 
             service_account_info = json.loads(google_firebase_raw)
 
@@ -439,16 +449,16 @@ class eh_person(SensorEntity, RestoreEntity):
 
                     if "access_token" not in result:
                         _LOGGER.error("Firebase OAuth error: %s", result)
-                        return None
+                        raise ValueError(f"Firebase OAuth error: {result}")
 
                     return result["access_token"]
 
         except OasiraAPIError as e:
             _LOGGER.error("Failed to fetch Firebase config: %s", e)
-            return None
+            raise
         except Exception as e:
             _LOGGER.exception("Failed to refresh Firebase access token: %s", e)
-            return None
+            raise
 
     def __repr__(self):
         return f"<eh_person email={self._email!r} devices={len(self._notification_devices)}>"
@@ -566,10 +576,7 @@ class eh_person(SensorEntity, RestoreEntity):
         """Update tracker state and trigger state change if needed."""
         if entity_id == self._local_tracker_entity_id:
             # Update local tracker
-            if hasattr(self, "_local_tracker_state"):
-                old_state = self._local_tracker_state
-            else:
-                old_state = "unknown"
+            old_state = self._local_tracker_state
 
             self._local_tracker_state = new_state
 
@@ -584,10 +591,7 @@ class eh_person(SensorEntity, RestoreEntity):
 
         elif entity_id == self._remote_tracker_entity_id:
             # Update remote tracker
-            if hasattr(self, "_remote_tracker_state"):
-                old_state = self._remote_tracker_state
-            else:
-                old_state = "unknown"
+            old_state = self._remote_tracker_state
 
             self._remote_tracker_state = new_state
 
