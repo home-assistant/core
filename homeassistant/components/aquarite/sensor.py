@@ -116,7 +116,6 @@ async def async_setup_entry(
             pool_name,
             "filtration_intel_time",
             "filtration.intel.time",
-            native_unit_of_measurement=UnitOfTime.HOURS,
         )
     )
 
@@ -207,6 +206,10 @@ class AquariteValueSensorEntity(AquariteEntity, SensorEntity):
 class AquariteTimeSensorEntity(AquariteEntity, SensorEntity):
     """Time sensor entity."""
 
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
     def __init__(
         self,
         dataservice: AquariteDataUpdateCoordinator,
@@ -214,14 +217,10 @@ class AquariteTimeSensorEntity(AquariteEntity, SensorEntity):
         pool_name: str,
         translation_key: str,
         value_path: str,
-        device_class: SensorDeviceClass | None = None,
-        native_unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize the time sensor."""
         super().__init__(dataservice, pool_id, pool_name)
         self._value_path = value_path
-        self._attr_device_class = device_class
-        self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._attr_translation_key = translation_key
         self._attr_unique_id = self.build_unique_id(translation_key)
 
