@@ -1064,7 +1064,9 @@ jobs:
           - 3306:3306
         env:
           MYSQL_ROOT_PASSWORD: password
-        options: --health-cmd="mysqladmin ping -uroot -ppassword" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: >-
+          --health-cmd="if command -v mariadb-admin >/dev/null; then mariadb-admin ping -uroot -ppassword; else mysqladmin ping -uroot -ppassword; fi"
+          --health-interval=5s --health-timeout=2s --health-retries=3
     needs:
       - info
       - base
