@@ -335,7 +335,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         return result
 
     async def _fetch_data(self) -> None:
-        """Fetch latest price data via API and return per-home data."""
+        """Fetch latest price data via API and update cached home data."""
         self._schedule_tomorrow_price_poll(
             dt_util.utcnow() + timedelta(seconds=random.uniform(60, 60 * 10))
         )
