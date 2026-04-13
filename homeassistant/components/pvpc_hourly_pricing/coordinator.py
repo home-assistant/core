@@ -56,10 +56,6 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
 
     async def _async_update_data(self) -> EsiosApiData:
         """Update electricity prices from the ESIOS API."""
-        try:
-            api_data = await self.api.async_update_all(self.data, dt_util.utcnow())
-        except KeyError as err:
-            if "2026" in str(err):
         requested_at = dt_util.utcnow()
         try:
             api_data = await self.api.async_update_all(self.data, requested_at)
