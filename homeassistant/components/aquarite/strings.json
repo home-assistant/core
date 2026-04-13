@@ -14,6 +14,9 @@
         "data": {
           "pool_id": "Pool"
         },
+        "data_description": {
+          "pool_id": "The pool to integrate with Home Assistant"
+        },
         "description": "Please choose the pool for this integration.",
         "title": "Select Pool"
       },
@@ -22,6 +25,10 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::aquarite::config::step::user::data_description::password%]",
+          "username": "[%key:component::aquarite::config::step::user::data_description::username%]"
+        },
         "description": "Re-authenticate your Hayward account to continue.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
@@ -29,6 +36,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::aquarite::config::step::user::data_description::password%]",
+          "username": "[%key:component::aquarite::config::step::user::data_description::username%]"
         },
         "description": "Update your Hayward credentials.",
         "title": "Reconfigure"
@@ -107,6 +118,9 @@
       "init": {
         "data": {
           "health_check_interval": "Health check interval (seconds)"
+        },
+        "data_description": {
+          "health_check_interval": "How often to verify the cloud connection is alive"
         },
         "description": "Configure the Aquarite integration.",
         "title": "Options"
