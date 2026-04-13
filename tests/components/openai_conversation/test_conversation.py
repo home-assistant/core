@@ -20,6 +20,7 @@ from homeassistant.components.homeassistant.exposed_entities import async_expose
 from homeassistant.components.openai_conversation.const import (
     CONF_CODE_INTERPRETER,
     CONF_SERVICE_TIER,
+    CONF_STORE_RESPONSES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -470,6 +471,46 @@ async def test_assist_api_tools_conversion(
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
     assert tools
+
+
+@pytest.mark.parametrize(
+    "expected_store",
+    [
+        False,
+        True,
+    ],
+)
+async def test_store_responses_forwarded_for_conversation_agent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    expected_store: bool,
+) -> None:
+    """Test store_responses is forwarded for the conversation agent."""
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "conversation"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_STORE_RESPONSES: expected_store},
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    mock_create_stream.return_value = [
+        create_message_item(id="msg_A", text="Hello!", output_index=0)
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert mock_create_stream.call_args is not None
+    assert mock_create_stream.call_args.kwargs["store"] is expected_store
 
 
 @pytest.mark.parametrize("inline_citations", [True, False])
