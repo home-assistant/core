@@ -369,16 +369,12 @@ def _humanify(
         else:
             continue
 
-        # Explicit None check: 0.0 is a valid epoch.
-        row_time_fired_ts = row[TIME_FIRED_TS_POS]
-        time_fired_ts: float = (
-            row_time_fired_ts if row_time_fired_ts is not None else time.time()
-        )
+        time_fired_ts = row[TIME_FIRED_TS_POS]
         if timestamp:
-            when: str | float = time_fired_ts
+            when = time_fired_ts or time.time()
         else:
             when = process_timestamp_to_utc_isoformat(
-                dt_util.utc_from_timestamp(time_fired_ts)
+                dt_util.utc_from_timestamp(time_fired_ts) or dt_util.utcnow()
             )
         data[LOGBOOK_ENTRY_WHEN] = when
 
