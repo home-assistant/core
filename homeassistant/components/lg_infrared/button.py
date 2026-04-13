@@ -12,8 +12,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LGDeviceType, CONF_REGION, REGION_GLOBAL, REGION_JAPAN
+from .codes import resolve_numeric_code
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LGDeviceType, CONF_REGION, REGION_GLOBAL, REGION_JAPAN, DOMAIN
 from .entity import LgIrEntity
+from .models import LGIRRemoteData
 
 PARALLEL_UPDATES = 1
 
@@ -22,7 +24,7 @@ PARALLEL_UPDATES = 1
 class LgIrButtonEntityDescription(ButtonEntityDescription):
     """Describes LG IR button entity."""
 
-    command_code: Union [LGTVCode, LGTVCodeJP]
+    command_code: Enum
 
 
 TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
@@ -213,7 +215,7 @@ TV_JAPAN_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
         key="list", translation_key="list", command_code=LGTVCodeJP.LIST
     ),
     LgIrButtonEntityDescription(
-        key="text", translation_key="text", command_code=LGTVCodeJP.TEXT
+        key="data", translation_key="data", command_code=LGTVCodeJP.TEXT
     ),
     LgIrButtonEntityDescription(
         key="yellow", translation_key="yellow", command_code=LGTVCodeJP.YELLOW
@@ -253,9 +255,6 @@ TV_JAPAN_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     ),
     LgIrButtonEntityDescription(
         key="input", translation_key="input", command_code=LGTVCodeJP.INPUT
-    ),
-    LgIrButtonEntityDescription(
-        key="num_0", translation_key="num_0", command_code=LGTVCodeJP.NUM_0
     ),
     LgIrButtonEntityDescription(
         key="num_1", translation_key="num_1", command_code=LGTVCodeJP.NUM_1
@@ -441,6 +440,8 @@ async def async_setup_entry(
     infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
     device_type = entry.data[CONF_DEVICE_TYPE]
     region = entry.data.get(CONF_REGION, REGION_GLOBAL)
+
+    data: LGIRRemoteData = hass.data[DOMAIN][entry.entry_id]
     
     if device_type == LGDeviceType.TV:
         descriptions = (
@@ -449,7 +450,7 @@ async def async_setup_entry(
             else TV_BUTTON_DESCRIPTIONS
         )
         async_add_entities(
-            LgIrButton(entry, infrared_entity_id, description)
+            LgIrButton(entry, infrared_entity_id, description, data)
             for description in descriptions
         )
 
@@ -464,11 +465,21 @@ class LgIrButton(LgIrEntity, ButtonEntity):
         entry: ConfigEntry,
         infrared_entity_id: str,
         description: LgIrButtonEntityDescription,
+        data: LGIRRemoteData,
     ) -> None:
         """Initialize LG IR button."""
         super().__init__(entry, infrared_entity_id, unique_id_suffix=description.key)
         self.entity_description = description
+        self._data = data
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._send_command(self.entity_description.command_code)
+        key = self.entity_description.key
+        command = self.entity_description.command_code
+
+        if key in {"dtv", "bs", "cs"}:
+            self._data.update_tuner(key)
+        elif key.startswith("num_"):
+            command = resolve_numeric_code(command, self._data.current_tuner)
+
+        await self._send_command(command)
