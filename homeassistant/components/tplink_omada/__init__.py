@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
@@ -69,16 +71,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     entry.runtime_data = controller
 
+    _cleanup_lock = asyncio.Lock()
+
     async def _async_cleanup_task() -> None:
-        await async_cleanup_devices(
-            hass,
-            config_entry_id=entry.entry_id,
-        )
-        await async_cleanup_client_trackers(
-            hass,
-            config_entry_id=entry.entry_id,
-            raise_on_error=False,
-        )
+        if _cleanup_lock.locked():
+            return
+        async with _cleanup_lock:
+            await async_cleanup_devices(
+                hass,
+                controller,
+            )
+            await async_cleanup_client_trackers(
+                hass,
+                controller,
+                raise_on_error=False,
+            )
 
     @callback
     def _schedule_cleanup() -> None:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, NamedTuple
@@ -27,6 +26,7 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
+    from .controller import OmadaSiteController
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -225,10 +225,6 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  #
 DEVICE_TRACKER_DOMAIN = "device_tracker"
 
 
-# Import locally to avoid circular dependency
-from .controller import OmadaSiteController  # noqa: E402
-
-
 def _unique_id_to_mac(unique_id: str | None) -> str | None:
     """Extract the client MAC address from a tracker unique ID."""
     if not unique_id or not unique_id.startswith("scanner_"):
@@ -252,96 +248,54 @@ async def _async_get_known_wireless_client_macs(
 
 async def async_cleanup_client_trackers(
     hass: HomeAssistant,
+    controller: OmadaSiteController,
     *,
-    entity_ids: Iterable[str] | None = None,
-    config_entry_id: str | None = None,
     raise_on_error: bool = False,
 ) -> None:
     """Remove stale client tracker entities for the Omada integration."""
 
     entity_registry = er.async_get(hass)
+    entry_id = controller.clients_coordinator.config_entry.entry_id
 
-    if entity_ids is not None:
-        entities_to_check = [
-            entity
-            for entity_id in entity_ids
-            if (entity := entity_registry.async_get(entity_id)) is not None
-        ]
-    elif config_entry_id is not None:
-        entities_to_check = list(
-            er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    try:
+        known_macs = await _async_get_known_wireless_client_macs(controller)
+    except OmadaClientException as ex:
+        if raise_on_error:
+            raise HomeAssistantError(
+                "Failed to fetch Omada clients while cleaning trackers"
+            ) from ex
+        _LOGGER.debug(
+            "Skipping stale client cleanup for entry %s: %s",
+            entry_id,
+            ex,
         )
-    else:
-        entities_to_check = [
-            entity
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            for entity in er.async_entries_for_config_entry(
-                entity_registry, entry.entry_id
-            )
-        ]
+        return
 
-    controllers: dict[str, OmadaSiteController] = {}
-    known_clients: dict[str, set[str]] = {}
-
-    for entity in entities_to_check:
-        if entity is None or entity.platform != DOMAIN:
-            continue
-        if entity.domain != DEVICE_TRACKER_DOMAIN or not entity.config_entry_id:
+    for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
+        if entity.domain != DEVICE_TRACKER_DOMAIN:
             continue
 
         client_mac = _unique_id_to_mac(entity.unique_id)
         if client_mac is None:
             continue
 
-        entry_id = entity.config_entry_id
-        if entry_id not in controllers:
-            entry = hass.config_entries.async_get_entry(entry_id)
-            if entry is None or not isinstance(entry.runtime_data, OmadaSiteController):
-                continue
-            controllers[entry_id] = entry.runtime_data
-
-        if entry_id not in known_clients:
-            controller = controllers[entry_id]
-            try:
-                known_clients[entry_id] = await _async_get_known_wireless_client_macs(
-                    controller
-                )
-            except OmadaClientException as ex:
-                if raise_on_error:
-                    raise HomeAssistantError(
-                        "Failed to fetch Omada clients while cleaning trackers"
-                    ) from ex
-                _LOGGER.debug(
-                    "Skipping stale client cleanup for entry %s: %s",
-                    entry_id,
-                    ex,
-                )
-                continue
-
-        if client_mac not in known_clients[entry_id]:
+        if client_mac not in known_macs:
             entity_registry.async_remove(entity.entity_id)
 
 
 async def async_cleanup_devices(
     hass: HomeAssistant,
-    *,
-    config_entry_id: str,
+    controller: OmadaSiteController,
 ) -> None:
     """Remove devices from the registry when Omada no longer reports them."""
 
     device_registry = dr.async_get(hass)
-
-    entry = hass.config_entries.async_get_entry(config_entry_id)
-    if entry is None or not isinstance(entry.runtime_data, OmadaSiteController):
-        return
-
-    controller = entry.runtime_data
+    entry_id = controller.clients_coordinator.config_entry.entry_id
     known_devices = controller.devices_coordinator.data
 
-    registered_devices = device_registry.devices.get_devices_for_config_entry_id(
-        config_entry_id
-    )
-    for device_entry in registered_devices:
+    for device_entry in device_registry.devices.get_devices_for_config_entry_id(
+        entry_id
+    ):
         mac = next(
             (
                 identifier[1]
@@ -355,9 +309,9 @@ async def async_cleanup_devices(
             _LOGGER.debug(
                 "Removing stale Omada device %s from entry %s",
                 mac,
-                config_entry_id,
+                entry_id,
             )
             device_registry.async_update_device(
                 device_entry.id,
-                remove_config_entry_id=config_entry_id,
+                remove_config_entry_id=entry_id,
             )
