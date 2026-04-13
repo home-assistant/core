@@ -1434,16 +1434,16 @@ class IntentResponse:
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
-            "speech": self.speech,
-            "card": self.card,
+            "speech": {k: dict(v) for k, v in self.speech.items()},
+            "card": {k: dict(v) for k, v in self.card.items()},
             "language": self.language,
             "response_type": self.response_type.value,
         }
 
         if self.reprompt:
-            response_dict["reprompt"] = self.reprompt
+            response_dict["reprompt"] = {k: dict(v) for k, v in self.reprompt.items()}
         if self.speech_slots:
-            response_dict["speech_slots"] = self.speech_slots
+            response_dict["speech_slots"] = self.speech_slots.copy()
 
         response_data: dict[str, Any] = {}
 
