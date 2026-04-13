@@ -78,7 +78,7 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         while not self.hass.is_stopping:
             try:
                 if self.auth.is_token_expiring():
-                    _LOGGER.debug("Token expiring soon, refreshing...")
+                    _LOGGER.debug("Token expiring soon, refreshing")
                     _, refreshed = await self.auth.get_client()
                     if refreshed:
                         await self.refresh_subscription()
