@@ -10,6 +10,7 @@ from homeassistant.components.sunricher_dali.diagnostics import (
     ALLOWED_ENTRY_KEYS,
     _serialize_device,
     _serialize_scene,
+    _strip_gw_sn,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -202,6 +203,12 @@ def test_serialized_scene_keys_are_exact(mock_scenes: list[MagicMock]) -> None:
     """The scene whitelist must be exactly EXPECTED_SCENE_KEYS."""
     serialized = _serialize_scene(mock_scenes[0])
     assert set(serialized.keys()) == EXPECTED_SCENE_KEYS
+
+
+def test_strip_gw_sn_noop_on_empty_serial() -> None:
+    """_strip_gw_sn must return the input unchanged when gw_sn is empty."""
+    payload = {"devices": [{"dev_id": "0101000002ABC123"}]}
+    assert _strip_gw_sn(payload, "") is payload
 
 
 async def test_diagnostics_empty_runtime(
