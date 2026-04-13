@@ -109,7 +109,7 @@ async def test_clock_operation_error_is_downgraded(
     callback = mock_error_handler.call_args.args[0]
     assert callback is not None
 
-    local_data = hass.data[DOMAIN][setup_risco_local.entry_id]
+    local_data = setup_risco_local.runtime_data.local_data
     disconnect_mock = cast(AsyncMock, local_data.system.disconnect)
 
     caplog.set_level(logging.WARNING, logger="homeassistant.components.risco")
