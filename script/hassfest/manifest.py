@@ -21,7 +21,7 @@ from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 from script.util import sort_manifest as util_sort_manifest
 
-from .model import Config, Integration, ScaledQualityScaleTiers
+from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
@@ -61,6 +61,7 @@ NO_IOT_CLASS = [
     "application_credentials",
     "auth",
     "automation",
+    "battery",
     "blueprint",
     "brands",
     "color_extractor",
@@ -89,6 +90,7 @@ NO_IOT_CLASS = [
     "homeassistant_sky_connect",
     "homeassistant_yellow",
     "humidity",
+    "illuminance",
     "image_upload",
     "input_boolean",
     "input_button",
@@ -102,10 +104,14 @@ NO_IOT_CLASS = [
     "logger",
     "lovelace",
     "media_source",
+    "moisture",
+    "motion",
     "my",
+    "occupancy",
     "onboarding",
     "panel_custom",
     "plant",
+    "power",
     "profiler",
     "proxy",
     "python_script",
@@ -118,6 +124,7 @@ NO_IOT_CLASS = [
     "system_health",
     "system_log",
     "tag",
+    "temperature",
     "timer",
     "trace",
     "web_rtc",
@@ -199,15 +206,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Required("domain"): str,
         vol.Required("name"): str,
         vol.Optional("integration_type", default="hub"): vol.In(
-            [
-                "device",
-                "entity",
-                "hardware",
-                "helper",
-                "hub",
-                "service",
-                "system",
-            ]
+            [t.value for t in IntegrationType if t != IntegrationType.VIRTUAL]
         ),
         vol.Optional("config_flow"): bool,
         vol.Optional("mqtt"): [str],
@@ -304,7 +303,7 @@ VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
-        vol.Required("integration_type"): "virtual",
+        vol.Required("integration_type"): IntegrationType.VIRTUAL.value,
         vol.Exclusive("iot_standards", "virtual_integration"): [
             vol.Any("homekit", "zigbee", "zwave")
         ],
@@ -315,7 +314,7 @@ VIRTUAL_INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
 
 def manifest_schema(value: dict[str, Any]) -> vol.Schema:
     """Validate integration manifest."""
-    if value.get("integration_type") == "virtual":
+    if value.get("integration_type") == IntegrationType.VIRTUAL:
         return VIRTUAL_INTEGRATION_MANIFEST_SCHEMA(value)
     return INTEGRATION_MANIFEST_SCHEMA(value)
 
@@ -366,12 +365,12 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
     if (
         domain not in NO_IOT_CLASS
         and "iot_class" not in integration.manifest
-        and integration.manifest.get("integration_type") != "virtual"
+        and integration.integration_type != IntegrationType.VIRTUAL
     ):
         integration.add_error("manifest", "Domain is missing an IoT Class")
 
     if (
-        integration.manifest.get("integration_type") == "virtual"
+        integration.integration_type == IntegrationType.VIRTUAL
         and (supported_by := integration.manifest.get("supported_by"))
         and not (core_components_dir / supported_by).exists()
     ):

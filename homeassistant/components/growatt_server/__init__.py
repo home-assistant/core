@@ -239,6 +239,9 @@ def _login_classic_api(
     return login_response
 
 
+V1_DEVICE_TYPES: dict[int, str] = {5: "sph", 7: "min"}
+
+
 def get_device_list_v1(
     api, config: Mapping[str, str]
 ) -> tuple[list[dict[str, str]], str]:
@@ -260,18 +263,17 @@ def get_device_list_v1(
             f"API error during device list: {e.error_msg or str(e)} (Code: {e.error_code})"
         ) from e
     devices = devices_dict.get("devices", [])
-    # Only MIN device (type = 7) support implemented in current V1 API
     supported_devices = [
         {
             "deviceSn": device.get("device_sn", ""),
-            "deviceType": "min",
+            "deviceType": V1_DEVICE_TYPES[device.get("type")],
         }
         for device in devices
-        if device.get("type") == 7
+        if device.get("type") in V1_DEVICE_TYPES
     ]
 
     for device in devices:
-        if device.get("type") != 7:
+        if device.get("type") not in V1_DEVICE_TYPES:
             _LOGGER.warning(
                 "Device %s with type %s not supported in Open API V1, skipping",
                 device.get("device_sn", ""),
@@ -348,7 +350,7 @@ async def async_setup_entry(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
         )
         for device in devices
-        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min"]
+        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min", "sph"]
     }
 
     # Perform the first refresh for the total coordinator

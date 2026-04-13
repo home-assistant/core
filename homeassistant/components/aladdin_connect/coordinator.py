@@ -11,22 +11,24 @@ from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
-type AladdinConnectConfigEntry = ConfigEntry[dict[str, AladdinConnectCoordinator]]
+type AladdinConnectConfigEntry = ConfigEntry[AladdinConnectCoordinator]
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-class AladdinConnectCoordinator(DataUpdateCoordinator[GarageDoor]):
+class AladdinConnectCoordinator(DataUpdateCoordinator[dict[str, GarageDoor]]):
     """Coordinator for Aladdin Connect integration."""
+
+    config_entry: AladdinConnectConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: AladdinConnectConfigEntry,
         client: AladdinConnectClient,
-        garage_door: GarageDoor,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -37,18 +39,16 @@ class AladdinConnectCoordinator(DataUpdateCoordinator[GarageDoor]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-        self.data = garage_door
 
-    async def _async_update_data(self) -> GarageDoor:
+    async def _async_update_data(self) -> dict[str, GarageDoor]:
         """Fetch data from the Aladdin Connect API."""
         try:
-            await self.client.update_door(self.data.device_id, self.data.door_number)
+            doors = await self.client.get_doors()
+        except aiohttp.ClientResponseError as err:
+            if 400 <= err.status < 500:
+                raise ConfigEntryAuthFailed(err) from err
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        self.data.status = self.client.get_door_status(
-            self.data.device_id, self.data.door_number
-        )
-        self.data.battery_level = self.client.get_battery_status(
-            self.data.device_id, self.data.door_number
-        )
-        return self.data
+
+        return {door.unique_id: door for door in doors}

@@ -317,6 +317,11 @@
           'value': '1.312',
         }),
       }),
+      'version': dict({
+        'major': 0,
+        'minor': 9,
+        'patch': 7,
+      }),
     }),
   })
 # ---

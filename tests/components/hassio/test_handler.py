@@ -11,203 +11,13 @@ from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-async def test_api_info(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API generic info."""
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
-        },
-    )
-
-    data = await hassio_handler.get_info()
-    assert aioclient_mock.call_count == 1
-    assert data["hassos"] is None
-    assert data["homeassistant"] == "0.110.0"
-    assert data["supervisor"] == "222"
-
-
-async def test_api_info_error(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Home Assistant info error."""
-    aioclient_mock.get(
-        "http://127.0.0.1/info", json={"result": "error", "message": None}
-    )
-
-    with pytest.raises(HassioAPIError):
-        await hassio_handler.get_info()
-
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_host_info(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Host info."""
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "chassis": "vm",
-                "operating_system": "Debian GNU/Linux 10 (buster)",
-                "kernel": "4.19.0-6-amd64",
-            },
-        },
-    )
-
-    data = await hassio_handler.get_host_info()
-    assert aioclient_mock.call_count == 1
-    assert data["chassis"] == "vm"
-    assert data["kernel"] == "4.19.0-6-amd64"
-    assert data["operating_system"] == "Debian GNU/Linux 10 (buster)"
-
-
-async def test_api_supervisor_info(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Supervisor info."""
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={
-            "result": "ok",
-            "data": {"supported": True, "version": "2020.11.1", "channel": "stable"},
-        },
-    )
-
-    data = await hassio_handler.get_supervisor_info()
-    assert aioclient_mock.call_count == 1
-    assert data["supported"]
-    assert data["version"] == "2020.11.1"
-    assert data["channel"] == "stable"
-
-
-async def test_api_os_info(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API OS info."""
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        json={
-            "result": "ok",
-            "data": {"board": "odroid-n2", "version": "2020.11.1"},
-        },
-    )
-
-    data = await hassio_handler.get_os_info()
-    assert aioclient_mock.call_count == 1
-    assert data["board"] == "odroid-n2"
-    assert data["version"] == "2020.11.1"
-
-
-async def test_api_host_info_error(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Home Assistant info error."""
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info", json={"result": "error", "message": None}
-    )
-
-    with pytest.raises(HassioAPIError):
-        await hassio_handler.get_host_info()
-
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_core_info(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Home Assistant Core info."""
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
-    )
-
-    data = await hassio_handler.get_core_info()
-    assert aioclient_mock.call_count == 1
-    assert data["version_latest"] == "1.0.0"
-
-
-async def test_api_core_info_error(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Home Assistant Core info error."""
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info", json={"result": "error", "message": None}
-    )
-
-    with pytest.raises(HassioAPIError):
-        await hassio_handler.get_core_info()
-
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_core_stats(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Add-on stats."""
-    aioclient_mock.get(
-        "http://127.0.0.1/core/stats",
-        json={"result": "ok", "data": {"memory_percent": 0.01}},
-    )
-
-    data = await hassio_handler.get_core_stats()
-    assert data["memory_percent"] == 0.01
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_supervisor_stats(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Add-on stats."""
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/stats",
-        json={"result": "ok", "data": {"memory_percent": 0.01}},
-    )
-
-    data = await hassio_handler.get_supervisor_stats()
-    assert data["memory_percent"] == 0.01
-    assert aioclient_mock.call_count == 1
-
-
-async def test_api_ingress_panels(
-    hassio_handler: HassIO, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API Ingress panels."""
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels",
-        json={
-            "result": "ok",
-            "data": {
-                "panels": {
-                    "slug": {
-                        "enable": True,
-                        "title": "Test",
-                        "icon": "mdi:test",
-                        "admin": False,
-                    }
-                }
-            },
-        },
-    )
-
-    data = await hassio_handler.get_ingress_panels()
-    assert aioclient_mock.call_count == 1
-    assert data["panels"]
-    assert "slug" in data["panels"]
-
 
 @pytest.mark.parametrize(
     ("api_call", "method", "payload"),
     [
-        ("get_network_info", "GET", None),
+        ("/ingress/panels", "GET", None),
+        ("/supervisor/options", "POST", {"diagnostics": True}),
+        ("/supervisor/update", "POST", None),
     ],
 )
 @pytest.mark.usefixtures("socket_enabled")
@@ -234,11 +44,7 @@ async def test_api_headers(
         f"{server.host}:{server.port}",
     )
 
-    api_func = getattr(hassio_handler, api_call)
-    if payload:
-        await api_func(payload)
-    else:
-        await api_func()
+    await hassio_handler.send_command(api_call, method, payload)
     assert received_request is not None
 
     assert received_request.method == method
