@@ -12,8 +12,7 @@ rules:
   common-modules:
     status: done
     comment: Uses async_get_clientsession for HTTP sessions
-  config-flow:
-    status: done
+  config-flow: done
   config-flow-test-coverage:
     status: done
     comment: Tests cover user, pool, reauth, reconfigure, options, errors, duplicate
@@ -61,10 +60,8 @@ rules:
   config-entry-unloading:
     status: done
     comment: async_unload_entry properly unloads platforms and shuts down coordinator
-  docs-configuration-parameters:
-    status: todo
-  docs-troubleshooting:
-    status: todo
+  docs-configuration-parameters: todo
+  docs-troubleshooting: todo
   entity-category:
     status: done
     comment: Diagnostic entities properly categorized (location, RSSI, pool name)
@@ -80,8 +77,7 @@ rules:
   parallel-updates:
     status: done
     comment: PARALLEL_UPDATES set on sensor platform
-  reauthentication-flow:
-    status: done
+  reauthentication-flow: done
   test-coverage:
     status: done
     comment: Config flow, coordinator, data navigation, value conversions all tested
@@ -99,18 +95,12 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Cloud API only, no local discovery possible
-  docs-data-update:
-    status: todo
-  docs-examples:
-    status: todo
-  docs-known-limitations:
-    status: todo
-  docs-supported-devices:
-    status: todo
-  docs-supported-functions:
-    status: todo
-  docs-use-cases:
-    status: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: Single pool device per config entry, statically configured
@@ -123,8 +113,7 @@ rules:
   icon-translations:
     status: done
     comment: icons.json with per-entity icons
-  reconfiguration-flow:
-    status: done
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No known repair scenarios
