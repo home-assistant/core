@@ -418,7 +418,6 @@ async def test_tv_autoplay_poll_state(
         return_value={"RoomUUID": soco.uid, "Source": "TV"}
     )
     await async_update_entity(hass, entity_id)
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -524,7 +523,6 @@ async def test_tv_ungroup_autoplay_available_independently_of_tv_autoplay(
         return_value={"IncludeLinkedZones": "1", "Source": "TV"}
     )
     await async_update_entity(hass, ungroup_id)
-    await hass.async_block_till_done()
 
     assert hass.states.get(ungroup_id).state == STATE_OFF
 

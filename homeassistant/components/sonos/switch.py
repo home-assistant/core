@@ -74,7 +74,7 @@ POLL_REQUIRED = (
 
 WEEKEND_DAYS = (0, 6)
 
-_TV_SOURCE = [("Source", "TV")]
+_TV_SOURCE = (("Source", "TV"),)
 
 # Mapping of model names to feature attributes that need to be substituted.
 # This is used to handle differences in attributes across Sonos models.
