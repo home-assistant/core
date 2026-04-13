@@ -40,7 +40,8 @@ ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     ),
     MelcloudBinarySensorEntityDescription(
         key="booster_heater1_status",
-        translation_key="booster_heater1_status",
+        translation_key="booster_heater_status",
+        translation_placeholders={"number": "1"},
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.device.booster_heater1_status,
@@ -48,7 +49,8 @@ ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     ),
     MelcloudBinarySensorEntityDescription(
         key="booster_heater2_status",
-        translation_key="booster_heater2_status",
+        translation_key="booster_heater_status",
+        translation_placeholders={"number": "2"},
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -57,7 +59,8 @@ ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     ),
     MelcloudBinarySensorEntityDescription(
         key="booster_heater2plus_status",
-        translation_key="booster_heater2plus_status",
+        translation_key="booster_heater_status",
+        translation_placeholders={"number": "2+"},
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -74,7 +77,8 @@ ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     ),
     MelcloudBinarySensorEntityDescription(
         key="water_pump1_status",
-        translation_key="water_pump1_status",
+        translation_key="water_pump_status",
+        translation_placeholders={"number": "1"},
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.device.water_pump1_status,
@@ -82,7 +86,8 @@ ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     ),
     MelcloudBinarySensorEntityDescription(
         key="water_pump2_status",
-        translation_key="water_pump2_status",
+        translation_key="water_pump_status",
+        translation_placeholders={"number": "2"},
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.device.water_pump2_status,
@@ -90,7 +95,8 @@ ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     ),
     MelcloudBinarySensorEntityDescription(
         key="water_pump3_status",
-        translation_key="water_pump3_status",
+        translation_key="water_pump_status",
+        translation_placeholders={"number": "3"},
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -99,7 +105,8 @@ ATW_BINARY_SENSORS: tuple[MelcloudBinarySensorEntityDescription, ...] = (
     ),
     MelcloudBinarySensorEntityDescription(
         key="water_pump4_status",
-        translation_key="water_pump4_status",
+        translation_key="water_pump_status",
+        translation_placeholders={"number": "4"},
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

@@ -46,14 +46,8 @@
       "boiler_status": {
         "name": "Boiler"
       },
-      "booster_heater1_status": {
-        "name": "Booster heater 1"
-      },
-      "booster_heater2_status": {
-        "name": "Booster heater 2"
-      },
-      "booster_heater2plus_status": {
-        "name": "Booster heater 2+"
+      "booster_heater_status": {
+        "name": "Booster heater {number}"
       },
       "immersion_heater_status": {
         "name": "Immersion heater"
@@ -64,17 +58,8 @@
       "valve_3way_status": {
         "name": "3-way valve"
       },
-      "water_pump1_status": {
-        "name": "Water pump 1"
-      },
-      "water_pump2_status": {
-        "name": "Water pump 2"
-      },
-      "water_pump3_status": {
-        "name": "Water pump 3"
-      },
-      "water_pump4_status": {
-        "name": "Water pump 4"
+      "water_pump_status": {
+        "name": "Water pump {number}"
       }
     },
     "sensor": {
