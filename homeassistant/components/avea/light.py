@@ -26,6 +26,7 @@ from . import AveaConfigEntry
 from .const import DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
+UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
 
 
 async def async_setup_entry(
@@ -182,7 +183,7 @@ class AveaLight(LightEntity):
         except ConnectionError:
             self._attr_available = False
             return
-        except BleakError, OSError, RuntimeError:
+        except UPDATE_EXCEPTIONS:
             _LOGGER.warning(
                 "Unexpected error while updating Avea device %s",
                 self._address,

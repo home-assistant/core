@@ -22,7 +22,9 @@ def test_validate_device_falls_back_to_discovery_name() -> None:
     bulb.get_name.side_effect = RuntimeError
     bulb.get_brightness.return_value = 0
 
-    with patch("homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb):
+    with patch(
+        "homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb
+    ):
         assert _validate_device(AVEA_DISCOVERY_INFO) == AVEA_DISCOVERY_INFO.name
 
 

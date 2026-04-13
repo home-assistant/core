@@ -19,6 +19,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from .const import AVEA_SERVICE_UUID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+NAME_EXCEPTIONS = (BleakError, OSError, RuntimeError)
 
 
 class CannotConnect(Exception):
@@ -34,7 +35,7 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
             raise CannotConnect
         try:
             name = bulb.get_name()
-        except BleakError, OSError, RuntimeError:
+        except NAME_EXCEPTIONS:
             _LOGGER.debug(
                 "Failed to get name for Avea device %s",
                 discovery_info.address,
