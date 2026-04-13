@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
+from .conftest import MOCK_MAC, MOCK_SERIAL
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -27,75 +28,48 @@ async def test_all_entities(
 
 
 @pytest.mark.usefixtures("mock_get_devices")
-@pytest.mark.parametrize(
-    ("entity_id", "expected_state"),
-    [
-        ("sensor.ecodan_outside_temperature", "7.5"),
-        ("sensor.ecodan_tank_temperature", "48.0"),
-        ("sensor.ecodan_flow_temperature", "38.5"),
-        ("sensor.ecodan_return_temperature", "33.2"),
-        ("sensor.ecodan_boiler_flow_temperature", "40.1"),
-        ("sensor.ecodan_boiler_return_temperature", "35.3"),
-        ("sensor.ecodan_mixing_tank_temperature", "42.0"),
-        ("sensor.ecodan_condensing_temperature", "55.0"),
-        ("sensor.ecodan_heat_pump_frequency", "52"),
-        ("sensor.ecodan_demand_percentage", "75"),
-        ("sensor.ecodan_energy_produced", "3.5"),
-        ("sensor.ecodan_daily_heating_energy_consumed", "12.5"),
-        ("sensor.ecodan_daily_hot_water_energy_consumed", "5.2"),
-    ],
-)
-async def test_atw_sensor_states(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    expected_state: str,
-) -> None:
-    """Test ATW sensor entity states."""
-    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"Entity {entity_id} not found"
-    assert state.state == expected_state
-
-
-@pytest.mark.usefixtures("mock_get_devices")
-@pytest.mark.parametrize(
-    ("entity_id", "expected_state"),
-    [
-        ("sensor.ecodan_zone_1_room_temperature", "22.5"),
-        ("sensor.ecodan_zone_1_flow_temperature", "36.0"),
-        ("sensor.ecodan_zone_1_return_temperature", "31.0"),
-    ],
-)
-async def test_atw_zone_sensor_states(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    expected_state: str,
-) -> None:
-    """Test ATW zone sensor entity states."""
-    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"Entity {entity_id} not found"
-    assert state.state == expected_state
-
-
-@pytest.mark.usefixtures("mock_get_devices")
-async def test_sensor_none_value(
+async def test_zone_sensor_unique_ids(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_atw_device: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor with None value reports unknown."""
-    mock_atw_device.outside_temperature = None
+    """Test unique ID generation for zone sensors with multiple zones."""
+    zone_2 = MagicMock()
+    zone_2.zone_index = 2
+    zone_2.name = "Zone 2"
+    zone_2.room_temperature = 23.5
+    zone_2.zone_flow_temperature = 37.0
+    zone_2.zone_return_temperature = 32.0
+    mock_atw_device.zones = [mock_atw_device.zones[0], zone_2]
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
 
-    state = hass.states.get("sensor.ecodan_outside_temperature")
-    assert state is not None
-    assert state.state == "unknown"
+    # Zone 1 sensors - no zone suffix in unique ID
+    entry = entity_registry.async_get("sensor.ecodan_zone_1_room_temperature")
+    assert entry is not None
+    assert entry.unique_id == f"{MOCK_SERIAL}-{MOCK_MAC}-room_temperature"
+
+    entry = entity_registry.async_get("sensor.ecodan_zone_1_flow_temperature")
+    assert entry is not None
+    assert entry.unique_id == f"{MOCK_SERIAL}-{MOCK_MAC}-flow_temperature"
+
+    entry = entity_registry.async_get("sensor.ecodan_zone_1_return_temperature")
+    assert entry is not None
+    assert entry.unique_id == f"{MOCK_SERIAL}-{MOCK_MAC}-return_temperature"
+
+    # Zone 2 sensors - with zone suffix in unique ID
+    entry = entity_registry.async_get("sensor.ecodan_zone_2_room_temperature")
+    assert entry is not None
+    assert entry.unique_id == f"{MOCK_SERIAL}-{MOCK_MAC}-room_temperature-zone-2"
+
+    entry = entity_registry.async_get("sensor.ecodan_zone_2_flow_temperature")
+    assert entry is not None
+    assert entry.unique_id == f"{MOCK_SERIAL}-{MOCK_MAC}-flow_temperature-zone-2"
+
+    entry = entity_registry.async_get("sensor.ecodan_zone_2_return_temperature")
+    assert entry is not None
+    assert entry.unique_id == f"{MOCK_SERIAL}-{MOCK_MAC}-return_temperature-zone-2"
 
 
 @pytest.mark.usefixtures("mock_get_devices")
