@@ -1,4 +1,4 @@
-"""Test the eurotronic_cometblue climate platform."""
+"""Test the eurotronic_cometblue button platform."""
 
 from unittest.mock import patch
 
@@ -19,7 +19,7 @@ async def test_button_press_sync_time(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that update data errors are handled and retried."""
+    """Test that pressing the sync-time button sets the device datetime."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.BUTTON])
 
     # Check if button is called correctly

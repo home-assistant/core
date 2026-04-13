@@ -1,4 +1,4 @@
-"""Comet Blue sensor integration."""
+"""Comet Blue button platform."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from homeassistant.util import dt as dt_util
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 DESCRIPTIONS = [
     ButtonEntityDescription(
