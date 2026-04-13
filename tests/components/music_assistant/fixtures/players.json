@@ -196,7 +196,7 @@
           "translation_key": "link_audio_delay",
           "translation_params": null,
           "value": true,
-          "read_only": true,
+          "read_only": false,
           "min_value": null,
           "max_value": null,
           "step": null,
