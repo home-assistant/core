@@ -58,7 +58,6 @@ def _is_avea_discovery(discovery_info: BluetoothServiceInfoBleak) -> bool:
 class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Avea."""
 
-    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -101,10 +100,9 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_ADDRESS: self._discovery_info.address},
                 )
 
-        placeholders = {
+        self.context["title_placeholders"] = {
             CONF_NAME: self._discovery_info.name or self._discovery_info.address
         }
-        self.context["title_placeholders"] = placeholders
         self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
