@@ -317,6 +317,59 @@ async def test_subentry_reasoning_effort_list(
 
 
 @pytest.mark.parametrize(
+    ("model", "has_reasoning_summary"),
+    [
+        ("o3", True),
+        ("o4-mini", True),
+        ("gpt-5", True),
+        ("gpt-5-mini", True),
+        ("gpt-5-pro", True),
+        ("gpt-4o", False),
+        ("gpt-4.1", False),
+    ],
+)
+async def test_subentry_reasoning_summary_visibility(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    model: str,
+    has_reasoning_summary: bool,
+) -> None:
+    """Test that reasoning_summary option is shown for all reasoning models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Configure initial step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
+
+    # Configure advanced step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: model,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+    assert (CONF_REASONING_SUMMARY in subentry_flow["data_schema"].schema) == (
+        has_reasoning_summary
+    )
+
+
+@pytest.mark.parametrize(
     ("model", "service_tier_options"),
     [
         ("gpt-5.4", ["auto", "flex", "default", "priority"]),
@@ -542,6 +595,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_MAX_TOKENS: 10000,
                 CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: True,
             },
         ),
@@ -808,6 +862,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_MAX_TOKENS: 1000,
                 CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: True,
             },
         ),

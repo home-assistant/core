@@ -244,7 +244,7 @@
         "auto": "[%key:common::state::auto%]",
         "detailed": "Detailed",
         "off": "[%key:common::state::off%]",
-        "short": "Short"
+        "concise": "Concise"
       }
     },
     "search_context_size": {

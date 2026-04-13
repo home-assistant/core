@@ -435,23 +435,28 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
+                }
+            )
+        elif CONF_VERBOSITY in options:
+            options.pop(CONF_VERBOSITY)
+
+        if model.startswith(("o", "gpt-5")):
+            step_schema.update(
+                {
                     vol.Optional(
                         CONF_REASONING_SUMMARY,
                         default=RECOMMENDED_REASONING_SUMMARY,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["off", "auto", "short", "detailed"],
+                            options=["off", "auto", "concise", "detailed"],
                             translation_key=CONF_REASONING_SUMMARY,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
                 }
             )
-        elif CONF_VERBOSITY in options:
-            options.pop(CONF_VERBOSITY)
-        if CONF_REASONING_SUMMARY in options:
-            if not model.startswith("gpt-5"):
-                options.pop(CONF_REASONING_SUMMARY)
+        elif CONF_REASONING_SUMMARY in options:
+            options.pop(CONF_REASONING_SUMMARY)
 
         service_tiers = self._get_service_tiers(model)
         if "flex" in service_tiers or "priority" in service_tiers:

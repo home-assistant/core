@@ -18,7 +18,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.openai_conversation.const import (
+    CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_REASONING_SUMMARY,
     CONF_SERVICE_TIER,
     CONF_STORE_RESPONSES,
     CONF_WEB_SEARCH,
@@ -382,6 +384,41 @@ async def test_function_call_without_reasoning(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
+
+
+@freeze_time("2025-10-31 18:00:00")
+async def test_reasoning_summary_off_omits_summary_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test that reasoning summary 'off' omits the summary key from the API call."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_CHAT_MODEL: "o4-mini",
+            CONF_REASONING_SUMMARY: "off",
+        },
+    )
+    await hass.async_block_till_done()
+
+    mock_create_stream.return_value = [
+        create_message_item(id="msg_A", text="Hello", output_index=0),
+    ]
+
+    await conversation.async_converse(
+        hass,
+        "Hello",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    reasoning = mock_create_stream.call_args.kwargs["reasoning"]
+    assert "summary" not in reasoning
 
 
 @pytest.mark.parametrize(
