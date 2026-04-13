@@ -35,12 +35,17 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
+# These are fan modes only supported by Coolmaster but don't have a defined
+# Home Assistant constant. We pass them through as is and they'll be used as
+# a custom fan mode.
+CM_ONLY_FAN_MODES = ["vlow", "top"]
+
 CM_TO_HA_FAN = {
     "low": FAN_LOW,
     "med": FAN_MEDIUM,
     "high": FAN_HIGH,
     "auto": FAN_AUTO,
-}
+} | {speed: speed for speed in CM_ONLY_FAN_MODES}
 
 HA_FAN_TO_CM = {value: key for key, value in CM_TO_HA_FAN.items()}
 

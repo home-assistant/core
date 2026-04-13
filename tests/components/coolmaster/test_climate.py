@@ -149,7 +149,7 @@ async def test_climate_unknown_fan_mode_warning(
     # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this test.
     setup_logs = caplog.get_records(when="setup")
 
-    # Assert that both unknown fan speeds logged a warning.
+    # Assert that unknown fan speeds logged a warning.
     assert any(
         "Detected unknown fan speed value from HVAC unit: ultra. "
         "Support for unknown fan speeds will be removed in 2026.7.0"
@@ -157,12 +157,17 @@ async def test_climate_unknown_fan_mode_warning(
         and rec.levelname == "WARNING"
         for rec in setup_logs
     )
-    assert any(
-        "Detected unknown fan speed value from HVAC unit: vlow. "
-        "Support for unknown fan speeds will be removed in 2026.7.0"
-        in rec.getMessage()
-        and rec.levelname == "WARNING"
+
+    # Assert that no other fan speeds logged warnings.
+    unexpected_warnings = [
+        message
         for rec in setup_logs
+        if "Detected unknown fan speed value from HVAC unit"
+        in (message := rec.getMessage())
+        and "ultra" not in message
+    ]
+    assert not unexpected_warnings, (
+        f"Unexpected warning(s) logged during setup: {unexpected_warnings}"
     )
 
     start_record_count = len(caplog.records)
