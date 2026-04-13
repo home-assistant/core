@@ -832,3 +832,27 @@ async def test_discovery_ignored_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_discovery_fallback_name_from_mac(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test discovery confirm uses MAC-based name when hostname and platform are absent."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            "source_ip": "10.0.0.5",
+            "hw_addr": "aa:bb:cc:dd:ee:ff",
+            "hostname": None,
+            "platform": None,
+            "services": {"Access": True},
+            "direct_connect_domain": "x.ui.direct",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"]["name"] == "Access DDEEFF"
