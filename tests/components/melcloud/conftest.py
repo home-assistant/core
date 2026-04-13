@@ -60,19 +60,6 @@ def _build_mock_atw_device() -> MagicMock:
     device.daily_hot_water_energy_consumed = 5.2
     device.daily_hot_water_energy_produced = 14.8
 
-    # Binary sensors
-    device.boiler_status = True
-    device.booster_heater1_status = False
-    device.booster_heater2_status = None
-    device.booster_heater2plus_status = None
-    device.immersion_heater_status = False
-    device.water_pump1_status = True
-    device.water_pump2_status = False
-    device.water_pump3_status = None
-    device.water_pump4_status = None
-    device.valve_3way_status = True
-    device.valve_2way_status = None
-
     # Zones
     device.zones = [_build_mock_zone(1)]
 
