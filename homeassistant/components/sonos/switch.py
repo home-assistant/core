@@ -127,7 +127,7 @@ async def async_setup_entry(
         """Return initial TV autoplay state, or None if not supported."""
         try:
             result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
-            return bool(result.get("RoomUUID", ""))
+            return bool(result.get("RoomUUID"))
         except SoCoUPnPException:
             return None
 
