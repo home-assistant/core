@@ -40,9 +40,8 @@ async def test_update_data_error_handling(
 
     # Fail with InvalidByteError on battery.
     # Should not raise UpdateFailed after 3 retries and keep old data.
-    with patch.object(
-        mock_config_entry.runtime_data.device,
-        "get_battery_async",
+    with patch(
+        "homeassistant.components.eurotronic_cometblue.coordinator.AsyncCometBlue.get_battery_async",
         side_effect=InvalidByteValueError("Invalid byte"),
     ) as mock_get_battery:
         await mock_config_entry.runtime_data.async_refresh()
