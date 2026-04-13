@@ -4,6 +4,20 @@
       "sync_time": {
         "default": "mdi:calendar-clock"
       }
+    },
+    "number": {
+      "target_temperature_high": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "target_temperature_low": {
+        "default": "mdi:thermometer-chevron-down"
+      },
+      "temperature_offset": {
+        "default": "mdi:thermometer-check"
+      },
+      "window_open_minutes": {
+        "default": "mdi:timer-sand"
+      }
     }
   }
 }
