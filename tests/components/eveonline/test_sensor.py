@@ -78,7 +78,7 @@ async def test_sensor_values(
     assert state.state == expected_state
 
 
-async def test_unavailable_sensor(
+async def test_sensor_without_data_shows_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_eveonline_client: AsyncMock,

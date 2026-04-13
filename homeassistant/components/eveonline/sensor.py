@@ -223,7 +223,7 @@ async def async_setup_entry(
 class EveOnlineCharacterSensor(
     EveOnlineCharacterEntity[EveOnlineCoordinator], SensorEntity
 ):
-    """Fast-polling Eve Online sensor (location, ship, wallet, mail, skill queue)."""
+    """Fast-polling Eve Online sensor (location, ship, wallet, mail)."""
 
     entity_description: EveOnlineSensorDescription
 

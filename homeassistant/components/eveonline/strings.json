@@ -72,7 +72,7 @@
   },
   "exceptions": {
     "authentication_failed": {
-      "message": "Authentication failed. Please reauthenticate."
+      "message": "Authentication failed. Please reauthenticate"
     },
     "token_refresh_failed": {
       "message": "Failed to refresh OAuth token: {error}"

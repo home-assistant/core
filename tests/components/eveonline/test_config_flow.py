@@ -3,6 +3,7 @@
 import base64
 import json
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -84,13 +85,14 @@ async def test_full_flow(
         },
     )
 
-    scope = "+".join(SCOPES)
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-        f"&scope={scope}"
-    )
+    parsed = urlparse(result["url"])
+    params = parse_qs(parsed.query)
+    assert parsed.scheme + "://" + parsed.netloc + parsed.path == OAUTH2_AUTHORIZE
+    assert params["response_type"] == ["code"]
+    assert params["client_id"] == [CLIENT_ID]
+    assert params["redirect_uri"] == ["https://example.com/auth/external/callback"]
+    assert params["state"] == [state]
+    assert set(params["scope"][0].split()) == set(SCOPES)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")

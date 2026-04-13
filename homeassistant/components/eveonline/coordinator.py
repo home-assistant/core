@@ -141,7 +141,7 @@ class _EveOnlineBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
 
 class EveOnlineCoordinator(_EveOnlineBaseCoordinator[EveOnlineData]):
-    """Fast coordinator (60 s): location, ship, wallet, mail, skill queue."""
+    """Fast coordinator (60 s): online status, location, ship, wallet, mail."""
 
     def __init__(
         self,
@@ -182,10 +182,10 @@ class EveOnlineCoordinator(_EveOnlineBaseCoordinator[EveOnlineData]):
         )
 
         # Skip location and ship when the character is offline — those values
-        # don't change while logged out, so the calls would only return the
-        # last known data which we already have cached.
-        location = None
-        ship = None
+        # don't change while logged out. Preserve the last known values so
+        # sensors stay at their previous state rather than going unknown.
+        location = self.data.location if self.data else None
+        ship = self.data.ship if self.data else None
         if character_online.online:
             location, ship = await asyncio.gather(
                 self._fetch_optional(
