@@ -58,6 +58,11 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
         """Update electricity prices from the ESIOS API."""
         try:
             api_data = await self.api.async_update_all(self.data, dt_util.utcnow())
+        except KeyError as err:
+            if "2026" in str(err):
+                # Skip update for unsupported year to avoid crash
+                return self.data
+            raise
         except BadApiTokenAuthError as exc:
             raise ConfigEntryAuthFailed from exc
         if (
