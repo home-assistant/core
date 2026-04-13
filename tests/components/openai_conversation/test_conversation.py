@@ -395,9 +395,14 @@ async def test_reasoning_summary_off_omits_summary_key(
     mock_chat_log: MockChatLog,  # noqa: F811
 ) -> None:
     """Test that reasoning summary 'off' omits the summary key from the API call."""
+    conversation_subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    )
     hass.config_entries.async_update_subentry(
         mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
+        conversation_subentry,
         data={
             CONF_CHAT_MODEL: "o4-mini",
             CONF_REASONING_SUMMARY: "off",

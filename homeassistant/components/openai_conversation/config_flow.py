@@ -445,7 +445,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Optional(
                         CONF_REASONING_SUMMARY,
-                        default=RECOMMENDED_REASONING_SUMMARY,
+                        default=options.get(
+                            CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+                        ),
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=["off", "auto", "concise", "detailed"],
