@@ -14,9 +14,13 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PRECISION_HALVES, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    PRECISION_HALVES,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .climate import MAX_TEMP, MIN_TEMP
