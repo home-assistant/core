@@ -7,7 +7,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
-from homeassistant.components.template.vacuum import CONF_SEGMENTS_TEMPLATE
+from homeassistant.components.template.vacuum import (
+    CONF_SEGMENTS_TEMPLATE,
+    SERVICE_CLEAN_AREA,
+)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
@@ -1046,6 +1049,7 @@ async def test_not_optimistic(
                 "unique_id": TEST_VACUUM.entity_id,
                 "start": [],
                 **CLEAN_AREA_ACTION,
+                "segments_template": "{{ [{'id': '1', 'name': 'Livingroom'}, {'id': '2', 'name': 'Kitchen'}] }}",
             },
         )
     ],
@@ -1252,13 +1256,54 @@ async def test_raise_segments_changed_issue(
 
 
 @pytest.mark.parametrize(
-    "vacuum_config",
+    ("vacuum_config", "err_msg"),
+    [
+        (
+            {**START_ACTION},
+            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("count", "extra_config"),
+    [
+        (
+            0,
+            {
+                "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
+        ),
+        (
+            0,
+            {**CLEAN_AREA_ACTION},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
+async def test_segments_part_config(
+    hass: HomeAssistant,
+    caplog_setup_text,
+    caplog: pytest.LogCaptureFixture,
+    count: int,
+    err_msg: str,
+) -> None:
+    """Test creating vacuum with segments, missing required options."""
+    assert len(hass.states.async_all(vacuum.DOMAIN)) == count
+    assert err_msg in caplog_setup_text or err_msg in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("vacuum_config"),
     [
         {
-            "start": [],
+            **START_ACTION,
             **CLEAN_AREA_ACTION,
-            "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'} ] }}",
-        }
+            "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+        },
     ],
 )
 @pytest.mark.parametrize(
@@ -1267,15 +1312,9 @@ async def test_raise_segments_changed_issue(
         (
             0,
             {},
-            f"Option `{CONF_SEGMENTS_TEMPLATE}` requires `{CONF_UNIQUE_ID}` to be configured",
+            f'key "{CONF_SEGMENTS_TEMPLATE}" requires key "{CONF_UNIQUE_ID}" to exist',
         ),
-        (
-            1,
-            {
-                "unique_id": TEST_VACUUM.entity_id,
-            },
-            "",
-        ),
+        (1, {"unique_id": TEST_VACUUM.entity_id}, ""),
     ],
 )
 @pytest.mark.parametrize(
@@ -1290,7 +1329,7 @@ async def test_segments_unique_id(
     count: int,
     err_msg: str,
 ) -> None:
-    """Test segments_template requires unique_id."""
+    """Test creating vacuum with segments, missing required options."""
     assert len(hass.states.async_all(vacuum.DOMAIN)) == count
     assert err_msg in caplog_setup_text or err_msg in caplog.text
 

@@ -91,13 +91,19 @@ SCRIPT_FIELDS = (
     SERVICE_CLEAN_AREA,
 )
 
+CLEAN_AREA_GROUP = "clean_area_group"
+
 VACUUM_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_BATTERY_LEVEL): cv.template,
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
         vol.Optional(CONF_FAN_SPEED): cv.template,
         vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_SEGMENTS_TEMPLATE): cv.template,
+        vol.Inclusive(
+            CONF_SEGMENTS_TEMPLATE,
+            CLEAN_AREA_GROUP,
+            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+        ): cv.template,
         vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
@@ -105,21 +111,13 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
         vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
         vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
         vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        vol.Optional(SERVICE_CLEAN_AREA): cv.SCRIPT_SCHEMA,
+        vol.Inclusive(
+            SERVICE_CLEAN_AREA,
+            CLEAN_AREA_GROUP,
+            f"Options `{CONF_SEGMENTS_TEMPLATE}` and `{SERVICE_CLEAN_AREA}` must both exist",
+        ): cv.SCRIPT_SCHEMA,
     }
 )
-
-
-def validate_clean_area_config(config: ConfigType) -> ConfigType:
-    """Validate clean area configuration."""
-    if CONF_SEGMENTS_TEMPLATE not in config:
-        return config
-    if not config.get(CONF_UNIQUE_ID):
-        raise vol.Invalid(
-            f"Option `{CONF_SEGMENTS_TEMPLATE}` requires `{CONF_UNIQUE_ID}` to be configured"
-        )
-
-    return config
 
 
 VACUUM_YAML_SCHEMA = vol.All(
@@ -128,7 +126,8 @@ VACUUM_YAML_SCHEMA = vol.All(
             VACUUM_DOMAIN, DEFAULT_NAME
         ).schema
     ),
-    validate_clean_area_config,
+    cv.key_dependency(CONF_SEGMENTS_TEMPLATE, CONF_UNIQUE_ID),
+    cv.key_dependency(SERVICE_CLEAN_AREA, CONF_UNIQUE_ID),
 )
 
 VACUUM_LEGACY_YAML_SCHEMA = vol.All(
