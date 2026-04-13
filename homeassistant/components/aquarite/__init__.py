@@ -37,7 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
 
     # Initial coordinator refresh and subscription
     await coordinator.async_config_entry_first_refresh()
-    await coordinator.subscribe()
+    try:
+        await coordinator.subscribe()
+    except AquariteError as exc:
+        raise ConfigEntryNotReady from exc
 
     # Start background tasks (token refresh and health check)
     await coordinator.setup_tasks()
