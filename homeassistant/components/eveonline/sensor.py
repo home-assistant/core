@@ -41,7 +41,7 @@ SENSORS: tuple[EveOnlineSensorDescription, ...] = (
     EveOnlineSensorDescription(
         key="ship",
         translation_key="ship",
-        value_fn=lambda data: data.ship.ship_name if data.ship else None,
+        value_fn=lambda data: data.ship_type_name,
     ),
 )
 

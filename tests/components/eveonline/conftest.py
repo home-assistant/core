@@ -86,10 +86,11 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         client.async_resolve_names.return_value = [
             UniverseName(
                 id=SOLAR_SYSTEM_ID, name=SOLAR_SYSTEM_NAME, category="solar_system"
-            )
+            ),
+            UniverseName(id=587, name="Rifter", category="inventory_type"),
         ]
         client.async_get_character_ship.return_value = CharacterShip(
-            ship_type_id=587, ship_item_id=1000000, ship_name="Rifter"
+            ship_type_id=587, ship_item_id=1000000, ship_name="i.probe"
         )
         yield client
 

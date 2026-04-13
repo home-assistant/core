@@ -31,6 +31,7 @@ class EveOnlineData:
     location: CharacterLocation | None = None
     solar_system_name: str | None = None
     ship: CharacterShip | None = None
+    ship_type_name: str | None = None
 
 
 class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
@@ -72,21 +73,29 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch location: %s", err)
 
-        if location:
-            try:
-                resolved = await self.client.async_resolve_names(
-                    [location.solar_system_id]
-                )
-                if resolved:
-                    solar_system_name = resolved[0].name
-            except (EveOnlineError, aiohttp.ClientError) as err:
-                _LOGGER.debug("Failed to resolve solar system name: %s", err)
-
         ship: CharacterShip | None = None
+        ship_type_name: str | None = None
         try:
             ship = await self.client.async_get_character_ship(self.character_id)
         except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch ship: %s", err)
+
+        ids_to_resolve = []
+        if location:
+            ids_to_resolve.append(location.solar_system_id)
+        if ship:
+            ids_to_resolve.append(ship.ship_type_id)
+
+        if ids_to_resolve:
+            try:
+                resolved = await self.client.async_resolve_names(ids_to_resolve)
+                resolved_by_id = {r.id: r.name for r in resolved}
+                if location:
+                    solar_system_name = resolved_by_id.get(location.solar_system_id)
+                if ship:
+                    ship_type_name = resolved_by_id.get(ship.ship_type_id)
+            except (EveOnlineError, aiohttp.ClientError) as err:
+                _LOGGER.debug("Failed to resolve names: %s", err)
 
         return EveOnlineData(
             character_id=self.character_id,
@@ -95,6 +104,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
             location=location,
             solar_system_name=solar_system_name,
             ship=ship,
+            ship_type_name=ship_type_name,
         )
 
 
