@@ -119,7 +119,7 @@ async def test_form(hass: HomeAssistant) -> None:
         },
     ]
     assert result2["version"] == 2
-    assert result2["minor_version"] == 6
+    assert result2["minor_version"] == 7
     assert len(mock_setup_entry.mock_calls) == 1
 
 

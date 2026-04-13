@@ -46,6 +46,7 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
     CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
@@ -489,6 +490,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
     if entry.version == 2 and entry.minor_version == 5:
         _add_stt_subentry(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=6)
+
+    if entry.version == 2 and entry.minor_version == 6:
+        for subentry in entry.subentries.values():
+            if subentry.subentry_type in ("conversation", "ai_task_data"):
+                data = dict(subentry.data)
+                if data.get(CONF_REASONING_SUMMARY) == "short":
+                    data[CONF_REASONING_SUMMARY] = "concise"
+                    hass.config_entries.async_update_subentry(
+                        entry, subentry, data=data
+                    )
+        hass.config_entries.async_update_entry(entry, minor_version=7)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
