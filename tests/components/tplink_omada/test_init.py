@@ -1,6 +1,7 @@
 """Tests for TP-Link Omada integration init."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,10 +19,9 @@ from homeassistant.components.tplink_omada.coordinator import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_ENTRY_DATA = {
     "host": "https://fake.omada.host",
@@ -123,7 +123,7 @@ async def test_automatic_missing_client_cleanup(
     tracker = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
-        unique_id="scanner_Default_11-11-11-11-11-11",
+        unique_id="scanner_SiteId_11-11-11-11-11-11",
         config_entry=mock_config_entry,
     )
 
@@ -185,7 +185,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
         config_entry=mock_config_entry,
     )
 
-    # Device tracker whose unique_id does not start with "scanner_" — MAC is unparseable
+    # Device tracker whose unique_id does not start with "scanner_" — MAC is unparsable
     malformed_no_prefix = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
@@ -193,7 +193,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
         config_entry=mock_config_entry,
     )
 
-    # Device tracker whose unique_id has only two underscore-separated parts — MAC is unparseable
+    # Device tracker whose unique_id has only two underscore-separated parts — MAC is unparsable
     malformed_wrong_parts = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
@@ -201,7 +201,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
         config_entry=mock_config_entry,
     )
 
-    await async_cleanup_client_trackers(hass, controller, raise_on_error=True)
+    await async_cleanup_client_trackers(hass, controller)
 
     assert entity_registry.async_get(unknown_client_entity_1.entity_id) is None
     assert entity_registry.async_get(unknown_client_entity_2.entity_id) is None
@@ -240,60 +240,12 @@ async def test_cleanup_devices_removes_orphans(
     assert device_registry.async_get(orphan.id) is None
 
 
-async def test_cleanup_client_trackers_raises_on_api_error(
-    hass: HomeAssistant,
-    mock_omada_clients_only_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test cleanup raises HomeAssistantError when API fails and raise_on_error is True."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
-
-    controller.omada_client.get_known_clients.side_effect = OmadaClientException()
-
-    with pytest.raises(HomeAssistantError):
-        await async_cleanup_client_trackers(hass, controller, raise_on_error=True)
-
-
-async def test_cleanup_client_trackers_silent_on_api_error(
-    hass: HomeAssistant,
-    mock_omada_clients_only_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test cleanup returns silently when API fails and raise_on_error is False."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
-
-    controller.omada_client.get_known_clients.side_effect = OmadaClientException()
-
-    # Should return without raising
-    await async_cleanup_client_trackers(hass, controller, raise_on_error=False)
-
-
 async def test_cleanup_lock_prevents_redundant_tasks(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test cleanup lock prevents scheduling a second cleanup while one is running."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
-
     cleanup_call_count = 0
     cleanup_started = asyncio.Event()
     cleanup_proceed = asyncio.Event()
@@ -308,15 +260,17 @@ async def test_cleanup_lock_prevents_redundant_tasks(
         "homeassistant.components.tplink_omada.async_cleanup_devices",
         new=blocking_cleanup,
     ):
-        # Trigger first coordinator update — starts cleanup background task
-        coordinator = controller.clients_coordinator
-        coordinator.async_set_updated_data(coordinator.data)
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        # Wait for the cleanup task to start and acquire the lock
+        # Startup _schedule_cleanup() fires immediately; wait for it to acquire lock
         await cleanup_started.wait()
 
-        # Lock is now held — a second coordinator update should see it and skip
-        coordinator.async_set_updated_data(coordinator.data)
+        # Lock is now held — the 1-hour interval firing should be a no-op
+        async_fire_time_changed(
+            hass, hass.loop.time() + timedelta(hours=1).total_seconds() + 1
+        )
         await hass.async_block_till_done()
 
         # Release the first cleanup
@@ -325,3 +279,33 @@ async def test_cleanup_lock_prevents_redundant_tasks(
 
     # The second _schedule_cleanup call returned early due to the lock guard
     assert cleanup_call_count == 1
+
+
+async def test_cleanup_runs_hourly(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test stale client trackers are removed on the hourly interval."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Add a stale tracker after initial startup cleanup has already run
+    stale_tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_11-11-11-11-11-11",
+        config_entry=mock_config_entry,
+    )
+    assert entity_registry.async_get(stale_tracker.entity_id) is not None
+
+    # Fire the 1-hour interval to trigger cleanup again
+    async_fire_time_changed(
+        hass,
+        hass.loop.time() + timedelta(hours=1).total_seconds() + 1,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get(stale_tracker.entity_id) is None

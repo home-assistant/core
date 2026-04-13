@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta
 
 from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
@@ -17,6 +18,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
@@ -82,11 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
             await async_cleanup_client_trackers(
                 hass,
                 controller,
-                raise_on_error=False,
             )
 
     @callback
-    def _schedule_cleanup() -> None:
+    def _schedule_cleanup(_now: datetime | None = None) -> None:
         if _cleanup_lock.locked():
             return
         entry.async_create_background_task(
@@ -95,13 +96,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
             "tplink_omada cleanup",
         )
 
-    entry.async_on_unload(
-        controller.clients_coordinator.async_add_listener(_schedule_cleanup)
-    )
-
     await controller.initialize_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    _schedule_cleanup()
+    entry.async_on_unload(
+        async_track_time_interval(hass, _schedule_cleanup, timedelta(hours=1))
+    )
 
     return True
 

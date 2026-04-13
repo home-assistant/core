@@ -18,7 +18,6 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -157,6 +156,29 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
         }
 
 
+class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
+    """Coordinator for getting details about all wireless clients known to the controller."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(
+            hass, config_entry, omada_client, "KnownClientsList", POLL_CLIENTS
+        )
+
+    async def poll_update(self) -> dict[str, OmadaWirelessClient]:
+        """Poll the site's all-time known wireless clients."""
+        return {
+            client.mac: client
+            async for client in self.omada_client.get_known_clients()
+            if isinstance(client, OmadaWirelessClient)
+        }
+
+
 class FirmwareUpdateStatus(NamedTuple):
     """Firmware update information for Omada SDN devices."""
 
@@ -235,41 +257,15 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     return parts[2]
 
 
-async def _async_get_known_wireless_client_macs(
-    controller: OmadaSiteController,
-) -> set[str]:
-    """Return the set of wireless client MAC addresses known to the controller."""
-    macs: set[str] = set()
-    async for client in controller.omada_client.get_known_clients():
-        if isinstance(client, OmadaWirelessClient):
-            macs.add(client.mac)
-    return macs
-
-
 async def async_cleanup_client_trackers(
     hass: HomeAssistant,
     controller: OmadaSiteController,
-    *,
-    raise_on_error: bool = False,
 ) -> None:
     """Remove stale client tracker entities for the Omada integration."""
 
     entity_registry = er.async_get(hass)
-    entry_id = controller.clients_coordinator.config_entry.entry_id
-
-    try:
-        known_macs = await _async_get_known_wireless_client_macs(controller)
-    except OmadaClientException as ex:
-        if raise_on_error:
-            raise HomeAssistantError(
-                "Failed to fetch Omada clients while cleaning trackers"
-            ) from ex
-        _LOGGER.debug(
-            "Skipping stale client cleanup for entry %s: %s",
-            entry_id,
-            ex,
-        )
-        return
+    entry_id = controller.known_clients_coordinator.config_entry.entry_id
+    known_macs = set(controller.known_clients_coordinator.data or {})
 
     for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
         if entity.domain != DEVICE_TRACKER_DOMAIN:
