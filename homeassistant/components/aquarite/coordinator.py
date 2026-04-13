@@ -115,13 +115,17 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_shutdown(self) -> None:
         """Cleanly unsubscribe and cancel tasks."""
-        if self.watch:
-            await asyncio.to_thread(self.watch.unsubscribe)
         for task in (self._health_task, self._token_task):
             if task:
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await task
+
+        async with self._subscription_lock:
+            watch = self.watch
+            self.watch = None
+            if watch:
+                await asyncio.to_thread(watch.unsubscribe)
         await super().async_shutdown()
 
     def get_value(self, path: str, default: Any = None) -> Any:
