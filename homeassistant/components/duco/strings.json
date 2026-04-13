@@ -40,14 +40,14 @@
       "ventilation_state": {
         "name": "Ventilation state",
         "state": {
-          "aut1": "Automatic low speed",
-          "aut2": "Automatic medium speed",
-          "aut3": "Automatic high speed",
+          "aut1": "Automatic boost (15 min)",
+          "aut2": "Automatic boost (30 min)",
+          "aut3": "Automatic boost (45 min)",
           "auto": "Automatic",
           "cnt1": "Continuous low speed",
           "cnt2": "Continuous medium speed",
           "cnt3": "Continuous high speed",
-          "empt": "Not in use",
+          "empt": "Empty house",
           "man1": "Manual low speed (15 min)",
           "man1x2": "Manual low speed (30 min)",
           "man1x3": "Manual low speed (45 min)",
