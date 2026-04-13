@@ -1150,8 +1150,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/netatmo/ @cgtobi
 /tests/components/netatmo/ @cgtobi
 /homeassistant/components/netdata/ @fabaff
-/homeassistant/components/netgear/ @hacf-fr @Quentame @starkillerOG
-/tests/components/netgear/ @hacf-fr @Quentame @starkillerOG
+/homeassistant/components/netgear/ @Quentame @starkillerOG
+/tests/components/netgear/ @Quentame @starkillerOG
 /homeassistant/components/netgear_lte/ @tkdrob
 /tests/components/netgear_lte/ @tkdrob
 /homeassistant/components/network/ @home-assistant/core
