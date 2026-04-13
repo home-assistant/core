@@ -1214,6 +1214,8 @@ send_message_draft:
           filter:
             domain: notify
             integration: telegram_bot
+          multiple: true
+          reorder: true
     message_thread_id:
       selector:
         number:

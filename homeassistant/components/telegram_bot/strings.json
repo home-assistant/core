@@ -943,7 +943,7 @@
       "description": "Stream a partial message to a user while the message is being generated.",
       "fields": {
         "chat_id": {
-          "description": "A pre-authorized chat IDs to send the message draft to.",
+          "description": "One or more pre-authorized chat IDs to send the message draft to.",
           "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]"
         },
         "config_entry_id": {
