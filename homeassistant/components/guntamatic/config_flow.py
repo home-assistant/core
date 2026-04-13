@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -59,15 +58,13 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except NoSerialException:
                 errors["base"] = "bad_data"
-            except asyncio.CancelledError:
-                raise
 
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 # set serial as unique id for deduplication, ip isn't a good match
-                serial = data.get("Serial", [None])[0]
+                serial = data["Serial"][0]
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}

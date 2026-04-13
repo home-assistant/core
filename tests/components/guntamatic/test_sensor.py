@@ -1,38 +1,35 @@
-"""Test the Guntamatic sensors."""
+"""Tests for the Guntamatic sensor platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensors_created(
+@pytest.mark.usefixtures("mock_heater")
+async def test_all_entities(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
-    mock_heater: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that sensors are created for each data point."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")
-    assert state is not None
-    assert state.state == "14.09"
-    assert state.attributes["unit_of_measurement"] == "°C"
-
-
-async def test_sensor_native_value(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_heater: MagicMock,
-) -> None:
-    """Test sensor returns correct native value."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.guntamatic_heater_outdoor_temperature")
-    assert state is not None
-    assert state.state == "15.95"
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.guntamatic._PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await snapshot_platform(
+            hass,
+            entity_registry,
+            snapshot,
+            mock_config_entry.entry_id,
+        )
