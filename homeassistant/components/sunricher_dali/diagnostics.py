@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from PySrDaliGateway import Device, Scene
-from PySrDaliGateway.types import SceneDeviceType
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import (
@@ -19,6 +16,10 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_SERIAL_NUMBER
 from .types import DaliCenterConfigEntry
+
+if TYPE_CHECKING:
+    from PySrDaliGateway import Device, Scene
+    from PySrDaliGateway.types import SceneDeviceType
 
 TO_REDACT = {
     CONF_HOST,
@@ -76,12 +77,9 @@ def _serialize_scene(scene: Scene) -> dict[str, Any]:
 
 
 def _strip_gw_sn(data: Any, gw_sn: str) -> Any:
-    """Recursively replace gw_sn in every string key and value."""
+    """Recursively replace gw_sn in string values and list items."""
     if isinstance(data, dict):
-        return {
-            _strip_gw_sn(key, gw_sn): _strip_gw_sn(value, gw_sn)
-            for key, value in data.items()
-        }
+        return {key: _strip_gw_sn(value, gw_sn) for key, value in data.items()}
     if isinstance(data, list):
         return [_strip_gw_sn(item, gw_sn) for item in data]
     if isinstance(data, str):
