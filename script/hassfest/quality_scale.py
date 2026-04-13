@@ -2151,6 +2151,7 @@ NO_QUALITY_SCALE = [
     "search",
     "system_health",
     "system_log",
+    "unifi_discovery",
     "tag",
     "temperature",
     "timer",

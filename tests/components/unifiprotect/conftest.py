@@ -60,6 +60,13 @@ DEFAULT_PASSWORD = "test-password"
 DEFAULT_API_KEY = "test-api-key"
 
 
+@pytest.fixture(autouse=True)
+def mock_discovery():
+    """Prevent real network scanning in all unifiprotect tests."""
+    with _patch_discovery(no_device=True):
+        yield
+
+
 @pytest.fixture(name="nvr")
 def mock_nvr():
     """Mock UniFi Protect Camera device."""
@@ -158,7 +165,6 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with (
-        _patch_discovery(no_device=True),
         patch(
             "homeassistant.components.unifiprotect.utils.ProtectApiClient"
         ) as mock_api,

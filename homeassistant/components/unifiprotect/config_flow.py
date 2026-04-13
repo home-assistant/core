@@ -36,8 +36,6 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -56,7 +54,6 @@ from .const import (
     OUTDATED_LOG_MESSAGE,
 )
 from .data import UFPConfigEntry, async_last_update_was_successful
-from .discovery import async_start_discovery
 from .utils import (
     _async_resolve,
     _async_short_mac,
@@ -204,28 +201,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         """Init the config flow."""
         super().__init__()
         self._discovered_device: dict[str, str] = {}
-
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle discovery via dhcp."""
-        _LOGGER.debug("Starting discovery via: %s", discovery_info)
-        return await self._async_discovery_handoff()
-
-    async def async_step_ssdp(
-        self, discovery_info: SsdpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle a discovered UniFi device."""
-        _LOGGER.debug("Starting discovery via: %s", discovery_info)
-        return await self._async_discovery_handoff()
-
-    async def _async_discovery_handoff(self) -> ConfigFlowResult:
-        """Ensure discovery is active."""
-        # Discovery requires an additional check so we use
-        # SSDP and DHCP to tell us to start it so it only
-        # runs on networks where unifi devices are present.
-        async_start_discovery(self.hass)
-        return self.async_abort(reason="discovery_started")
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
