@@ -61,6 +61,10 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
         except KeyError as err:
             if "2026" in str(err):
                 # Skip update for unsupported year to avoid crash
+                if self.data is None:
+                    raise UpdateFailed(
+                        "Unsupported year and no cached electricity prices available"
+                    ) from err
                 return self.data
             raise
         except BadApiTokenAuthError as exc:
