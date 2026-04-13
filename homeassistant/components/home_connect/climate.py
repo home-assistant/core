@@ -8,8 +8,6 @@ from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import Execution, ProgramDefinitionConstraints
 
 from homeassistant.components.climate import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     FAN_AUTO,
     ClimateEntity,
     ClimateEntityDescription,
@@ -20,7 +18,6 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .common import setup_home_connect_entry
 from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN, UNIT_MAP
@@ -183,9 +180,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             option_constraints := self._get_temperature_constraints()
         ) and option_constraints.min is not None:
             return option_constraints.min
-        return TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
-        )
+        return super().min_temp
 
     @property
     def max_temp(self) -> float:
@@ -194,9 +189,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             option_constraints := self._get_temperature_constraints()
         ) and option_constraints.max is not None:
             return option_constraints.max
-        return TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
-        )
+        return super().max_temp
 
     @property
     def target_temperature_step(self) -> float | None:
@@ -394,7 +387,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await super().async_set_option_with_key(
+        await self.async_set_option_with_key(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
             FAN_MODES_OPTIONS[fan_mode],
         )
