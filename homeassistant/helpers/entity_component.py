@@ -226,13 +226,19 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         *,
+        batched: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
-        """Register an entity service."""
+        """Register an entity service.
+
+        If batched is True, the service function is called once with all
+        matching entities as a list, instead of once per entity.
+        """
         service.async_register_entity_service(
             self.hass,
             self.domain,
             name,
+            batched=batched,
             entities=self._entities,
             func=func,
             job_type=HassJobType.Coroutinefunction,
