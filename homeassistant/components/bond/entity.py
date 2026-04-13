@@ -109,13 +109,11 @@ class BondEntity(Entity):
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, self._hub.bond_id)
         if self._device.location is not None:
             device_info[ATTR_SUGGESTED_AREA] = self._device.location
-        if not self._hub.is_bridge:
+        if isinstance(self._device, BondGroup):
+            device_info[ATTR_MODEL] = "Bond Group"
+        elif not self._hub.is_bridge:
             if self._hub.model is not None:
                 device_info[ATTR_MODEL] = self._hub.model
-            if self._hub.fw_ver is not None:
-                device_info[ATTR_SW_VERSION] = self._hub.fw_ver
-            if self._hub.mcu_ver is not None:
-                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
         else:
             model_data = []
             if self._device.branding_profile:
@@ -124,6 +122,11 @@ class BondEntity(Entity):
                 model_data.append(self._device.template)
             if model_data:
                 device_info[ATTR_MODEL] = " ".join(model_data)
+        if not self._hub.is_bridge:
+            if self._hub.fw_ver is not None:
+                device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+            if self._hub.mcu_ver is not None:
+                device_info[ATTR_HW_VERSION] = self._hub.mcu_ver
 
         return device_info
 

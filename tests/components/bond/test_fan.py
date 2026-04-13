@@ -118,6 +118,7 @@ async def test_entity_registry(
 async def test_group_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Tests that Bond fan groups are registered in the entity registry."""
     await setup_group_platform(
@@ -130,6 +131,10 @@ async def test_group_entity_registry(
 
     entity = entity_registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_group_test-group-id"
+
+    device = device_registry.async_get(entity.device_id)
+    assert device is not None
+    assert device.model == "Bond Group"
 
 
 async def test_non_standard_speed_list(hass: HomeAssistant) -> None:
