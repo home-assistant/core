@@ -2,25 +2,25 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import EveOnlineCoordinator
+from .coordinator import _EveOnlineBaseCoordinator
 
 
-class EveOnlineEntity(CoordinatorEntity[EveOnlineCoordinator]):
-    """Base class for all Eve Online entities."""
+class EveOnlineCharacterEntity[_CoordT: _EveOnlineBaseCoordinator[Any]](
+    CoordinatorEntity[_CoordT]
+):
+    """Base class for all Eve Online character entities."""
 
     _attr_has_entity_name = True
 
-
-class EveOnlineCharacterEntity(EveOnlineEntity):
-    """Base class for Eve Online character entities."""
-
     def __init__(
         self,
-        coordinator: EveOnlineCoordinator,
+        coordinator: _CoordT,
         key: str,
     ) -> None:
         """Initialize character entity."""

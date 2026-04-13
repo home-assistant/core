@@ -4,6 +4,7 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
+from eveonline.models import CharacterOnlineStatus
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -71,7 +72,9 @@ def mock_eveonline_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_client_class:
         client = mock_client_class.return_value
-        client.async_get_character_online.return_value = None
+        client.async_get_character_online.return_value = CharacterOnlineStatus(
+            online=True
+        )
         client.async_get_wallet_balance.return_value = None
         client.async_get_skill_queue.return_value = []
         client.async_get_character_location.return_value = None
