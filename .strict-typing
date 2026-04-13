@@ -94,6 +94,7 @@ homeassistant.components.apprise.*
 homeassistant.components.aprs.*
 homeassistant.components.apsystems.*
 homeassistant.components.aqualogic.*
+homeassistant.components.aquarite.*
 homeassistant.components.aquostv.*
 homeassistant.components.aranet.*
 homeassistant.components.arcam_fmj.*

@@ -98,6 +98,7 @@ rules:
     comment: Cloud API only, no local discovery possible
   discovery-update-info:
     status: exempt
+    comment: Cloud API only, no local discovery possible
   docs-data-update:
     status: todo
   docs-examples:
