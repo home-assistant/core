@@ -17,6 +17,7 @@ from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
+    Platform.SENSOR,
 ]
 
 

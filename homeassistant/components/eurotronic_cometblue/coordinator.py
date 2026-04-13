@@ -32,6 +32,7 @@ class CometBlueCoordinatorData:
 
     temperatures: dict[str, float | int] = field(default_factory=dict)
     holiday: dict = field(default_factory=dict)
+    battery: int | None = None
 
 
 class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorData]):
@@ -64,11 +65,11 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
         LOGGER.debug("Updating device %s with '%s'", self.name, payload)
         retry_count = 0
         while retry_count < MAX_RETRIES:
+            retry_count += 1
             try:
                 async with self.device:
                     return await function(**payload)
             except (InvalidByteValueError, TimeoutError, BleakError) as ex:
-                retry_count += 1
                 if retry_count >= MAX_RETRIES:
                     raise HomeAssistantError(
                         f"Error sending command to '{self.name}': {ex}"
@@ -94,14 +95,17 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
 
         while retry_count < MAX_RETRIES and not data.temperatures:
             try:
+                retry_count += 1
                 async with self.device:
                     # temperatures are required and must trigger a retry if not available
                     if not data.temperatures:
                         data.temperatures = await self.device.get_temperature_async()
-                    # holiday is optional and should not trigger a retry
+                    # holiday and battery are optional and should not trigger a retry
                     try:
                         if not data.holiday:
                             data.holiday = await self.device.get_holiday_async(1) or {}
+                        if not data.battery:
+                            data.battery = await self.device.get_battery_async()
                     except InvalidByteValueError as ex:
                         LOGGER.warning(
                             "Failed to retrieve optional data for %s: %s (%s)",
@@ -110,7 +114,6 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                             ex,
                         )
             except (InvalidByteValueError, TimeoutError, BleakError) as ex:
-                retry_count += 1
                 if retry_count >= MAX_RETRIES:
                     raise UpdateFailed(
                         f"Error retrieving data: {ex}", retry_after=30
@@ -128,5 +131,9 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                 ) from ex
 
         # If one value was not retrieved correctly, keep the old value
+        if not data.holiday:
+            data.holiday = self.data.holiday if self.data else {}
+        if not data.battery:
+            data.battery = self.data.battery if self.data else None
         LOGGER.debug("Received data for %s: %s", self.name, data)
         return data
