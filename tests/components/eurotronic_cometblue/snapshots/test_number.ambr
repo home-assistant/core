@@ -26,12 +26,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Target Temperature High',
+    'object_id_base': 'Target temperature high',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Target Temperature High',
+    'original_name': 'Target temperature high',
     'platform': 'eurotronic_cometblue',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Target Temperature High',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Target temperature high',
       'max': 28.5,
       'min': 7.5,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -87,12 +87,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Target Temperature Low',
+    'object_id_base': 'Target temperature low',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Target Temperature Low',
+    'original_name': 'Target temperature low',
     'platform': 'eurotronic_cometblue',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -106,7 +106,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Target Temperature Low',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Target temperature low',
       'max': 28.5,
       'min': 7.5,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -148,12 +148,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperature Offset',
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature Offset',
+    'original_name': 'Temperature offset',
     'platform': 'eurotronic_cometblue',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -167,7 +167,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Temperature Offset',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Temperature offset',
       'max': 5.0,
       'min': -5.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -209,12 +209,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Window Open Minutes',
+    'object_id_base': 'Window open minutes',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Window Open Minutes',
+    'original_name': 'Window open minutes',
     'platform': 'eurotronic_cometblue',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -228,7 +228,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Window Open Minutes',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Window open minutes',
       'max': 15.0,
       'min': 5.0,
       'mode': <NumberMode.AUTO: 'auto'>,
