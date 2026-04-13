@@ -359,6 +359,7 @@ class AppleTvMediaPlayer(
             metadata_extra = extra.get("metadata") or {}
             if not isinstance(metadata_extra, dict):
                 metadata_extra = {}
+            # Coerce empty strings to None so Apple TV doesn't display blank fields with 'or None'
             title = extra.get("title") or metadata_extra.get("title") or None
             metadata = MediaMetadata(
                 title=title,
