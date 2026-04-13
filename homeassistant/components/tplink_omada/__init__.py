@@ -74,8 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
     _cleanup_lock = asyncio.Lock()
 
     async def _async_cleanup_task() -> None:
-        if _cleanup_lock.locked():
-            return
         async with _cleanup_lock:
             await async_cleanup_devices(
                 hass,
@@ -89,6 +87,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     @callback
     def _schedule_cleanup() -> None:
+        if _cleanup_lock.locked():
+            return
         entry.async_create_background_task(
             hass,
             _async_cleanup_task(),
