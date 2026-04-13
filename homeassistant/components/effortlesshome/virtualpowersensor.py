@@ -3,23 +3,27 @@
 from __future__ import annotations
 
 import logging
+from random import uniform
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_platforms,
+)
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import dt as dt_util
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.restore_state import RestoreEntity
-
-from random import uniform
 
 from .const import DOMAIN, NAME
 

@@ -2,40 +2,37 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
-import json
 from typing import Optional, List
+
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.util import dt as dt_util
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
-
+from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_platforms,
+)
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, NAME
 from .notificationdevice import effortlesshomenotificationdevice
-
+from .personsensor import eh_personSensor
 from .virtualpowersensor import (
     VirtualPowerSensor,
     VirtualPowerSensorAlwaysOn,
     FakeDeviceVirtualPowerSensor,
     TotalEnergySensor,
 )
-
-from .personsensor import eh_personSensor
-
-from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -708,6 +705,9 @@ class HighTemperatureTomorrowSensor(SensorEntity, RestoreEntity):
         )
 
         _LOGGER.debug(f"In high temp tomorrow forecasts: {forecasts}")
+
+        if forecasts is None:
+            return
 
         forecast_data = forecasts.get("weather.forecast_home")
         if forecast_data is None or not isinstance(forecast_data, dict):

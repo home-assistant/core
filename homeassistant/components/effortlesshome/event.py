@@ -1,8 +1,9 @@
 # fire events in HA for use with automations  # noqa: EXE002
+"""Event handler for EffortlessHome."""
 
 import logging
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import const
@@ -11,7 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EventHandler:
-    def __init__(self, hass) -> None:
+    """Handle events in EffortlessHome."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Class constructor."""
         self.hass = hass
         self._subscription = async_dispatcher_connect(

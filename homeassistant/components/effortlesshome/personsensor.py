@@ -79,7 +79,11 @@ class eh_personSensor(Entity):
 
     @property
     def unique_id(self) -> str:
-        return self._attr_unique_id or f"effortlesshome_person_{self._email.lower().replace('@', '_').replace('.', '_')}"
+        """Return unique ID."""
+        return self._attr_unique_id or (
+            f"effortlesshome_person_"
+            f"{self._email.lower().replace('@', '_').replace('.', '_')}"
+        )
 
     @property
     def icon(self) -> str:

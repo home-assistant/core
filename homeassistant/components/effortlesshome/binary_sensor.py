@@ -21,6 +21,7 @@ from .const import ALARM_TYPE_MED_ALERT, ALARM_TYPE_MONITORING, DOMAIN, NAME
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
+ENTITY_REGISTRY: dict[str, Any] = {}
 
 
 async def async_setup_entry(
@@ -45,9 +46,8 @@ async def async_setup_entry(
     async_add_entities([SmartApplianceSensor("smartappliance3")])
 
 
-def checkforlabel(labels, value_to_check) -> bool:
+def checkforlabel(labels: list[str] | None, value_to_check: str) -> bool:
     """Check whether a label is in the list of labels."""
-
     # Handle potential null or empty values and convert to a clean list
     parsed_labels = [label for label in labels if label] if labels else []
 
@@ -55,13 +55,18 @@ def checkforlabel(labels, value_to_check) -> bool:
 
     # Check if the value is in parsed_labels
     if value_to_check in parsed_labels:
-        _LOGGER.debug(f"'{value_to_check}' is in parsed_labels. '{parsed_labels}'")
+        _LOGGER.debug(
+            "'%s' is in parsed_labels. '%s'", value_to_check, parsed_labels
+        )
         return True
-    _LOGGER.debug(f"'{value_to_check}' is not in parsed_labels. '{parsed_labels}'")
+    _LOGGER.debug(
+        "'%s' is not in parsed_labels. '%s'", value_to_check, parsed_labels
+    )
     return False
 
 
-async def updateEntity(area_id, state):
+async def updateEntity(area_id: str, state: str) -> None:
+    """Update entity state."""
     sensor = ENTITY_REGISTRY.get(area_id)
     if sensor:
         sensor.set_state(state)
@@ -737,17 +742,26 @@ class SomeoneHomeSensor(BinarySensorEntity, RestoreEntity):
             for entity_id in self.hass.states.entity_ids("person"):
                 try:
                     state = self.hass.states.get(entity_id)
+                    state_value = getattr(state, "state", None)
                     _LOGGER.debug(
-                        f"[SomeoneHomeSensor][update] Checking person {entity_id}: state={getattr(state, 'state', None)}"
+                        "[SomeoneHomeSensor][update] Checking person %s: state=%s",
+                        entity_id,
+                        state_value,
                     )
                     if state and state.state == "home":
                         home += 1
                         _LOGGER.debug(
-                            f"[SomeoneHomeSensor][update] {entity_id} is home. Incremented home count: {home}"
+                            "[SomeoneHomeSensor][update] %s is home. "
+                            "Incremented home count: %s",
+                            entity_id,
+                            home,
+                        )
                         )
                 except Exception as e:
                     _LOGGER.error(
-                        f"[SomeoneHomeSensor][update] Error checking person {entity_id}: {e}"
+                        "[SomeoneHomeSensor][update] Error checking person %s: %s",
+                        entity_id,
+                        e,
                     )
 
             entity_id = "group.security_motion_sensors_group"
@@ -759,11 +773,14 @@ class SomeoneHomeSensor(BinarySensorEntity, RestoreEntity):
                     else "Unknown"
                 )
                 _LOGGER.debug(
-                    f"[SomeoneHomeSensor][update] Motion sensor group state: {motion_sensor_state_val}"
+                    "[SomeoneHomeSensor][update] Motion sensor group state: %s",
+                    motion_sensor_state_val,
                 )
             except Exception as e:
                 _LOGGER.error(
-                    f"[SomeoneHomeSensor][update] Error getting motion sensor group state: {e}"
+                    "[SomeoneHomeSensor][update] "
+                    "Error getting motion sensor group state: %s",
+                    e,
                 )
                 motion_sensor_state_val = "Unknown"
 
@@ -774,16 +791,26 @@ class SomeoneHomeSensor(BinarySensorEntity, RestoreEntity):
                 prev_state = self._state
                 self._state = "on"
                 _LOGGER.debug(
-                    f"[SomeoneHomeSensor][update] Someone is home or motion detected. State changed from {prev_state} to 'on'. (home={home}, motion_sensor_state_val={motion_sensor_state_val})"
+                    "[SomeoneHomeSensor][update] Someone is home or motion detected. "
+                    "State changed from %s to 'on'. "
+                    "(home=%s, motion_sensor_state_val=%s)",
+                    prev_state,
+                    home,
+                    motion_sensor_state_val,
                 )
             else:
                 prev_state = self._state
                 self._state = "off"
                 _LOGGER.debug(
-                    f"[SomeoneHomeSensor][update] No one home and no motion. State changed from {prev_state} to 'off'. (home={home}, motion_sensor_state_val={motion_sensor_state_val})"
+                    "[SomeoneHomeSensor][update] No one home and no motion. "
+                    "State changed from %s to 'off'. "
+                    "(home=%s, motion_sensor_state_val=%s)",
+                    prev_state,
+                    home,
+                    motion_sensor_state_val,
                 )
         except Exception as e:
-            _LOGGER.error(f"[SomeoneHomeSensor][update] Error in update: {e}")
+            _LOGGER.error("[SomeoneHomeSensor][update] Error in update: %s", e)
 
 
 class SmartApplianceSensor(BinarySensorEntity, RestoreEntity):

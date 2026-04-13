@@ -1,10 +1,15 @@
+"""Card websocket handler for EffortlessHome."""
+
 import logging
 
 import voluptuous as vol
-
-from homeassistant.components.websocket_api import async_register_command, decorators
-from homeassistant.core import callback
+from homeassistant.components.websocket_api import (
+    async_register_command,
+    decorators,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +40,6 @@ async def handle_subscribe_updates(hass, connection, msg) -> None:
     connection.send_result(msg["id"])
 
 
-async def async_register_card(hass) -> None:
+async def async_register_card(hass: HomeAssistant) -> None:
     """Publish event to lovelace when alarm changes."""
     async_register_command(hass, handle_subscribe_updates)

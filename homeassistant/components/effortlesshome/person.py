@@ -10,7 +10,7 @@ from google.auth import jwt
 from google.auth.crypt import rsa
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.helpers.device_registry import async_get as async_get_dev_reg, DeviceInfo
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.event import async_track_state_change_event
@@ -35,7 +35,8 @@ class eh_person(SensorEntity, RestoreEntity):
     """A persistent, sensor-like representation of an EffortlessHome Person with tracking and notifications."""
 
     def __init__(self, hass: Optional[HomeAssistant], email: str):
-        self.hass = hass
+        super().__init__()
+        self.hass: HomeAssistant | None = hass
         self._email = email
         self._attr_name = email
         self._attr_unique_id = (
@@ -58,7 +59,11 @@ class eh_person(SensorEntity, RestoreEntity):
     # ---- Standard HA Properties ----
     @property
     def unique_id(self) -> str:
-        return self._attr_unique_id or f"effortlesshome_person_{self._email.lower().replace('@', '_').replace('.', '_')}"
+        """Return unique ID."""
+        return self._attr_unique_id or (
+            f"effortlesshome_person_"
+            f"{self._email.lower().replace('@', '_').replace('.', '_')}"
+        )
 
     @property
     def icon(self) -> str:
@@ -83,15 +88,15 @@ class eh_person(SensorEntity, RestoreEntity):
         return self._notification_devices
 
     @property
-    def device_info(self) -> Dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo | None:
         """Return device info."""
         if self.hass is None:
             return None
-        return {
-            "identifiers": {(DOMAIN, NAME)},
-            "name": NAME,
-            "manufacturer": NAME,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, NAME)},
+            name=NAME,
+            manufacturer=NAME,
+        )
 
     @property
     def localtracker(self) -> str:

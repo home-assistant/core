@@ -56,8 +56,8 @@ from .virtualpowersensor import VirtualPowerSensor
 try:
     # Older versions (pre-2025)
     from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-except (ImportError, AttributeError):
-    # Newer versions (2025+)
+except (ImportError, AttributeError, Exception):
+    # Newer versions (2025+) or attribute not found
     SOURCE_TYPE_GPS = "gps"
 
 from aiohttp import web
@@ -519,7 +519,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Failed to fetch customer/system data: %s", e)
             if "401" in str(e):
                 _LOGGER.info("Token expired, requesting reauth")
-                await entry.async_start_reauth(hass)
+                entry.async_start_reauth(hass)
                 return False
             raise HomeAssistantError(
                 f"Failed to fetch customer/system data: {e}"
@@ -1328,7 +1328,7 @@ async def handle_effortlesshome_location_update(hass, webhook_id, request):
                 home_lon = hass.config.longitude
                 if home_lat is not None and home_lon is not None:
                     home_coords = (float(home_lat), float(home_lon))
-            except:
+            except (AttributeError, ValueError, TypeError):
                 pass
 
         # Calculate distance and determine state

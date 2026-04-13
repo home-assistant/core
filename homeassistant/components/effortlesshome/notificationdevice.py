@@ -17,7 +17,8 @@ class effortlesshomenotificationdevice(RestoreEntity):
     def __init__(
         self, hass: Optional[HomeAssistant], token: str, name: str, platform: str
     ):
-        self.hass = hass
+        super().__init__()
+        self.hass: HomeAssistant | None = hass
         self._attr_unique_id = name
         self._attr_name = name
         self._platform = platform
@@ -31,27 +32,27 @@ class effortlesshomenotificationdevice(RestoreEntity):
         return self._state
 
     @property
-    def DeviceToken(self) -> str:
+    def device_token(self) -> str:
         """Return the token."""
         return self._token
 
-    @DeviceToken.setter
-    def DeviceToken(self, value: str) -> None:
+    @device_token.setter
+    def device_token(self, value: str) -> None:
         """Set the token."""
         self._token = value
 
     @property
-    def Name(self) -> str | None:
+    def name(self) -> str | None:
         """Return the name."""
         return self._attr_name
 
     @property
-    def Platform(self) -> str:
+    def platform(self) -> str:
         """Return the platform."""
         return self._platform
 
-    @Platform.setter
-    def Platform(self, value: str) -> None:
+    @platform.setter
+    def platform(self, value: str) -> None:
         """Set the platform."""
         self._platform = value
 

@@ -3,7 +3,6 @@ clean_motion_files:
   target: {}
   fields:
     age:
-      description: The age of the files to remove in days. Default is 30 days.
       example: 30
       selector:
         number:
