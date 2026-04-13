@@ -130,13 +130,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud device binary sensors based on config_entry."""
-    coordinators = entry.runtime_data
+    coordinator = entry.runtime_data
+
+    if DEVICE_TYPE_ATW not in coordinator:
+        return
 
     entities: list[MelDeviceBinarySensor] = [
-        MelDeviceBinarySensor(coordinator, description)
+        MelDeviceBinarySensor(coord, description)
         for description in ATW_BINARY_SENSORS
-        for coordinator in coordinators.get(DEVICE_TYPE_ATW, [])
-        if description.enabled(coordinator)
+        for coord in coordinator[DEVICE_TYPE_ATW]
+        if description.enabled(coord)
     ]
     async_add_entities(entities)
 

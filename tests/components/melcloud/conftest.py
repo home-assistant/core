@@ -25,7 +25,6 @@ def _build_mock_atw_device() -> MagicMock:
     device.name = "Ecodan"
     device.units = [{"model": "ATW-Unit", "serial": "unit-serial-1"}]
 
-    # Binary sensors
     device.boiler_status = True
     device.booster_heater1_status = False
     device.booster_heater2_status = None
@@ -38,10 +37,8 @@ def _build_mock_atw_device() -> MagicMock:
     device.valve_3way_status = True
     device.valve_2way_status = None
 
-    # Zones (required by coordinator)
     device.zones = []
 
-    # update is async
     device.update = AsyncMock()
 
     return device
