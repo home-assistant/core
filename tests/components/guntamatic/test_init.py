@@ -32,6 +32,7 @@ async def test_setup_entry(
             ConfigEntryState.SETUP_RETRY,
         ),
         (NoSerialException, ConfigEntryState.SETUP_ERROR),
+        (Exception("Unexpected error"), ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_setup_entry_fails(

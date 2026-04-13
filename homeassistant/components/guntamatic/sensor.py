@@ -13,9 +13,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GuntamaticConfigEntry
 from .const import DOMAIN
-from .coordinator import GuntamaticCoordinator
+from .coordinator import GuntamaticConfigEntry, GuntamaticCoordinator
 
 PARALLEL_UPDATES = 0
 

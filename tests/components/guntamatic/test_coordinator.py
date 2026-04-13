@@ -11,6 +11,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.guntamatic.conftest import MOCK_DATA
 
 
 @pytest.mark.parametrize(
@@ -39,3 +40,11 @@ async def test_coordinator_update_failed(
 
     state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")
     assert state.state == STATE_UNAVAILABLE
+
+    # Recovery
+    mock_heater.return_value.parse_data.side_effect = None
+    mock_heater.return_value.parse_data.return_value = MOCK_DATA
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")
+    assert state.state != STATE_UNAVAILABLE

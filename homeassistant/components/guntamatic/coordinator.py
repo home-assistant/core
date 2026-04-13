@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from guntamatic.heater import Heater, NoSerialException
+from guntamatic.heater import Heater
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +14,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+type GuntamaticConfigEntry = ConfigEntry[GuntamaticCoordinator]
 
 
 class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
@@ -38,6 +40,4 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
             )
         except requests.exceptions.ConnectionError as err:
             raise UpdateFailed(f"Cannot connect to heater: {err}") from err
-        except NoSerialException as err:
-            raise UpdateFailed(f"Unexpected data from heater: {err}") from err
         return data
