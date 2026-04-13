@@ -103,3 +103,38 @@ async def test_victron_select_actions(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "auto"
+
+
+
+async def test_select_main_topic_has_translation_key(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that select entities with main_topic=True still have translation_key set.
+
+    Regression test: previously main_topic entities skipped setting translation_key,
+    breaking HA state/option translations.
+    """
+    victron_hub, mock_config_entry = init_integration
+
+    # vebus Mode has main_topic=True
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/vebus/289/Mode",
+        '{"value": 3}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    assert len(entities) == 1
+    entity = entities[0]
+    # translation_key must be set even for main_topic entities
+    assert entity.translation_key is not None, "main_topic entity must have translation_key"
+    assert entity.translation_key == "vebus_mode"
+    # name should be None (uses device name via has_entity_name)
+    assert entity.name is None
