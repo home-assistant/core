@@ -6,7 +6,9 @@ import logging
 from typing import Any
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -54,6 +56,8 @@ async def async_setup_entry(
 
 class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     """Represents a Jellyfin Player device."""
+
+    _attr_media_image_remotely_accessible = False
 
     def __init__(
         self,
@@ -166,7 +170,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         self._attr_media_duration = media_duration
         self._attr_media_position = media_position
         self._attr_media_position_updated_at = media_position_updated
-        self._attr_media_image_remotely_accessible = True
 
     @property
     def media_image_url(self) -> str | None:
@@ -203,6 +206,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.STOP
                 | MediaPlayerEntityFeature.SEEK
                 | MediaPlayerEntityFeature.SEARCH_MEDIA
+                | MediaPlayerEntityFeature.MEDIA_ENQUEUE
             )
 
             if "Mute" in commands and "Unmute" in commands:
@@ -245,8 +249,20 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
+        command = "PlayNow"
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE)
+        if enqueue == MediaPlayerEnqueue.NEXT:
+            command = "PlayNext"
+        elif enqueue == MediaPlayerEnqueue.ADD:
+            command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id]
+            self.session_id, [media_id], command
+        )
+
+    def play_media_shuffle(self, media_content_id: str) -> None:
+        """Play a piece of media on shuffle."""
+        self.coordinator.api_client.jellyfin.remote_play_media(
+            self.session_id, [media_content_id], "PlayShuffle"
         )
 
     def set_volume_level(self, volume: float) -> None:
@@ -285,7 +301,6 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             self.hass,
             self.coordinator.api_client,
             self.coordinator.user_id,
-            media_content_type,
             media_content_id,
         )
 

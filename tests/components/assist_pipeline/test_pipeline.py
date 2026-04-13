@@ -1,6 +1,7 @@
 """Websocket tests for Voice Assistant integration."""
 
 from collections.abc import AsyncGenerator, Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -18,7 +19,12 @@ from homeassistant.components import (
     stt,
     tts,
 )
-from homeassistant.components.assist_pipeline.const import ACKNOWLEDGE_PATH, DOMAIN
+from homeassistant.components.assist_pipeline.const import (
+    ACKNOWLEDGE_PATH,
+    CONF_DEBUG_RECORDING_DIR,
+    DATA_CONFIG,
+    DOMAIN,
+)
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
     STORAGE_VERSION,
@@ -809,6 +815,34 @@ def test_pipeline_run_equality(hass: HomeAssistant, init_components) -> None:
     assert run_1 == run_1  # noqa: PLR0124
     assert run_1 != run_2
     assert run_1 != 1234
+
+
+async def test_text_only_run_does_not_start_debug_recording_thread(
+    hass: HomeAssistant,
+    init_components,
+    tmp_path: Path,
+) -> None:
+    """Test that text-only runs do not start debug recording."""
+    hass.data[DATA_CONFIG][CONF_DEBUG_RECORDING_DIR] = str(tmp_path)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass)
+    run = assist_pipeline.pipeline.PipelineRun(
+        hass,
+        context=Context(),
+        pipeline=pipeline,
+        start_stage=assist_pipeline.PipelineStage.INTENT,
+        end_stage=assist_pipeline.PipelineStage.INTENT,
+        event_callback=events.append,
+    )
+
+    run.start(conversation_id="mock-ulid", device_id=None, satellite_id=None)
+    assert run.debug_recording_thread is None
+    assert run.debug_recording_queue is None
+
+    await run.end()
+
+    assert not any(tmp_path.iterdir())
 
 
 async def test_tts_audio_output(
@@ -1825,11 +1859,15 @@ async def test_acknowledge(
     """Test that acknowledge sound is played when targets are in the same area."""
     area_1 = area_registry.async_get_or_create("area_1")
 
-    light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
+    light_1 = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="light 1"
+    )
     hass.states.async_set(light_1.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 1"})
     light_1 = entity_registry.async_update_entity(light_1.entity_id, area_id=area_1.id)
 
-    light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
+    light_2 = entity_registry.async_get_or_create(
+        "light", "demo", "5678", original_name="light 2"
+    )
     hass.states.async_set(light_2.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 2"})
     light_2 = entity_registry.async_update_entity(light_2.entity_id, area_id=area_1.id)
 
@@ -2007,11 +2045,15 @@ async def test_acknowledge_other_agents(
     """Test that acknowledge sound is only played when intents are processed locally for other agents."""
     area_1 = area_registry.async_get_or_create("area_1")
 
-    light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
+    light_1 = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="light 1"
+    )
     hass.states.async_set(light_1.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 1"})
     light_1 = entity_registry.async_update_entity(light_1.entity_id, area_id=area_1.id)
 
-    light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
+    light_2 = entity_registry.async_get_or_create(
+        "light", "demo", "5678", original_name="light 2"
+    )
     hass.states.async_set(light_2.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 2"})
     light_2 = entity_registry.async_update_entity(light_2.entity_id, area_id=area_1.id)
 

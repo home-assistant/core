@@ -1,6 +1,5 @@
 """Sensor platform for Victron BLE."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -148,7 +147,10 @@ def error_to_state(value: float | str | None) -> str | None:
         "network_c": "network",
         "network_d": "network",
     }
-    return value_map.get(value)
+    mapped = value_map.get(value)
+    if mapped is not None:
+        return mapped
+    return value if isinstance(value, str) and value in CHARGER_ERROR_OPTIONS else None
 
 
 DEVICE_STATE_OPTIONS = [
@@ -178,10 +180,6 @@ PARALLEL_UPDATES = 0
 @dataclass(frozen=True, kw_only=True)
 class VictronBLESensorEntityDescription(SensorEntityDescription):
     """Describes Victron BLE sensor entity."""
-
-    value_fn: Callable[[float | int | str | None], float | int | str | None] = (
-        lambda x: x
-    )
 
 
 SENSOR_DESCRIPTIONS = {
@@ -255,7 +253,6 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.ENUM,
         translation_key="charger_error",
         options=CHARGER_ERROR_OPTIONS,
-        value_fn=error_to_state,
     ),
     Keys.CONSUMED_AMPERE_HOURS: VictronBLESensorEntityDescription(
         key=Keys.CONSUMED_AMPERE_HOURS,
@@ -535,4 +532,6 @@ class VictronBLESensorEntity(PassiveBluetoothProcessorEntity, SensorEntity):
         """Return the state of the sensor."""
         value = self.processor.entity_data.get(self.entity_key)
 
-        return self.entity_description.value_fn(value)
+        if self.entity_description.key == Keys.CHARGER_ERROR:
+            return error_to_state(value)
+        return value

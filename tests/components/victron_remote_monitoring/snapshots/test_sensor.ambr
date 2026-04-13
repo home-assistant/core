@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -61,8 +62,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -121,8 +123,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -181,8 +184,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -241,8 +245,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -301,8 +306,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -361,8 +367,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_current_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -421,8 +428,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_next_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -481,8 +489,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -541,8 +550,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -601,8 +611,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_tomorrow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -661,8 +672,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -721,8 +733,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -771,8 +784,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -821,8 +835,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -871,8 +886,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -921,8 +937,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_tomorrow-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -971,8 +988,9 @@
 # ---
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_yesterday-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -1,1 +1,1 @@
-"""The sky_hub component."""
+"""The Sky Hub integration."""

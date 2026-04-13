@@ -13,23 +13,22 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import SkybellConfigEntry
 from .entity import SkybellEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SkybellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Skybell switch."""
     async_add_entities(
         SkybellLight(coordinator, LightEntityDescription(key="light"))
-        for coordinator in hass.data[DOMAIN][entry.entry_id]
+        for coordinator in entry.runtime_data
     )
 
 

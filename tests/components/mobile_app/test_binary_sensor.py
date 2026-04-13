@@ -336,7 +336,7 @@ async def test_dispatcher_cleanup_on_unload(
     await hass.async_block_till_done()
 
     # Check binary sensor was created
-    assert hass.states.get("binary_sensor.test_before_unload") is not None
+    assert hass.states.get("binary_sensor.test_1_test_before_unload") is not None
 
     # Unload the config entry
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -359,7 +359,7 @@ async def test_dispatcher_cleanup_on_unload(
     await hass.async_block_till_done()
 
     # The binary sensor should not be created because dispatcher was cleaned up
-    assert hass.states.get("binary_sensor.test_after_unload") is None
+    assert hass.states.get("binary_sensor.test_1_test_after_unload") is None
 
     # Reload the config entry
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -382,5 +382,5 @@ async def test_dispatcher_cleanup_on_unload(
     await hass.async_block_till_done()
 
     # This binary sensor should be created successfully after reload
-    assert hass.states.get("binary_sensor.test_after_reload") is not None
-    assert hass.states.get("binary_sensor.test_after_reload").state == "on"
+    assert hass.states.get("binary_sensor.test_1_test_after_reload") is not None
+    assert hass.states.get("binary_sensor.test_1_test_after_reload").state == "on"

@@ -49,6 +49,14 @@ CIRCULATOR_FAN_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
+STANDING_FAN_INFO = Device(
+    version="V1.0",
+    deviceId="standing-fan-id-1",
+    deviceName="standing-fan-1",
+    deviceType="Standing Fan",
+    hubDeviceId="test-hub-id",
+)
+
 
 METER_INFO = Device(
     version="V1.0",
