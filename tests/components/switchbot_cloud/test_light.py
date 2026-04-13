@@ -1,9 +1,15 @@
 """Test for the Switchbot Light Entity."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from switchbot_api import CeilingLightCommands, CommonCommands, Device, SwitchBotAPI
+from switchbot_api import (
+    CeilingLightCommands,
+    CommonCommands,
+    Device,
+    RGBWWLightCommands,
+    SwitchBotAPI,
+)
 
 from homeassistant.components.light import (
     ATTR_COLOR_MODE,
@@ -548,3 +554,149 @@ async def test_candle_warmer_lamp(
         mock_send_command.assert_called()
     state = hass.states.get(entity_id)
     assert state.state is STATE_ON
+
+
+async def test_permanent_outdoor_lights_turn_on(
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+) -> None:
+    """Test permanent outdoor lights turn on."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="light-id-1",
+            deviceName="light-1",
+            deviceType="Permanent Outdoor Lights",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {"power": "off", "brightness": 1, "color": "0:0:0", "colorTemperature": 4567},
+        {"power": "on", "brightness": 38, "color": "0:0:0", "colorTemperature": 4567},
+        {
+            "power": "on",
+            "brightness": 38,
+            "color": "255:246:158",
+            "colorTemperature": 4567,
+        },
+        {
+            "power": "on",
+            "brightness": 38,
+            "color": "255:246:158",
+            "colorTemperature": 2800,
+        },
+        {
+            "power": "on",
+            "brightness": 38,
+            "color": "255:246:158",
+            "colorTemperature": 2800,
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = "light.light_1"
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_OFF
+
+    # Test turn on with brightness
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            blocking=True,
+        )
+        mock_send_command.assert_called_with(
+            "light-id-1",
+            RGBWWLightCommands.SET_BRIGHTNESS,
+            "command",
+            "38",
+        )
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+    # Test turn on with RGB color
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
+            blocking=True,
+        )
+        mock_send_command.assert_called_with(
+            "light-id-1",
+            RGBWWLightCommands.SET_COLOR,
+            "command",
+            "255:246:158",
+        )
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+    # Test turn on with color temperature
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "color_temp_kelvin": 2800},
+            blocking=True,
+        )
+        mock_send_command.assert_called_with(
+            "light-id-1",
+            RGBWWLightCommands.SET_COLOR_TEMPERATURE,
+            "command",
+            "2800",
+        )
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+    # Test plain turn on
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called_with(
+            "light-id-1",
+            CommonCommands.ON,
+            "command",
+            "default",
+        )
+
+
+async def test_permanent_outdoor_lights_turn_off(
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+) -> None:
+    """Test permanent outdoor lights turn off."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="light-id-1",
+            deviceName="light-1",
+            deviceType="Permanent Outdoor Lights",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {"power": "on", "brightness": 50, "color": "255:0:0", "colorTemperature": 4000},
+        {"power": "off", "brightness": 50, "color": "255:0:0", "colorTemperature": 4000},
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = "light.light_1"
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_send_command.assert_called_with(
+            "light-id-1",
+            CommonCommands.OFF,
+            "command",
+            "default",
+        )
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_OFF
+
