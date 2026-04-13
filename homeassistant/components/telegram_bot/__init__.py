@@ -916,6 +916,7 @@ async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) ->
     if entry.runtime_data.old_config_data != entry.data:
         # Reload if config data has changed
         hass.config_entries.async_schedule_reload(entry.entry_id)
+        return
 
     # reload entities
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
