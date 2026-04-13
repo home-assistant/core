@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from fluss_api import FlussApiClientError
@@ -13,14 +14,16 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.fluss.cover import STATUS_REFRESH_DELAY
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_covers(
@@ -166,3 +169,60 @@ async def test_no_cover_when_status_missing(
 
     assert hass.states.get("cover.device_1") is None
     assert hass.states.get("cover.device_2") is None
+
+
+async def test_cover_state_unknown_on_unexpected_status(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test cover reports unknown state when the API returns an unexpected status."""
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    # After setup the cover exists; now simulate the API transitioning to an
+    # unexpected state on the next coordinator refresh.
+    mock_api_client.async_get_device_status.side_effect = lambda device_id: {
+        "status": {"deviceId": device_id, "openCloseStatus": "Unknown"}
+    }
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.device_1"},
+        blocking=True,
+    )
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=STATUS_REFRESH_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.device_1")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_cover_open_triggers_delayed_refresh(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that opening a cover schedules a delayed coordinator refresh."""
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    mock_api_client.async_get_devices.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.device_1"},
+        blocking=True,
+    )
+
+    # Refresh hasn't happened yet — the delay isn't up.
+    assert mock_api_client.async_get_devices.call_count == 0
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=STATUS_REFRESH_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    assert mock_api_client.async_get_devices.call_count >= 1
