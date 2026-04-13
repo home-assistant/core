@@ -30,18 +30,30 @@ async def test_connection_reset(
     two_zone_local: dict[int, Any],
     mock_error_handler: MagicMock,
     setup_risco_local: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test config entry reload on connection reset."""
-
+    """Test that ConnectionResetError triggers a reload but generic errors do not."""
     callback = mock_error_handler.call_args.args[0]
     assert callback is not None
 
-    with patch.object(hass.config_entries, "async_reload") as reload_mock:
-        await callback(Exception())
-        reload_mock.assert_not_awaited()
+    local_data = setup_risco_local.runtime_data.local_data
+    disconnect_mock = cast(AsyncMock, local_data.system.disconnect)
+    connect_mock = cast(AsyncMock, local_data.system.connect)
 
-        await callback(ConnectionResetError())
-        reload_mock.assert_awaited_once()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.risco")
+
+    # Generic error should not trigger reload — unload/setup not invoked again
+    await callback(Exception())
+    await hass.async_block_till_done()
+    disconnect_mock.assert_not_called()
+    assert connect_mock.call_count == 1
+
+    # ConnectionResetError should trigger a reload
+    await callback(ConnectionResetError())
+    await hass.async_block_till_done()
+    disconnect_mock.assert_called_once()
+    assert connect_mock.call_count == 2
+    assert "Disconnected from panel. Reloading integration" in caplog.text
 
 
 async def test_unload_handles_disconnect_error(
