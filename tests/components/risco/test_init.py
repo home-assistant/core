@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.risco.const import (
     CONF_COMMUNICATION_DELAY,
+    DEFAULT_CONCURRENCY,
     DOMAIN,
     TYPE_LOCAL,
 )
@@ -51,7 +52,7 @@ async def test_connection_reset(
     # ConnectionResetError should trigger a reload
     await callback(ConnectionResetError())
     await hass.async_block_till_done()
-    disconnect_mock.assert_called_once()
+    disconnect_mock.assert_awaited_once()
     assert connect_mock.call_count == 2
     assert "Disconnected from panel. Reloading integration" in caplog.text
 
@@ -106,7 +107,7 @@ async def test_local_setup_uses_stored_communication_delay(
             5004,
             "1234",
             communication_delay=2,
-            concurrency=4,
+            concurrency=DEFAULT_CONCURRENCY,
         )
 
 
