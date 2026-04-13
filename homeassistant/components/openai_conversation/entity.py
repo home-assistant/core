@@ -43,7 +43,7 @@ from openai.types.responses import (
     ToolParam,
     WebSearchToolParam,
 )
-from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
+from openai.types.responses.response_create_params import Reasoning, ResponseCreateParamsStreaming
 from openai.types.responses.response_input_param import (
     FunctionCallOutput,
     ImageGenerationCall as ImageGenerationCallParam,
@@ -515,7 +515,7 @@ class OpenAIBaseLLMEntity(Entity):
         )
 
         if model_args["model"].startswith(("o", "gpt-5")):
-            reasoning: dict[str, Any] = {
+            reasoning: Reasoning = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )
