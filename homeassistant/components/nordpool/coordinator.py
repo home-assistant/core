@@ -108,11 +108,11 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         """Fetch data from Nord Pool."""
         data = await self.api_call()
         if data and data.entries:
-            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
-            for entry in data.entries:
-                if entry.requested_date == current_day:
-                    LOGGER.debug("Data for current day found")
-                    return data
+            current_day = dt_util.now().date()
+            if current_day in data.entries:
+                LOGGER.debug("Data for current day found")
+                return data
+
         if data and not data.entries and not initial:
             # Empty response, use cache
             LOGGER.debug("No data entries received")
@@ -158,16 +158,11 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
     def merge_price_entries(self) -> list[DeliveryPeriodEntry]:
         """Return the merged price entries."""
         merged_entries: list[DeliveryPeriodEntry] = []
-        for del_period in self.data.entries:
+        for del_period in self.data.entries.values():
             merged_entries.extend(del_period.entries)
         return merged_entries
 
     def get_data_current_day(self) -> DeliveryPeriodData:
         """Return the current day data."""
-        current_day = dt_util.utcnow().strftime("%Y-%m-%d")
-        delivery_period: DeliveryPeriodData = self.data.entries[0]
-        for del_period in self.data.entries:
-            if del_period.requested_date == current_day:
-                delivery_period = del_period
-                break
-        return delivery_period
+        current_day = dt_util.now().date()
+        return self.data.entries[current_day]
