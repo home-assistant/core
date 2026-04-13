@@ -38,16 +38,16 @@
     },
     "number": {
       "offset": {
-        "name": "Temperature Offset"
+        "name": "Temperature offset"
       },
       "target_temp_high": {
-        "name": "Target Temperature High"
+        "name": "Target temperature high"
       },
       "target_temp_low": {
-        "name": "Target Temperature Low"
+        "name": "Target temperature low"
       },
       "window_open_minutes": {
-        "name": "Window Open Minutes"
+        "name": "Window open minutes"
       }
     }
   }
