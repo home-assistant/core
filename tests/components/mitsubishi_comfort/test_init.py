@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import DeviceInfo
-import pytest
 
 from homeassistant.components.mitsubishi_comfort.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
