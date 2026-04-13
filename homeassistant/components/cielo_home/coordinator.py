@@ -65,7 +65,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             data = await self.client.get_devices_data()
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed from err
-        except (TimeoutError, CieloError, ClientError) as err:
+        except (TimeoutError, ConnectionError, CieloError, ClientError) as err:
             raise UpdateFailed(err) from err
 
         return CieloData(raw=data.raw, parsed=data.parsed)
