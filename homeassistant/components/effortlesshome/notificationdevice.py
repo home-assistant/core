@@ -17,7 +17,7 @@ class effortlesshomenotificationdevice(RestoreEntity):
     def __init__(
         self, hass: Optional[HomeAssistant], token: str, name: str, platform: str
     ):
-        self.hass: Optional[HomeAssistant] = hass
+        self.hass = hass
         self._attr_unique_id = name
         self._attr_name = name
         self._platform = platform

@@ -1,7 +1,7 @@
 """Base auto-entity class."""
 
 from functools import cached_property
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
@@ -79,7 +79,7 @@ class AutoEntity(Entity, Generic[_TEntity, _TDeviceClass]):
     @cached_property
     def device_class(self) -> _TDeviceClass:
         """Return device class."""
-        return cast(_TDeviceClass, self._device_class)
+        return self._device_class
 
     @property
     def device_info(self):

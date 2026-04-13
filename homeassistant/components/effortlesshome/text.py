@@ -1,3 +1,5 @@
+"""Text entity platform for EffortlessHome."""
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.text import TextEntity
 from homeassistant.const import ATTR_ENTITY_ID

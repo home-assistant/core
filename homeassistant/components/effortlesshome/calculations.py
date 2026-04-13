@@ -6,6 +6,7 @@ from collections.abc import Callable
 from statistics import mean, median
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State
@@ -130,11 +131,10 @@ DEFAULT_CALCULATION_HUMIDITY = CALCULATE_MAX
 
 
 def get_calculation(
-    sensor_type: SensorDeviceClass | BinarySensorDeviceClass,
+    sensor_type: SensorDeviceClass | BinarySensorDeviceClass | CoverDeviceClass,
 ) -> Callable[[list[State]], StateType] | None:
     """Get the configured calculation for the sensor provided."""
     # Handle CoverDeviceClass by returning None (covers don't need aggregation)
-    from homeassistant.components.cover import CoverDeviceClass
     if isinstance(sensor_type, CoverDeviceClass):
         return None
     

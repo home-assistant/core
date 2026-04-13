@@ -35,7 +35,7 @@ class eh_person(SensorEntity, RestoreEntity):
     """A persistent, sensor-like representation of an EffortlessHome Person with tracking and notifications."""
 
     def __init__(self, hass: Optional[HomeAssistant], email: str):
-        self.hass: Optional[HomeAssistant] = hass
+        self.hass = hass
         self._email = email
         self._attr_name = email
         self._attr_unique_id = (
@@ -84,6 +84,9 @@ class eh_person(SensorEntity, RestoreEntity):
 
     @property
     def device_info(self) -> Dict[str, Any] | None:
+        """Return device info."""
+        if self.hass is None:
+            return None
         return {
             "identifiers": {(DOMAIN, NAME)},
             "name": NAME,
@@ -93,26 +96,22 @@ class eh_person(SensorEntity, RestoreEntity):
     @property
     def localtracker(self) -> str:
         # Local tracker
-        if self._local_tracker_entity_id:
-            entity = self.hass.states.get(self._local_tracker_entity_id)
-            if entity is not None:
-                return entity.state
-            else:
-                return "unknown"
-        else:
+        if self.hass is None or not self._local_tracker_entity_id:
             return "unknown"
+        entity = self.hass.states.get(self._local_tracker_entity_id)
+        if entity is not None:
+            return entity.state
+        return "unknown"
 
     @property
     def remotetracker(self) -> str:
         # Remote tracker
-        if self._remote_tracker_entity_id:
-            entity = self.hass.states.get(self._remote_tracker_entity_id)
-            if entity is not None:
-                return entity.state
-            else:
-                return "unknown"
-        else:
+        if self.hass is None or not self._remote_tracker_entity_id:
             return "unknown"
+        entity = self.hass.states.get(self._remote_tracker_entity_id)
+        if entity is not None:
+            return entity.state
+        return "unknown"
 
     @property
     def extra_state_attributes(self) -> Dict[str, Any]:
@@ -492,6 +491,8 @@ class eh_person(SensorEntity, RestoreEntity):
 
     def _get_home_coordinates(self) -> Optional[tuple]:
         """Get home coordinates from system configuration."""
+        if self.hass is None:
+            return None
         try:
             # Try to get home coordinates from system configuration
             system_data = self.hass.data.get(DOMAIN, {})
@@ -543,6 +544,8 @@ class eh_person(SensorEntity, RestoreEntity):
             return tracker_state
 
         # Get current location from the tracker entity
+        if self.hass is None:
+            return "unknown"
         entity = self.hass.states.get(entity_id)
         if not entity:
             return "unknown"

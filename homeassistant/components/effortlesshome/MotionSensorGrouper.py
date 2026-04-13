@@ -65,7 +65,8 @@ class MotionSensorGrouper:
                 )
                 motion_sensors.append(entity.entity_id)
         _LOGGER.debug(
-            f"[MotionSensorGrouper] Security motion sensors: {motion_sensors}"
+            "[MotionSensorGrouper] Security motion sensors: %s",
+            motion_sensors,
         )
         await self._create_group("group.security_motion_sensors_group", motion_sensors)
 
@@ -73,22 +74,28 @@ class MotionSensorGrouper:
         """Check whether a label is in the list of labels."""
         parsed_labels = [label for label in labels if label] if labels else []
         _LOGGER.debug(
-            f"[MotionSensorGrouper] Checking for label '{value_to_check}' in labels: {parsed_labels}"
+            "[MotionSensorGrouper] Checking for label '%s' in labels: %s",
+            value_to_check,
+            parsed_labels,
         )
         if value_to_check in parsed_labels:
             _LOGGER.debug(
-                f"[MotionSensorGrouper] '{value_to_check}' is in parsed_labels."
+                "[MotionSensorGrouper] '%s' is in parsed_labels.",
+                value_to_check,
             )
             return True
         _LOGGER.debug(
-            f"[MotionSensorGrouper] '{value_to_check}' is not in parsed_labels."
+            "[MotionSensorGrouper] '%s' is not in parsed_labels.",
+            value_to_check,
         )
         return False
 
     async def _create_group(self, group_name, entity_ids) -> None:  # noqa: ANN001
         """Create a group of entities in Home Assistant."""
         _LOGGER.debug(
-            f"[MotionSensorGrouper] Creating group '{group_name}' with entities: {entity_ids}"
+            "[MotionSensorGrouper] Creating group '%s' with entities: %s",
+            group_name,
+            entity_ids,
         )
         service_data = {
             "object_id": group_name.split(".")[-1],
@@ -97,5 +104,7 @@ class MotionSensorGrouper:
         }
         await self.hass.services.async_call("group", "set", service_data, blocking=True)
         _LOGGER.debug(
-            f"[MotionSensorGrouper] Group '{group_name}' created with entities: {entity_ids}"
+            "[MotionSensorGrouper] Group '%s' created with entities: %s",
+            group_name,
+            entity_ids,
         )

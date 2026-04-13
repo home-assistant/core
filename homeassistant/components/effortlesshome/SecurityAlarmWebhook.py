@@ -49,7 +49,7 @@ class SecurityAlarmWebhook:
         try:
             responsejson = await request.json()
 
-            _LOGGER.info("webhookjson:" + str(responsejson))
+            _LOGGER.info("webhookjson: %s", str(responsejson))
 
             alarmstate = hass.data[DOMAIN]["alarm_id"]
 
@@ -83,7 +83,7 @@ class SecurityAlarmWebhook:
         except KeyError as e:
             _LOGGER.error("Missing expected field in webhook data: %s", e)
             return web.Response(status=400, text="Missing required field")
-        except Exception as e:
+        except RuntimeError as e:
             _LOGGER.error("Error processing security alarm webhook: %s", e)
             return web.Response(status=500, text="Internal server error")
 

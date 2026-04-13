@@ -178,20 +178,11 @@ class WindowGroup(BinarySensorEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if entity is on."""
-        return self._state
-
-    def update(self) -> None:
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        entity_id = "group.window_sensors_group"
-        sensor_state = self.hass.states.get(entity_id)
-
-        if sensor_state is not None:
-            self._state = sensor_state.state
-        else:
-            self._state = "unknown"
+        if self._state in ("on", "true", True):
+            return True
+        if self._state in ("off", "false", False):
+            return False
+        return None
 
 
 class DoorGroup(BinarySensorEntity, RestoreEntity):
@@ -233,7 +224,11 @@ class DoorGroup(BinarySensorEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if entity is on."""
-        return self._state
+        if self._state in ("on", "true", True):
+            return True
+        if self._state in ("off", "false", False):
+            return False
+        return None
 
     def update(self) -> None:
         """Fetch new state data for the sensor.
@@ -288,7 +283,11 @@ class CarbonMonoxideGroup(BinarySensorEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if entity is on."""
-        return self._state
+        if self._state in ("on", "true", True):
+            return True
+        if self._state in ("off", "false", False):
+            return False
+        return None
 
     def update(self) -> None:
         """Fetch new state data for the sensor.
@@ -343,7 +342,11 @@ class MoistureGroup(BinarySensorEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if entity is on."""
-        return self._state
+        if self._state in ("on", "true", True):
+            return True
+        if self._state in ("off", "false", False):
+            return False
+        return None
 
     def update(self) -> None:
         """Fetch new state data for the sensor.
@@ -398,7 +401,11 @@ class SmokeGroup(BinarySensorEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if entity is on."""
-        return self._state
+        if self._state in ("on", "true", True):
+            return True
+        if self._state in ("off", "false", False):
+            return False
+        return None
 
     def update(self) -> None:
         """Fetch new state data for the sensor.
@@ -714,7 +721,11 @@ class SomeoneHomeSensor(BinarySensorEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if entity is on."""
-        return self._state
+        if self._state in ("on", "true", True):
+            return True
+        if self._state in ("off", "false", False):
+            return False
+        return None
 
     def update(self) -> None:
         """Fetch new state data for the sensor, with detailed debug logging."""
@@ -810,7 +821,11 @@ class SmartApplianceSensor(BinarySensorEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if entity is on."""
-        return self._state
+        if self._state in ("on", "true", True):
+            return True
+        if self._state in ("off", "false", False):
+            return False
+        return None
 
     @property
     def icon(self):

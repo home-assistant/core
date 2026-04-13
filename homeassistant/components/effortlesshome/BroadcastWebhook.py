@@ -73,7 +73,7 @@ class BroadcastWebhook:
         except ValueError as e:
             _LOGGER.error("Webhook JSON error: invalid JSON body - %s", e)
             return web.Response(status=400, text="Invalid JSON")
-        except Exception as e:
+        except RuntimeError as e:
             _LOGGER.error("Error processing broadcast webhook: %s", e)
             return web.Response(status=500, text="Internal server error")
 
@@ -83,5 +83,5 @@ async def async_remove(self) -> None:
     try:
         webhook.async_unregister(self.hass, "effortlesshome_broadcast")
         _LOGGER.info("Broadcast Webhook unregistered")
-    except Exception as e:
-        _LOGGER.info(f"Error unregistering webhook: {e}")
+    except RuntimeError as e:
+        _LOGGER.info("Error unregistering webhook: %s", e)

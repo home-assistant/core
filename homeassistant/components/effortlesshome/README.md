@@ -70,7 +70,7 @@ The integration provides several services:
 | `effortlesshome.clean_motion_files` | Clean old motion snapshot files |
 | `effortlesshome.create_alert` | Create an alert record |
 | `effortlesshome.cancel_alarm` | Cancel an active alarm |
-| `effortlessHome.get_alarm_status` | Get current alarm status |
+| `effortlesshome.get_alarm_status` | Get current alarm status |
 | `effortlesshome.confirm_pending_alarm` | Confirm a pending alarm |
 | `effortlesshome.create_event` | Create an event for active alarm |
 | `effortlesshome.deploy_latest_config` | Deploy latest configuration files |

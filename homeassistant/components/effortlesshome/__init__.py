@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import math
+import os
 import shutil
 import subprocess
 import time
@@ -14,10 +15,11 @@ from urllib.parse import quote
 from google.auth import jwt
 from google.auth.crypt import rsa
 import voluptuous as vol
+from oasira import OasiraAPIClient, OasiraAPIError
 
 from homeassistant.components import webhook
 from homeassistant.components.notify import BaseNotificationService
-from homeassistant.config import get_default_config_dir
+from homeassistant.components.persistent_notification import create as notify_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -30,59 +32,38 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-import homeassistant.util.dt as dt_util
-
-ATTR_TITLE = "title"
-ATTR_DATA = "data"
 
 from .alarm_common import (
     async_cancelalarm,
     async_confirmpendingalarm,
     async_getalarmstatus,
 )
-from .area_manager import AreaManager
 from .auto_area import AutoArea
-
-from oasira import OasiraAPIClient, OasiraAPIError
 from .auth_helper import safe_api_call
-
+from .BroadcastWebhook import BroadcastWebhook, async_remove as broadcast_async_remove
 from .const import (
     DOMAIN,
     LABELS,
-    CONF_EMAIL,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     NAME,
-    name_internal,
 )
-
-
 from .deviceclassgroupsync import async_setup_devicegroup
-from .event import EventHandler
 from .MotionSensorGrouper import MotionSensorGrouper
-from .SecurityAlarmWebhook import SecurityAlarmWebhook, async_remove
-from .BroadcastWebhook import BroadcastWebhook, async_remove
+from .SecurityAlarmWebhook import SecurityAlarmWebhook, async_remove as security_async_remove
 from .siren import SirenGrouper
-
 from .virtualpowersensor import VirtualPowerSensor
-
-from .influx import process_trend_data
-from .binary_sensor import updateEntity
 
 try:
     # Older versions (pre-2025)
     from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-except ImportError:
+except (ImportError, AttributeError):
     # Newer versions (2025+)
     SOURCE_TYPE_GPS = "gps"
 
 from aiohttp import web
+
+ATTR_TITLE = "title"
+ATTR_DATA = "data"
 
 LOCATION_SERVICE_SCHEMA = vol.Schema(
     {
@@ -538,7 +519,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Failed to fetch customer/system data: %s", e)
             if "401" in str(e):
                 _LOGGER.info("Token expired, requesting reauth")
-                await entry.async_request_reauth(hass)
+                await entry.async_start_reauth(hass)
                 return False
             raise HomeAssistantError(
                 f"Failed to fetch customer/system data: {e}"

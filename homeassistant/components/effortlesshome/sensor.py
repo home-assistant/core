@@ -207,8 +207,8 @@ class AlarmCreateMessageSensor(SensorEntity, RestoreEntity):
         return "mdi:alarm-light-outline"
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def native_value(self):
+        """Return the native value of the sensor."""
         return self._state
 
     def update(self) -> None:
@@ -302,8 +302,8 @@ class AlarmStatusSensor(SensorEntity, RestoreEntity):
         return "mdi:alarm-light-outline"
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def native_value(self):
+        """Return the native value of the sensor."""
         return self._state
 
     def update(self) -> None:
@@ -743,6 +743,7 @@ class ConfigSensor(SensorEntity, RestoreEntity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return f"Config {self._key}"
 
     @property
@@ -752,14 +753,17 @@ class ConfigSensor(SensorEntity, RestoreEntity):
 
     @property
     def unique_id(self):
+        """Return the unique identifier."""
         return f"config_sensor_{self._key.lower()}"
 
     @property
     def device_class(self):
+        """Return the device class."""
         return None
 
     @property
     def should_poll(self):
+        """Return whether polling is needed."""
         return False
 
 
