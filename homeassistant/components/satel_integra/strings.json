@@ -1,7 +1,9 @@
 {
   "common": {
     "code": "Access code",
-    "code_input_description": "Code to toggle switchable outputs"
+    "code_input_description": "Code to toggle switchable outputs",
+    "encryption_key": "Integration encryption key",
+    "encryption_key_description": "If the alarm panel requires encryption, enter the integration encryption key here."
   },
   "config": {
     "abort": {
@@ -22,20 +24,24 @@
       },
       "reconfigure": {
         "data": {
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key_description%]",
           "host": "[%key:component::satel_integra::config::step::user::data_description::host%]",
           "port": "[%key:component::satel_integra::config::step::user::data_description::port%]"
         }
       },
       "user": {
         "data": {
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
+          "encryption_key": "[%key:component::satel_integra::common::encryption_key_description%]",
           "host": "The IP address of the alarm panel",
           "port": "The port of the alarm panel"
         }
