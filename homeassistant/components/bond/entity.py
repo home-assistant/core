@@ -6,6 +6,7 @@ from abc import abstractmethod
 from asyncio import Lock
 from datetime import datetime
 import logging
+from typing import Any, cast
 
 from aiohttp import ClientError
 from bond_async import Action
@@ -86,21 +87,26 @@ class BondEntity(Entity):
         if isinstance(self._device, BondGroup):
             device_info = DeviceInfo(
                 manufacturer=self._hub.make,
-                identifiers={
-                    (
-                        DOMAIN,
-                        self._hub.bond_id,
-                        GROUP_DEVICE_IDENTIFIER,
-                        self._device.group_id,
-                    )
-                },
+                identifiers=cast(
+                    set[tuple[str, str]],
+                    {
+                        (
+                            DOMAIN,
+                            self._hub.bond_id,
+                            GROUP_DEVICE_IDENTIFIER,
+                            self._device.group_id,
+                        )
+                    },
+                ),
                 configuration_url=f"http://{self._hub.host}",
             )
         else:
             device_info = DeviceInfo(
                 manufacturer=self._hub.make,
-                # type ignore: tuple items should not be Optional
-                identifiers={(DOMAIN, self._hub.bond_id, self._device_id)},  # type: ignore[arg-type]
+                identifiers=cast(
+                    set[tuple[str, str]],
+                    {(DOMAIN, self._hub.bond_id, self._device_id)},
+                ),
                 configuration_url=f"http://{self._hub.host}",
             )
         if self.name is not None:
@@ -173,11 +179,11 @@ class BondEntity(Entity):
             return
         await self._bond.action(self._device_id, action)
 
-    async def _async_fetch_state(self) -> dict:
+    async def _async_fetch_state(self) -> dict[Any, Any]:
         """Fetch the latest state for this entity target."""
         if isinstance(self._device, BondGroup):
-            return await self._bond.group_state(self._device_id)
-        return await self._bond.device_state(self._device_id)
+            return cast(dict[Any, Any], await self._bond.group_state(self._device_id))
+        return cast(dict[Any, Any], await self._bond.device_state(self._device_id))
 
     async def _async_update_from_api(self) -> None:
         """Fetch via the API."""

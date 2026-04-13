@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
 from bond_async import Bond, BPUPSubscriptions, RequestorUUID, start_bpup
@@ -133,12 +133,12 @@ async def async_remove_config_entry_device(
     """Remove bond config entry from a device."""
     data = config_entry.runtime_data
     hub = data.hub
-    for identifier in device_entry.identifiers:
+    for identifier in cast(set[tuple[str, ...]], device_entry.identifiers):
         if identifier[0] != DOMAIN:
             continue
 
         if len(identifier) == 3:
-            bond_id: str = identifier[1]  # type: ignore[unreachable]
+            bond_id = identifier[1]
             # Bond still uses the 3 arg tuple before
             # the identifiers were typed
             device_id: str = identifier[2]

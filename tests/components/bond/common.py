@@ -126,9 +126,7 @@ async def setup_group_platform(
         patch_bond_bridge(return_value=bridge),
         patch_bond_token(return_value=token),
         patch_bond_device_ids(return_value=[]),
-        patch(
-            "homeassistant.components.bond.Bond.supports_groups", return_value=True
-        ),
+        patch("homeassistant.components.bond.Bond.supports_groups", return_value=True),
         patch(
             "homeassistant.components.bond.Bond.groups", return_value=[bond_group_id]
         ),

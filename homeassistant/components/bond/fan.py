@@ -44,9 +44,7 @@ async def async_setup_entry(
 
     devices = data.hub.devices + data.hub.groups
     async_add_entities(
-        BondFan(data, device)
-        for device in devices
-        if DeviceType.is_fan(device.type)
+        BondFan(data, device) for device in devices if DeviceType.is_fan(device.type)
     )
 
 

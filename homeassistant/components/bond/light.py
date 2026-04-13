@@ -193,7 +193,9 @@ class BondDownLight(BondBaseLight):
         light = state.get("light")
         if isinstance(self._device, BondGroup):
             self._attr_is_on = (
-                None if down_light is None or light is None else bool(down_light and light)
+                None
+                if down_light is None or light is None
+                else bool(down_light and light)
             )
         else:
             self._attr_is_on = bool(down_light and light)
