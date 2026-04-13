@@ -155,9 +155,9 @@
     },
     "quote_approval_policy": {
       "options": {
-        "followers": "Followers - Only accounts that follow you can quote this post.",
-        "nobody": "Nobody - No one but you can quote this post.",
-        "public": "Anyone can quote this post."
+        "followers": "Followers - Only accounts that follow you can quote this post",
+        "nobody": "Nobody - No one but you can quote this post",
+        "public": "Anyone can quote this post"
       }
     }
   },
