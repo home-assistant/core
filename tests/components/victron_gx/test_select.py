@@ -105,7 +105,6 @@ async def test_victron_select_actions(
     assert state.state == "auto"
 
 
-
 async def test_select_main_topic_has_translation_key(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
@@ -134,7 +133,9 @@ async def test_select_main_topic_has_translation_key(
     assert len(entities) == 1
     entity = entities[0]
     # translation_key must be set even for main_topic entities
-    assert entity.translation_key is not None, "main_topic entity must have translation_key"
+    assert entity.translation_key is not None, (
+        "main_topic entity must have translation_key"
+    )
     assert entity.translation_key == "vebus_mode"
     # name should be None (uses device name via has_entity_name)
     assert entity.name is None
