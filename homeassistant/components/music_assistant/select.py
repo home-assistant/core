@@ -50,7 +50,7 @@ async def async_setup_entry(
                 != PlayerOptionType.BOOLEAN  # these always go to switch
                 and player_option.options
             ):
-                # We ignore entities with unknown translation keys for the base option.
+                # We ignore entities with unknown translation key for the base name.
                 # However, we accept a non-available translation_key in strings.json for the entity's state,
                 # as these are oftentimes dynamically created, dependent on a specific player and might not be known to the provider
                 # developer. In that case, the frontend falls back to showing the state's bare translation key.
