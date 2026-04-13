@@ -232,7 +232,14 @@ async def test_reauth_flow_shows_form(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     # Start reauth
-    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -262,7 +269,14 @@ async def test_reauth_flow_success(
         mock_auth = AsyncMock()
         mock_auth_cls.return_value = mock_auth
 
-        result = await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "new@example.com", CONF_PASSWORD: "newpass"},
@@ -299,7 +313,14 @@ async def test_reauth_flow_auth_error(
         mock_auth.authenticate.side_effect = AuthenticationError
         mock_auth_cls.return_value = mock_auth
 
-        result = await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "bad@example.com", CONF_PASSWORD: "wrong"},
@@ -333,7 +354,13 @@ async def test_reconfigure_flow_shows_form(
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
@@ -363,7 +390,13 @@ async def test_reconfigure_flow_success(
         mock_auth = AsyncMock()
         mock_auth_cls.return_value = mock_auth
 
-        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "updated@example.com", CONF_PASSWORD: "updatedpass"},
@@ -400,7 +433,13 @@ async def test_reconfigure_flow_auth_error(
         mock_auth.authenticate.side_effect = AuthenticationError
         mock_auth_cls.return_value = mock_auth
 
-        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
+        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "bad@example.com", CONF_PASSWORD: "wrong"},

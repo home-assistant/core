@@ -6,6 +6,7 @@ Run with: pytest tests/components/aquarite/test_coordinator.py
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -64,19 +65,23 @@ async def test_refresh_subscription(
 
 
 async def test_async_shutdown(
+    hass: HomeAssistant,
     coordinator: AquariteDataUpdateCoordinator,
 ) -> None:
     """Test shutdown cancels tasks and unsubscribes."""
     mock_watch = MagicMock()
     coordinator.watch = mock_watch
 
-    mock_health_task = AsyncMock()
-    mock_token_task = AsyncMock()
-    coordinator._health_task = mock_health_task
-    coordinator._token_task = mock_token_task
+    async def _never_ending() -> None:
+        await asyncio.sleep(3600)
+
+    health_task = hass.async_create_task(_never_ending())
+    token_task = hass.async_create_task(_never_ending())
+    coordinator._health_task = health_task
+    coordinator._token_task = token_task
 
     with patch("asyncio.to_thread", new_callable=AsyncMock):
         await coordinator.async_shutdown()
 
-    mock_health_task.cancel.assert_called_once()
-    mock_token_task.cancel.assert_called_once()
+    assert health_task.cancelled()
+    assert token_task.cancelled()

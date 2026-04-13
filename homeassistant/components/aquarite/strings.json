@@ -38,6 +38,10 @@
           "password": "Password",
           "username": "Hayward Username"
         },
+        "data_description": {
+          "password": "The password for your Hayward account",
+          "username": "The email used for your Hayward account"
+        },
         "description": "Enter your Hayward credentials.",
         "title": "Authentication"
       }
