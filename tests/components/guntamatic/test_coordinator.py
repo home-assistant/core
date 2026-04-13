@@ -10,8 +10,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
+from .conftest import MOCK_DATA
+
 from tests.common import MockConfigEntry
-from tests.components.guntamatic.conftest import MOCK_DATA
 
 
 @pytest.mark.parametrize(
