@@ -65,7 +65,9 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
                 raise UpdateFailed(
                     f"PVPC data is not available for requested year {requested_at.year}"
                 ) from err
-            raise UpdateFailed("Unexpected PVPC data lookup failure") from err
+            raise UpdateFailed(
+                f"Unexpected PVPC data lookup failure: missing key {missing_key!r}"
+            ) from err
         except BadApiTokenAuthError as exc:
             raise ConfigEntryAuthFailed from exc
         if (
