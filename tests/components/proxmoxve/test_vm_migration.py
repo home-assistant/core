@@ -223,3 +223,114 @@ async def test_dual_node_during_migration_prefers_source(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_dual_node_does_not_duplicate_entities(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a VMID visible on two nodes results in a single entity."""
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    # Mid-migration snapshot: VM 100 and container 200 appear on both nodes.
+    dual_node_data = {
+        "pve1": ProxmoxNodeData(
+            node=_full_node("pve1", "node/pve1"),
+            vms={100: _VM_100, 101: _VM_101},
+            containers={200: _CT_200, 201: _CT_201},
+        ),
+        "pve2": ProxmoxNodeData(
+            node=_full_node("pve2", "node/pve2"),
+            vms={100: {**_VM_100, "cpu": 0.30}},
+            containers={200: {**_CT_200, "cpu": 0.10}},
+        ),
+    }
+    coordinator.async_set_updated_data(dual_node_data)
+    await hass.async_block_till_done()
+
+    # Exactly one entity per VMID/CTID, regardless of dual-node visibility.
+    vm_status_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id.endswith("100_status")
+    ]
+    assert len(vm_status_entries) == 1
+
+    ct_status_entries = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id.endswith("200_status")
+    ]
+    assert len(ct_status_entries) == 1
+
+
+async def test_id_node_map_is_deterministic_on_first_resolution(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a new VMID seen on multiple nodes resolves deterministically."""
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    # A brand new VMID (999) appears on two nodes at once, with no prior
+    # entry in vmid_node_map. The chosen node must not depend on dict
+    # iteration order.
+    new_vm = {**_VM_100, "vmid": 999, "name": "vm-new"}
+    new_ct = {**_CT_200, "vmid": 888, "name": "ct-new"}
+
+    data_order_a = {
+        "pve2": ProxmoxNodeData(
+            node=_full_node("pve2", "node/pve2"),
+            vms={999: new_vm},
+            containers={888: new_ct},
+        ),
+        "pve1": ProxmoxNodeData(
+            node=_full_node("pve1", "node/pve1"),
+            vms={100: _VM_100, 999: new_vm},
+            containers={200: _CT_200, 888: new_ct},
+        ),
+    }
+    coordinator.vmid_node_map = {}
+    coordinator.ctid_node_map = {}
+    coordinator._build_id_node_maps(data_order_a)
+    choice_a_vm = coordinator.vmid_node_map[999]
+    choice_a_ct = coordinator.ctid_node_map[888]
+
+    data_order_b = {
+        "pve1": ProxmoxNodeData(
+            node=_full_node("pve1", "node/pve1"),
+            vms={100: _VM_100, 999: new_vm},
+            containers={200: _CT_200, 888: new_ct},
+        ),
+        "pve2": ProxmoxNodeData(
+            node=_full_node("pve2", "node/pve2"),
+            vms={999: new_vm},
+            containers={888: new_ct},
+        ),
+    }
+    coordinator.vmid_node_map = {}
+    coordinator.ctid_node_map = {}
+    coordinator._build_id_node_maps(data_order_b)
+    choice_b_vm = coordinator.vmid_node_map[999]
+    choice_b_ct = coordinator.ctid_node_map[888]
+
+    assert choice_a_vm == choice_b_vm == "pve1"
+    assert choice_a_ct == choice_b_ct == "pve1"
