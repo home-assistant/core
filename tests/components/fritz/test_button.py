@@ -284,3 +284,23 @@ async def test_cleanup_button_deprecation_issue(
 
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_cleanup_button")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_firmware_update_button_deprecation_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test deprecation issue is created when legacy firmware update button is enabled."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_firmware_update_button")
