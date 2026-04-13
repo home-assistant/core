@@ -35,7 +35,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            await self.async_set_unique_id(user_input[CONF_USERNAME].strip().lower())
             self._abort_if_unique_id_configured()
 
             account = MitsubishiCloudAccount(
