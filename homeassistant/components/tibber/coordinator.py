@@ -277,10 +277,12 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
             3600 * 14, 3600 * 23
         )
         self._unsub_tomorrow_price_poll: CALLBACK_TYPE | None = None
-        self._schedule_tomorrow_price_poll(
-            dt_util.start_of_local_day()
-            + timedelta(seconds=self._tomorrow_price_poll_threshold_seconds)
+        initial_tomorrow_price_poll = dt_util.start_of_local_day() + timedelta(
+            seconds=self._tomorrow_price_poll_threshold_seconds
         )
+        if initial_tomorrow_price_poll <= dt_util.utcnow():
+            initial_tomorrow_price_poll += timedelta(days=1)
+        self._schedule_tomorrow_price_poll(initial_tomorrow_price_poll)
         self._tibber_homes: list[tibber.TibberHome] | None = None
 
     async def async_shutdown(self) -> None:
