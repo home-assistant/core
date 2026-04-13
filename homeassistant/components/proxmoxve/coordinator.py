@@ -204,30 +204,50 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         """Build VMID/CTID-to-node maps from current data.
 
         During live migration a VMID may temporarily appear on two nodes.
-        When that happens, prefer the node where it was previously known
-        to keep entity resolution stable until migration completes.
+        Resolution priority:
+        1. If the previously-known node still reports the VMID, keep it
+           (source node preferred, stable across refreshes).
+        2. Otherwise, pick the lexicographically smallest node name
+           reporting the VMID so the choice is deterministic and does
+           not depend on dict iteration order.
         """
-        new_vmid_map: dict[int, str] = {}
-        for node_name, node_data in data.items():
-            for vmid in node_data.vms:
-                if vmid not in new_vmid_map:
-                    new_vmid_map[vmid] = node_name
-                elif self.vmid_node_map.get(vmid) == new_vmid_map[vmid]:
-                    pass  # keep previous/source node
-                else:
-                    new_vmid_map[vmid] = node_name
-        self.vmid_node_map = new_vmid_map
+        self.vmid_node_map = self._resolve_id_map(
+            {
+                vmid: sorted(
+                    node_name
+                    for node_name, node_data in data.items()
+                    if vmid in node_data.vms
+                )
+                for node_data in data.values()
+                for vmid in node_data.vms
+            },
+            self.vmid_node_map,
+        )
 
-        new_ctid_map: dict[int, str] = {}
-        for node_name, node_data in data.items():
-            for ctid in node_data.containers:
-                if ctid not in new_ctid_map:
-                    new_ctid_map[ctid] = node_name
-                elif self.ctid_node_map.get(ctid) == new_ctid_map[ctid]:
-                    pass  # keep previous/source node
-                else:
-                    new_ctid_map[ctid] = node_name
-        self.ctid_node_map = new_ctid_map
+        self.ctid_node_map = self._resolve_id_map(
+            {
+                ctid: sorted(
+                    node_name
+                    for node_name, node_data in data.items()
+                    if ctid in node_data.containers
+                )
+                for node_data in data.values()
+                for ctid in node_data.containers
+            },
+            self.ctid_node_map,
+        )
+
+    @staticmethod
+    def _resolve_id_map(
+        candidates: dict[int, list[str]], previous: dict[int, str]
+    ) -> dict[int, str]:
+        """Pick a node per VMID/CTID, preferring previous mapping when stable."""
+        return {
+            vmid: previous[vmid]
+            if vmid in previous and previous[vmid] in nodes
+            else nodes[0]
+            for vmid, nodes in candidates.items()
+        }
 
     def async_set_updated_data(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Update data, track new nodes/VMs and rebuild ID-to-node maps."""
