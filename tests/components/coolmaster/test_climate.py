@@ -162,7 +162,8 @@ async def test_climate_unknown_fan_mode_warning(
     unexpected_warnings = [
         message
         for rec in setup_logs
-        if "Detected unknown fan speed value from HVAC unit"
+        if rec.levelname == "WARNING"
+        and "Detected unknown fan speed value from HVAC unit"
         in (message := rec.getMessage())
         and "ultra" not in message
     ]
