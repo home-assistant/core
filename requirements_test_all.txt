@@ -25,7 +25,7 @@ HATasmota==0.10.1
 HueBLE==2.1.0
 
 # homeassistant.components.mastodon
-Mastodon.py==2.1.2
+Mastodon.py==2.2.1
 
 # homeassistant.components.playstation_network
 PSNAWP==3.0.3
