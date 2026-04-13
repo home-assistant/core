@@ -26,7 +26,6 @@ from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEn
 from .coordinator import (
     TibberDataAPICoordinator,
     TibberDataCoordinator,
-    TibberFetchPriceCoordinator,
     TibberPriceCoordinator,
 )
 from .services import async_setup_services
@@ -45,7 +44,6 @@ class TibberRuntimeData:
     session: OAuth2Session
     data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
     data_coordinator: TibberDataCoordinator | None = field(default=None)
-    price_fetch_coordinator: TibberFetchPriceCoordinator | None = field(default=None)
     price_coordinator: TibberPriceCoordinator | None = field(default=None)
     _client: tibber.Tibber | None = None
 
@@ -133,10 +131,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
         raise ConfigEntryNotReady("Fatal HTTP error from Tibber API") from err
 
     if tibber_connection.get_homes(only_active=True):
-        price_fetch_coordinator = TibberFetchPriceCoordinator(hass, entry)
-        entry.runtime_data.price_fetch_coordinator = price_fetch_coordinator
-        await price_fetch_coordinator.async_config_entry_first_refresh()
-
         price_coordinator = TibberPriceCoordinator(hass, entry)
         await price_coordinator.async_config_entry_first_refresh()
         entry.runtime_data.price_coordinator = price_coordinator
