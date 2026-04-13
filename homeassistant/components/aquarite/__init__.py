@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_POOL_ID
 from .coordinator import AquariteDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -22,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquariteConfigEntry) -> 
     """Set up Aquarite from a config entry."""
     user_config = entry.data
     session = async_get_clientsession(hass)
-    pool_id: str = user_config["pool_id"]
+    pool_id: str = user_config[CONF_POOL_ID]
 
     auth = AquariteAuth(session, user_config[CONF_USERNAME], user_config[CONF_PASSWORD])
     try:

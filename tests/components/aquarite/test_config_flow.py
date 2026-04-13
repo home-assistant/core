@@ -17,6 +17,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.aquarite.const import (
     CONF_HEALTH_CHECK_INTERVAL,
+    CONF_POOL_ID,
     DEFAULT_HEALTH_CHECK_INTERVAL,
     DOMAIN,
 )
@@ -96,7 +97,7 @@ async def test_full_flow_creates_entry(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -104,7 +105,7 @@ async def test_full_flow_creates_entry(
     assert result["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
-        "pool_id": MOCK_POOL_ID,
+        CONF_POOL_ID: MOCK_POOL_ID,
     }
 
 
@@ -182,7 +183,7 @@ async def test_duplicate_pool_aborts(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -198,7 +199,7 @@ async def test_duplicate_pool_aborts(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -225,7 +226,7 @@ async def test_reauth_flow_shows_form(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -252,7 +253,7 @@ async def test_reauth_flow_success(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -288,7 +289,7 @@ async def test_reauth_flow_auth_error(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -327,7 +328,7 @@ async def test_reconfigure_flow_shows_form(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -353,7 +354,7 @@ async def test_reconfigure_flow_success(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -389,7 +390,7 @@ async def test_reconfigure_flow_auth_error(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -426,7 +427,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -459,7 +460,7 @@ async def test_options_flow_default(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"pool_id": MOCK_POOL_ID},
+            {CONF_POOL_ID: MOCK_POOL_ID},
         )
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

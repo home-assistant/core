@@ -19,7 +19,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_INTERVAL, DOMAIN
+from .const import (
+    CONF_HEALTH_CHECK_INTERVAL,
+    CONF_POOL_ID,
+    DEFAULT_HEALTH_CHECK_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +92,7 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the pool selection step."""
         if user_input is not None:
-            pool_id: str = user_input["pool_id"]
+            pool_id: str = user_input[CONF_POOL_ID]
 
             await self.async_set_unique_id(pool_id)
             self._abort_if_unique_id_configured()
@@ -97,7 +102,7 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_USERNAME: self._user_data[CONF_USERNAME],
                     CONF_PASSWORD: self._user_data[CONF_PASSWORD],
-                    "pool_id": pool_id,
+                    CONF_POOL_ID: pool_id,
                 },
             )
 
@@ -133,7 +138,7 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         pool_schema = vol.Schema(
-            {vol.Required("pool_id"): vol.In(self._available_pools)}
+            {vol.Required(CONF_POOL_ID): vol.In(self._available_pools)}
         )
         return self.async_show_form(step_id="pool", data_schema=pool_schema)
 

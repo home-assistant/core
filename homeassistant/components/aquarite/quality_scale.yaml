@@ -67,10 +67,10 @@ rules:
     status: todo
   entity-category:
     status: done
-    comment: Diagnostic entities properly categorized (location, module presence, RSSI)
+    comment: Diagnostic entities properly categorized (location, RSSI, pool name)
   entity-disabled-by-default:
     status: done
-    comment: Module presence sensors and RSSI disabled by default
+    comment: RSSI sensor disabled by default
   integration-owner:
     status: done
     comment: "@fdebrus"

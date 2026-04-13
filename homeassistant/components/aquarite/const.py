@@ -17,3 +17,6 @@ DEFAULT_HEALTH_CHECK_INTERVAL = 300  # 5 minutes
 
 # Options flow keys
 CONF_HEALTH_CHECK_INTERVAL = "health_check_interval"
+
+# Config entry data keys
+CONF_POOL_ID = "pool_id"
