@@ -430,94 +430,6 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeSensitivityLevel,),
     ),
-    # Keep the legacy vendor-specific select entities around for one release
-    # so existing users can migrate before we remove them in favor of the
-    # generic number slider.
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
-            key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
-            entity_category=EntityCategory.CONFIG,
-            entity_registry_enabled_default=False,
-            translation_key="sensitivity_level",
-            options=["10 mm", "20 mm", "30 mm"],
-            device_to_ha={
-                0: "10 mm",
-                1: "20 mm",
-                2: "30 mm",
-            }.get,
-            ha_to_device={
-                "10 mm": 0,
-                "20 mm": 1,
-                "30 mm": 2,
-            }.get,
-        ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(
-            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
-        ),
-        vendor_id=(4447,),
-        product_id=(8194,),
-        allow_multi=True,
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
-            key="AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
-            entity_category=EntityCategory.CONFIG,
-            entity_registry_enabled_default=False,
-            translation_key="sensitivity_level",
-            options=["low", "standard", "high"],
-            device_to_ha={
-                0: "low",
-                1: "standard",
-                2: "high",
-            }.get,
-            ha_to_device={
-                "low": 0,
-                "standard": 1,
-                "high": 2,
-            }.get,
-        ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(
-            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
-        ),
-        vendor_id=(4447,),
-        product_id=(
-            8195,
-            8197,
-            8201,
-        ),
-        allow_multi=True,
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
-            key="HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
-            entity_category=EntityCategory.CONFIG,
-            entity_registry_enabled_default=False,
-            translation_key="sensitivity_level",
-            options=["low", "standard", "high"],
-            device_to_ha={
-                0: "low",
-                1: "standard",
-                2: "high",
-            }.get,
-            ha_to_device={
-                "low": 0,
-                "standard": 1,
-                "high": 2,
-            }.get,
-        ),
-        entity_class=MatterAttributeSelectEntity,
-        required_attributes=(
-            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
-        ),
-        vendor_id=(4619,),
-        product_id=(4097,),
-        allow_multi=True,
-    ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
@@ -647,6 +559,94 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
+    ),
+    # Keep the legacy vendor-specific select entities around for one release
+    # so existing users can migrate before we remove them in favor of the
+    # generic number slider.
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="AqaraBooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+            translation_key="sensitivity_level",
+            options=["10 mm", "20 mm", "30 mm"],
+            device_to_ha={
+                0: "10 mm",
+                1: "20 mm",
+                2: "30 mm",
+            }.get,
+            ha_to_device={
+                "10 mm": 0,
+                "20 mm": 1,
+                "30 mm": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
+        vendor_id=(4447,),
+        product_id=(8194,),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+            translation_key="sensitivity_level",
+            options=["low", "standard", "high"],
+            device_to_ha={
+                0: "low",
+                1: "standard",
+                2: "high",
+            }.get,
+            ha_to_device={
+                "low": 0,
+                "standard": 1,
+                "high": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
+        vendor_id=(4447,),
+        product_id=(
+            8195,
+            8197,
+            8201,
+        ),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+            translation_key="sensitivity_level",
+            options=["low", "standard", "high"],
+            device_to_ha={
+                0: "low",
+                1: "standard",
+                2: "high",
+            }.get,
+            ha_to_device={
+                "low": 0,
+                "standard": 1,
+                "high": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
+        vendor_id=(4619,),
+        product_id=(4097,),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,

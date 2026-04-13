@@ -1,5 +1,4 @@
 {
-  "node": {
     "node_id": 364,
     "date_commissioned": "2026-03-10T00:21:04.489000",
     "last_interview": "2026-04-10T11:57:17.154000",
@@ -406,5 +405,4 @@
       "2/47/65528": []
     },
     "attribute_subscriptions": []
-  }
 }
