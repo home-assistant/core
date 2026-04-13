@@ -13,10 +13,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import (
-    ulid_to_bytes_or_none,
-    uuid_hex_to_bytes_or_none,
-)
 from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -24,6 +20,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.event_type import EventType
 
 from .const import DOMAIN
 from .helpers import (
@@ -348,8 +345,6 @@ async def ws_event_stream(
             hass, _unsub, end_time
         )
 
-    context_user_ids = event_processor.logbook_run.context_user_ids
-
     @callback
     def _queue_or_cancel(event: Event) -> None:
         """Queue an event to be processed or cancel."""
@@ -362,41 +357,28 @@ async def ws_event_stream(
             )
             _unsub()
 
-    @callback
-    def _cache_user_id_from_service_call(event: Event) -> None:
-        """Cache user_id from call_service events for parent-context attribution.
-
-        Service call events are not enqueued — they would only consume queue
-        capacity and be dropped by _humanify. We extract the user_id here so
-        child contexts can inherit it during live processing.
-        """
-        context = event.context
-        if (
-            context.user_id
-            and (context_id_bin := ulid_to_bytes_or_none(context.id))
-            and context_id_bin not in context_user_ids
-            and (user_id_bin := uuid_hex_to_bytes_or_none(context.user_id))
-        ):
-            context_user_ids[context_id_bin] = user_id_bin
-
     entities_filter: Callable[[str], bool] | None = None
     if not event_processor.limited_select:
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         entities_filter = logbook_config.entity_filter
 
+    # Live subscription needs call_service events so the live consumer can
+    # cache parent user_ids as they fire. Historical queries don't — the
+    # context_only join fetches them by context_id regardless of type.
+    # Unfiltered streams already include it via BUILT_IN_EVENTS.
+    live_event_types: tuple[EventType[Any] | str, ...] = (
+        event_types
+        if EVENT_CALL_SERVICE in event_types
+        else (*event_types, EVENT_CALL_SERVICE)
+    )
     async_subscribe_events(
         hass,
         subscriptions,
         _queue_or_cancel,
-        event_types,
+        live_event_types,
         entities_filter,
         entity_ids,
         device_ids,
-    )
-    # Subscribe to call_service events separately to seed the parent-context
-    # user_id cache without enqueueing them (they'd be dropped by _humanify).
-    subscriptions.append(
-        hass.bus.async_listen(EVENT_CALL_SERVICE, _cache_user_id_from_service_call)
     )
     subscriptions_setup_complete_time = dt_util.utcnow()
     connection.subscriptions[msg_id] = _unsub

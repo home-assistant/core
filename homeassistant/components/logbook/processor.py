@@ -298,12 +298,20 @@ def _humanify(
     data: dict[str, Any]
 
     context_user_ids = logbook_run.context_user_ids
+    # Skip the LRU write on one-shot runs — the LogbookRun is discarded.
+    populate_context_user_ids = logbook_run.for_live_stream
 
     # Process rows
     for row in rows:
         context_id_bin = row[CONTEXT_ID_BIN_POS]
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
+        if (
+            populate_context_user_ids
+            and (context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS])
+            and context_id_bin not in context_user_ids
+        ):
+            context_user_ids[context_id_bin] = context_user_id_bin
         if row[CONTEXT_ONLY_POS]:
             continue
         event_type = row[EVENT_TYPE_POS]
