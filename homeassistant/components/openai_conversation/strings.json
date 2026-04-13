@@ -242,9 +242,9 @@
     "reasoning_summary": {
       "options": {
         "auto": "[%key:common::state::auto%]",
+        "concise": "Concise",
         "detailed": "Detailed",
-        "off": "[%key:common::state::off%]",
-        "concise": "Concise"
+        "off": "[%key:common::state::off%]"
       }
     },
     "search_context_size": {

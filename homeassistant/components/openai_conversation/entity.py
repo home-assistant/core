@@ -43,7 +43,10 @@ from openai.types.responses import (
     ToolParam,
     WebSearchToolParam,
 )
-from openai.types.responses.response_create_params import Reasoning, ResponseCreateParamsStreaming
+from openai.types.responses.response_create_params import (
+    Reasoning,
+    ResponseCreateParamsStreaming,
+)
 from openai.types.responses.response_input_param import (
     FunctionCallOutput,
     ImageGenerationCall as ImageGenerationCallParam,
