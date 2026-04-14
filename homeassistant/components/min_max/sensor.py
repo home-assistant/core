@@ -8,8 +8,8 @@ import statistics
 from typing import Any
 
 import voluptuous as vol
-import yaml
 
+from homeassistant.components.group import CONF_ENTITIES
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -35,7 +35,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.util import ulid as ulid_util
+from homeassistant.util import ulid as ulid_util, yaml as yaml_util
 
 from . import PLATFORMS
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
@@ -53,7 +53,6 @@ ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
 
-CONF_ENTITIES = "entities"
 
 ICON = "mdi:calculator"
 
@@ -89,7 +88,7 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     platform_config.pop(CONF_PLATFORM)
     if CONF_NAME not in platform_config:
         platform_config[CONF_NAME] = f"{platform_config[CONF_TYPE]} sensor".capitalize()
-    yaml_config = yaml.dump(platform_config)
+    yaml_config = yaml_util.dump(platform_config)
     yaml_config = yaml_config.replace("\n", "\n    ")
     yaml_config = "```yaml\nsensor:\n  - platform: group\n    " + yaml_config + "\n```"
     async_create_issue(
@@ -120,7 +119,6 @@ async def async_setup_platform(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     await yaml_deprecation_notice(hass, config)
-    print("hej", config)
 
     async_add_entities(
         [MinMaxSensor(entity_ids, name, sensor_type, round_digits, unique_id)]
