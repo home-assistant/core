@@ -40,26 +40,14 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
-        """Fetch device list and per-device connectivity status.
+        """Return devices keyed by deviceId with internetConnected merged in.
 
-        Credentials are validated by async_get_devices; an auth failure there
-        surfaces as ConfigEntryError so the entry enters the reauth flow.
-
-        Devices whose userPermissions.canUseWiFi is false are filtered out
-        up front: calling /status on them returns 403 which the library
-        classifies as an auth error, but per the Fluss API docs a 403 on a
-        per-device status call means "this user lacks WiFi permission for
-        this specific device", not "your API key is bad".
-
-        As a safety net for permissions that change between the list and
-        status calls, any FlussApiClientError from a per-device status call
-        is treated as "that device is unreachable" and the device is marked
-        offline rather than failing the whole update.
+        Only devices where the user has canUseWiFi permission are included;
+        per-device status errors mark that device offline.
 
         Raises:
-            ConfigEntryError: authentication failed for the device list.
-            UpdateFailed: the device list request failed with a non-auth
-                FlussApiClientError.
+            ConfigEntryError: credentials rejected by async_get_devices.
+            UpdateFailed: device list fetch failed for another reason.
         """
         try:
             devices = await self.api.async_get_devices()
@@ -81,11 +69,10 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         result: dict[str, dict[str, Any]] = {}
         for device, status in zip(device_list, statuses, strict=True):
             if isinstance(status, FlussApiClientError):
-                internet_connected = False
-            else:
-                internet_connected = bool(status["status"]["internetConnected"])
+                result[device["deviceId"]] = {**device, "internetConnected": False}
+                continue
             result[device["deviceId"]] = {
                 **device,
-                "internetConnected": internet_connected,
+                "internetConnected": bool(status["status"]["internetConnected"]),
             }
         return result
