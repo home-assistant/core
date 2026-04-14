@@ -2930,7 +2930,7 @@ sentry-sdk==2.48.0
 
 # homeassistant.components.homeassistant_hardware
 # homeassistant.components.zha
-serialx==1.1.1
+serialx==1.2.2
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
