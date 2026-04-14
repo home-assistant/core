@@ -132,8 +132,7 @@ class OAuth2FlowHandler(
         """Handle a flow start."""
         _LOGGER.debug("Starting user step with input: %s", user_input)
 
-        # self._async_abort_entries_match()
-        # await self.async_set_unique_id(DOMAIN)
+        await self.async_set_unique_id(DOMAIN)
         # self._abort_if_unique_id_configured()
 
         if user_input is None:
