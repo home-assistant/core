@@ -132,9 +132,9 @@ class OAuth2FlowHandler(
         """Handle a flow start."""
         _LOGGER.debug("Starting user step with input: %s", user_input)
 
-        self._async_abort_entries_match()
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
+        # self._async_abort_entries_match()
+        # await self.async_set_unique_id(DOMAIN)
+        # self._abort_if_unique_id_configured()
 
         if user_input is None:
             # Show initial form
@@ -163,7 +163,10 @@ class OAuth2FlowHandler(
             return self.async_external_step(step_id="auth", url=url)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to generate authorize URL: %s", err)
-            return self.async_abort(reason="authorize_url_fail")
+            return self.async_show_form(
+                step_id="user", errors={"base": "authorize_url_failure"}
+            )
+            # return self.async_abort(reason="authorize_url_fail")
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None

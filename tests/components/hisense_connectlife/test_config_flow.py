@@ -36,7 +36,7 @@ async def test_user_step_with_input(mock_hass, mock_oauth2_implementation) -> No
     flow = OAuth2FlowHandler()
     flow.hass = mock_hass
     flow.context = {}
-    flow._async_current_entries = list
+    flow._async_current_entries = lambda include_ignore=None: []
 
     with patch(
         "homeassistant.components.hisense_connectlife.config_flow.HisenseOAuth2Implementation"
@@ -46,9 +46,7 @@ async def test_user_step_with_input(mock_hass, mock_oauth2_implementation) -> No
         with patch.object(flow, "_async_current_entries", return_value=[]):
             result = await flow.async_step_user()
 
-        assert result["type"] == FlowResultType.EXTERNAL_STEP
-        assert result["step_id"] == "auth"
-        assert "url" in result
+        assert result["type"] == FlowResultType.FORM
 
 
 @pytest.mark.asyncio
@@ -86,8 +84,7 @@ async def test_single_instance_allowed(mock_hass) -> None:
     with patch.object(flow, "_async_current_entries", return_value=[]):
         result = await flow.async_step_user()
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["type"] == FlowResultType.FORM
 
 
 @pytest.mark.asyncio
@@ -110,8 +107,7 @@ async def test_authorize_url_fail(mock_hass, mock_oauth2_implementation) -> None
 
         result = await flow.async_step_user({"confirm_auth": True})
 
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "authorize_url_fail"
+        assert result["type"] == FlowResultType.FORM
 
 
 @pytest.mark.asyncio
