@@ -21,6 +21,8 @@ from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RitualsSensorEntityDescription(SensorEntityDescription):
