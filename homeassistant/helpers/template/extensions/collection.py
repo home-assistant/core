@@ -187,16 +187,18 @@ class CollectionExtension(BaseTemplateExtension):
         reverse: bool = False,
     ) -> list[Any]:
         """Return elements sorted naturally."""
+        DEFAULT_ALG = ns.FLOAT | ns.SIGNED
+        ALG_MAP = {name: getattr(ns, name) for name in dir(ns) if name.isupper()}
+
         if not isinstance(lst, list):
             raise TypeError(
                 f"natural_sort expected an iterable list, got {type(lst).__name__}"
             )
+
         if isinstance(alg, Undefined):
             raise TypeError(
                 f"alg expected a string or integer, got an undefined variable: {type(alg).__name__}"
             )
-        DEFAULT_ALG = ns.FLOAT | ns.SIGNED
-        ALG_MAP = {name: getattr(ns, name) for name in dir(ns) if name.isupper()}
 
         def _get_key(v: Any) -> Any:
             """Get the key."""
@@ -205,8 +207,8 @@ class CollectionExtension(BaseTemplateExtension):
                     return v.get(key)
                 return getattr(v, key, None)
             if not isinstance(key, int):
-                raise KeyError(
-                    f"key is expected as an integer for list or string for list of lists, got {type(key).__name__}"
+                raise TypeError(
+                    f"key expected a string or integer, got {type(key).__name__}"
                 )
             return v[key]
 

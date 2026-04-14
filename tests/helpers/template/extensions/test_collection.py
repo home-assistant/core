@@ -371,7 +371,7 @@ def test_natural_sort(
     ("value_template", "expected"),
     [
         (
-            "{{ ['Apple', 'apple15', 'Banana', 'apple14,689', 'banana'] | natural_sort(alg=['alg=ns.REAL | ns.LOCALE | ns.IGNORECASE']) }}",
+            "{{ ['Apple', 'apple15', 'Banana', 'apple14,689', 'banana'] | natural_sort(alg=['ns.REAL | ns.LOCALE | ns.IGNORECASE']) }}",
             "alg expected a string, got list",
         ),
         (
@@ -385,6 +385,10 @@ def test_natural_sort(
         (
             "{{ foo | natural_sort(alg='ns.LOCALE') }}",
             "natural_sort expected an iterable list, got LoggingUndefined",
+        ),
+        (
+            "{{ ['Apple', 'apple15', 'Banana', 'apple14,689', 'banana'] | natural_sort(key=['wrong_list']) }}",
+            "key expected a string or integer, got list",
         ),
     ],
 )
