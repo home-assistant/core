@@ -699,10 +699,14 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data[DATA_NETWORK_INFO] = network_info.to_dict()
         # Separate dict for hass.data supervisor info since we add deprecated
         # compat keys that should not be in coordinator data
-        data[DATA_SUPERVISOR_INFO] = supervisor_info.to_dict()
-        # Deprecated 2026.4.0: Folding repositories into supervisor_info for
-        # compatibility. Written to hass.data only, not coordinator data.
-        data[DATA_SUPERVISOR_INFO]["repositories"] = data[DATA_STORE][ATTR_REPOSITORIES]
+        supervisor_info_dict = supervisor_info.to_dict()
+        # Deprecated 2026.4.0: Folding repositories and addons into
+        # supervisor_info for compatibility. Written to hass.data only, not
+        # coordinator data. Preserve the addons key from the addon coordinator.
+        supervisor_info_dict["repositories"] = data[DATA_STORE][ATTR_REPOSITORIES]
+        if (prev := data.get(DATA_SUPERVISOR_INFO)) and "addons" in prev:
+            supervisor_info_dict["addons"] = prev["addons"]
+        data[DATA_SUPERVISOR_INFO] = supervisor_info_dict
 
         # If this is the initial refresh, register all main components
         if is_first_update:
