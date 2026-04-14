@@ -9,6 +9,7 @@ from iaqualink.exception import (
 
 from homeassistant.components.iaqualink import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -97,3 +98,92 @@ async def test_with_existing_config(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data["username"]
     assert result["data"] == config_data
+
+
+async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) -> None:
+    """Test successful reauthentication."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=config_data[CONF_USERNAME],
+        data=config_data,
+    )
+    entry.add_to_hass(hass)
+
+    new_username = "updated@example.com"
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: new_username, CONF_PASSWORD: "new_password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.title == new_username
+    assert dict(entry.data) == {
+        **config_data,
+        CONF_USERNAME: new_username,
+        CONF_PASSWORD: "new_password",
+    }
+
+
+async def test_reauth_invalid_auth(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test reauthentication with invalid credentials."""
+    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        side_effect=AqualinkServiceUnauthorizedException,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "bad_password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth_cannot_connect(
+    hass: HomeAssistant, config_data: dict[str, str]
+) -> None:
+    """Test reauthentication when the service cannot be reached."""
+    entry = MockConfigEntry(domain=DOMAIN, data=config_data)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        side_effect=AqualinkServiceException,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: config_data[CONF_USERNAME], CONF_PASSWORD: "new_password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}

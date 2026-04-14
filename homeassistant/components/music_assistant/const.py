@@ -80,5 +80,3 @@ ATTR_FANART_IMAGE = "fanart_image"
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
 LOGGER = logging.getLogger(__package__)
-
-SOUND_MODES_TRANSLATION_KEY_PREFIX = "player_sound_mode."
