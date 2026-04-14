@@ -35,10 +35,8 @@ def test_sockets_disabled() -> None:
 @pytest.mark.usefixtures("socket_enabled")
 def test_sockets_enabled() -> None:
     """Test we can't connect to an address different from 127.0.0.1."""
-    with (
-        socket.socket() as mysocket,
-        pytest.raises(pytest_socket.SocketConnectBlockedError),
-    ):
+    mysocket = socket.socket()
+    with pytest.raises(pytest_socket.SocketConnectBlockedError):
         mysocket.connect(("127.0.0.2", 1234))
 
 

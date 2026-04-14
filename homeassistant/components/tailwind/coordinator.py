@@ -5,7 +5,6 @@ from datetime import timedelta
 from gotailwind import (
     Tailwind,
     TailwindAuthenticationError,
-    TailwindConnectionError,
     TailwindDeviceStatus,
     TailwindError,
 )
@@ -46,13 +45,5 @@ class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus])
             return await self.tailwind.status()
         except TailwindAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
-        except TailwindConnectionError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-            ) from err
         except TailwindError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="unknown_error",
-            ) from err
+            raise UpdateFailed(err) from err

@@ -1331,43 +1331,43 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "twinkly-*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "B4FBE4*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "802AA8*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "F09FC2*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "68D79A*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "18E829*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "245A4C*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "784558*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "E063DA*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "265A4C*",
     },
     {
-        "domain": "unifi_discovery",
+        "domain": "unifiprotect",
         "macaddress": "74ACB9*",
     },
     {

@@ -19,8 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
 
-PARALLEL_UPDATES = 0
-
 
 @dataclass(kw_only=True, frozen=True)
 class TailwindDoorBinarySensorEntityDescription(BinarySensorEntityDescription):

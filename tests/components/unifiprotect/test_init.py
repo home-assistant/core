@@ -328,7 +328,7 @@ async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> No
 async def test_setup_starts_discovery(
     hass: HomeAssistant, ufp_config_entry: ConfigEntry, ufp_client: ProtectApiClient
 ) -> None:
-    """Test setting up will start discovery via unifi_discovery dependency."""
+    """Test setting up will start discovery."""
     with (
         _patch_discovery(),
         patch(
@@ -340,9 +340,9 @@ async def test_setup_starts_discovery(
         ufp = MockUFPFixture(ufp_config_entry, ufp_client)
 
         await hass.config_entries.async_setup(ufp.entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
         assert ufp.entry.state is ConfigEntryState.LOADED
-        # Discovery is now handled by unifi_discovery dependency
+        await hass.async_block_till_done()
         assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
 
 
@@ -586,6 +586,7 @@ async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry", return_value=True
         ),
+        patch("homeassistant.components.unifiprotect.async_start_discovery"),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

@@ -29,12 +29,5 @@
         }
       }
     }
-  },
-  "entity": {
-    "button": {
-      "sync_time": {
-        "name": "Sync time"
-      }
-    }
   }
 }

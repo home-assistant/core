@@ -57,6 +57,8 @@ async def async_setup_entry(
 class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     """Represents a Jellyfin Player device."""
 
+    _attr_media_image_remotely_accessible = False
+
     def __init__(
         self,
         coordinator: JellyfinDataUpdateCoordinator,

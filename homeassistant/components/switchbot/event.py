@@ -52,14 +52,12 @@ class SwitchbotEventEntity(SwitchbotEntity, EventEntity):
         self._event = event
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.base_unique_id}-{event}"
-        self._previous_doorbell_seq = int(
-            coordinator.device.parsed_data.get("doorbell_seq", 0)
-        )
+        self._previous_value = False
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        seq = int(self.parsed_data.get("doorbell_seq", 0))
-        if seq not in (0, self._previous_doorbell_seq):
+        value = bool(self.parsed_data.get(self._event, False))
+        if value and not self._previous_value:
             self._trigger_event("ring")
-        self._previous_doorbell_seq = seq
+        self._previous_value = value

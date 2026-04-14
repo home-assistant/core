@@ -14,8 +14,7 @@ from evohomeasync2.schemas.const import (
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_MODE, ATTR_STATE
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
@@ -58,15 +57,6 @@ SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     ),
 }
 
-# DHW service schemas (registered as entity services)
-SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(ATTR_STATE): cv.boolean,
-    vol.Optional(ATTR_DURATION): vol.All(
-        cv.time_period,
-        vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
-    ),
-}
-
 
 def _register_zone_entity_services(hass: HomeAssistant) -> None:
     """Register entity-level services for zones."""
@@ -86,19 +76,6 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         entity_domain=CLIMATE_DOMAIN,
         schema=SET_ZONE_OVERRIDE_SCHEMA,
         func="async_set_zone_override",
-    )
-
-
-def _register_dhw_entity_services(hass: HomeAssistant) -> None:
-    """Register entity-level services for DHW zones."""
-
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        EvoService.SET_DHW_OVERRIDE,
-        entity_domain=WATER_HEATER_DOMAIN,
-        schema=SET_DHW_OVERRIDE_SCHEMA,
-        func="async_set_dhw_override",
     )
 
 
@@ -194,4 +171,3 @@ def setup_service_functions(
     )
 
     _register_zone_entity_services(hass)
-    _register_dhw_entity_services(hass)

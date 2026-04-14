@@ -22,8 +22,6 @@ from .const import DOMAIN
 from .coordinator import TailwindConfigEntry
 from .entity import TailwindEntity
 
-PARALLEL_UPDATES = 1
-
 
 @dataclass(frozen=True, kw_only=True)
 class TailwindButtonEntityDescription(ButtonEntityDescription):
@@ -68,6 +66,7 @@ class TailwindButtonEntity(TailwindEntity, ButtonEntity):
             await self.entity_description.press_fn(self.coordinator.tailwind)
         except TailwindError as exc:
             raise HomeAssistantError(
+                str(exc),
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from exc

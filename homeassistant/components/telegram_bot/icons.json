@@ -49,9 +49,6 @@
     "send_message": {
       "service": "mdi:send"
     },
-    "send_message_draft": {
-      "service": "mdi:chat-processing"
-    },
     "send_photo": {
       "service": "mdi:camera"
     },

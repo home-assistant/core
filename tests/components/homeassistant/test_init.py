@@ -642,21 +642,17 @@ async def test_reload_all(
 
 
 @pytest.mark.parametrize(
-    ("arch", "bit_32", "expected_issue"),
+    "arch",
     [
-        ("i386", True, "deprecated_method_architecture"),
-        ("armhf", True, "deprecated_method_architecture"),
-        ("armv7", True, "deprecated_method_architecture"),
-        ("aarch64", False, "deprecated_method"),
-        ("generic-x86-64", False, "deprecated_method"),
+        "i386",
+        "armhf",
+        "armv7",
     ],
 )
-async def test_deprecated_installation_issue_core(
+async def test_deprecated_installation_issue_32bit_core(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     arch: str,
-    bit_32: bool,
-    expected_issue: str,
 ) -> None:
     """Test deprecated installation issue."""
     with (
@@ -669,7 +665,7 @@ async def test_deprecated_installation_issue_core(
         ),
         patch(
             "homeassistant.components.homeassistant._is_32_bit",
-            return_value=bit_32,
+            return_value=True,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -677,7 +673,47 @@ async def test_deprecated_installation_issue_core(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_method_architecture")
+    assert issue.domain == DOMAIN
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {
+        "installation_type": "Core",
+        "arch": arch,
+    }
+
+
+@pytest.mark.parametrize(
+    "arch",
+    [
+        "aarch64",
+        "generic-x86-64",
+    ],
+)
+async def test_deprecated_installation_issue_64bit_core(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    arch: str,
+) -> None:
+    """Test deprecated installation issue."""
+    with (
+        patch(
+            "homeassistant.components.homeassistant.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Core",
+                "arch": arch,
+            },
+        ),
+        patch(
+            "homeassistant.components.homeassistant._is_32_bit",
+            return_value=False,
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_method")
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {
@@ -694,7 +730,7 @@ async def test_deprecated_installation_issue_core(
         "armhf",
     ],
 )
-async def test_deprecated_installation_issue_container_32bit(
+async def test_deprecated_installation_issue_32bit(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     arch: str,

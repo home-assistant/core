@@ -32,7 +32,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: done
+  parallel-updates: todo
   reauthentication-flow: done
   test-coverage: done
   # Gold
@@ -55,9 +55,12 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      The coordinator needs translation when the update failed.
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: |

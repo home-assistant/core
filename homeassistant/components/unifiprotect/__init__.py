@@ -40,6 +40,7 @@ from .const import (
     PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
+from .discovery import DATA_UNIFIPROTECT, UniFiProtectRuntimeData, async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_setup_services
 from .utils import (
@@ -63,7 +64,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
+    # Initialize domain data structure (setdefault in case discovery already started)
+    hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
+    # Only start discovery once regardless of how many entries they have
     async_setup_services(hass)
+    async_start_discovery(hass)
     return True
 
 
@@ -73,23 +78,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
 
-    # Reuse ProtectData from previous retry or create new
-    if hasattr(entry, "runtime_data"):
-        data_service = entry.runtime_data
-        data_service.api = protect
-    else:
-        data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
-        entry.runtime_data = data_service
-
     try:
         await protect.update()
     except NotAuthorized as err:
-        data_service.auth_retries += 1
-        if data_service.auth_retries > AUTH_RETRIES:
-            raise ConfigEntryAuthFailed(err) from err
-        raise ConfigEntryNotReady from err
+        domain_data = hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
+        retries = domain_data.auth_retries.get(entry.entry_id, 0)
+        if retries < AUTH_RETRIES:
+            retries += 1
+            domain_data.auth_retries[entry.entry_id] = retries
+            raise ConfigEntryNotReady from err
+        raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
+
+    data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
     bootstrap = protect.bootstrap
     nvr_info = bootstrap.nvr
     auth_user = bootstrap.users.get(bootstrap.auth_user_id)
@@ -140,6 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
+    entry.runtime_data = data_service
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )

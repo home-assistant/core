@@ -625,13 +625,10 @@ def _get_test_socket() -> socket.socket:
 @callback
 def async_port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
-    test_socket = _get_test_socket()
     try:
-        test_socket.bind(("", port))
+        _get_test_socket().bind(("", port))
     except OSError:
         return False
-    finally:
-        test_socket.close()
     return True
 
 

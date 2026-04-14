@@ -1,7 +1,7 @@
 {
   "domain": "freebox",
   "name": "Freebox",
-  "codeowners": ["@hacf-fr/reviewers", "@Quentame"],
+  "codeowners": ["@hacf-fr", "@Quentame"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/freebox",

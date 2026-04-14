@@ -608,7 +608,6 @@
       },
       "binary_sensor": {
         "data": {
-          "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "state": "[%key:component::template::common::state%]"
         },

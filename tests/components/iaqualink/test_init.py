@@ -34,7 +34,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system
@@ -83,11 +82,8 @@ async def test_system_refresh_failure_marks_entities_unavailable(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
-    assert len(entity_ids) == 1
-    entity_id = entity_ids[0]
-
-    state = hass.states.get(entity_id)
+    name = f"{LIGHT_DOMAIN}.{light.name}"
+    state = hass.states.get(name)
     assert state is not None
     assert state.state == STATE_ON
 
@@ -99,7 +95,7 @@ async def test_system_refresh_failure_marks_entities_unavailable(
 
     await _advance_coordinator_time(hass, freezer)
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(name)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -144,10 +140,7 @@ async def test_light_service_calls_update_entity_state(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
-    assert len(entity_ids) == 1
-    entity_id = entity_ids[0]
-
+    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
@@ -415,7 +408,6 @@ async def test_setup_all_good_all_device_types(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     client: AqualinkClient,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup ending in one device of each type recognized."""
     config_entry.add_to_hass(hass)
@@ -477,18 +469,6 @@ async def test_setup_all_good_all_device_types(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    for domain in (
-        BINARY_SENSOR_DOMAIN,
-        CLIMATE_DOMAIN,
-        LIGHT_DOMAIN,
-        SENSOR_DOMAIN,
-        SWITCH_DOMAIN,
-    ):
-        for entity_id in hass.states.async_entity_ids(domain):
-            entry = entity_registry.async_get(entity_id)
-            assert entry is not None
-            assert entry.has_entity_name is True
-
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -531,9 +511,7 @@ async def test_multiple_updates(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
-    assert len(entity_ids) == 1
-    entity_id = entity_ids[0]
+    entity_id = f"{LIGHT_DOMAIN}.{light.name}"
 
     def assert_state(expected_state: str) -> None:
         state = hass.states.get(entity_id)
@@ -654,10 +632,9 @@ async def test_entity_assumed_and_available(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
-    assert len(entity_ids) == 1
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
 
-    name = entity_ids[0]
+    name = f"{LIGHT_DOMAIN}.{light.name}"
 
     # None means maybe.
     light.system.online = None

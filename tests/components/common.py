@@ -46,20 +46,13 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, mock_device_registry
 
 
-async def target_entities(
-    hass: HomeAssistant, domain: str, *, domain_excluded: str | None = None
-) -> dict[str, list[str]]:
+async def target_entities(hass: HomeAssistant, domain: str) -> dict[str, list[str]]:
     """Create multiple entities associated with different targets.
-
-    If `domain_excluded` is provided, entities in excluded_entities will have this
-    domain, otherwise they will have the same domain as included_entities.
 
     Returns a dict with the following keys:
     - included_entities: List of entity_ids meant to be targeted.
     - excluded_entities: List of entity_ids not meant to be targeted.
     """
-    domain_excluded = domain_excluded or domain
-
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
@@ -91,10 +84,10 @@ async def target_entities(
     )
     entity_reg.async_update_entity(entity_area.entity_id, area_id=area.id)
     entity_area_excluded = entity_reg.async_get_or_create(
-        domain=domain_excluded,
+        domain=domain,
         platform="test",
-        unique_id=f"{domain_excluded}_area_excluded",
-        suggested_object_id=f"area_{domain_excluded}_excluded",
+        unique_id=f"{domain}_area_excluded",
+        suggested_object_id=f"area_{domain}_excluded",
     )
     entity_reg.async_update_entity(entity_area_excluded.entity_id, area_id=area.id)
 
@@ -114,10 +107,10 @@ async def target_entities(
         device_id=device.id,
     )
     entity_reg.async_get_or_create(
-        domain=domain_excluded,
+        domain=domain,
         platform="test",
-        unique_id=f"{domain_excluded}_device_excluded",
-        suggested_object_id=f"device_{domain_excluded}_excluded",
+        unique_id=f"{domain}_device_excluded",
+        suggested_object_id=f"device_{domain}_excluded",
         device_id=device.id,
     )
 
@@ -130,10 +123,10 @@ async def target_entities(
     )
     entity_reg.async_update_entity(entity_label.entity_id, labels={label.label_id})
     entity_label_excluded = entity_reg.async_get_or_create(
-        domain=domain_excluded,
+        domain=domain,
         platform="test",
-        unique_id=f"{domain_excluded}_label_excluded",
-        suggested_object_id=f"label_{domain_excluded}_excluded",
+        unique_id=f"{domain}_label_excluded",
+        suggested_object_id=f"label_{domain}_excluded",
     )
     entity_reg.async_update_entity(
         entity_label_excluded.entity_id, labels={label.label_id}
@@ -150,10 +143,10 @@ async def target_entities(
             f"{domain}.device2_{domain}",
         ],
         "excluded_entities": [
-            f"{domain_excluded}.standalone_{domain_excluded}_excluded",
-            f"{domain_excluded}.label_{domain_excluded}_excluded",
-            f"{domain_excluded}.area_{domain_excluded}_excluded",
-            f"{domain_excluded}.device_{domain_excluded}_excluded",
+            f"{domain}.standalone_{domain}_excluded",
+            f"{domain}.label_{domain}_excluded",
+            f"{domain}.area_{domain}_excluded",
+            f"{domain}.device_{domain}_excluded",
         ],
     }
 
@@ -222,7 +215,6 @@ def _parametrize_condition_states(
     other_states: list[str | None | tuple[str | None, dict]],
     required_filter_attributes: dict | None,
     condition_true_if_invalid: bool,
-    excluded_entities_from_other_domain: bool,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected condition evaluations.
 
@@ -235,9 +227,7 @@ def _parametrize_condition_states(
 
     required_filter_attributes = required_filter_attributes or {}
     condition_options = condition_options or {}
-    add_excluded_state = excluded_entities_from_other_domain or bool(
-        required_filter_attributes
-    )
+    has_required_filter_attributes = bool(required_filter_attributes)
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict],
@@ -252,7 +242,7 @@ def _parametrize_condition_states(
                     "attributes": required_filter_attributes,
                 },
                 "excluded_state": {
-                    "state": state if add_excluded_state else None,
+                    "state": state if has_required_filter_attributes else None,
                     "attributes": {},
                 },
                 "condition_true": condition_true,
@@ -264,8 +254,8 @@ def _parametrize_condition_states(
                 "attributes": state[1] | required_filter_attributes,
             },
             "excluded_state": {
-                "state": state[0] if add_excluded_state else None,
-                "attributes": state[1] if add_excluded_state else {},
+                "state": state[0] if has_required_filter_attributes else None,
+                "attributes": state[1],
             },
             "condition_true": condition_true,
             "condition_true_first_entity": condition_true_first_entity,
@@ -317,7 +307,6 @@ def parametrize_condition_states_any(
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
     required_filter_attributes: dict | None = None,
-    excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected condition evaluations.
 
@@ -335,7 +324,6 @@ def parametrize_condition_states_any(
         other_states=other_states,
         required_filter_attributes=required_filter_attributes,
         condition_true_if_invalid=False,
-        excluded_entities_from_other_domain=excluded_entities_from_other_domain,
     )
 
 
@@ -346,7 +334,6 @@ def parametrize_condition_states_all(
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
     required_filter_attributes: dict | None = None,
-    excluded_entities_from_other_domain: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected condition evaluations.
 
@@ -364,7 +351,6 @@ def parametrize_condition_states_all(
         other_states=other_states,
         required_filter_attributes=required_filter_attributes,
         condition_true_if_invalid=True,
-        excluded_entities_from_other_domain=excluded_entities_from_other_domain,
     )
 
 

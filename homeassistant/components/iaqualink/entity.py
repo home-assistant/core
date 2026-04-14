@@ -22,9 +22,6 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
     entity update flow.
     """
 
-    _attr_has_entity_name = True
-    _attr_name = None
-
     def __init__(
         self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkDeviceT
     ) -> None:

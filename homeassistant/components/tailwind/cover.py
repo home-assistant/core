@@ -26,8 +26,6 @@ from .const import DOMAIN, LOGGER
 from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
 
-PARALLEL_UPDATES = 1
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

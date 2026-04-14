@@ -381,13 +381,5 @@
         "default": "mdi:watermark"
       }
     }
-  },
-  "services": {
-    "get_feeder_meal_plan": {
-      "service": "mdi:database-eye"
-    },
-    "set_feeder_meal_plan": {
-      "service": "mdi:database-edit"
-    }
   }
 }

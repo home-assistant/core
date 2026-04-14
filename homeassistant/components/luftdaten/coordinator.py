@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 
 from luftdaten import Luftdaten
-from luftdaten.exceptions import LuftdatenConnectionError, LuftdatenError
+from luftdaten.exceptions import LuftdatenError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -47,22 +47,11 @@ class LuftdatenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float | int
         """Update sensor/binary sensor data."""
         try:
             await self._sensor_community.get_data()
-        except LuftdatenConnectionError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-            ) from err
         except LuftdatenError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="unknown_error",
-            ) from err
+            raise UpdateFailed("Unable to retrieve data from Sensor.Community") from err
 
         if not self._sensor_community.values:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="no_data_received",
-            )
+            raise UpdateFailed("Did not receive sensor data from Sensor.Community")
 
         data: dict[str, float | int] = self._sensor_community.values
         data.update(self._sensor_community.meta)
