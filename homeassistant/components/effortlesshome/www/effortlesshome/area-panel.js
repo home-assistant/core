@@ -1,4 +1,8 @@
-import { html, css, LitElement } from "https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js";
+import {
+  html,
+  css,
+  LitElement,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js";
 import "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js";
 
 class AreaPanel extends LitElement {
@@ -13,10 +17,15 @@ class AreaPanel extends LitElement {
   static styles = css`
     :host {
       display: block;
-      background-color: var(--lovelace-background, var(--primary-background-color));
+      background-color: var(
+        --lovelace-background,
+        var(--primary-background-color)
+      );
       color: var(--primary-text-color);
       font-family: var(--paper-font-body1_-_font-family, "Arial", sans-serif);
-      transition: background-color 0.3s, color 0.3s;
+      transition:
+        background-color 0.3s,
+        color 0.3s;
       min-height: 100vh;
     }
 
@@ -51,7 +60,9 @@ class AreaPanel extends LitElement {
       border: 1px solid var(--divider-color);
       background-color: var(--secondary-background-color);
       color: var(--primary-text-color);
-      transition: border-color 0.3s, background-color 0.3s;
+      transition:
+        border-color 0.3s,
+        background-color 0.3s;
     }
 
     .domain-select:focus {
@@ -73,7 +84,9 @@ class AreaPanel extends LitElement {
       display: flex;
       flex-direction: column;
       box-shadow: var(--ha-card-box-shadow, 0 2px 6px rgba(0, 0, 0, 0.15));
-      transition: background-color 0.3s, box-shadow 0.3s;
+      transition:
+        background-color 0.3s,
+        box-shadow 0.3s;
     }
 
     .area-box h3 {
@@ -99,7 +112,9 @@ class AreaPanel extends LitElement {
       box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
       cursor: grab;
       text-align: center;
-      transition: transform 0.2s, background-color 0.3s;
+      transition:
+        transform 0.2s,
+        background-color 0.3s;
     }
 
     .instructions {
@@ -116,7 +131,7 @@ class AreaPanel extends LitElement {
       font-size: 0.95rem;
       box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
     }
-    
+
     .instructions ha-icon {
       color: var(--primary-color);
       flex-shrink: 0;
@@ -157,7 +172,13 @@ class AreaPanel extends LitElement {
   }
 
   async _buildAreaTiles() {
-    if (!this.hass || !this.hass.areas || !this.hass.states || !this.hass.entities) return;
+    if (
+      !this.hass ||
+      !this.hass.areas ||
+      !this.hass.states ||
+      !this.hass.entities
+    )
+      return;
 
     const excludedDomains = [
       "person",
@@ -250,43 +271,43 @@ class AreaPanel extends LitElement {
         <div class="back-arrow" @click=${() => history.back()}>&larr;</div>
         <select class="domain-select" @change=${this._handleDomainChange}>
           ${this.domains.map(
-      (domain) => html`
+            (domain) => html`
               <option ?selected=${domain === this.selectedDomain}>
                 ${domain}
               </option>
-            `
-    )}
+            `,
+          )}
         </select>
       </div>
 
       <div class="instructions">
         <ha-icon icon="mdi:information-outline"></ha-icon>
         <div>
-          <strong>Instructions:</strong> Drag and drop entities between the boxes to assign them to different areas. The changes are saved automatically.
+          <strong>Instructions:</strong> Drag and drop entities between the
+          boxes to assign them to different areas. The changes are saved
+          automatically.
         </div>
       </div>
 
       <div class="container">
         ${this.areas.map(
-      (area) => html`
+          (area) => html`
             <div class="area-box">
               <h3>${area.name}</h3>
               <div class="tile-grid" id="grid-${area.area_id}">
                 ${this.areaEntityMap[area.area_id]
-          ?.filter(
-            (eid) => eid.split(".")[0] === this.selectedDomain
-          )
-          .map(
-            (eid) => html`
+                  ?.filter((eid) => eid.split(".")[0] === this.selectedDomain)
+                  .map(
+                    (eid) => html`
                       <div class="entity-tile" data-entity="${eid}">
                         ${this._getFriendlyName(eid)}
                       </div>
-                    `
-          )}
+                    `,
+                  )}
               </div>
             </div>
-          `
-    )}
+          `,
+        )}
       </div>
     `;
   }

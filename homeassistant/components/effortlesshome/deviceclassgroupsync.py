@@ -1,3 +1,5 @@
+"""Sync entities into helper groups by device class."""
+
 import logging
 
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN

@@ -1,4 +1,8 @@
-import { html, css, LitElement } from "https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js";
+import {
+  html,
+  css,
+  LitElement,
+} from "https://cdn.jsdelivr.net/gh/lit/dist@2/core/lit-core.min.js";
 import "https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js";
 
 class LabelPanel extends LitElement {
@@ -14,7 +18,10 @@ class LabelPanel extends LitElement {
     :host {
       display: block;
       color: var(--primary-text-color);
-      background-color: var(--lovelace-background, var(--primary-background-color));
+      background-color: var(
+        --lovelace-background,
+        var(--primary-background-color)
+      );
       font-family: var(--primary-font-family, Roboto, sans-serif);
     }
 
@@ -26,7 +33,7 @@ class LabelPanel extends LitElement {
       background: var(--card-background-color);
       border-bottom: 1px solid var(--divider-color);
       color: var(--primary-text-color);
-      box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0,0,0,0.1));
+      box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
     }
 
     .back-arrow {
@@ -71,7 +78,9 @@ class LabelPanel extends LitElement {
       box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.1));
       display: flex;
       flex-direction: column;
-      transition: background 0.3s, box-shadow 0.3s;
+      transition:
+        background 0.3s,
+        box-shadow 0.3s;
     }
 
     .label-box h3 {
@@ -97,7 +106,9 @@ class LabelPanel extends LitElement {
       box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
       cursor: grab;
       text-align: center;
-      transition: background 0.3s, transform 0.1s;
+      transition:
+        background 0.3s,
+        transform 0.1s;
     }
 
     .instructions {
@@ -114,7 +125,7 @@ class LabelPanel extends LitElement {
       font-size: 0.95rem;
       box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
     }
-    
+
     .instructions ha-icon {
       color: var(--primary-color);
       flex-shrink: 0;
@@ -125,7 +136,10 @@ class LabelPanel extends LitElement {
     }
 
     .entity-tile:hover {
-      background: var(--ha-card-background-hover, var(--secondary-background-color));
+      background: var(
+        --ha-card-background-hover,
+        var(--secondary-background-color)
+      );
       transform: scale(1.02);
     }
   `;
@@ -172,7 +186,9 @@ class LabelPanel extends LitElement {
       "effortlesshome",
     ];
 
-    const rawLabels = await this.hass.callWS({ type: "config/label_registry/list" });
+    const rawLabels = await this.hass.callWS({
+      type: "config/label_registry/list",
+    });
     const labels = [...rawLabels, { name: "No Labels", label_id: "no_labels" }];
     const entities = Object.values(this.hass.states);
 
@@ -185,12 +201,18 @@ class LabelPanel extends LitElement {
 
     for (const ent of entities) {
       const domain = ent.entity_id.split(".")[0];
-      if (excludedDomains.includes(domain) || !this.hass.entities[ent.entity_id]) continue;
+      if (
+        excludedDomains.includes(domain) ||
+        !this.hass.entities[ent.entity_id]
+      )
+        continue;
 
       domainSet.add(domain);
 
       const entityLabels = this.hass.entities[ent.entity_id].labels || [];
-      const validLabels = entityLabels.filter((labelId) => labelEntityMap[labelId]);
+      const validLabels = entityLabels.filter(
+        (labelId) => labelEntityMap[labelId],
+      );
 
       if (validLabels.length === 0) {
         labelEntityMap["no_labels"].push(ent.entity_id);
@@ -216,7 +238,9 @@ class LabelPanel extends LitElement {
 
   _initSortable() {
     this.labels.forEach((label) => {
-      const container = this.renderRoot.querySelector(`#grid-${label.label_id}`);
+      const container = this.renderRoot.querySelector(
+        `#grid-${label.label_id}`,
+      );
       if (!container) return;
 
       Sortable.create(container, {
@@ -253,38 +277,41 @@ class LabelPanel extends LitElement {
         <span class="back-arrow" @click=${() => history.back()}>←</span>
         <select @change=${this._onDomainChange}>
           ${this.allDomains.map(
-      (domain) =>
-        html`<option ?selected=${domain === this.selectedDomain}>${domain}</option>`
-    )}
+            (domain) =>
+              html`<option ?selected=${domain === this.selectedDomain}>
+                ${domain}
+              </option>`,
+          )}
         </select>
       </div>
 
       <div class="instructions">
         <ha-icon icon="mdi:information-outline"></ha-icon>
         <div>
-          <strong>Instructions:</strong> Drag and drop entities into the labels to assign them. Entities can have multiple labels.
+          <strong>Instructions:</strong> Drag and drop entities into the labels
+          to assign them. Entities can have multiple labels.
         </div>
       </div>
 
       <div class="container">
         ${this.labels.map(
-      (label) => html`
+          (label) => html`
             <div class="label-box">
               <h3>${label.name}</h3>
               <div class="tile-grid" id="grid-${label.label_id}">
                 ${this.labelEntityMap[label.label_id]
-          ?.filter((eid) => eid.startsWith(this.selectedDomain + "."))
-          .map(
-            (eid) => html`
+                  ?.filter((eid) => eid.startsWith(this.selectedDomain + "."))
+                  .map(
+                    (eid) => html`
                       <div class="entity-tile" data-entity="${eid}">
                         ${this._getFriendlyName(eid)}
                       </div>
-                    `
-          )}
+                    `,
+                  )}
               </div>
             </div>
-          `
-    )}
+          `,
+        )}
       </div>
     `;
   }

@@ -2,31 +2,27 @@
 
 from __future__ import annotations
 
-import asyncio
+from datetime import timedelta
 import logging
-import re
-from datetime import datetime, timedelta
-from functools import cached_property
+from typing import Any
 
-import pytz
-from homeassistant.components.recorder.history import get_significant_states
+from propcache.api import cached_property
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import discovery
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UndefinedType
-from homeassistant.util.dt import as_local
 
 from .const import DOMAIN, NAME
-from .medication_tracking import MedicationTrackingSwitch
 from .motion_notification import MotionNotificationsSwitch
 from .sleep_mode import SleepModeSwitch
 from .smart_appliance_conversion import SmartApplianceConversionSwitch
 
 SCAN_INTERVAL = timedelta(seconds=5)
+PARALLEL_UPDATES = 0
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -34,7 +30,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities."""
 
@@ -66,7 +62,7 @@ class MedicalAlertAlarmSwitch(SwitchEntity, RestoreEntity):
         self.entity_id = "switch." + name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return information about the device."""
         return {
             "identifiers": {(DOMAIN, NAME)},
@@ -89,7 +85,7 @@ class MedicalAlertAlarmSwitch(SwitchEntity, RestoreEntity):
         """Return the state of the switch."""
         return self._is_on
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         self._is_on = True
         self.schedule_update_ha_state()
@@ -99,7 +95,7 @@ class MedicalAlertAlarmSwitch(SwitchEntity, RestoreEntity):
             {"is_on": self._is_on},
         )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         self._is_on = False
         self.schedule_update_ha_state()
@@ -109,7 +105,7 @@ class MedicalAlertAlarmSwitch(SwitchEntity, RestoreEntity):
             {"is_on": self._is_on},
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore previous state when entity is added."""
         await super().async_added_to_hass()
 
@@ -128,7 +124,7 @@ class MonitoringAlarmSwitch(SwitchEntity, RestoreEntity):
         self._attr_name = name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return information about the device."""
         return {
             "identifiers": {(DOMAIN, NAME)},
@@ -156,7 +152,7 @@ class MonitoringAlarmSwitch(SwitchEntity, RestoreEntity):
         """Return the state of the switch."""
         return self._is_on
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         self._is_on = True
         self.schedule_update_ha_state()
@@ -166,7 +162,7 @@ class MonitoringAlarmSwitch(SwitchEntity, RestoreEntity):
             {"is_on": self._is_on},
         )
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         self._is_on = False
         self.schedule_update_ha_state()
@@ -176,7 +172,7 @@ class MonitoringAlarmSwitch(SwitchEntity, RestoreEntity):
             {"is_on": self._is_on},
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore previous state when entity is added."""
         await super().async_added_to_hass()
 
@@ -197,7 +193,7 @@ class PresenceSimulationSwitch(SwitchEntity, RestoreEntity):
         self.entity_id = "switch.presence_simulation"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return information about the device."""
         return {
             "identifiers": {(DOMAIN, NAME)},
@@ -220,17 +216,17 @@ class PresenceSimulationSwitch(SwitchEntity, RestoreEntity):
         """Return the state of the switch."""
         return self._is_on
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         self._is_on = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         self._is_on = False
         self.schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore previous state when entity is added."""
         await super().async_added_to_hass()
 
@@ -250,7 +246,7 @@ class DisableMotionLightingSwitch(SwitchEntity, RestoreEntity):
         self.entity_id = "switch.motion_lighting_disable"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return information about the device."""
         return {
             "identifiers": {(DOMAIN, NAME)},
@@ -273,17 +269,17 @@ class DisableMotionLightingSwitch(SwitchEntity, RestoreEntity):
         """Return the state of the switch."""
         return self._is_on
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         self._is_on = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         self._is_on = False
         self.schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore previous state when entity is added."""
         await super().async_added_to_hass()
 

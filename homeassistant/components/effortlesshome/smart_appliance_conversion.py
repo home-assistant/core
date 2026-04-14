@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 import logging
 
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.helpers.typing import UndefinedType
-from homeassistant.helpers.restore_state import RestoreEntity
+from propcache.api import cached_property
 
-from .const import NAME, DOMAIN
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import UndefinedType
+
+from .const import DOMAIN, NAME
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class SmartApplianceConversionSwitch(SwitchEntity, RestoreEntity):
+class SmartApplianceConversionSwitch(SwitchEntity, RestoreEntity):  # pylint: disable=hass-enforce-class-module
     """Set up a SmartApplianceConversionSwitch."""
 
     _attr_should_poll = False

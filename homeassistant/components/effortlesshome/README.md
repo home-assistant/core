@@ -110,6 +110,35 @@ The integration uses the following labels for entity organization:
 
 We welcome contributions! Please see our [contributing guidelines](CONTRIBUTING.md) for more information.
 
+## Run Home Assistant Core PR Checks Locally
+
+From this `effortlesshome` folder, you can run the same core checks used in Home Assistant CI:
+
+1. First-time setup (create `.venv` in core and install dev/test dependencies):
+
+	```powershell
+	.\run_core_pr_checks.ps1 -Setup -Checks all
+	```
+
+2. Run all requested checks:
+
+	```powershell
+	.\run_core_pr_checks.ps1 -Checks all
+	```
+
+3. Run individual checks:
+
+	```powershell
+	.\run_core_pr_checks.ps1 -Checks prek
+	.\run_core_pr_checks.ps1 -Checks hassfest
+	.\run_core_pr_checks.ps1 -Checks pylint
+	.\run_core_pr_checks.ps1 -Checks mypy
+	```
+
+This script targets `homeassistant/components/effortlesshome` for pylint/mypy and uses the same `PREK_SKIP` split as the CI workflow so that `prek` does not duplicate `hassfest`, `pylint`, and `mypy`.
+
+VS Code tasks are also included in `.vscode/tasks.json` for one-click runs.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

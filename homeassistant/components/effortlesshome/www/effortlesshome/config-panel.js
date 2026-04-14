@@ -324,8 +324,12 @@ class ConfigPanel extends HTMLElement {
       </div>
     `;
 
-    this.querySelector("#logout-btn")?.addEventListener("click", () => this.handleLogout());
-    this.querySelector("#restart-btn")?.addEventListener("click", () => this.handleRestart());
+    this.querySelector("#logout-btn")?.addEventListener("click", () =>
+      this.handleLogout(),
+    );
+    this.querySelector("#restart-btn")?.addEventListener("click", () =>
+      this.handleRestart(),
+    );
 
     this.populateCurrentUser();
     this.fetchMatterBridges();
@@ -360,7 +364,9 @@ class ConfigPanel extends HTMLElement {
     const nameEl = this.querySelector("#user-name");
     const urlEl = this.querySelector("#ha-url");
     if (nameEl) nameEl.textContent = this.hass.user.name;
-    if (urlEl) urlEl.textContent = this.hass.states["sensor.ha_url"]?.state || "Connected";
+    if (urlEl)
+      urlEl.textContent =
+        this.hass.states["sensor.ha_url"]?.state || "Connected";
 
     if (!this.hass.user.is_admin) {
       const restartBtn = this.querySelector("#restart-btn");
@@ -388,13 +394,18 @@ class ConfigPanel extends HTMLElement {
       const bridges = await response.json();
 
       if (bridges && bridges.length > 0) {
-        if (list) list.innerHTML = bridges.map(b => this._renderBridgeCard(b)).join("");
+        if (list)
+          list.innerHTML = bridges
+            .map((b) => this._renderBridgeCard(b))
+            .join("");
       } else {
         if (list) list.innerHTML = "<p>No Matter bridges found.</p>";
       }
     } catch (err) {
       console.error("Failed to fetch Matter bridges:", err);
-      if (list) list.innerHTML = "<p style='color: var(--error-color, #f44336);'>Matter Hub unreachable or API failed.</p>";
+      if (list)
+        list.innerHTML =
+          "<p style='color: var(--error-color, #f44336);'>Matter Hub unreachable or API failed.</p>";
     }
   }
 
@@ -410,7 +421,8 @@ class ConfigPanel extends HTMLElement {
       const btn = this.querySelector(`#${resetBtnId}`);
       if (btn) {
         btn.onclick = async () => {
-          if (!confirm("Factory reset this bridge? This cannot be undone.")) return;
+          if (!confirm("Factory reset this bridge? This cannot be undone."))
+            return;
           btn.disabled = true;
           btn.textContent = "Resetting...";
           try {

@@ -5,14 +5,19 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-import subprocess
-import voluptuous as vol
+import time
+
 from oasira import OasiraAPIClient, OasiraAPIError
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -20,13 +25,8 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 
-from .const import (
-    DOMAIN,
-    LABELS,
-    NAME,
-)
+from .const import DOMAIN, LABELS, NAME
 from .deviceclassgroupsync import async_setup_devicegroup
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,6 @@ class HASSComponent:
         return cls.hass_instance
 
 
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up integration from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -59,10 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     id_token = entry.data.get("id_token")
 
     if not system_id:
-        raise HomeAssistantError("System ID is missing in configuration.")
+        raise ConfigEntryError("System ID is missing in configuration.")
 
     if not customer_id:
-        raise HomeAssistantError("Customer ID is missing in configuration.")
+        raise ConfigEntryError("Customer ID is missing in configuration.")
 
     HASSComponent.set_hass(hass)
 
@@ -78,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             plan_features = None
             try:
                 plan_features = await api_client.get_plan_features_by_system_id()
-            except Exception as pf_exc:
+            except OasiraAPIError as pf_exc:
                 _LOGGER.warning("Failed to fetch plan features: %s", pf_exc)
                 plan_features = None
 
@@ -118,12 +117,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except OasiraAPIError as e:
             _LOGGER.error("Failed to fetch customer/system data: %s", e)
             if "401" in str(e):
-                _LOGGER.info("Token expired, requesting reauth")
-                entry.async_start_reauth(hass)
-                return False
-            raise HomeAssistantError(
+                raise ConfigEntryAuthFailed(
+                    "Authentication failed while fetching customer/system data"
+                ) from e
+            raise ConfigEntryNotReady(
                 f"Failed to fetch customer/system data: {e}"
             ) from e
+
+    entry.runtime_data = hass.data[DOMAIN]
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -193,12 +194,12 @@ def _deploy_latest_config_sync(hass: HomeAssistant):
 
 async def deploy_latest_config(hass: HomeAssistant):
     """Deploy latest: theme, cards, blueprints, etc."""
-    _LOGGER.info("[EffortlessHome] Deploying latest configuration files...")
+    _LOGGER.info("Deploying latest configuration files")
     await hass.async_add_executor_job(_deploy_latest_config_sync, hass)
-    _LOGGER.info("[EffortlessHome] Configuration deployment complete.")
+    _LOGGER.info("Configuration deployment complete")
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     await hass.config_entries.async_unload_platforms(entry, ["switch"])
@@ -221,7 +222,7 @@ async def add_label_to_entity(call: ServiceCall) -> None:
 
     if not entity_id or not label:
         _LOGGER.error(
-            "entity_id and label are required for add_label_to_entity service"
+            "Both entity_id and label are required for add_label_to_entity service"
         )
         return
 
@@ -230,14 +231,14 @@ async def add_label_to_entity(call: ServiceCall) -> None:
     entity_entry = ent_reg.async_get(entity_id)
 
     if not entity_entry:
-        _LOGGER.error(f"Entity not found: {entity_id}")
+        _LOGGER.error("Entity not found: %s", entity_id)
         return
 
     new_labels = set(entity_entry.labels)
     new_labels.add(label)
 
     ent_reg.async_update_entity(entity_id, labels=new_labels)
-    _LOGGER.info(f"Added label '{label}' to entity '{entity_id}'")
+    _LOGGER.info("Added label '%s' to entity '%s'", label, entity_id)
 
 
 @callback
@@ -286,14 +287,14 @@ async def loaddevicegroups(calldata) -> None:
 
 async def create_event(call: ServiceCall) -> None:
     """Create event."""
-    _LOGGER.info("create event calldata =%s", call.data)
+    _LOGGER.info("Create event calldata: %s", call.data)
 
     hass = HASSComponent.get_hass()
 
     entity_id = call.data.get("entity_id")
     if not entity_id:
-        _LOGGER.error("entity_id is required for create_event service")
-        return
+        _LOGGER.error("The entity_id is required for create_event service")
+        return None
 
     devicestate = hass.states.get(entity_id)
     sensor_device_class = None
@@ -313,7 +314,7 @@ async def create_event(call: ServiceCall) -> None:
 
             if alarmstatus == "ACTIVE":
                 alarmid = alarmstate
-                _LOGGER.info("alarm id =%s", alarmid)
+                _LOGGER.info("Alarm id: %s", alarmid)
 
                 # Call the API to create event
                 systemid = hass.data[DOMAIN].get("systemid")
@@ -333,10 +334,11 @@ async def create_event(call: ServiceCall) -> None:
                     try:
                         result = await api_client.create_event(alarmid, event_data)
                         _LOGGER.info("API response content: %s", result)
-                        return result
                     except OasiraAPIError as e:
                         _LOGGER.error("Failed to create event: %s", e)
                         return None
+                    else:
+                        return result
             return None
         return None
     return None
@@ -344,7 +346,7 @@ async def create_event(call: ServiceCall) -> None:
 
 async def create_alert(call: ServiceCall) -> None:
     """Create alert."""
-    _LOGGER.info("create alert calldata =%s", call.data)
+    _LOGGER.info("Create alert calldata: %s", call.data)
 
     hass = HASSComponent.get_hass()
     alert_type = call.data.get("alert_type")
@@ -353,9 +355,9 @@ async def create_alert(call: ServiceCall) -> None:
 
     if not alert_type or not alert_description or not status:
         _LOGGER.error(
-            "alert_type, alert_description, and status are required for create_alert service"
+            "The alert_type, alert_description, and status are required for create_alert service"
         )
-        return
+        return None
 
     alert_data = {
         "alert_type": alert_type,
@@ -376,38 +378,58 @@ async def create_alert(call: ServiceCall) -> None:
         try:
             result = await api_client.create_alert(alert_data)
             _LOGGER.info("API response content: %s", result)
-            return result
         except OasiraAPIError as e:
             _LOGGER.error("Failed to create alert: %s", e)
             return None
+        else:
+            return result
+
+
+def _clean_motion_files_sync(age: int) -> tuple[int, list[str]]:
+    """Delete snapshot files older than age days from /media/snapshots."""
+    snapshots_dir = "/media/snapshots"
+    cutoff_seconds = age * 86400
+    now = time.time()
+    removed_count = 0
+    errors: list[str] = []
+
+    if not os.path.isdir(snapshots_dir):
+        return 0, [f"Directory not found: {snapshots_dir}"]
+
+    for root, _dirs, files in os.walk(snapshots_dir):
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            try:
+                age_seconds = now - os.path.getmtime(file_path)
+                if age_seconds > cutoff_seconds:
+                    os.remove(file_path)
+                    removed_count += 1
+            except OSError as err:
+                errors.append(f"{file_path}: {err}")
+
+    return removed_count, errors
 
 
 async def clean_motion_files(call: ServiceCall) -> None:
-    """Execute the shell command to delete old snapshots."""
+    """Delete old snapshots from /media/snapshots."""
     age = call.data.get("age", 30)
 
     if not isinstance(age, int) or age < 1:
         _LOGGER.warning("Invalid age value %s, using default 30 days", age)
         age = 30
 
-    command = f"find /media/snapshots/* -mtime +{age} -exec rm {{}} \\;"
+    removed_count, errors = await HASSComponent.get_hass().async_add_executor_job(
+        _clean_motion_files_sync, age
+    )
 
-    # Use subprocess to execute the shell command
-    try:
-        process = subprocess.run(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
+    if errors:
+        _LOGGER.error("Failed to clean some motion files: %s", "; ".join(errors))
+    else:
+        _LOGGER.info(
+            "Successfully deleted %s snapshots older than %s days",
+            removed_count,
+            age,
         )
-
-        if process.returncode == 0:
-            _LOGGER.info("Successfully deleted old snapshots older than %s days", age)
-        else:
-            _LOGGER.error("Error deleting snapshots: %s", process.stderr.decode())
-    except Exception as e:
-        _LOGGER.error("Failed to clean motion files: %s", e)
 
 
 async def handle_deploy_latest_config(call: ServiceCall) -> None:
@@ -415,4 +437,3 @@ async def handle_deploy_latest_config(call: ServiceCall) -> None:
     hass = HASSComponent.get_hass()
 
     await deploy_latest_config(hass)
-

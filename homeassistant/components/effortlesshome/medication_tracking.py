@@ -1,17 +1,21 @@
+"""Medication tracking switch entities."""
+
 from __future__ import annotations
 
-from functools import cached_property
 import logging
 
+from propcache.api import cached_property
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.helpers.typing import UndefinedType
 from homeassistant.helpers.restore_state import RestoreEntity
-from .const import NAME, DOMAIN
+from homeassistant.helpers.typing import UndefinedType
+
+from .const import DOMAIN, NAME
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class MedicationTrackingSwitch(SwitchEntity, RestoreEntity):
+class MedicationTrackingSwitch(SwitchEntity, RestoreEntity):  # pylint: disable=hass-enforce-class-module
     """Set up a medication tracking switch."""
 
     _attr_should_poll = False

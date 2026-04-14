@@ -1,0 +1,102 @@
+{
+  "tasks": [
+    {
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/run_core_pr_checks.ps1",
+        "-Setup",
+        "-Checks",
+        "all"
+      ],
+      "command": "powershell",
+      "group": "build",
+      "label": "EffortlessHome: Setup Core Check Env",
+      "problemMatcher": [],
+      "type": "shell"
+    },
+    {
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/run_core_pr_checks.ps1",
+        "-Checks",
+        "all"
+      ],
+      "command": "powershell",
+      "group": "test",
+      "label": "EffortlessHome: Run Core PR Checks (all)",
+      "problemMatcher": [],
+      "type": "shell"
+    },
+    {
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/run_core_pr_checks.ps1",
+        "-Checks",
+        "prek"
+      ],
+      "command": "powershell",
+      "group": "test",
+      "label": "EffortlessHome: Run prek checks",
+      "problemMatcher": [],
+      "type": "shell"
+    },
+    {
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/run_core_pr_checks.ps1",
+        "-Checks",
+        "hassfest"
+      ],
+      "command": "powershell",
+      "group": "test",
+      "label": "EffortlessHome: Check hassfest",
+      "problemMatcher": [],
+      "type": "shell"
+    },
+    {
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/run_core_pr_checks.ps1",
+        "-Checks",
+        "pylint"
+      ],
+      "command": "powershell",
+      "group": "test",
+      "label": "EffortlessHome: Check pylint",
+      "problemMatcher": [],
+      "type": "shell"
+    },
+    {
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/run_core_pr_checks.ps1",
+        "-Checks",
+        "mypy"
+      ],
+      "command": "powershell",
+      "group": "test",
+      "label": "EffortlessHome: Check mypy",
+      "problemMatcher": [],
+      "type": "shell"
+    }
+  ],
+  "version": "2.0.0"
+}

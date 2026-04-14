@@ -1,14 +1,16 @@
 """Config flow for EffortlessHome integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
-
 from oasira import OasiraAPIClient, OasiraAPIError
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
+
 from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,19 +29,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self._firebase_uid = None
-        self._id_token = None
-        self._refresh_token = None
-        self._email = None
-        self._customer_id = None
-        self._system_id = None
-        self._available_systems = []
+        self._firebase_uid: str | None = None
+        self._id_token: str | None = None
+        self._refresh_token: str | None = None
+        self._email: str | None = None
+        self._customer_id: str | None = None
+        self._system_id: str | None = None
+        self._available_systems: list[dict[str, Any]] = []
 
-    async def async_step_user(self, user_input: dict | None = None) -> Any:
+    async def async_step_user(  # pylint: disable=too-many-nested-blocks
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step - collect email and password for Firebase auth."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             email = user_input.get(CONF_EMAIL)
@@ -48,30 +52,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not email or not password:
                 errors["base"] = "missing_fields"
             else:
-                # Attempt Firebase authentication
                 try:
                     auth_result = await self._authenticate_firebase(email, password)
-
-                    if auth_result:
+                except Exception:
+                    _LOGGER.exception("Unexpected error during authentication")
+                    errors["base"] = "unknown"
+                else:
+                    if not auth_result:
+                        errors["base"] = "invalid_auth"
+                    else:
                         self._firebase_uid = auth_result["firebase_uid"]
                         self._id_token = auth_result["id_token"]
                         self._refresh_token = auth_result["refresh_token"]
                         self._email = email
 
-                        # Fetch system list from API
                         try:
                             systems = await self._fetch_system_list(email)
-
+                        except OasiraAPIError as err:
+                            _LOGGER.error("Failed to fetch system list: %s", err)
+                            errors["base"] = "cannot_connect"
+                        else:
                             if not systems:
                                 _LOGGER.warning("No systems found for user %s", email)
                                 errors["base"] = "no_system_found"
                             elif len(systems) == 1:
-                                # Single system - use it automatically
                                 system = systems[0]
                                 self._customer_id = str(system["customer_id"])
                                 self._system_id = str(system["SystemID"])
 
-                                # Check if already configured
                                 await self.async_set_unique_id(
                                     f"{self._customer_id}_{self._system_id}"
                                 )
@@ -89,19 +97,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                     },
                                 )
                             else:
-                                # Multiple systems - let user choose
                                 self._available_systems = systems
                                 return await self.async_step_select_system()
-
-                        except OasiraAPIError as err:
-                            _LOGGER.error("Failed to fetch system list: %s", err)
-                            errors["base"] = "cannot_connect"
-                    else:
-                        errors["base"] = "invalid_auth"
-
-                except Exception as err:
-                    _LOGGER.exception("Unexpected error during authentication: %s", err)
-                    errors["base"] = "unknown"
 
         data_schema = vol.Schema(
             {
@@ -120,10 +117,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_select_system(
-        self, user_input: dict | None = None
-    ) -> Any:
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle system selection when user has multiple systems."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             selected_system_key = user_input.get(CONF_SYSTEM_ID)
@@ -155,8 +152,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SYSTEM_ID: self._system_id,
                     },
                 )
-            else:
-                errors["base"] = "invalid_system"
+            errors["base"] = "invalid_system"
 
         # Build system selection options
         system_options = {}
@@ -181,10 +177,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual_entry(
-        self, user_input: dict | None = None
-    ) -> Any:
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle manual entry of customer_id and system_id if API lookup fails."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             customer_id = user_input.get(CONF_CUSTOMER_ID)
@@ -264,8 +260,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except OasiraAPIError as err:
             _LOGGER.error("Firebase auth error: %s", err)
             return None
-        except Exception as err:
-            _LOGGER.exception("Error calling Firebase auth API: %s", err)
+        except Exception:
+            _LOGGER.exception("Error calling Firebase auth API")
             return None
 
     async def _fetch_system_list(self, email: str) -> list[dict[str, Any]]:
@@ -288,20 +284,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 systems = await client.get_system_list_by_email(email)
                 _LOGGER.info("Found %d system(s) for email %s", len(systems), email)
                 return systems
-        except OasiraAPIError as err:
-            _LOGGER.exception("Failed to fetch system list: %s", err)
+        except OasiraAPIError:
+            _LOGGER.exception("Failed to fetch system list")
             raise
         except Exception as err:
-            _LOGGER.exception("Unexpected error fetching system list: %s", err)
+            _LOGGER.exception("Unexpected error fetching system list")
             raise OasiraAPIError(f"Unexpected error: {err}") from err
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth - re-enter credentials."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(entry_data)
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -309,11 +307,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for EffortlessHome."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

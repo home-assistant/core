@@ -1,32 +1,32 @@
 """Base auto-entity class."""
 
-from functools import cached_property
+import logging
 from typing import Generic, TypeVar
+
+from propcache.api import cached_property
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.sensor.const import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import StateType
 
 from .auto_area import AutoArea
 from .calculations import get_calculation
+from .const import DOMAIN, NAME
 
 _TEntity = TypeVar("_TEntity", bound=Entity)
 _TDeviceClass = TypeVar(
     "_TDeviceClass", BinarySensorDeviceClass, SensorDeviceClass, CoverDeviceClass
 )
 
-import logging
-
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class AutoEntity(Entity, Generic[_TEntity, _TDeviceClass]):
+class AutoEntity(Entity, Generic[_TEntity, _TDeviceClass]):  # pylint: disable=hass-enforce-class-module
     """Set up an Auto Area entity."""
 
     def __init__(
@@ -62,8 +62,11 @@ class AutoEntity(Entity, Generic[_TEntity, _TDeviceClass]):
         return [
             entity.entity_id
             for entity in self.auto_area.get_valid_entities()
-            if entity.device_class == self.device_class
-            or entity.original_device_class == self.device_class
+            if self.device_class
+            in (
+                entity.device_class,
+                entity.original_device_class,
+            )
         ]
 
     @cached_property

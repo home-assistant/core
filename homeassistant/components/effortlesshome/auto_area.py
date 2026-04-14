@@ -5,29 +5,14 @@ from __future__ import annotations
 import logging
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.area_registry import (
-    AreaEntry,
-    async_get as async_get_area_registry,
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
 )
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    async_get as async_get_device_registry,
-)
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_get as async_get_entity_registry,
-)
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import slugify
 
-from .const import (
-    DOMAIN,
-    ISSUE_TYPE_INVALID_AREA,
-    NAME,
-    RELEVANT_DOMAINS,
-    VERSION,
-    DOMAIN,
-)
+from .const import DOMAIN, NAME, RELEVANT_DOMAINS
 from .ha_helpers import get_all_entities, is_valid_entity
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -50,12 +35,12 @@ class AutoArea:
         self.hass = hass
         # self.config_entry = entry
 
-        self.area_registry = async_get_area_registry(self.hass)
-        self.device_registry = async_get_device_registry(self.hass)
-        self.entity_registry = async_get_entity_registry(self.hass)
+        self.area_registry = ar.async_get(self.hass)
+        self.device_registry = dr.async_get(self.hass)
+        self.entity_registry = er.async_get(self.hass)
 
         self.area_id = areaid
-        self.area: AreaEntry | None = self.area_registry.async_get_area(
+        self.area: ar.AreaEntry | None = self.area_registry.async_get_area(
             self.area_id or ""
         )
 
@@ -71,9 +56,9 @@ class AutoArea:
         if self.auto_lights:
             self.auto_lights.cleanup()
 
-    def get_valid_entities(self) -> list[RegistryEntry]:
+    def get_valid_entities(self) -> list[er.RegistryEntry]:
         """Return all valid and relevant entities for this area."""
-        entities = [
+        return [
             entity
             for entity in get_all_entities(
                 self.entity_registry,
@@ -83,7 +68,6 @@ class AutoArea:
             )
             if is_valid_entity(self.hass, entity)
         ]
-        return entities
 
     def get_area_entity_ids(self, device_classes: list[str]) -> list[str]:
         """Return all entity ids in a list of device classes."""
@@ -95,7 +79,7 @@ class AutoArea:
         ]
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> dr.DeviceInfo:
         """Information about this device."""
         return {
             "identifiers": {(DOMAIN, NAME)},

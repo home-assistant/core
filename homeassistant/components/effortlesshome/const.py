@@ -8,3 +8,20 @@ LABELS = [
     "Favorite",
     "NotForSecurityMonitoring",
 ]
+
+RELEVANT_DOMAINS = (
+    "binary_sensor",
+    "camera",
+    "climate",
+    "cover",
+    "fan",
+    "humidifier",
+    "light",
+    "lock",
+    "media_player",
+    "remote",
+    "sensor",
+    "switch",
+    "vacuum",
+    "water_heater",
+)
