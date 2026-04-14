@@ -127,18 +127,18 @@ async def async_setup_entry(
         """Return initial TV autoplay state, or None if not supported."""
         try:
             result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
-            return bool(result.get("RoomUUID"))
         except SoCoUPnPException:
             return None
+        return bool(result.get("RoomUUID"))
 
     def _get_tv_ungroup_autoplay_state(speaker: SonosSpeaker) -> bool | None:
         """Return initial TV ungroup-on-autoplay state, or None if not supported."""
         try:
             result = speaker.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
-            # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
-            return result.get("IncludeLinkedZones") == "0"
         except SoCoUPnPException:
             return None
+        # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
+        return result.get("IncludeLinkedZones") == "0"
 
     async def _async_create_switches(speaker: SonosSpeaker) -> None:
         entities: list[SonosPollingEntity] = []
