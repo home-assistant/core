@@ -14,10 +14,15 @@ from homeassistant.const import (
     SERVICE_RELOAD,  # noqa: F401
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.group import (
     expand_entity_ids as _expand_entity_ids,
+)
+from homeassistant.helpers.group import (
     get_entity_ids as _get_entity_ids,
+)
+from homeassistant.helpers.group import (
     get_group_entities,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -40,6 +45,7 @@ from .const import (  # noqa: F401
     ATTR_ORDER,
     ATTR_REMOVE_ENTITIES,
     CONF_ALL,
+    CONF_GROUP_TYPE,
     CONF_HIDE_MEMBERS,
     CONF_IGNORE_NON_NUMERIC,
     DATA_COMPONENT,
