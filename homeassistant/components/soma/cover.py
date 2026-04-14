@@ -11,28 +11,27 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API, DEVICES, DOMAIN
+from . import SomaConfigEntry
 from .entity import SomaEntity
 from .utils import is_api_response_success
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SomaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Soma cover platform."""
 
-    api = hass.data[DOMAIN][API]
-    devices = hass.data[DOMAIN][DEVICES]
+    data = config_entry.runtime_data
+    api = data.api
     entities: list[SomaTilt | SomaShade] = []
 
-    for device in devices:
+    for device in data.devices:
         # Assume a shade device if the type is not present in the api response (Connect <2.2.6)
         if "type" in device and device["type"].lower() == "tilt":
             entities.append(SomaTilt(device, api))

@@ -1,0 +1,143 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'auth_type': 'api_token',
+        'name': 'Test Plant',
+        'plant_id': '**REDACTED**',
+        'token': '**REDACTED**',
+        'url': 'other_regions',
+        'user_id': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'growatt_server',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'devices': list([
+      dict({
+        'data': dict({
+          'acChargeEnable': 1,
+          'chargePowerCommand': 50,
+          'deviceSn': '**REDACTED**',
+          'disChargePowerCommand': 80,
+          'eBatChargeToday': 6.3,
+          'eBatChargeTotal': 150.2,
+          'eBatDischargeToday': 7.8,
+          'eBatDischargeTotal': 180.5,
+          'eChargeToday': 5.2,
+          'eChargeTotal': 125.8,
+          'eDischargeToday': 8.1,
+          'eDischargeTotal': 245.6,
+          'eSelfToday': 12.5,
+          'eSelfTotal': 320.4,
+          'forcedStopSwitch1': 1,
+          'forcedStopSwitch2': 0,
+          'forcedStopSwitch3': 0,
+          'forcedStopSwitch4': 0,
+          'forcedStopSwitch5': 0,
+          'forcedStopSwitch6': 0,
+          'forcedStopSwitch7': 0,
+          'forcedStopSwitch8': 0,
+          'forcedStopSwitch9': 0,
+          'forcedTimeStart1': '06:00',
+          'forcedTimeStart2': '22:00',
+          'forcedTimeStart3': '00:00',
+          'forcedTimeStart4': '00:00',
+          'forcedTimeStart5': '00:00',
+          'forcedTimeStart6': '00:00',
+          'forcedTimeStart7': '00:00',
+          'forcedTimeStart8': '00:00',
+          'forcedTimeStart9': '00:00',
+          'forcedTimeStop1': '08:00',
+          'forcedTimeStop2': '24:00',
+          'forcedTimeStop3': '00:00',
+          'forcedTimeStop4': '00:00',
+          'forcedTimeStop5': '00:00',
+          'forcedTimeStop6': '00:00',
+          'forcedTimeStop7': '00:00',
+          'forcedTimeStop8': '00:00',
+          'forcedTimeStop9': '00:00',
+          'onGridDischargeStopSOC': 15,
+          'time1Mode': 1,
+          'time2Mode': 0,
+          'time3Mode': 1,
+          'time4Mode': 1,
+          'time5Mode': 1,
+          'time6Mode': 1,
+          'time7Mode': 1,
+          'time8Mode': 1,
+          'time9Mode': 1,
+          'wchargeSOCLowLimit': 10,
+          'wdisChargeSOCLowLimit': 20,
+        }),
+        'device_sn': '**REDACTED**',
+        'device_type': 'min',
+      }),
+    ]),
+    'total_coordinator': dict({
+      'current_power': 2500,
+      'invTodayPpv': 2500,
+      'todayEnergy': 12.5,
+      'today_energy': 12.5,
+      'totalEnergy': 1250.0,
+      'total_energy': 1250.0,
+    }),
+  })
+# ---
+# name: test_diagnostics_classic_api
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'auth_type': 'password',
+        'name': 'Test Plant',
+        'password': '**REDACTED**',
+        'plant_id': '**REDACTED**',
+        'url': 'other_regions',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'growatt_server',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'devices': list([
+      dict({
+        'data': dict({
+          'deviceSn': '**REDACTED**',
+          'status': 1,
+        }),
+        'device_sn': '**REDACTED**',
+        'device_type': 'inverter',
+      }),
+    ]),
+    'total_coordinator': dict({
+      'invTodayPpv': 2500,
+      'todayEnergy': 12.5,
+      'totalEnergy': 1250.0,
+    }),
+  })
+# ---

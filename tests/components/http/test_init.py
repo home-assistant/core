@@ -6,6 +6,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
+import os
 from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
@@ -14,6 +15,7 @@ import pytest
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
 from homeassistant.components.cloud import CloudNotAvailable
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
@@ -735,3 +737,74 @@ async def test_server_host(
     )
 
     assert set(issue_registry.issues) == expected_issues
+
+
+async def test_unix_socket_started_with_supervisor(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test unix socket is started when running under Supervisor."""
+    await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=["system-admin"]
+    )
+    socket_path = tmp_path / "core.sock"
+    loop = asyncio.get_running_loop()
+    mock_sock = Mock()
+    with (
+        patch.dict(
+            os.environ, {"SUPERVISOR_CORE_API_SOCKET": str(socket_path)}, clear=False
+        ),
+        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
+        patch(
+            "homeassistant.components.http.web_runner.HomeAssistantUnixSite"
+            "._create_unix_socket",
+            return_value=mock_sock,
+        ) as mock_create_sock,
+        patch.object(
+            loop, "create_unix_server", return_value=Mock()
+        ) as mock_create_unix,
+    ):
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    mock_create_sock.assert_called_once()
+    mock_create_unix.assert_called_once_with(ANY, sock=mock_sock, backlog=128)
+    assert hass.http.supervisor_site is not None
+
+
+async def test_unix_socket_not_started_without_supervisor(
+    hass: HomeAssistant,
+) -> None:
+    """Test unix socket is not started when not running under Supervisor."""
+    with (
+        patch.dict(os.environ, {}, clear=False),
+        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
+    ):
+        os.environ.pop("SUPERVISOR_CORE_API_SOCKET", None)
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.http.supervisor_site is None
+
+
+async def test_unix_socket_rejected_relative_path(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unix socket is rejected when path is relative."""
+    with (
+        patch.dict(
+            os.environ,
+            {"SUPERVISOR_CORE_API_SOCKET": "relative/path.sock"},
+            clear=False,
+        ),
+        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
+    ):
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.http.supervisor_site is None
+    assert "path must be absolute" in caplog.text

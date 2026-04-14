@@ -462,7 +462,9 @@ async def test_ws_hass_agent_debug_out_of_range(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test homeassistant agent debug websocket command with an out of range entity."""
-    test_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    test_light = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="test light"
+    )
     hass.states.async_set(
         test_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "test light"}
     )

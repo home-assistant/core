@@ -1,10 +1,9 @@
 """Tests for the Overseerr event platform."""
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from future.backports.datetime import timedelta
 import pytest
 from python_overseerr import OverseerrConnectionError
 from syrupy.assertion import SnapshotAssertion

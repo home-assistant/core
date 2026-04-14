@@ -151,7 +151,9 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         return value
 
-    def get_options_map(self, command: str) -> dict[str, str]:
+    def get_options_map(
+        self, command: str, *, snake_case: bool = False
+    ) -> dict[str, str]:
         """Get the available options for a command."""
         capabilities = self.capabilities.get(command, {})
 
@@ -162,7 +164,10 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         values = list(capabilities.get("parameter", {}).get("read", {}).values())
 
-        return {v: v.translate(TRANSLATIONS) for v in values}
+        options = {v: v.translate(TRANSLATIONS) for v in values}
+        if snake_case:
+            return {k: v.replace("-", "_") for k, v in options.items()}
+        return options
 
     def supports(self, command: type[Command]) -> bool:
         """Check if the device supports a command."""

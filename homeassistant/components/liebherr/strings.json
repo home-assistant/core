@@ -33,6 +33,11 @@
     }
   },
   "entity": {
+    "light": {
+      "presentation_light": {
+        "name": "Presentation light"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "name": "Setpoint"

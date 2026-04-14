@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.model0_comfort_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -61,8 +62,9 @@
 # ---
 # name: test_all_entities[number.model0_comfort_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -121,8 +123,9 @@
 # ---
 # name: test_all_entities[number.model0_dhw_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -181,8 +184,9 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_shift-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 40,
@@ -241,8 +245,9 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_shift_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 40,
@@ -301,8 +306,9 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_slope-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.5,
@@ -359,8 +365,9 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_slope_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.5,
@@ -417,8 +424,9 @@
 # ---
 # name: test_all_entities[number.model0_normal_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -477,8 +485,9 @@
 # ---
 # name: test_all_entities[number.model0_normal_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -537,8 +546,9 @@
 # ---
 # name: test_all_entities[number.model0_reduced_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -597,8 +607,9 @@
 # ---
 # name: test_all_entities[number.model0_reduced_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,

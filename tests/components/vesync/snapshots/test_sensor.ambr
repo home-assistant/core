@@ -35,8 +35,9 @@
 # name: test_sensor_state[Air Purifier 131s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -69,8 +70,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -170,8 +172,9 @@
 # name: test_sensor_state[Air Purifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -258,8 +261,9 @@
 # name: test_sensor_state[Air Purifier 400s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -292,8 +296,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -328,8 +333,9 @@
       'unit_of_measurement': 'μg/m³',
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -445,8 +451,9 @@
 # name: test_sensor_state[Air Purifier 600s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -479,8 +486,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -515,8 +523,9 @@
       'unit_of_measurement': 'μg/m³',
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -632,8 +641,9 @@
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -671,8 +681,9 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -710,8 +721,9 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -747,8 +759,9 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -784,8 +797,9 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'options': list([
@@ -952,8 +966,9 @@
 # name: test_sensor_state[CS158-AF Air Fryer Standby][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -988,8 +1003,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1024,8 +1040,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1061,8 +1078,9 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -1098,8 +1116,9 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'options': list([
@@ -1338,8 +1357,9 @@
 # name: test_sensor_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1427,8 +1447,9 @@
 # name: test_sensor_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1463,8 +1484,9 @@
       'unit_of_measurement': '%',
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1502,8 +1524,9 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1622,8 +1645,9 @@
 # name: test_sensor_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1711,8 +1735,9 @@
 # name: test_sensor_state[Outlet][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1750,8 +1775,9 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1789,8 +1815,9 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1828,8 +1855,9 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1867,8 +1895,9 @@
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1906,8 +1935,9 @@
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

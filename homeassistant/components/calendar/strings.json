@@ -1,4 +1,18 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if"
+  },
+  "conditions": {
+    "is_event_active": {
+      "description": "Tests if one or more calendars have an active event.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::calendar::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Calendar event is active"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::calendar::title%]",
@@ -46,6 +60,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_offset_type": {
       "options": {
         "after": "After",
@@ -90,7 +110,7 @@
           "name": "Summary"
         }
       },
-      "name": "Create event"
+      "name": "Create calendar event"
     },
     "get_events": {
       "description": "Retrieves events on a calendar within a time range.",
@@ -108,7 +128,7 @@
           "name": "Start time"
         }
       },
-      "name": "Get events"
+      "name": "Get calendar events"
     }
   },
   "title": "Calendar",

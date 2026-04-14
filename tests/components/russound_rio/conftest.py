@@ -3,8 +3,9 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiorussound import Controller, RussoundTcpConnectionHandler, Source
-from aiorussound.rio import ZoneControlSurface
+from aiorussound import RussoundTcpConnectionHandler
+from aiorussound.rio import Source
+from aiorussound.rio.client import Controller, ZoneControlSurface
 from aiorussound.util import controller_device_str, zone_device_str
 import pytest
 
@@ -39,10 +40,10 @@ def mock_russound_client() -> Generator[AsyncMock]:
     """Mock the Russound RIO client."""
     with (
         patch(
-            "homeassistant.components.russound_rio.RussoundClient", autospec=True
+            "homeassistant.components.russound_rio.RussoundRIOClient", autospec=True
         ) as mock_client,
         patch(
-            "homeassistant.components.russound_rio.config_flow.RussoundClient",
+            "homeassistant.components.russound_rio.config_flow.RussoundRIOClient",
             new=mock_client,
         ),
     ):
@@ -85,6 +86,7 @@ def mock_russound_client() -> Generator[AsyncMock]:
                 zone.set_turn_on_volume = AsyncMock()
                 zone.set_loudness = AsyncMock()
                 zone.restore_preset = AsyncMock()
+                zone.set_party_mode = AsyncMock()
 
         client.controllers = {
             1: Controller(

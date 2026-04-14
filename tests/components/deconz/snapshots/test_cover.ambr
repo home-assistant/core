@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover[light_payload0][cover.window_covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_level_controllable_output_cover[light_payload0][cover.vent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -108,8 +110,9 @@
 # ---
 # name: test_tilt_cover[light_payload0][cover.covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

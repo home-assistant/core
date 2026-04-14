@@ -12,7 +12,7 @@ from prana_local_api_client.exceptions import (
 )
 from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
 from prana_local_api_client.models.prana_state import PranaState
-from prana_local_api_client.prana_api_client import PranaLocalApiClient
+from prana_local_api_client.prana_local_api_client import PranaLocalApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST

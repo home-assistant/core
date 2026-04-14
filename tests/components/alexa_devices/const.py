@@ -70,6 +70,7 @@ TEST_DEVICE_1 = AmazonDevice(
             next_occurrence=None,
         ),
     },
+    media_player_supported=True,
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
@@ -102,4 +103,5 @@ TEST_DEVICE_2 = AmazonDevice(
     },
     notifications_supported=False,
     notifications={},
+    media_player_supported=False,
 )

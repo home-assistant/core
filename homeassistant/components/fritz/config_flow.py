@@ -283,6 +283,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
         self._use_tls = user_input[CONF_SSL]
+        self._feature_device_discovery = user_input[CONF_FEATURE_DEVICE_TRACKING]
 
         self._port = self._determine_port(user_input)
 

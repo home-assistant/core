@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pyportainer import DockerContainerState, EndpointStatus, StackStatus
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -15,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
-from .const import ContainerState, EndpointStatus, StackStatus
 from .coordinator import PortainerContainerData
 from .entity import (
     PortainerContainerEntity,
@@ -53,7 +54,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
     PortainerContainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.container.state == ContainerState.RUNNING,
+        state_fn=lambda data: data.container.state == DockerContainerState.RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

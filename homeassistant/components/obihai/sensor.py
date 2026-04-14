@@ -7,24 +7,24 @@ import datetime
 from requests.exceptions import RequestException
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ObihaiConfigEntry
 from .connectivity import ObihaiConnection
-from .const import DOMAIN, LOGGER, OBIHAI
+from .const import LOGGER, OBIHAI
 
 SCAN_INTERVAL = datetime.timedelta(seconds=5)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ObihaiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Obihai sensor entries."""
 
-    requester: ObihaiConnection = hass.data[DOMAIN][entry.entry_id]
+    requester = entry.runtime_data
 
     sensors = [ObihaiServiceSensors(requester, key) for key in requester.services]
 
