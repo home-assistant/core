@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from fluss_api import (
@@ -47,4 +48,20 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 
-        return {device["deviceId"]: device for device in devices.get("devices", [])}
+        device_list: list[dict[str, Any]] = devices.get("devices", [])
+        statuses = await asyncio.gather(
+            *(self.api.async_get_device_status(d["deviceId"]) for d in device_list),
+            return_exceptions=True,
+        )
+
+        result: dict[str, dict[str, Any]] = {}
+        for device, status in zip(device_list, statuses, strict=True):
+            merged = dict(device)
+            if isinstance(status, BaseException):
+                merged["internetConnected"] = False
+            else:
+                merged["internetConnected"] = bool(
+                    status.get("status", {}).get("internetConnected")
+                )
+            result[device["deviceId"]] = merged
+        return result

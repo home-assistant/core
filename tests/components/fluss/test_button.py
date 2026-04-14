@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -48,6 +48,23 @@ async def test_button_press(
     )
 
     mock_api_client.async_trigger_device.assert_called_once_with("2a303030sdj1")
+
+
+async def test_button_unavailable_when_offline(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A device whose status call fails is reported as unavailable."""
+    mock_api_client.async_get_device_status.side_effect = [
+        FlussApiClientError("device offline"),
+        {"status": {"internetConnected": True}},
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("button.device_2").state != STATE_UNAVAILABLE
 
 
 async def test_button_press_error(

@@ -52,4 +52,7 @@ def mock_api_client() -> Generator[AsyncMock]:
                 {"deviceId": "ape93k9302j2", "deviceName": "Device 2"},
             ]
         }
+        client.async_get_device_status.return_value = {
+            "status": {"internetConnected": True}
+        }
         yield client
