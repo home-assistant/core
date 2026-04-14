@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 import aiohttp
 from eveonline import EveOnlineError
 from eveonline.models import WalletBalance
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -48,16 +47,13 @@ async def test_sensor_wallet_updated(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_eveonline_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that wallet balance updates on coordinator refresh."""
-
-    freezer.tick(61)
     mock_eveonline_client.async_get_wallet_balance.return_value = WalletBalance(
         balance=9999999.99
     )
 
-    async_fire_time_changed(hass)
+    await init_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")

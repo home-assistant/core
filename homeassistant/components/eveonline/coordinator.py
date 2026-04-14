@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -66,19 +67,26 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
                 f"Error communicating with Eve Online API: {err}"
             ) from err
 
-        location: CharacterLocation | None = None
-        solar_system_name: str | None = None
-        try:
-            location = await self.client.async_get_character_location(self.character_id)
-        except (EveOnlineError, aiohttp.ClientError) as err:
-            _LOGGER.debug("Failed to fetch location: %s", err)
+        async def _fetch_location() -> CharacterLocation | None:
+            try:
+                return await self.client.async_get_character_location(self.character_id)
+            except (EveOnlineError, aiohttp.ClientError) as err:
+                _LOGGER.debug("Failed to fetch location: %s", err)
+                return None
 
-        ship: CharacterShip | None = None
+        async def _fetch_ship() -> CharacterShip | None:
+            try:
+                return await self.client.async_get_character_ship(self.character_id)
+            except (EveOnlineError, aiohttp.ClientError) as err:
+                _LOGGER.debug("Failed to fetch ship: %s", err)
+                return None
+
+        location: CharacterLocation | None
+        ship: CharacterShip | None
+        location, ship = await asyncio.gather(_fetch_location(), _fetch_ship())
+
+        solar_system_name: str | None = None
         ship_type_name: str | None = None
-        try:
-            ship = await self.client.async_get_character_ship(self.character_id)
-        except (EveOnlineError, aiohttp.ClientError) as err:
-            _LOGGER.debug("Failed to fetch ship: %s", err)
 
         ids_to_resolve = []
         if location:

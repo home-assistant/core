@@ -249,3 +249,77 @@ async def test_flow_aborts_on_bad_jwt(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_flow_succeeds_after_oauth_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a new flow can succeed after a previous one failed with a bad token."""
+    await _setup_credentials(hass)
+
+    # First flow — bad JWT causes oauth_error abort.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "not-a-jwt",
+            "token_type": "Bearer",
+            "expires_in": 1200,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+    # Second flow — valid JWT, should succeed.
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state2 = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result2["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    aioclient_mock.clear_requests()
+    fake_jwt = _make_jwt(CHARACTER_ID, CHARACTER_NAME)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token-2",
+            "access_token": fake_jwt,
+            "token_type": "Bearer",
+            "expires_in": 1200,
+        },
+    )
+
+    await client.get(f"/auth/external/callback?code=abcd&state={state2}")
+
+    with patch(
+        "homeassistant.components.eveonline.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
