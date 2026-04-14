@@ -2326,6 +2326,66 @@ async def test_on_create_entry_with_options_flow(
 @pytest.mark.parametrize(
     ("invalid_next_flow", "error"),
     [
+        ((config_entries.FlowType.OPTIONS_FLOW, "invalid_flow_id"), HomeAssistantError),
+        (
+            (config_entries.FlowType.CONFIG_SUBENTRIES_FLOW, "invalid_flow_id"),
+            HomeAssistantError,
+        ),
+    ],
+)
+async def test_next_flow_with_unsupported_flow_type(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    invalid_next_flow: tuple[str, str],
+    error: type[Exception],
+) -> None:
+    """Test use async_on_create_entry with creating an options flow."""
+
+    async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        """Mock setup."""
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=mock_async_setup,
+            async_setup_entry=async_setup_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> config_entries.ConfigFlowResult:
+            """Test next step."""
+            if user_input is None:
+                return self.async_show_form(step_id="user")
+            return self.async_create_entry(
+                title="user_flow", data={"flow": "user"}, next_flow=invalid_next_flow
+            )
+
+    with mock_config_flow("comp", TestFlow):
+        assert await async_setup_component(hass, "comp", {})
+
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+        with pytest.raises(
+            error,
+            match="next_flow only supports FlowType.CONFIG_FLOW; use async_on_create_entry for options or subentry flows",
+        ):
+            await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+
+@pytest.mark.parametrize(
+    ("invalid_next_flow", "error"),
+    [
         (("invalid_flow_type", "invalid_flow_id"), HomeAssistantError),
         ((config_entries.FlowType.CONFIG_FLOW, "invalid_flow_id"), UnknownFlow),
         ((config_entries.FlowType.OPTIONS_FLOW, "invalid_flow_id"), UnknownFlow),
