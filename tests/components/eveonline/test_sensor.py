@@ -65,7 +65,7 @@ async def test_sensor_wallet_updated(
     assert float(state.state) == 9999999.99
 
 
-async def test_sensor_location_unavailable_when_endpoint_fails(
+async def test_sensor_location_shows_unknown_when_endpoint_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_eveonline_client: AsyncMock,
@@ -84,7 +84,7 @@ async def test_sensor_location_unavailable_when_endpoint_fails(
     assert state.state == "unknown"
 
 
-async def test_sensor_ship_unavailable_when_endpoint_fails(
+async def test_sensor_ship_shows_unknown_when_endpoint_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_eveonline_client: AsyncMock,
