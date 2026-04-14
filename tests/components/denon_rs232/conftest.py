@@ -75,6 +75,7 @@ class MockReceiver(DenonReceiver):
     async def _mock_disconnect(self) -> None:
         """Pretend to close the serial connection."""
         self._connected = False
+        self._notify_subscribers()
 
     def _load_state(self, state: MockState) -> None:
         """Swap in a new state object and rebind the live players to it."""
