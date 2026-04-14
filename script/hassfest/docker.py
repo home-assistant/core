@@ -41,13 +41,11 @@ WORKDIR /usr/src
 
 # Add go2rtc binary
 COPY --from=ghcr.io/alexxit/go2rtc@sha256:{go2rtc} /usr/local/bin/go2rtc /bin/go2rtc
-# Add uv binary
-COPY --from=ghcr.io/astral-sh/uv:{uv} /uv /bin/uv
 
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-RUN \
+RUN --mount=from=ghcr.io/astral-sh/uv:{uv},source=/uv,target=/bin/uv \
     # Verify go2rtc can be executed
     go2rtc --version \
     && uv pip install \
