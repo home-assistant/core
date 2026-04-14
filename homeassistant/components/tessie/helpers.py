@@ -30,6 +30,11 @@ async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     """Handle an awaitable Vehicle/EnergySite command."""
     try:
         result = await command
+    except ClientError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from e
     except TeslaFleetError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

@@ -12,6 +12,8 @@
     'config_store': dict({
       'entities': dict({
       }),
+      'expose': dict({
+      }),
       'time_server': dict({
       }),
     }),
@@ -44,6 +46,8 @@
     'config_store': dict({
       'entities': dict({
       }),
+      'expose': dict({
+      }),
       'time_server': dict({
       }),
     }),
@@ -68,6 +72,8 @@
     }),
     'config_store': dict({
       'entities': dict({
+      }),
+      'expose': dict({
       }),
       'time_server': dict({
       }),
@@ -133,6 +139,8 @@
             }),
           }),
         }),
+      }),
+      'expose': dict({
       }),
       'time_server': dict({
       }),
