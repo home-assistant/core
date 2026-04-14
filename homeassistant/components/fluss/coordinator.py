@@ -84,8 +84,15 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                 continue
             if isinstance(status, BaseException):
                 raise status
+
+            internet_connected = False
+            if isinstance(status, dict):
+                status_data = status.get("status")
+                if isinstance(status_data, dict):
+                    internet_connected = bool(status_data.get("internetConnected"))
+
             result[device["deviceId"]] = {
                 **device,
-                "internetConnected": bool(status["status"]["internetConnected"]),
+                "internetConnected": internet_connected,
             }
         return result
