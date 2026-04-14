@@ -10,4 +10,5 @@ DOMAIN = "unifi_discovery"
 CONSUMER_MAPPING: dict[UnifiService, str] = {
     UnifiService.Protect: "unifiprotect",
     UnifiService.Network: "unifi",
+    UnifiService.Access: "unifi_access",
 }
