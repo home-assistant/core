@@ -55,8 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_reg.async_update_entity_platform(
             old_entity, GROUP_DOMAIN, new_config_entry_id=new_config_entry.entry_id
         )
-
-    await hass.config_entries.async_add(new_config_entry)
+        # If entity is not existing, it has already been migrated
+        # and we should not create it again
+        await hass.config_entries.async_add(new_config_entry)
 
     async def remove_old_entry(now: datetime) -> None:
         """Remove the old config entry after migration."""
