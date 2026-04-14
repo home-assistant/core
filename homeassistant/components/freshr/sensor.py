@@ -21,12 +21,10 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import FreshrConfigEntry, FreshrReadingsCoordinator
+from .entity import FreshrEntity
 
 PARALLEL_UPDATES = 0
 
@@ -93,12 +91,6 @@ _TEMP = FreshrSensorEntityDescription(
     value_fn=lambda r: r.temp,
 )
 
-_DEVICE_TYPE_NAMES: dict[DeviceType, str] = {
-    DeviceType.FRESH_R: "Fresh-r",
-    DeviceType.FORWARD: "Fresh-r Forward",
-    DeviceType.MONITOR: "Fresh-r Monitor",
-}
-
 SENSOR_TYPES: dict[DeviceType, tuple[FreshrSensorEntityDescription, ...]] = {
     DeviceType.FRESH_R: (_T1, _T2, _CO2, _HUM, _FLOW, _DP),
     DeviceType.FORWARD: (_T1, _T2, _CO2, _HUM, _FLOW, _DP, _TEMP),
@@ -131,17 +123,10 @@ async def async_setup_entry(
             descriptions = SENSOR_TYPES.get(
                 device.device_type, SENSOR_TYPES[DeviceType.FRESH_R]
             )
-            device_info = DeviceInfo(
-                identifiers={(DOMAIN, device_id)},
-                name=_DEVICE_TYPE_NAMES.get(device.device_type, "Fresh-r"),
-                serial_number=device_id,
-                manufacturer="Fresh-r",
-            )
             entities.extend(
                 FreshrSensor(
                     config_entry.runtime_data.readings[device_id],
                     description,
-                    device_info,
                 )
                 for description in descriptions
             )
@@ -151,22 +136,19 @@ async def async_setup_entry(
     config_entry.async_on_unload(coordinator.async_add_listener(_check_devices))
 
 
-class FreshrSensor(CoordinatorEntity[FreshrReadingsCoordinator], SensorEntity):
+class FreshrSensor(FreshrEntity, SensorEntity):
     """Representation of a Fresh-r sensor."""
 
-    _attr_has_entity_name = True
     entity_description: FreshrSensorEntityDescription
 
     def __init__(
         self,
         coordinator: FreshrReadingsCoordinator,
         description: FreshrSensorEntityDescription,
-        device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_device_info = device_info
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
