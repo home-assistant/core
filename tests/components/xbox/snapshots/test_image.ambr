@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_image_platform[image.erics273_avatar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -52,8 +53,9 @@
 # ---
 # name: test_image_platform[image.erics273_gamerpic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -103,8 +105,9 @@
 # ---
 # name: test_image_platform[image.erics273_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -154,8 +157,9 @@
 # ---
 # name: test_image_platform[image.gsr_ae_avatar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -205,8 +209,9 @@
 # ---
 # name: test_image_platform[image.gsr_ae_gamerpic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -256,8 +261,9 @@
 # ---
 # name: test_image_platform[image.gsr_ae_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -307,8 +313,9 @@
 # ---
 # name: test_image_platform[image.ikken_hissatsuu_avatar-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -358,8 +365,9 @@
 # ---
 # name: test_image_platform[image.ikken_hissatsuu_gamerpic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -409,8 +417,9 @@
 # ---
 # name: test_image_platform[image.ikken_hissatsuu_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

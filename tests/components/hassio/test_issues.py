@@ -72,7 +72,7 @@ def mock_resolution_info(
         if suggestions_by_issue
         else [],
         checks=[
-            Check(enabled=True, slug=CheckType.SUPERVISOR_TRUST),
+            Check(enabled=True, slug=CheckType.DOCKER_CONFIG),
             Check(enabled=True, slug=CheckType.FREE_SPACE),
         ],
     )
@@ -197,7 +197,7 @@ async def test_unsupported_issues(
     """Test issues added for unsupported systems."""
     mock_resolution_info(
         supervisor_client,
-        unsupported=[UnsupportedReason.CONTENT_TRUST, UnsupportedReason.OS],
+        unsupported=[UnsupportedReason.CONNECTIVITY_CHECK, UnsupportedReason.OS],
     )
 
     result = await async_setup_component(hass, "hassio", {})
@@ -210,7 +210,7 @@ async def test_unsupported_issues(
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 2
     assert_repair_in_list(
-        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+        msg["result"]["issues"], unhealthy=False, reason="connectivity_check"
     )
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
 
@@ -502,7 +502,7 @@ async def test_reasons_added_and_removed(
 
     mock_resolution_info(
         supervisor_client,
-        unsupported=[UnsupportedReason.CONTENT_TRUST],
+        unsupported=[UnsupportedReason.CONNECTIVITY_CHECK],
         unhealthy=[UnhealthyReason.SETUP],
     )
     await client.send_json(
@@ -526,7 +526,7 @@ async def test_reasons_added_and_removed(
     assert len(msg["result"]["issues"]) == 2
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
     assert_repair_in_list(
-        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+        msg["result"]["issues"], unhealthy=False, reason="connectivity_check"
     )
 
 
@@ -950,6 +950,61 @@ async def test_supervisor_issues_detached_addon_missing(
 
 
 @pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_ntp_sync_failed(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for NTP sync failed."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "ntp_sync_failed",
+                    "context": "system",
+                    "reference": None,
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "enable_ntp",
+                            "context": "system",
+                            "reference": None,
+                        }
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="system",
+        type_="ntp_sync_failed",
+        fixable=True,
+        placeholders=None,
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_disk_lifetime(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
@@ -1047,13 +1102,16 @@ async def test_supervisor_issues_free_space(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_free_space_host_info_fail(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
+    host_info: AsyncMock,
 ) -> None:
     """Test supervisor issue for too little free space remaining without host info."""
     mock_resolution_info(supervisor_client)
+    host_info.side_effect = SupervisorError()
 
     result = await async_setup_component(hass, "hassio", {})
     assert result

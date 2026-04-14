@@ -79,6 +79,7 @@ def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
         "homeassistant.helpers.service._handle_entity_call",
+        new_callable=AsyncMock,
         return_value=None,
     ) as mock_call:
         yield mock_call
@@ -1683,6 +1684,40 @@ async def test_call_with_sync_attr(hass: HomeAssistant, mock_entities) -> None:
     assert mock_method.mock_calls[0][2] == {}
 
 
+async def test_call_single_entity_uses_parallel_updates(
+    hass: HomeAssistant, mock_handle_entity_call, mock_entities
+) -> None:
+    """Check that single entity calls go through async_request_call."""
+    entity = mock_entities["light.kitchen"]
+    entity.parallel_updates = asyncio.Semaphore(1)
+
+    # Hold the semaphore so the service would block if it respects it
+    await entity.parallel_updates.acquire()
+
+    service_call = service.entity_service_call(
+        hass,
+        mock_entities,
+        Mock(),
+        ServiceCall(
+            hass,
+            "test_domain",
+            "test_service",
+            {"entity_id": "light.kitchen"},
+        ),
+    )
+    task = hass.async_create_task(service_call)
+
+    # Give the event loop a chance to progress; the call should be blocked
+    await asyncio.sleep(0)
+    assert mock_handle_entity_call.await_count == 0
+
+    # Release the semaphore so the call can proceed
+    entity.parallel_updates.release()
+    await task
+
+    assert mock_handle_entity_call.await_count == 1
+
+
 async def test_call_context_user_not_exist(hass: HomeAssistant) -> None:
     """Check we don't allow deleted users to do things."""
     with pytest.raises(exceptions.UnknownUser) as err:
@@ -2408,6 +2443,28 @@ async def test_entity_service_call_warn_referenced(
         "Referenced floors non-existent-floor, areas non-existent-area, "
         "devices non-existent-device, entities non.existent, "
         "labels non-existent-label are missing or not currently available"
+    ) in caplog.text
+
+
+async def test_entity_service_call_warn_unavailable(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that explicitly referenced unavailable entities are logged."""
+    mock_entities["light.kitchen"] = MockEntity(
+        entity_id="light.kitchen", available=False
+    )
+
+    call = ServiceCall(
+        hass,
+        "test_domain",
+        "test_service",
+        {"entity_id": ["light.kitchen"]},
+    )
+    await service.entity_service_call(hass, mock_entities, "", call)
+    assert (
+        "Referenced entities light.kitchen are missing or not currently available"
     ) in caplog.text
 
 

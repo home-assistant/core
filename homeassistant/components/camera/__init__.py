@@ -432,6 +432,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     # Entity Properties
+    entity_description: CameraEntityDescription
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
     _attr_is_on: bool = True
@@ -759,12 +760,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return CameraCapabilities(frontend_stream_types)
 
     @callback
-    def async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
         Schedules async_refresh_providers if support of streams have changed.
         """
-        super().async_write_ha_state()
+        super()._async_write_ha_state()
         if self.__supports_stream != (
             supports_stream := self.supported_features & CameraEntityFeature.STREAM
         ):

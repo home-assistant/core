@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -22,13 +23,24 @@ FW_SCAN_INTERVAL = timedelta(hours=12)
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class QnapQswData:
+    """Data for the QNAP QSW integration."""
+
+    data_coordinator: QswDataCoordinator
+    firmware_coordinator: QswFirmwareCoordinator
+
+
+type QnapQswConfigEntry = ConfigEntry[QnapQswData]
+
+
 class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the QNAP QSW device."""
 
-    config_entry: ConfigEntry
+    config_entry: QnapQswConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, qsw: QnapQswApi
+        self, hass: HomeAssistant, config_entry: QnapQswConfigEntry, qsw: QnapQswApi
     ) -> None:
         """Initialize."""
         self.qsw = qsw
@@ -54,10 +66,10 @@ class QswDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class QswFirmwareCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching firmware data from the QNAP QSW device."""
 
-    config_entry: ConfigEntry
+    config_entry: QnapQswConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, qsw: QnapQswApi
+        self, hass: HomeAssistant, config_entry: QnapQswConfigEntry, qsw: QnapQswApi
     ) -> None:
         """Initialize."""
         self.qsw = qsw

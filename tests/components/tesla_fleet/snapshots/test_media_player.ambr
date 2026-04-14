@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_media_player[media_player.test_media_player-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -41,6 +42,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Test Media player',
+      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'media_album_name': 'Elon Musk',
       'media_artist': 'Walter Isaacson',
       'media_duration': 651.0,
@@ -64,6 +66,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Test Media player',
+      'last_non_buffering_state': <MediaPlayerState.IDLE: 'idle'>,
       'media_album_name': '',
       'media_artist': '',
       'media_playlist': '',
@@ -82,8 +85,9 @@
 # ---
 # name: test_media_player_noscope[media_player.test_media_player-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -122,6 +126,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Test Media player',
+      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'media_album_name': 'Elon Musk',
       'media_artist': 'Walter Isaacson',
       'media_duration': 651.0,
