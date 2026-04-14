@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch[switch.energy_site_allow_charging_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_switch[switch.energy_site_storm_watch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_switch[switch.test_auto_seat_climate_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -151,8 +154,9 @@
 # ---
 # name: test_switch[switch.test_auto_seat_climate_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -201,8 +205,9 @@
 # ---
 # name: test_switch[switch.test_auto_steering_wheel_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -251,8 +256,9 @@
 # ---
 # name: test_switch[switch.test_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -301,8 +307,9 @@
 # ---
 # name: test_switch[switch.test_defrost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -351,8 +358,9 @@
 # ---
 # name: test_switch[switch.test_sentry_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

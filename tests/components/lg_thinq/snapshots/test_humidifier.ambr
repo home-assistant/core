@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_humidifier_entities[dehumidifier][humidifier.test_dehumidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'available_modes': list([

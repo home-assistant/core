@@ -5,6 +5,7 @@ from __future__ import annotations
 DOMAIN = "waze_travel_time"
 SEMAPHORE = "semaphore"
 
+CONF_BASE_COORDINATES = "base_coordinates"
 CONF_DESTINATION = "destination"
 CONF_ORIGIN = "origin"
 CONF_INCL_FILTER = "incl_filter"
@@ -33,7 +34,9 @@ UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
 REGIONS = ["us", "na", "eu", "il", "au"]
 VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
 
-DEFAULT_OPTIONS: dict[str, str | bool | list[str] | dict[str, int]] = {
+DEFAULT_OPTIONS: dict[
+    str, str | bool | list[str] | dict[str, int] | dict[str, float]
+] = {
     CONF_REALTIME: DEFAULT_REALTIME,
     CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
     CONF_UNITS: METRIC_UNITS,

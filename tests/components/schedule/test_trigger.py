@@ -13,31 +13,27 @@ from homeassistant.components.schedule.const import (
     CONF_TO,
     DOMAIN,
 )
-from homeassistant.const import (
-    ATTR_LABEL_ID,
-    CONF_ENTITY_ID,
-    CONF_ICON,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_ICON, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_fire_time_changed
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_behavior_any,
+    assert_trigger_behavior_first,
+    assert_trigger_behavior_last,
+    assert_trigger_gated_by_labs_flag,
     parametrize_target_entities,
     parametrize_trigger_states,
-    set_or_remove_state,
     target_entities,
 )
 
 
 @pytest.fixture
-async def target_schedules(hass: HomeAssistant) -> list[str]:
+async def target_schedules(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple schedule entities associated with different targets."""
-    return (await target_entities(hass, DOMAIN))["included"]
+    return await target_entities(hass, DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -51,13 +47,7 @@ async def test_schedule_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the schedule triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -82,8 +72,7 @@ async def test_schedule_triggers_gated_by_labs_flag(
 )
 async def test_schedule_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_schedules: list[str],
+    target_schedules: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -92,30 +81,16 @@ async def test_schedule_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the schedule state trigger fires when any schedule state changes to a specific state."""
-    other_entity_ids = set(target_schedules) - {entity_id}
-
-    # Set all schedules, including the tested one, to the initial state
-    for eid in target_schedules:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {}, trigger_target_config)
-
-    for state in states[1:]:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        # Check if changing other schedules also triggers
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
+    await assert_trigger_behavior_any(
+        hass,
+        target_entities=target_schedules,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -140,8 +115,7 @@ async def test_schedule_state_trigger_behavior_any(
 )
 async def test_schedule_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_schedules: list[str],
+    target_schedules: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -150,29 +124,16 @@ async def test_schedule_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the schedule state trigger fires when the first schedule changes to a specific state."""
-    other_entity_ids = set(target_schedules) - {entity_id}
-
-    # Set all schedules, including the tested one, to the initial state
-    for eid in target_schedules:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
-
-    for state in states[1:]:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        # Triggering other schedules should not cause the trigger to fire again
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
+    await assert_trigger_behavior_first(
+        hass,
+        target_entities=target_schedules,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -197,8 +158,7 @@ async def test_schedule_state_trigger_behavior_first(
 )
 async def test_schedule_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_schedules: list[str],
+    target_schedules: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -207,38 +167,26 @@ async def test_schedule_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the schedule state trigger fires when the last schedule changes to a specific state."""
-    other_entity_ids = set(target_schedules) - {entity_id}
-
-    # Set all schedules, including the tested one, to the initial state
-    for eid in target_schedules:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
-
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+    await assert_trigger_behavior_last(
+        hass,
+        target_entities=target_schedules,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_schedule_state_trigger_back_to_back(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the schedule state trigger fires when transitioning between two back-to-back schedule blocks."""
+    calls: list[str] = []
     freezer.move_to("2022-08-30 13:20:00-07:00")
     entity_id = "schedule.from_yaml"
 
@@ -263,6 +211,7 @@ async def test_schedule_state_trigger_back_to_back(
         "schedule.turned_on",
         {},
         {"entity_id": [entity_id]},
+        calls,
     )
 
     # initial state
@@ -281,9 +230,9 @@ async def test_schedule_state_trigger_back_to_back(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T22:30:00-07:00"
 
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
-    service_calls.clear()
+    assert len(calls) == 1
+    assert calls[0] == entity_id
+    calls.clear()
 
     # move time into second block (back-to-back)
     freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
@@ -295,9 +244,9 @@ async def test_schedule_state_trigger_back_to_back(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-04T23:00:00-07:00"
 
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id
-    service_calls.clear()
+    assert len(calls) == 1
+    assert calls[0] == entity_id
+    calls.clear()
 
     # move time to after second block to ensure it turns off
     freezer.move_to(state.attributes[ATTR_NEXT_EVENT])
@@ -309,4 +258,4 @@ async def test_schedule_state_trigger_back_to_back(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T22:00:00-07:00"
 
-    assert len(service_calls) == 0
+    assert len(calls) == 0

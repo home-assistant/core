@@ -1,7 +1,7 @@
 {
   "domain": "indevolt",
   "name": "Indevolt",
-  "codeowners": ["@xirtnl"],
+  "codeowners": ["@xirt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/indevolt",
   "integration_type": "device",

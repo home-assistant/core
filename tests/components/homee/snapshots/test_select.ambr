@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select_snapshot[select.test_select_displayed_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -59,8 +60,9 @@
 # ---
 # name: test_select_snapshot[select.test_select_repeater_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

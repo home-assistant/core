@@ -16,6 +16,10 @@ from zwave_js_server.const import (
     ConfigurationValueType,
     LogLevel,
 )
+from zwave_js_server.const.command_class.notification import (
+    CC_SPECIFIC_NOTIFICATION_TYPE,
+    NotificationType,
+)
 from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.log_config import LogConfig
@@ -53,6 +57,8 @@ from .const import (
     DOMAIN,
     LIB_LOGGER,
     LOGGER,
+    NOTIFICATION_ACCESS_CONTROL_PROPERTY,
+    OPENING_STATE_PROPERTY_KEY,
 )
 from .models import ZwaveJSConfigEntry
 
@@ -124,6 +130,39 @@ def get_state_key_from_unique_id(unique_id: str) -> int | None:
 def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     """Return the value of a ZwaveValue."""
     return value.value if value else None
+
+
+def _get_notification_type(value: ZwaveValue) -> int | None:
+    """Return the notification type for a value, if available."""
+    return value.metadata.cc_specific.get(CC_SPECIFIC_NOTIFICATION_TYPE)
+
+
+def is_opening_state_notification_value(value: ZwaveValue) -> bool:
+    """Return if the value is the Access Control Opening state notification."""
+    if (
+        value.command_class != CommandClass.NOTIFICATION
+        or _get_notification_type(value) != NotificationType.ACCESS_CONTROL
+    ):
+        return False
+
+    return (
+        value.property_ == NOTIFICATION_ACCESS_CONTROL_PROPERTY
+        and value.property_key == OPENING_STATE_PROPERTY_KEY
+    )
+
+
+def get_opening_state_notification_value(
+    node: ZwaveNode, endpoint: int | None = None
+) -> ZwaveValue | None:
+    """Return the Access Control Opening state value for a node."""
+    value_id = get_value_id_str(
+        node,
+        CommandClass.NOTIFICATION,
+        NOTIFICATION_ACCESS_CONTROL_PROPERTY,
+        endpoint,
+        OPENING_STATE_PROPERTY_KEY,
+    )
+    return node.values.get(value_id)
 
 
 async def async_enable_statistics(driver: Driver) -> None:

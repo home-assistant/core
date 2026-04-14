@@ -782,6 +782,8 @@ async def entity_service_call(
         all_referenced,
     )
 
+    entity_candidates = [e for e in entity_candidates if e.available]
+
     if not target_all_entities:
         assert referenced is not None
         # Only report on explicit referenced entities
@@ -792,9 +794,6 @@ async def entity_service_call(
 
     entities: list[Entity] = []
     for entity in entity_candidates:
-        if not entity.available:
-            continue
-
         # Skip entities that don't have the required device class.
         if (
             entity_device_classes is not None
@@ -832,8 +831,8 @@ async def entity_service_call(
     if len(entities) == 1:
         # Single entity case avoids creating task
         entity = entities[0]
-        single_response = await _handle_entity_call(
-            hass, entity, func, data, call.context
+        single_response = await entity.async_request_call(
+            _handle_entity_call(hass, entity, func, data, call.context)
         )
         if entity.should_poll:
             # Context expires if the turn on commands took a long time.
