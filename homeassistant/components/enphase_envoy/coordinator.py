@@ -224,13 +224,13 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         retries: int = self.config_entry.options.get(
             OPTION_SET_RETRY_ATTEMPTS, OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE
         )
-        # Each envoy instance set retry to OPTION_SET_RETRY_DELAY_DEFAULT_VALUE
-        # only change if option is set to different value
+        # Keep the Envoy default retry policy unless the retry attempts option
+        # is changed from its default value.
         if retries != OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE:
             # Envoy uses 45 sec timeouts, set allowed time
             # a bit larger to allow for wait time.
             retry_delay: int = 15 + (retries - 1) * 45
-            # set attempts no lower then 4.
+            # set attempts no lower than 4.
             retry_attempts = max(4, retries + 1)
             self.envoy.set_retry_policy(
                 max_delay=retry_delay, max_attempts=retry_attempts
