@@ -155,7 +155,7 @@ async def websocket_run(
     if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
         # Audio pipeline that will receive audio as binary websocket messages
         msg_input = msg["input"]
-        audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
+        audio_queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=256)
         incoming_sample_rate = msg_input["sample_rate"]
         wake_word_phrase: str | None = None
 
@@ -188,8 +188,11 @@ async def websocket_run(
             _connection: websocket_api.ActiveConnection,
             data: bytes,
         ) -> None:
-            # Forward to STT audio stream
-            audio_queue.put_nowait(data)
+            # Forward to STT audio stream.
+            # Drop frames if the pipeline can't keep up rather than
+            # growing the queue without bound.
+            with contextlib.suppress(asyncio.QueueFull):
+                audio_queue.put_nowait(data)
 
         handler_id, unregister_handler = connection.async_register_binary_handler(
             handle_binary
@@ -272,6 +275,20 @@ async def websocket_run(
             if unregister_handler is not None:
                 # Unregister binary handler
                 unregister_handler()
+
+                # Send stop signal to unblock the stt_stream generator.
+                # Empty bytes is falsy and causes the ``while chunk :=``
+                # loop to exit cleanly.  If the bounded queue is full,
+                # discard queued audio until there is room for the stop
+                # sentinel so the stream can always exit.
+                while True:
+                    try:
+                        audio_queue.put_nowait(b"")
+                    except asyncio.QueueFull:
+                        with contextlib.suppress(asyncio.QueueEmpty):
+                            audio_queue.get_nowait()
+                    else:
+                        break
 
 
 @callback

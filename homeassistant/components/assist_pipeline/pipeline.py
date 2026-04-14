@@ -6,6 +6,7 @@ import array
 import asyncio
 from collections import defaultdict, deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
+import contextlib
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -1631,6 +1632,17 @@ def _pipeline_debug_recording_thread_proc(
             wav_writer.close()
 
 
+async def _close_async_generators(
+    *generators: AsyncIterable[Any] | None,
+) -> None:
+    """Close async generators, suppressing non-cancellation errors."""
+    for gen in generators:
+        aclose = getattr(gen, "aclose", None)
+        if aclose is not None:
+            with contextlib.suppress(Exception):
+                await aclose()
+
+
 @dataclass(kw_only=True)
 class PipelineInput:
     """Input to a pipeline run."""
@@ -1680,12 +1692,16 @@ class PipelineInput:
         )
         current_stage: PipelineStage | None = self.run.start_stage
 
+        # Track async generators so they can be closed on early exit
+        # (validation error, no wake word, cancellation, etc.).
+        stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
+        stt_input_stream: AsyncIterable[EnhancedAudioChunk] | None = None
+
         try:
             if validation_error is not None:
                 raise validation_error
 
             stt_audio_buffer: list[EnhancedAudioChunk] = []
-            stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
 
             if self.stt_stream is not None:
                 if self.run.audio_settings.needs_processor:
@@ -1800,6 +1816,16 @@ class PipelineInput:
                 )
             )
         finally:
+            # Close async generators so buffered audio chunks and the
+            # audio enhancer's VAD state are released promptly instead of
+            # waiting on garbage collection (which is especially slow on
+            # Python 3.14+).  Close the wrapper first, then the upstream.
+            # Skip if both refer to the same object to avoid double-close.
+            await _close_async_generators(
+                None if stt_input_stream is stt_processed_stream else stt_input_stream,
+                stt_processed_stream,
+            )
+
             # Always end the run since it needs to shut down the debug recording
             # thread, etc.
             await self.run.end()
