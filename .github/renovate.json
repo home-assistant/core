@@ -89,7 +89,7 @@
         "zeroconf"
       ],
       "enabled": true,
-      "labels": ["dependency", "core-dependency"]
+      "labels": ["dependency", "core"]
     },
     {
       "description": "Test dependencies (allowlisted)",
@@ -122,7 +122,7 @@
         "/^types-/"
       ],
       "enabled": true,
-      "labels": ["dependency", "test-dependency"]
+      "labels": ["dependency"]
     },
     {
       "description": "Pre-commit hook repos (allowlisted, matched by owner/repo)",
@@ -133,7 +133,7 @@
         "zizmorcore/zizmor-pre-commit"
       ],
       "enabled": true,
-      "labels": ["dependency", "test-dependency"]
+      "labels": ["dependency"]
     },
     {
       "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
