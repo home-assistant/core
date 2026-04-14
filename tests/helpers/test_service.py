@@ -78,7 +78,7 @@ SUPPORT_C = 4
 def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
-        "homeassistant.helpers.service._handle_entity_call",
+        "homeassistant.helpers.service._handle_single_entity_call",
         new_callable=AsyncMock,
         return_value=None,
     ) as mock_call:
