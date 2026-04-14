@@ -372,20 +372,20 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
 
         self._attr_available = True
         if self._verify_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
-            self._attr_is_on = bool(result.bits[0] & 1)
+            value = int(bool(result.bits[0] & 1))
         else:
             value = int(result.registers[0])
-            if value in self._state_on:
-                self._attr_is_on = True
-            elif value in self._state_off:
-                self._attr_is_on = False
-            elif value is not None:
-                _LOGGER.error(
-                    (
-                        "Unexpected response from modbus device slave %s register %s,"
-                        " got 0x%2x"
-                    ),
-                    self._device_address,
-                    self._verify_address,
-                    value,
-                )
+        if value in self._state_on:
+            self._attr_is_on = True
+        elif value in self._state_off:
+            self._attr_is_on = False
+        else:
+            _LOGGER.error(
+                (
+                    "Unexpected response from modbus device slave %s register %s,"
+                    " got 0x%2x"
+                ),
+                self._device_address,
+                self._verify_address,
+                value,
+            )
