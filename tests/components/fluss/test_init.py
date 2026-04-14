@@ -56,15 +56,24 @@ async def test_async_setup_entry_authentication_error(
     assert mock_config_entry.state is state
 
 
-async def test_status_authentication_error_raises_config_entry_error(
+async def test_status_authentication_error_marks_device_offline(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
 ) -> None:
-    """An auth error from a per-device status call must surface as a setup error."""
+    """An auth error from a per-device status call must not fail the entry.
+
+    canUseWiFi can be revoked between the list call and the status call, in
+    which case the status endpoint returns 403. That does not imply a bad
+    API key (credentials were already validated by async_get_devices), so
+    the device is marked offline instead of transitioning the entry to an
+    auth error state.
+    """
     mock_api_client.async_get_device_status.side_effect = (
-        FlussApiClientAuthenticationError("bad key")
+        FlussApiClientAuthenticationError("permission revoked")
     )
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("button.device_1").state == "unavailable"
+    assert hass.states.get("button.device_2").state == "unavailable"

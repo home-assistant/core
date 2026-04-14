@@ -50,6 +50,34 @@ async def test_button_press(
     mock_api_client.async_trigger_device.assert_called_once_with("2a303030sdj1")
 
 
+async def test_devices_without_wifi_permission_are_filtered(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Devices whose userPermissions.canUseWiFi is false must not be surfaced."""
+    mock_api_client.async_get_devices.return_value = {
+        "devices": [
+            {
+                "deviceId": "allowed",
+                "deviceName": "Allowed",
+                "userPermissions": {"canUseWiFi": True},
+            },
+            {
+                "deviceId": "blocked",
+                "deviceName": "Blocked",
+                "userPermissions": {"canUseWiFi": False},
+            },
+        ]
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("button.allowed") is not None
+    assert hass.states.get("button.blocked") is None
+    mock_api_client.async_get_device_status.assert_called_once_with("allowed")
+
+
 async def test_button_unavailable_when_offline(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
