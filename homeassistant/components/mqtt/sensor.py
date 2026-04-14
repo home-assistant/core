@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -46,6 +47,7 @@ from .const import (
     CONF_EXPIRE_AFTER,
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_OPTIONS,
+    CONF_QOS,
     CONF_STATE_TOPIC,
     CONF_SUGGESTED_DISPLAY_PRECISION,
     PAYLOAD_NONE,
@@ -398,3 +400,22 @@ class MqttSensor(MqttEntity, RestoreSensor):
         return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
             self._expire_after is None or not self._expired
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Expose selected MQTT config parameters as read-only state attributes.
+
+        Makes runtime-relevant config values accessible to automations and
+        templates without hardcoding, e.g. for watchdog automations that
+        compare last_updated against expire_after.
+        """
+        attrs: dict[str, Any] = {}
+        if (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None:
+            attrs["expire_after"] = expire_after
+        if (force_update := self._config.get(CONF_FORCE_UPDATE)) is not None:
+            attrs["force_update"] = force_update
+        if (qos := self._config.get(CONF_QOS)) is not None:
+            attrs["qos"] = qos
+        if (state_topic := self._config.get(CONF_STATE_TOPIC)) is not None:
+            attrs["state_topic"] = state_topic
+        return attrs or None

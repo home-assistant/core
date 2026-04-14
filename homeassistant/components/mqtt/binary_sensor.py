@@ -35,7 +35,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_OFF_DELAY, CONF_STATE_TOPIC, PAYLOAD_NONE
+from .const import CONF_OFF_DELAY, CONF_QOS, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
@@ -256,3 +256,24 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         return MqttAvailabilityMixin.available.fget(self) and (  # type: ignore[attr-defined]
             self._expire_after is None or not self._expired
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Expose selected MQTT config parameters as read-only state attributes.
+
+        Makes runtime-relevant config values accessible to automations and
+        templates without hardcoding, e.g. for watchdog automations that
+        compare last_updated against expire_after or off_delay.
+        """
+        attrs: dict[str, Any] = {}
+        if (expire_after := self._config.get(CONF_EXPIRE_AFTER)) is not None:
+            attrs["expire_after"] = expire_after
+        if (off_delay := self._config.get(CONF_OFF_DELAY)) is not None:
+            attrs["off_delay"] = off_delay
+        if (force_update := self._config.get(CONF_FORCE_UPDATE)) is not None:
+            attrs["force_update"] = force_update
+        if (qos := self._config.get(CONF_QOS)) is not None:
+            attrs["qos"] = qos
+        if (state_topic := self._config.get(CONF_STATE_TOPIC)) is not None:
+            attrs["state_topic"] = state_topic
+        return attrs or None
