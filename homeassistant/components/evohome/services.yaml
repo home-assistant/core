@@ -32,12 +32,6 @@ set_system_mode:
           enable_second: false
 
 reset_system:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: evohome
-          domain: climate
 
 refresh_system:
 

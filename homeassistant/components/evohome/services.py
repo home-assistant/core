@@ -52,10 +52,6 @@ SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
 }
 
-RESET_SYSTEM_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-}
-
 # Zone service schemas (registered as entity services)
 SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     vol.Required(ATTR_SETPOINT): vol.All(
@@ -134,6 +130,8 @@ def _resolve_ctl_unique_id(
         )
 
     return tcs_id
+
+
 def _register_dhw_entity_services(hass: HomeAssistant) -> None:
     """Register entity-level services for DHW zones."""
 
@@ -228,13 +226,7 @@ def setup_service_functions(
         async_dispatcher_send(hass, DOMAIN, payload)
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
-
-    hass.services.async_register(
-        DOMAIN,
-        EvoService.RESET_SYSTEM,
-        set_system_mode,
-        schema=vol.Schema(RESET_SYSTEM_SCHEMA),
-    )
+    hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     hass.services.async_register(
         DOMAIN,
