@@ -40,7 +40,6 @@ def parametrize_brightness_condition_states_any(
                 (state, {attribute: 0}),
                 (state, {attribute: None}),
             ],
-            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_any(
             condition=condition,
@@ -53,7 +52,6 @@ def parametrize_brightness_condition_states_any(
                 (state, {attribute: 255}),
                 (state, {attribute: None}),
             ],
-            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_any(
             condition=condition,
@@ -73,7 +71,6 @@ def parametrize_brightness_condition_states_any(
                 (state, {attribute: 255}),
                 (state, {attribute: None}),
             ],
-            excluded_entities_from_other_domain=True,
         ),
     ]
 
@@ -98,7 +95,6 @@ def parametrize_brightness_condition_states_all(
                 (state, {attribute: 0}),
                 (state, {attribute: None}),
             ],
-            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_all(
             condition=condition,
@@ -111,7 +107,6 @@ def parametrize_brightness_condition_states_all(
                 (state, {attribute: 255}),
                 (state, {attribute: None}),
             ],
-            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_all(
             condition=condition,
@@ -131,7 +126,6 @@ def parametrize_brightness_condition_states_all(
                 (state, {attribute: 255}),
                 (state, {attribute: None}),
             ],
-            excluded_entities_from_other_domain=True,
         ),
     ]
 
