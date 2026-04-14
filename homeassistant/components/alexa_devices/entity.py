@@ -61,13 +61,11 @@ class AmazonServiceEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
     def __init__(
         self,
         coordinator: AmazonDevicesCoordinator,
-        serial_num: str,
         description: EntityDescription,
     ) -> None:
         """Initialize the service entity."""
 
         super().__init__(coordinator)
-        self._serial_num = serial_num
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, service_device_id(coordinator))},
             manufacturer="Amazon",
@@ -75,7 +73,9 @@ class AmazonServiceEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
         )
         self.entity_description = description
-        self._attr_unique_id = f"{serial_num}-{description.key}"
+        self._attr_unique_id = (
+            f"{slugify(coordinator.config_entry.title)}-{description.key}"
+        )
 
 
 def service_device_id(coordinator: AmazonDevicesCoordinator) -> str:

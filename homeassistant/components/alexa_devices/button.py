@@ -47,7 +47,6 @@ class AmazonRoutineButton(AmazonServiceEntity, ButtonEntity):
         self._routine = routine
         super().__init__(
             coordinator,
-            coordinator.config_entry.title,
             EntityDescription(key=slugify(routine), name=routine),
         )
 
