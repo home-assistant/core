@@ -50,8 +50,6 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             name=f"{entry.entry_id} {self.__class__.__name__}",
         )
 
-        self.last_update_success = False
-
     def setup(self) -> None:
         """Set up client callbacks for this coordinator."""
         self.client.controller.add_connection_status_callback(
