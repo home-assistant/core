@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -40,6 +40,28 @@ MEDIAN = round(statistics.median(VALUES), 2)
 RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
 RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 SUM_VALUE = sum(VALUES)
+
+
+async def test_deprecation_warning(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the min sensor with a default name."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "type": "min",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    with patch("homeassistant.util.ulid.ulid", return_value="1234"):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "1234")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_key == "yaml_deprecated"
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:
