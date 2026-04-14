@@ -29,15 +29,13 @@ TO_REDACT = {
     "dev_sn",
 }
 
-ALLOWED_ENTRY_KEYS = frozenset(
-    {
-        CONF_HOST,
-        CONF_PORT,
-        CONF_NAME,
-        CONF_USERNAME,
-        CONF_PASSWORD,
-        CONF_SERIAL_NUMBER,
-    }
+ALLOWED_ENTRY_KEYS: tuple[str, ...] = (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_NAME,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_SERIAL_NUMBER,
 )
 
 
