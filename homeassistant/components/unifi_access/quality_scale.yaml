@@ -42,8 +42,10 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info: done
+  discovery:
+    status: exempt
+    comment: Discovery is handled via unifi_discovery dependency using SOURCE_INTEGRATION_DISCOVERY.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

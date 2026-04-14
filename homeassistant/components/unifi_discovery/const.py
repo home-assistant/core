@@ -9,4 +9,5 @@ DOMAIN = "unifi_discovery"
 # when initial discovery runs — the same pattern DHCP/SSDP use with manifest matchers.
 CONSUMER_MAPPING: dict[UnifiService, str] = {
     UnifiService.Protect: "unifiprotect",
+    UnifiService.Access: "unifi_access",
 }
