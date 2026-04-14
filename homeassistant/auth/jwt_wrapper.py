@@ -30,6 +30,7 @@ _NO_VERIFY_OPTIONS = Options(
     verify_iss=False,
     verify_sub=False,
     verify_jti=False,
+    require=[],
 )
 
 
@@ -62,7 +63,8 @@ class _PyJWTWithVerify(PyJWT):
 
     def __init__(self) -> None:
         """Initialize the PyJWT instance."""
-        super().__init__()
+        # We require exp and iat claims to be present
+        super().__init__(Options(require=["exp", "iat"]))
         # Override the _jws instance with our cached version
         self._jws = _PyJWSWithLoadCache(options=self._get_sig_options())
 
@@ -76,7 +78,7 @@ class _PyJWTWithVerify(PyJWT):
         options: Options | None = None,
     ) -> dict[str, Any]:
         """Verify a JWT's signature and claims."""
-        payload = self.decode(
+        return self.decode(
             jwt=jwt,
             key=key,
             algorithms=algorithms,
@@ -84,12 +86,6 @@ class _PyJWTWithVerify(PyJWT):
             leeway=leeway,
             options=options,
         )
-        # These should never be missing since we verify them
-        # but this is an additional safeguard to make sure
-        # nothing slips through.
-        assert "exp" in payload, "exp claim is required"
-        assert "iat" in payload, "iat claim is required"
-        return payload
 
     @override
     def decode(
