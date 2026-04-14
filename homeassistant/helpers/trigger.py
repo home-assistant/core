@@ -349,7 +349,9 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpec]
-    _excluded_states: set[str] = {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    _excluded_states: Final[frozenset[str]] = frozenset(
+        {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    )
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
