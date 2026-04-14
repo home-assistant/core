@@ -574,6 +574,7 @@ async def test_pipeline_udp_audio(
             await pipeline_finished.wait()
 
             await tts_finished.wait()
+            transport.close()
 
     # Verify TTS audio (from UDP)
     assert protocol.data_received == [b"test-wav"]
