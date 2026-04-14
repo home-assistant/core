@@ -80,15 +80,14 @@ jobs:
       packages: write # To push to GHCR
       id-token: write # For cosign signing
     strategy:
-      <<: &base_build_strategy
-        fail-fast: false
-        matrix:
-          arch: ${{ fromJson(needs.init.outputs.architectures) }}
-          include:
-            - arch: amd64
-              os: ubuntu-24.04
-            - arch: aarch64
-              os: ubuntu-24.04-arm
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        include:
+          - arch: amd64
+            os: ubuntu-24.04
+          - arch: aarch64
+            os: ubuntu-24.04-arm
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -230,7 +229,14 @@ jobs:
       packages: write # To push to GHCR
       id-token: write # For cosign signing
     strategy:
-      <<: *base_build_strategy
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        include:
+          - arch: amd64
+            os: ubuntu-24.04
+          - arch: aarch64
+            os: ubuntu-24.04-arm
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
