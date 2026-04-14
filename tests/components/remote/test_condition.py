@@ -51,11 +51,13 @@ async def test_remote_conditions_gated_by_labs_flag(
             condition="remote.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_any(
             condition="remote.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
@@ -94,11 +96,13 @@ async def test_remote_state_condition_behavior_any(
             condition="remote.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_all(
             condition="remote.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
