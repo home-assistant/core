@@ -10,6 +10,7 @@ from fluss_api import (
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -75,5 +76,5 @@ async def test_status_authentication_error_marks_device_offline(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("button.device_1").state == "unavailable"
-    assert hass.states.get("button.device_2").state == "unavailable"
+    assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE
