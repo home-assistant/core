@@ -1,9 +1,24 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_zone_description": "The zones to check for.",
+    "condition_zone_name": "Zone",
     "trigger_behavior_name": "Trigger when"
   },
   "conditions": {
+    "in_zone": {
+      "description": "Tests if one or more device trackers are in a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::device_tracker::common::condition_behavior_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::device_tracker::common::condition_zone_description%]",
+          "name": "[%key:component::device_tracker::common::condition_zone_name%]"
+        }
+      },
+      "name": "In zone"
+    },
     "is_home": {
       "description": "Tests if one or more device trackers are home.",
       "fields": {
@@ -21,6 +36,19 @@
         }
       },
       "name": "Device tracker is not home"
+    },
+    "not_in_zone": {
+      "description": "Tests if one or more device trackers are not in a zone.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::device_tracker::common::condition_behavior_name%]"
+        },
+        "zone": {
+          "description": "[%key:component::device_tracker::common::condition_zone_description%]",
+          "name": "[%key:component::device_tracker::common::condition_zone_name%]"
+        }
+      },
+      "name": "Not in zone"
     }
   },
   "device_automation": {

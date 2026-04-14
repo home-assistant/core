@@ -1,10 +1,16 @@
 {
   "conditions": {
+    "in_zone": {
+      "condition": "mdi:map-marker-check"
+    },
     "is_home": {
       "condition": "mdi:account"
     },
     "is_not_home": {
       "condition": "mdi:account-arrow-right"
+    },
+    "not_in_zone": {
+      "condition": "mdi:map-marker-remove"
     }
   },
   "entity_component": {

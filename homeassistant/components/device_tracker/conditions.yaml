@@ -1,9 +1,9 @@
 .condition_common: &condition_common
-  target:
+  target: &condition_target
     entity:
       domain: device_tracker
   fields:
-    behavior:
+    behavior: &condition_behavior
       required: true
       default: any
       selector:
@@ -13,5 +13,18 @@
             - all
             - any
 
+.condition_zone: &condition_zone
+  <<: *condition_common
+  fields:
+    behavior: *condition_behavior
+    zone:
+      required: true
+      selector:
+        entity:
+          domain: zone
+          multiple: true
+
+in_zone: *condition_zone
 is_home: *condition_common
 is_not_home: *condition_common
+not_in_zone: *condition_zone
