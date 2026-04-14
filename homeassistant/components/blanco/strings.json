@@ -1,0 +1,127 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connected to cloud"
+      },
+      "absence_mode_active": {
+        "name": "Mode: Absence"
+      },
+      "child_protect": {
+        "name": "Mode: Hot water"
+      },
+      "has_error": {
+        "name": "Error"
+      }
+    },
+    "sensor": {
+      "online": {
+        "name": "Last online"
+      },
+      "set_point_cooling": {
+        "name": "Temperature: Cold"
+      },
+      "set_point_heating": {
+        "name": "Temperature: Hot"
+      },
+      "co2_rest": {
+        "name": "CO2: Remaining capacity"
+      },
+      "filter_rest": {
+        "name": "Filter: Remaining capacity"
+      },
+      "filter_remaining_volume": {
+        "name": "Filter: Remaining quantity"
+      },
+      "filter_remaining_days": {
+        "name": "Filter: Remaining time"
+      },
+      "error_count": {
+        "name": "Active errors"
+      },
+      "last_dispensing": {
+        "name": "Consumption: Last"
+      },
+      "water_total": {
+        "name": "Consumption: Total"
+      },
+      "water_still": {
+        "name": "Consumption: Total - Still"
+      },
+      "water_medium": {
+        "name": "Consumption: Total - Medium"
+      },
+      "water_classic": {
+        "name": "Consumption: Total - Classic"
+      },
+      "water_hot": {
+        "name": "Consumption: Total - Hot"
+      },
+      "water_today": {
+        "name": "Consumption: Today"
+      },
+      "water_week": {
+        "name": "Consumption: This week"
+      },
+      "water_month": {
+        "name": "Consumption: This month"
+      },
+      "water_year": {
+        "name": "Consumption: This year"
+      }
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please enter the serial number and the Service Code of your BLANCO device.\nThen check in the UNIT app under Settings → Smart Home whether the RCA (secure connection link) is already activated.",
+        "data": {
+          "serial": "Serial number",
+          "service_code": "Service Code"
+        },
+        "data_description": {
+          "serial": "The serial number of your BLANCO device, found on the device label (e.g. 123456789012).",
+          "service_code": "The Service Code shown in the BLANCO UNIT app under Settings → Smart Home."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-enter the Service Code for your BLANCO device ({serial}) to restore the connection.",
+        "data": {
+          "service_code": "Service Code"
+        },
+        "data_description": {
+          "service_code": "The Service Code shown in the BLANCO UNIT app under Settings → Smart Home."
+        }
+      },
+      "reconfigure": {
+        "description": "Update the credentials for your BLANCO device. The serial number must match the existing entry.",
+        "data": {
+          "serial": "Serial number",
+          "service_code": "Service Code"
+        },
+        "data_description": {
+          "serial": "The serial number of your BLANCO device, found on the device label (e.g. 123456789012).",
+          "service_code": "The Service Code shown in the BLANCO UNIT app under Settings → Smart Home."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "access_not_granted": "Invalid authentication. Please grant access via the BLANCO UNIT app and try again. You must be within Bluetooth range of the device to grant access.",
+      "device_type_not_supported": "This device type is currently not supported for Smart Home applications.",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Credentials successfully updated"
+    }
+  },
+  "issues": {
+    "device_error": {
+      "title": "BLANCO device reports an error",
+      "description": "The device **{device_name}** reports {error_count} active error(s). Please check the device or the BLANCO UNIT app."
+    }
+  }
+}

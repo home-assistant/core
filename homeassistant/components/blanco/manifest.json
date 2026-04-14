@@ -1,0 +1,16 @@
+{
+  "domain": "blanco",
+  "name": "BLANCO",
+  "after_dependencies": ["recorder"],
+  "codeowners": [
+    "@blancoGDPD"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/blanco",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "loggers": ["blanco_smart_home_api_client"],
+  "quality_scale": "bronze",
+  "requirements": ["blanco-smart-home-api-client==1.0.0"]
+}
