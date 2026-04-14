@@ -7,7 +7,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
-from .entity import AmazonEntity
+from .entity import AmazonServiceEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -36,7 +36,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_routines))
 
 
-class AmazonRoutineButton(AmazonEntity, ButtonEntity):
+class AmazonRoutineButton(AmazonServiceEntity, ButtonEntity):
     """Button entity for Alexa routine."""
 
     _attr_has_entity_name = True
@@ -49,13 +49,7 @@ class AmazonRoutineButton(AmazonEntity, ButtonEntity):
             coordinator,
             coordinator.config_entry.title,
             EntityDescription(key=slugify(routine), name=routine),
-            connect_to_hub=True,
         )
-
-    @property
-    def available(self) -> bool:
-        """Routines are always available."""
-        return True
 
     async def async_press(self) -> None:
         """Handle button press action."""
