@@ -13,7 +13,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_SLUG,
     CONTAINER_STATS,
-    CORE_CONTAINER,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
@@ -21,20 +20,79 @@ from .const import (
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
     DOMAIN,
-    KEY_TO_UPDATE_TYPES,
-    SUPERVISOR_CONTAINER,
 )
-from .coordinator import HassioDataUpdateCoordinator
+from .coordinator import (
+    HassioAddOnDataUpdateCoordinator,
+    HassioMainDataUpdateCoordinator,
+    HassioStatsDataUpdateCoordinator,
+)
 
 
-class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
+    """Base entity for container stats (CPU, memory)."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HassioStatsDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        *,
+        container_id: str,
+        data_key: str,
+        device_id: str,
+        unique_id_prefix: str,
+    ) -> None:
+        """Initialize base entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._container_id = container_id
+        self._data_key = data_key
+        self._attr_unique_id = f"{unique_id_prefix}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self._data_key == DATA_KEY_ADDONS:
+            return (
+                super().available
+                and DATA_KEY_ADDONS in self.coordinator.data
+                and self.entity_description.key
+                in (
+                    self.coordinator.data[DATA_KEY_ADDONS].get(self._container_id) or {}
+                )
+            )
+        return (
+            super().available
+            and self._data_key in self.coordinator.data
+            and self.entity_description.key in self.coordinator.data[self._data_key]
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to stats updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_enable_container_updates(
+                self._container_id, self.entity_id, {CONTAINER_STATS}
+            )
+        )
+        # Stats are only fetched for containers with subscribed entities.
+        # The first coordinator refresh (before entities exist) has no
+        # subscribers, so no stats are fetched. Schedule a debounced
+        # refresh so that all stats entities registering during platform
+        # setup are batched into a single API call.
+        await self.coordinator.async_request_refresh()
+
+
+class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
     """Base entity for a Hass.io add-on."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioAddOnDataUpdateCoordinator,
         entity_description: EntityDescription,
         addon: dict[str, Any],
     ) -> None:
@@ -56,26 +114,23 @@ class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
+        """Subscribe to addon info updates."""
         await super().async_added_to_hass()
-        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
         self.async_on_remove(
-            self.coordinator.async_enable_container_updates(
-                self._addon_slug, self.entity_id, update_types
+            self.coordinator.async_enable_addon_info_updates(
+                self._addon_slug, self.entity_id
             )
         )
-        if CONTAINER_STATS in update_types:
-            await self.coordinator.async_request_refresh()
 
 
-class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioOSEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Hass.io OS."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -94,14 +149,14 @@ class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
 
 
-class HassioHostEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioHostEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Hass.io host."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -120,14 +175,14 @@ class HassioHostEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
 
 
-class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioSupervisorEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Supervisor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -146,27 +201,15 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             in self.coordinator.data[DATA_KEY_SUPERVISOR]
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        await super().async_added_to_hass()
-        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
-        self.async_on_remove(
-            self.coordinator.async_enable_container_updates(
-                SUPERVISOR_CONTAINER, self.entity_id, update_types
-            )
-        )
-        if CONTAINER_STATS in update_types:
-            await self.coordinator.async_request_refresh()
 
-
-class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioCoreEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Core."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -184,27 +227,15 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
             and self.entity_description.key in self.coordinator.data[DATA_KEY_CORE]
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        await super().async_added_to_hass()
-        update_types = KEY_TO_UPDATE_TYPES[self.entity_description.key]
-        self.async_on_remove(
-            self.coordinator.async_enable_container_updates(
-                CORE_CONTAINER, self.entity_id, update_types
-            )
-        )
-        if CONTAINER_STATS in update_types:
-            await self.coordinator.async_request_refresh()
 
-
-class HassioMountEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Mount."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
         mount: CIFSMountResponse | NFSMountResponse,
     ) -> None:
