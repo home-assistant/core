@@ -113,7 +113,9 @@ class AFSAPIDevice(MediaPlayerEntity):
                     self.name or afsapi.webfsapi_endpoint,
                 )
                 self._attr_available = False
-                return
+
+            # Don't try to update any more details if we can't connect to the device
+            return
 
         if not self._attr_available:
             _LOGGER.warning(
