@@ -4,6 +4,7 @@ from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -46,9 +47,10 @@ async def test_setup_migrates_to_groups(
     assert entity is not None
     assert entity.config_entry_id is not None
     assert entity.config_entry_id != config_entry.entry_id
-    assert entity.platform == "group"
+    assert entity.platform == GROUP_DOMAIN
 
     # Check the platform is setup correctly
+    assert len(hass.states.async_all()) == 3
     state = hass.states.get(min_max_entity_id)
     assert state.state == "20.0"
 
