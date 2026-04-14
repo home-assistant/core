@@ -28,10 +28,10 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
-            is_valid = await self.validate_input(user_input)
+            error = await self.validate_input(user_input)
 
-            if not is_valid:
-                errors["base"] = "cannot_connect"
+            if error:
+                errors["base"] = error
                 return self._show_setup_form(errors=errors)
 
             _LOGGER.debug("Received user input %s", user_input)
@@ -55,7 +55,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def validate_input(self, data: dict) -> bool:
+    async def validate_input(self, data: dict) -> str | None:
         """Validate the user input allows us to connect."""
         tis_api = TISApi(
             port=int(data[CONF_PORT]),
@@ -68,13 +68,13 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(
                 "Failed to connect to TIS Control bridge at %d: %s", data[CONF_PORT], e
             )
-            return False
+            return "cannot_connect"
         except Exception:
             _LOGGER.exception(
                 "Unexpected error while validating TIS Control connection"
             )
-            return False
+            return "unknown"
         finally:
             tis_api.disconnect()
 
-        return True
+        return None
