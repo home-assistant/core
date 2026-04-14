@@ -1,17 +1,37 @@
 """Fixtures for WaterFurnace integration tests."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from waterfurnace.waterfurnace import WaterFurnace, WFGateway, WFNoDataError, WFReading
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.models import StatisticMeanType
+from homeassistant.components.recorder.models.statistics import (
+    StatisticData,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.waterfurnace.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.components.recorder.common import async_wait_recording_done
+
+SEED_STATISTIC_METADATA = StatisticMetaData(
+    has_sum=True,
+    mean_type=StatisticMeanType.NONE,
+    name="WaterFurnace Energy",
+    source=DOMAIN,
+    statistic_id=f"{DOMAIN}:test_gwid_12345_energy",
+    unit_class=EnergyConverter.UNIT_CLASS,
+    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+)
 
 
 @pytest.fixture
@@ -110,6 +130,25 @@ def mock_config_entry() -> MockConfigEntry:
         version=1,
         minor_version=2,
     )
+
+
+@pytest.fixture
+async def seed_statistics(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
+    """Seed a recent energy statistic so the coordinator uses the normal poll path.
+
+    Without this, the energy coordinator sees no prior statistics and triggers
+    a reverse backfill on first refresh.
+    """
+    now = dt_util.utcnow()
+    # Place the seed 90 minutes back so it doesn't collide with test readings
+    start = (now - timedelta(minutes=90)).replace(minute=0, second=0, microsecond=0)
+    async_add_external_statistics(
+        hass, SEED_STATISTIC_METADATA, [StatisticData(start=start, state=0.0, sum=0.0)]
+    )
+    await async_wait_recording_done(hass)
 
 
 @pytest.fixture
