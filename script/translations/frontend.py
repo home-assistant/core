@@ -4,7 +4,7 @@ import argparse
 import json
 
 from .const import FRONTEND_DIR
-from .download import DOWNLOAD_DIR, run_download_docker
+from .download import DOWNLOAD_DIR, fetch_translations, get_client, start_async_download
 from .util import get_base_arg_parser, load_json_from_path
 
 FRONTEND_BACKEND_TRANSLATIONS = FRONTEND_DIR / "translations/backend"
@@ -27,7 +27,9 @@ def run():
     args = get_arguments()
 
     if not args.skip_download:
-        run_download_docker()
+        client = get_client()
+        process_id = start_async_download(client)
+        fetch_translations(client, process_id)
 
     for lang_file in DOWNLOAD_DIR.glob("*.json"):
         translations = load_json_from_path(lang_file)

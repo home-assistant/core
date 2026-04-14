@@ -25,9 +25,8 @@ from .util import (
 )
 
 DOWNLOAD_DIR = Path("build/translations-download").absolute()
-
-
 POLL_INTERVAL = 5
+MAX_POLL_TIME = 1200  # 20 minutes
 
 
 def get_arguments() -> argparse.Namespace:
@@ -69,6 +68,7 @@ def start_async_download(client: lokalise.Client) -> str:
 
 def wait_for_process(client: lokalise.Client, process_id: str) -> str:
     """Wait for a queued process to complete and return the process download URL."""
+    deadline = time.monotonic() + MAX_POLL_TIME
     while True:
         process_info = client.queued_process(CORE_PROJECT_ID, process_id)
         # Current status of the process. Can be queued, pre_processing, running,
@@ -95,6 +95,11 @@ def wait_for_process(client: lokalise.Client, process_id: str) -> str:
                 f"Process {process_id} ended with status: {status}{additional_info}"
             )
 
+        if time.monotonic() > deadline:
+            raise ExitApp(
+                f"Process {process_id} timed out after {MAX_POLL_TIME} seconds"
+            )
+
         time.sleep(POLL_INTERVAL)
 
 
@@ -108,6 +113,15 @@ def download_and_unzip(bundle_url: str) -> None:
 
     with ZipFile(io.BytesIO(response.content)) as zf:
         zf.extractall(DOWNLOAD_DIR)
+
+    # Lokalise bundles contain a top-level "locale/" directory.
+    # Move JSON files directly under DOWNLOAD_DIR so callers using
+    # DOWNLOAD_DIR.glob("*.json") can find them.
+    locale_dir = DOWNLOAD_DIR / "locale"
+    if locale_dir.is_dir():
+        for json_path in locale_dir.glob("*.json"):
+            json_path.rename(DOWNLOAD_DIR / json_path.name)
+        locale_dir.rmdir()
 
     print(f"Extracted translations to {DOWNLOAD_DIR}")
 

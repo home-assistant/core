@@ -203,7 +203,7 @@ jobs:
           TRANSLATION_PROCESS_ID: ${{ needs.init.outputs.translation_download_process }}
         run: |
           pip install -r script/translations/requirements.txt
-          python3 -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
+          python3 -u -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
 
       - name: Build base image (fully)
         uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
@@ -500,7 +500,7 @@ jobs:
           TRANSLATION_PROCESS_ID: ${{ needs.init.outputs.translation_download_process }}
         run: |
           pip install -r script/translations/requirements.txt
-          python3 -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
+          python3 -u -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
 
       - name: Build package
         shell: bash
