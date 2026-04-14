@@ -11,11 +11,9 @@ from tests.components.common import (
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
-    create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -23,17 +21,7 @@ from tests.components.common import (
 @pytest.fixture
 async def target_todos(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple to-do list entities associated with different targets."""
-    return await target_entities(hass, "todo")
-
-
-@pytest.fixture
-async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple sensor entities associated with different targets.
-
-    Note: The sensors are used to ensure that only to-do list entities are considered
-    in the condition evaluation and not other entities.
-    """
-    return await target_entities(hass, "sensor")
+    return await target_entities(hass, "todo", domain_excluded="sensor")
 
 
 @pytest.mark.parametrize(
@@ -62,13 +50,13 @@ async def test_todo_conditions_gated_by_labs_flag(
             condition="todo.all_completed",
             target_states=["0"],
             other_states=["1", "5"],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
 async def test_todo_state_condition_behavior_any(
     hass: HomeAssistant,
     target_todos: dict[str, list[str]],
-    target_sensors: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -77,38 +65,16 @@ async def test_todo_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the to-do list state condition with the 'any' behavior."""
-    other_entity_ids = set(target_todos["included_entities"]) - {entity_id}
-
-    # Set all to-do lists, including the tested one, to the initial state
-    for eid in target_todos["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_any(
         hass,
+        target_entities=target_todos,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="any",
+        condition_options=condition_options,
+        states=states,
     )
-
-    # Set state for sensors to ensure that they don't impact the condition
-    for state in states:
-        for eid in target_sensors["included_entities"]:
-            set_or_remove_state(hass, eid, state["included_state"])
-            await hass.async_block_till_done()
-            assert condition(hass) is False
-
-    for state in states:
-        included_state = state["included_state"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
-
-        # Check if changing other to-do lists also passes the condition
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -123,6 +89,7 @@ async def test_todo_state_condition_behavior_any(
             condition="todo.all_completed",
             target_states=["0"],
             other_states=["1", "5"],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
@@ -137,36 +104,16 @@ async def test_todo_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the to-do list state condition with the 'all' behavior."""
-    # Set state for two sensors to ensure that they don't impact the condition
-    hass.states.async_set("sensor.label_sensor_1", "0")
-    hass.states.async_set("sensor.label_sensor_2", "3")
-
-    other_entity_ids = set(target_todos["included_entities"]) - {entity_id}
-
-    # Set all to-do lists, including the tested one, to the initial state
-    for eid in target_todos["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_all(
         hass,
+        target_entities=target_todos,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="all",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included_state"]
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
-
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-
-        assert condition(hass) == state["condition_true"]
 
 
 def parametrize_incomplete_condition_states_any(
