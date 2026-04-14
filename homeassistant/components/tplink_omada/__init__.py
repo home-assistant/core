@@ -73,30 +73,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     entry.runtime_data = controller
 
-    _cleanup_lock = asyncio.Lock()
+    _cleanup_task: asyncio.Task[None] | None = None
     _first_cleanup_call = True
 
     async def _async_cleanup_task() -> None:
         nonlocal _first_cleanup_call
-        async with _cleanup_lock:
-            await async_cleanup_devices(
-                hass,
-                controller,
-            )
-            if not _first_cleanup_call:
-                # Skip refresh on first run — data is already fresh from initialize_first_refresh()
-                await controller.known_clients_coordinator.async_refresh()
-            _first_cleanup_call = False
-            await async_cleanup_client_trackers(
-                hass,
-                controller,
-            )
+        await async_cleanup_devices(
+            hass,
+            controller,
+        )
+        if not _first_cleanup_call:
+            # Skip refresh on first run — data is already fresh from initialize_first_refresh()
+            await controller.known_clients_coordinator.async_refresh()
+        _first_cleanup_call = False
+        await async_cleanup_client_trackers(
+            hass,
+            controller,
+        )
 
     @callback
     def _schedule_cleanup(_now: datetime | None = None) -> None:
-        if _cleanup_lock.locked():
+        nonlocal _cleanup_task
+        if _cleanup_task is not None and not _cleanup_task.done():
             return
-        entry.async_create_background_task(
+        _cleanup_task = entry.async_create_background_task(
             hass,
             _async_cleanup_task(),
             "tplink_omada cleanup",
