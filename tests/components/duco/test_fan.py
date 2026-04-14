@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
 from freezegun.api import FrozenDateTimeFactory
@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -25,6 +25,20 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _FAN_ENTITY = "fan.living"
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> MockConfigEntry:
+    """Set up only the fan platform for testing."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.duco.PLATFORMS", [Platform.FAN]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    return mock_config_entry
 
 
 @pytest.mark.usefixtures("init_integration")
