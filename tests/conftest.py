@@ -8,6 +8,7 @@ from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
 import functools
 import gc
+import ipaddress
 import itertools
 import logging
 import os
@@ -210,31 +211,47 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    def disable_dns(host, *args: Any, **kwargs: Any) -> None:
+    def getaddrinfo_patched(host, *args: Any, **kwargs: Any):
         # Allow localhost/127.0.0.1/::1 for integration tests
         if host in ("localhost", "127.0.0.1", "::1"):
             return _real_getaddrinfo(host, *args, **kwargs)
+        # Allow IP literals (IPv4/IPv6) and host=None/""/"0.0.0.0"/"::"
+        try:
+            if host is None or host in ("", "0.0.0.0", "::"):
+                return _real_getaddrinfo(host, *args, **kwargs)
+            ipaddress.ip_address(host)
+            return _real_getaddrinfo(host, *args, **kwargs)
+        except ValueError:
+            pass
         raise RuntimeError("DNS resolution disabled in tests")
 
-    setattr(socket, "getaddrinfo", disable_dns)
-    setattr(
-        socket,
-        "gethostbyname",
-        lambda host, *a, **k: (
-            "127.0.0.1"
-            if host in ("localhost", "127.0.0.1", "::1")
-            else (_ for _ in ()).throw(RuntimeError("DNS resolution disabled in tests"))
-        ),
-    )
-    setattr(
-        socket,
-        "gethostbyname_ex",
-        lambda host, *a, **k: (
-            (host, [], ["127.0.0.1"])
-            if host in ("localhost", "127.0.0.1", "::1")
-            else (_ for _ in ()).throw(RuntimeError("DNS resolution disabled in tests"))
-        ),
-    )
+    def gethostbyname_patched(host, *args, **kwargs):
+        # Delegate to real function for allowed hosts and IP literals
+        if host in ("localhost", "127.0.0.1", "::1"):
+            return host
+        try:
+            ipaddress.ip_address(host)
+        except ValueError:
+            pass
+        else:
+            return host
+        raise RuntimeError("DNS resolution disabled in tests")
+
+    def gethostbyname_ex_patched(host, *args, **kwargs):
+        # Delegate to real function for allowed hosts and IP literals
+        if host in ("localhost", "127.0.0.1", "::1"):
+            return (host, [], [host])
+        try:
+            ipaddress.ip_address(host)
+        except ValueError:
+            pass
+        else:
+            return (host, [], [host])
+        raise RuntimeError("DNS resolution disabled in tests")
+
+    setattr(socket, "getaddrinfo", getaddrinfo_patched)
+    setattr(socket, "gethostbyname", gethostbyname_patched)
+    setattr(socket, "gethostbyname_ex", gethostbyname_ex_patched)
 
     pytest_socket.SocketBlockedError = HASocketBlockedError
 
