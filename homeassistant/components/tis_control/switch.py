@@ -70,12 +70,22 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
             # Skip appliances with non-numeric channel values.
             continue
 
+        # Validate device_id to ensure it's a list that can be converted to ints
+        raw_device_id = appliance.get("device_id")
+        if not isinstance(raw_device_id, list):
+            continue
+
+        try:
+            device_id = [int(i) for i in raw_device_id]
+        except TypeError, ValueError:
+            continue
+
         # Create a new, clean dictionary with a standardized format.
         result.append(
             SwitchDescription(
                 switch_name=appliance.get("name"),
                 channel_number=channel_number,
-                device_id=appliance.get("device_id"),
+                device_id=device_id,
                 is_protected=appliance.get("is_protected", False),
                 gateway=appliance.get("gateway"),
             )

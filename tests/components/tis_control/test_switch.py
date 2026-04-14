@@ -201,10 +201,10 @@ async def test_setup_switch_no_name(
     assert state.name == "TIS Switch tis_1_2_3_ch1"
 
 
-async def test_invalid_channel_data(
+async def test_invalid_appliance_data(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
-    """Test switch setup ignores appliances with invalid channel data."""
+    """Test switch setup ignores appliances with invalid channel or device_id data."""
     mock_tis_api.get_entities.return_value = [
         # Channels is not a list or is empty.
         {
@@ -246,7 +246,23 @@ async def test_invalid_channel_data(
             "device_id": [1, 2, 3],
             "channels": [{"Output": [1]}],
         },
-        # Valid channel to ensure the loop processes correctly.
+        # Invalid device_id tests
+        {
+            "name": "Device ID None",
+            "device_id": None,
+            "channels": [{"Output": 1}],
+        },
+        {
+            "name": "Device ID not list",
+            "device_id": "not_a_list",
+            "channels": [{"Output": 1}],
+        },
+        {
+            "name": "Device ID list of invalid strings",
+            "device_id": ["not", "an", "int"],
+            "channels": [{"Output": 1}],
+        },
+        # Valid channel and device_id to ensure the loop processes correctly.
         {
             "name": "Valid Switch",
             "device_id": [1, 2, 3],
