@@ -9,7 +9,6 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -344,16 +343,6 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import from a min_max config entry."""
-        new_data = import_data.copy()
-        new_data[CONF_ENTITIES] = new_data.pop("entity_ids")
-        new_data[CONF_GROUP_TYPE] = "sensor"
-        new_data[CONF_HIDE_MEMBERS] = False
-        new_data[CONF_IGNORE_NON_NUMERIC] = False
-
-        return self.async_create_entry(data=new_data)
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
