@@ -139,19 +139,20 @@ class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
     @actron_air_command
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set a new fan mode."""
-        api_fan_mode = FAN_MODE_MAPPING_HA_TO_ACTRONAIR.get(fan_mode)
+        api_fan_mode = FAN_MODE_MAPPING_HA_TO_ACTRONAIR[fan_mode]
         await self._status.user_aircon_settings.set_fan_mode(api_fan_mode)
 
     @actron_air_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
-        ac_mode = HVAC_MODE_MAPPING_HA_TO_ACTRONAIR.get(hvac_mode)
+        ac_mode = HVAC_MODE_MAPPING_HA_TO_ACTRONAIR[hvac_mode]
         await self._status.ac_system.set_system_mode(ac_mode)
 
     @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
         await self._status.user_aircon_settings.set_temperature(temperature=temp)
 
 
@@ -221,4 +222,6 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
     @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        await self._zone.set_temperature(temperature=kwargs.get(ATTR_TEMPERATURE))
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        await self._zone.set_temperature(temperature=temp)
