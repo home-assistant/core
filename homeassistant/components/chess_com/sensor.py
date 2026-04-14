@@ -101,14 +101,12 @@ PUZZLE_SENSORS: tuple[ChessPuzzleEntityDescription, ...] = (
     ChessPuzzleEntityDescription(
         key="puzzle_game_count",
         translation_key="puzzle_game_count",
-        native_unit_of_measurement="puzzles",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda puzzle: puzzle.game_count,
     ),
     ChessPuzzleEntityDescription(
         key="puzzle_passed_count",
         translation_key="puzzle_passed_count",
-        native_unit_of_measurement="puzzles",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda puzzle: puzzle.passed_count,
@@ -116,7 +114,6 @@ PUZZLE_SENSORS: tuple[ChessPuzzleEntityDescription, ...] = (
     ChessPuzzleEntityDescription(
         key="puzzle_failed_count",
         translation_key="puzzle_failed_count",
-        native_unit_of_measurement="puzzles",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda puzzle: puzzle.failed_count,
@@ -216,6 +213,7 @@ class ChessPuzzleSensor(ChessEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}.{description.key}"
+        self._attr_suggested_object_id = description.key
 
     @property
     def native_value(self) -> int | None:

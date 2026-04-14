@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientError, ClientSession, ClientTimeout
+
+_REQUEST_TIMEOUT = ClientTimeout(total=10)
 
 PUZZLE_STATS_URL = (
     "https://www.chess.com/callback/stats/tactics2/new/puzzles/{username}"
@@ -45,7 +47,7 @@ class PuzzleStatsClient:
         """Fetch puzzle stats for a player."""
         url = PUZZLE_STATS_URL.format(username=username)
         try:
-            async with self._session.get(url) as response:
+            async with self._session.get(url, timeout=_REQUEST_TIMEOUT) as response:
                 response.raise_for_status()
                 data = await response.json()
                 return PuzzleStats.from_dict(data)
