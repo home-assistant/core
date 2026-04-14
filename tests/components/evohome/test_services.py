@@ -80,10 +80,10 @@ async def test_reset_system_deprecated(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
-@pytest.mark.usefixtures("evohome")
 async def test_reset_system(
     hass: HomeAssistant,
     ctl_id: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test entity-targeted reset_system service calls."""
 
@@ -107,6 +107,9 @@ async def test_reset_system(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_controller_service_call")
+    assert issue is None
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -184,6 +187,7 @@ async def test_set_system_mode_deprecated(
 async def test_set_system_mode(
     hass: HomeAssistant,
     ctl_id: str,
+    issue_registry: ir.IssueRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entity-targeted set_system_mode service calls."""
@@ -222,6 +226,9 @@ async def test_set_system_mode(
         mock_fcn.assert_awaited_once_with(
             "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_controller_service_call")
+    assert issue is None
 
 
 @pytest.mark.parametrize("install", ["default"])
