@@ -579,7 +579,11 @@ async def _setup_and_test_yaml_device_action(
         (
             "vacuum",
             VACUUM_SCRIPT_FIELDS,
-            {"fan_speeds": ["low", "medium", "high"]},
+            {
+                "unique_id": "very-unique",
+                "fan_speeds": ["low", "medium", "high"],
+                "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
+            },
             (
                 ("start", {}),
                 ("pause", {}),
@@ -777,6 +781,7 @@ async def test_yaml_device_actions_modern_config(
             {
                 "fan_speeds": ["low", "medium", "high"],
                 "state": "{{ 'on' }}",
+                "segments_template": "{{ [{'id': '1', 'name': 'Kitchen'}] }}",
             },
             (
                 ("start", {}),
