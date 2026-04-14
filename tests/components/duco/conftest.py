@@ -5,7 +5,14 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from duco.models import BoardInfo, LanInfo, Node, NodeGeneralInfo, NodeVentilationInfo
+from duco.models import (
+    BoardInfo,
+    LanInfo,
+    Node,
+    NodeGeneralInfo,
+    NodeSensorInfo,
+    NodeVentilationInfo,
+)
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
@@ -62,7 +69,7 @@ def mock_lan_info() -> LanInfo:
 
 @pytest.fixture
 def mock_nodes() -> list[Node]:
-    """Return a list with a single BOX node."""
+    """Return a list of nodes covering all supported types."""
     return [
         Node(
             node_id=1,
@@ -82,7 +89,63 @@ def mock_nodes() -> list[Node]:
                 mode="AUTO",
                 flow_lvl_tgt=0,
             ),
-        )
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=None,
+                iaq_rh=None,
+            ),
+        ),
+        Node(
+            node_id=2,
+            general=NodeGeneralInfo(
+                node_type="UCCO2",
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Office CO2",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=405,
+                iaq_co2=80,
+                rh=None,
+                iaq_rh=None,
+            ),
+        ),
+        Node(
+            node_id=113,
+            general=NodeGeneralInfo(
+                node_type="BSRH",
+                sub_type=0,
+                network_type="RF",
+                parent=1,
+                asso=1,
+                name="Bathroom RH",
+                identify=0,
+            ),
+            ventilation=NodeVentilationInfo(
+                state="AUTO",
+                time_state_remain=0,
+                time_state_end=0,
+                mode="-",
+                flow_lvl_tgt=None,
+            ),
+            sensor=NodeSensorInfo(
+                co2=None,
+                iaq_co2=None,
+                rh=42.0,
+                iaq_rh=85,
+            ),
+        ),
     ]
 
 

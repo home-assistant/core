@@ -42,6 +42,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "boiler_status": {
+        "name": "Boiler"
+      },
+      "booster_heater_status": {
+        "name": "Booster heater {number}"
+      },
+      "immersion_heater_status": {
+        "name": "Immersion heater"
+      },
+      "valve_2way_status": {
+        "name": "2-way valve"
+      },
+      "valve_3way_status": {
+        "name": "3-way valve"
+      },
+      "water_pump_status": {
+        "name": "Water pump {number}"
+      }
+    },
     "sensor": {
       "condensing_temperature": {
         "name": "Condensing temperature"
