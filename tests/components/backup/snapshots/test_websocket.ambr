@@ -5619,10 +5619,10 @@
 # name: test_generate[None].6
   dict({
     'event': dict({
+      'agent_id': 'backup.local',
       'manager_state': 'create_backup',
-      'reason': None,
-      'stage': None,
-      'state': 'completed',
+      'total_bytes': 10240,
+      'uploaded_bytes': 10240,
     }),
     'id': 1,
     'type': 'event',
@@ -5694,10 +5694,10 @@
 # name: test_generate[data1].6
   dict({
     'event': dict({
+      'agent_id': 'backup.local',
       'manager_state': 'create_backup',
-      'reason': None,
-      'stage': None,
-      'state': 'completed',
+      'total_bytes': 10240,
+      'uploaded_bytes': 10240,
     }),
     'id': 1,
     'type': 'event',
@@ -5769,10 +5769,10 @@
 # name: test_generate[data2].6
   dict({
     'event': dict({
+      'agent_id': 'backup.local',
       'manager_state': 'create_backup',
-      'reason': None,
-      'stage': None,
-      'state': 'completed',
+      'total_bytes': 10240,
+      'uploaded_bytes': 10240,
     }),
     'id': 1,
     'type': 'event',

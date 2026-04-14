@@ -174,6 +174,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "dsp-w215",
     },
     {
+        "domain": "elgato",
+        "registered_devices": True,
+    },
+    {
         "domain": "elkm1",
         "registered_devices": True,
     },
@@ -402,6 +406,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "litter-robot4",
     },
     {
+        "domain": "litterrobot",
+        "hostname": "whiskerrobots",
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*",
@@ -431,6 +439,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "motion_blinds",
         "hostname": "connector_*",
+    },
+    {
+        "domain": "mystrom",
+        "hostname": "mystrom-*",
+    },
+    {
+        "domain": "mystrom",
+        "registered_devices": True,
     },
     {
         "domain": "nest",
@@ -816,6 +832,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "smartthings",
         "hostname": "hub*",
         "macaddress": "286D97*",
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "smarthub",
+        "macaddress": "683A48*",
     },
     {
         "domain": "smartthings",
@@ -1310,43 +1331,43 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "twinkly-*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "B4FBE4*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "802AA8*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "F09FC2*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "68D79A*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "18E829*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "245A4C*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "784558*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "E063DA*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "265A4C*",
     },
     {
-        "domain": "unifiprotect",
+        "domain": "unifi_discovery",
         "macaddress": "74ACB9*",
     },
     {

@@ -134,6 +134,11 @@ def _create_mock_device(device_data: dict[str, Any]) -> MagicMock:
     device.model = device_data["model"]
     device.gw_sn = GATEWAY_SERIAL
     device.color_mode = device_data["color_mode"]
+    device.address = device_data["address"]
+    device.channel = device_data["channel"]
+    device.dev_sn = device_data.get("dev_sn", f"DEVSN-{device_data['address']:04d}")
+    device.area_name = device_data.get("area_name", "Test Area")
+    device.area_id = device_data.get("area_id", "test_area")
     device.turn_on = MagicMock()
     device.turn_off = MagicMock()
     device.read_status = MagicMock()
@@ -223,6 +228,7 @@ def _create_mock_scene(
     scene.unique_id = unique_id
     scene.gw_sn = gw_sn
     scene.channel = channel
+    scene.area_id = area_id
     scene.activate = MagicMock()
     scene.devices = devices_with_ids
 

@@ -4,13 +4,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import as_local
 
-from .const import DATA_PROTECTION_WINDOW, DOMAIN, LOGGER, TYPE_PROTECTION_WINDOW
-from .coordinator import OpenUvCoordinator
+from .const import DATA_PROTECTION_WINDOW, LOGGER, TYPE_PROTECTION_WINDOW
+from .coordinator import OpenUvConfigEntry
 from .entity import OpenUvEntity
 
 ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"
@@ -26,12 +25,11 @@ BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW = BinarySensorEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OpenUvConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    # Once we've successfully authenticated, we re-enable client request retries:
-    """Set up an OpenUV sensor based on a config entry."""
-    coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]
+    """Set up OpenUV binary sensors for a config entry."""
+    coordinators = entry.runtime_data
 
     async_add_entities(
         [

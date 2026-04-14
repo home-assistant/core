@@ -12,7 +12,7 @@ import hashlib
 import io
 from itertools import chain
 import json
-from pathlib import Path, PurePath
+from pathlib import Path, PurePath, PureWindowsPath
 import shutil
 import sys
 import tarfile
@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     start,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.async_iterator import AsyncIteratorReader
@@ -67,6 +68,7 @@ from .models import (
     BackupReaderWriterError,
     BaseBackup,
     Folder,
+    InvalidBackupFilename,
 )
 from .store import BackupStore
 from .util import (
@@ -77,6 +79,8 @@ from .util import (
     validate_password,
     validate_password_stream,
 )
+
+UPLOAD_PROGRESS_DEBOUNCE_SECONDS = 1
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -141,6 +145,7 @@ class CreateBackupStage(StrEnum):
     ADDONS = "addons"
     AWAIT_ADDON_RESTARTS = "await_addon_restarts"
     DOCKER_CONFIG = "docker_config"
+    CLEANING_UP = "cleaning_up"
     FINISHING_FILE = "finishing_file"
     FOLDERS = "folders"
     HOME_ASSISTANT = "home_assistant"
@@ -590,22 +595,48 @@ class BackupManager:
                 )
             agent = self.backup_agents[agent_id]
 
+            latest_uploaded_bytes = 0
+
             @callback
-            def on_upload_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
-                """Handle upload progress."""
+            def _emit_upload_progress() -> None:
+                """Emit the latest upload progress event."""
                 self.async_on_backup_event(
                     UploadBackupEvent(
                         manager_state=self.state,
                         agent_id=agent_id,
-                        uploaded_bytes=bytes_uploaded,
+                        uploaded_bytes=latest_uploaded_bytes,
                         total_bytes=_backup.size,
                     )
                 )
+
+            upload_progress_debouncer: Debouncer[None] = Debouncer(
+                self.hass,
+                LOGGER,
+                cooldown=UPLOAD_PROGRESS_DEBOUNCE_SECONDS,
+                immediate=True,
+                function=_emit_upload_progress,
+            )
+
+            @callback
+            def on_upload_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+                """Handle upload progress."""
+                nonlocal latest_uploaded_bytes
+                latest_uploaded_bytes = bytes_uploaded
+                upload_progress_debouncer.async_schedule_call()
 
             await agent.async_upload_backup(
                 open_stream=open_stream_func,
                 backup=_backup,
                 on_progress=on_upload_progress,
+            )
+            upload_progress_debouncer.async_cancel()
+            self.async_on_backup_event(
+                UploadBackupEvent(
+                    manager_state=self.state,
+                    agent_id=agent_id,
+                    uploaded_bytes=_backup.size,
+                    total_bytes=_backup.size,
+                )
             )
             if streamer:
                 await streamer.wait()
@@ -976,6 +1007,14 @@ class BackupManager:
     ) -> str:
         """Receive and store a backup file from upload."""
         contents.chunk_size = BUF_SIZE
+        suggested_filename = contents.filename or "backup.tar"
+        safe_filename = PureWindowsPath(suggested_filename).name
+        if (
+            not safe_filename
+            or safe_filename != suggested_filename
+            or safe_filename == ".."
+        ):
+            raise InvalidBackupFilename(f"Invalid filename: {suggested_filename}")
         self.async_on_backup_event(
             ReceiveBackupEvent(
                 reason=None,
@@ -986,7 +1025,7 @@ class BackupManager:
         written_backup = await self._reader_writer.async_receive_backup(
             agent_ids=agent_ids,
             stream=contents,
-            suggested_filename=contents.filename or "backup.tar",
+            suggested_filename=suggested_filename,
         )
         self.async_on_backup_event(
             ReceiveBackupEvent(
@@ -1261,6 +1300,13 @@ class BackupManager:
                 )
             # delete old backups more numerous than copies
             # try this regardless of agent errors above
+            self.async_on_backup_event(
+                CreateBackupEvent(
+                    reason=None,
+                    stage=CreateBackupStage.CLEANING_UP,
+                    state=CreateBackupState.IN_PROGRESS,
+                )
+            )
             await delete_backups_exceeding_configured_count(self)
 
         finally:

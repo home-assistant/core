@@ -18,6 +18,7 @@ TO_REDACT = {
     CONF_TOTP_SECRET,
     # Title contains the username/email
     "title",
+    "utility_account_id",
 }
 
 
@@ -27,43 +28,46 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
 
-    return {
-        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
-        "data": {
-            account_id: {
-                "account": {
-                    "utility_account_id": account.utility_account_id,
-                    "meter_type": account.meter_type.name,
-                    "read_resolution": (
-                        account.read_resolution.name
-                        if account.read_resolution
+    return async_redact_data(
+        {
+            "entry": entry.as_dict(),
+            "data": [
+                {
+                    "account": {
+                        "utility_account_id": account.utility_account_id,
+                        "meter_type": account.meter_type.name,
+                        "read_resolution": (
+                            account.read_resolution.name
+                            if account.read_resolution
+                            else None
+                        ),
+                    },
+                    "forecast": (
+                        {
+                            "usage_to_date": forecast.usage_to_date,
+                            "cost_to_date": forecast.cost_to_date,
+                            "forecasted_usage": forecast.forecasted_usage,
+                            "forecasted_cost": forecast.forecasted_cost,
+                            "typical_usage": forecast.typical_usage,
+                            "typical_cost": forecast.typical_cost,
+                            "unit_of_measure": forecast.unit_of_measure.name,
+                            "start_date": forecast.start_date.isoformat(),
+                            "end_date": forecast.end_date.isoformat(),
+                            "current_date": forecast.current_date.isoformat(),
+                        }
+                        if (forecast := data.forecast)
                         else None
                     ),
-                },
-                "forecast": (
-                    {
-                        "usage_to_date": forecast.usage_to_date,
-                        "cost_to_date": forecast.cost_to_date,
-                        "forecasted_usage": forecast.forecasted_usage,
-                        "forecasted_cost": forecast.forecasted_cost,
-                        "typical_usage": forecast.typical_usage,
-                        "typical_cost": forecast.typical_cost,
-                        "unit_of_measure": forecast.unit_of_measure.name,
-                        "start_date": forecast.start_date.isoformat(),
-                        "end_date": forecast.end_date.isoformat(),
-                        "current_date": forecast.current_date.isoformat(),
-                    }
-                    if (forecast := data.forecast)
-                    else None
-                ),
-                "last_changed": (
-                    data.last_changed.isoformat() if data.last_changed else None
-                ),
-                "last_updated": (
-                    data.last_updated.isoformat() if data.last_updated else None
-                ),
-            }
-            for account_id, data in coordinator.data.items()
-            for account in (data.account,)
+                    "last_changed": (
+                        data.last_changed.isoformat() if data.last_changed else None
+                    ),
+                    "last_updated": (
+                        data.last_updated.isoformat() if data.last_updated else None
+                    ),
+                }
+                for data in coordinator.data.values()
+                for account in (data.account,)
+            ],
         },
-    }
+        TO_REDACT,
+    )

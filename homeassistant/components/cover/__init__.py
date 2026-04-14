@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
+from .condition import make_cover_is_closed_condition, make_cover_is_open_condition
 from .const import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -80,6 +81,8 @@ __all__ = [
     "CoverEntityFeature",
     "CoverState",
     "make_cover_closed_trigger",
+    "make_cover_is_closed_condition",
+    "make_cover_is_open_condition",
     "make_cover_opened_trigger",
 ]
 
