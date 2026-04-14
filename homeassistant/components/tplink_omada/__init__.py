@@ -74,14 +74,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
     entry.runtime_data = controller
 
     _cleanup_lock = asyncio.Lock()
+    _first_cleanup_call = True
 
     async def _async_cleanup_task() -> None:
+        nonlocal _first_cleanup_call
         async with _cleanup_lock:
             await async_cleanup_devices(
                 hass,
                 controller,
             )
-            await controller.known_clients_coordinator.async_refresh()
+            if not _first_cleanup_call:
+                # Skip refresh on first run — data is already fresh from initialize_first_refresh()
+                await controller.known_clients_coordinator.async_refresh()
+            _first_cleanup_call = False
             await async_cleanup_client_trackers(
                 hass,
                 controller,
