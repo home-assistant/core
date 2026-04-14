@@ -20,8 +20,8 @@ async def test_user_step_initial_form(mock_hass) -> None:
     flow = OAuth2FlowHandler()
     flow.hass = mock_hass
     flow.context = {}
-    flow._async_current_entries = lambda: []
-    
+    flow._async_current_entries = lambda include_ignore=None: []
+
     result = await flow.async_step_user()
 
     assert result["type"] == FlowResultType.FORM
