@@ -1,0 +1,86 @@
+# Service to clean motion files older than specified age
+clean_motion_files:
+  target: {}
+  fields:
+    age:
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 365
+          unit_of_measurement: days
+
+# Add a label to an entity
+add_label_to_entity:
+  target: {}
+  fields:
+    entity_id:
+      example: "sensor.living_room_temperature"
+      required: true
+      selector:
+        entity: {}
+
+    label:
+      example: "favorite"
+      required: true
+      selector:
+        label: {}
+
+# Create an alert record
+create_alert:
+  target: {}
+  fields:
+    alert_type:
+      description: The type of the alert
+      example: "Humidity Alert"
+      required: true
+      selector:
+        text: {}
+    alert_description:
+      description: Details about the alert
+      example: "High humidity detected in basement"
+      required: true
+      selector:
+        text:
+          multiline: true
+    status:
+      description: The status of the alert
+      example: "Active"
+      required: true
+      selector:
+        select:
+          options:
+            - "Active"
+            - "Resolved"
+            - "Acknowledged"
+
+# Update entity area
+update_entity:
+  target: {}
+  fields:
+    entity_id:
+      example: "sensor.living_room_temperature"
+      required: true
+      selector:
+        entity: {}
+
+    area_id:
+      description: The new area to assign to the entity
+      example: "living_room"
+      required: true
+      selector:
+        area: {}
+
+# Deploy latest EffortlessHome config
+deploy_latest_config:
+  target: {}
+
+# Create event service
+create_event:
+  target: {}
+  fields:
+    entity_id:
+      example: "sensor.living_room_temperature"
+      required: true
+      selector:
+        entity: {}
