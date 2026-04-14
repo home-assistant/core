@@ -330,6 +330,49 @@ async def test_reauth_flow_auth_error(
     assert result["errors"] == {"base": "auth_error"}
 
 
+async def test_reauth_flow_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reauth flow handles an unexpected error."""
+    patch_auth, patch_client, _ = _mock_auth_and_client()
+
+    with patch_auth, patch_client:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_POOL_ID: MOCK_POOL_ID},
+        )
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    with patch(PATCH_AUTH) as mock_auth_cls:
+        mock_auth = AsyncMock()
+        mock_auth.authenticate.side_effect = RuntimeError("Connection refused")
+        mock_auth_cls.return_value = mock_auth
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new@example.com", CONF_PASSWORD: "newpass"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown_error"}
+
+
 # ── Reconfigure Flow ──────────────────────────────────────────────
 
 
@@ -447,6 +490,48 @@ async def test_reconfigure_flow_auth_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "auth_error"}
+
+
+async def test_reconfigure_flow_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfigure flow handles an unexpected error."""
+    patch_auth, patch_client, _ = _mock_auth_and_client()
+
+    with patch_auth, patch_client:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_POOL_ID: MOCK_POOL_ID},
+        )
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    with patch(PATCH_AUTH) as mock_auth_cls:
+        mock_auth = AsyncMock()
+        mock_auth.authenticate.side_effect = RuntimeError("Connection refused")
+        mock_auth_cls.return_value = mock_auth
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "bad@example.com", CONF_PASSWORD: "wrong"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown_error"}
 
 
 # ── Options Flow ──────────────────────────────────────────────────
