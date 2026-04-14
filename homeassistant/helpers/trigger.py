@@ -349,6 +349,7 @@ class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
     _domain_specs: Mapping[str, DomainSpec]
+    _excluded_states: set[str] = {STATE_UNAVAILABLE, STATE_UNKNOWN}
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -392,6 +393,7 @@ class EntityTriggerBase(Trigger):
             self.is_valid_state(state)
             for entity_id in entity_ids
             if (state := self._hass.states.get(entity_id)) is not None
+            and state.state not in self._excluded_states
         )
 
     def check_one_match(self, entity_ids: set[str]) -> bool:
@@ -401,6 +403,7 @@ class EntityTriggerBase(Trigger):
                 self.is_valid_state(state)
                 for entity_id in entity_ids
                 if (state := self._hass.states.get(entity_id)) is not None
+                and state.state not in self._excluded_states
             )
             == 1
         )
