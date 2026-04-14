@@ -45,7 +45,7 @@ async def test_climate_entity_creation(mock_coordinator) -> None:
         device=device,
     )
 
-    assert entity._attr_name == "Test AC"
+    assert entity._attr_name == "Test AC Device"
     assert entity._attr_temperature_unit == UnitOfTemperature.CELSIUS
 
 
