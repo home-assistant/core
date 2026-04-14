@@ -23,7 +23,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self._user_code: str = ""
         self._verification_uri: str = ""
         self._expires_minutes: str = "30"
-        self.login_task: asyncio.Task | None = None
+        self.login_task: asyncio.Task[None] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
