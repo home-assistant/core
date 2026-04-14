@@ -39,10 +39,7 @@
   "automerge": false,
 
   "vulnerabilityAlerts": {
-    "enabled": true,
-    "minimumReleaseAge": null,
-    "labels": ["dependency", "security"],
-    "automerge": false
+    "enabled": false
   },
 
   "packageRules": [
