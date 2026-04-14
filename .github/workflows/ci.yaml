@@ -50,9 +50,11 @@ env:
   # - 10.10.3 is the latest (as of 6 Feb 2023)
   # 10.11 is the latest long-term-support
   # - 10.11.2 is the version currently shipped with Synology (as of 11 Oct 2023)
+  # 11.4 is an LTS with support until May 2029
+  # - 11.4.9 is used in Alpine 3.23 (used in latest HA base images as of 11 Apr 2026)
   # mysql 8.0.32 does not always behave the same as MariaDB
   # and some queries that work on MariaDB do not work on MySQL
-  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mysql:8.0.32']"
+  MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mariadb:11.4.9','mysql:8.0.32']"
   # 12 is the oldest supported version
   # - 12.14 is the latest (as of 9 Feb 2023)
   # 15 is the latest version
@@ -1062,7 +1064,9 @@ jobs:
           - 3306:3306
         env:
           MYSQL_ROOT_PASSWORD: password
-        options: --health-cmd="mysqladmin ping -uroot -ppassword" --health-interval=5s --health-timeout=2s --health-retries=3
+        options: >-
+          --health-cmd="if command -v mariadb-admin >/dev/null; then mariadb-admin ping -uroot -ppassword; else mysqladmin ping -uroot -ppassword; fi"
+          --health-interval=5s --health-timeout=2s --health-retries=3
     needs:
       - info
       - base
