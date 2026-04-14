@@ -609,8 +609,8 @@ async def _async_setup_graphql_sensors(
 
     entity_registry = er.async_get(hass)
 
-    coordinator: TibberDataCoordinator | None = None
-    price_coordinator: TibberPriceCoordinator | None = None
+    coordinator = entry.runtime_data.data_coordinator
+    price_coordinator = entry.runtime_data.price_coordinator
     entities: list[TibberSensor] = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
@@ -626,12 +626,9 @@ async def _async_setup_graphql_sensors(
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
-        if home.has_active_subscription:
-            if price_coordinator is None:
-                price_coordinator = TibberPriceCoordinator(hass, entry)
+        if price_coordinator is not None and home.has_active_subscription:
             entities.append(TibberSensorElPrice(price_coordinator, home))
-            if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
+        if coordinator is not None and home.has_active_subscription:
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
@@ -772,9 +769,15 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
         self._model = "Price Sensor"
 
         self._device_name = self._home_name
+        self._update_attributes()
 
     @callback
     def _handle_coordinator_update(self) -> None:
+        self._update_attributes()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attributes(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data
         if not data or (
@@ -782,7 +785,6 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
             or (current_price := home_data.get("current_price")) is None
         ):
             self._attr_available = False
-            self.async_write_ha_state()
             return
 
         self._attr_native_unit_of_measurement = home_data.get(
@@ -804,7 +806,6 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
             "estimated_annual_consumption"
         ]
         self._attr_available = True
-        self.async_write_ha_state()
 
 
 class TibberDataSensor(TibberSensor, CoordinatorEntity[TibberDataCoordinator]):
