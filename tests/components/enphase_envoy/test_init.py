@@ -637,7 +637,9 @@ async def test_retry_option_in_config_file(
     mock_envoy: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test coordinator with token provided from config."""
+    """Test coordinator with retry option provided from config."""
+    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
+    caplog.set_level(logging.DEBUG)
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
         key="secret",
@@ -655,7 +657,7 @@ async def test_retry_option_in_config_file(
             CONF_PASSWORD: "test-password",
             CONF_TOKEN: token,
         },
-        options={"set_retry_delay": 6},
+        options={OPTION_SET_RETRY_ATTEMPTS: 6},
     )
     mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
     await setup_integration(hass, entry)
@@ -671,7 +673,9 @@ async def test_default_retry_option_in_config_file(
     mock_envoy: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test coordinator with token provided from config."""
+    """Test coordinator with default retry option provided from config."""
+    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
+    caplog.set_level(logging.DEBUG)
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
         key="secret",
@@ -705,7 +709,9 @@ async def test_retry_option_not_in_config_file(
     mock_envoy: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test coordinator with token provided from config."""
+    """Test coordinator when the retry option is absent from config."""
+    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
+    caplog.set_level(logging.DEBUG)
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
         key="secret",
