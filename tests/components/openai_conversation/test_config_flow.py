@@ -876,6 +876,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: "auto",
                 CONF_SERVICE_TIER: "flex",
                 CONF_CODE_INTERPRETER: True,
                 CONF_VERBOSITY: "medium",
