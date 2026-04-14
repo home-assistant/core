@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 from datetime import timedelta
 import logging
 from types import ModuleType
@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    EntityServiceResponse,
     Event,
     HassJobType,
     HomeAssistant,
@@ -226,19 +227,46 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         *,
-        batched: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
-        """Register an entity service.
+        """Register an entity service."""
+        service.async_register_entity_service(
+            self.hass,
+            self.domain,
+            name,
+            entities=self._entities,
+            func=func,
+            job_type=HassJobType.Coroutinefunction,
+            required_features=required_features,
+            schema=schema,
+            supports_response=supports_response,
+            description_placeholders=description_placeholders,
+        )
 
-        If batched is True, the service function is called once with all
+    @callback
+    def async_register_batched_entity_service(
+        self,
+        name: str,
+        schema: VolDictType | VolSchemaType | None,
+        func: Callable[
+            [list[_EntityT], ServiceCall],
+            Coroutine[Any, Any, EntityServiceResponse | None],
+        ],
+        required_features: list[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        """Register a batched entity service.
+
+        A batched entity service calls the service function once with all
         matching entities as a list, instead of once per entity.
         """
         service.async_register_entity_service(
             self.hass,
             self.domain,
             name,
-            batched=batched,
+            batched=True,
             entities=self._entities,
             func=func,
             job_type=HassJobType.Coroutinefunction,

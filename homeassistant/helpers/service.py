@@ -1251,13 +1251,28 @@ def async_register_entity_service(
     )
 
 
+def _get_platform_entities(
+    hass: HomeAssistant,
+    entity_domain: str,
+    service_domain: str,
+) -> dict[str, Entity]:
+    """Get platform entities for a service domain."""
+    from .entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES  # noqa: PLC0415
+
+    entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
+        (entity_domain, service_domain)
+    )
+    if entities is None:
+        return {}
+    return entities
+
+
 @callback
 def async_register_platform_entity_service(
     hass: HomeAssistant,
     service_domain: str,
     service_name: str,
     *,
-    batched: bool = False,
     description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
     entity_domain: str,
@@ -1267,20 +1282,10 @@ def async_register_platform_entity_service(
     supports_response: SupportsResponse = SupportsResponse.NONE,
 ) -> None:
     """Help registering a platform entity service."""
-    from .entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES  # noqa: PLC0415
-
     schema = _validate_entity_service_schema(schema, f"{service_domain}.{service_name}")
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
-
-    def get_entities() -> dict[str, Entity]:
-        entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
-            (entity_domain, service_domain)
-        )
-        if entities is None:
-            return {}
-        return entities
 
     hass.services.async_register(
         service_domain,
@@ -1288,10 +1293,52 @@ def async_register_platform_entity_service(
         partial(
             entity_service_call,
             hass,
-            get_entities,
+            partial(_get_platform_entities, hass, entity_domain, service_domain),
             service_func,
-            batched=batched,
             entity_device_classes=entity_device_classes,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=HassJobType.Coroutinefunction,
+        description_placeholders=description_placeholders,
+    )
+
+
+@callback
+def async_register_batched_platform_entity_service[_EntityT: Entity](
+    hass: HomeAssistant,
+    service_domain: str,
+    service_name: str,
+    *,
+    description_placeholders: Mapping[str, str] | None = None,
+    entity_domain: str,
+    func: Callable[
+        [list[_EntityT], ServiceCall],
+        Coroutine[Any, Any, EntityServiceResponse | None],
+    ],
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering a batched platform entity service.
+
+    A batched entity service calls the service function once with all
+    matching entities as a list, instead of once per entity.
+    """
+    schema = _validate_entity_service_schema(schema, f"{service_domain}.{service_name}")
+
+    service_func: HassJob[..., Any] = HassJob(func)
+
+    hass.services.async_register(
+        service_domain,
+        service_name,
+        partial(
+            entity_service_call,
+            hass,
+            partial(_get_platform_entities, hass, entity_domain, service_domain),
+            service_func,
+            batched=True,
             required_features=required_features,
         ),
         schema,

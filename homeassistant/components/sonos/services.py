@@ -50,24 +50,22 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 hass, config_entry, speakers, service_call.data[ATTR_WITH_GROUP]
             )
 
-    service.async_register_platform_entity_service(
+    service.async_register_batched_platform_entity_service(
         hass,
         DOMAIN,
         SERVICE_SNAPSHOT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
         func=async_service_handle,
-        batched=True,
     )
 
-    service.async_register_platform_entity_service(
+    service.async_register_batched_platform_entity_service(
         hass,
         DOMAIN,
         SERVICE_RESTORE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
         func=async_service_handle,
-        batched=True,
     )
 
     service.async_register_platform_entity_service(
