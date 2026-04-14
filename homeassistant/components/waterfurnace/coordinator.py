@@ -297,10 +297,14 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
                 )
 
         if all_readings:
-            # Exclude the incomplete current hour.
-            current_hour_ts = end_dt.replace(
-                minute=0, second=0, microsecond=0
-            ).timestamp()
+            # Exclude the incomplete current hour. Use local timezone so
+            # the hour boundary is correct for partial-offset timezones
+            # (e.g. UTC+5:30).
+            current_hour_ts = (
+                end_dt.astimezone(local_tz)
+                .replace(minute=0, second=0, microsecond=0)
+                .timestamp()
+            )
             statistics = self._build_statistics(
                 all_readings, last_ts, initial_sum, current_hour_ts
             )
@@ -382,7 +386,13 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
 
         _LOGGER.debug("Fetched %s readings", len(readings))
 
-        current_hour_ts = now.replace(minute=0, second=0, microsecond=0).timestamp()
+        # Use local timezone so the hour boundary is correct for
+        # partial-offset timezones (e.g. UTC+5:30).
+        current_hour_ts = (
+            now.astimezone(local_tz)
+            .replace(minute=0, second=0, microsecond=0)
+            .timestamp()
+        )
         statistics = self._build_statistics(
             readings, last_ts, last_sum, current_hour_ts
         )
