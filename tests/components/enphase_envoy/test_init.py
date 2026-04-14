@@ -635,11 +635,8 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
 async def test_retry_option_in_config_file(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator with retry option provided from config."""
-    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
-    caplog.set_level(logging.DEBUG)
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
         key="secret",
@@ -664,18 +661,15 @@ async def test_retry_option_in_config_file(
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
-    assert "Set retry policy step 6: 240 and 7" in caplog.text
+    mock_envoy.set_retry_policy.assert_called_once_with(max_delay=240, max_attempts=7)
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
 async def test_default_retry_option_in_config_file(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator with default retry option provided from config."""
-    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
-    caplog.set_level(logging.DEBUG)
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
         key="secret",
@@ -700,18 +694,15 @@ async def test_default_retry_option_in_config_file(
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
-    assert "Set retry policy step" not in caplog.text
+    mock_envoy.set_retry_policy.assert_not_called()
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
 async def test_retry_option_not_in_config_file(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator when the retry option is absent from config."""
-    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
-    caplog.set_level(logging.DEBUG)
     token = encode(
         payload={"name": "envoy", "exp": 1907837780},
         key="secret",
@@ -736,4 +727,4 @@ async def test_retry_option_not_in_config_file(
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
-    assert "Set retry policy step" not in caplog.text
+    mock_envoy.set_retry_policy.assert_not_called()
