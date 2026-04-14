@@ -20,6 +20,7 @@ from homeassistant.components.tplink_omada.coordinator import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -269,7 +270,7 @@ async def test_cleanup_lock_prevents_redundant_tasks(
 
         # Lock is now held — the 1-hour interval firing should be a no-op
         async_fire_time_changed(
-            hass, hass.loop.time() + timedelta(hours=1).total_seconds() + 1
+            hass, dt_util.utcnow() + timedelta(hours=1, seconds=1)
         )
         await hass.async_block_till_done()
 
@@ -304,7 +305,7 @@ async def test_cleanup_runs_hourly(
     # Fire the 1-hour interval to trigger cleanup again
     async_fire_time_changed(
         hass,
-        hass.loop.time() + timedelta(hours=1).total_seconds() + 1,
+        dt_util.utcnow() + timedelta(hours=1, seconds=1),
     )
     await hass.async_block_till_done(wait_background_tasks=True)
 
