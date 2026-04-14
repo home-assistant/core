@@ -50,6 +50,24 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             name=f"{entry.entry_id} {self.__class__.__name__}",
         )
 
+        self.last_update_success = False
+
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        self.client.controller.add_connection_status_callback(
+            self._async_handle_connection_state_update
+        )
+
+    @callback
+    def _async_handle_connection_state_update(self) -> None:
+        """Handle connection state changes from the client."""
+        connected = self.client.controller.connected
+        if self.last_update_success == connected:
+            return
+
+        self.last_update_success = connected
+        self.async_update_listeners()
+
 
 class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
     """DataUpdateCoordinator to handle zone updates."""
