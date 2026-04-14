@@ -37,22 +37,20 @@ ENV \
 # Home Assistant S6-Overlay
 COPY rootfs /
 
+WORKDIR /usr/src
+
 # Add go2rtc binary
 COPY --from=ghcr.io/alexxit/go2rtc@sha256:{go2rtc} /usr/local/bin/go2rtc /bin/go2rtc
-
-RUN \
-    # Verify go2rtc can be executed
-    go2rtc --version \
-    # Install uv
-    && pip3 install uv=={uv}
-
-WORKDIR /usr/src
+# Add uv binary
+COPY --from=ghcr.io/astral-sh/uv:{uv} /uv /bin/uv
 
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
 RUN \
-    uv pip install \
+    # Verify go2rtc can be executed
+    go2rtc --version \
+    && uv pip install \
         --no-build \
         -r homeassistant/requirements.txt
 
