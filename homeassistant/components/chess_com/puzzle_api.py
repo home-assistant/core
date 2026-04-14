@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import quote
 
 from aiohttp import ClientError, ClientSession, ClientTimeout
 
@@ -45,7 +46,7 @@ class PuzzleStatsClient:
 
     async def async_get_puzzle_stats(self, username: str) -> PuzzleStats | None:
         """Fetch puzzle stats for a player."""
-        url = PUZZLE_STATS_URL.format(username=username)
+        url = PUZZLE_STATS_URL.format(username=quote(username, safe=""))
         try:
             async with self._session.get(url, timeout=_REQUEST_TIMEOUT) as response:
                 response.raise_for_status()
