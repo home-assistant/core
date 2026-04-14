@@ -3,8 +3,8 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from aiorussound.models import PartyMode
-from aiorussound.rio import Controller, ZoneControlSurface
+from aiorussound.rio.client import Controller, ZoneControlSurface
+from aiorussound.rio.models import PartyMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory

@@ -38,6 +38,10 @@
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "AI task",
+      "error": {
+        "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]",
+        "model_not_found": "[%key:component::anthropic::config_subentries::conversation::error::model_not_found%]"
+      },
       "initiate_flow": {
         "reconfigure": "Reconfigure AI task",
         "user": "Add AI task"
@@ -98,6 +102,10 @@
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Conversation agent",
+      "error": {
+        "api_error": "Unable to get model info: {message}",
+        "model_not_found": "Model not found"
+      },
       "initiate_flow": {
         "reconfigure": "Reconfigure conversation agent",
         "user": "Add conversation agent"
