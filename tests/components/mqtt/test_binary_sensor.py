@@ -745,6 +745,147 @@ async def test_off_delay(
     assert len(events) == 3
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "expire_after": 120,
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_expire_after(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that expire_after is exposed as a state attribute."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state is not None
+    assert state.attributes.get("expire_after") == 120
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_expire_after_absent_when_not_set(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that expire_after is absent from attributes when not configured."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state is not None
+    assert "expire_after" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "off_delay": 30,
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_off_delay(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that off_delay is exposed as a state attribute."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state is not None
+    assert state.attributes.get("off_delay") == 30
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_off_delay_absent_when_not_set(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that off_delay is absent from attributes when not configured."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state is not None
+    assert "off_delay" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                binary_sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "home/door/contact",
+                    "expire_after": 3600,
+                    "off_delay": 60,
+                    "force_update": True,
+                    "qos": 1,
+                }
+            }
+        }
+    ],
+)
+async def test_config_attributes_all_together(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that all new config attributes coexist on binary_sensor."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "home/door/contact", "ON")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state is not None
+    attrs = state.attributes
+    assert attrs.get("expire_after") == 3600
+    assert attrs.get("off_delay") == 60
+    assert attrs.get("force_update") is True
+    assert attrs.get("qos") == 1
+    assert attrs.get("state_topic") == "home/door/contact"
+
+
 async def test_setting_attribute_via_mqtt_json_message(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:

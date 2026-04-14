@@ -769,6 +769,199 @@ async def test_force_update_enabled(
     assert len(events) == 2
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "expire_after": 300,
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_expire_after(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that expire_after is exposed as a state attribute."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.attributes.get("expire_after") == 300
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_expire_after_absent_when_not_set(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that expire_after is absent from attributes when not configured."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert "expire_after" not in state.attributes
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "force_update": True,
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_force_update(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that force_update is exposed as a state attribute."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.attributes.get("force_update") is True
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "qos": 1,
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_qos(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that qos is exposed as a state attribute."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.attributes.get("qos") == 1
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "home/h60/energy",
+                }
+            }
+        }
+    ],
+)
+async def test_config_attribute_state_topic(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that state_topic is exposed as a state attribute."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "home/h60/energy", "100")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.attributes.get("state_topic") == "home/h60/energy"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "home/h60/energy",
+                    "expire_after": 600,
+                    "force_update": True,
+                    "qos": 2,
+                }
+            }
+        }
+    ],
+)
+async def test_config_attributes_all_together(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that all new config attributes coexist when all parameters are set."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "home/h60/energy", "100")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    attrs = state.attributes
+    assert attrs.get("expire_after") == 600
+    assert attrs.get("force_update") is True
+    assert attrs.get("qos") == 2
+    assert attrs.get("state_topic") == "home/h60/energy"
+
+
+async def test_config_attribute_expire_after_via_discovery(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test that expire_after configured via MQTT discovery is exposed as attribute."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/h60_test/config",
+        json.dumps(
+            {
+                "name": "test",
+                "state_topic": "home/h60/energy",
+                "expire_after": 300,
+                "unique_id": "h60_energy_test",
+            }
+        ),
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "home/h60/energy", "100")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.attributes.get("expire_after") == 300
+    assert state.attributes.get("state_topic") == "home/h60/energy"
+
+
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
