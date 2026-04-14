@@ -5,6 +5,7 @@ from types import MappingProxyType
 
 from homeassistant.components.group import (
     CONF_ENTITIES,
+    CONF_GROUP_TYPE,
     CONF_HIDE_MEMBERS,
     CONF_IGNORE_NON_NUMERIC,
     DOMAIN as GROUP_DOMAIN,
@@ -30,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config.pop(CONF_ROUND_DIGITS)
     config[CONF_HIDE_MEMBERS] = False
     config[CONF_IGNORE_NON_NUMERIC] = False
+    config[CONF_GROUP_TYPE] = SENSOR_DOMAIN
 
     # Create new config entry for group component and remove old entry
     new_config_entry = ConfigEntry(
@@ -52,8 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if old_entity := entity_reg.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, entry.entry_id
     ):
-        entity_reg.async_update_entity(
-            old_entity, config_entry_id=new_config_entry.entry_id
+        entity_reg.async_update_entity_platform(
+            old_entity, GROUP_DOMAIN, new_config_entry_id=new_config_entry.entry_id
         )
 
     return True
