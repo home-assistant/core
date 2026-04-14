@@ -196,6 +196,7 @@ jobs:
           image-tags: base-intermediate
           push: false
           load: true
+          version: ${{ needs.init.outputs.version }}
 
       - name: Download translations
         shell: bash
