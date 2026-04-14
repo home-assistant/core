@@ -22,6 +22,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -124,11 +125,15 @@ def _build_property_key_map() -> dict[str, str]:
     return mapping
 
 
-async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
-    """Ensure property entity unique_ids use {serial}-{property_key} format."""
+async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> bool:
+    """Ensure property entity unique_ids use {serial}-{property_key} format.
+
+    Returns True if any entity was migrated or removed.
+    """
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
+    migrated = False
     property_key_map = await hass.async_add_executor_job(_build_property_key_map)
     for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
         if not entry.original_name or not entry.device_id:
@@ -143,6 +148,7 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
 
         expected_unique_id = f"{serial}-{property_key}"
         if entry.unique_id != expected_unique_id:
+            migrated = True
             if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
                 # Target unique_id already exists (created by new code) — remove stale entry
                 _LOGGER.debug(
@@ -162,6 +168,7 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
             _LOGGER.debug(
                 "Unique_id is ok: %s = %s", entry.unique_id, expected_unique_id
             )
+    return migrated
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -187,7 +194,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
 
     _migrate_device_identifiers(hass, entry.entry_id)
     # Migrate unique ids before the bus scan to preserve entity history
-    await _migrate_property_unique_ids(hass, entry.entry_id)
+    if await _migrate_property_unique_ids(hass, entry.entry_id):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"entity_ids_changed_{entry.entry_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="entity_ids_changed",
+        )
 
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)

@@ -86,6 +86,10 @@
     "deprecated_interface_parameter": {
       "description": "The 'interface' parameter in the Velbus actions is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
       "title": "Deprecated 'interface' parameter"
+    },
+    "entity_ids_changed": {
+      "description": "Some Velbus property entities (such as light value and program selection) have been assigned new entity IDs after an upgrade. Please check and update any automations or dashboard cards that reference these entities.",
+      "title": "Velbus entity IDs have changed"
     }
   },
   "services": {

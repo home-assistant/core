@@ -13,7 +13,11 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import init_integration
 from .const import PORT_TCP
@@ -231,9 +235,10 @@ async def test_migrate_property_unique_ids_rename(
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     controller: MagicMock,
 ) -> None:
-    """Test that a property entity with an outdated unique_id gets renamed."""
+    """Test that a property entity with an outdated unique_id gets renamed and an issue is created."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "1")},
@@ -259,6 +264,9 @@ async def test_migrate_property_unique_ids_rename(
     )
     assert entity_registry.async_get_entity_id(
         "select", DOMAIN, "test_serial-SelectedProgram"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"entity_ids_changed_{config_entry.entry_id}"
     )
 
 
@@ -313,9 +321,10 @@ async def test_migrate_property_unique_ids_already_correct(
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     controller: MagicMock,
 ) -> None:
-    """Test that a property entity with a correct unique_id is left unchanged."""
+    """Test that a property entity with a correct unique_id is left unchanged and no issue is created."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "1")},
@@ -338,6 +347,9 @@ async def test_migrate_property_unique_ids_already_correct(
 
     assert entity_registry.async_get_entity_id(
         "select", DOMAIN, "test_serial-SelectedProgram"
+    )
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"entity_ids_changed_{config_entry.entry_id}"
     )
 
 
