@@ -27,7 +27,7 @@ ATTR_PERIOD: Final = "period"  # number of days
 ATTR_SETPOINT: Final = "setpoint"
 
 # Support for untargeted service calls to controllers is being deprecated
-SERVICE_BREAKS_IN_HA_VERSION: Final = "2026.7.0"
+SERVICE_BREAKS_IN_HA_VERSION: Final = "2026.11.0"
 
 
 @unique
