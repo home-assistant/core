@@ -119,7 +119,7 @@ class TISSwitch(SwitchEntity):
         if self.device_api.name:
             self._attr_name = self.device_api.name
         else:
-            self._attr_name = None
+            self._attr_name = f"TIS Switch {self.device_api.unique_id}"
 
         self._attr_unique_id = self.device_api.unique_id
         self._attr_should_poll = False

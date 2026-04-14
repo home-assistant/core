@@ -198,6 +198,7 @@ async def test_setup_switch_no_name(
     state = hass.states.get(entity_ids[0])
     assert state is not None
     assert state.state == STATE_OFF
+    assert state.name == "TIS Switch tis_1_2_3_ch1"
 
 
 async def test_invalid_channel_data(
