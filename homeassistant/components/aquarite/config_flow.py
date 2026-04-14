@@ -164,6 +164,9 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 await auth.authenticate()
             except AuthenticationError:
                 errors["base"] = "auth_error"
+            except Exception:
+                _LOGGER.exception("Unexpected error during reauth")
+                errors["base"] = "unknown_error"
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
@@ -205,6 +208,9 @@ class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
                 await auth.authenticate()
             except AuthenticationError:
                 errors["base"] = "auth_error"
+            except Exception:
+                _LOGGER.exception("Unexpected error during reconfigure")
+                errors["base"] = "unknown_error"
             else:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
