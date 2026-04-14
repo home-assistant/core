@@ -49,8 +49,7 @@ RUN \
 WORKDIR /usr/src
 
 ## Setup Home Assistant Core dependencies
-COPY requirements.txt homeassistant/
-COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
+COPY --parents requirements.txt homeassistant/package_constraints.txt homeassistant/
 RUN \
     uv pip install \
         --no-build \
@@ -66,7 +65,7 @@ RUN \
         -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
-COPY . homeassistant/
+COPY --parents CODEOWNERS LICENSE* README* homeassistant pyproject.toml homeassistant/
 RUN \
     uv pip install \
         -e ./homeassistant \
