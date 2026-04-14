@@ -127,12 +127,12 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
-        """Discover TFA.me stations via mDNS service '_tfa_me._tcp'."""
+        """Discover TFA.me stations via mDNS (zeroconf) service '_tfa_me._tcp'."""
         props = discovery_info.properties or {}
         unique_id = (props.get("id") or "").strip()
         host = (discovery_info.host or "").rstrip(".")
 
-        # Add "Discovered" info)
+        # Add "Discovered" info
         self.context["configuration_url"] = f"http://{host}/ha_menu"
         self._discovered_host_or_id = host or None
         if unique_id:
@@ -170,7 +170,7 @@ class OptionsFlowHandler(OptionsFlow):
                 cordy: TFAmeDataCoordinator = coordinator
                 for entity in cordy.sensor_entity_list:
                     if any(k in entity for k in RAIN_KEYS):
-                        coordinator.data[entity]["reset_rain"] = True
+                        coordinator.data.entities[entity]["reset_rain"] = True
                         msg_reset = f"{entity} rain reset"
                         _LOGGER.info(msg_reset)
 
