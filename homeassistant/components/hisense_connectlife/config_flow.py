@@ -133,7 +133,7 @@ class OAuth2FlowHandler(
         _LOGGER.debug("Starting user step with input: %s", user_input)
 
         await self.async_set_unique_id(DOMAIN)
-        # self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured()
 
         if user_input is None:
             # Show initial form
