@@ -28,7 +28,7 @@ ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 ATTR_SETPOINT: Final = "setpoint"
 
 # Support for the reset service calls/presets is being deprecated
-RESET_BREAKS_IN_HA_VERSION: Final = "2026.7.0"
+RESET_BREAKS_IN_HA_VERSION: Final = "2026.11.0"
 
 
 @unique
