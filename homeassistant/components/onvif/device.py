@@ -44,6 +44,15 @@ from .const import (
 from .event_manager import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 
+RELAY_DISCOVERY_EXCEPTIONS = (
+    *GET_CAPABILITIES_EXCEPTIONS,
+    XMLParseError,
+    XMLSyntaxError,
+    AttributeError,
+    TypeError,
+    ValueError,
+)
+
 
 class ONVIFDevice:
     """Manages an ONVIF device."""
@@ -220,7 +229,7 @@ class ONVIFDevice:
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
-            except IndexError, Fault:
+            except (IndexError, Fault):
                 if idx == timezone_max_idx:
                     raise
             else:
@@ -303,7 +312,13 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault:
+        except (
+            TimeoutError,
+            aiohttp.ClientError,
+            TransportError,
+            IndexError,
+            Fault,
+        ):
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 
@@ -395,18 +410,7 @@ class ONVIFDevice:
                 capabilities = await deviceio_service.GetServiceCapabilities()
                 if capabilities and hasattr(capabilities, "RelayOutputs"):
                     relay_outputs = int(capabilities.RelayOutputs)
-            except (
-                ONVIFError,
-                Fault,
-                aiohttp.ClientError,
-                TimeoutError,
-                TransportError,
-                XMLParseError,
-                XMLSyntaxError,
-                AttributeError,
-                TypeError,
-                ValueError,
-            ):
+            except RELAY_DISCOVERY_EXCEPTIONS:
                 pass
             # Fall back to GetRelayOutputs if relay count is still unknown,
             # e.g. when GetServiceCapabilities() succeeds but omits RelayOutputs
@@ -420,18 +424,7 @@ class ONVIFDevice:
                             if isinstance(relay_list.RelayOutput, list)
                             else 1
                         )
-                except (
-                    ONVIFError,
-                    Fault,
-                    aiohttp.ClientError,
-                    TimeoutError,
-                    TransportError,
-                    XMLParseError,
-                    XMLSyntaxError,
-                    AttributeError,
-                    TypeError,
-                    ValueError,
-                ):
+                except RELAY_DISCOVERY_EXCEPTIONS:
                     pass
 
         return Capabilities(
@@ -736,15 +729,14 @@ class ONVIFDevice:
             )
             return []
 
-        deviceio_service = await self.device.create_deviceio_service()
-
         LOGGER.debug("Getting relay outputs")
         try:
+            deviceio_service = await self.device.create_deviceio_service()
             result = await deviceio_service.GetRelayOutputs()
             if result and hasattr(result, "RelayOutput"):
                 relays = result.RelayOutput
                 return relays if isinstance(relays, list) else [relays]
-        except GET_CAPABILITIES_EXCEPTIONS as err:
+        except RELAY_DISCOVERY_EXCEPTIONS as err:
             LOGGER.error("Error trying to get relay outputs: %s", err)
 
         return []

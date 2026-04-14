@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from onvif.exceptions import ONVIFError
 import pytest
+from zeep.exceptions import XMLParseError
 
 from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.components.onvif.device import ONVIFDevice
@@ -105,6 +106,36 @@ async def test_get_capabilities_deviceio_relay_outputs_fallback(
     deviceio_service.GetRelayOutputs.assert_awaited_once()
 
 
+async def test_get_capabilities_deviceio_missing_relay_outputs_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test relay outputs fallback when capabilities omit the count."""
+    device = _create_onvif_device(hass)
+
+    media_service = AsyncMock()
+    media_service.GetServiceCapabilities = AsyncMock(return_value=None)
+    imaging_service = AsyncMock()
+    relay_response = MagicMock()
+    relay_response.RelayOutput = [MagicMock(), MagicMock(), MagicMock()]
+    deviceio_service = AsyncMock()
+    deviceio_service.GetServiceCapabilities = AsyncMock(return_value=MagicMock())
+    deviceio_service.GetRelayOutputs = AsyncMock(return_value=relay_response)
+
+    device.device = MagicMock(
+        create_media_service=AsyncMock(return_value=media_service),
+        get_definition=MagicMock(),
+        create_imaging_service=AsyncMock(return_value=imaging_service),
+        create_deviceio_service=AsyncMock(return_value=deviceio_service),
+    )
+
+    capabilities = await device.async_get_capabilities()
+
+    assert capabilities.deviceio
+    assert capabilities.relay_outputs == 3
+    deviceio_service.GetServiceCapabilities.assert_awaited_once()
+    deviceio_service.GetRelayOutputs.assert_awaited_once()
+
+
 async def test_get_relay_outputs(hass: HomeAssistant) -> None:
     """Test relay outputs retrieval from DeviceIO."""
     device = _create_onvif_device(hass)
@@ -133,6 +164,24 @@ async def test_get_relay_outputs_error(hass: HomeAssistant) -> None:
 
     deviceio_service = AsyncMock()
     deviceio_service.GetRelayOutputs = AsyncMock(side_effect=ONVIFError("boom"))
+
+    device.device = MagicMock(
+        create_deviceio_service=AsyncMock(return_value=deviceio_service),
+    )
+
+    relays = await device.async_get_relay_outputs()
+
+    assert relays == []
+    deviceio_service.GetRelayOutputs.assert_awaited_once()
+
+
+async def test_get_relay_outputs_xml_parse_error(hass: HomeAssistant) -> None:
+    """Test relay outputs retrieval returns empty list on XML parse errors."""
+    device = _create_onvif_device(hass)
+    device.capabilities = Capabilities(deviceio=True)
+
+    deviceio_service = AsyncMock()
+    deviceio_service.GetRelayOutputs = AsyncMock(side_effect=XMLParseError("boom"))
 
     device.device = MagicMock(
         create_deviceio_service=AsyncMock(return_value=deviceio_service),

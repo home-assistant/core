@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from onvif.exceptions import ONVIFError
+import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -36,6 +37,18 @@ async def test_wiper_switch_no_ptz(hass: HomeAssistant) -> None:
     device.profiles = device.async_get_profiles()
 
     assert hass.states.get("switch.testcamera_wiper") is None
+
+
+async def test_wiper_switch_with_ptz_only(hass: HomeAssistant) -> None:
+    """Test the wiper switch gets created for PTZ-only devices."""
+    _config, _camera, device = await setup_onvif_integration(
+        hass, capabilities=Capabilities(imaging=False, ptz=True, deviceio=False)
+    )
+    device.profiles = device.async_get_profiles()
+
+    state = hass.states.get("switch.testcamera_wiper")
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_turn_wiper_switch_on(hass: HomeAssistant) -> None:
@@ -287,17 +300,13 @@ async def test_relay_switch_error_handling(hass: HomeAssistant) -> None:
         side_effect=ONVIFError("Test error")
     )
 
-    # Attempt to turn on should fail and raise exception
-    try:
+    with pytest.raises(ONVIFError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             "turn_on",
             {ATTR_ENTITY_ID: "switch.testcamera_relay_relayoutputtoken_0"},
             blocking=True,
         )
-        await hass.async_block_till_done()
-    except ONVIFError:
-        pass
 
     # State should remain unknown (not changed to on)
     state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
@@ -329,17 +338,13 @@ async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None
         side_effect=ONVIFError("Test error")
     )
 
-    # Attempt to turn off should fail and raise exception
-    try:
+    with pytest.raises(ONVIFError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             "turn_off",
             {ATTR_ENTITY_ID: "switch.testcamera_relay_relayoutputtoken_0"},
             blocking=True,
         )
-        await hass.async_block_till_done()
-    except ONVIFError:
-        pass
 
     # State should remain on (not changed to off)
     state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")

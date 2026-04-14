@@ -103,7 +103,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if device.capabilities.events:
         device.platforms += [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-    if device.capabilities.imaging or device.capabilities.deviceio:
+    if (
+        device.capabilities.imaging
+        or device.capabilities.deviceio
+        or device.capabilities.ptz
+    ):
         device.platforms += [Platform.SWITCH]
 
     _async_migrate_camera_entities_unique_ids(hass, entry, device)
@@ -122,7 +126,13 @@ async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
     if device.capabilities.events and device.events.started:
         try:
             await device.events.async_stop()
-        except TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError:
+        except (
+            TimeoutError,
+            ONVIFError,
+            Fault,
+            aiohttp.ClientError,
+            TransportError,
+        ):
             LOGGER.warning("Error while stopping events: %s", device.name)
     await device.device.close()
 

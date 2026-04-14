@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +15,12 @@ from .const import DOMAIN, GET_CAPABILITIES_EXCEPTIONS
 from .device import ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
+
+
+class RelayOutput(Protocol):
+    """Typed relay output attributes used by the switch entity."""
+
+    token: str
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -122,13 +128,13 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device: ONVIFDevice, relay: Any) -> None:
+    def __init__(self, device: ONVIFDevice, relay: RelayOutput) -> None:
         """Initialize the relay switch."""
         super().__init__(device)
         self._relay_token = relay.token
-        # Extract relay properties if available
-        if hasattr(relay, "Properties") and hasattr(relay.Properties, "Name"):
-            self._attr_name = relay.Properties.Name
+        properties = getattr(relay, "Properties", None)
+        if properties is not None and hasattr(properties, "Name"):
+            self._attr_name = properties.Name
         else:
             self._attr_name = f"Relay {relay.token}"
 
