@@ -136,8 +136,8 @@ async def test_form_user_reauth_different_unique_id(hass: HomeAssistant) -> None
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_host"}
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "invalid_host"
 
 
 async def test_form_user_reauth_invalid_auth(hass: HomeAssistant) -> None:

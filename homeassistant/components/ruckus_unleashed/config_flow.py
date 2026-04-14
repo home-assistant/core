@@ -86,12 +86,10 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=info[KEY_SYS_TITLE], data=user_input
                     )
-                reauth_entry = self._get_reauth_entry()
-                if info[KEY_SYS_SERIAL] == reauth_entry.unique_id:
-                    return self.async_update_reload_and_abort(
-                        reauth_entry, data=user_input
-                    )
-                errors["base"] = "invalid_host"
+                self._abort_if_unique_id_mismatch(reason="invalid_host")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=user_input
+                )
 
         data_schema = DATA_SCHEMA
         if self.source == SOURCE_REAUTH:
