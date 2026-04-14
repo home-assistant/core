@@ -46,6 +46,7 @@ async def setup_mock_switch(
         mock_switch_wrapper.name = "Test Switch"
         mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
         mock_switch_wrapper.device_id = [1, 2, 3]
+        mock_switch_wrapper.gateway = "mock_gateway"
         mock_switch_wrapper.channel_number = 1
         mock_switch_wrapper.is_on = None  # Initial state
         mock_switch_wrapper.available = True
@@ -187,6 +188,7 @@ async def test_setup_switch_no_name(
         mock_switch_wrapper.name = None
         mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
         mock_switch_wrapper.device_id = [1, 2, 3]
+        mock_switch_wrapper.gateway = "mock_gateway"
         mock_switch_wrapper.channel_number = 1
         mock_switch_wrapper.is_on = False
         mock_switch_wrapper.available = True
@@ -284,6 +286,7 @@ async def test_invalid_appliance_data(
         mock_switch_wrapper.name = "Valid Switch"
         mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
         mock_switch_wrapper.device_id = [1, 2, 3]
+        mock_switch_wrapper.gateway = "mock_gateway"
         mock_switch_wrapper.channel_number = 1
         mock_switch_wrapper.is_on = False
         mock_switch_wrapper.available = True

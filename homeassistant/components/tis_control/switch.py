@@ -129,9 +129,11 @@ class TISSwitch(SwitchEntity):
         self.device_api = device_api
 
         dev_id_str = "_".join(str(i) for i in self.device_api.device_id)
+        gateway = getattr(self.device_api, "gateway", "")
+        identifier_str = f"{gateway}_{dev_id_str}" if gateway else dev_id_str
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, dev_id_str)},
+            identifiers={(DOMAIN, identifier_str)},
             name=f"TIS Device {dev_id_str}",
             manufacturer="TIS Control",
         )
