@@ -323,6 +323,7 @@ jobs:
         file:
           - Dockerfile
           - Dockerfile.dev
+          - Dockerfile.translations
           - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
