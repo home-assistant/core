@@ -34,25 +34,22 @@ ENV \
     UV_SYSTEM_PYTHON=true \
     UV_NO_CACHE=true
 
+WORKDIR /usr/src
+
 # Home Assistant S6-Overlay
 COPY rootfs /
 
 # Add go2rtc binary
 COPY --from=ghcr.io/alexxit/go2rtc@sha256:{go2rtc} /usr/local/bin/go2rtc /bin/go2rtc
 
-RUN \
-    # Verify go2rtc can be executed
-    go2rtc --version \
-    # Install uv
-    && pip3 install uv=={uv}
-
-WORKDIR /usr/src
-
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-RUN \
-    uv pip install \
+# Use latest uv to install the one defined in the requirements file
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+    # Verify go2rtc can be executed
+    go2rtc --version \
+    && uv pip install \
         --no-build \
         -r homeassistant/requirements.txt
 
@@ -143,8 +140,8 @@ WORKDIR "/github/workspace"
 
 COPY . /usr/src/homeassistant
 
-# Uv is only needed during build
-RUN --mount=from=ghcr.io/astral-sh/uv:{uv},source=/uv,target=/bin/uv \
+# Latest uv is used to install the one defined in the requirements file
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
     # Uv creates a lock file in /tmp
     --mount=type=tmpfs,target=/tmp \
     # Required for PyTurboJPEG
@@ -217,8 +214,7 @@ def _generate_files(config: Config) -> list[File]:
         + 10
     ) * 1000
 
-    package_versions = _get_package_versions(config.root / "requirements.txt", {"uv"})
-    package_versions |= _get_package_versions(
+    package_versions = _get_package_versions(
         config.root / "requirements_test.txt", {"pipdeptree", "tqdm"}
     )
     package_versions |= _get_package_versions(
