@@ -436,7 +436,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         return fan_mode
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         modes = list(self._attr_fan_modes)
         if self.hvac_mode == HVACMode.FAN_ONLY:
@@ -549,7 +549,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         fan_mode = self.fan_mode
         self._cached_fan_mode = fan_mode or None
         swing_mode = self.swing_mode
-        self._cached_swing_mode = swing_mode if swing_mode else SWING_OFF
+        self._cached_swing_mode = swing_mode or SWING_OFF
         target_temp = self.target_temperature
         self._cached_target_temp = target_temp if target_temp is not None else None
         self._last_command_time = time.time()
