@@ -62,7 +62,7 @@ async def test_async_update_data_calls_fetch(
 async def test_subscribe(coordinator: AquariteDataUpdateCoordinator) -> None:
     """Test subscribe calls the API and stores the watch handle."""
     await coordinator.subscribe()
-    coordinator.api.subscribe_pool.assert_called_once()
+    coordinator.api.subscribe_pool.assert_awaited_once()
     assert coordinator.watch is not None
 
 
