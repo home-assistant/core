@@ -5,12 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from afsapi import (
-    AFSAPI,
-    ConnectionError as FSConnectionError,
-    NotImplementedException as FSNotImplementedException,
-    PlayState,
-)
+from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, PlayCaps, PlayState
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -23,6 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from . import FrontierSiliconConfigEntry
 from .browse_media import browse_node, browse_top_level
@@ -59,21 +55,14 @@ class AFSAPIDevice(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    _attr_supported_features = (
-        MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.VOLUME_SET
+    _BASE_SUPPORTED_FEATURES = (
+        MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_STEP
-        | MediaPlayerEntityFeature.PREVIOUS_TRACK
-        | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.PLAY_MEDIA
-        | MediaPlayerEntityFeature.PLAY
-        | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
@@ -90,8 +79,37 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         self.__modes_by_label: dict[str, str] | None = None
         self.__sound_modes_by_label: dict[str, str] | None = None
+        self.__play_caps: PlayCaps | None = None
 
         self._supports_sound_mode: bool = True
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the currently supported features for this device."""
+        features = self._BASE_SUPPORTED_FEATURES
+
+        if self.__play_caps is not None:
+            if self.__play_caps & (PlayCaps.PAUSE | PlayCaps.STOP):
+                features |= MediaPlayerEntityFeature.PLAY
+            if self.__play_caps & PlayCaps.PAUSE:
+                features |= MediaPlayerEntityFeature.PAUSE
+            if self.__play_caps & PlayCaps.STOP:
+                features |= MediaPlayerEntityFeature.STOP
+            if self.__play_caps & (
+                PlayCaps.SKIP_PREVIOUS | PlayCaps.REWIND | PlayCaps.SKIP_BACKWARD
+            ):
+                features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+            if self.__play_caps & (
+                PlayCaps.SKIP_NEXT | PlayCaps.FAST_FORWARD | PlayCaps.SKIP_FORWARD
+            ):
+                features |= MediaPlayerEntityFeature.NEXT_TRACK
+            if self.__play_caps & PlayCaps.SEEK:
+                features |= MediaPlayerEntityFeature.SEEK
+
+        if self._supports_sound_mode:
+            features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
+
+        return features
 
     async def async_update(self) -> None:
         """Get the latest date and update device state."""
@@ -100,11 +118,12 @@ class AFSAPIDevice(MediaPlayerEntity):
             if await afsapi.get_power():
                 status = await afsapi.get_play_status()
                 self._attr_state = {
+                    PlayState.IDLE: MediaPlayerState.IDLE,
+                    PlayState.BUFFERING: MediaPlayerState.BUFFERING,
                     PlayState.PLAYING: MediaPlayerState.PLAYING,
                     PlayState.PAUSED: MediaPlayerState.PAUSED,
+                    PlayState.REBUFFERING: MediaPlayerState.BUFFERING,
                     PlayState.STOPPED: MediaPlayerState.IDLE,
-                    PlayState.LOADING: MediaPlayerState.BUFFERING,
-                    None: MediaPlayerState.IDLE,
                 }.get(status)
             else:
                 self._attr_state = MediaPlayerState.OFF
@@ -131,15 +150,16 @@ class AFSAPIDevice(MediaPlayerEntity):
             }
             self._attr_source_list = list(self.__modes_by_label)
 
+        try:
+            self.__play_caps = await afsapi.get_play_caps()
+        except FSNotImplementedError:
+            self.__play_caps = None
+
         if not self._attr_sound_mode_list and self._supports_sound_mode:
             try:
                 equalisers = await afsapi.get_equalisers()
-            except FSNotImplementedException:
+            except FSNotImplementedError:
                 self._supports_sound_mode = False
-                # Remove SELECT_SOUND_MODE from the advertised supported features
-                self._attr_supported_features ^= (
-                    MediaPlayerEntityFeature.SELECT_SOUND_MODE
-                )
             else:
                 self.__sound_modes_by_label = {
                     sound_mode.label: sound_mode.key for sound_mode in equalisers
@@ -169,12 +189,8 @@ class AFSAPIDevice(MediaPlayerEntity):
             if self._supports_sound_mode:
                 try:
                     eq_preset = await afsapi.get_eq_preset()
-                except FSNotImplementedException:
+                except FSNotImplementedError:
                     self._supports_sound_mode = False
-                    # Remove SELECT_SOUND_MODE from the advertised supported features
-                    self._attr_supported_features ^= (
-                        MediaPlayerEntityFeature.SELECT_SOUND_MODE
-                    )
                 else:
                     self._attr_sound_mode = (
                         eq_preset.label if eq_preset is not None else None
@@ -197,11 +213,20 @@ class AFSAPIDevice(MediaPlayerEntity):
 
             self._attr_volume_level = None
 
+    def force_refresh(self, delay: float = 0.2) -> None:
+        """Force refresh device state after a delay."""
+
+        async def request_refresh(_now: Any) -> None:
+            await self.async_update()
+
+        async_call_later(self.hass, delay, request_refresh)
+
     # Management actions
     # power control
     async def async_turn_on(self) -> None:
         """Turn on the device."""
         await self.fs_device.set_power(True)
+        self.force_refresh()
 
     async def async_turn_off(self) -> None:
         """Turn off the device."""
@@ -209,22 +234,25 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.fs_device.play()
+        if self.__play_caps is not None and self.__play_caps & PlayCaps.STOP:
+            # The 'play' command only seems to work when the current stream is paused.
+            # We need to send a 'stop' command instead to resume a stopped stream.
+            await self.fs_device.stop()
+        else:
+            await self.fs_device.play()
+
+        self.force_refresh()
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.fs_device.pause()
-
-    async def async_media_play_pause(self) -> None:
-        """Send play/pause command."""
-        if self._attr_state == MediaPlayerState.PLAYING:
-            await self.fs_device.pause()
-        else:
-            await self.fs_device.play()
+        self.force_refresh()
 
     async def async_media_stop(self) -> None:
-        """Send play/pause command."""
-        await self.fs_device.pause()
+        """Send stop command."""
+        await self.fs_device.stop()
+
+        self.force_refresh()
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
