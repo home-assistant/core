@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_setup_migrates_to_groups
+  dict({
+    'data': dict({
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'group',
+    'minor_version': 1,
+    'options': dict({
+      'entities': list([
+        'sensor.input_one',
+        'sensor.input_two',
+      ]),
+      'group_type': 'sensor',
+      'hide_members': False,
+      'ignore_non_numeric': False,
+      'name': 'My min_max',
+      'type': 'max',
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'subentries': list([
+    ]),
+    'title': 'My min_max',
+    'unique_id': None,
+    'version': 1,
+  })
+# ---

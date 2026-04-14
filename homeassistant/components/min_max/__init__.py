@@ -1,5 +1,6 @@
 """The min_max component."""
 
+from datetime import datetime
 import logging
 from types import MappingProxyType
 
@@ -15,6 +16,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_call_later
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
 
@@ -47,7 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         version=1,
     )
     await hass.config_entries.async_add(new_config_entry)
-    await hass.config_entries.async_remove(entry.entry_id)
 
     # Migrate entity from old entry to new entry
     entity_reg = er.async_get(hass)
@@ -58,9 +59,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             old_entity, GROUP_DOMAIN, new_config_entry_id=new_config_entry.entry_id
         )
 
+    # await hass.config_entries.async_remove(entry.entry_id)
+
+    async def remove_old_entry(now: datetime) -> None:
+        """Remove the old config entry after migration."""
+        await hass.config_entries.async_remove(entry.entry_id)
+
+    async_call_later(hass, 60, remove_old_entry)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    return True
