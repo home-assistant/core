@@ -101,6 +101,21 @@
       "followers": {
         "name": "Followers",
         "unit_of_measurement": "followers"
+      },
+      "puzzle_rating": {
+        "name": "Puzzle rating"
+      },
+      "puzzle_game_count": {
+        "name": "Total puzzles played",
+        "unit_of_measurement": "puzzles"
+      },
+      "puzzle_passed_count": {
+        "name": "Total puzzles solved",
+        "unit_of_measurement": "puzzles"
+      },
+      "puzzle_failed_count": {
+        "name": "Total puzzles failed",
+        "unit_of_measurement": "puzzles"
       }
     }
   }

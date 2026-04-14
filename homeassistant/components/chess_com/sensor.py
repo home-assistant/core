@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import ChessConfigEntry
 from .coordinator import ChessCoordinator, ChessData
 from .entity import ChessEntity
+from .puzzle_api import PuzzleStats
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -32,6 +33,13 @@ class ChessModeEntityDescription(SensorEntityDescription):
     """Sensor description for a Chess.com game mode."""
 
     value_fn: Callable[[dict[str, Any]], float]
+
+
+@dataclass(kw_only=True, frozen=True)
+class ChessPuzzleEntityDescription(SensorEntityDescription):
+    """Sensor description for Chess.com puzzle stats."""
+
+    value_fn: Callable[[PuzzleStats], int]
 
 
 PLAYER_SENSORS: tuple[ChessEntityDescription, ...] = (
@@ -83,6 +91,35 @@ GAME_MODES: dict[str, Callable[[PlayerStats], dict[str, Any] | None]] = {
     "chess960_daily": lambda stats: stats.chess960_daily,
 }
 
+PUZZLE_SENSORS: tuple[ChessPuzzleEntityDescription, ...] = (
+    ChessPuzzleEntityDescription(
+        key="puzzle_rating",
+        translation_key="puzzle_rating",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda puzzle: puzzle.rating,
+    ),
+    ChessPuzzleEntityDescription(
+        key="puzzle_game_count",
+        translation_key="puzzle_game_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda puzzle: puzzle.game_count,
+    ),
+    ChessPuzzleEntityDescription(
+        key="puzzle_passed_count",
+        translation_key="puzzle_passed_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda puzzle: puzzle.passed_count,
+    ),
+    ChessPuzzleEntityDescription(
+        key="puzzle_failed_count",
+        translation_key="puzzle_failed_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda puzzle: puzzle.failed_count,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -102,6 +139,12 @@ async def async_setup_entry(
                 ChessGameModeSensor(coordinator, description, game_mode, stats_fn)
                 for description in GAME_MODE_SENSORS
             )
+
+    if coordinator.data.puzzle_stats is not None:
+        entities.extend(
+            ChessPuzzleSensor(coordinator, description)
+            for description in PUZZLE_SENSORS
+        )
 
     async_add_entities(entities)
 
@@ -155,3 +198,27 @@ class ChessGameModeSensor(ChessEntity, SensorEntity):
         if TYPE_CHECKING:
             assert mode_data is not None
         return self.entity_description.value_fn(mode_data)
+
+
+class ChessPuzzleSensor(ChessEntity, SensorEntity):
+    """Chess.com puzzle stats sensor."""
+
+    entity_description: ChessPuzzleEntityDescription
+
+    def __init__(
+        self,
+        coordinator: ChessCoordinator,
+        description: ChessPuzzleEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}.{description.key}"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        puzzle_stats = self.coordinator.data.puzzle_stats
+        if puzzle_stats is None:
+            return None
+        return self.entity_description.value_fn(puzzle_stats)

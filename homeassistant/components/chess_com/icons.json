@@ -63,6 +63,18 @@
       },
       "followers": {
         "default": "mdi:account-multiple"
+      },
+      "puzzle_rating": {
+        "default": "mdi:puzzle"
+      },
+      "puzzle_game_count": {
+        "default": "mdi:puzzle"
+      },
+      "puzzle_passed_count": {
+        "default": "mdi:puzzle"
+      },
+      "puzzle_failed_count": {
+        "default": "mdi:puzzle"
       }
     }
   }
