@@ -260,8 +260,8 @@ def validate_segments(
                 template_validators.log_validation_result_error(
                     entity,
                     option,
-                    result,
-                    "expected a list of dictionaries",
+                    item,
+                    f"expected dictionary with keys {Segment.__slots__}",
                 )
                 return None
             try:
@@ -270,7 +270,7 @@ def validate_segments(
                 template_validators.log_validation_result_error(
                     entity,
                     option,
-                    result,
+                    item,
                     str(err).replace("Segment.__init__() ", ""),
                 )
                 return None

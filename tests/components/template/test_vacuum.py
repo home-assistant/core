@@ -1188,6 +1188,17 @@ async def test_get_segments(
             },
             "unexpected keyword argument 'extra_key'",
         ),
+        (
+            {"unique_id": TEST_VACUUM.entity_id, "segments_template": "{{ [[]] }}"},
+            f"expected dictionary with keys {Segment.__slots__}",
+        ),
+        (
+            {
+                "unique_id": TEST_VACUUM.entity_id,
+                "segments_template": "{{ [ {'id': '1', 'name': 'Kitchen'}, [] ] }}",
+            },
+            f"expected dictionary with keys {Segment.__slots__}",
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_test_vacuum_with_extra_config")
