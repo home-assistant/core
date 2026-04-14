@@ -224,7 +224,7 @@ async def test_coordinator_energy_history_cold_start_invalid_data(
     # All energy history fields should use the coordinator's numeric fallback output
     for key in ENERGY_HISTORY_FIELDS:
         assert coordinator.data[key] == 0
-    assert "_period_start" in coordinator.data
+    assert coordinator.data["_period_start"] == freezer()
 
     # Sensor should reflect the numeric fallback value, not become unavailable
     assert hass.states.get("sensor.energy_site_grid_imported").state == "0"
