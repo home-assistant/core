@@ -50,7 +50,7 @@ openai==2.21.0
 orjson==3.11.7
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==12.1.1
+Pillow==12.2.0
 propcache==0.4.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
