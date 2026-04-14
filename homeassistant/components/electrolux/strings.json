@@ -5,8 +5,7 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to the Electrolux API. Please check credentials and try again.",
-      "invalid_auth": "Authentication failed. Please check your credentials.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_auth": "Authentication failed. Please check your credentials."
     },
     "step": {
       "user": {
@@ -33,11 +32,11 @@
           "alarm": "Alarm",
           "delayed_start": "Delayed start",
           "end_of_cycle": "Cycle ended",
-          "idle": "Idle",
-          "off": "Off",
-          "paused": "Paused",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]",
+          "paused": "[%key:common::state::paused%]",
           "ready_to_start": "Ready to start",
-          "running": "Runing"
+          "running": "Running"
         }
       },
       "display_temperature": {
@@ -46,8 +45,8 @@
       "door_state": {
         "name": "Door state",
         "state": {
-          "closed": "Closed",
-          "open": "Open"
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
         }
       },
       "food_probe_state": {

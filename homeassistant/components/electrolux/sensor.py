@@ -200,7 +200,8 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
                 self._attr_options = snake_case_options
 
         if description.options is not None:
-            description.options.append(UNKNOWN)
+            self._attr_options = list(description.options)
+            self._attr_options.append(UNKNOWN)
 
         self.entity_description = description
         self._attr_unique_id = (
@@ -217,7 +218,6 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
             new_value = _convert_to_snake_case(new_value)
             if self.translation_key:
                 new_value = map_to_known_value(
-                    self.coordinator.hass,
                     Platform.SENSOR,
                     self.translation_key,
                     new_value,

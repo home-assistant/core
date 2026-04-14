@@ -5,6 +5,9 @@ from unittest.mock import AsyncMock
 from electrolux_group_developer_sdk.auth.invalid_credentials_exception import (
     InvalidCredentialsException,
 )
+from electrolux_group_developer_sdk.client.bad_credentials_exception import (
+    BadCredentialsException,
+)
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
@@ -33,7 +36,6 @@ async def test_user_flow_success(
     hass: HomeAssistant, appliances: AsyncMock, mock_token_manager: AsyncMock
 ) -> None:
     """Test a successful user config flow."""
-    mock_token_manager.get_user_id.return_value = "userId"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -47,7 +49,7 @@ async def test_user_flow_success(
     )
 
     assert result2.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Electrolux"
+    assert result2.get("title") == "Electrolux for mock@email.com"
     assert result2.get("data") == valid_user_input
 
 
@@ -78,7 +80,39 @@ async def test_user_flow_invalid_auth(
     )
 
     assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Electrolux"
+    assert result3.get("title") == "Electrolux for mock@email.com"
+    assert result3.get("data") == valid_user_input
+
+
+async def test_user_flow_bad_credentials(
+    hass: HomeAssistant, appliances: AsyncMock, mock_token_manager: AsyncMock
+) -> None:
+    """Test an invalid auth config flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result.get("type") == "form"
+
+    appliances.test_connection.side_effect = BadCredentialsException()
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=invalid_user_input,
+    )
+
+    assert result2.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result2.get("errors") == {"base": "invalid_auth"}
+
+    appliances.test_connection.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input=valid_user_input
+    )
+
+    assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3.get("title") == "Electrolux for mock@email.com"
     assert result3.get("data") == valid_user_input
 
 
@@ -110,7 +144,7 @@ async def test_user_flow_failed_connection(
     )
 
     assert result3.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Electrolux"
+    assert result3.get("title") == "Electrolux for mock@email.com"
     assert result3.get("data") == valid_user_input
 
 

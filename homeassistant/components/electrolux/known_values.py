@@ -1,8 +1,10 @@
 """File containing mappings to all known values reported by entities by the Electrolux integration."""
 
-from homeassistant.components import persistent_notification
+import logging
+
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 # embedded dictionary where the keys (from outer to inner order) are:
 # platform, entity_name, value
@@ -42,15 +44,17 @@ def is_known_value(platform: str, entity_name: str, value: str) -> bool:
     return value in KNOWN_VALUES.get(platform, {}).get(entity_name, {})
 
 
-def map_to_known_value(
-    hass: HomeAssistant, platform: str, entity_name: str, value: str
-) -> str:
-    """Return the provided value if it is a known value, otherwise map it to unknown and create a notification for the user to open a PR."""
+def map_to_known_value(platform: str, entity_name: str, value: str) -> str:
+    """Return provided value if it is known, otherwise log warn message and return 'unknown'."""
     if not is_known_value(platform, entity_name, value):
-        persistent_notification.async_create(
-            hass,
-            title="Unknown value encountered",
-            message=f'An unknown value {value} was reported for an entity for the Electrolux integration. Please open a PR for the integration, and include the following information: platform="{platform}", entity name="{entity_name}", reported value="{value}"',
+        _LOGGER.warning(
+            "An unknown value %s was reported for an entity for the Electrolux integration. "
+            "Please open a PR for the integration, and include the following information: "
+            'platform="%s", entity name="%s", reported value="%s"',
+            value,
+            platform,
+            entity_name,
+            value,
         )
         return UNKNOWN
     return value

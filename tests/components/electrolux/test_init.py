@@ -5,7 +5,15 @@ from unittest.mock import AsyncMock
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
-import pytest
+from electrolux_group_developer_sdk.client.bad_credentials_exception import (
+    BadCredentialsException,
+)
+from electrolux_group_developer_sdk.client.client_exception import (
+    ApplianceClientException,
+)
+from electrolux_group_developer_sdk.client.failed_connection_exception import (
+    FailedConnectionException,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.electrolux import ElectroluxData
@@ -27,7 +35,6 @@ from .conftest import appliance_data_factory
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -35,7 +42,6 @@ async def test_async_setup_entry_success(
     mock_token_manager: AsyncMock,
 ) -> None:
     """Test successful setup of the Electrolux integration."""
-    # Add and setup config entry
     await setup_integration(hass, mock_config_entry)
 
     # Check integration is loaded
@@ -62,7 +68,7 @@ def test_appliance_fixture_data() -> None:
 
         appliance_state = load_appliance_state(appliance_fixture)
         assert appliance_id == appliance_state.applianceId, (
-            f"Appliance ID in state {appliance_state.applianceId} does not appliance ID in appliance object {appliance_id}"
+            f"Appliance ID in state {appliance_state.applianceId} does not match appliance ID in appliance object {appliance_id}"
         )
 
         appliance_id_set.add(appliance_id)
@@ -149,3 +155,45 @@ async def test_check_for_new_devices(
 
     assert device_registry.async_get_device({(DOMAIN, old_appliance_id)}) is None
     assert device_registry.async_get_device({(DOMAIN, new_appliance_id)}) is not None
+
+
+async def test_appliance_client_exception(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that getting an error while getting data of all appliances will result in retrying integration setup."""
+    mock_appliance_client.get_appliance_data.side_effect = ApplianceClientException()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_appliance_client_test_connection_bad_credentials(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that getting an auth related error while testing the connection will result in retrying integration setup."""
+    mock_appliance_client.test_connection.side_effect = BadCredentialsException()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_appliance_client_test_connection_transient(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that getting a transient error while testing the connection will result in retrying integration setup."""
+    mock_appliance_client.test_connection.side_effect = FailedConnectionException()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

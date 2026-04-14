@@ -7,6 +7,7 @@ from electrolux_group_developer_sdk.client.appliance_data_factory import (
     appliance_data_factory,
 )
 from electrolux_group_developer_sdk.client.dto.appliance_state import ApplianceState
+from electrolux_group_developer_sdk.client.dto.email import Email
 import pytest
 
 from homeassistant.components.electrolux.const import CONF_REFRESH_TOKEN, DOMAIN
@@ -76,6 +77,8 @@ def mock_appliance_client() -> Generator[AsyncMock]:
             return load_appliance_state(get_fixture_name(appliance_id))
 
         client.get_appliance_state.side_effect = get_appliance_state
+
+        client.get_user_email.return_value = Email(email="mock@email.com")
 
         yield client
 

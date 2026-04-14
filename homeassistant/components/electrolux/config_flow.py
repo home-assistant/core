@@ -9,6 +9,9 @@ from electrolux_group_developer_sdk.auth.invalid_credentials_exception import (
 )
 from electrolux_group_developer_sdk.auth.token_manager import TokenManager
 from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
+from electrolux_group_developer_sdk.client.bad_credentials_exception import (
+    BadCredentialsException,
+)
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
@@ -36,11 +39,16 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             token_manager: TokenManager
+            email: str
             try:
                 token_manager = await _authenticate_user(user_input)
+                client = ApplianceClient(
+                    token_manager=token_manager, external_user_agent=USER_AGENT
+                )
+                email = (await client.get_user_email()).email
                 # Don't allow the same user to be able to be set up twice
                 await self.async_set_unique_id(token_manager.get_user_id())
-            except InvalidCredentialsException as _:
+            except (InvalidCredentialsException, BadCredentialsException) as _:
                 errors["base"] = "invalid_auth"
             except FailedConnectionException as _:
                 errors["base"] = "cannot_connect"
@@ -48,7 +56,10 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if not errors:
-                return self.async_create_entry(title="Electrolux", data=user_input)
+                return self.async_create_entry(
+                    title=f"Electrolux for {email}",
+                    data=user_input,
+                )
 
         return self._show_form(step_id="user", errors=errors)
 

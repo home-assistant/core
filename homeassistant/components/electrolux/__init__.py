@@ -6,17 +6,25 @@ import logging
 
 from electrolux_group_developer_sdk.auth.token_manager import TokenManager
 from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
+from electrolux_group_developer_sdk.client.appliances.appliance_data import (
+    ApplianceData,
+)
+from electrolux_group_developer_sdk.client.bad_credentials_exception import (
+    BadCredentialsException,
+)
+from electrolux_group_developer_sdk.client.client_exception import (
+    ApplianceClientException,
+)
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .api import fetch_appliance_data
 from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
 from .coordinator import (
     ElectroluxConfigEntry,
@@ -39,11 +47,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
         token_manager=token_manager, external_user_agent=USER_AGENT
     )
 
-    # Check during integration initialization if we are able to set it up correctly
     try:
         await client.test_connection()
+    except BadCredentialsException as e:
+        raise ConfigEntryAuthFailed("Bad credentials detected.") from e
     except FailedConnectionException as e:
-        raise ConfigEntryAuthFailed("Connection with client failed.") from e
+        raise ConfigEntryNotReady("Connection with client failed.") from e
 
     appliances = await fetch_appliance_data(client)
 
@@ -67,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
         await coordinator.async_config_entry_first_refresh()
 
         # Subscribe this coordinator to its appliance events
-        client.add_listener(appliance_id, coordinator.callback_handle_event)
+        coordinator.add_client_listener()
 
         coordinators[appliance_id] = coordinator
         # Device state is refreshed whenever the SSE connection opens.
@@ -94,24 +103,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
     """Unload a config entry."""
     # Remove SSE listeners
-    runtime_data = entry.runtime_data
-    if runtime_data:
-        coordinators = runtime_data.coordinators
-        for coordinator in coordinators.values():
-            coordinator.remove_listeners()
+    coordinators = entry.runtime_data.coordinators
+    for coordinator in coordinators.values():
+        coordinator.remove_client_listeners()
 
-        # Cancel SSE task
-        data = entry.runtime_data
-        sse_task = data.sse_task
-        if sse_task:
-            sse_task.cancel()
-            try:
-                await sse_task
-            except CancelledError:
-                _LOGGER.info("SSE stream cancelled for entry %s", entry.entry_id)
+    # Cancel SSE task
+    sse_task = entry.runtime_data.sse_task
+    sse_task.cancel()
+    try:
+        await sse_task
+    except CancelledError:
+        _LOGGER.info("SSE stream cancelled for entry %s", entry.entry_id)
 
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def create_token_manager(
@@ -150,8 +154,7 @@ async def _check_for_new_devices(
     _LOGGER.info("Checking for new devices")
     device_registry = dr.async_get(hass)
 
-    data = entry.runtime_data
-    coordinators = data.coordinators
+    coordinators = entry.runtime_data.coordinators
     appliances = await fetch_appliance_data(client)
 
     existing_ids = set(coordinators.keys())
@@ -167,8 +170,8 @@ async def _check_for_new_devices(
 
             await coordinator.async_refresh()
 
-            client.add_listener(appliance_id, coordinator.callback_handle_event)
-            data.coordinators[appliance_id] = coordinator
+            coordinator.add_client_listener()
+            coordinators[appliance_id] = coordinator
             on_livestream_opening_callback_list.append(coordinator.async_refresh)
 
             # Notify all platforms
@@ -182,7 +185,7 @@ async def _check_for_new_devices(
 
         # Remove coordinator
         coordinator = coordinators.pop(missing_id)
-        client.remove_all_listeners_by_appliance_id(missing_id)
+        coordinator.remove_client_listeners()
         on_livestream_opening_callback_list.remove(coordinator.async_refresh)
 
         device_registry = dr.async_get(hass)
@@ -192,3 +195,19 @@ async def _check_for_new_devices(
 
         if device_entry:
             device_registry.async_remove_device(device_entry.id)
+
+
+async def fetch_appliance_data(client: ApplianceClient) -> list[ApplianceData]:
+    """Helper method to retrieve all the appliances data from the Electrolux APIs."""
+    try:
+        appliances = await client.get_appliance_data()
+    except ApplianceClientException as e:
+        _LOGGER.warning("Failed to get appliances: %s", e)
+        raise ConfigEntryNotReady from e
+
+    # Filter out appliances where details or state is None
+    return [
+        appliance
+        for appliance in appliances
+        if appliance.details is not None and appliance.state is not None
+    ]

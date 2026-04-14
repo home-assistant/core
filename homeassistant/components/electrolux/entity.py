@@ -6,6 +6,7 @@ import logging
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
+from electrolux_group_developer_sdk.client.dto.appliance_details import ApplianceInfo
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -33,6 +34,8 @@ class ElectroluxBaseEntity[T: ApplianceData](
         super().__init__(coordinator)
         appliance_name = appliance_data.appliance.applianceName
         appliance_id = appliance_data.appliance.applianceId
+
+        appliance_info: ApplianceInfo | None = None
         if appliance_data.details:
             appliance_info = appliance_data.details.applianceInfo
 
@@ -48,12 +51,19 @@ class ElectroluxBaseEntity[T: ApplianceData](
                 "reported"
             )
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, appliance_id)},
-            name=appliance_name,
-            manufacturer=appliance_info.brand,
-            model=appliance_info.model,
-            serial_number=appliance_info.serialNumber,
+        self._attr_device_info = (
+            DeviceInfo(
+                identifiers={(DOMAIN, appliance_id)},
+                name=appliance_name,
+                manufacturer=appliance_info.brand,
+                model=appliance_info.model,
+                serial_number=appliance_info.serialNumber,
+            )
+            if appliance_info is not None
+            else DeviceInfo(
+                identifiers={(DOMAIN, appliance_id)},
+                name=appliance_name,
+            )
         )
 
         self._is_entity_available = True
@@ -71,7 +81,6 @@ class ElectroluxBaseEntity[T: ApplianceData](
     async def async_added_to_hass(self) -> None:
         """When entity is added to HA."""
         await super().async_added_to_hass()
-        self.coordinator.async_add_listener(self._handle_coordinator_update)
         self._handle_coordinator_update()
 
     @abstractmethod

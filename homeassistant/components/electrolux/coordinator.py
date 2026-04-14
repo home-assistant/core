@@ -70,7 +70,11 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         else:
             return appliance_state
 
-    def remove_listeners(self) -> None:
+    def add_client_listener(self) -> None:
+        """Register an SSE listener to the appliance client for appliance state updates."""
+        self.client.add_listener(self._appliance_id, self.callback_handle_event)
+
+    def remove_client_listeners(self) -> None:
         """Remove all SSE listeners."""
         self.client.remove_all_listeners_by_appliance_id(self._appliance_id)
 
@@ -93,11 +97,15 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
         # Copy state into a dict
         state_dict = state.model_dump()
 
-        prop = event["property"]
-        value = event["value"]
+        prop = event.get("property")
+        value = event.get("value")
 
         if prop is None:
             _LOGGER.warning("Received SSE event without 'property': %s", event)
+            return state
+
+        if value is None:
+            _LOGGER.warning("Received SSE event without 'value': %s", event)
             return state
 
         # Special case: top-level connectionState
