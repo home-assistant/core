@@ -23,7 +23,7 @@ from .const import LOGGER, UPDATE_INTERVAL_TIMEDELTA
 type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
 
-class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Manages fetching Fluss device data on a schedule."""
 
     def __init__(
@@ -77,14 +77,13 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         result: dict[str, dict[str, Any]] = {}
         for device, status in zip(device_list, statuses, strict=True):
-            internet_connected = False
-            if not isinstance(status, Exception):
-                status_data = status.get("status") if isinstance(status, dict) else None
-                if isinstance(status_data, dict) and "internetConnected" in status_data:
-                    internet_connected = bool(status_data["internetConnected"])
-
+            if isinstance(status, BaseException):
+                if not isinstance(status, FlussApiClientError):
+                    raise status
+                result[device["deviceId"]] = {**device, "internetConnected": False}
+                continue
             result[device["deviceId"]] = {
                 **device,
-                "internetConnected": internet_connected,
+                "internetConnected": bool(status["status"]["internetConnected"]),
             }
         return result
