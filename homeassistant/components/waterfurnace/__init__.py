@@ -122,7 +122,7 @@ async def _async_setup_coordinator(
     async def _async_start_energy(hass: HomeAssistant) -> None:
         await energy_coordinator.async_refresh()
 
-    async_at_started(hass, _async_start_energy)
+    entry.async_on_unload(async_at_started(hass, _async_start_energy))
 
     return device_client.gwid, WaterFurnaceDeviceData(
         realtime=coordinator, energy=energy_coordinator
