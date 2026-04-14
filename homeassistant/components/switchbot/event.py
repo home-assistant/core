@@ -60,6 +60,6 @@ class SwitchbotEventEntity(SwitchbotEntity, EventEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         seq = int(self.parsed_data.get("doorbell_seq", 0))
-        if seq != self._previous_doorbell_seq:
+        if seq != 0 and seq != self._previous_doorbell_seq:
             self._trigger_event("ring")
         self._previous_doorbell_seq = seq
