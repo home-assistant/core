@@ -28,14 +28,18 @@ from .remote_service import async_call_remote_service
 class SubaruButtonEntityDescription(ButtonEntityDescription):
     """Describes a Subaru button entity."""
 
-    arg: Callable[[dict[str, Any]], str | None] | None = None
+    arg: Callable[[SubaruConfigEntry, dict[str, Any]], str | None] | None = None
 
 
 REMOTE_BUTTONS = [
     SubaruButtonEntityDescription(
         key=SERVICE_REMOTE_START,
         translation_key="remote_start",
-        arg=lambda _: "Auto",
+        arg=lambda config_entry, vehicle_info: (
+            config_entry.runtime_data.climate_presets.get(
+                vehicle_info[VEHICLE_VIN], "Auto"
+            )
+        ),
     ),
     SubaruButtonEntityDescription(
         key=SERVICE_REMOTE_STOP,
@@ -86,7 +90,9 @@ class SubaruButton(ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         arg = (
-            self.entity_description.arg(self.vehicle_info)
+            self.entity_description.arg(
+                self.coordinator.config_entry, self.vehicle_info
+            )
             if self.entity_description.arg
             else None
         )

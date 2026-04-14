@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import time
@@ -34,6 +34,7 @@ class SubaruRuntimeData:
     controller: SubaruAPI
     coordinator: SubaruDataUpdateCoordinator
     vehicles: dict[str, dict[str, Any]]
+    climate_presets: dict[str, str] = field(default_factory=dict)
 
 
 class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

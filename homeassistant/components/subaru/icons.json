@@ -13,6 +13,11 @@
         "default": "mdi:car"
       }
     },
+    "select": {
+      "climate_preset": {
+        "default": "mdi:thermometer-lines"
+      }
+    },
     "sensor": {
       "average_fuel_consumption": {
         "default": "mdi:leaf"

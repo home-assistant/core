@@ -98,7 +98,7 @@ async def test_remote_start(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_remote_start.assert_called_once()
+        mock_remote_start.assert_called_once_with(vin, "Auto")
 
 
 @pytest.mark.parametrize(
@@ -276,6 +276,42 @@ async def test_remote_stop_exception(
             {ATTR_ENTITY_ID: VEHICLE_BUTTONS[vin]["remote_stop"]},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("vin", "vehicle_status"),
+    [
+        (TEST_VIN_2_EV, VEHICLE_STATUS_EV),
+        (TEST_VIN_3_G3, VEHICLE_STATUS_G3),
+    ],
+)
+async def test_remote_start_with_selected_preset(
+    hass: HomeAssistant,
+    subaru_config_entry: MockConfigEntry,
+    vin: str,
+    vehicle_status: dict,
+) -> None:
+    """Test remote start uses selected climate preset from runtime_data."""
+    await setup_subaru_config_entry(
+        hass,
+        subaru_config_entry,
+        vehicle_list=[vin],
+        vehicle_data=VEHICLE_DATA[vin],
+    )
+    subaru_config_entry.runtime_data.climate_presets[vin] = "Full Heat"
+    with (
+        patch(MOCK_API_REMOTE_START) as mock_remote_start,
+        patch(MOCK_API_FETCH),
+        patch(MOCK_API_GET_DATA, return_value=vehicle_status),
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            "press",
+            {ATTR_ENTITY_ID: VEHICLE_BUTTONS[vin]["remote_start"]},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_remote_start.assert_called_once_with(vin, "Full Heat")
 
 
 async def test_no_buttons_without_remote_start(

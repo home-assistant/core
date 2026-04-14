@@ -24,6 +24,8 @@ VEHICLE_HAS_REMOTE_SERVICE = "has_remote"
 VEHICLE_HAS_SAFETY_SERVICE = "has_safety"
 VEHICLE_LAST_UPDATE = "last_update"
 VEHICLE_STATUS = "vehicle_status"
+VEHICLE_CLIMATE = "climate"
+VEHICLE_CLIMATE_PRESET_NAME = "name"
 
 
 API_GEN_1 = "g1"
@@ -35,6 +37,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 

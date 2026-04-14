@@ -7,6 +7,8 @@ from homeassistant.components.subaru.const import (
     API_GEN_2,
     API_GEN_3,
     VEHICLE_API_GEN,
+    VEHICLE_CLIMATE,
+    VEHICLE_CLIMATE_PRESET_NAME,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_SERVICE,
     VEHICLE_HAS_REMOTE_START,
@@ -61,6 +63,59 @@ VEHICLE_DATA = {
 MOCK_DATETIME = datetime.fromtimestamp(1595560000, UTC)
 
 VEHICLE_STATUS_EV = {
+    VEHICLE_CLIMATE: [
+        {
+            VEHICLE_CLIMATE_PRESET_NAME: "Auto",
+            "runTimeMinutes": "10",
+            "climateZoneFrontTemp": "74",
+            "climateZoneFrontAirMode": "AUTO",
+            "climateZoneFrontAirVolume": "AUTO",
+            "outerAirCirculation": "auto",
+            "heatedRearWindowActive": "false",
+            "airConditionOn": "false",
+            "heatedSeatFrontLeft": "off",
+            "heatedSeatFrontRight": "off",
+            "startConfiguration": "START_ENGINE_ALLOW_KEY_IN_IGNITION",
+            "canEdit": "true",
+            "disabled": "false",
+            "vehicleType": "gas",
+            "presetType": "subaruPreset",
+        },
+        {
+            VEHICLE_CLIMATE_PRESET_NAME: "Full Cool",
+            "runTimeMinutes": "10",
+            "climateZoneFrontTemp": "60",
+            "climateZoneFrontAirMode": "feet_face_balanced",
+            "climateZoneFrontAirVolume": "7",
+            "airConditionOn": "true",
+            "heatedSeatFrontLeft": "OFF",
+            "heatedSeatFrontRight": "OFF",
+            "heatedRearWindowActive": "false",
+            "outerAirCirculation": "outsideAir",
+            "startConfiguration": "START_ENGINE_ALLOW_KEY_IN_IGNITION",
+            "canEdit": "true",
+            "disabled": "true",
+            "vehicleType": "gas",
+            "presetType": "subaruPreset",
+        },
+        {
+            VEHICLE_CLIMATE_PRESET_NAME: "Full Heat",
+            "runTimeMinutes": "10",
+            "climateZoneFrontTemp": "85",
+            "climateZoneFrontAirMode": "feet_window",
+            "climateZoneFrontAirVolume": "7",
+            "airConditionOn": "false",
+            "heatedSeatFrontLeft": "high_heat",
+            "heatedSeatFrontRight": "high_heat",
+            "heatedRearWindowActive": "true",
+            "outerAirCirculation": "outsideAir",
+            "startConfiguration": "START_ENGINE_ALLOW_KEY_IN_IGNITION",
+            "canEdit": "true",
+            "disabled": "true",
+            "vehicleType": "gas",
+            "presetType": "subaruPreset",
+        },
+    ],
     VEHICLE_STATUS: {
         "AVG_FUEL_CONSUMPTION": 51.1,
         "DISTANCE_TO_EMPTY_FUEL": 170,
@@ -94,7 +149,7 @@ VEHICLE_STATUS_EV = {
         "WINDOW_SUNROOF_STATUS": "UNKNOWN",
         "LATITUDE": 40.0,
         "LONGITUDE": -100.0,
-    }
+    },
 }
 
 

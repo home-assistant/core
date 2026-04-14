@@ -30,14 +30,14 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
 
 MOCK_API = "homeassistant.components.subaru.SubaruAPI."
 MOCK_API_DEVICE_REGISTERED = f"{MOCK_API}device_registered"
@@ -199,4 +199,17 @@ async def ev_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert hass.config_entries.async_get_entry(subaru_config_entry.entry_id)
     assert subaru_config_entry.state is ConfigEntryState.LOADED
+    return subaru_config_entry
+
+
+@pytest.fixture
+async def ev_entry_with_saved_climate(
+    hass: HomeAssistant, subaru_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Create Subaru EV entity with saved climate preset."""
+    mock_restore_cache(
+        hass,
+        (State("select.test_vehicle_2_climate_preset", "Full Heat"),),
+    )
+    await setup_subaru_config_entry(hass, subaru_config_entry)
     return subaru_config_entry
