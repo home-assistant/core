@@ -691,10 +691,6 @@ class HomeConnectProgramDurationSensor(HomeConnectProgramSensor):
         assert self._attr_unique_id
         self._attr_unique_id += "_duration"
 
-    def _update_native_value(self, status: str | float | None) -> None:
-        """Set the value of the sensor based on the given value."""
-        self._attr_native_value = cast(float | None, status)
-
     @callback
     def _handle_operation_state_event(self) -> None:
         """Update status when an event for the entity is received."""
