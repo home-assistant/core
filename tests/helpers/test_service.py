@@ -79,6 +79,7 @@ def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
         "homeassistant.helpers.service._handle_entity_call",
+        new_callable=AsyncMock,
         return_value=None,
     ) as mock_call:
         yield mock_call
@@ -1693,13 +1694,6 @@ async def test_call_single_entity_uses_parallel_updates(
     # Hold the semaphore so the service would block if it respects it
     await entity.parallel_updates.acquire()
 
-    call_started = asyncio.Event()
-
-    async def _delayed_handle(*args: Any, **kwargs: Any) -> None:
-        call_started.set()
-
-    mock_handle_entity_call.side_effect = _delayed_handle
-
     service_call = service.entity_service_call(
         hass,
         mock_entities,
@@ -1715,13 +1709,13 @@ async def test_call_single_entity_uses_parallel_updates(
 
     # Give the event loop a chance to progress; the call should be blocked
     await asyncio.sleep(0)
-    assert not call_started.is_set()
+    assert mock_handle_entity_call.await_count == 0
 
     # Release the semaphore so the call can proceed
     entity.parallel_updates.release()
     await task
 
-    assert len(mock_handle_entity_call.mock_calls) == 1
+    assert mock_handle_entity_call.await_count == 1
 
 
 async def test_call_context_user_not_exist(hass: HomeAssistant) -> None:
