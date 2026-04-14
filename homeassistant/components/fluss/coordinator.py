@@ -69,6 +69,8 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             if isinstance(device, dict)
             and isinstance(device.get("userPermissions"), dict)
             and bool(device["userPermissions"].get("canUseWiFi"))
+            and isinstance(device.get("deviceId"), str)
+            and bool(device["deviceId"])
         ]
         statuses = await asyncio.gather(
             *(self.api.async_get_device_status(d["deviceId"]) for d in device_list),
