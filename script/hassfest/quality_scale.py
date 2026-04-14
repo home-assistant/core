@@ -1456,7 +1456,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
