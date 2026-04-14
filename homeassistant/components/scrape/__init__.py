@@ -163,7 +163,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         old_to_new_sensor_id = {}
         for sensor_config in entry.options[SENSOR_DOMAIN]:
             # Create a new sub config entry per sensor
-            title = sensor_config.pop(CONF_NAME)
+            title = sensor_config[CONF_NAME]
             old_unique_id = sensor_config[CONF_UNIQUE_ID]
             subentry_config = {
                 CONF_INDEX: sensor_config[CONF_INDEX],
