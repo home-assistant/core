@@ -37,7 +37,6 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
             OAUTH2_TOKEN,
         )
 
-
     @property
     def name(self) -> str:
         """Name of the implementation."""
