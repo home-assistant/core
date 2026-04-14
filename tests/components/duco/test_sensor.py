@@ -58,6 +58,21 @@ async def test_iaq_sensor_entities_disabled_by_default(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_diagnostic_sensor_entities_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that diagnostic sensor entities are disabled by default."""
+    for entity_id in (
+        "sensor.living_signal_strength",
+        "sensor.living_write_requests_remaining",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_coordinator_update_marks_unavailable(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,

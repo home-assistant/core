@@ -58,6 +58,9 @@
           "man3x2": "Manual high speed (30 min)",
           "man3x3": "Manual high speed (45 min)"
         }
+      },
+      "write_req_remaining": {
+        "name": "Write requests remaining"
       }
     }
   },

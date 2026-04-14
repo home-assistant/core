@@ -6,7 +6,7 @@ import logging
 
 from duco import DucoClient
 from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, Node
+from duco.models import BoardInfo, LanInfo, Node
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,6 +26,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
+    lan_info: LanInfo | None
+    rssi_wifi: int | None
+    write_req_remaining: int | None
 
     def __init__(
         self,
@@ -42,6 +45,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
+        self.rssi_wifi = None
+        self.write_req_remaining = None
 
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
@@ -72,4 +77,16 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
+
+        try:
+            lan_info = await self.client.async_get_lan_info()
+            self.rssi_wifi = lan_info.rssi_wifi
+        except DucoError:
+            self.rssi_wifi = None
+
+        try:
+            self.write_req_remaining = await self.client.async_get_write_req_remaining()
+        except DucoError:
+            self.write_req_remaining = None
+
         return {node.node_id: node for node in nodes}

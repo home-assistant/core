@@ -13,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, PERCENTAGE
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -29,6 +34,13 @@ class DucoSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Node], int | float | str | None]
     node_types: tuple[NodeType, ...]
+
+
+@dataclass(frozen=True, kw_only=True)
+class DucoBoxSensorEntityDescription(SensorEntityDescription):
+    """Duco sensor entity description for box-level diagnostic data."""
+
+    value_fn: Callable[[DucoCoordinator], int | float | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
@@ -78,6 +90,26 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
     ),
 )
 
+BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
+    DucoBoxSensorEntityDescription(
+        key="rssi_wifi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda coordinator: coordinator.rssi_wifi,
+    ),
+    DucoBoxSensorEntityDescription(
+        key="write_req_remaining",
+        translation_key="write_req_remaining",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda coordinator: coordinator.write_req_remaining,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -87,12 +119,20 @@ async def async_setup_entry(
     """Set up Duco sensor entities."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
+    entities: list[SensorEntity] = [
         DucoSensorEntity(coordinator, node, description)
         for node in coordinator.data.values()
         for description in SENSOR_DESCRIPTIONS
         if node.general.node_type in description.node_types
-    )
+    ]
+
+    if box_node := coordinator.data.get(1):
+        entities.extend(
+            DucoBoxSensorEntity(coordinator, box_node, description)
+            for description in BOX_SENSOR_DESCRIPTIONS
+        )
+
+    async_add_entities(entities)
 
 
 class DucoSensorEntity(DucoEntity, SensorEntity):
@@ -117,3 +157,25 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
     def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
+
+
+class DucoBoxSensorEntity(DucoEntity, SensorEntity):
+    """Sensor entity for box-level diagnostic data."""
+
+    entity_description: DucoBoxSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DucoCoordinator,
+        node: Node,
+        description: DucoBoxSensorEntityDescription,
+    ) -> None:
+        """Initialize the box sensor entity."""
+        super().__init__(coordinator, node)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self.coordinator)
