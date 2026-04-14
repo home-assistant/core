@@ -82,6 +82,7 @@
         "SQLAlchemy",
         "Pillow",
         "attrs",
+        "uv",
         "voluptuous",
         "voluptuous-serialize",
         "voluptuous-openapi",
