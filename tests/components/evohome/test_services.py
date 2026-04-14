@@ -45,17 +45,13 @@ async def test_refresh_system(hass: HomeAssistant) -> None:
         mock_fcn.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)  # some don't support AutoWithReset
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 @pytest.mark.usefixtures("evohome")
-async def test_reset_system_deprecated(
+async def test_reset_system(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test untargeted reset_system service calls.
-
-    These untargeted service calls remain supported during the deprecation window but
-    should cause a Repair issue.
-    """
+    """Test untargeted reset_system service calls."""
 
     # EvoService.RESET_SYSTEM
     with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
@@ -71,44 +67,6 @@ async def test_reset_system_deprecated(
     issue = issue_registry.async_get_issue(
         DOMAIN, "deprecated_reset_system_service_call"
     )
-    assert issue
-    assert issue.translation_key == "deprecated_controller_service_call"
-    assert issue.translation_placeholders == {
-        "breaks_in_ha_version": SERVICE_BREAKS_IN_HA_VERSION,
-        "service": EvoService.RESET_SYSTEM,
-    }
-
-
-@pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_reset_system(
-    hass: HomeAssistant,
-    ctl_id: str,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test entity-targeted reset_system service calls."""
-
-    with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.RESET_SYSTEM,
-            target={ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-
-    # can remove, once the domain-level service is removed
-    with patch("evohomeasync2.control_system.ControlSystem.reset") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.RESET_SYSTEM,
-            {ATTR_ENTITY_ID: ctl_id},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_controller_service_call")
     assert issue is None
 
 
