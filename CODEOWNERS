@@ -566,8 +566,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/fortios/ @kimfrellsen
 /homeassistant/components/foscam/ @Foscam-wangzhengyu
 /tests/components/foscam/ @Foscam-wangzhengyu
-/homeassistant/components/freebox/ @hacf-fr @Quentame
-/tests/components/freebox/ @hacf-fr @Quentame
+/homeassistant/components/freebox/ @hacf-fr/reviewers @Quentame
+/tests/components/freebox/ @hacf-fr/reviewers @Quentame
 /homeassistant/components/freedompro/ @stefano055415
 /tests/components/freedompro/ @stefano055415
 /homeassistant/components/freshr/ @SierraNL

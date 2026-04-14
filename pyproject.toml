@@ -584,16 +584,6 @@ filterwarnings = [
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:ndms2_client.connection",
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:pyws66i",
 
-  # -- Pydantic V1 models
-  # https://github.com/madpilot/amberelectric.py - v2.0.12 - 2024-11-19
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:amberelectric.api.amber_api",
-  # https://github.com/elevenlabs/elevenlabs-python - v2.18.0 - 2024-10-14
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:elevenlabs.core.pydantic_utilities",
-  # https://github.com/Lektrico/lektricowifi - v0.1 - 2025-05-19
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:lektricowifi.models",
-  # https://github.com/sstallion/sensorpush-api - v2.1.3 - 2025-06-10
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:sensorpush_api.api.api_api",
-
   # -- New in Python 3.14
   # https://github.com/litl/backoff/pull/220 - v2.2.1 - 2022-10-05 (archived)
   "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:(backoff._decorator|backoff._async)",
