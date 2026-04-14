@@ -11,8 +11,19 @@ import threading
 
 from .backup_restore import restore_backup
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+from .util.package import is_docker_env, is_virtual_env
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
+
+
+def validate_environment() -> None:
+    """Validate that Home Assistant is started from a container or a venv."""
+    if not is_virtual_env() and not is_docker_env():
+        print(
+            "Home Assistant must be run in a Python virtual environment or a container.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 def validate_os() -> None:
@@ -40,8 +51,6 @@ def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
     from . import config as config_util  # noqa: PLC0415
 
-    lib_dir = os.path.join(config_dir, "deps")
-
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
@@ -61,17 +70,6 @@ def ensure_config_path(config_dir: str) -> None:
             print(
                 "Fatal Error: Unable to create default configuration "
                 f"directory {config_dir}: {ex}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-
-    # Test if library directory exists
-    if not os.path.isdir(lib_dir):
-        try:
-            os.mkdir(lib_dir)
-        except OSError as ex:
-            print(
-                f"Fatal Error: Unable to create library directory {lib_dir}: {ex}",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -168,6 +166,7 @@ def check_threads() -> None:
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
+    validate_environment()
 
     args = get_arguments()
 

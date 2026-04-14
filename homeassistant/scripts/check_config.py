@@ -149,7 +149,7 @@ def run(script_args: list) -> int:
         yaml_files = [
             f
             for f in glob(os.path.join(config_dir, "**/*.yaml"), recursive=True)
-            if not f.startswith(deps)
+            if not f.startswith(deps)  # Avoid scanning legacy deps folder
         ]
 
         for yfn in sorted(yaml_files):

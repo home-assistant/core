@@ -108,7 +108,7 @@ from .setup import (
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
-from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.package import is_docker_env
 from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
@@ -353,9 +353,6 @@ async def async_setup_hass(
                 err,
             )
         else:
-            if not is_virtual_env():
-                await async_mount_local_lib_path(runtime_config.config_dir)
-
             if hass.config.safe_mode:
                 _LOGGER.info("Starting in safe mode")
 
@@ -702,17 +699,6 @@ class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
         the result of this check is always False.
         """
         return False
-
-
-async def async_mount_local_lib_path(config_dir: str) -> str:
-    """Add local library to Python Path.
-
-    This function is a coroutine.
-    """
-    deps_dir = os.path.join(config_dir, "deps")
-    if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
-        sys.path.insert(0, lib_dir)
-    return deps_dir
 
 
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:

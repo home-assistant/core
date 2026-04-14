@@ -52,29 +52,6 @@ async def test_requirement_installed_in_venv(hass: HomeAssistant) -> None:
         )
 
 
-async def test_requirement_installed_in_deps(hass: HomeAssistant) -> None:
-    """Test requirement installed in deps directory."""
-    with (
-        patch("os.path.dirname", return_value="ha_package_path"),
-        patch("homeassistant.util.package.is_virtual_env", return_value=False),
-        patch("homeassistant.util.package.is_docker_env", return_value=False),
-        patch(
-            "homeassistant.util.package.install_package", return_value=True
-        ) as mock_install,
-        patch.dict(os.environ, env_without_wheel_links(), clear=True),
-    ):
-        hass.config.skip_pip = False
-        mock_integration(hass, MockModule("comp", requirements=["package==0.0.1"]))
-        assert await setup.async_setup_component(hass, "comp", {})
-        assert "comp" in hass.config.components
-        assert mock_install.call_args == call(
-            "package==0.0.1",
-            target=hass.config.path("deps"),
-            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
-            timeout=60,
-        )
-
-
 async def test_install_existing_package(hass: HomeAssistant) -> None:
     """Test an install attempt on an existing package."""
     with patch(
