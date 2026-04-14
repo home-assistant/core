@@ -45,9 +45,9 @@ class PuzzleStatsClient:
         """Fetch puzzle stats for a player."""
         url = PUZZLE_STATS_URL.format(username=username)
         try:
-            response = await self._session.get(url)
-            response.raise_for_status()
-            data = await response.json()
-            return PuzzleStats.from_dict(data)
+            async with self._session.get(url) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return PuzzleStats.from_dict(data)
         except ClientError, TimeoutError, KeyError, TypeError, ValueError:
             return None

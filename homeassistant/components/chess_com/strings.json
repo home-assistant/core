@@ -103,16 +103,13 @@
         "unit_of_measurement": "followers"
       },
       "puzzle_failed_count": {
-        "name": "Total puzzles failed",
-        "unit_of_measurement": "puzzles"
+        "name": "Total puzzles failed"
       },
       "puzzle_game_count": {
-        "name": "Total puzzles played",
-        "unit_of_measurement": "puzzles"
+        "name": "Total puzzles played"
       },
       "puzzle_passed_count": {
-        "name": "Total puzzles solved",
-        "unit_of_measurement": "puzzles"
+        "name": "Total puzzles solved"
       },
       "puzzle_rating": {
         "name": "Puzzle rating"

@@ -101,12 +101,14 @@ PUZZLE_SENSORS: tuple[ChessPuzzleEntityDescription, ...] = (
     ChessPuzzleEntityDescription(
         key="puzzle_game_count",
         translation_key="puzzle_game_count",
+        native_unit_of_measurement="puzzles",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda puzzle: puzzle.game_count,
     ),
     ChessPuzzleEntityDescription(
         key="puzzle_passed_count",
         translation_key="puzzle_passed_count",
+        native_unit_of_measurement="puzzles",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda puzzle: puzzle.passed_count,
@@ -114,6 +116,7 @@ PUZZLE_SENSORS: tuple[ChessPuzzleEntityDescription, ...] = (
     ChessPuzzleEntityDescription(
         key="puzzle_failed_count",
         translation_key="puzzle_failed_count",
+        native_unit_of_measurement="puzzles",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda puzzle: puzzle.failed_count,
@@ -140,11 +143,10 @@ async def async_setup_entry(
                 for description in GAME_MODE_SENSORS
             )
 
-    if coordinator.data.puzzle_stats is not None:
-        entities.extend(
-            ChessPuzzleSensor(coordinator, description)
-            for description in PUZZLE_SENSORS
-        )
+    entities.extend(
+        ChessPuzzleSensor(coordinator, description)
+        for description in PUZZLE_SENSORS
+    )
 
     async_add_entities(entities)
 
