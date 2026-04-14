@@ -141,8 +141,7 @@ async def async_setup_entry(
             )
 
     entities.extend(
-        ChessPuzzleSensor(coordinator, description)
-        for description in PUZZLE_SENSORS
+        ChessPuzzleSensor(coordinator, description) for description in PUZZLE_SENSORS
     )
 
     async_add_entities(entities)
