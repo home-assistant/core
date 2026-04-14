@@ -22,7 +22,8 @@ async def test_user_step_initial_form(mock_hass) -> None:
     flow.context = {}
     flow._async_current_entries = lambda include_ignore=None: []
 
-    result = await flow.async_step_user()
+    with patch.object(flow, "_async_current_entries", return_value=[]):
+        result = await flow.async_step_user()
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -42,7 +43,8 @@ async def test_user_step_with_input(mock_hass, mock_oauth2_implementation) -> No
     ) as mock_impl:
         mock_impl.return_value = mock_oauth2_implementation
 
-        result = await flow.async_step_user({"confirm_auth": True})
+        with patch.object(flow, "_async_current_entries", return_value=[]):
+            result = await flow.async_step_user()
 
         assert result["type"] == FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth"
@@ -81,7 +83,8 @@ async def test_single_instance_allowed(mock_hass) -> None:
     # Mock existing entries
     mock_hass.config_entries.async_entries.return_value = [MagicMock()]
 
-    result = await flow.async_step_user()
+    with patch.object(flow, "_async_current_entries", return_value=[]):
+        result = await flow.async_step_user()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
