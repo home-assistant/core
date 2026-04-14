@@ -49,5 +49,5 @@ class PuzzleStatsClient:
             response.raise_for_status()
             data = await response.json()
             return PuzzleStats.from_dict(data)
-        except (ClientError, TimeoutError, KeyError, TypeError, ValueError):
+        except ClientError, TimeoutError, KeyError, TypeError, ValueError:
             return None
