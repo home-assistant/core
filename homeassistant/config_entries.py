@@ -1602,7 +1602,7 @@ class ConfigEntriesFlowManager(
         self,
         result: ConfigFlowResult,
     ) -> None:
-        """Validate and set next_flow in result if provided."""
+        """Validate `next_flow` in result if provided."""
         if (next_flow := result.get("next_flow")) is None:
             return
         flow_type, flow_id = next_flow
