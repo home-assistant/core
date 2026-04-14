@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from tests.common import MockConfigEntry
 
@@ -54,6 +55,23 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert init_integration.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_eveonline_client: AsyncMock,
+    setup_credentials: None,
+) -> None:
+    """Test setup failure when authentication fails."""
+    mock_eveonline_client.async_get_wallet_balance.side_effect = ConfigEntryAuthFailed(
+        "Token expired"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_optional_endpoint_error_does_not_fail_setup(
