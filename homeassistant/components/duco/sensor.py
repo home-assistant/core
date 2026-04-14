@@ -119,20 +119,18 @@ async def async_setup_entry(
     """Set up Duco sensor entities."""
     coordinator = entry.runtime_data
 
-    entities: list[SensorEntity] = [
+    async_add_entities(
         DucoSensorEntity(coordinator, node, description)
         for node in coordinator.data.values()
         for description in SENSOR_DESCRIPTIONS
         if node.general.node_type in description.node_types
-    ]
+    )
 
     if box_node := coordinator.data.get(1):
-        entities.extend(
+        async_add_entities(
             DucoBoxSensorEntity(coordinator, box_node, description)
             for description in BOX_SENSOR_DESCRIPTIONS
         )
-
-    async_add_entities(entities)
 
 
 class DucoSensorEntity(DucoEntity, SensorEntity):
