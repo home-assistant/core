@@ -140,11 +140,23 @@ async def async_setup_entry(
         # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
         return result.get("IncludeLinkedZones") == "0"
 
+    def _get_switch_state(
+        speaker: SonosSpeaker,
+    ) -> tuple[list[str], bool | None, bool | None]:
+        """Return all switch state needed for entity creation in a single executor call."""
+        return (
+            available_soco_attributes(speaker),
+            _get_tv_autoplay_state(speaker),
+            _get_tv_ungroup_autoplay_state(speaker),
+        )
+
     async def _async_create_switches(speaker: SonosSpeaker) -> None:
         entities: list[SonosPollingEntity] = []
-        available_features = await hass.async_add_executor_job(
-            available_soco_attributes, speaker
-        )
+        (
+            available_features,
+            initial_autoplay,
+            initial_ungroup,
+        ) = await hass.async_add_executor_job(_get_switch_state, speaker)
         for feature_type in available_features:
             attribute_key = MODEL_FEATURE_SUBSTITUTIONS.get(
                 speaker.model_name.upper(), {}
@@ -164,9 +176,6 @@ async def async_setup_entry(
                 )
             )
 
-        initial_autoplay = await hass.async_add_executor_job(
-            _get_tv_autoplay_state, speaker
-        )
         if initial_autoplay is not None:
             speaker.tv_autoplay = initial_autoplay
             _LOGGER.debug(
@@ -178,9 +187,6 @@ async def async_setup_entry(
                 SonosTVAutoplaySwitchEntity(speaker=speaker, config_entry=config_entry)
             )
 
-        initial_ungroup = await hass.async_add_executor_job(
-            _get_tv_ungroup_autoplay_state, speaker
-        )
         if initial_ungroup is not None:
             speaker.tv_ungroup_autoplay = initial_ungroup
             _LOGGER.debug(
