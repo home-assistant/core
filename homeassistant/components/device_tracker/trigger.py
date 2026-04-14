@@ -2,6 +2,7 @@
 
 import voluptuous as vol
 
+from homeassistant.components.zone import ENTITY_ID_HOME as ENTITY_ID_HOME_ZONE
 from homeassistant.const import (
     CONF_OPTIONS,
     CONF_ZONE,
@@ -54,9 +55,18 @@ class ZoneTriggerBase(EntityTriggerBase):
         return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
     def _in_target_zones(self, state: State) -> bool:
-        """Check if the device is in any of the selected zones."""
-        in_zones = set(self._get_tracked_value(state) or [])
-        return bool(in_zones.intersection(self._zones))
+        """Check if the device is in any of the selected zones.
+
+        For GPS-based trackers, uses the in_zones attribute.
+        For scanner-based trackers (no in_zones attribute), infers from
+        state: 'home' means the device is in zone.home.
+        """
+        if (in_zones := self._get_tracked_value(state)) is not None:
+            return bool(set(in_zones).intersection(self._zones))
+        # Scanner tracker: state 'home' means in zone.home
+        if state.state == STATE_HOME:
+            return ENTITY_ID_HOME_ZONE in self._zones
+        return False
 
 
 class EnteredZoneTrigger(ZoneTriggerBase):

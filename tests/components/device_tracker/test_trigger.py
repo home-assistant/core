@@ -32,28 +32,29 @@ from tests.components.common import (
 STATE_WORK_ZONE = "work"
 
 
-def _dt_state(state: str, in_zones: list[str]) -> tuple[str, dict[str, list[str]]]:
-    """Create a device tracker state tuple with in_zones attribute."""
+def _gps_state(state: str, in_zones: list[str]) -> tuple[str, dict[str, list[str]]]:
+    """Create a GPS-based device tracker state with in_zones attribute."""
     return (state, {ATTR_IN_ZONES: in_zones})
 
 
-ZONE_TRIGGERS = [
+# Zone triggers for GPS-based trackers (have in_zones attribute)
+GPS_ZONE_TRIGGERS = [
     *parametrize_trigger_states(
         trigger="device_tracker.entered_zone",
         trigger_options={CONF_ZONE: ["zone.home", "zone.work"]},
         target_states=[
             # In zone.home
-            _dt_state(STATE_HOME, ["zone.home"]),
+            _gps_state(STATE_HOME, ["zone.home"]),
             # In zone.work
-            _dt_state(STATE_WORK_ZONE, ["zone.work"]),
+            _gps_state(STATE_WORK_ZONE, ["zone.work"]),
             # In both zones
-            _dt_state(STATE_HOME, ["zone.home", "zone.work"]),
+            _gps_state(STATE_HOME, ["zone.home", "zone.work"]),
         ],
         other_states=[
             # Not in any selected zone
-            _dt_state(STATE_NOT_HOME, []),
+            _gps_state(STATE_NOT_HOME, []),
             # In an unrelated zone
-            _dt_state("school", ["zone.school"]),
+            _gps_state("school", ["zone.school"]),
         ],
     ),
     *parametrize_trigger_states(
@@ -61,17 +62,42 @@ ZONE_TRIGGERS = [
         trigger_options={CONF_ZONE: ["zone.home", "zone.work"]},
         target_states=[
             # Not in any selected zone
-            _dt_state(STATE_NOT_HOME, []),
+            _gps_state(STATE_NOT_HOME, []),
             # In an unrelated zone only
-            _dt_state("school", ["zone.school"]),
+            _gps_state("school", ["zone.school"]),
         ],
         other_states=[
             # In zone.home
-            _dt_state(STATE_HOME, ["zone.home"]),
+            _gps_state(STATE_HOME, ["zone.home"]),
             # In zone.work
-            _dt_state(STATE_WORK_ZONE, ["zone.work"]),
+            _gps_state(STATE_WORK_ZONE, ["zone.work"]),
             # In both zones
-            _dt_state(STATE_HOME, ["zone.home", "zone.work"]),
+            _gps_state(STATE_HOME, ["zone.home", "zone.work"]),
+        ],
+    ),
+]
+
+# Zone triggers for scanner-based trackers (no in_zones attribute,
+# state is 'home' or 'not_home')
+SCANNER_ZONE_TRIGGERS = [
+    *parametrize_trigger_states(
+        trigger="device_tracker.entered_zone",
+        trigger_options={CONF_ZONE: ["zone.home"]},
+        target_states=[
+            STATE_HOME,
+        ],
+        other_states=[
+            STATE_NOT_HOME,
+        ],
+    ),
+    *parametrize_trigger_states(
+        trigger="device_tracker.left_zone",
+        trigger_options={CONF_ZONE: ["zone.home"]},
+        target_states=[
+            STATE_NOT_HOME,
+        ],
+        other_states=[
+            STATE_HOME,
         ],
     ),
 ]
@@ -292,7 +318,10 @@ async def test_device_tracker_zone_trigger_validation(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("device_tracker"),
 )
-@pytest.mark.parametrize(("trigger", "trigger_options", "states"), ZONE_TRIGGERS)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [*GPS_ZONE_TRIGGERS, *SCANNER_ZONE_TRIGGERS],
+)
 async def test_device_tracker_zone_trigger_behavior_any(
     hass: HomeAssistant,
     target_device_trackers: dict[str, list[str]],
@@ -321,7 +350,10 @@ async def test_device_tracker_zone_trigger_behavior_any(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("device_tracker"),
 )
-@pytest.mark.parametrize(("trigger", "trigger_options", "states"), ZONE_TRIGGERS)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [*GPS_ZONE_TRIGGERS, *SCANNER_ZONE_TRIGGERS],
+)
 async def test_device_tracker_zone_trigger_behavior_first(
     hass: HomeAssistant,
     target_device_trackers: dict[str, list[str]],
@@ -350,7 +382,10 @@ async def test_device_tracker_zone_trigger_behavior_first(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("device_tracker"),
 )
-@pytest.mark.parametrize(("trigger", "trigger_options", "states"), ZONE_TRIGGERS)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [*GPS_ZONE_TRIGGERS, *SCANNER_ZONE_TRIGGERS],
+)
 async def test_device_tracker_zone_trigger_behavior_last(
     hass: HomeAssistant,
     target_device_trackers: dict[str, list[str]],
