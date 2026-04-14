@@ -831,8 +831,8 @@ async def entity_service_call(
     if len(entities) == 1:
         # Single entity case avoids creating task
         entity = entities[0]
-        single_response = await _handle_entity_call(
-            hass, entity, func, data, call.context
+        single_response = await entity.async_request_call(
+            _handle_entity_call(hass, entity, func, data, call.context)
         )
         if entity.should_poll:
             # Context expires if the turn on commands took a long time.
