@@ -564,6 +564,7 @@ async def test_config_flow_device(
         "extra_options",
         "options_options",
         "key_template",
+        "suggested_device_class",
     ),
     [
         (
@@ -579,6 +580,7 @@ async def test_config_flow_device(
             {"device_class": "motion"},
             {"device_class": "window"},
             "state",
+            ("motion",),
         ),
         (
             "sensor",
@@ -593,6 +595,7 @@ async def test_config_flow_device(
             {},
             {},
             "state",
+            (),
         ),
         (
             "button",
@@ -620,6 +623,7 @@ async def test_config_flow_device(
                 ],
             },
             "state",
+            (),
         ),
         (
             "cover",
@@ -630,6 +634,7 @@ async def test_config_flow_device(
             {"set_cover_position": []},
             {"set_cover_position": []},
             "state",
+            (),
         ),
         (
             "event",
@@ -640,6 +645,7 @@ async def test_config_flow_device(
             {"event_types": "{{ ['single', 'double'] }}"},
             {"event_types": "{{ ['single', 'double'] }}"},
             "event_type",
+            (),
         ),
         (
             "fan",
@@ -650,6 +656,7 @@ async def test_config_flow_device(
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
             "state",
+            (),
         ),
         (
             "image",
@@ -667,6 +674,7 @@ async def test_config_flow_device(
                 "verify_ssl": True,
             },
             "url",
+            (),
         ),
         (
             "light",
@@ -677,6 +685,7 @@ async def test_config_flow_device(
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
             "state",
+            (),
         ),
         (
             "lock",
@@ -687,6 +696,7 @@ async def test_config_flow_device(
             {"lock": [], "unlock": []},
             {"lock": [], "unlock": []},
             "state",
+            (),
         ),
         (
             "number",
@@ -717,6 +727,7 @@ async def test_config_flow_device(
                 },
             },
             "state",
+            (),
         ),
         (
             "alarm_control_panel",
@@ -727,6 +738,7 @@ async def test_config_flow_device(
             {"code_arm_required": True, "code_format": "number"},
             {"code_arm_required": True, "code_format": "number"},
             "value_template",
+            (),
         ),
         (
             "select",
@@ -737,6 +749,7 @@ async def test_config_flow_device(
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             "state",
+            (),
         ),
         (
             "switch",
@@ -747,6 +760,7 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
+            (),
         ),
         (
             "update",
@@ -757,6 +771,7 @@ async def test_config_flow_device(
             {"latest_version": "{{ '2.0' }}"},
             {"latest_version": "{{ '2.0' }}"},
             "installed_version",
+            (),
         ),
         (
             "vacuum",
@@ -767,6 +782,7 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+            (),
         ),
         (
             "weather",
@@ -777,6 +793,7 @@ async def test_config_flow_device(
             {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
             {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
             "condition",
+            (),
         ),
     ],
 )
@@ -791,6 +808,7 @@ async def test_options(
     extra_options: dict[str, Any],
     options_options: dict[str, Any],
     key_template: str,
+    suggested_device_class: tuple[str, ...],
 ) -> None:
     """Test reconfiguring."""
     input_entities = ["one", "two"]
@@ -828,10 +846,10 @@ async def test_options(
         result["data_schema"].schema, key_template
     ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
-    if template_type == "binary_sensor":
+    for device_class in suggested_device_class:
         assert (
             get_schema_suggested_value(result["data_schema"].schema, "device_class")
-            == "motion"
+            == device_class
         )
 
     result = await hass.config_entries.options.async_configure(
