@@ -73,10 +73,10 @@ async def test_automatic_missing_device_cleanup(
     device_registry: dr.DeviceRegistry,
     mock_omada_client: MagicMock,
 ) -> None:
-    """Test missing devices are removed on coordinator data refresh.
+    """Test missing devices are removed during initial startup cleanup.
 
-    This validates the cleanup mechanism that runs during coordinator refresh,
-    which is triggered during initial setup.
+    This validates the cleanup mechanism scheduled immediately on entry setup,
+    which runs as a background task.
     """
     mock_config_entry = MockConfigEntry(
         title="Test Omada Controller",
@@ -107,10 +107,10 @@ async def test_automatic_missing_client_cleanup(
     mock_omada_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test missing client trackers are removed on coordinator data refresh.
+    """Test missing client trackers are removed during initial startup cleanup.
 
-    This validates the cleanup mechanism that runs during coordinator refresh,
-    which is triggered during initial setup.
+    This validates the cleanup mechanism scheduled immediately on entry setup,
+    which runs as a background task.
     """
 
     mock_config_entry = MockConfigEntry(

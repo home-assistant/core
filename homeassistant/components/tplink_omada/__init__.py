@@ -81,6 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
                 hass,
                 controller,
             )
+            await controller.known_clients_coordinator.async_refresh()
             await async_cleanup_client_trackers(
                 hass,
                 controller,

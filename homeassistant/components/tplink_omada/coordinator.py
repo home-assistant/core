@@ -167,7 +167,7 @@ class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
-            hass, config_entry, omada_client, "KnownClientsList", POLL_CLIENTS
+            hass, config_entry, omada_client, "KnownClientsList", poll_delay=None
         )
 
     async def poll_update(self) -> dict[str, OmadaWirelessClient]:
