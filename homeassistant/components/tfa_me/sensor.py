@@ -3,7 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-import logging
+
+# import logging
 from typing import Any, cast
 
 from tfa_me_ha_local.history import SensorHistory
@@ -29,14 +30,14 @@ from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator, resolve_tfa_hos
 
 PARALLEL_UPDATES = 1
 
-_LOGGER = logging.getLogger(__name__)
+# _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
 class TFAmeSensorEntityDescription(SensorEntityDescription):
     """Entity description for TFA.me sensor entity."""
 
-    # value_fn gets entity and the raw data dict (coordinator.data[self.uid])
+    # value_fn gets entity and the raw data dict (coordinator.data.entities[self.uid])
     value_fn: Callable[["TFAmeSensorEntity", dict[str, Any]], StateType] | None = None
 
 
@@ -45,7 +46,7 @@ def _calc_rain_last_hour(entity: "TFAmeSensorEntity", data: dict[str, Any]) -> f
     reset_rain = data.get("reset_rain", False)
     if reset_rain:
         entity.rain_history.clear()
-        entity.coordinator.data[entity.uid]["reset_rain"] = False
+        entity.coordinator.data.entities[entity.uid]["reset_rain"] = False
 
     value = entity.rain_history.get_rain_amount()
     return round(value, 1)
@@ -56,7 +57,7 @@ def _calc_rain_last_24h(entity: "TFAmeSensorEntity", data: dict[str, Any]) -> fl
     reset_rain = data.get("reset_rain", False)
     if reset_rain:
         entity.rain_history_24.clear()
-        entity.coordinator.data[entity.uid]["reset_rain"] = False
+        entity.coordinator.data.entities[entity.uid]["reset_rain"] = False
 
     value = entity.rain_history_24.get_rain_amount()
     return round(value, 1)
@@ -142,7 +143,11 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda entity, data: round(
-            float(entity.coordinator.data[entity.uid.replace("_deg", "")]["value"])
+            float(
+                entity.coordinator.data.entities[entity.uid.replace("_deg", "")][
+                    "value"
+                ]
+            )
             * (360.0 / 16.0),
             1,
         ),
@@ -217,7 +222,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     # Initialize first refresh/request and wait for parsed JSON data from coordinator
     sensors_start = []
-    for unique_id in coordinator.data:
+    for unique_id in coordinator.data.entities:
         sensor_id = unique_id[17:26]  # sensor ID
         if unique_id not in coordinator.sensor_entity_list:
             sensors_start.append(TFAmeSensorEntity(coordinator, sensor_id, unique_id))
@@ -227,7 +232,7 @@ async def async_setup_entry(
     async_add_entities(sensors_start, True)
 
 
-class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
+class TFAmeSensorEntity(CoordinatorEntity[TFAmeDataCoordinator], SensorEntity):
     """TFA.me sensor entity, represents in HA a single measurement value of a sensor."""
 
     # Narrow the type of entity_description for this entity class
@@ -244,13 +249,13 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         try:
             super().__init__(coordinator)
             self._initialized_once = False
-            self.coordinator = coordinator
+            self.coordinator: TFAmeDataCoordinator = coordinator
             self._attr_unique_id = unique_id  # Unique ID (sets unique_id), will never be changed, name schema "StationID_SensorID_MeasurementValue"
             self.host = coordinator.host
             self.name_with_station_id = coordinator.name_with_station_id
             self.entity_id = unique_id  # User can edit this entity ID
             self.uid: str = unique_id
-            self.gateway_id = self.coordinator.gateway_id
+            self.gateway_id = self.coordinator.data.gateway_id
             self.sensor_id = sensor_id
             self._attr_icon = ""
             ids_str = f"{sensor_id}_{self.gateway_id}"
@@ -286,7 +291,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                 self._attr_device_info["configuration_url"] = (
                     f"http://{host_resolved}/ha_menu"
                 )
-                self._attr_device_info["sw_version"] = self.coordinator.gateway_sw
+                self._attr_device_info["sw_version"] = self.coordinator.data.gateway_sw
                 self._attr_device_info["serial_number"] = (
                     self.format_string_tfa_id_only(self.gateway_id)
                 )
@@ -297,7 +302,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
             # Add init value & description
             self.init_measure_value: float = 0
-            self.init_measure_value = self.coordinator.data[self.uid]["value"]
+            self.init_measure_value = self.coordinator.data.entities[self.uid]["value"]
             self.entity_description = cast(
                 TFAmeSensorEntityDescription,
                 TFA_ME_ENTITY_DESCRIPTIONS.get(self.measure_name),
@@ -322,8 +327,8 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
         if "rain_1_hour" in self.uid:
             try:
-                value = float(self.coordinator.data[self.uid]["value"])
-                ts = self.coordinator.data[self.uid]["ts"]
+                value = float(self.coordinator.data.entities[self.uid]["value"])
+                ts = self.coordinator.data.entities[self.uid]["ts"]
                 self.rain_history.add_measurement(value, ts)
 
             except (ValueError, TypeError, KeyError):
@@ -331,8 +336,8 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
 
         if "rain_24_hours" in self.uid:
             try:
-                value = float(self.coordinator.data[self.uid]["value"])
-                ts = self.coordinator.data[self.uid]["ts"]
+                value = float(self.coordinator.data.entities[self.uid]["value"])
+                ts = self.coordinator.data.entities[self.uid]["ts"]
                 self.rain_history_24.add_measurement(value, ts)
 
             except (ValueError, TypeError, KeyError):
@@ -377,13 +382,13 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Actual measurement value of an entity."""
         try:
-            last_update_ts: int = int(self.coordinator.data[self.uid]["ts"])
+            last_update_ts: int = int(self.coordinator.data.entities[self.uid]["ts"])
             utc_now_ts = int(datetime.now().timestamp())
             timeout = self.get_timeout(self.sensor_id)
             if (utc_now_ts - last_update_ts) > timeout:
                 return None
 
-            data = self.coordinator.data[self.uid]
+            data = self.coordinator.data.entities[self.uid]
             desc: TFAmeSensorEntityDescription = self.entity_description
 
             if desc.value_fn is not None:
@@ -400,7 +405,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         """Unit of measurement value,  e.g. for wind speed unit is "m/s"."""
 
         try:
-            unit = self.coordinator.data[self.uid]["unit"]
+            unit = self.coordinator.data.entities[self.uid]["unit"]
             if unit is None:
                 return None  # HA shows "unavailable"
             return str(unit)
@@ -412,7 +417,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
         """Extra attributes dictionary for an entity: sensor ID, measurement, timestamp, icon."""
 
         try:
-            sensor_data = self.coordinator.data[self.uid]
+            sensor_data = self.coordinator.data.entities[self.uid]
             dt = datetime.fromtimestamp(
                 int(sensor_data["ts"]), tz=UTC
             )  # ISO-8601-UTC format

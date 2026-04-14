@@ -9,8 +9,8 @@ import pytest
 
 from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.components.tfa_me.coordinator import (
-    DataUpdateCoordinator,
     TFAmeConfigEntry,
+    TFAmeCoordinatorData,
     TFAmeDataCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -65,7 +65,8 @@ def tfa_me_options_flow_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def tfa_me_mock_coordinator():
     """Return a mock coordinator with dummy data."""
-    coordinator = MagicMock(spec=DataUpdateCoordinator)
+    coordinator = MagicMock(spec=TFAmeDataCoordinator)
+
     coordinator.async_add_listener = Mock(return_value=lambda: None)
     coordinator.async_request_refresh = AsyncMock()
     coordinator.async_update = AsyncMock()
@@ -73,10 +74,10 @@ def tfa_me_mock_coordinator():
     coordinator.name_with_station_id = False
     coordinator.sensor_entity_list = []
     now = datetime.now().timestamp()
-    coordinator.gateway_id = "017654321"
-    coordinator.gateway_sw = "1.12345 / 1"
+    gateway_id = "017654321"
+    gateway_sw = "1.12345 / 1"
     # Some entities used for 100% test coverage
-    coordinator.data = {
+    entities = {
         "sensor.017654321_a01234567_temperature": {
             "value": "23.5",
             "unit": "°C",
@@ -144,6 +145,10 @@ def tfa_me_mock_coordinator():
             "ts": int(now),
         },
     }
+
+    coordinator.data = TFAmeCoordinatorData(
+        entities=entities, gateway_id=gateway_id, gateway_sw=gateway_sw
+    )
 
     return coordinator
 

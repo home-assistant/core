@@ -37,7 +37,7 @@ async def test_async_setup_entry_creates_entities(
     entry.add_to_hass(hass)
 
     # Fake coordinator with two sensors
-    tfa_me_mock_coordinator.data = {
+    tfa_me_mock_coordinator.data.entities = {
         "uid_1": {"sensor_id": "a204e4df6"},
         "uid_2": {"sensor_id": "a4481290f"},
     }
@@ -138,10 +138,10 @@ async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
     assert float(entity6.native_value) == 1000.1
 
     # Test: Unit None
-    tfa_me_mock_coordinator.data[entity.entity_id]["unit"] = None
+    tfa_me_mock_coordinator.data.entities[entity.entity_id]["unit"] = None
     assert entity.native_unit_of_measurement is None
     # Test: Remove unit
-    del tfa_me_mock_coordinator.data[entity.entity_id]["unit"]
+    del tfa_me_mock_coordinator.data.entities[entity.entity_id]["unit"]
     assert entity.native_unit_of_measurement == ""
 
     # Station barometric pressure without "measurement"
@@ -347,7 +347,7 @@ def test_handle_coordinator_update(
     }
 
     # Set data
-    tfa_me_mock_coordinator.data = {uid: sensor_data}
+    tfa_me_mock_coordinator.data.entities = {uid: sensor_data}
 
     with (
         patch("homeassistant.components.tfa_me.sensor.SensorHistory") as mock_hist_cls,
@@ -439,12 +439,12 @@ def test_native_value_generic_fallback(
     ent.hass = hass
 
     # Test: Timeout
-    tfa_me_mock_coordinator.data[uid]["ts"] = 0
+    tfa_me_mock_coordinator.data.entities[uid]["ts"] = 0
     assert ent.native_value is None
 
     # Provide an entity_description with value_fn = None
     ent.entity_description = SimpleNamespace(value_fn=None)
-    tfa_me_mock_coordinator.data[uid]["ts"] = int(datetime.now().timestamp())
+    tfa_me_mock_coordinator.data.entities[uid]["ts"] = int(datetime.now().timestamp())
 
     # Test: generic fallback is used → data.get("value")
     assert ent.native_value == "23.5"

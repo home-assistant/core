@@ -17,7 +17,6 @@ from homeassistant.components.hassio import datetime
 from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import AsyncMock
@@ -64,10 +63,7 @@ async def test_update_data_with_ip(
     coordinator = TFAmeDataCoordinator(
         hass,
         tfa_me_options_flow_mock_entry,
-        "017-654-321",
-        name_with_station_id=True,
     )
-    coordinator.first_init = 1
 
     # Patch TFAmeClient delivers JSON directly
     with patch(
@@ -78,11 +74,10 @@ async def test_update_data_with_ip(
         result = await coordinator._async_update_data()
 
     # Simply check if the number of entities is correct
-    assert len(result) == 12
+    assert len(result.entities) == 12
 
     # Asserts others
-    assert coordinator.gateway_id == "017654321"
-    assert coordinator.first_init == 2
+    assert result.gateway_id == "017654321"
 
     # Create invalid JSON: "measurements" is a string not a dict
     bad_json = {
@@ -100,19 +95,18 @@ async def test_update_data_with_ip(
 
     # Assert: TFAmeJSONError
     with pytest.raises(TFAmeJSONError, match="Invalid JSON response"):
-        coordinator.json_to_entities(bad_json)
+        coordinator.parse_json(bad_json)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("exc", "expected"),
     [
-        (TFAmeTimeoutError("timeout"), ConfigEntryNotReady),
-        (TFAmeConnectionError("conn"), ConfigEntryNotReady),
+        (TFAmeTimeoutError("timeout"), UpdateFailed),
+        (TFAmeConnectionError("conn"), UpdateFailed),
         (TFAmeHTTPError("http"), UpdateFailed),
         (TFAmeJSONError("json"), UpdateFailed),
-        (TFAmeException("other"), ConfigEntryNotReady),
-        (RuntimeError("unexpected"), ConfigEntryNotReady),
+        (TFAmeException("other"), UpdateFailed),
     ],
 )
 async def test_async_update_data_exceptions_first_init(
@@ -123,8 +117,6 @@ async def test_async_update_data_exceptions_first_init(
     coordinator = TFAmeDataCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
-        host="127.0.0.1",
-        name_with_station_id=False,
     )
 
     # Patch the client so that async_get_sensors raises the test exception
@@ -147,7 +139,6 @@ async def test_async_update_data_exceptions_first_init(
         (TFAmeHTTPError("http"), UpdateFailed),
         (TFAmeJSONError("json"), UpdateFailed),
         (TFAmeException("other"), UpdateFailed),
-        (RuntimeError("unexpected"), UpdateFailed),
     ],
 )
 async def test_async_update_data_exceptions_after_first_init(
@@ -158,10 +149,7 @@ async def test_async_update_data_exceptions_after_first_init(
     coordinator = TFAmeDataCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
-        host="127.0.0.1",
-        name_with_station_id=False,
     )
-    coordinator.first_init = 1  # simulate already initialized
 
     with (
         patch(

@@ -18,7 +18,7 @@ from .helper import resolve_tfa_host
 
 
 class TFAmeData:
-    """Small helper used by the config flow to talk to a TFA.me station."""
+    """Small helper used by the config flow to talk to a TFA.me station to get the unique ID."""
 
     def __init__(self, hass: HomeAssistant, address: str) -> None:
         """Initialize helper with user-provided address (IP or station ID)."""

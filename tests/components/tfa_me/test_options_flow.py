@@ -59,7 +59,7 @@ async def test_options_flow_action_rain(
     # Assertions
     assert result["type"] == "create_entry"
     assert (
-        tfa_me_mock_coordinator.data["sensor.017654321_a1fffffea_rain_1_hour"][
+        tfa_me_mock_coordinator.data.entities["sensor.017654321_a1fffffea_rain_1_hour"][
             "reset_rain"
         ]
         is True
