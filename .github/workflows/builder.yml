@@ -202,7 +202,7 @@ jobs:
           TRANSLATION_PROCESS_ID: ${{ needs.init.outputs.translation_download_process }}
         run: |
           pip install -r script/translations/requirements.txt
-          python3 -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
+          python3 -u -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
 
       - name: Build base image (fully)
         uses: edenhaus/builder/actions/build-image@edenhaus-target-support
@@ -500,7 +500,7 @@ jobs:
   #         TRANSLATION_PROCESS_ID: ${{ needs.init.outputs.translation_download_process }}
   #       run: |
   #         pip install -r script/translations/requirements.txt
-  #         python3 -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
+  #         python3 -u -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
 
   #     - name: Build package
   #       shell: bash
