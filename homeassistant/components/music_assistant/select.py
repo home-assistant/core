@@ -98,10 +98,12 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         self._option_key_to_translation_key_mapping = {
             option.key: option.translation_key for option in player_option.options
         }
+
         super().__init__(mass, player_id, player_option)
 
-        self._attr_options = list(self._option_translation_key_to_key_mapping.keys())
         self.entity_description = entity_description
+
+        self._attr_options = list(self._option_translation_key_to_key_mapping.keys())
 
     @catch_musicassistant_error
     async def async_select_option(self, option: str) -> None:
