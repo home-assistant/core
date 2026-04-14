@@ -4,7 +4,22 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Several test improvements needed:
+      - test_flow_works does not assert that the unique_id is set on the config entry.
+      - test_flow_fails_user_credentials_faulty (and test_flow_fails_hub_unavailable)
+        should also verify recovery by completing with CREATE_ENTRY; the two tests
+        can be parametrized together.
+      - aiounifi.Controller.login is patched at library level; it should be patched
+        where it is actually used (homeassistant.components.unifi…).
+      - Some test_hub.py tests duplicate coverage already in test_init.py.
+      - Large inline test data payloads should be moved to JSON fixtures.
+      - test_entity_and_device_data (test_sensor.py) uses if statements inside the
+        test body; tests should not branch, use parametrize instead.
+      - Mocking should happen at library level (aiounifi) rather than at the
+        integration API level where possible.
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -16,7 +31,12 @@ rules:
   has-entity-name:
     status: todo
     comment: |
-      The DPI restriction switch entity uses has_entity_name=False.
+      Multiple entities still use name_fn to set the entity name instead of
+      translation_key: button.py (Restart, Power Cycle, Regenerate Password),
+      image.py (QR Code), sensor.py (RX, TX, Link speed, PoE Power, temperature,
+      latency, Uptime), switch.py (firewall policy, outlet, port forward, traffic
+      rule, traffic route, PoE, port, DPI restriction). Requires migration with
+      breaking change support.
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -53,9 +73,20 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      The user flow currently allows updating existing config entry data
+      (host/credentials), which should be handled by a dedicated
+      async_step_reconfigure instead.
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: todo
+    comment: |
+      Only manual removal via async_remove_config_entry_device; no automatic
+      cleanup of devices removed from the UniFi controller. Consider also
+      whether device tracker clients should be split into their own device
+      registry entries.
 
   # Platinum
   async-dependency: done
