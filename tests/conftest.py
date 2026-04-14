@@ -211,42 +211,34 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    def getaddrinfo_patched(host, *args: Any, **kwargs: Any):
-        # Allow localhost/127.0.0.1/::1 for integration tests
-        if host in ("localhost", "127.0.0.1", "::1"):
-            return _real_getaddrinfo(host, *args, **kwargs)
-        # Allow IP literals (IPv4/IPv6) and host=None/""/"0.0.0.0"/"::"
+    def _is_allowed_host(host):
+        # Returns (is_allowed, normalized_host) for allowed hosts or IP literals
+        allowed = host in ("localhost", "127.0.0.1", "::1", None, "", "0.0.0.0", "::")
+        if allowed:
+            return True, host
         try:
-            if host is None or host in ("", "0.0.0.0", "::"):
-                return _real_getaddrinfo(host, *args, **kwargs)
             ipaddress.ip_address(host)
-            return _real_getaddrinfo(host, *args, **kwargs)
         except ValueError:
-            pass
+            return False, None
+        else:
+            return True, host
+
+    def getaddrinfo_patched(host, *args: Any, **kwargs: Any):
+        allowed, _ = _is_allowed_host(host)
+        if allowed:
+            return _real_getaddrinfo(host, *args, **kwargs)
         raise RuntimeError("DNS resolution disabled in tests")
 
     def gethostbyname_patched(host, *args, **kwargs):
-        # Delegate to real function for allowed hosts and IP literals
-        if host in ("localhost", "127.0.0.1", "::1"):
-            return host
-        try:
-            ipaddress.ip_address(host)
-        except ValueError:
-            pass
-        else:
-            return host
+        allowed, normalized = _is_allowed_host(host)
+        if allowed:
+            return normalized
         raise RuntimeError("DNS resolution disabled in tests")
 
     def gethostbyname_ex_patched(host, *args, **kwargs):
-        # Delegate to real function for allowed hosts and IP literals
-        if host in ("localhost", "127.0.0.1", "::1"):
-            return (host, [], [host])
-        try:
-            ipaddress.ip_address(host)
-        except ValueError:
-            pass
-        else:
-            return (host, [], [host])
+        allowed, normalized = _is_allowed_host(host)
+        if allowed:
+            return (host, [], [normalized])
         raise RuntimeError("DNS resolution disabled in tests")
 
     setattr(socket, "getaddrinfo", getaddrinfo_patched)
