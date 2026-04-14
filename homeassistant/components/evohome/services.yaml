@@ -58,3 +58,19 @@ clear_zone_override:
       domain: climate
       supported_features:
         - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+
+set_dhw_override:
+  target:
+    entity:
+      integration: evohome
+      domain: water_heater
+  fields:
+    state:
+      required: true
+      selector:
+        boolean:
+    duration:
+      example: "02:15"
+      selector:
+        duration:
+          enable_second: false
