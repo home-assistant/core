@@ -77,11 +77,11 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
 
         result: dict[str, dict[str, Any]] = {}
         for device, status in zip(device_list, statuses, strict=True):
-            if isinstance(status, BaseException):
-                if not isinstance(status, FlussApiClientError):
-                    raise status
+            if isinstance(status, FlussApiClientError):
                 result[device["deviceId"]] = {**device, "internetConnected": False}
                 continue
+            if isinstance(status, BaseException):
+                raise status
             result[device["deviceId"]] = {
                 **device,
                 "internetConnected": bool(status["status"]["internetConnected"]),
