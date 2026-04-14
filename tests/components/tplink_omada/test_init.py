@@ -269,9 +269,7 @@ async def test_cleanup_lock_prevents_redundant_tasks(
         await cleanup_started.wait()
 
         # Lock is now held — the 1-hour interval firing should be a no-op
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(hours=1, seconds=1)
-        )
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
         await hass.async_block_till_done()
 
         # Release the first cleanup
