@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "migrated_to_groups": "The min/max integration has been migrated to use groups. Please use the group integration instead."
+      "migrated_to_groups": "The min/max integration has been migrated to use group sensors. Please use the group integration instead."
     },
     "step": {
       "user": {
