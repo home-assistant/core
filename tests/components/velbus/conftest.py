@@ -210,6 +210,7 @@ def mock_buttoncounter() -> AsyncMock:
     channel.get_unit.return_value = "W"
     channel.get_counter_state.return_value = 100
     channel.get_counter_unit.return_value = "kWh"
+    channel._energy = 100000  # 100000 Wh = 100.0 kWh
     return channel
 
 

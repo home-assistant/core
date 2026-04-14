@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import Platform, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,3 +24,33 @@ async def test_entities(
         await init_integration(hass, config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+async def test_vmb8in_counter_energy_value(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_buttoncounter: MockConfigEntry,
+) -> None:
+    """Test VMB8IN-20 counter sensor shows energy in kWh when _energy is set."""
+    mock_buttoncounter._energy = 100000  # 100000 Wh = 100.0 kWh
+    with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, config_entry)
+
+    state = hass.states.get("sensor.input_buttoncounter_counter")
+    assert state is not None
+    assert state.state == "100.0"
+
+
+async def test_vmb8in_counter_energy_unavailable_when_no_energy(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_buttoncounter: MockConfigEntry,
+) -> None:
+    """Test VMB8IN-20 counter sensor is unknown when _energy has not been received."""
+    mock_buttoncounter._energy = None
+    with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, config_entry)
+
+    state = hass.states.get("sensor.input_buttoncounter_counter")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
