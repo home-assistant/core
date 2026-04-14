@@ -42,6 +42,12 @@ def get_arguments() -> argparse.Namespace:
         type=str,
         help="Process ID to wait for, then download and unzip the result.",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Write translations to this directory instead of in-place. "
+        "The directory structure mirrors the source tree.",
+    )
     return parser.parse_args()
 
 
@@ -154,7 +160,9 @@ def filter_translations(translations: dict[str, Any], strings: dict[str, Any]) -
                 continue
 
 
-def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
+def save_language_translations(
+    lang: str, translations: dict[str, Any], output_dir: Path | None = None
+) -> None:
     """Save translations for a single language."""
     components = translations.get("component", {})
 
@@ -167,7 +175,7 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
         if not component_translations:
             continue
 
-        component_path = Path("homeassistant") / "components" / component
+        component_path = INTEGRATIONS_DIR / component
         if not component_path.is_dir():
             print(
                 f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
@@ -182,7 +190,12 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
             continue
         strings = load_json_from_path(strings_path)
 
-        path = component_path / "translations" / f"{lang}.json"
+        if output_dir is not None:
+            out_path = output_dir / INTEGRATIONS_DIR / component
+        else:
+            out_path = component_path
+
+        path = out_path / "translations" / f"{lang}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
 
         component_translations = substitute_references(
@@ -194,17 +207,18 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
         save_json(path, component_translations)
 
 
-def save_integrations_translations() -> None:
+def save_integrations_translations(output_dir: Path | None = None) -> None:
     """Save integrations translations."""
     for lang_file in DOWNLOAD_DIR.glob("*.json"):
         lang = lang_file.stem
         translations = load_json_from_path(lang_file)
-        save_language_translations(lang, translations)
+        save_language_translations(lang, translations, output_dir)
 
 
-def delete_old_translations() -> None:
+def delete_old_translations(output_dir: Path | None = None) -> None:
     """Delete old translations."""
-    for fil in INTEGRATIONS_DIR.glob("*/translations/*"):
+    base = INTEGRATIONS_DIR if output_dir is None else output_dir / INTEGRATIONS_DIR
+    for fil in base.glob("*/translations/*"):
         fil.unlink()
 
 
@@ -225,6 +239,9 @@ def run() -> int:
             return 0
 
     fetch_translations(client, process_id)
-    delete_old_translations()
-    save_integrations_translations()
+    if args.output_dir is None:
+        delete_old_translations()
+    else:
+        delete_old_translations(args.output_dir)
+    save_integrations_translations(args.output_dir)
     return 0

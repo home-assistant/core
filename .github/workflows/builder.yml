@@ -192,9 +192,10 @@ jobs:
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           cosign-base-identity: "https://github.com/home-assistant/docker/.*"
           cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          image: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant
+          image-tags: base-intermediate
           push: false
           load: true
-          target: deps
 
       - name: Download translations
         shell: bash
@@ -203,18 +204,18 @@ jobs:
           TRANSLATION_PROCESS_ID: ${{ needs.init.outputs.translation_download_process }}
         run: |
           pip install -r script/translations/requirements.txt
-          python3 -u -m script.translations download --process-id "$TRANSLATION_PROCESS_ID"
+          python3 -u -m script.translations download --process-id "$TRANSLATION_PROCESS_ID" --output-dir build/translations-output
 
-      - name: Build base image (fully)
+      - name: Build translations image
         uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
         with:
           arch: ${{ matrix.arch }}
           build-args: |
-            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+            BUILD_FROM=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:base-intermediate
           cache-gha: false
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          cosign-base-identity: "https://github.com/home-assistant/docker/.*"
-          cosign-base-verify: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ needs.init.outputs.base_image_version }}
+          context: build/translations-output
+          file: Dockerfile.translations
           image: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant
           image-tags: ${{ needs.init.outputs.version }}
           push: true
