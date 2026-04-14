@@ -1,0 +1,93 @@
+# serializer version: 1
+# name: test_entities_created
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'AVR-3805',
+      'is_volume_muted': False,
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
+      'source': 'cd',
+      'source_list': list([
+        'cd',
+        'cdr_tape1',
+        'dbs_sat',
+        'dvd',
+        'phono',
+        'tuner',
+        'tv',
+        'v_aux',
+        'vcr_1',
+        'vcr_2',
+        'vdp',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 3468>,
+      'volume_level': 0.5555555555555556,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.avr_3805',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities_created.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'AVR-3805 Zone 2',
+      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
+      'source': 'tuner',
+      'source_list': list([
+        'cd',
+        'cdr_tape1',
+        'dbs_sat',
+        'dvd',
+        'phono',
+        'tuner',
+        'tv',
+        'v_aux',
+        'vcr_1',
+        'vcr_2',
+        'vdp',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 3460>,
+      'volume_level': 0.6666666666666666,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.avr_3805_zone_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities_created.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'receiver',
+      'friendly_name': 'AVR-3805 Zone 3',
+      'last_non_buffering_state': <MediaPlayerState.OFF: 'off'>,
+      'source_list': list([
+        'cd',
+        'cdr_tape1',
+        'dbs_sat',
+        'dvd',
+        'phono',
+        'tuner',
+        'tv',
+        'v_aux',
+        'vcr_1',
+        'vcr_2',
+        'vdp',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 3460>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.avr_3805_zone_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
