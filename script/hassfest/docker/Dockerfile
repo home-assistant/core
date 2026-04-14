@@ -13,7 +13,7 @@ WORKDIR "/github/workspace"
 
 COPY . /usr/src/homeassistant
 
-# Latest uv is used to install the one defined in the requirements file
+# Use latest uv to install the one defined in the requirements file
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
     # Uv creates a lock file in /tmp
     --mount=type=tmpfs,target=/tmp \
