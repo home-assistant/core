@@ -36,3 +36,4 @@ class EvoService(StrEnum):
     RESET_SYSTEM = "reset_system"
     SET_ZONE_OVERRIDE = "set_zone_override"
     CLEAR_ZONE_OVERRIDE = "clear_zone_override"
+    SET_DHW_OVERRIDE = "set_dhw_override"
