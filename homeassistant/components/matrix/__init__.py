@@ -506,6 +506,7 @@ class MatrixBot:
         # Get required image metadata.
         image = await self.hass.async_add_executor_job(Image.open, image_path)
         (width, height) = image.size
+        image.close()
         mime_type = mimetypes.guess_type(image_path)[0]
         file_stat = await aiofiles.os.stat(image_path)
 
