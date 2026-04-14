@@ -1013,6 +1013,36 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def send_message_draft(
+        self,
+        message: str,
+        chat_id: int,
+        draft_id: int,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> None:
+        """Stream a partial message to a user while the message is being generated."""
+        params = self._get_msg_kwargs(kwargs)
+
+        _LOGGER.debug(
+            "Sending message draft %s in chat ID %s with params: %s",
+            draft_id,
+            chat_id,
+            params,
+        )
+
+        await self._send_msg(
+            self.bot.send_message_draft,
+            None,
+            chat_id=chat_id,
+            draft_id=draft_id,
+            text=message,
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            parse_mode=params[ATTR_PARSER],
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
+        )
+
     async def download_file(
         self,
         file_id: str,
