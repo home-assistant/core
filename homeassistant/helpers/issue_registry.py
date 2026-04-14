@@ -29,6 +29,13 @@ STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 2
 
+# Issues that are handled entirely by the frontend and don't need
+# a description or fix_flow.
+FRONTEND_HANDLED_ISSUES: dict[str, set[str]] = {
+    "sensor": {"mean_type_changed", "state_class_removed", "units_changed"},
+    "vacuum": {"segments_changed"},
+}
+
 
 class EventIssueRegistryUpdatedData(TypedDict):
     """Event data for when the issue registry is updated."""

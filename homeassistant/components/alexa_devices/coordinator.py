@@ -58,7 +58,17 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_PASSWORD],
             entry.data[CONF_LOGIN_DATA],
         )
-        self.previous_devices: set[str] = set()
+        device_registry = dr.async_get(hass)
+        self.previous_devices: set[str] = {
+            identifier
+            for device in device_registry.devices.get_devices_for_config_entry_id(
+                entry.entry_id
+            )
+            if device.entry_type != dr.DeviceEntryType.SERVICE
+            for identifier_domain, identifier in device.identifiers
+            if identifier_domain == DOMAIN
+        }
+
         self._volume_states: dict[str, AmazonVolumeState] = {}
         self._media_states: dict[str, AmazonMediaState] = {}
 

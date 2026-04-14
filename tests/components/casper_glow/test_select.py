@@ -1,6 +1,6 @@
 """Test the Casper Glow select platform."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, patch
 
 from pycasperglow import CasperGlowError, GlowState
@@ -44,14 +44,14 @@ async def test_entities(
 async def test_select_state_from_callback(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test that the select entity shows dimming time reported by device callback."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    fire_callbacks(
+    await fire_callbacks(
         GlowState(configured_dimming_time_minutes=int(DIMMING_TIME_OPTIONS[2]))
     )
 
@@ -64,7 +64,7 @@ async def test_select_option(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_casper_glow: MagicMock,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test selecting a dimming time option."""
     await hass.services.async_call(
@@ -82,7 +82,7 @@ async def test_select_option(
     assert state.state == DIMMING_TIME_OPTIONS[1]
 
     # A subsequent device callback must not overwrite the user's selection.
-    fire_callbacks(
+    await fire_callbacks(
         GlowState(configured_dimming_time_minutes=int(DIMMING_TIME_OPTIONS[0]))
     )
 
@@ -118,7 +118,7 @@ async def test_select_state_update_via_callback_after_command_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_casper_glow: MagicMock,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test that device callbacks correctly update state even after a command failure."""
     mock_casper_glow.set_brightness_and_dimming_time.side_effect = CasperGlowError(
@@ -138,7 +138,7 @@ async def test_select_state_update_via_callback_after_command_failure(
     assert state.state == STATE_UNKNOWN
 
     # Device sends a push state update — entity reflects true state
-    fire_callbacks(
+    await fire_callbacks(
         GlowState(configured_dimming_time_minutes=int(DIMMING_TIME_OPTIONS[1]))
     )
 
@@ -150,10 +150,10 @@ async def test_select_state_update_via_callback_after_command_failure(
 async def test_select_ignores_remaining_time_updates(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    fire_callbacks: Callable[[GlowState], None],
+    fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
     """Test that callbacks with only remaining time do not change the select state."""
-    fire_callbacks(GlowState(dimming_time_remaining_ms=2_640_000))
+    await fire_callbacks(GlowState(dimming_time_remaining_ms=2_640_000))
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
