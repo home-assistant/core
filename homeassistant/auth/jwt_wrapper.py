@@ -60,9 +60,9 @@ def _decode_payload(json_payload: str) -> dict[str, Any]:
 class _PyJWTWithVerify(PyJWT):
     """PyJWT with a fast decode implementation."""
 
-    def __init__(self, options: Options | None = None) -> None:
+    def __init__(self) -> None:
         """Initialize the PyJWT instance."""
-        super().__init__(options=options)
+        super().__init__()
         # Override the _jws instance with our cached version
         self._jws = _PyJWSWithLoadCache(options=self._get_sig_options())
 
