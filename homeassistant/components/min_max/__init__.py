@@ -31,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = dict(entry.options)
     config[CONF_ENTITIES] = config.pop(CONF_ENTITY_IDS)
     config.pop(CONF_ROUND_DIGITS)
+    # Set group sensor defaults
     config[CONF_HIDE_MEMBERS] = False
     config[CONF_IGNORE_NON_NUMERIC] = False
     config[CONF_GROUP_TYPE] = SENSOR_DOMAIN
@@ -59,6 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # and we should not create it again
         await hass.config_entries.async_add(new_config_entry)
 
+    # Wait for config entry setup to finish before removing the old config entry
     async def remove_old_entry(now: datetime) -> None:
         """Remove the old config entry after migration."""
         if entry.state == ConfigEntryState.LOADED:
