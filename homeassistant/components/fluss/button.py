@@ -32,7 +32,7 @@ class FlussButton(FlussEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return True only when the device is online."""
-        return super().available and bool(self.device.get("internetConnected"))
+        return super().available and self.device["internetConnected"]
 
     async def async_press(self) -> None:
         """Handle the button press."""

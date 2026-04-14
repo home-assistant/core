@@ -40,7 +40,17 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
-        """Fetch data from the Fluss API and return as a dictionary keyed by deviceId."""
+        """Fetch device list and per-device connectivity status.
+
+        Raises:
+            ConfigEntryError: authentication failed for the device list or
+                any per-device status call.
+            UpdateFailed: the device list request failed with a non-auth
+                FlussApiClientError.
+
+        A single device whose status call fails with a non-auth
+        FlussApiClientError is marked offline rather than failing the update.
+        """
         try:
             devices = await self.api.async_get_devices()
         except FlussApiClientAuthenticationError as err:
@@ -48,7 +58,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 
-        device_list: list[dict[str, Any]] = devices.get("devices", [])
+        device_list: list[dict[str, Any]] = devices["devices"]
         statuses = await asyncio.gather(
             *(self.api.async_get_device_status(d["deviceId"]) for d in device_list),
             return_exceptions=True,
@@ -56,12 +66,14 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         result: dict[str, dict[str, Any]] = {}
         for device, status in zip(device_list, statuses, strict=True):
-            merged = dict(device)
-            if isinstance(status, BaseException):
-                merged["internetConnected"] = False
+            if isinstance(status, FlussApiClientAuthenticationError):
+                raise ConfigEntryError(f"Authentication failed: {status}") from status
+            if isinstance(status, FlussApiClientError):
+                internet_connected = False
             else:
-                merged["internetConnected"] = bool(
-                    status.get("status", {}).get("internetConnected")
-                )
-            result[device["deviceId"]] = merged
+                internet_connected = bool(status["status"]["internetConnected"])
+            result[device["deviceId"]] = {
+                **device,
+                "internetConnected": internet_connected,
+            }
         return result

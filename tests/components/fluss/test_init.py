@@ -54,3 +54,17 @@ async def test_async_setup_entry_authentication_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is state
+
+
+async def test_status_authentication_error_raises_config_entry_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """An auth error from a per-device status call must surface as a setup error."""
+    mock_api_client.async_get_device_status.side_effect = (
+        FlussApiClientAuthenticationError("bad key")
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
