@@ -143,6 +143,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "occupancy",
     "person",
     "power",
+    "remote",
     "schedule",
     "select",
     "siren",
