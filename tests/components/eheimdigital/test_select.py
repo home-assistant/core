@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from eheimdigital.types import FilterMode, FilterModeProf
+from eheimdigital.types import FilterMode, FilterModeProf, ReeflexMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -82,6 +82,17 @@ async def test_setup(
                 ("select.mock_filter_night_speed", "860", "dfs_soll_night", 14),
                 ("select.mock_filter_high_pulse_speed", "620", "dfs_soll_high", 6),
                 ("select.mock_filter_low_pulse_speed", "770", "dfs_soll_low", 11),
+            ],
+        ),
+        (
+            "reeflex_mock",
+            [
+                (
+                    "select.mock_reeflex_operation_mode",
+                    "constant",
+                    "mode",
+                    int(ReeflexMode.CONSTANT),
+                ),
             ],
         ),
     ],
@@ -182,6 +193,18 @@ async def test_set_value(
                     "pm_dfs_soll_low",
                     11,
                     "770",
+                ),
+            ],
+        ),
+        (
+            "reeflex_mock",
+            [
+                (
+                    "select.mock_reeflex_operation_mode",
+                    "reeflex_data",
+                    "mode",
+                    int(ReeflexMode.CONSTANT),
+                    "constant",
                 ),
             ],
         ),

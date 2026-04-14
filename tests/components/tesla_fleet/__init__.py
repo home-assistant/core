@@ -5,6 +5,7 @@ from unittest.mock import patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -24,7 +25,7 @@ async def setup_platform(
 ) -> None:
     """Set up the Tesla Fleet platform."""
 
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

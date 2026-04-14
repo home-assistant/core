@@ -368,7 +368,7 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     """Test YAML mode creates a repair issue."""
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
 
-    # Panel should still be registered for backwards compatibility
+    # Panel should be registered as a YAML dashboard
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
 
     # Repair issue should be created
@@ -803,3 +803,47 @@ async def test_lovelace_no_migration_no_default_panel_set(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["value"] is None
+
+
+async def test_lovelace_info_default(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test lovelace/info returns default resource_mode."""
+    assert await async_setup_component(hass, "lovelace", {})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "lovelace/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"resource_mode": "storage"}
+
+
+async def test_lovelace_info_yaml_resource_mode(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test lovelace/info returns yaml resource_mode."""
+    assert await async_setup_component(
+        hass, "lovelace", {"lovelace": {"resource_mode": "yaml"}}
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "lovelace/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"resource_mode": "yaml"}
+
+
+async def test_lovelace_info_yaml_mode_fallback(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test lovelace/info returns yaml resource_mode when mode is yaml."""
+    assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "yaml"}})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "lovelace/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"resource_mode": "yaml"}

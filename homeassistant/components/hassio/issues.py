@@ -17,6 +17,7 @@ from aiohasupervisor.models import (
     UnsupportedReason,
 )
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_call_later
@@ -30,6 +31,7 @@ from .const import (
     ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_HEALTHY,
+    ATTR_SLUG,
     ATTR_STARTUP,
     ATTR_SUPPORTED,
     ATTR_UNHEALTHY_REASONS,
@@ -45,6 +47,7 @@ from .const import (
     EVENT_SUPPORTED_CHANGED,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_ADDON_PWNED,
@@ -59,8 +62,8 @@ from .const import (
     STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_addons_info, get_host_info
-from .handler import HassIO, get_supervisor_client
+from .coordinator import HassioDataUpdateCoordinator, get_addons_list, get_host_info
+from .handler import get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
 ISSUE_KEY_UNSUPPORTED = "unsupported"
@@ -88,6 +91,8 @@ ISSUE_KEYS_FOR_REPAIRS = {
     "issue_system_disk_lifetime",
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
+    "issue_system_ntp_sync_failed",
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -170,10 +175,9 @@ class Issue:
 class SupervisorIssues:
     """Create issues from supervisor events."""
 
-    def __init__(self, hass: HomeAssistant, client: HassIO) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize supervisor issues."""
         self._hass = hass
-        self._client = client
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[UUID, Issue] = {}
@@ -251,9 +255,10 @@ class SupervisorIssues:
     def add_issue(self, issue: Issue) -> None:
         """Add or update an issue in the list. Create or update a repair if necessary."""
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
-            placeholders: dict[str, str] = {}
             if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
-                placeholders |= EXTRA_PLACEHOLDERS[issue.key]
+                placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
+            else:
+                placeholders = {}
 
             if issue.reference:
                 placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
@@ -265,23 +270,18 @@ class SupervisorIssues:
                     placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
                         f"/hassio/addon/{issue.reference}"
                     )
-                    addons = get_addons_info(self._hass)
-                    if addons and issue.reference in addons:
-                        placeholders[PLACEHOLDER_KEY_ADDON] = addons[issue.reference][
-                            "name"
-                        ]
-                    else:
-                        placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
+                    addons_list = get_addons_list(self._hass) or []
+                    placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
+                    for addon in addons_list:
+                        if addon[ATTR_SLUG] == issue.reference:
+                            placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
+                            break
 
             elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
                 host_info = get_host_info(self._hass)
-                if (
-                    host_info
-                    and "data" in host_info
-                    and "disk_free" in host_info["data"]
-                ):
+                if host_info and "disk_free" in host_info:
                     placeholders[PLACEHOLDER_KEY_FREE_SPACE] = str(
-                        host_info["data"]["disk_free"]
+                        host_info["disk_free"]
                     )
                 else:
                     placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"

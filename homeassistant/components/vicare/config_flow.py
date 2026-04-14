@@ -18,14 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_HEATING_TYPE,
-    DOMAIN,
-    VICARE_NAME,
-    VIESSMANN_DEVELOPER_PORTAL,
-    HeatingType,
-)
+from .const import DOMAIN, VICARE_NAME, VIESSMANN_DEVELOPER_PORTAL
 from .utils import login
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,9 +33,6 @@ REAUTH_SCHEMA = vol.Schema(
 USER_SCHEMA = REAUTH_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
-            [e.value for e in HeatingType]
-        ),
     }
 )
 
@@ -51,6 +41,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ViCare."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,7 +55,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(login, self.hass, user_input)
-            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
+            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(title=VICARE_NAME, data=user_input)
@@ -99,7 +90,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(login, self.hass, data)
-            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
+            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_update_reload_and_abort(reauth_entry, data=data)

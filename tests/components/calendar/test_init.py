@@ -13,15 +13,22 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
+from homeassistant.components.calendar import (
+    CREATE_EVENT_SERVICE,
+    DOMAIN,
+    SERVICE_GET_EVENTS,
+    CalendarEntity,
+    CalendarEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -218,7 +225,6 @@ async def test_unsupported_websocket(
 
 async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     """Test unsupported service call."""
-    await async_setup_component(hass, "homeassistant", {})
     with pytest.raises(
         ServiceNotSupported,
         match="Entity calendar.calendar_1 does not "
@@ -226,7 +232,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            "create_event",
+            CREATE_EVENT_SERVICE,
             {
                 "start_date_time": "1997-07-14T17:00:00+00:00",
                 "end_date_time": "1997-07-15T04:00:00+00:00",
@@ -401,8 +407,8 @@ async def test_create_event_service_invalid_params(
 
     with pytest.raises(expected_error, match=error_match):
         await hass.services.async_call(
-            "calendar",
-            "create_event",
+            DOMAIN,
+            CREATE_EVENT_SERVICE,
             {
                 "summary": "Bastille Day Party",
                 **date_fields,
@@ -657,3 +663,289 @@ async def test_calendar_initial_color_none(
     # Entities 1 and 2 were created without an initial_color
     entity = test_entities[0]
     assert entity.get_initial_entity_options() is None
+
+
+@pytest.mark.parametrize(
+    ("description_color", "attr_color", "expected_color"),
+    [
+        # no description and no attr_initial_color
+        (UNDEFINED, UNDEFINED, None),
+        # no description and attr_initial_color "A"
+        (UNDEFINED, "#AAAAAA", "#AAAAAA"),
+        # no description and attr_initial_color None
+        (UNDEFINED, None, None),
+        # description setting the color "B", and no attr_initial_color
+        ("#BBBBBB", UNDEFINED, "#BBBBBB"),
+        # description setting the color "B", but overridden by attr_initial_color "A"
+        ("#BBBBBB", "#AAAAAA", "#AAAAAA"),
+        # description setting the color "B", but overridden by attr_initial_color None
+        ("#BBBBBB", None, None),
+    ],
+)
+async def test_calendar_initial_color_precedence(
+    description_color: str | None | object,
+    attr_color: str | None | object,
+    expected_color: str | None,
+) -> None:
+    """Test that _attr_initial_color takes precedence over entity_description."""
+
+    class TestCalendarEntity(CalendarEntity):
+        """Test entity for initial_color precedence tests."""
+
+        _attr_has_entity_name = True
+
+        def __init__(
+            self,
+            description_color: str | None | object,
+            attr_color: str | None | object,
+        ) -> None:
+            """Initialize entity."""
+            self._attr_name = "Test"
+            self._attr_unique_id = "test_precedence"
+
+            # Only set entity_description if description_color is not UNDEFINED
+            if description_color is not UNDEFINED:
+                self.entity_description = CalendarEntityDescription(
+                    key="test",
+                    initial_color=description_color,
+                )
+
+            # Only set _attr_initial_color if attr_color is not UNDEFINED
+            if attr_color is not UNDEFINED:
+                self._attr_initial_color = attr_color
+
+    entity = TestCalendarEntity(description_color, attr_color)
+    assert entity.initial_color == expected_color
+
+
+async def test_websocket_handle_subscribe_calendar_events(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test subscribing to calendar event updates via websocket."""
+    client = await hass_ws_client(hass)
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    # Should receive initial event list
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    assert "events" in msg["event"]
+    events = msg["event"]["events"]
+    assert len(events) == 1
+    assert events[0]["summary"] == "Future Event"
+
+
+async def test_websocket_subscribe_updates_on_state_change(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that subscribers receive updates when calendar state changes."""
+    client = await hass_ws_client(hass)
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    # Receive initial event list
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+
+    # Add a new event and trigger state update
+    entity = test_entities[0]
+    entity.create_event(
+        start=start + timedelta(hours=2),
+        end=start + timedelta(hours=3),
+        summary="New Event",
+    )
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    # Should receive updated event list
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    events = msg["event"]["events"]
+    assert len(events) == 2
+    summaries = {event["summary"] for event in events}
+    assert "Future Event" in summaries
+    assert "New Event" in summaries
+
+
+async def test_websocket_subscribe_entity_not_found(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribing to a non-existent calendar entity."""
+    client = await hass_ws_client(hass)
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.nonexistent",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    assert "Calendar entity not found" in msg["error"]["message"]
+
+
+async def test_websocket_subscribe_event_fetch_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test subscription handles event fetch errors gracefully."""
+    client = await hass_ws_client(hass)
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    # Set up entity to fail on async_get_events
+    test_entities[0].async_get_events.side_effect = HomeAssistantError("API Error")
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    # Should receive None for events due to error
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] is None
+
+
+async def test_websocket_subscribe_invalid_timespan(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test subscribing with start after end returns an error."""
+    client = await hass_ws_client(hass)
+
+    now = dt_util.now()
+    start = now + timedelta(days=1)
+    end = now
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert "Start must be before end" in msg["error"]["message"]
+
+
+async def test_websocket_subscribe_debounces_rapid_updates(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that rapid state writes are debounced for event listeners."""
+    client = await hass_ws_client(hass)
+
+    start = dt_util.now()
+    end = start + timedelta(days=1)
+
+    await client.send_json_auto_id(
+        {
+            "type": "calendar/event/subscribe",
+            "entity_id": "calendar.calendar_1",
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    # Receive initial event list
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+
+    entity = test_entities[0]
+    entity.async_get_events.reset_mock()
+
+    # Rapidly write state multiple times
+    for i in range(5):
+        entity.create_event(
+            start=start + timedelta(hours=i + 2),
+            end=start + timedelta(hours=i + 3),
+            summary=f"Rapid Event {i}",
+        )
+        entity.async_write_ha_state()
+
+    await hass.async_block_till_done()
+
+    # The debouncer with immediate=True fires the first call immediately
+    # and coalesces the rest into one call after the cooldown.
+    # Without debouncing this would be 5 calls.
+    assert entity.async_get_events.call_count == 1
+
+    # Advance time past the debounce cooldown to fire the trailing call
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+    await hass.async_block_till_done()
+
+    # Should be exactly 2 total: immediate + one coalesced trailing call
+    assert entity.async_get_events.call_count == 2
+
+    # Drain messages: immediate update + trailing debounced update
+    messages: list[dict] = []
+    for _ in range(10):
+        msg = await client.receive_json()
+        assert msg["id"] == subscription_id
+        assert msg["type"] == "event"
+        messages.append(msg)
+        if len(msg["event"]["events"]) == 6:  # 1 original + 5 rapid
+            break
+    else:
+        pytest.fail("Did not receive expected calendar event list with 6 events")
+
+    # The final message has all events
+    assert len(messages[-1]["event"]["events"]) == 6

@@ -26,7 +26,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     base = Alpha2Base(data[CONF_HOST])
     try:
         await base.update_data()
-    except (aiohttp.client_exceptions.ClientConnectorError, TimeoutError):
+    except aiohttp.client_exceptions.ClientConnectorError, TimeoutError:
         return {"error": "cannot_connect"}
     except Exception:
         _LOGGER.exception("Unexpected exception")

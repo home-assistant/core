@@ -23,7 +23,9 @@ from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
 ) -> None:
     """Test successful load and unload of entry."""
     await setup_integration(hass, mock_config_entry)

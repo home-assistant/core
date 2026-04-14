@@ -43,7 +43,7 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                         longitude=user_input[CONF_LONGITUDE],
                     )
                     await accuweather.async_get_location()
-            except (ApiError, ClientConnectorError, TimeoutError, ClientError):
+            except ApiError, ClientConnectorError, TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidApiKeyError:
                 errors[CONF_API_KEY] = "invalid_api_key"
@@ -104,7 +104,7 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                         longitude=self._longitude,
                     )
                     await accuweather.async_get_location()
-            except (ApiError, ClientConnectorError, TimeoutError, ClientError):
+            except ApiError, ClientConnectorError, TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidApiKeyError:
                 errors["base"] = "invalid_api_key"

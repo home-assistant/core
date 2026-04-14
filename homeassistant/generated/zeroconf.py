@@ -566,6 +566,12 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "airq",
+            "properties": {
+                "device": "air-q",
+            },
+        },
+        {
             "domain": "awair",
             "name": "awair*",
         },
@@ -594,6 +600,10 @@ ZEROCONF = {
             "name": "vrroom-*",
         },
         {
+            "domain": "homevolt",
+            "name": "homevolt*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -604,6 +614,14 @@ ZEROCONF = {
         {
             "domain": "loqed",
             "name": "loqed*",
+        },
+        {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-*",
+                "uid": "*",
+            },
         },
         {
             "domain": "nam",
@@ -621,6 +639,10 @@ ZEROCONF = {
         },
         {
             "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
+            "domain": "powerfox_local",
             "name": "powerfox*",
         },
         {
@@ -696,6 +718,9 @@ ZEROCONF = {
     "_linkplay._tcp.local.": [
         {
             "domain": "linkplay",
+        },
+        {
+            "domain": "wiim",
         },
     ],
     "_lookin._tcp.local.": [
@@ -915,6 +940,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_solarman._tcp.local.": [
+        {
+            "domain": "solarman",
+        },
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos",
@@ -951,6 +981,11 @@ ZEROCONF = {
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
+        },
+    ],
+    "_systemnexa2._tcp.local.": [
+        {
+            "domain": "systemnexa2",
         },
     ],
     "_technove-stations._tcp.local.": [

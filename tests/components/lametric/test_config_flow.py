@@ -1,7 +1,7 @@
 """Tests for the LaMetric config flow."""
 
 from http import HTTPStatus
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from demetriek import (
     LaMetricConnectionError,
@@ -686,6 +686,7 @@ async def test_cloud_errors(
 async def test_dhcp_discovery_updates_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test DHCP discovery updates config entries."""
     mock_config_entry.add_to_hass(hass)

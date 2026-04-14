@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol, TypedDict
@@ -281,7 +281,7 @@ def async_is_firmware_update_in_progress(hass: HomeAssistant, device: str) -> bo
 @asynccontextmanager
 async def async_firmware_update_context(
     hass: HomeAssistant, device: str, source_domain: str
-) -> AsyncIterator[None]:
+) -> AsyncGenerator[None]:
     """Register a device as having its firmware being actively updated."""
     async_register_firmware_update_in_progress(hass, device, source_domain)
 

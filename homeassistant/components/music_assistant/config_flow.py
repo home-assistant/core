@@ -214,7 +214,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             # Parse zeroconf properties (strings) to ServerInfoMessage
             server_info = _parse_zeroconf_server_info(discovery_info.properties)
-        except (LookupError, KeyError, ValueError):
+        except LookupError, KeyError, ValueError:
             return self.async_abort(reason="invalid_discovery_info")
 
         if server_info.schema_version >= HASSIO_DISCOVERY_SCHEMA_VERSION:
@@ -321,7 +321,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 aiohttp_session=session,
             )
             LOGGER.debug("Successfully created long-lived token")
-        except (TimeoutError, CannotConnect):
+        except TimeoutError, CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except (AuthenticationFailed, InvalidToken) as err:
             LOGGER.error("Authentication failed: %s", err)
@@ -364,7 +364,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             except InvalidServerVersion:
                 return self.async_abort(reason="invalid_server_version")
-            except (AuthenticationFailed, InvalidToken):
+            except AuthenticationFailed, InvalidToken:
                 errors["base"] = "auth_failed"
             except MusicAssistantClientException:
                 LOGGER.exception("Unexpected exception during manual auth")

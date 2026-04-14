@@ -124,13 +124,23 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._event_type_template = config[CONF_EVENT_TYPE]
-        self._event_types_template = config[CONF_EVENT_TYPES]
-
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
         self._event_type = None
         self._attr_event_types = []
+
+        self.setup_template(
+            CONF_EVENT_TYPES,
+            "_attr_event_types",
+            None,
+            self._update_event_types,
+        )
+        self.setup_template(
+            CONF_EVENT_TYPE,
+            "_event_type",
+            None,
+            self._update_event_type,
+        )
 
     @callback
     def _update_event_types(self, event_types: Any) -> None:
@@ -179,25 +189,6 @@ class StateEventEntity(TemplateEntity, AbstractTemplateEvent):
         TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateEvent.__init__(self, config)
 
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        self.add_template_attribute(
-            "_attr_event_types",
-            self._event_types_template,
-            None,
-            self._update_event_types,
-            none_on_template_error=True,
-        )
-        self.add_template_attribute(
-            "_event_type",
-            self._event_type_template,
-            None,
-            self._update_event_type,
-            none_on_template_error=True,
-        )
-        super()._async_setup_templates()
-
 
 class TriggerEventEntity(TriggerEntity, AbstractTemplateEvent, RestoreEntity):
     """Event entity based on trigger data."""
@@ -217,20 +208,3 @@ class TriggerEventEntity(TriggerEntity, AbstractTemplateEvent, RestoreEntity):
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateEvent.__init__(self, config)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            return
-
-        for key, updater in (
-            (CONF_EVENT_TYPES, self._update_event_types),
-            (CONF_EVENT_TYPE, self._update_event_type),
-        ):
-            updater(self._rendered[key])
-
-        self.async_set_context(self.coordinator.data["context"])
-        self.async_write_ha_state()

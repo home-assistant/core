@@ -15,7 +15,7 @@ import base64
 from collections.abc import Awaitable, Callable
 import hashlib
 from http import HTTPStatus
-from json import JSONDecodeError
+import json
 import logging
 import secrets
 import time
@@ -29,7 +29,12 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
@@ -55,6 +60,7 @@ DATA_PROVIDERS: HassKey[
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
+
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
@@ -134,7 +140,10 @@ class AbstractOAuth2Implementation(ABC):
 
     @abstractmethod
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh a token."""
+        """Refresh a token.
+
+        Should raise OAuth2TokenRequestError on token refresh failure.
+        """
 
 
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
@@ -211,7 +220,8 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
+        """Refresh a token."""
+
         new_token = await self._token_request(
             {
                 "grant_type": "refresh_token",
@@ -219,33 +229,76 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 "refresh_token": token["refresh_token"],
             }
         )
+
         return {**token, **new_token}
 
     async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
+        """Make a token request.
+
+        Raises OAuth2TokenRequestError on token request failure.
+        """
         session = async_get_clientsession(self.hass)
 
         data["client_id"] = self.client_id
-
         if self.client_secret:
             data["client_secret"] = self.client_secret
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
-        resp = await session.post(self.token_url, data=data)
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
-                error_response = {}
-            error_code = error_response.get("error", "unknown")
-            error_description = error_response.get("error_description", "unknown error")
-            _LOGGER.error(
-                "Token request for %s failed (%s): %s",
-                self.domain,
-                error_code,
-                error_description,
-            )
-        resp.raise_for_status()
+
+        try:
+            resp = await session.post(self.token_url, data=data)
+            if resp.status >= 400:
+                error_body = ""
+                try:
+                    error_body = await resp.text()
+                    error_data = json.loads(error_body)
+                    error_code = error_data.get("error", "unknown error")
+                    error_description = error_data.get("error_description")
+                    detail = (
+                        f"{error_code}: {error_description}"
+                        if error_description
+                        else error_code
+                    )
+                except ClientError, ValueError, AttributeError:
+                    detail = error_body[:200] if error_body else "unknown error"
+                _LOGGER.debug(
+                    "Token request for %s failed (%s): %s",
+                    self.domain,
+                    resp.status,
+                    detail,
+                )
+            resp.raise_for_status()
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self._domain,
+            ) from err
+
         return cast(dict, await resp.json())
 
 
@@ -458,12 +511,12 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         except TimeoutError as err:
             _LOGGER.error("Timeout resolving OAuth token: %s", err)
             return self.async_abort(reason="oauth_timeout")
-        except (ClientResponseError, ClientError) as err:
+        except (
+            OAuth2TokenRequestError,
+            ClientError,
+        ) as err:
             _LOGGER.error("Error resolving OAuth token: %s", err)
-            if (
-                isinstance(err, ClientResponseError)
-                and err.status == HTTPStatus.UNAUTHORIZED
-            ):
+            if isinstance(err, OAuth2TokenRequestReauthError):
                 return self.async_abort(reason="oauth_unauthorized")
             return self.async_abort(reason="oauth_failed")
 

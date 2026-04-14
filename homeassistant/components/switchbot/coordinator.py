@@ -41,6 +41,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         device_name: str,
         connectable: bool,
         model: SwitchbotModel,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
@@ -57,6 +58,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
+        self.config_entry = config_entry
         self._ready_event = asyncio.Event()
         self._was_unavailable = True
 

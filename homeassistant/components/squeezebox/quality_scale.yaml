@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration only has entity_actions, which are setup in the entity async_setup_entry.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -24,8 +22,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: done
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

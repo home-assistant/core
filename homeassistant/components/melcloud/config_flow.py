@@ -54,7 +54,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             return self.async_abort(reason="cannot_connect")
         except AttributeError:
             # python-melcloud library bug: login() raises AttributeError on invalid
@@ -131,7 +131,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             errors["base"] = "cannot_connect"
 
         return acquired_token, errors

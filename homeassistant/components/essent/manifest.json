@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["essent-dynamic-pricing==0.2.7"],
+  "requirements": ["essent-dynamic-pricing==0.3.1"],
   "single_config_entry": true
 }

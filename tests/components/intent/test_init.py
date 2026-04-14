@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components import conversation
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -12,6 +13,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
@@ -82,8 +84,72 @@ async def test_http_handle_intent(
             }
         },
         "language": hass.config.language,
+        "response_type": intent.IntentResponseType.ACTION_DONE.value,
+        "data": {"success": [], "failed": []},
+    }
+
+
+async def test_http_language_device_satellite_id(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test handle intent with language, device id, and satellite id."""
+    device_id = "test-device-id"
+    satellite_id = "test-satellite-id"
+    language = "en-GB"
+
+    class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
+
+        intent_type = "TestIntent"
+
+        async def async_handle(self, intent_obj: intent.Intent):
+            """Handle the intent."""
+            assert intent_obj.context.user_id == hass_admin_user.id
+            # Verify language, device id, and satellite id were passed through.
+            assert intent_obj.language == language
+            assert intent_obj.device_id == device_id
+            assert intent_obj.satellite_id == satellite_id
+
+            response = intent_obj.create_response()
+            response.async_set_speech("Test response")
+            response.async_set_speech_slots({"slot1": "value 1", "slot2": 2})
+            return response
+
+    intent.async_register(hass, TestIntentHandler())
+
+    result = await async_setup_component(hass, "intent", {})
+    assert result
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/intent/handle",
+        json={
+            "name": "TestIntent",
+            "language": language,
+            "device_id": device_id,
+            "satellite_id": satellite_id,
+        },
+    )
+
+    assert resp.status == 200
+    data = await resp.json()
+
+    # Also check speech slots.
+    assert data == {
+        "card": {},
+        "speech": {
+            "plain": {
+                "extra_data": None,
+                "speech": "Test response",
+            }
+        },
+        "speech_slots": {
+            "slot1": "value 1",
+            "slot2": 2,
+        },
+        "language": language,
         "response_type": "action_done",
-        "data": {"targets": [], "success": [], "failed": []},
+        "data": {"success": [], "failed": []},
     }
 
 
@@ -113,6 +179,60 @@ async def test_http_handle_intent_match_failure(
     assert "DUPLICATE_NAME" in data["speech"]["plain"]["speech"]
 
 
+async def test_http_assistant(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test handle intent only targets exposed entities with 'assistant' set."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    hass.states.async_set(
+        "cover.garage_door_1", "closed", {ATTR_FRIENDLY_NAME: "Garage Door 1"}
+    )
+    async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
+
+    client = await hass_client()
+
+    # Exposed
+    async_expose_entity(hass, conversation.DOMAIN, "cover.garage_door_1", True)
+    resp = await client.post(
+        "/api/intent/handle",
+        json={
+            "name": "HassTurnOn",
+            "data": {"name": "Garage Door 1"},
+            "assistant": conversation.DOMAIN,
+        },
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["response_type"] == intent.IntentResponseType.ACTION_DONE.value
+
+    # Not exposed
+    async_expose_entity(hass, conversation.DOMAIN, "cover.garage_door_1", False)
+    resp = await client.post(
+        "/api/intent/handle",
+        json={
+            "name": "HassTurnOn",
+            "data": {"name": "Garage Door 1"},
+            "assistant": conversation.DOMAIN,
+        },
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["response_type"] == intent.IntentResponseType.ERROR.value
+    assert data["data"]["code"] == intent.IntentResponseErrorCode.FAILED_TO_HANDLE.value
+
+    # No assistant (exposure is irrelevant)
+    resp = await client.post(
+        "/api/intent/handle",
+        json={"name": "HassTurnOn", "data": {"name": "Garage Door 1"}},
+    )
+    assert resp.status == 200
+    data = await resp.json()
+    assert data["response_type"] == intent.IntentResponseType.ACTION_DONE.value
+
+
 async def test_cover_intents_loading(hass: HomeAssistant) -> None:
     """Test Cover Intents Loading."""
     assert await async_setup_component(hass, "intent", {})
@@ -128,12 +248,11 @@ async def test_cover_intents_loading(hass: HomeAssistant) -> None:
     hass.states.async_set("cover.garage_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    response = await intent.async_handle(
+    await intent.async_handle(
         hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Opening garage door"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "cover"
@@ -407,22 +526,34 @@ async def test_get_state_intent(
     # 1 light in kitchen (on)
     # 1 sensor in kitchen (50)
     # 2 binary sensors in the office (problem, moisture, on)
-    bedroom_light = entity_registry.async_get_or_create("light", "demo", "1")
+    bedroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "1", original_name="bedroom light"
+    )
     entity_registry.async_update_entity(bedroom_light.entity_id, area_id=bedroom.id)
 
-    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "2")
+    kitchen_sensor = entity_registry.async_get_or_create(
+        "sensor", "demo", "2", original_name="kitchen sensor"
+    )
     entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    kitchen_light = entity_registry.async_get_or_create("light", "demo", "3")
+    kitchen_light = entity_registry.async_get_or_create(
+        "light", "demo", "3", original_name="kitchen light"
+    )
     entity_registry.async_update_entity(kitchen_light.entity_id, area_id=kitchen.id)
 
-    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "4")
+    kitchen_sensor = entity_registry.async_get_or_create(
+        "sensor", "demo", "4", original_name="kitchen sensor"
+    )
     entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    problem_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "5")
+    problem_sensor = entity_registry.async_get_or_create(
+        "binary_sensor", "demo", "5", original_name="problem sensor"
+    )
     entity_registry.async_update_entity(problem_sensor.entity_id, area_id=office.id)
 
-    moisture_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "6")
+    moisture_sensor = entity_registry.async_get_or_create(
+        "binary_sensor", "demo", "6", original_name="moisture sensor"
+    )
     entity_registry.async_update_entity(moisture_sensor.entity_id, area_id=office.id)
 
     hass.states.async_set(

@@ -71,7 +71,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_input, self.hass, user_input
                 )
-            except (ConnectTimeout, HTTPError):
+            except ConnectTimeout, HTTPError:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

@@ -89,7 +89,8 @@
         "name": "Free memory"
       },
       "info_leds_count": {
-        "name": "LED count"
+        "name": "LED count",
+        "unit_of_measurement": "LEDs"
       },
       "info_leds_max_power": {
         "name": "Max current"

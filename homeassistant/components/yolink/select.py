@@ -74,7 +74,7 @@ async def async_setup_entry(
     async_add_entities(
         YoLinkSelectEntity(config_entry, selector_device_coordinator, description)
         for selector_device_coordinator in device_coordinators.values()
-        if selector_device_coordinator.device.device_type in [ATTR_DEVICE_SPRINKLER]
+        if selector_device_coordinator.device.device_type == ATTR_DEVICE_SPRINKLER
         for description in SELECTOR_MAPPINGS
         if description.exists_fn(selector_device_coordinator.device)
     )

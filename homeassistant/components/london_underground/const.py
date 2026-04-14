@@ -29,6 +29,8 @@ TUBE_LINES = [
     "Suffragette",
     "Weaver",
     "Windrush",
+    "Tram",
+    "IFS Cloud Cable Car",
 ]
 
 # Default lines to monitor if none selected

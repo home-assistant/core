@@ -9,6 +9,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_weather.weather import _CONDITION_MAP
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_PARTLYCLOUDY,
@@ -91,7 +95,7 @@ async def test_manual_update_entity(
     """Test manual update entity via service homeassistant/update_entity."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     assert mock_google_weather_api.async_get_current_conditions.call_count == 1
     mock_google_weather_api.async_get_current_conditions.assert_called_with(
@@ -99,8 +103,8 @@ async def test_manual_update_entity(
     )
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["weather.home"]},
         blocking=True,
     )

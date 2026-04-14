@@ -100,7 +100,7 @@ class AirZoneCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.airzone.login()
-            except (AirzoneCloudError, LoginError):
+            except AirzoneCloudError, LoginError:
                 errors["base"] = "cannot_connect"
             else:
                 return await self.async_step_inst_pick()

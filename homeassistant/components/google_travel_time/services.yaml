@@ -1,0 +1,118 @@
+get_travel_times:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: google_travel_time
+    origin:
+      required: true
+      example: "1600 Amphitheatre Parkway, Mountain View, CA"
+      selector:
+        text:
+    destination:
+      required: true
+      example: "1 Infinite Loop, Cupertino, CA"
+      selector:
+        text:
+    mode:
+      default: "driving"
+      selector:
+        select:
+          translation_key: mode
+          options:
+            - driving
+            - walking
+            - bicycling
+    units:
+      default: "metric"
+      selector:
+        select:
+          translation_key: units
+          options:
+            - metric
+            - imperial
+    language:
+      required: false
+      selector:
+        language:
+    avoid:
+      required: false
+      selector:
+        select:
+          translation_key: avoid
+          options:
+            - tolls
+            - highways
+            - ferries
+            - indoor
+    traffic_model:
+      required: false
+      selector:
+        select:
+          translation_key: traffic_model
+          options:
+            - best_guess
+            - pessimistic
+            - optimistic
+    departure_time:
+      required: false
+      selector:
+        time:
+
+get_transit_times:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: google_travel_time
+    origin:
+      required: true
+      example: "1600 Amphitheatre Parkway, Mountain View, CA"
+      selector:
+        text:
+    destination:
+      required: true
+      example: "1 Infinite Loop, Cupertino, CA"
+      selector:
+        text:
+    units:
+      default: "metric"
+      selector:
+        select:
+          translation_key: units
+          options:
+            - metric
+            - imperial
+    language:
+      required: false
+      selector:
+        language:
+    transit_mode:
+      required: false
+      selector:
+        select:
+          translation_key: transit_mode
+          options:
+            - bus
+            - subway
+            - train
+            - tram
+            - rail
+    transit_routing_preference:
+      required: false
+      selector:
+        select:
+          translation_key: transit_routing_preference
+          options:
+            - less_walking
+            - fewer_transfers
+    departure_time:
+      required: false
+      selector:
+        time:
+    arrival_time:
+      required: false
+      selector:
+        time:

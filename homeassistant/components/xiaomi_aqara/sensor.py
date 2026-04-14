@@ -125,7 +125,7 @@ async def async_setup_entry(
                     device, "Illumination", "illumination", gateway, config_entry
                 )
             )
-        elif device["model"] in ("vibration",):
+        elif device["model"] == "vibration":
             entities.append(
                 XiaomiSensor(
                     device, "Bed Activity", "bed_activity", gateway, config_entry
@@ -190,7 +190,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         value = float(value)
         if self._data_key in ("temperature", "humidity", "pressure"):
             value /= 100
-        elif self._data_key in ("illumination",):
+        elif self._data_key == "illumination":
             value = max(value - 300, 0)
         if self._data_key == "temperature" and (value < -50 or value > 60):
             return False

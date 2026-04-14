@@ -1,6 +1,6 @@
 """Constants for EQ3 Bluetooth Smart Radiator Valves."""
 
-from enum import Enum
+from enum import StrEnum
 
 from eq3btsmart.const import Eq3OperationMode
 
@@ -48,7 +48,7 @@ HA_TO_EQ_HVAC = {
 }
 
 
-class Preset(str, Enum):
+class Preset(StrEnum):
     """Preset modes for the eQ-3 radiator valve."""
 
     NONE = PRESET_NONE
@@ -61,7 +61,7 @@ class Preset(str, Enum):
     WINDOW_OPEN = "Window"
 
 
-class CurrentTemperatureSelector(str, Enum):
+class CurrentTemperatureSelector(StrEnum):
     """Selector for current temperature."""
 
     NOTHING = "NOTHING"
@@ -71,7 +71,7 @@ class CurrentTemperatureSelector(str, Enum):
     ENTITY = "ENTITY"
 
 
-class TargetTemperatureSelector(str, Enum):
+class TargetTemperatureSelector(StrEnum):
     """Selector for target temperature."""
 
     TARGET = "TARGET"

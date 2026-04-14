@@ -65,9 +65,11 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
         translation_key="display_temperature_unit",
         options=[x.name.lower() for x in TemperatureUnit],
         value_fn=(
-            lambda coordinator: coordinator.data.temperature_unit.name.lower()
-            if coordinator.data.temperature_unit is not None
-            else None
+            lambda coordinator: (
+                coordinator.data.temperature_unit.name.lower()
+                if coordinator.data.temperature_unit is not None
+                else None
+            )
         ),
         set_value_fn=(
             lambda device_client, serial, option: device_client.set_temperature_unit(
@@ -75,10 +77,12 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
             )
         ),
         supported_fn=(
-            lambda coordinator: DeviceFeature.TEMPERATURE_SET_UNIT
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.TEMPERATURE_SET_UNIT
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -92,10 +96,12 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
         value_fn=_get_brightness_low_high_value,
         set_value_fn=_set_brightness_low_high_value,
         supported_fn=(
-            lambda coordinator: DeviceFeature.LIGHT_BRIGHTNESS_LOW_HIGH
-            in coordinator.device_client.device_info(
-                coordinator.device.serial_number
-            ).features
+            lambda coordinator: (
+                DeviceFeature.LIGHT_BRIGHTNESS_LOW_HIGH
+                in coordinator.device_client.device_info(
+                    coordinator.device.serial_number
+                ).features
+            )
         ),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -104,9 +110,11 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
         translation_key="light_mode",
         options=[x.name.lower() for x in LightMode],
         value_fn=(
-            lambda coordinator: coordinator.data.light_mode.name.lower()
-            if coordinator.data.light_mode is not None
-            else None
+            lambda coordinator: (
+                coordinator.data.light_mode.name.lower()
+                if coordinator.data.light_mode is not None
+                else None
+            )
         ),
         set_value_fn=(
             lambda device_client, serial, option: device_client.set_light_mode(

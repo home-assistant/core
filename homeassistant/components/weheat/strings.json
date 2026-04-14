@@ -84,8 +84,32 @@
       "electricity_used": {
         "name": "Electricity used"
       },
+      "electricity_used_cooling": {
+        "name": "Electricity used cooling"
+      },
+      "electricity_used_defrost": {
+        "name": "Electricity used defrost"
+      },
+      "electricity_used_dhw": {
+        "name": "Electricity used DHW"
+      },
+      "electricity_used_heating": {
+        "name": "Electricity used heating"
+      },
       "energy_output": {
         "name": "Total energy output"
+      },
+      "energy_output_cooling": {
+        "name": "Energy output cooling"
+      },
+      "energy_output_defrost": {
+        "name": "Energy output defrost"
+      },
+      "energy_output_dhw": {
+        "name": "Energy output DHW"
+      },
+      "energy_output_heating": {
+        "name": "Energy output heating"
       },
       "heat_pump_state": {
         "state": {

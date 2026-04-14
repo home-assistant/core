@@ -96,7 +96,7 @@ async def async_register_insteon_frontend(hass: HomeAssistant):
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         dev_path = hass.data.get(DOMAIN, {}).get(CONF_DEV_PATH)
         is_dev = dev_path is not None
-        path = dev_path if dev_path else locate_dir()
+        path = dev_path or locate_dir()
         build_id = get_build_id(is_dev)
         await hass.http.async_register_static_paths(
             [StaticPathConfig(URL_BASE, path, cache_headers=not is_dev)]

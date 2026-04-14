@@ -10,7 +10,7 @@ from imgw_pib.const import HYDROLOGICAL_ALERTS_MAP, NO_ALERT
 from imgw_pib.model import HydrologicalData
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -102,7 +102,7 @@ async def async_setup_entry(
     entity_reg = er.async_get(hass)
     for key in ("flood_warning_level", "flood_alarm_level"):
         if entity_id := entity_reg.async_get_entity_id(
-            SENSOR_PLATFORM, DOMAIN, f"{coordinator.station_id}_{key}"
+            SENSOR_DOMAIN, DOMAIN, f"{coordinator.station_id}_{key}"
         ):
             entity_reg.async_remove(entity_id)
 

@@ -268,6 +268,8 @@ class ZeroconfDiscovery:
             _ZeroconfServiceInfo,
             lambda service_info: bool(service_info.name == name),
         ):
+            if flow.get("context", {}).get("dismiss_protected"):
+                continue
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     @callback

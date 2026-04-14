@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[light.nanoleaf-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -11,9 +12,7 @@
         'Nemo',
       ]),
       'max_color_temp_kelvin': 4500,
-      'max_mireds': 833,
       'min_color_temp_kelvin': 1200,
-      'min_mireds': 222,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -54,7 +53,6 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'effect': None,
       'effect_list': list([
@@ -65,9 +63,7 @@
       'friendly_name': 'Nanoleaf',
       'hs_color': None,
       'max_color_temp_kelvin': 4500,
-      'max_mireds': 833,
       'min_color_temp_kelvin': 1200,
-      'min_mireds': 222,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,

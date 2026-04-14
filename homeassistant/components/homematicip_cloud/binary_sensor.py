@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
+from homematicip.base.enums import LockState, SmokeDetectorAlarmType, WindowState
 from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
@@ -42,6 +42,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
+from .helpers import smoke_detector_channel_data_exists
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -71,6 +72,30 @@ SAM_DEVICE_ATTRIBUTES = {
     "accelerationSensorSensitivity": ATTR_ACCELERATION_SENSOR_SENSITIVITY,
     "accelerationSensorTriggerAngle": ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE,
 }
+
+
+def _is_full_flush_lock_controller(device: object) -> bool:
+    """Return whether the device is an HmIP-FLC."""
+    return getattr(device, "modelType", None) == "HmIP-FLC" and hasattr(
+        device, "functionalChannels"
+    )
+
+
+def _get_channel_by_role(
+    device: object,
+    functional_channel_type: str,
+    channel_role: str,
+) -> object | None:
+    """Return the matching functional channel for the device."""
+    for channel in getattr(device, "functionalChannels", []):
+        channel_type = getattr(channel, "functionalChannelType", None)
+        channel_type_name = getattr(channel_type, "name", channel_type)
+        if channel_type_name != functional_channel_type:
+            continue
+        if getattr(channel, "channelRole", None) != channel_role:
+            continue
+        return channel
+    return None
 
 
 async def async_setup_entry(
@@ -121,10 +146,15 @@ async def async_setup_entry(
             entities.append(
                 HomematicipPluggableMainsFailureSurveillanceSensor(hap, device)
             )
+        if _is_full_flush_lock_controller(device):
+            entities.append(HomematicipFullFlushLockControllerLocked(hap, device))
+            entities.append(HomematicipFullFlushLockControllerGlassBreak(hap, device))
         if isinstance(device, PresenceDetectorIndoor):
             entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, SmokeDetector):
             entities.append(HomematicipSmokeDetector(hap, device))
+            if smoke_detector_channel_data_exists(device, "chamberDegraded"):
+                entities.append(HomematicipSmokeDetectorChamberDegraded(hap, device))
         if isinstance(device, WaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
         if isinstance(device, (RainSensor, WeatherSensorPlus, WeatherSensorPro)):
@@ -295,6 +325,55 @@ class HomematicipMotionDetector(HomematicipGenericEntity, BinarySensorEntity):
         return self._device.motionDetected
 
 
+class HomematicipFullFlushLockControllerLocked(
+    HomematicipGenericEntity, BinarySensorEntity
+):
+    """Representation of the HomematicIP full flush lock controller lock state."""
+
+    _attr_device_class = BinarySensorDeviceClass.LOCK
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the full flush lock controller lock sensor."""
+        super().__init__(hap, device, post="Locked")
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the controlled lock is locked."""
+        channel = _get_channel_by_role(
+            self._device,
+            "MULTI_MODE_LOCK_INPUT_CHANNEL",
+            "DOOR_LOCK_SENSOR",
+        )
+        if channel is None:
+            return False
+        lock_state = getattr(channel, "lockState", None)
+        return getattr(lock_state, "name", lock_state) == LockState.LOCKED.name
+
+
+class HomematicipFullFlushLockControllerGlassBreak(
+    HomematicipGenericEntity, BinarySensorEntity
+):
+    """Representation of the HomematicIP full flush lock controller glass state."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the full flush lock controller glass break sensor."""
+        super().__init__(hap, device, post="Glass break")
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if glass break has been detected."""
+        channel = _get_channel_by_role(
+            self._device,
+            "MULTI_MODE_LOCK_INPUT_CHANNEL",
+            "DOOR_LOCK_SENSOR",
+        )
+        if channel is None:
+            return False
+        return bool(getattr(channel, "glassBroken", False))
+
+
 class HomematicipPresenceDetector(HomematicipGenericEntity, BinarySensorEntity):
     """Representation of the HomematicIP presence detector."""
 
@@ -320,6 +399,23 @@ class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
                 == SmokeDetectorAlarmType.PRIMARY_ALARM
             )
         return False
+
+
+class HomematicipSmokeDetectorChamberDegraded(
+    HomematicipGenericEntity, BinarySensorEntity
+):
+    """Representation of the HomematicIP smoke detector chamber health."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize smoke detector chamber health sensor."""
+        super().__init__(hap, device, post="Chamber Degraded")
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if smoke chamber is degraded."""
+        return self._device.chamberDegraded
 
 
 class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):

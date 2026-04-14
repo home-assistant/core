@@ -145,7 +145,7 @@ class DateTimeExtension(BaseTemplateExtension):
                 result = dt_util.as_local(result)
 
             return result.strftime(date_format)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_custom", value)
@@ -155,7 +155,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to local date/time."""
         try:
             return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_local", value)
@@ -165,7 +165,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter to convert given timestamp to UTC date/time."""
         try:
             return dt_util.utc_from_timestamp(value).isoformat()
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # If timestamp can't be converted
             if default is _SENTINEL:
                 raise_no_default("timestamp_utc", value)
@@ -175,7 +175,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Filter and function which tries to convert value to timestamp."""
         try:
             return dt_util.as_timestamp(value)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             if default is _SENTINEL:
                 raise_no_default("as_timestamp", value)
             return default
@@ -192,11 +192,11 @@ class DateTimeExtension(BaseTemplateExtension):
             # Check for a valid UNIX timestamp string, int or float
             timestamp = float(value)
             return dt_util.utc_from_timestamp(timestamp)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # Try to parse datetime string to datetime object
             try:
                 return dt_util.parse_datetime(value, raise_on_error=True)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 if default is _SENTINEL:
                     # Return None on string input
                     # to ensure backwards compatibility with HA Core 2024.1 and before.
@@ -213,7 +213,7 @@ class DateTimeExtension(BaseTemplateExtension):
         """Parse a time string to datetime."""
         try:
             return datetime.strptime(string, fmt)
-        except (ValueError, AttributeError, TypeError):
+        except ValueError, AttributeError, TypeError:
             if default is _SENTINEL:
                 raise_no_default("strptime", string)
             return default

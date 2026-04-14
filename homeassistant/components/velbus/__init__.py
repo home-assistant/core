@@ -143,16 +143,6 @@ async def async_migrate_entry(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    # This is the config entry migration for adding the new program selection
-    # migrate from 1.x to 2.1
-    if config_entry.version < 2:
-        # clean the velbusCache
-        cache_path = hass.config.path(
-            STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/"
-        )
-        if os.path.isdir(cache_path):
-            await hass.async_add_executor_job(shutil.rmtree, cache_path)
-
     # This is the config entry migration for swapping the usb unique id to the serial number
     # migrate from 2.1 to 2.2
     if (
@@ -166,8 +156,20 @@ async def async_migrate_entry(
         if len(parts) == 4:
             hass.config_entries.async_update_entry(config_entry, unique_id=parts[1])
 
+    # This is the config entry migration for adding the new program selection
+    # migrate from < 2 to 2.1
+    # This is the config entry migration for adding the new properties
+    # migrate from < 3 to 3.2
+    if config_entry.version < 3:
+        # clean the velbusCache
+        cache_path = hass.config.path(
+            STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/"
+        )
+        if os.path.isdir(cache_path):
+            await hass.async_add_executor_job(shutil.rmtree, cache_path)
+
     # update the config entry
-    hass.config_entries.async_update_entry(config_entry, version=2, minor_version=2)
+    hass.config_entries.async_update_entry(config_entry, version=3, minor_version=2)
 
     _LOGGER.error(
         "Migration to version %s.%s successful",

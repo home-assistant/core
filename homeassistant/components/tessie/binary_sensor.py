@@ -16,8 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
-from .const import TessieState
+from .const import TessieChargeStates, TessieState
 from .entity import TessieEnergyEntity, TessieEntity
+from .helpers import charge_state_to_option
 from .models import TessieEnergyData, TessieVehicleData
 
 PARALLEL_UPDATES = 0
@@ -44,7 +45,9 @@ VEHICLE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="charge_state_charging_state",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        is_on=lambda x: x == "Charging",
+        is_on=lambda value: (
+            charge_state_to_option(value) == TessieChargeStates["Charging"]
+        ),
         entity_registry_enabled_default=False,
     ),
     TessieBinarySensorEntityDescription(
@@ -160,10 +163,16 @@ VEHICLE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     ),
 )
 
-ENERGY_LIVE_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(key="backup_capable"),
-    BinarySensorEntityDescription(key="grid_services_active"),
-    BinarySensorEntityDescription(key="storm_mode_active"),
+ENERGY_LIVE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
+    TessieBinarySensorEntityDescription(key="backup_capable"),
+    TessieBinarySensorEntityDescription(key="grid_services_active"),
+    TessieBinarySensorEntityDescription(
+        key="grid_status",
+        is_on=lambda x: x == "Active",
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(key="storm_mode_active"),
 )
 
 
@@ -225,21 +234,28 @@ class TessieBinarySensorEntity(TessieEntity, BinarySensorEntity):
 class TessieEnergyLiveBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity):
     """Base class for Tessie energy live binary sensors."""
 
-    entity_description: BinarySensorEntityDescription
+    entity_description: TessieBinarySensorEntityDescription
 
     def __init__(
         self,
         data: TessieEnergyData,
-        description: BinarySensorEntityDescription,
+        description: TessieBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
         assert data.live_coordinator is not None
         super().__init__(data, data.live_coordinator, description.key)
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._attr_available
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
-        self._attr_is_on = self._value
+        self._attr_available = self._value is not None
+        if self._attr_available:
+            self._attr_is_on = self.entity_description.is_on(self._value)
 
 
 class TessieEnergyInfoBinarySensorEntity(TessieEnergyEntity, BinarySensorEntity):

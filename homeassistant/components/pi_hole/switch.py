@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PiHoleConfigEntry
 from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .coordinator import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
 _LOGGER = logging.getLogger(__name__)
