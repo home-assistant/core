@@ -274,7 +274,7 @@ def get_device_list_v1(
 
     for device in devices:
         if device.get("type") not in V1_DEVICE_TYPES:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Device %s with type %s not supported in Open API V1, skipping",
                 device.get("device_sn", ""),
                 device.get("type"),
