@@ -1,25 +1,35 @@
 """Coordinator for Plaato devices."""
 
-from __future__ import annotations
-
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import Plaato, PlaatoDeviceType
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-if TYPE_CHECKING:
-    from . import PlaatoConfigEntry
-
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class PlaatoData:
+    """Runtime data for the Plaato integration."""
+
+    coordinator: PlaatoCoordinator | None
+    device_name: str
+    device_type: str
+    device_id: str | None
+    sensor_data: PlaatoDevice | None = field(default=None)
+
+
+type PlaatoConfigEntry = ConfigEntry[PlaatoData]
 
 
 class PlaatoCoordinator(DataUpdateCoordinator[PlaatoDevice]):
@@ -48,7 +58,7 @@ class PlaatoCoordinator(DataUpdateCoordinator[PlaatoDevice]):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> PlaatoDevice:
         """Update data via library."""
         return await self.api.get_data(
             session=aiohttp_client.async_get_clientsession(self.hass),

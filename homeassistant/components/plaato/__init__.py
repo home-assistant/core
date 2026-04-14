@@ -1,14 +1,10 @@
 """Support for Plaato devices."""
 
-from __future__ import annotations
-
-from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 
 from aiohttp import web
 from pyplaato.models.airlock import PlaatoAirlock
-from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import (
     ATTR_ABV,
     ATTR_BATCH_VOLUME,
@@ -27,7 +23,6 @@ import voluptuous as vol
 
 from homeassistant.components import webhook
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
@@ -47,23 +42,10 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import PlaatoCoordinator
+from .coordinator import PlaatoConfigEntry, PlaatoCoordinator, PlaatoData
 
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass
-class PlaatoData:
-    """Runtime data for the Plaato integration."""
-
-    coordinator: PlaatoCoordinator | None
-    device_name: str
-    device_type: str
-    device_id: str | None
-    sensor_data: PlaatoDevice | None = field(default=None)
-
-
-type PlaatoConfigEntry = ConfigEntry[PlaatoData]
 
 DEPENDENCIES = ["webhook"]
 

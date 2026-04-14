@@ -1,8 +1,6 @@
 """PlaatoEntity class."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import Any, cast
 
 from pyplaato.models.device import PlaatoDevice
 
@@ -11,9 +9,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN, EXTRA_STATE_ATTRIBUTES, SENSOR_SIGNAL
-
-if TYPE_CHECKING:
-    from . import PlaatoData
+from .coordinator import PlaatoCoordinator, PlaatoData
 
 
 class PlaatoEntity(entity.Entity):
@@ -21,12 +17,18 @@ class PlaatoEntity(entity.Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, data: PlaatoData, sensor_type, coordinator=None) -> None:
+    def __init__(
+        self,
+        data: PlaatoData,
+        sensor_type: str,
+        coordinator: PlaatoCoordinator | None = None,
+    ) -> None:
         """Initialize the sensor."""
         self._coordinator = coordinator
         self._entry_data = data
         self._sensor_type = sensor_type
-        self._device_id = data.device_id
+        assert self._entry_data.device_id is not None
+        self._device_id = cast(str, data.device_id)
         self._device_type = data.device_type
         self._device_name = data.device_name
         self._attr_unique_id = f"{self._device_id}_{self._sensor_type}"
@@ -35,7 +37,7 @@ class PlaatoEntity(entity.Entity):
         if firmware := self._sensor_data.firmware_version:
             sw_version = firmware
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, self._device_id)},
             manufacturer="Plaato",
             model=self._device_type,
             name=self._device_name,

@@ -11,8 +11,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PlaatoConfigEntry
 from .const import CONF_USE_WEBHOOK
+from .coordinator import PlaatoConfigEntry, PlaatoCoordinator, PlaatoData
 from .entity import PlaatoEntity
 
 
@@ -42,7 +42,12 @@ async def async_setup_entry(
 class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
     """Representation of a Binary Sensor."""
 
-    def __init__(self, data, sensor_type, coordinator=None) -> None:
+    def __init__(
+        self,
+        data: PlaatoData,
+        sensor_type: str,
+        coordinator: PlaatoCoordinator | None = None,
+    ) -> None:
         """Initialize plaato binary sensor."""
         super().__init__(data, sensor_type, coordinator)
         if sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:

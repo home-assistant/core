@@ -17,8 +17,9 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_TEMP, SENSOR_UPDATE, PlaatoConfigEntry
+from . import ATTR_TEMP, SENSOR_UPDATE
 from .const import CONF_USE_WEBHOOK, SENSOR_SIGNAL
+from .coordinator import PlaatoConfigEntry, PlaatoCoordinator, PlaatoData
 from .entity import PlaatoEntity
 
 
@@ -70,18 +71,23 @@ async def async_setup_entry(
 class PlaatoSensor(PlaatoEntity, SensorEntity):
     """Representation of a Plaato Sensor."""
 
-    def __init__(self, data, sensor_type, coordinator=None) -> None:
+    def __init__(
+        self,
+        data: PlaatoData,
+        sensor_type: str,
+        coordinator: PlaatoCoordinator | None = None,
+    ) -> None:
         """Initialize plaato sensor."""
         super().__init__(data, sensor_type, coordinator)
         if sensor_type is PlaatoKeg.Pins.TEMPERATURE or sensor_type == ATTR_TEMP:
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self._sensor_data.sensors.get(self._sensor_type)
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self._sensor_data.get_unit_of_measurement(self._sensor_type)
