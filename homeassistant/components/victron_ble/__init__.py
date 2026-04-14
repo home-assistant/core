@@ -41,20 +41,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update = data.update(service_info)
 
         # Only assess key validity for instant-readout advertisements
-        # (0x10 prefix) whose device type the parser actually recognises.
-        # Unrecognised mode bytes or non-instant-readout packets are neutral:
+        # (0x10 prefix) whose device type the parser actually recognizes.
+        # Unrecognized mode bytes or non-instant-readout packets are neutral:
         # they say nothing about whether the encryption key is correct, so
         # they must not increment or reset the failure counter.
         raw_data = service_info.manufacturer_data.get(VICTRON_IDENTIFIER)
         if update.devices and raw_data is not None:
             try:
-                is_recognisable = (
+                is_recognizable = (
                     raw_data[:1] == b"\x10" and detect_device_type(raw_data) is not None
                 )
             except struct_error, IndexError:
-                is_recognisable = False
+                is_recognizable = False
 
-            if is_recognisable:
+            if is_recognizable:
                 if not data.validate_advertisement_key(raw_data):
                     consecutive_failures += 1
                     if consecutive_failures >= REAUTH_AFTER_FAILURES:

@@ -41,7 +41,7 @@ from .fixtures import (
     VICTRON_VEBUS_BAD_KEY_SERVICE_INFO,
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
-    VICTRON_VEBUS_UNRECOGNISED_MODE_SERVICE_INFO,
+    VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -166,13 +166,13 @@ def _inject_bad_advertisement(hass: HomeAssistant, seq: int = 0) -> None:
     )
 
 
-def _inject_unrecognised_mode_advertisement(hass: HomeAssistant, seq: int = 0) -> None:
-    """Inject a Victron advertisement with an unrecognised mode byte.
+def _inject_unrecognized_mode_advertisement(hass: HomeAssistant, seq: int = 0) -> None:
+    """Inject a Victron advertisement with an unrecognized mode byte.
 
     detect_device_type returns None for this payload so the reauth guard
     must treat it as neutral (neither increment nor reset the failure counter).
     """
-    info = VICTRON_VEBUS_UNRECOGNISED_MODE_SERVICE_INFO
+    info = VICTRON_VEBUS_UNRECOGNIZED_MODE_SERVICE_INFO
     raw = bytearray(info.manufacturer_data[VICTRON_IDENTIFIER])
     raw[-1] = seq & 0xFF
     device = generate_ble_device(address=info.address, name=info.name, details={})
@@ -349,14 +349,14 @@ async def test_charger_error_state(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_reauth_not_triggered_on_unrecognised_mode(
+async def test_reauth_not_triggered_on_unrecognized_mode(
     hass: HomeAssistant,
     mock_config_entry_added_to_hass: MockConfigEntry,
 ) -> None:
-    """Test reauth is NOT triggered by advertisements with unrecognised mode bytes.
+    """Test reauth is NOT triggered by advertisements with unrecognized mode bytes.
 
     Some Victron devices broadcast advertisements with mode bytes that
-    detect_device_type does not recognise (returns None).
+    detect_device_type does not recognize (returns None).
     validate_advertisement_key also returns False for these, but that does
     not mean the encryption key is wrong.
 
@@ -371,9 +371,9 @@ async def test_reauth_not_triggered_on_unrecognised_mode(
     inject_bluetooth_service_info(hass, VICTRON_VEBUS_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    # Now send many unrecognised-mode advertisements
+    # Now send many unrecognized-mode advertisements
     for i in range(REAUTH_AFTER_FAILURES + 5):
-        _inject_unrecognised_mode_advertisement(hass, seq=i)
+        _inject_unrecognized_mode_advertisement(hass, seq=i)
         await hass.async_block_till_done()
 
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -381,14 +381,14 @@ async def test_reauth_not_triggered_on_unrecognised_mode(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_reauth_still_triggers_across_unrecognised_mode(
+async def test_reauth_still_triggers_across_unrecognized_mode(
     hass: HomeAssistant,
     mock_config_entry_added_to_hass: MockConfigEntry,
 ) -> None:
-    """Test that unrecognised-mode advertisements are neutral for the failure counter.
+    """Test that unrecognized-mode advertisements are neutral for the failure counter.
 
-    The sequence bad → bad → unrecognised → bad must still trigger reauth
-    because unrecognised advertisements should neither increment nor reset the
+    The sequence bad → bad → unrecognized → bad must still trigger reauth
+    because unrecognized advertisements should neither increment nor reset the
     consecutive failure counter.
 
     Regression test for https://github.com/home-assistant/core/issues/168019
@@ -408,8 +408,8 @@ async def test_reauth_still_triggers_across_unrecognised_mode(
     _inject_bad_advertisement(hass, seq=101)
     await hass.async_block_till_done()
 
-    # unrecognised mode — should be neutral
-    _inject_unrecognised_mode_advertisement(hass, seq=50)
+    # unrecognized mode — should be neutral
+    _inject_unrecognized_mode_advertisement(hass, seq=50)
     await hass.async_block_till_done()
 
     # one more bad → 3 consecutive failures → reauth
