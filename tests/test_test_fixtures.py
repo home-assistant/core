@@ -38,6 +38,7 @@ def test_sockets_enabled() -> None:
     mysocket = socket.socket()
     with pytest.raises(pytest_socket.SocketConnectBlockedError):
         mysocket.connect(("127.0.0.2", 1234))
+    mysocket.close()
 
 
 async def test_hass_cv(hass: HomeAssistant) -> None:
