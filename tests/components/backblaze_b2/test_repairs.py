@@ -29,10 +29,24 @@ def mock_entry():
     return entry
 
 
+async def test_unauthorized_triggers_reauth(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Test that Unauthorized exception triggers reauth flow."""
+    mock_entry.runtime_data.api.account_info.get_allowed.side_effect = Unauthorized(
+        "test", "auth_failed"
+    )
+    with patch.object(mock_entry, "async_start_reauth") as mock_reauth:
+        await async_check_for_repair_issues(hass, mock_entry)
+
+    mock_reauth.assert_called_once_with(hass)
+    assert len(ir.async_get(hass).issues) == 0
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_issues"),
     [
-        (Unauthorized("test", "auth_failed"), 0),  # Handled by reauth flow
         (RestrictedBucket("test"), 1),  # Creates repair issue
         (NonExistentBucket("test"), 1),  # Creates repair issue
         (B2Error("test"), 0),  # Just logs, no issue
@@ -45,11 +59,12 @@ async def test_repair_issue_creation(
     expected_issues: int,
 ) -> None:
     """Test repair issue creation for different exception types."""
-    with patch.object(hass, "async_add_executor_job", side_effect=exception):
+    mock_entry.runtime_data.api.account_info.get_allowed.side_effect = exception
+    with patch.object(mock_entry, "async_start_reauth") as mock_reauth:
         await async_check_for_repair_issues(hass, mock_entry)
 
-    issues = ir.async_get(hass).issues
-    assert len(issues) == expected_issues
+    mock_reauth.assert_not_called()
+    assert len(ir.async_get(hass).issues) == expected_issues
 
 
 async def test_async_create_fix_flow(hass: HomeAssistant) -> None:

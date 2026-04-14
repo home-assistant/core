@@ -67,14 +67,15 @@ def assert_action(
     calls: list[ServiceCall],
     expected_calls: int,
     expected_action: str,
+    index: int = -1,
     **kwargs,
 ) -> None:
     """Validate the action was properly called."""
     assert len(calls) == expected_calls
-    assert calls[-1].data["action"] == expected_action
-    assert calls[-1].data["caller"] == platform_setup.entity_id
+    assert calls[index].data["action"] == expected_action
+    assert calls[index].data["caller"] == platform_setup.entity_id
     for key, value in kwargs.items():
-        assert calls[-1].data[key] == value
+        assert calls[index].data[key] == value
 
 
 async def async_trigger(

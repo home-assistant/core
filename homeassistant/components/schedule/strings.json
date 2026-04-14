@@ -1,7 +1,27 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted schedules to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more schedule blocks are currently not active.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Schedule is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more schedule blocks are currently active.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Schedule is on"
+    }
   },
   "entity_component": {
     "_": {
@@ -25,6 +45,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
@@ -40,7 +66,7 @@
     },
     "reload": {
       "description": "Reloads schedules from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload schedules"
     }
   },
   "title": "Schedule",
@@ -49,7 +75,6 @@
       "description": "Triggers when a schedule block ends.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::schedule::common::trigger_behavior_description%]",
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"
         }
       },
@@ -59,7 +84,6 @@
       "description": "Triggers when a schedule block starts.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::schedule::common::trigger_behavior_description%]",
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"
         }
       },

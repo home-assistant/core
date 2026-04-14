@@ -13,7 +13,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -21,7 +20,6 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
     store_info: AsyncMock,
     addon_stats: AsyncMock,
@@ -37,10 +35,9 @@ def mock_all(
     os_info: AsyncMock,
     homeassistant_stats: AsyncMock,
     supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     homeassistant_info.return_value = replace(
         homeassistant_info.return_value,
         version="1.0.0dev221",
@@ -57,9 +54,6 @@ def mock_all(
         supervisor_info.return_value,
         version_latest="1.0.1dev222",
         update_available=True,
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
 
     def mock_addon_info(slug: str):

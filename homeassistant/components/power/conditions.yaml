@@ -1,0 +1,43 @@
+.condition_behavior: &condition_behavior
+  required: true
+  default: any
+  selector:
+    select:
+      translation_key: condition_behavior
+      options:
+        - all
+        - any
+
+.power_units: &power_units
+  - "mW"
+  - "W"
+  - "kW"
+  - "MW"
+  - "GW"
+  - "TW"
+  - "BTU/h"
+
+.power_threshold_entity: &power_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *power_units
+  - domain: sensor
+    device_class: power
+  - domain: number
+    device_class: power
+
+is_value:
+  target:
+    entity:
+      - domain: sensor
+        device_class: power
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *power_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *power_units

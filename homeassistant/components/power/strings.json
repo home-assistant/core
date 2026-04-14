@@ -1,0 +1,61 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_threshold_name": "Threshold type",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_threshold_name": "Threshold type"
+  },
+  "conditions": {
+    "is_value": {
+      "description": "Tests the power value of one or more entities.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::power::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::power::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Power value"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Power",
+  "triggers": {
+    "changed": {
+      "description": "Triggers after one or more power values change.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::power::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Power changed"
+    },
+    "crossed_threshold": {
+      "description": "Triggers after one or more power values cross a threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::power::common::trigger_behavior_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::power::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Power crossed threshold"
+    }
+  }
+}

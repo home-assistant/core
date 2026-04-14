@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_TARGET,
+    UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
@@ -156,7 +157,6 @@ async def test_climate_trigger_validation(
 )
 async def test_climate_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -168,7 +168,6 @@ async def test_climate_state_trigger_behavior_any(
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -191,7 +190,10 @@ async def test_climate_state_trigger_behavior_any(
             "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.target_temperature_changed", HVACMode.AUTO, ATTR_TEMPERATURE
+            "climate.target_temperature_changed",
+            HVACMode.AUTO,
+            ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
@@ -200,6 +202,7 @@ async def test_climate_state_trigger_behavior_any(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -220,7 +223,6 @@ async def test_climate_state_trigger_behavior_any(
 )
 async def test_climate_state_attribute_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -232,7 +234,6 @@ async def test_climate_state_attribute_trigger_behavior_any(
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -280,7 +281,6 @@ async def test_climate_state_attribute_trigger_behavior_any(
 )
 async def test_climate_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entities_in_target: int,
@@ -292,7 +292,6 @@ async def test_climate_state_trigger_behavior_first(
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -318,6 +317,7 @@ async def test_climate_state_trigger_behavior_first(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -338,7 +338,6 @@ async def test_climate_state_trigger_behavior_first(
 )
 async def test_climate_state_attribute_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -350,7 +349,6 @@ async def test_climate_state_attribute_trigger_behavior_first(
     """Test that the climate state trigger fires when the first climate state changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -398,7 +396,6 @@ async def test_climate_state_attribute_trigger_behavior_first(
 )
 async def test_climate_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entities_in_target: int,
@@ -410,7 +407,6 @@ async def test_climate_state_trigger_behavior_last(
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -436,6 +432,7 @@ async def test_climate_state_trigger_behavior_last(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
+            threshold_unit=UnitOfTemperature.CELSIUS,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -456,7 +453,6 @@ async def test_climate_state_trigger_behavior_last(
 )
 async def test_climate_state_attribute_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -468,7 +464,6 @@ async def test_climate_state_attribute_trigger_behavior_last(
     """Test that the climate state trigger fires when the last climate state changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

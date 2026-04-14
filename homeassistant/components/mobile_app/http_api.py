@@ -68,8 +68,13 @@ class RegistrationsView(HomeAssistantView):
         hass = request.app[KEY_HASS]
 
         webhook_id = secrets.token_hex()
+        user = request["hass_user"]
 
-        if cloud.async_active_subscription(hass) and cloud.async_is_connected(hass):
+        if (
+            not user.local_only
+            and cloud.async_active_subscription(hass)
+            and cloud.async_is_connected(hass)
+        ):
             data[CONF_CLOUDHOOK_URL] = await async_create_cloud_hook(
                 hass, webhook_id, None
             )
@@ -79,7 +84,7 @@ class RegistrationsView(HomeAssistantView):
         if data[ATTR_SUPPORTS_ENCRYPTION]:
             data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
 
-        data[CONF_USER_ID] = request["hass_user"].id
+        data[CONF_USER_ID] = user.id
 
         # Fallback to DEVICE_ID if slug is empty.
         if not slugify(data[ATTR_DEVICE_NAME], separator=""):
@@ -92,7 +97,7 @@ class RegistrationsView(HomeAssistantView):
         )
 
         remote_ui_url = None
-        if cloud.async_active_subscription(hass):
+        if not user.local_only and cloud.async_active_subscription(hass):
             with suppress(cloud.CloudNotAvailable):
                 remote_ui_url = cloud.async_remote_ui_url(hass)
 

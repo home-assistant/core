@@ -88,7 +88,6 @@ class _MachineConfig:
 _MACHINES = {
     "generic-x86-64": _MachineConfig(arch="amd64", packages=("libva-intel-driver",)),
     "green": _MachineConfig(arch="aarch64"),
-    "intel-nuc": _MachineConfig(arch="amd64", packages=("libva-intel-driver",)),
     "khadas-vim3": _MachineConfig(arch="aarch64"),
     "odroid-c2": _MachineConfig(arch="aarch64"),
     "odroid-c4": _MachineConfig(arch="aarch64"),
