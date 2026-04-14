@@ -53,7 +53,6 @@ class CollectionExtension(BaseTemplateExtension):
                     self.natural_sort,
                     as_global=True,
                     as_filter=True,
-                    as_test=True,
                 ),
                 TemplateFunction(
                     "union",
@@ -190,7 +189,7 @@ class CollectionExtension(BaseTemplateExtension):
         """Return elements sorted naturally."""
         if not isinstance(lst, list):
             raise TypeError(
-                f"natural_sort expected a iterable list, got {type(lst).__name__}"
+                f"natural_sort expected an iterable list, got {type(lst).__name__}"
             )
         if isinstance(alg, Undefined):
             raise TypeError(
@@ -227,8 +226,8 @@ class CollectionExtension(BaseTemplateExtension):
 
         return natsorted(
             lst,
-            key=_get_key if key else None,
-            alg=_get_alg(alg) if alg else DEFAULT_ALG,
+            key=_get_key if key is not None else None,
+            alg=_get_alg(alg) if alg is not None else DEFAULT_ALG,
             reverse=reverse,
         )
 

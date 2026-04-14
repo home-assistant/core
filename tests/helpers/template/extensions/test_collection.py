@@ -380,16 +380,16 @@ def test_natural_sort(
         ),
         (
             "{{ none | natural_sort(alg='ns.LOCALE') }}",
-            "natural_sort expected a iterable list, got NoneType",
+            "natural_sort expected an iterable list, got NoneType",
         ),
         (
             "{{ foo | natural_sort(alg='ns.LOCALE') }}",
-            "natural_sort expected a iterable list, got LoggingUndefined",
+            "natural_sort expected an iterable list, got LoggingUndefined",
         ),
     ],
 )
 def test_natural_sort_errors(
-    hass: HomeAssistant, value_template: str, expected: list[Any]
+    hass: HomeAssistant, value_template: str, expected: str
 ) -> None:
     """Test natural sort filter and function."""
     with pytest.raises(TemplateError, match=expected):
