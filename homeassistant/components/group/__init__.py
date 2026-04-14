@@ -41,6 +41,7 @@ from .const import (  # noqa: F401
     ATTR_REMOVE_ENTITIES,
     CONF_ALL,
     CONF_HIDE_MEMBERS,
+    CONF_IGNORE_NON_NUMERIC,
     DATA_COMPONENT,
     DOMAIN,
     GROUP_ORDER,

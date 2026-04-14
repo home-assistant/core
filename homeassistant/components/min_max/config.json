@@ -1,0 +1,51 @@
+{
+  "group": {
+    "created_at": "2026-04-10T14:33:19.033744+00:00",
+    "data": {},
+    "disabled_by": null,
+    "discovery_keys": {},
+    "domain": "group",
+    "entry_id": "01KNVWZHXSVPAZD4DGFF8TN94Z",
+    "minor_version": 1,
+    "modified_at": "2026-04-10T14:33:19.033750+00:00",
+    "options": {
+      "entities": ["sensor.carbon_dioxide", "sensor.carbon_monoxide"],
+      "group_type": "sensor",
+      "hide_members": false,
+      "ignore_non_numeric": false,
+      "name": "Olle",
+      "round_digits": 2.0,
+      "type": "min"
+    },
+    "pref_disable_new_entities": false,
+    "pref_disable_polling": false,
+    "source": "import",
+    "subentries": [],
+    "title": "Olle",
+    "unique_id": null,
+    "version": 1
+  },
+  "min_max": {
+    "created_at": "2026-04-10T14:13:58.312444+00:00",
+    "data": {},
+    "disabled_by": null,
+    "discovery_keys": {},
+    "domain": "min_max",
+    "entry_id": "01KNVVW4D8NK8ARQF8GCH7CD5A",
+    "minor_version": 1,
+    "modified_at": "2026-04-10T14:33:19.073168+00:00",
+    "options": {
+      "entity_ids": ["sensor.carbon_dioxide", "sensor.carbon_monoxide"],
+      "name": "Olle",
+      "round_digits": 2.0,
+      "type": "min"
+    },
+    "pref_disable_new_entities": false,
+    "pref_disable_polling": false,
+    "source": "user",
+    "subentries": [],
+    "title": "Olle",
+    "unique_id": null,
+    "version": 2
+  }
+}
