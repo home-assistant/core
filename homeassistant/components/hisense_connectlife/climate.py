@@ -438,7 +438,8 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        modes = list(self._attr_fan_modes)
+        fan_modes = self._attr_fan_modes or []
+        modes = list(fan_modes)
         if self.hvac_mode == HVACMode.FAN_ONLY:
             if FAN_AUTO in modes:
                 modes.remove(FAN_AUTO)
