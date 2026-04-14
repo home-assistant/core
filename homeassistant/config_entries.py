@@ -316,7 +316,7 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
 
 
 class FlowType(StrEnum):
-    """Flow type."""
+    """Flow type supported in `next_flow` of ConfigFlowResult."""
 
     CONFIG_FLOW = "config_flow"
     OPTIONS_FLOW = "options_flow"
