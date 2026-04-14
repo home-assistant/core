@@ -13,9 +13,15 @@ from iaqualink.exception import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 from .const import DOMAIN
@@ -32,6 +38,16 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_hostname: str | None = None
+        self._discovered_ip: str | None = None
+
+    async def _async_set_single_instance_unique_id(self) -> None:
+        """Assign the unique ID used by this single-instance integration."""
+        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
+        self._abort_if_unique_id_configured(error="single_instance_allowed")
 
     async def _async_test_credentials(
         self, user_input: dict[str, Any]
@@ -53,10 +69,24 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return {}
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a DHCP discovery."""
+        await self._async_set_single_instance_unique_id()
+
+        self._discovered_hostname = discovery_info.hostname
+        self._discovered_ip = discovery_info.ip
+
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
+        if self.source not in (SOURCE_DHCP, SOURCE_REAUTH):
+            await self._async_set_single_instance_unique_id()
+
         errors = {}
 
         if user_input is not None:
@@ -66,9 +96,21 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME], data=user_input
                 )
 
+        discovery = ""
+        if (
+            self.source == SOURCE_DHCP
+            and self._discovered_hostname is not None
+            and self._discovered_ip is not None
+        ):
+            discovery = (
+                "A likely iAquaLink device was discovered on your network at "
+                f"{self._discovered_ip} ({self._discovered_hostname}). "
+            )
+
         return self.async_show_form(
             step_id="user",
             data_schema=CREDENTIALS_DATA_SCHEMA,
+            description_placeholders={"discovery": discovery},
             errors=errors,
         )
 
