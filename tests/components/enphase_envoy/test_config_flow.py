@@ -13,8 +13,8 @@ from homeassistant.components.enphase_envoy.const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
     OPTION_DISABLE_KEEP_ALIVE,
     OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
-    OPTION_SET_RETRY_DELAY,
-    OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
+    OPTION_SET_RETRY_ATTEMPTS,
+    OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -598,7 +598,7 @@ async def test_options_default(
     assert config_entry.options == {
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
         OPTION_DISABLE_KEEP_ALIVE: OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
-        OPTION_SET_RETRY_DELAY: OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
+        OPTION_SET_RETRY_ATTEMPTS: OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE,
     }
 
 
@@ -619,14 +619,14 @@ async def test_options_set(
         user_input={
             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
             OPTION_DISABLE_KEEP_ALIVE: True,
-            OPTION_SET_RETRY_DELAY: 6,
+            OPTION_SET_RETRY_ATTEMPTS: 6,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
         OPTION_DISABLE_KEEP_ALIVE: True,
-        OPTION_SET_RETRY_DELAY: 6,
+        OPTION_SET_RETRY_ATTEMPTS: 6,
     }
 
 

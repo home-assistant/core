@@ -15,8 +15,8 @@ from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
-    OPTION_SET_RETRY_DELAY,
-    OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
+    OPTION_SET_RETRY_ATTEMPTS,
+    OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE,
     Platform,
 )
 from homeassistant.components.enphase_envoy.coordinator import (
@@ -689,7 +689,7 @@ async def test_default_retry_option_in_config_file(
             CONF_PASSWORD: "test-password",
             CONF_TOKEN: token,
         },
-        options={OPTION_SET_RETRY_DELAY: OPTION_SET_RETRY_DELAY_DEFAULT_VALUE},
+        options={OPTION_SET_RETRY_ATTEMPTS: OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE},
     )
     mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
     await setup_integration(hass, entry)

@@ -23,8 +23,8 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DOMAIN,
     INVALID_AUTH_ERRORS,
-    OPTION_SET_RETRY_DELAY,
-    OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
+    OPTION_SET_RETRY_ATTEMPTS,
+    OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -222,11 +222,11 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _set_retry_policy(self) -> None:
         """Set Envoy retry policy if set in options."""
         retries: int = self.config_entry.options.get(
-            OPTION_SET_RETRY_DELAY, OPTION_SET_RETRY_DELAY_DEFAULT_VALUE
+            OPTION_SET_RETRY_ATTEMPTS, OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE
         )
         # Each envoy instance set retry to OPTION_SET_RETRY_DELAY_DEFAULT_VALUE
         # only change if option is set to different value
-        if retries != OPTION_SET_RETRY_DELAY_DEFAULT_VALUE:
+        if retries != OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE:
             # Envoy uses 45 sec timeouts, set allowed time
             # a bit larger to allow for wait time.
             retry_delay: int = 15 + (retries - 1) * 45
