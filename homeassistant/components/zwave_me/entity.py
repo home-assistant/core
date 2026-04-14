@@ -71,3 +71,7 @@ class ZWaveMeEntity(Entity):
     def delete_entity(self) -> None:
         """Remove this entity."""
         self.hass.async_create_task(self.async_remove(force_remove=True))
+
+    def update(self) -> None:
+        """Get data from the device."""
+        self.controller.zwave_api.send_command(self.device.id, "update")
