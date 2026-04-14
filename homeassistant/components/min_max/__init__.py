@@ -12,7 +12,7 @@ from homeassistant.components.group import (
     DOMAIN as GROUP_DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -35,7 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config[CONF_IGNORE_NON_NUMERIC] = False
     config[CONF_GROUP_TYPE] = SENSOR_DOMAIN
 
-    # Create new config entry for group component and remove old entry
     new_config_entry = ConfigEntry(
         data={},
         discovery_keys=MappingProxyType({}),
@@ -48,9 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         unique_id=None,
         version=1,
     )
-    await hass.config_entries.async_add(new_config_entry)
 
-    # Migrate entity from old entry to new entry
     entity_reg = er.async_get(hass)
     if old_entity := entity_reg.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, entry.entry_id
@@ -59,13 +56,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             old_entity, GROUP_DOMAIN, new_config_entry_id=new_config_entry.entry_id
         )
 
-    # await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_add(new_config_entry)
 
     async def remove_old_entry(now: datetime) -> None:
         """Remove the old config entry after migration."""
-        await hass.config_entries.async_remove(entry.entry_id)
+        if entry.state == ConfigEntryState.LOADED:
+            await hass.config_entries.async_remove(entry.entry_id)
+        else:
+            async_call_later(hass, 5, remove_old_entry)
 
-    async_call_later(hass, 60, remove_old_entry)
+    async_call_later(hass, 5, remove_old_entry)
 
     return True
 
