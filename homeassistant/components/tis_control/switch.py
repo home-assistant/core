@@ -10,9 +10,11 @@ from TISApi.components.switch.base_switch import TISAPISwitch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TISConfigEntry
+from .const import DOMAIN
 
 
 class SwitchDescription(TypedDict):
@@ -120,16 +122,24 @@ async def async_setup_entry(
 class TISSwitch(SwitchEntity):
     """Represents a TIS switch entity in Home Assistant."""
 
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(self, device_api: TISAPISwitch) -> None:
         """Initialize the switch entity."""
         self.device_api = device_api
 
+        dev_id_str = "_".join(str(i) for i in self.device_api.device_id)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, dev_id_str)},
+            name=f"TIS Device {dev_id_str}",
+            manufacturer="TIS Control",
+        )
+
         if self.device_api.name:
             self._attr_name = self.device_api.name
         else:
-            self._attr_name = f"TIS Switch {self.device_api.unique_id}"
+            self._attr_name = f"Channel {self.device_api.channel_number}"
 
         self._attr_unique_id = self.device_api.unique_id
         self._attr_should_poll = False

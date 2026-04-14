@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = f"{SWITCH_DOMAIN}.test_switch"
+ENTITY_ID = f"{SWITCH_DOMAIN}.tis_device_1_2_3_test_switch"
 
 MOCK_RAW_API_RESPONSE = [
     {
@@ -45,6 +45,8 @@ async def setup_mock_switch(
         mock_switch_wrapper = mock_api_switch_cls.return_value
         mock_switch_wrapper.name = "Test Switch"
         mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
+        mock_switch_wrapper.device_id = [1, 2, 3]
+        mock_switch_wrapper.channel_number = 1
         mock_switch_wrapper.is_on = None  # Initial state
         mock_switch_wrapper.available = True
         mock_switch_wrapper.request_update = AsyncMock()
@@ -65,7 +67,7 @@ async def test_setup_and_properties(
     """Test switch setup, initial state, and properties."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.name == "Test Switch"
+    assert state.name == "TIS Device 1_2_3 Test Switch"
 
     setup_mock_switch.register_callback.assert_called_once()
     setup_mock_switch.request_update.assert_awaited_once()
@@ -184,6 +186,8 @@ async def test_setup_switch_no_name(
         mock_switch_wrapper = mock_api_switch_cls.return_value
         mock_switch_wrapper.name = None
         mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
+        mock_switch_wrapper.device_id = [1, 2, 3]
+        mock_switch_wrapper.channel_number = 1
         mock_switch_wrapper.is_on = False
         mock_switch_wrapper.available = True
         mock_switch_wrapper.request_update = AsyncMock()
@@ -198,7 +202,7 @@ async def test_setup_switch_no_name(
     state = hass.states.get(entity_ids[0])
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.name == "TIS Switch tis_1_2_3_ch1"
+    assert state.name == "TIS Device 1_2_3 Channel 1"
 
 
 async def test_invalid_appliance_data(
@@ -279,6 +283,8 @@ async def test_invalid_appliance_data(
         mock_switch_wrapper = mock_api_switch_cls.return_value
         mock_switch_wrapper.name = "Valid Switch"
         mock_switch_wrapper.unique_id = "tis_1_2_3_ch1"
+        mock_switch_wrapper.device_id = [1, 2, 3]
+        mock_switch_wrapper.channel_number = 1
         mock_switch_wrapper.is_on = False
         mock_switch_wrapper.available = True
         mock_switch_wrapper.request_update = AsyncMock()
@@ -290,4 +296,4 @@ async def test_invalid_appliance_data(
     # Verify that only the single valid entity was created.
     entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
     assert len(entity_ids) == 1
-    assert hass.states.get(entity_ids[0]).name == "Valid Switch"
+    assert hass.states.get(entity_ids[0]).name == "TIS Device 1_2_3 Valid Switch"
