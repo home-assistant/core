@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from unifi_discovery import AIOUnifiScanner, UnifiDevice, UnifiService
@@ -27,6 +28,21 @@ UNIFI_DISCOVERY_NO_MAC = UnifiDevice(
     platform=DEVICE_HOSTNAME,
     hostname=DEVICE_HOSTNAME,
     services={UnifiService.Protect: True},
+    direct_connect_domain=DIRECT_CONNECT_DOMAIN,
+)
+
+# In production the crash happens because asdict() deep-copies Enum keys in
+# the services dict, and on Python 3.14+ deepcopy traverses into
+# Enum.__members__ (a mappingproxy) which cannot be pickled.  Whether
+# deepcopy(enum) actually fails depends on the specific CPython build, so
+# we force the error reliably by using MappingProxyType directly as the
+# services value — deepcopy always fails on it.
+UNIFI_DISCOVERY_MAPPINGPROXY_SERVICES = UnifiDevice(
+    source_ip=DEVICE_IP_ADDRESS,
+    hw_addr=DEVICE_MAC_ADDRESS,
+    platform=DEVICE_HOSTNAME,
+    hostname=DEVICE_HOSTNAME,
+    services=MappingProxyType({UnifiService.Protect: True}),
     direct_connect_domain=DIRECT_CONNECT_DOMAIN,
 )
 

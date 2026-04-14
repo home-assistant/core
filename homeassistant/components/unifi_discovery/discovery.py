@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from collections.abc import Mapping
+from dataclasses import fields
 from datetime import timedelta
 import logging
 from typing import Any
@@ -22,6 +23,24 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTERVAL = timedelta(minutes=60)
 
 DATA_DISCOVERY_STARTED: HassKey[bool] = HassKey(DOMAIN)
+
+
+def _device_to_dict(device: UnifiDevice) -> dict[str, Any]:
+    """Convert a UnifiDevice to a plain dict.
+
+    Avoid dataclasses.asdict() because it calls copy.deepcopy() on non-builtin
+    types.  On Python 3.14+ deepcopy cannot pickle mappingproxy objects, and
+    Enum members (used as dict keys in ``services``) internally reference
+    ``__members__`` which is a mappingproxy.  This causes asdict() to crash
+    with ``TypeError: cannot pickle 'mappingproxy' object``.
+    """
+    data: dict[str, Any] = {}
+    for f in fields(device):
+        value = getattr(device, f.name)
+        if isinstance(value, Mapping):
+            value = dict(value)
+        data[f.name] = value
+    return data
 
 
 @callback
@@ -74,5 +93,5 @@ def async_trigger_discovery(
                     hass,
                     domain,
                     context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                    data=asdict(device),
+                    data=_device_to_dict(device),
                 )
