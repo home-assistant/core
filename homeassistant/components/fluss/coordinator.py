@@ -56,10 +56,19 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 
+        if not isinstance(devices, dict):
+            raise UpdateFailed("Error fetching Fluss devices: invalid response data")
+
+        raw_device_list = devices.get("devices")
+        if not isinstance(raw_device_list, list):
+            raise UpdateFailed("Error fetching Fluss devices: invalid devices data")
+
         device_list: list[dict[str, Any]] = [
             device
-            for device in devices["devices"]
-            if device["userPermissions"]["canUseWiFi"]
+            for device in raw_device_list
+            if isinstance(device, dict)
+            and isinstance(device.get("userPermissions"), dict)
+            and bool(device["userPermissions"].get("canUseWiFi"))
         ]
         statuses = await asyncio.gather(
             *(self.api.async_get_device_status(d["deviceId"]) for d in device_list),
