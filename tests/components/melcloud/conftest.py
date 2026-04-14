@@ -36,6 +36,19 @@ def _build_mock_atw_device() -> MagicMock:
     device.name = "Ecodan"
     device.units = [{"model": "ATW-Unit", "serial": "unit-serial-1"}]
 
+    # Binary sensor properties
+    device.boiler_status = True
+    device.booster_heater1_status = False
+    device.booster_heater2_status = None
+    device.booster_heater2plus_status = None
+    device.immersion_heater_status = False
+    device.water_pump1_status = True
+    device.water_pump2_status = False
+    device.water_pump3_status = None
+    device.water_pump4_status = None
+    device.valve_3way_status = True
+    device.valve_2way_status = None
+
     # Existing ATW sensors
     device.outside_temperature = 7.5
     device.tank_temperature = 48.0
@@ -63,7 +76,6 @@ def _build_mock_atw_device() -> MagicMock:
     # Zones
     device.zones = [_build_mock_zone(1)]
 
-    # update is async
     device.update = AsyncMock()
 
     return device

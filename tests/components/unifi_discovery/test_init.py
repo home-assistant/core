@@ -7,7 +7,11 @@ from homeassistant.components.unifi_discovery.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import UNIFI_DISCOVERY_NO_MAC, _patch_discovery
+from . import (
+    UNIFI_DISCOVERY_MAPPINGPROXY_SERVICES,
+    UNIFI_DISCOVERY_NO_MAC,
+    _patch_discovery,
+)
 
 
 async def test_setup_starts_discovery(hass: HomeAssistant) -> None:
@@ -51,6 +55,23 @@ async def test_dependency_loads_discovery(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     # unifi_discovery should have been loaded as a dependency and started scanning
+    flows = hass.config_entries.flow.async_progress_by_handler("unifiprotect")
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
+
+
+async def test_discovery_does_not_deepcopy_device(hass: HomeAssistant) -> None:
+    """Test discovery works without deepcopy.
+
+    In production asdict() deep-copies Enum keys in the services dict which
+    can crash on Python 3.14+ because Enum.__members__ is a mappingproxy that
+    cannot be pickled.  We force the crash reliably by using MappingProxyType
+    as the services value.
+    """
+    with _patch_discovery(device=UNIFI_DISCOVERY_MAPPINGPROXY_SERVICES):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done(wait_background_tasks=True)
+
     flows = hass.config_entries.flow.async_progress_by_handler("unifiprotect")
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == config_entries.SOURCE_INTEGRATION_DISCOVERY
