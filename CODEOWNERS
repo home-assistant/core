@@ -231,6 +231,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @swistakm @bkobus-bbx
 /tests/components/blebox/ @bbx-a @swistakm @bkobus-bbx
+/homeassistant/components/blanco/ @blancoGDPD
+/tests/components/blanco/ @blancoGDPD
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
 /homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23

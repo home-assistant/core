@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "absence_mode_active": { "default": "mdi:home-export-outline" },
+      "child_protect": { "default": "mdi:shield-lock-outline" }
+    },
+    "sensor": {
+      "online": { "default": "mdi:clock-outline" },
+      "set_point_cooling": { "default": "mdi:thermometer" },
+      "set_point_heating": { "default": "mdi:thermometer" },
+      "co2_rest": { "default": "mdi:molecule-co2" },
+      "filter_rest": { "default": "mdi:air-filter" },
+      "filter_remaining_volume": { "default": "mdi:cup-water" },
+      "filter_remaining_days": { "default": "mdi:calendar-clock" },
+      "error_count": { "default": "mdi:alert-outline" },
+      "last_dispensing": { "default": "mdi:water" },
+      "water_total": { "default": "mdi:water" },
+      "water_still": { "default": "mdi:water" },
+      "water_medium": { "default": "mdi:water" },
+      "water_classic": { "default": "mdi:water" },
+      "water_hot": { "default": "mdi:water" }
+    }
+  }
+}
