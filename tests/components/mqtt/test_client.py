@@ -2179,8 +2179,8 @@ async def test_server_sock_connect_and_disconnect(
     # Should have failed
     assert len(recorded_calls) == 0
 
+    # Cleanup. Server is closed earlier already.
     client.close()
-    server.close()
 
 
 async def test_server_sock_buffer_size(
@@ -2205,6 +2205,7 @@ async def test_server_sock_buffer_size(
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
 
+    # Cleanup
     client.close()
     server.close()
 
@@ -2240,6 +2241,7 @@ async def test_server_sock_buffer_size_with_websocket(
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
 
+    # Cleanup
     client.close()
     server.close()
 
@@ -2277,7 +2279,7 @@ async def test_client_sock_failure_after_connect(
     # Should have failed
     assert len(recorded_calls) == 0
 
-    client.close()
+    # Cleanup. Client is closed earlier already.
     server.close()
 
 
@@ -2321,5 +2323,5 @@ async def test_loop_write_failure(
 
     assert "Error returned from MQTT server: The connection was lost." in caplog.text
 
+    # Cleanup. Server is closed earlier already.
     client.close()
-    server.close()
