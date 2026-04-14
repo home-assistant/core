@@ -48,6 +48,8 @@ from .const import (
 )
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "Met.no"
 
 
