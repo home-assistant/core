@@ -106,7 +106,7 @@
       "title": "[%key:component::homeassistant::issues::deprecated_architecture::title%]"
     },
     "deprecated_method": {
-      "description": "This system is using the {installation_type} installation type, which has been deprecated and will become unsupported following the release of Home Assistant 2025.12.",
+      "description": "This system is using the {installation_type} installation type, which has been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to a supported installation method.",
       "title": "Deprecation notice: Installation method"
     },
     "deprecated_method_architecture": {
