@@ -40,7 +40,6 @@ from .const import (
     DATA_ADDONS_INFO,
     DATA_ADDONS_LIST,
     DATA_ADDONS_STATS,
-    DATA_COMPONENT,
     DATA_CORE_INFO,
     DATA_CORE_STATS,
     DATA_HOST_INFO,
@@ -453,7 +452,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self.hassio = hass.data[DATA_COMPONENT]
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
@@ -648,7 +646,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self.hassio = hass.data[DATA_COMPONENT]
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
