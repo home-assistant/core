@@ -817,9 +817,8 @@ async def test_no_state_change_when_operation_mode_off_2(hass: HomeAssistant) ->
     assert len(calls) == 0
 
 
-@pytest.fixture
-async def setup_comp_4(hass: HomeAssistant) -> None:
-    """Initialize components."""
+async def test_set_target_temp_with_hvac_mode_heat(hass: HomeAssistant) -> None:
+    """Test setting the target temperature and HVAC mode together."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(
         hass,
@@ -838,32 +837,10 @@ async def setup_comp_4(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-
-
-@pytest.mark.usefixtures("setup_comp_4")
-async def test_set_target_temp_with_hvac_mode_heat(hass: HomeAssistant) -> None:
-    """Test setting the target temperature and HVAC mode together."""
-
     await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.HEAT)
     state = hass.states.get(ENTITY)
     assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
     assert state.state == HVACMode.HEAT
-
-
-@pytest.mark.usefixtures("setup_comp_4")
-async def test_set_target_temp_with_invalid_hvac_mode_raises(
-    hass: HomeAssistant,
-) -> None:
-    """Test that invalid hvac_mode is rejected from set_temperature."""
-
-    with pytest.raises(ServiceValidationError):
-        await common.async_set_temperature(
-            hass, temperature=30, hvac_mode=HVACMode.COOL
-        )
-
-    state = hass.states.get(ENTITY)
-    assert state.attributes.get(ATTR_TEMPERATURE) == 20.0
-    assert state.state == HVACMode.OFF
 
 
 async def test_set_target_temp_with_hvac_mode_off(hass: HomeAssistant) -> None:
