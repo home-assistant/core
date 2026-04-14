@@ -118,7 +118,7 @@ async def test_unexpected_exception(
     )
     await hass.async_block_till_done()
 
-    # The flow should still show the form with the error because it returns False
+    # The flow should show the form with the unknown error because validate_input returns "unknown"
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "unknown"}
     mock_tis_api.disconnect.assert_called_once()
