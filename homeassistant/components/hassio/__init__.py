@@ -79,7 +79,6 @@ from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_REPOSITORIES,
-    COORDINATOR,
     DATA_ADDONS_LIST,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
@@ -92,12 +91,13 @@ from .const import (
     DATA_STORE,
     DATA_SUPERVISOR_INFO,
     DOMAIN,
-    HASSIO_UPDATE_INTERVAL,
+    HASSIO_MAIN_UPDATE_INTERVAL,
+    MAIN_COORDINATOR,
     STATS_COORDINATOR,
 )
 from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
-    HassioDataUpdateCoordinator,
+    HassioMainDataUpdateCoordinator,
     HassioStatsDataUpdateCoordinator,
     get_addons_info,
     get_addons_list,
@@ -434,7 +434,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             # os info not yet fetched from supervisor, retry later
             async_call_later(
                 hass,
-                HASSIO_UPDATE_INTERVAL,
+                HASSIO_MAIN_UPDATE_INTERVAL,
                 async_setup_hardware_integration_job,
             )
             return
@@ -461,9 +461,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
 
-    coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
+    coordinator = HassioMainDataUpdateCoordinator(hass, entry, dev_reg)
     await coordinator.async_config_entry_first_refresh()
-    hass.data[COORDINATOR] = coordinator
+    hass.data[MAIN_COORDINATOR] = coordinator
 
     addon_coordinator = HassioAddOnDataUpdateCoordinator(
         hass, entry, dev_reg, coordinator.jobs
@@ -540,11 +540,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Unload coordinator
-    coordinator: HassioDataUpdateCoordinator = hass.data[COORDINATOR]
+    coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     coordinator.unload()
 
     # Pop coordinators
-    hass.data.pop(COORDINATOR, None)
+    hass.data.pop(MAIN_COORDINATOR, None)
     hass.data.pop(ADDONS_COORDINATOR, None)
     hass.data.pop(STATS_COORDINATOR, None)
 

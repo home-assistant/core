@@ -42,7 +42,7 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
-    HASSIO_UPDATE_INTERVAL,
+    HASSIO_MAIN_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
 from homeassistant.components.homeassistant import (
@@ -1129,7 +1129,7 @@ async def test_deprecated_installation_issue_os_armv7(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1192,7 +1192,7 @@ async def test_deprecated_installation_issue_32bit_os(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1253,7 +1253,7 @@ async def test_deprecated_installation_issue_32bit_supervised(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1318,7 +1318,7 @@ async def test_deprecated_installation_issue_64bit_supervised(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -1379,7 +1379,7 @@ async def test_deprecated_installation_issue_supported_board(
             },
             blocking=True,
         )
-        freezer.tick(HASSIO_UPDATE_INTERVAL)
+        freezer.tick(HASSIO_MAIN_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 

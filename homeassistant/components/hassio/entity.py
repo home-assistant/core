@@ -23,7 +23,7 @@ from .const import (
 )
 from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
-    HassioDataUpdateCoordinator,
+    HassioMainDataUpdateCoordinator,
     HassioStatsDataUpdateCoordinator,
 )
 
@@ -123,14 +123,14 @@ class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
         )
 
 
-class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioOSEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Hass.io OS."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -149,14 +149,14 @@ class HassioOSEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
 
 
-class HassioHostEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioHostEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Hass.io host."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -175,14 +175,14 @@ class HassioHostEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
 
 
-class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioSupervisorEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Supervisor."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -202,14 +202,14 @@ class HassioSupervisorEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
 
 
-class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioCoreEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Core."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize base entity."""
@@ -228,14 +228,14 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
 
 
-class HassioMountEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     """Base Entity for Mount."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: HassioDataUpdateCoordinator,
+        coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
         mount: CIFSMountResponse | NFSMountResponse,
     ) -> None:

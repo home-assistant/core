@@ -25,11 +25,11 @@ from .const import (
     ATTR_AUTO_UPDATE,
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
-    COORDINATOR,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    MAIN_COORDINATOR,
 )
 from .entity import (
     HassioAddonEntity,
@@ -52,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Supervisor update based on a config entry."""
-    coordinator = hass.data[COORDINATOR]
+    coordinator = hass.data[MAIN_COORDINATOR]
 
     entities: list[UpdateEntity] = [
         SupervisorSupervisorUpdateEntity(

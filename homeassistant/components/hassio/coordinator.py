@@ -59,8 +59,8 @@ from .const import (
     DATA_SUPERVISOR_STATS,
     DOMAIN,
     HASSIO_ADDON_UPDATE_INTERVAL,
+    HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
-    HASSIO_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
     SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
@@ -627,7 +627,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to retrieve Hass.io status."""
 
     config_entry: ConfigEntry
@@ -641,7 +641,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=HASSIO_UPDATE_INTERVAL,
+            update_interval=HASSIO_MAIN_UPDATE_INTERVAL,
             # We don't want an immediate refresh since we want to avoid
             # hammering the Supervisor API on startup
             request_refresh_debouncer=Debouncer(

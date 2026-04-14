@@ -20,13 +20,13 @@ from .const import (
     ATTR_SLUG,
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
-    COORDINATOR,
     CORE_CONTAINER,
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    MAIN_COORDINATOR,
     STATS_COORDINATOR,
     SUPERVISOR_CONTAINER,
 )
@@ -116,7 +116,7 @@ async def async_setup_entry(
 ) -> None:
     """Sensor set up for Hass.io config entry."""
     addons_coordinator = hass.data[ADDONS_COORDINATOR]
-    coordinator = hass.data[COORDINATOR]
+    coordinator = hass.data[MAIN_COORDINATOR]
     stats_coordinator = hass.data[STATS_COORDINATOR]
 
     entities: list[SensorEntity] = []

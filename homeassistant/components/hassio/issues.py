@@ -37,7 +37,6 @@ from .const import (
     ATTR_UNSUPPORTED_REASONS,
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
-    COORDINATOR,
     DOMAIN,
     EVENT_HEALTH_CHANGED,
     EVENT_ISSUE_CHANGED,
@@ -54,6 +53,7 @@ from .const import (
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_MOUNT_MOUNT_FAILED,
+    MAIN_COORDINATOR,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
@@ -62,7 +62,7 @@ from .const import (
     STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_addons_list, get_host_info
+from .coordinator import HassioMainDataUpdateCoordinator, get_addons_list, get_host_info
 from .handler import get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
@@ -417,8 +417,8 @@ class SupervisorIssues:
 
     def _async_coordinator_refresh(self) -> None:
         """Refresh coordinator to update latest data in entities."""
-        coordinator: HassioDataUpdateCoordinator | None
-        if coordinator := self._hass.data.get(COORDINATOR):
+        coordinator: HassioMainDataUpdateCoordinator | None
+        if coordinator := self._hass.data.get(MAIN_COORDINATOR):
             coordinator.config_entry.async_create_task(
                 self._hass, coordinator.async_refresh()
             )
