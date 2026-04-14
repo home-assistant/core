@@ -3309,6 +3309,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if flow_type not in FlowType:
             raise HomeAssistantError(f"Invalid flow type: {flow_type}")
         if flow_type != FlowType.CONFIG_FLOW:
+            # This early validation only supports config flows as all other
+            # types require a config entry to exist before they can start
             return
         # Raises UnknownFlow if the flow does not exist.
         self.hass.config_entries.flow.async_get(flow_id)
