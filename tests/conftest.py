@@ -1031,7 +1031,8 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             self.rc = 0
 
     with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient",
+        create=True
     ) as mock_client:
         # The below use a call_soon for the on_publish/on_subscribe/on_unsubscribe
         # callbacks to simulate the behavior of the real MQTT client which will
