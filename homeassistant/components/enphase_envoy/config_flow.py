@@ -35,6 +35,10 @@ from .const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
     OPTION_DISABLE_KEEP_ALIVE,
     OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
+    OPTION_SET_RETRY_DELAY,
+    OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
+    OPTION_SET_RETRY_DELAY_MAX_VALUE,
+    OPTION_SET_RETRY_DELAY_MIN_VALUE,
 )
 from .coordinator import EnphaseConfigEntry
 
@@ -366,6 +370,19 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
                             OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
                         ),
                     ): bool,
+                    vol.Required(
+                        OPTION_SET_RETRY_DELAY,
+                        default=self.config_entry.options.get(
+                            OPTION_SET_RETRY_DELAY,
+                            OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
+                        ),
+                    ): vol.All(
+                        int,
+                        vol.Range(
+                            min=OPTION_SET_RETRY_DELAY_MIN_VALUE,
+                            max=OPTION_SET_RETRY_DELAY_MAX_VALUE,
+                        ),
+                    ),
                 }
             ),
             description_placeholders={

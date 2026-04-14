@@ -732,11 +732,13 @@
       "init": {
         "data": {
           "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activities. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
-          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
+          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares.",
+          "set_retry_delay": "Data request attempts to use."
         },
         "data_description": {
           "diagnostics_include_fixtures": "Include fixtures in diagnostics report",
-          "disable_keep_alive": "May resolve communication issues with some Envoy firmwares."
+          "disable_keep_alive": "May resolve communication issues with some Envoy firmwares.",
+          "set_retry_delay": "Each request attempt waits 45 second for a reply. Default is 4 attempts, configurable range is 2-10. Increase when daily outages still occur around 11 PM, the time when the Envoy recycles internal tasks."
         },
         "title": "Envoy {serial} {host} options"
       }

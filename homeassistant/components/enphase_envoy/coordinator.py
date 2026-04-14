@@ -20,7 +20,12 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, INVALID_AUTH_ERRORS
+from .const import (
+    DOMAIN,
+    INVALID_AUTH_ERRORS,
+    OPTION_SET_RETRY_DELAY,
+    OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -214,6 +219,29 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             cancel_on_shutdown=True,
         )
 
+    def _set_retry_policy(self) -> None:
+        """Set Envoy retry policy if set in options."""
+        retries: int = self.config_entry.options.get(
+            OPTION_SET_RETRY_DELAY, OPTION_SET_RETRY_DELAY_DEFAULT_VALUE
+        )
+        # Each envoy instance set retry to OPTION_SET_RETRY_DELAY_DEFAULT_VALUE
+        # only change if option is set to different value
+        if retries != OPTION_SET_RETRY_DELAY_DEFAULT_VALUE:
+            # Envoy uses 45 sec timeouts, set allowed time
+            # a bit larger to allow for wait time.
+            retry_delay: int = 15 + (retries - 1) * 45
+            # set attempts no lower then 4.
+            retry_attempts = max(4, retries + 1)
+            self.envoy.set_retry_policy(
+                max_delay=retry_delay, max_attempts=retry_attempts
+            )
+            _LOGGER.debug(
+                "Set retry policy step %s: %s and %s",
+                retries,
+                retry_delay,
+                retry_attempts,
+            )
+
     async def _async_setup_and_authenticate(self) -> None:
         """Set up and authenticate with the envoy."""
         envoy = self.envoy
@@ -269,6 +297,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     _LOGGER.debug("update on try %s, setup not complete", tries)
                     await self._async_setup_and_authenticate()
                     self._async_mark_setup_complete()
+                    self._set_retry_policy()
                 # dump all received data in debug mode to assist troubleshooting
                 envoy_data = await envoy.update()
             except INVALID_AUTH_ERRORS as err:

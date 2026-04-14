@@ -15,6 +15,8 @@ from homeassistant.components.enphase_envoy import DOMAIN
 from homeassistant.components.enphase_envoy.const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DISABLE_KEEP_ALIVE,
+    OPTION_SET_RETRY_DELAY,
+    OPTION_SET_RETRY_DELAY_DEFAULT_VALUE,
     Platform,
 )
 from homeassistant.components.enphase_envoy.coordinator import (
@@ -627,3 +629,105 @@ async def test_coordinator_interface_information_mac_also_in_other_device(
             "00:11:22:33:44:55",
         )
     }
+
+
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_retry_option_in_config_file(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with token provided from config."""
+    token = encode(
+        payload={"name": "envoy", "exp": 1907837780},
+        key="secret",
+        algorithm="HS256",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+        },
+        options={"set_retry_delay": 6},
+    )
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    await setup_integration(hass, entry)
+
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+    assert "Set retry policy step 6: 240 and 7" in caplog.text
+
+
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_default_retry_option_in_config_file(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with token provided from config."""
+    token = encode(
+        payload={"name": "envoy", "exp": 1907837780},
+        key="secret",
+        algorithm="HS256",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+        },
+        options={OPTION_SET_RETRY_DELAY: OPTION_SET_RETRY_DELAY_DEFAULT_VALUE},
+    )
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    await setup_integration(hass, entry)
+
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+    assert "Set retry policy step" not in caplog.text
+
+
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_retry_option_not_in_config_file(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator with token provided from config."""
+    token = encode(
+        payload={"name": "envoy", "exp": 1907837780},
+        key="secret",
+        algorithm="HS256",
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: token,
+        },
+        options={},
+    )
+    mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
+    await setup_integration(hass, entry)
+
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == "116"
+    assert "Set retry policy step" not in caplog.text
