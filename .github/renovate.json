@@ -48,8 +48,8 @@
       ],
       "matchStringsStrategy": "recursive",
       "matchStrings": [
-        "\"requirements\"\\s*:\\s*\\[(?<inner>[^\\]]*)\\]",
-        "\"(?<depName>[^\"=<>!~;\\s]+?)==(?<currentValue>[^\"]+?)\""
+        "\"requirements\"\\s*:\\s*\\[(?<inner>\\s*(?:\"(?:[^\"\\\\]|\\\\.)*\"\\s*,\\s*)*\"(?:[^\"\\\\]|\\\\.)*\"\\s*)?\\]",
+        "\"(?<depName>[^\"=<>!~;\\s\\[\\]]+)(?:\\[[^\"\\]]*\\])?==(?<currentValue>[^\"]+?)\""
       ],
       "datasourceTemplate": "pypi"
     }
