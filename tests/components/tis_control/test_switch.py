@@ -205,7 +205,7 @@ async def test_invalid_channel_data(
 ) -> None:
     """Test switch setup ignores appliances with invalid channel data."""
     mock_tis_api.get_entities.return_value = [
-        # channels is not a list or is empty.
+        # Channels is not a list or is empty.
         {
             "name": "Invalid Channels Type",
             "device_id": [1, 2, 3],
@@ -216,7 +216,7 @@ async def test_invalid_channel_data(
             "device_id": [1, 2, 3],
             "channels": [],
         },
-        # first channel is not a dict or is empty.
+        # First channel is not a dict or is empty.
         {
             "name": "String Channel",
             "device_id": [1, 2, 3],
@@ -227,7 +227,7 @@ async def test_invalid_channel_data(
             "device_id": [1, 2, 3],
             "channels": [{}],
         },
-        # first channel value is None.
+        # First channel value is None.
         {
             "name": "None Value Channel",
             "device_id": [1, 2, 3],
