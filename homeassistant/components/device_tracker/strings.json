@@ -1,7 +1,9 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_zone_description": "The zones to trigger on.",
+    "trigger_zone_name": "Zone"
   },
   "conditions": {
     "is_home": {
@@ -137,8 +139,8 @@
           "name": "[%key:component::device_tracker::common::trigger_behavior_name%]"
         },
         "zone": {
-          "description": "The zones to trigger on.",
-          "name": "Zones"
+          "description": "[%key:component::device_tracker::common::trigger_zone_description%]",
+          "name": "[%key:component::device_tracker::common::trigger_zone_name%]"
         }
       },
       "name": "Entered zone"
@@ -159,8 +161,8 @@
           "name": "[%key:component::device_tracker::common::trigger_behavior_name%]"
         },
         "zone": {
-          "description": "The zones to trigger on.",
-          "name": "Zones"
+          "description": "[%key:component::device_tracker::common::trigger_zone_description%]",
+          "name": "[%key:component::device_tracker::common::trigger_zone_name%]"
         }
       },
       "name": "Left zone"
