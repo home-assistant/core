@@ -207,8 +207,9 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
     ) -> list[StatisticData]:
         """Build hourly statistics from readings, skipping already-recorded ones.
 
-        current_hour_ts is passed during normal polls to exclude the incomplete
-        current hour. Backfill callers omit it so all historical hours are included.
+        When provided, current_hour_ts acts as an exclusive cutoff so readings at
+        or after that timestamp are excluded, such as to skip the incomplete
+        current hour during normal polling and backfill.
         """
         statistics: list[StatisticData] = []
         seen_hours: set[float] = set()
