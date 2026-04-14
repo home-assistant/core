@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, TypedDict
 
 from TISApi.api import TISApi
 from TISApi.components.switch.base_switch import TISAPISwitch
@@ -15,17 +15,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TISConfigEntry
 
 
-async def async_get_switches(tis_api: TISApi) -> list[dict]:
-    """Fetch switches from TIS API and normalize to a list of dictionaries.
+class SwitchDescription(TypedDict):
+    """Normalized switch payload."""
 
-    Returns a list with items like:
-    {
-        "switch_name": str,
-        "channel_number": int,
-        "device_id": list[int],
-        "is_protected": bool,
-        "gateway": str,
-    }
+    switch_name: str | None
+    channel_number: int
+    device_id: list[int]
+    is_protected: bool
+    gateway: str | None
+
+
+async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
+    """Fetch switches from TIS API and normalize to a list of TypedDicts.
 
     Having this helper makes the setup code easier to test and keeps the
     API parsing logic in one place.
@@ -38,7 +39,7 @@ async def async_get_switches(tis_api: TISApi) -> list[dict]:
         return []
 
     # Prepare a list to hold the formatted switch data.
-    result: list[dict] = []
+    result: list[SwitchDescription] = []
 
     # Iterate through the raw data for each switch appliance returned by the API.
     for appliance in raw:
@@ -71,13 +72,13 @@ async def async_get_switches(tis_api: TISApi) -> list[dict]:
 
         # Create a new, clean dictionary with a standardized format.
         result.append(
-            {
-                "switch_name": appliance.get("name"),
-                "channel_number": channel_number,
-                "device_id": appliance.get("device_id"),
-                "is_protected": appliance.get("is_protected", False),
-                "gateway": appliance.get("gateway"),
-            }
+            SwitchDescription(
+                switch_name=appliance.get("name"),
+                channel_number=channel_number,
+                device_id=appliance.get("device_id"),
+                is_protected=appliance.get("is_protected", False),
+                gateway=appliance.get("gateway"),
+            )
         )
 
     # Return the final list of formatted switches.

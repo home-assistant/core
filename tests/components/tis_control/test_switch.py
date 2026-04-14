@@ -205,7 +205,7 @@ async def test_invalid_channel_data(
 ) -> None:
     """Test switch setup ignores appliances with invalid channel data."""
     mock_tis_api.get_entities.return_value = [
-        # Covers line 54: channels is not a list or is empty.
+        # channels is not a list or is empty.
         {
             "name": "Invalid Channels Type",
             "device_id": [1, 2, 3],
@@ -216,7 +216,7 @@ async def test_invalid_channel_data(
             "device_id": [1, 2, 3],
             "channels": [],
         },
-        # Covers line 59: first channel is not a dict or is empty.
+        # first channel is not a dict or is empty.
         {
             "name": "String Channel",
             "device_id": [1, 2, 3],
@@ -227,19 +227,19 @@ async def test_invalid_channel_data(
             "device_id": [1, 2, 3],
             "channels": [{}],
         },
-        # Covers line 64: first channel value is None.
+        # first channel value is None.
         {
             "name": "None Value Channel",
             "device_id": [1, 2, 3],
             "channels": [{"Output": None}],
         },
-        # Covers lines 68-70: ValueError (cannot cast string to int).
+        # ValueError (cannot cast string to int).
         {
             "name": "String Value Channel",
             "device_id": [1, 2, 3],
             "channels": [{"Output": "abc"}],
         },
-        # Covers lines 68-70: TypeError (cannot cast list to int).
+        # TypeError (cannot cast list to int).
         {
             "name": "List Value Channel",
             "device_id": [1, 2, 3],
