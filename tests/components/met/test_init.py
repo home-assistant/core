@@ -106,11 +106,14 @@ async def test_api_failure(hass: HomeAssistant, mock_weather: MagicMock) -> None
 async def test_track_home_called_twice(
     hass: HomeAssistant, mock_weather: MagicMock
 ) -> None:
-    """Test that calling track_home twice does not register duplicate listeners."""
+    """Test track_home does not register duplicate listeners when called twice."""
     entry = await init_integration(hass, track_home=True)
     coordinator = entry.runtime_data
 
-    coordinator.track_home()
-    coordinator.track_home()  # second call should return immediately without registering a duplicate listener
+    # First call registers the listener
+    unsub_first = coordinator._unsub_track_home
+    assert unsub_first is not None
 
-    assert coordinator._unsub_track_home is not None
+    # Second call should not register a new listener
+    coordinator.track_home()
+    assert coordinator._unsub_track_home is unsub_first
