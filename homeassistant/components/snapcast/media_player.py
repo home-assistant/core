@@ -17,14 +17,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CLIENT_PREFIX, CLIENT_SUFFIX, DOMAIN
-from .coordinator import SnapcastUpdateCoordinator
+from .coordinator import SnapcastConfigEntry, SnapcastUpdateCoordinator
 from .entity import SnapcastCoordinatorEntity
 
 STREAM_STATUS = {
@@ -38,13 +37,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SnapcastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the snapcast config entry."""
 
-    # Fetch coordinator from global data
-    coordinator: SnapcastUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     _known_client_ids: set[str] = set()
 

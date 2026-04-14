@@ -9,12 +9,14 @@ from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platf
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL, DOMAIN
+from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL
 
 PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
+type NoboHubConfigEntry = ConfigEntry[nobo]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
     """Set up Nobø Ecohub from a config entry."""
 
     serial = entry.data[CONF_SERIAL]
@@ -29,8 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await hub.connect()
 
-    hass.data.setdefault(DOMAIN, {})
-
     async def _async_close(event):
         """Close the Nobø Ecohub socket connection when HA stops."""
         await hub.stop()
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
     )
-    hass.data[DOMAIN][entry.entry_id] = hub
+    entry.runtime_data = hub
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -47,12 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
     """Unload a config entry."""
 
-    hub: nobo = hass.data[DOMAIN][entry.entry_id]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hub.stop()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        await entry.runtime_data.stop()
 
     return unload_ok

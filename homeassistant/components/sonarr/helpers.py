@@ -276,7 +276,7 @@ def format_upcoming(
 
     for episode in calendar:
         # Create a unique key combining series title and episode identifier
-        series_title = episode.series.title if hasattr(episode, "series") else "Unknown"
+        series_title = episode.series.title if hasattr(episode, "series") else "Unknown"  # type: ignore[misc]
         identifier = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
         key = f"{series_title} {identifier}"
         episodes[key] = format_upcoming_item(episode, base_url)
@@ -324,7 +324,7 @@ def format_wanted(
     for item in wanted.records:
         # Create a unique key combining series title and episode identifier
         series_title = (
-            item.series.title if hasattr(item, "series") and item.series else "Unknown"
+            item.series.title if hasattr(item, "series") and item.series else "Unknown"  # type: ignore[misc]
         )
         identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
         key = f"{series_title} {identifier}"
