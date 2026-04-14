@@ -952,7 +952,7 @@
       }
     },
     "send_message_draft": {
-      "description": "Stream a partial message to a user while the message is being generated.",
+      "description": "Streams a partial message to a user while the message is being generated.",
       "fields": {
         "chat_id": {
           "description": "One or more pre-authorized chat IDs to send the message draft to.",
