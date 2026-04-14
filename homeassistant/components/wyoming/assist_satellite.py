@@ -181,8 +181,18 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
+        if event.type == assist_pipeline.PipelineEventType.RUN_END:
+            # Pipeline run is complete — always update bookkeeping state
+            # even after a disconnect so follow-up reconnects don't retain
+            # stale _is_pipeline_running / _pipeline_ended_event state.
+            self._is_pipeline_running = False
+            self._pipeline_ended_event.set()
+            self.device.set_is_active(False)
+            self._tts_stream_token = None
+            self._is_tts_streaming = False
+
         if self._client is None:
-            # Satellite disconnected, ignore lingering pipeline events
+            # Satellite disconnected, don't try to write to the client
             return
 
         if event.type == assist_pipeline.PipelineEventType.RUN_START:
@@ -192,13 +202,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 # can start streaming TTS before the TTS_END event.
                 self._tts_stream_token = tts_output["token"]
                 self._is_tts_streaming = False
-        elif event.type == assist_pipeline.PipelineEventType.RUN_END:
-            # Pipeline run is complete
-            self._is_pipeline_running = False
-            self._pipeline_ended_event.set()
-            self.device.set_is_active(False)
-            self._tts_stream_token = None
-            self._is_tts_streaming = False
         elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
             self.config_entry.async_create_background_task(
                 self.hass,

@@ -797,8 +797,8 @@ async def test_on_pipeline_event_ignores_disconnected_client(
                 )
             )
 
-        # Give any stray background tasks a chance to run.
-        await asyncio.sleep(0)
+        # Flush any stray background tasks before asserting on side effects.
+        await hass.async_block_till_done()
 
         # If the guard did not hold, the mock client would have observed
         # ``Detect``, ``Transcribe``, ``Transcript``, ``Synthesize`` and
