@@ -54,6 +54,7 @@ from homeassistant.helpers.target import (
 )
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.package import is_virtual_env
 
 # The scene integration will do a late import of scene
 # so we want to make sure its loaded with the component
@@ -417,7 +418,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         installation_type = info["installation_type"][15:]
         if installation_type in {"Core", "Container"}:
-            deprecated_method = installation_type == "Core"
+            core_installation = installation_type == "Core"
             bit32 = _is_32_bit()
             arch = info["arch"]
             if bit32 and installation_type == "Container":
@@ -433,12 +434,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     translation_placeholders={"arch": arch},
                 )
             deprecated_architecture = bit32 and installation_type != "Container"
-            if deprecated_method or deprecated_architecture:
+            if core_installation or deprecated_architecture:
                 issue_id = "deprecated"
-                if deprecated_method:
+                if core_installation:
                     issue_id += "_method"
                 if deprecated_architecture:
                     issue_id += "_architecture"
+                if core_installation and not is_virtual_env():
+                    issue_id += "_local_deps"
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
