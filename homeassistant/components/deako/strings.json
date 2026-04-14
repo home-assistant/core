@@ -8,8 +8,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_host": "Please enter a primary bridge IP address",
-      "same_host": "Primary and failover cannot be the same IP address"
+      "no_host": "Please enter a primary bridge IP address"
     },
     "step": {
       "user": {
