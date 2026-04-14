@@ -557,6 +557,9 @@ class HomeAssistant:
                 functools.partial(self.async_create_task, target, eager_start=True)
             )
             return
+        if is_callback_check_partial(target):
+            self.loop.call_soon_threadsafe(target, *args)
+            return
         self.loop.call_soon_threadsafe(
             functools.partial(self._async_add_hass_job, HassJob(target), *args)
         )
