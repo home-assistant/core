@@ -9,6 +9,9 @@
       },
       "ventilation_state": {
         "default": "mdi:tune-variant"
+      },
+      "write_req_remaining": {
+        "default": "mdi:api"
       }
     }
   }
