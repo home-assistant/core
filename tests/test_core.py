@@ -955,6 +955,21 @@ async def test_add_job_partial_coroutine_function(
     assert result == [("partial", 2)]
 
 
+async def test_add_job_async_with_callback_decorator(hass: HomeAssistant) -> None:
+    """Test add_job with an async function incorrectly marked as @callback."""
+    result: list[str] = []
+
+    @ha.callback
+    async def my_async(value: str) -> None:  # pylint: disable=hass-async-callback-decorator
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_async, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
 def test_event_eq() -> None:
     """Test events."""
     now = dt_util.utcnow()
