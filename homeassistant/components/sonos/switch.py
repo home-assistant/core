@@ -332,8 +332,10 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         try:
             result = self.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
             self.speaker.tv_ungroup_autoplay = result.get("IncludeLinkedZones") == "0"
-        except SoCoUPnPException:
-            pass
+        except SoCoUPnPException as exc:
+            _LOGGER.debug(
+                "Could not refresh %s state: %s", ATTR_TV_UNGROUP_AUTOPLAY, exc
+            )
         self.speaker.write_entity_states()
 
 
