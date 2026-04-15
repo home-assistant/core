@@ -2434,7 +2434,7 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_TEMP_STEP",
     # Removed
     "CONF_WHITE_VALUE",
-    # Config enty only settings
+    # Config entry only settings
     "CONF_BROKER",
     "CONF_BIRTH_MESSAGE",
     "CONF_DISCOVERY_PREFIX",
