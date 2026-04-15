@@ -1,19 +1,14 @@
 """Provides triggers for media players."""
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import Trigger, make_entity_transition_trigger
 
 from . import MediaPlayerState
-from .const import ATTR_LAST_NON_BUFFERING_STATE, DOMAIN
-
-_LAST_NON_BUFFERING_SPEC = {
-    DOMAIN: DomainSpec(value_source=ATTR_LAST_NON_BUFFERING_STATE)
-}
+from .const import DOMAIN
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "paused_playing": make_entity_transition_trigger(
-        _LAST_NON_BUFFERING_SPEC,
+        DOMAIN,
         from_states={
             MediaPlayerState.PLAYING,
         },
@@ -22,7 +17,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
         },
     ),
     "started_playing": make_entity_transition_trigger(
-        _LAST_NON_BUFFERING_SPEC,
+        DOMAIN,
         from_states={
             MediaPlayerState.IDLE,
             MediaPlayerState.OFF,
