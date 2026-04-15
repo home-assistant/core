@@ -7,7 +7,7 @@ import logging
 
 from duco import DucoClient
 from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, LanInfo, Node
+from duco.models import BoardInfo, Node
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -63,9 +63,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
-        nodes_result: list[Node] | BaseException
-        lan_result: LanInfo | BaseException
-        write_result: int | BaseException
         nodes_result, lan_result, write_result = await asyncio.gather(
             self.client.async_get_nodes(),
             self.client.async_get_lan_info(),
