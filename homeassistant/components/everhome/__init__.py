@@ -1,10 +1,7 @@
 """The EcoTracker integration."""
 
-from ecotracker import EcoTracker
-
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import EcoTrackerConfigEntry, EcoTrackerDataUpdateCoordinator
 
@@ -14,14 +11,9 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: EcoTrackerConfigEntry) -> bool:
     """Set up EcoTracker from a config entry."""
 
-    host = entry.data[CONF_HOST]
-    session = async_get_clientsession(hass)
-    client = EcoTracker(host, session=session)
-
     coordinator = EcoTrackerDataUpdateCoordinator(
         hass,
-        client=client,
-        host=host,
+        host=entry.data[CONF_HOST],
         config_entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()

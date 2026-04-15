@@ -9,6 +9,7 @@ from ecotracker.data import EcoTrackerData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN
@@ -30,7 +31,6 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
         self,
         hass: HomeAssistant,
         *,
-        client: EcoTracker,
         host: str,
         config_entry: EcoTrackerConfigEntry,
     ) -> None:
@@ -42,7 +42,7 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
         )
-        self.client = client
+        self.client = EcoTracker(host, session=async_get_clientsession(hass))
         self.host = host
 
     async def async_setup(self) -> None:
