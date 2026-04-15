@@ -9,14 +9,12 @@ from logging import getLogger
 from aiohttp import web
 from switchbot_api import (
     Device,
-    DeviceSupportMap,
     Remote,
     SwitchBotAPI,
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
     SwitchBotDeviceOfflineError,
 )
-from switchbot_api.utils import assert_device_is_supported
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, ENTRY_TITLE
+from .const import DOMAIN, ENTRY_TITLE, DeviceSupportMap
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
@@ -256,10 +254,12 @@ async def make_device_data(
         devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
 
-    if assert_device_is_supported(device.device_type):
-        default_config = DeviceSupportMap.get(device.device_type)
-        default_entity_map = default_config["entity_list"]
-        default_webhook_status = default_config["webhook"]
+    if device.device_type in DeviceSupportMap:
+        default_config = DeviceSupportMap[device.device_type]
+
+        default_webhook_status = default_config.get("webhook")
+        assert default_webhook_status is not None
+        assert isinstance(default_webhook_status, bool)
         coordinator = await coordinator_for_device(
             hass,
             entry,
@@ -268,6 +268,10 @@ async def make_device_data(
             coordinators_by_id,
             manageable_by_webhook=default_webhook_status,
         )
+
+        default_entity_map = default_config.get("entity_list")
+        assert default_entity_map is not None
+        assert isinstance(default_entity_map, list)
         for item in default_entity_map:
             exist_device_list = getattr(devices_data, str(item.value))
             for existed_device in exist_device_list:
