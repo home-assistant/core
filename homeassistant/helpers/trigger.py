@@ -472,6 +472,9 @@ class EntityTriggerBase(Trigger):
                 ):
                     return
             elif behavior == BEHAVIOR_FIRST:
+                # Note: It's enough to test for exactly 1 match here because if there
+                # were previously 2 matches the transition would not be valid and we
+                # would have returned already.
                 if (
                     self.count_matches(target_state_change_data.targeted_entity_ids)
                     != 1
