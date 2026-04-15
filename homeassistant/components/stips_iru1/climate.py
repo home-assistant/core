@@ -364,6 +364,8 @@ class StipsIruClimate(ClimateEntity):
             (remote_snapshot.get("model") or {}).get("protocol"), -1
         )
         self._model = 0
+        self._control_hosts_cache: list[str] | None = None
+        self._control_live_ip_cache: str | None = None
 
         safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in remote_id)[
             :80
