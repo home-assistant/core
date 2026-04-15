@@ -1,22 +1,13 @@
 {
   "domain": "effortlesshome",
   "name": "EffortlessHome",
-  "codeowners": [
-    "@effortlesshome"
-  ],
+  "codeowners": ["@effortlesshome"],
   "config_flow": true,
-  "dependencies": [
-    "http",
-    "recorder"
-  ],
+  "dependencies": ["http", "recorder"],
   "documentation": "https://www.home-assistant.io/integrations/effortlesshome",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": [
-    "effortlesshome"
-  ],
+  "loggers": ["effortlesshome"],
   "quality_scale": "bronze",
-  "requirements": [
-    "oasira==0.2.12"
-  ]
+  "requirements": ["oasira==0.2.12"]
 }
