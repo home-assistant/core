@@ -4,10 +4,10 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service import async_extract_config_entry_ids
-from homeassistant.const import ATTR_DEVICE_ID
 
 from .const import DOMAIN
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
@@ -39,8 +39,14 @@ async def _service_handler(call: ServiceCall) -> None:
     """Call one of the Fritzbox services."""
 
     device_reg = dr.async_get(call.hass)
+    target_entries: list[FritzboxConfigEntry] = [
+        entry
+        for entry_id in await async_extract_config_entry_ids(call)
+        if (entry := call.hass.config_entries.async_get_entry(entry_id))
+        and entry.domain == DOMAIN
+    ]
 
-    for target_entry in await async_extract_config_entry_ids(call):
+    for target_entry in target_entries:
         coordinator: FritzboxDataUpdateCoordinator = target_entry.runtime_data
         if device_entry := device_reg.async_get(call.data[ATTR_DEVICE_ID]):
             for domain, ain in device_entry.identifiers:

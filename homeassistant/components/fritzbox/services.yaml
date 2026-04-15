@@ -1,3 +1,13 @@
+set_window_close:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          entity:
+            integration: fritzbox
+            domain: climate
+
 set_window_open:
   fields:
     device_id:
@@ -16,12 +26,3 @@ set_window_open:
           max: 86400
           unit_of_measurement: seconds
 
-set_window_close:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          entity:
-            integration: fritzbox
-            domain: climate
