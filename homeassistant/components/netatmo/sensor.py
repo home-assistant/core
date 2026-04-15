@@ -736,7 +736,14 @@ class NetatmoClimateSensor(NetatmoSensor):
         super().__init__(netatmo_device, description=description)
 
         self._attr_unique_id = (
-            f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
+            f"{netatmo_device.parent_id}-{self.device.entity_id}-{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, netatmo_device.parent_id)},
+            name=netatmo_device.device.name,
+            manufacturer=self.device_description[0],
+            model=self.device_description[1],
+            configuration_url=self._attr_configuration_url,
         )
 
 
@@ -752,18 +759,6 @@ class NetatmoClimateBatterySensor(NetatmoClimateSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(netatmo_device, description=description)
-
-        self._attr_unique_id = (
-            f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
-        )
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, netatmo_device.parent_id)},
-            name=netatmo_device.device.name,
-            manufacturer=self.device_description[0],
-            model=self.device_description[1],
-            configuration_url=self._attr_configuration_url,
-        )
 
     @callback
     def async_update_callback(self) -> None:
