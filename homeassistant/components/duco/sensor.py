@@ -126,18 +126,12 @@ async def async_setup_entry(
         if node.general.node_type in description.node_types
     )
 
-    if box_node := next(
-        (
-            node
-            for node in coordinator.data.values()
-            if node.general.node_type == NodeType.BOX
-        ),
-        None,
-    ):
-        async_add_entities(
-            DucoBoxSensorEntity(coordinator, box_node, description)
-            for description in BOX_SENSOR_DESCRIPTIONS
-        )
+    async_add_entities(
+        DucoBoxSensorEntity(coordinator, node, description)
+        for node in coordinator.data.values()
+        for description in BOX_SENSOR_DESCRIPTIONS
+        if node.general.node_type == NodeType.BOX
+    )
 
 
 class DucoSensorEntity(DucoEntity, SensorEntity):
