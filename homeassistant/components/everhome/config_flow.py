@@ -15,7 +15,7 @@ from .const import DOMAIN
 CONFIG_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
 
-class EcoTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EcoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EcoTracker."""
 
     VERSION = 1
