@@ -77,7 +77,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def send_playback(self, key):
         """Send playback status to CEC adapter."""
-        self._device.async_send_command(CecCommand(key, dst=self._logical_address))
+        self._device.send_command(CecCommand(key, dst=self._logical_address))
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute volume."""
