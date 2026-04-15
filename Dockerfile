@@ -30,10 +30,11 @@ COPY --from=ghcr.io/alexxit/go2rtc@sha256:675c318b23c06fd862a61d262240c9a63436b4
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-# Use latest uv to install the one defined in the requirements file
-RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+RUN \
     # Verify go2rtc can be executed
     go2rtc --version \
+    # Install uv at the version pinned in the requirements file
+    && pip3 install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' homeassistant/requirements.txt)" \
     && uv pip install \
         --no-build \
         -r homeassistant/requirements.txt

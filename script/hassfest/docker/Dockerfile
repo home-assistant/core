@@ -13,12 +13,12 @@ WORKDIR "/github/workspace"
 
 COPY . /usr/src/homeassistant
 
-# Use latest uv to install the one defined in the requirements file
-RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
-    # Uv creates a lock file in /tmp
-    --mount=type=tmpfs,target=/tmp \
+# Uv creates a lock file in /tmp
+RUN --mount=type=tmpfs,target=/tmp \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
+    # Install uv at the version pinned in the requirements file
+    && pip install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' /usr/src/homeassistant/requirements.txt)" \
     && uv pip install \
         --no-build \
         --no-cache \
