@@ -143,7 +143,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff_rssi_wifi',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_1_rssi_wifi',
     'unit_of_measurement': 'dBm',
   })
 # ---
@@ -288,7 +288,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'write_req_remaining',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_write_req_remaining',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_1_write_req_remaining',
     'unit_of_measurement': None,
   })
 # ---
