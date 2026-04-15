@@ -134,7 +134,11 @@ class OAuth2FlowHandler(
 
         await self.async_set_unique_id(DOMAIN)
         # self._abort_if_unique_id_configured()
-
+        if self._async_current_entries():
+            _LOGGER.debug("Aborting due to single instance allowed")
+            return self.async_show_form(
+                step_id="user", errors={"base": "single_instance_allowed"}
+            )
         if user_input is None:
             # Show initial form
             return self.async_show_form(
