@@ -55,7 +55,7 @@ async def test_create_entry_success(hass: HomeAssistant) -> None:
 
 async def test_unique_id_includes_api_host(hass: HomeAssistant) -> None:
     """Test same username on different API hosts can be configured separately."""
-    existing_entry = MockConfigEntry(
+    existing_entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=f"{DOMAIN}_stips.api.staging.visionalization.net_demo",
         data={"api_host": "stips.api.staging.visionalization.net", "username": "demo"},

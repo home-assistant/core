@@ -1,6 +1,6 @@
 """Init tests for stips_iru1."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -10,7 +10,6 @@ from homeassistant.components.stips_iru1 import (
     async_setup_entry,
 )
 from homeassistant.components.stips_iru1.const import PLATFORMS
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
@@ -21,7 +20,7 @@ async def test_async_setup_entry_forwards_only_climate(
     hass: HomeAssistant,
 ) -> None:
     """Test integration forwards only the climate platform for initial core PR scope."""
-    entry = MockConfigEntry(
+    entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data={
             "devices": [
@@ -38,12 +37,12 @@ async def test_async_setup_entry_forwards_only_climate(
     with patch.object(
         hass.config_entries,
         "async_forward_entry_setups",
-        new=AsyncMock(return_value=True),
+        return_value=True,
     ) as mock_forward:
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     mock_forward.assert_called_once_with(entry, PLATFORMS)
-    assert PLATFORMS == [Platform.CLIMATE]
+    assert PLATFORMS == ["climate"]
     assert isinstance(entry.runtime_data, StipsIru1RuntimeData)
     assert entry.runtime_data.devices == entry.data["devices"]
 
@@ -52,7 +51,9 @@ async def test_async_setup_entry_raises_for_invalid_devices_data(
     hass: HomeAssistant,
 ) -> None:
     """Test setup raises a config entry error when devices data is invalid."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"devices": {"invalid": "shape"}})
+    entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN, data={"devices": {"invalid": "shape"}}
+    )
 
     with (
         patch.object(
