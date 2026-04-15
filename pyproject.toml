@@ -58,10 +58,10 @@ dependencies = [
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==46.0.7",
-  "Pillow==12.1.1",
+  "Pillow==12.2.0",
   "propcache==0.4.1",
   "pyOpenSSL==26.0.0",
-  "orjson==3.11.7",
+  "orjson==3.11.8",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
@@ -415,7 +415,7 @@ per-file-ignores = [
   # redefined-outer-name: Tests reference fixtures in the test function
   # use-implicit-booleaness-not-comparison: Tests need to validate that a list
   # or a dict is returned
-  "/tests/:redefined-outer-name,use-implicit-booleaness-not-comparison",
+  "tests/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
