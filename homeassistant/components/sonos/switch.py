@@ -296,9 +296,6 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_AUTOPLAY}"
 
-    async def _async_fallback_poll(self) -> None:
-        """No-op: entity is already polled by HA's built-in poller."""
-
     @soco_error()
     def poll_state(self) -> None:
         """Poll the current TV autoplay state from the device."""
@@ -356,9 +353,6 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         """Initialize the switch."""
         super().__init__(speaker, config_entry)
         self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_UNGROUP_AUTOPLAY}"
-
-    async def _async_fallback_poll(self) -> None:
-        """No-op: entity is already polled by HA's built-in poller."""
 
     @soco_error()
     def poll_state(self) -> None:
