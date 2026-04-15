@@ -21,7 +21,7 @@
   },
   "services": {
     "clear_zone_override": {
-      "description": "Sets a zone to follow its schedule.",
+      "description": "Sets the zone to follow its schedule.",
       "name": "Clear zone override"
     },
     "refresh_system": {
@@ -29,11 +29,25 @@
       "name": "Refresh system"
     },
     "reset_system": {
-      "description": "Sets the system to `Auto` mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. `AutoWithReset` mode).",
+      "description": "Sets the system mode to `Auto` mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. `AutoWithReset` mode).",
       "name": "Reset system"
     },
+    "set_dhw_override": {
+      "description": "Overrides the DHW state, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
+      "fields": {
+        "duration": {
+          "description": "The DHW will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",
+          "name": "Duration"
+        },
+        "state": {
+          "description": "The DHW state: True (on: heat the water up to the setpoint) or False (off).",
+          "name": "State"
+        }
+      },
+      "name": "Set DHW override"
+    },
     "set_system_mode": {
-      "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to `Auto`. Not all systems support all modes.",
+      "description": "Sets the system mode, either indefinitely or until a specified end time, after which it will revert to `Auto`. Not all systems support all modes.",
       "fields": {
         "duration": {
           "description": "The duration in hours; used only with `AutoWithEco` mode (up to 24 hours).",
@@ -51,7 +65,7 @@
       "name": "Set system mode"
     },
     "set_zone_override": {
-      "description": "Overrides the zone's setpoint, either indefinitely, or for a specified period of time, after which it will revert to following its schedule.",
+      "description": "Overrides the zone setpoint, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
       "fields": {
         "duration": {
           "description": "The zone will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",

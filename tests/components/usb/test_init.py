@@ -7,6 +7,7 @@ import os
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
+from serialx import SerialPortInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
@@ -1296,112 +1297,55 @@ async def test_register_port_event_callback_failure(
     assert "Failure 2" in caplog.text
 
 
-async def test_async_scan_serial_ports_with_unique_symlinks(
-    hass: HomeAssistant,
-) -> None:
-    """Test async_scan_serial_ports returns devices with unique /dev/serial/by-id paths."""
-    entry1 = MagicMock(spec_set=os.DirEntry)
-    entry1.is_symlink.return_value = True
-    entry1.path = "/dev/serial/by-id/usb-device1"
-
-    entry2 = MagicMock(spec_set=os.DirEntry)
-    entry2.is_symlink.return_value = True
-    entry2.path = "/dev/serial/by-id/usb-device2"
-
-    mock_port1 = MagicMock()
-    mock_port1.device = "/dev/ttyUSB0"
-    mock_port1.vid = 0x1234
-    mock_port1.pid = 0x5678
-    mock_port1.serial_number = "ABC123"
-    mock_port1.manufacturer = "Test Manufacturer"
-    mock_port1.description = "Test Device"
-
-    mock_port2 = MagicMock()
-    mock_port2.device = "/dev/ttyUSB1"
-    mock_port2.vid = 0xABCD
-    mock_port2.pid = 0xEF01
-    mock_port2.serial_number = "XYZ789"
-    mock_port2.manufacturer = "Another Manufacturer"
-    mock_port2.description = "Another Device"
-
-    def mock_realpath(path: str) -> str:
-        realpath_map = {
-            "/dev/serial/by-id/usb-device1": "/dev/ttyUSB0",
-            "/dev/serial/by-id/usb-device2": "/dev/ttyUSB1",
-        }
-        return realpath_map.get(path, path)
-
-    with (
-        patch("os.path.isdir", return_value=True),
-        patch("os.scandir", return_value=[entry1, entry2]),
-        patch("os.path.realpath", side_effect=mock_realpath),
-        patch(
-            "homeassistant.components.usb.utils.comports",
-            return_value=[mock_port1, mock_port2],
-        ),
+async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
+    """Test async_scan_serial_ports parsing."""
+    with patch(
+        "homeassistant.components.usb.utils.list_serial_ports",
+        return_value=[
+            SerialPortInfo(
+                device="/dev/ttyAMA1",
+                resolved_device="/dev/ttyAMA1",
+                vid=None,
+                pid=None,
+                serial_number=None,
+                manufacturer=None,
+                product=None,
+                bcd_device=None,
+                interface_description=None,
+                interface_num=None,
+            ),
+            SerialPortInfo(
+                device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+                resolved_device="/dev/ttyACM0",
+                vid=12346,
+                pid=16385,
+                serial_number="10B41DE589FC",
+                manufacturer="Nabu Casa",
+                product="ZBT-2",
+                bcd_device=257,
+                interface_description="Nabu Casa ZBT-2",
+                interface_num=0,
+            ),
+        ],
     ):
         devices = await async_scan_serial_ports(hass)
 
-    assert len(devices) == 2
-    assert devices[0].device == "/dev/serial/by-id/usb-device1"
-    assert devices[0].vid == "1234"
-    assert devices[1].device == "/dev/serial/by-id/usb-device2"
-    assert devices[1].vid == "ABCD"
-
-
-async def test_async_scan_serial_ports_without_unique_symlinks(
-    hass: HomeAssistant,
-) -> None:
-    """Test async_scan_serial_ports returns devices with original paths when no symlinks exist."""
-    mock_port = MagicMock()
-    mock_port.device = "/dev/ttyUSB0"
-    mock_port.vid = 0x1234
-    mock_port.pid = 0x5678
-    mock_port.serial_number = "ABC123"
-    mock_port.manufacturer = "Test Manufacturer"
-    mock_port.description = "Test Device"
-
-    with (
-        patch("os.path.isdir", return_value=False),
-        patch("os.path.realpath", side_effect=lambda x: x),
-        patch(
-            "homeassistant.components.usb.utils.comports",
-            return_value=[mock_port],
+    assert devices == [
+        SerialDevice(
+            device="/dev/ttyAMA1",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
         ),
-    ):
-        devices = await async_scan_serial_ports(hass)
-
-    assert len(devices) == 1
-    assert devices[0].device == "/dev/ttyUSB0"
-    assert devices[0].vid == "1234"
-
-
-async def test_async_scan_serial_ports_no_vid_pid(hass: HomeAssistant) -> None:
-    """Test async_scan_serial_ports returns devices without VID:PID."""
-    mock_port = MagicMock()
-    mock_port.device = "/dev/ttyAMA1"
-    mock_port.vid = None
-    mock_port.pid = None
-    mock_port.serial_number = None
-    mock_port.manufacturer = None
-    mock_port.description = None
-
-    with (
-        patch("os.path.isdir", return_value=False),
-        patch("os.path.realpath", side_effect=lambda x: x),
-        patch(
-            "homeassistant.components.usb.utils.comports",
-            return_value=[mock_port],
+        USBDevice(
+            device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+            vid="303A",
+            pid="4001",
+            serial_number="10B41DE589FC",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
         ),
-    ):
-        devices = await async_scan_serial_ports(hass)
-
-    assert len(devices) == 1
-    assert isinstance(devices[0], SerialDevice)
-    assert devices[0].device == "/dev/ttyAMA1"
-    assert devices[0].serial_number is None
-    assert devices[0].manufacturer is None
-    assert devices[0].description is None
+    ]
 
 
 def test_usb_device_from_path_finds_by_symlink() -> None:
