@@ -24,6 +24,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     force_usb_polling_watcher,  # noqa: F401
     patch_scanned_serial_ports,
+    setup_usb_fixture,  # noqa: F401
 )
 
 from tests.common import (
@@ -1649,12 +1650,13 @@ async def test_removal_aborts_discovery_flows(
         assert final_flows[0]["handler"] == "test2"
 
 
-@pytest.mark.usefixtures("force_usb_polling_watcher")
 async def test_list_serial_ports(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_usb: MagicMock,
 ) -> None:
     """Test listing serial ports via websocket."""
-    mock_ports = [
+    setup_usb.return_value = [
         USBDevice(
             device="/dev/ttyUSB0",
             vid="10C4",
@@ -1671,16 +1673,9 @@ async def test_list_serial_ports(
         ),
     ]
 
-    with (
-        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
-        patch_scanned_serial_ports(return_value=mock_ports),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {"usb": {}})
-        await hass.async_block_till_done()
-
-        ws_client = await hass_ws_client(hass)
-        await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
-        response = await ws_client.receive_json()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    response = await ws_client.receive_json()
 
     assert response["success"]
     result = response["result"]
@@ -1701,25 +1696,35 @@ async def test_list_serial_ports(
     assert "pid" not in result[1]
 
 
-@pytest.mark.usefixtures("force_usb_polling_watcher")
 async def test_list_serial_ports_require_admin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
+    setup_usb: MagicMock,
 ) -> None:
     """Test that listing serial ports requires admin."""
     hass_admin_user.groups = []
 
-    with (
-        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
-        patch_scanned_serial_ports(return_value=[]),
-    ):
-        assert await async_setup_component(hass, DOMAIN, {"usb": {}})
-        await hass.async_block_till_done()
-
-        ws_client = await hass_ws_client(hass)
-        await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
-        response = await ws_client.receive_json()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    response = await ws_client.receive_json()
 
     assert not response["success"]
     assert response["error"]["code"] == "unauthorized"
+
+
+async def test_list_serial_ports_os_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_usb: MagicMock,
+) -> None:
+    """Test listing serial ports handles OSError."""
+    setup_usb.side_effect = OSError("Permission denied")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    assert "Permission denied" in response["error"]["message"]

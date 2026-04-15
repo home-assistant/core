@@ -490,7 +490,11 @@ async def websocket_usb_list_serial_ports(
     msg: dict[str, Any],
 ) -> None:
     """List available serial ports."""
-    ports = await async_scan_serial_ports(hass)
+    try:
+        ports = await async_scan_serial_ports(hass)
+    except OSError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+        return
     connection.send_result(
         msg["id"],
         [dataclasses.asdict(port) for port in ports],
