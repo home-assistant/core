@@ -142,25 +142,16 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Allow removal of a Velbus device.
 
-    When a parent device is removed, its sub-devices are removed as well.
-    If the device is still on the bus, it will be recreated on the next scan.
+    When a device is removed, its sub-devices are detached from this config entry
+    as well. If the device is still on the bus, it will be recreated on the next scan.
     """
-    address = next(
-        (ident[1] for ident in device_entry.identifiers if ident[0] == DOMAIN),
-        None,
-    )
-    # Only parent devices (plain address, no dash) can have sub-devices
-    if address and "-" not in address:
-        dev_reg = dr.async_get(hass)
-        for sub_device in dr.async_entries_for_config_entry(
-            dev_reg, config_entry.entry_id
-        ):
-            sub_address = next(
-                (ident[1] for ident in sub_device.identifiers if ident[0] == DOMAIN),
-                None,
+    # Remove sub-devices that belong to this parent device
+    dev_reg = dr.async_get(hass)
+    for sub_device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
+        if sub_device.via_device_id == device_entry.id:
+            dev_reg.async_update_device(
+                sub_device.id, remove_config_entry_id=config_entry.entry_id
             )
-            if sub_address and sub_address.startswith(f"{address}-"):
-                dev_reg.async_remove_device(sub_device.id)
     return True
 
 
