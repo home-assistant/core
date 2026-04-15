@@ -80,9 +80,7 @@ class EntityTypeForMap(Enum):
     VACUUM = "vacuums"
 
 
-DEVICE_SUPPORT_MAP: Final[
-    dict[str, dict[str, bool | list[EntityTypeForMap]]]
-] = {
+DEVICE_SUPPORT_MAP: Final[dict[str, dict[str, bool | list[EntityTypeForMap]]]] = {
     "Smart Radiator Thermostat": {
         "webhook": False,
         "entity_list": [EntityTypeForMap.CLIMATE, EntityTypeForMap.SENSOR],
