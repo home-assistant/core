@@ -474,15 +474,23 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
     @property
     def native_value(self) -> Any:
         """Return the current sensor value."""
-        section: dict[str, Any] = self.coordinator.data.get(
+        section: Any = self.coordinator.data.get(
             self.entity_description.data_key, {}
         )
-        data: dict[str, Any] = section.get(self.entity_description.source, {})
+        data: Any = (
+            section.get(self.entity_description.source, {})
+            if isinstance(section, dict)
+            else {}
+        )
 
         if self.entity_description.value_fn is not None:
             value = self.entity_description.value_fn(data)
         else:
-            value = data.get(self.entity_description.param_key)
+            value = (
+                data.get(self.entity_description.param_key)
+                if isinstance(data, dict)
+                else None
+            )
 
         if value is None:
             return None
