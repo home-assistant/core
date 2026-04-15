@@ -25,7 +25,6 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -119,8 +118,6 @@ class TibberCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         """Get the Tibber client with error handling."""
         try:
             return await self._runtime_data.async_get_client(self.hass)
-        except ConfigEntryAuthFailed:
-            raise
         except (ClientError, TimeoutError, tibber.exceptions.HttpExceptionError) as err:
             raise UpdateFailed(f"Unable to create Tibber client: {err}") from err
 
