@@ -412,14 +412,10 @@ class StipsIruClimate(ClimateEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Expose debugging metadata for the backing STIPS device."""
+        """Expose non-sensitive metadata for the backing STIPS device."""
         return {
             "device_unique_name": self._device_unique_name,
             "unique_name": self._device_unique_name,
-            "device_ip": self._device_ip_live or self._device_ip or None,
-            "device_ip_backend": self._device_ip or None,
-            "device_ip_live": self._device_ip_live or None,
-            "device_mac": self._device_mac or None,
             "device_online": self._device_online,
             "remote_type": self._remote_snapshot.get("type"),
             "protocol": self._proto,
