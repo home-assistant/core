@@ -29,15 +29,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: EveOnlineConfigEntry) ->
         raise ConfigEntryNotReady(
             "OAuth2 implementation unavailable, check application credentials"
         ) from err
-    session = OAuth2Session(hass, entry, implementation)
-    auth = AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
+    auth = AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass),
+        OAuth2Session(hass, entry, implementation),
+    )
     client = EveOnlineClient(auth=auth)
 
-    character_id: int = entry.data[CONF_CHARACTER_ID]
-    character_name: str = entry.data[CONF_CHARACTER_NAME]
-
     coordinator = EveOnlineCoordinator(
-        hass, entry, client, character_id, character_name
+        hass,
+        entry,
+        client,
+        entry.data[CONF_CHARACTER_ID],
+        entry.data[CONF_CHARACTER_NAME],
     )
     await coordinator.async_config_entry_first_refresh()
 
