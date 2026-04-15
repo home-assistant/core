@@ -41,6 +41,7 @@ ATTR_REMAINING = "remaining"
 ATTR_FINISHES_AT = "finishes_at"
 ATTR_RESTORE = "restore"
 ATTR_FINISHED_AT = "finished_at"
+ATTR_LAST_ACTION = "last_action"
 
 CONF_DURATION = "duration"
 CONF_RESTORE = "restore"
@@ -202,6 +203,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     def __init__(self, config: ConfigType) -> None:
         """Initialize a timer."""
         self._config: dict = config
+        self._last_action: str | None = None
         self._state: str = STATUS_IDLE
         self._configured_duration = cv.time_period_str(config[CONF_DURATION])
         self._running_duration: timedelta = self._configured_duration
@@ -249,6 +251,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         attrs: dict[str, Any] = {
             ATTR_DURATION: _format_timedelta(self._running_duration),
             ATTR_EDITABLE: self.editable,
+            ATTR_LAST_ACTION: self._last_action,
         }
         if self._end is not None:
             attrs[ATTR_FINISHES_AT] = self._end.isoformat()
@@ -274,6 +277,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Begin restoring state
         self._state = state.state
+        self._last_action = state.attributes.get(ATTR_LAST_ACTION)
 
         # Nothing more to do if the timer is idle
         if self._state == STATUS_IDLE:
@@ -321,8 +325,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         self._end = start + self._remaining
 
-        self.async_write_ha_state()
-        self.hass.bus.async_fire(event, {ATTR_ENTITY_ID: self.entity_id})
+        self._fire_event_and_write_state(event)
 
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
@@ -349,6 +352,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._listener()
         self._end += duration
         self._remaining = new_remaining
+        # We don't use _fire_event_and_write_state here because we don't want to
+        # update last_action
         self.async_write_ha_state()
         self.hass.bus.async_fire(EVENT_TIMER_CHANGED, {ATTR_ENTITY_ID: self.entity_id})
         self._listener = async_track_point_in_utc_time(
@@ -366,8 +371,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_PAUSED
         self._end = None
-        self.async_write_ha_state()
-        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {ATTR_ENTITY_ID: self.entity_id})
+        self._fire_event_and_write_state(EVENT_TIMER_PAUSED)
 
     @callback
     def async_cancel(self) -> None:
@@ -382,10 +386,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
-        self.async_write_ha_state()
-        self.hass.bus.async_fire(
-            EVENT_TIMER_CANCELLED, {ATTR_ENTITY_ID: self.entity_id}
-        )
+        self._fire_event_and_write_state(EVENT_TIMER_CANCELLED)
 
     @callback
     def async_finish(self) -> None:
@@ -403,10 +404,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
-        self.async_write_ha_state()
-        self.hass.bus.async_fire(
-            EVENT_TIMER_FINISHED,
-            {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
+        self._fire_event_and_write_state(
+            EVENT_TIMER_FINISHED, extra_attrs={ATTR_FINISHED_AT: end.isoformat()}
         )
 
     @callback
@@ -421,10 +420,8 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._end = None
         self._remaining = None
         self._running_duration = self._configured_duration
-        self.async_write_ha_state()
-        self.hass.bus.async_fire(
-            EVENT_TIMER_FINISHED,
-            {ATTR_ENTITY_ID: self.entity_id, ATTR_FINISHED_AT: end.isoformat()},
+        self._fire_event_and_write_state(
+            EVENT_TIMER_FINISHED, extra_attrs={ATTR_FINISHED_AT: end.isoformat()}
         )
 
     async def async_update_config(self, config: ConfigType) -> None:
@@ -435,3 +432,14 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             self._running_duration = self._configured_duration
         self._restore = config.get(CONF_RESTORE, DEFAULT_RESTORE)
         self.async_write_ha_state()
+
+    def _fire_event_and_write_state(
+        self, event: str, *, extra_attrs: dict[str, Any] | None = None
+    ) -> None:
+        """Fire the event and write state."""
+        self._last_action = event.partition(".")[2]
+        self.async_write_ha_state()
+        event_data = {ATTR_ENTITY_ID: self.entity_id}
+        if extra_attrs:
+            event_data.update(extra_attrs)
+        self.hass.bus.async_fire(event, event_data)
