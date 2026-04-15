@@ -25,6 +25,7 @@ from .const import (
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
+    SOURCE_TV,
 )
 from .entity import SonosEntity, SonosPollingEntity
 from .helpers import SonosConfigEntry, soco_error
@@ -74,7 +75,7 @@ POLL_REQUIRED = (
 
 WEEKEND_DAYS = (0, 6)
 
-_TV_SOURCE = (("Source", "TV"),)
+_TV_SOURCE = (("Source", SOURCE_TV),)
 
 # Mapping of model names to feature attributes that need to be substituted.
 # This is used to handle differences in attributes across Sonos models.
