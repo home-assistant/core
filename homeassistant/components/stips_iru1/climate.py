@@ -471,12 +471,35 @@ class StipsIruClimate(ClimateEntity):
         swing_v, swing_h = _split_swing_mode(swing_mode)
         await self._send_update(power=1, swingV=swing_v, swingH=swing_h)
 
-    async def _send_update(self, **overrides: int) -> None:
+    def _get_cached_control_hosts(self) -> tuple[list[str], str | None]:
+        """Return cached control hosts and live IP if available."""
+        hosts = getattr(self, "_control_hosts_cache", None)
+        live_ip = getattr(self, "_control_live_ip_cache", None)
+        if not hosts:
+            return [], None
+        return list(hosts), live_ip
+
+    async def async_resolve_control_hosts(
+        self, *, force_refresh: bool = False
+    ) -> tuple[list[str], str | None]:
+        """Resolve control hosts, reusing a cached result when possible."""
+        if not force_refresh:
+            cached_hosts, cached_live_ip = self._get_cached_control_hosts()
+            if cached_hosts:
+                return cached_hosts, cached_live_ip
+
         hosts, live_ip = await async_build_control_hosts(
             self.hass,
             device_unique_name=self._device_unique_name,
             backend_ip=self._device_ip,
         )
+        if hosts:
+            self._control_hosts_cache = list(hosts)
+            self._control_live_ip_cache = live_ip
+        return hosts, live_ip
+
+    async def _send_update(self, **overrides: int) -> None:
+        hosts, live_ip = await self.async_resolve_control_hosts()
         if not hosts:
             raise HomeAssistantError(
                 "Device host is missing; verify the IRU is online and its mDNS name resolves, "
