@@ -8,7 +8,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_address
 import json
-from unittest.mock import AsyncMock, _patch, patch
+from unittest.mock import _patch, patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 from aiohttp.test_utils import TestClient
@@ -109,7 +109,7 @@ ENTITY_IDS_BY_NUMBER = {
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
 
 
-def patch_upnp() -> _patch[AsyncMock]:
+def patch_upnp() -> _patch:
     """Patch async_create_upnp_datagram_endpoint."""
     return patch(
         "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
@@ -814,7 +814,9 @@ async def test_put_light_state(
 
     # mock light.turn_on call
     attributes = hass.states.get("light.ceiling_lights").attributes
-    supported_features = attributes[ATTR_SUPPORTED_FEATURES] | light.SUPPORT_TRANSITION
+    supported_features = (
+        attributes[ATTR_SUPPORTED_FEATURES] | light.LightEntityFeature.TRANSITION
+    )
     attributes = {**attributes, ATTR_SUPPORTED_FEATURES: supported_features}
     hass.states.async_set("light.ceiling_lights", STATE_ON, attributes)
     call_turn_on = async_mock_service(hass, "light", "turn_on")
@@ -1794,11 +1796,11 @@ async def test_get_light_state_when_none(
             light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
-                light.COLOR_MODE_COLOR_TEMP,
-                light.COLOR_MODE_HS,
-                light.COLOR_MODE_XY,
+                light.ColorMode.COLOR_TEMP,
+                light.ColorMode.HS,
+                light.ColorMode.XY,
             ],
-            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+            light.ATTR_COLOR_MODE: light.ColorMode.XY,
         },
     )
 
@@ -1822,11 +1824,11 @@ async def test_get_light_state_when_none(
             light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
-                light.COLOR_MODE_COLOR_TEMP,
-                light.COLOR_MODE_HS,
-                light.COLOR_MODE_XY,
+                light.ColorMode.COLOR_TEMP,
+                light.ColorMode.HS,
+                light.ColorMode.XY,
             ],
-            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+            light.ATTR_COLOR_MODE: light.ColorMode.XY,
         },
     )
 

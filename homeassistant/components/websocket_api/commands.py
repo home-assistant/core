@@ -14,6 +14,7 @@ from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
+    CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -331,6 +332,7 @@ async def handle_call_service(
         connection.logger.error(
             "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
         )
+        connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -369,7 +371,7 @@ def handle_get_states(
 
     try:
         serialized_states = [state.as_dict_json for state in states]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
     else:
         _send_handle_get_states_response(connection, msg["id"], serialized_states)
@@ -380,7 +382,7 @@ def handle_get_states(
     for state in states:
         try:
             serialized_states.append(state.as_dict_json)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
@@ -477,7 +479,7 @@ def handle_subscribe_entities(
         else:
             # Fast path when not filtering
             serialized_states = [state.as_compressed_state_json for state in states]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
     else:
         _send_handle_entities_init_response(
@@ -493,7 +495,7 @@ def handle_subscribe_entities(
             continue
         try:
             serialized_states.append(state.as_compressed_state_json)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
@@ -650,7 +652,12 @@ def handle_get_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get config command."""
-    connection.send_result(msg["id"], hass.config.as_dict())
+    config = hass.config.as_dict()
+
+    if connection.user.local_only:
+        config.pop(CONF_EXTERNAL_URL)
+
+    connection.send_result(msg["id"], config)
 
 
 @decorators.websocket_command(

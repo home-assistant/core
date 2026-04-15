@@ -164,7 +164,7 @@ class EcovacsActiveMapSelectEntity(
         self._option_to_id.clear()
 
         for map_info in event.maps:
-            name = map_info.name if map_info.name else map_info.id
+            name = map_info.name or map_info.id
             self._id_to_option[map_info.id] = name
             self._option_to_id[name] = map_info.id
 

@@ -40,7 +40,7 @@ class Dremel3DPrinterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             api = await self.hass.async_add_executor_job(Dremel3DPrinter, host)
-        except (ConnectTimeout, HTTPError, JSONDecodeError):
+        except ConnectTimeout, HTTPError, JSONDecodeError:
             errors = {"base": "cannot_connect"}
         except Exception:  # noqa: BLE001
             LOGGER.exception("An unknown error has occurred")

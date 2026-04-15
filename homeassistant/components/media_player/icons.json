@@ -1,4 +1,21 @@
 {
+  "conditions": {
+    "is_not_playing": {
+      "condition": "mdi:stop"
+    },
+    "is_off": {
+      "condition": "mdi:cast-off"
+    },
+    "is_on": {
+      "condition": "mdi:cast"
+    },
+    "is_paused": {
+      "condition": "mdi:pause"
+    },
+    "is_playing": {
+      "condition": "mdi:play"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:cast",
@@ -109,8 +126,20 @@
     "muted": {
       "trigger": "mdi:volume-mute"
     },
+    "paused_playing": {
+      "trigger": "mdi:pause"
+    },
+    "started_playing": {
+      "trigger": "mdi:play"
+    },
     "stopped_playing": {
       "trigger": "mdi:stop"
+    },
+    "turned_off": {
+      "trigger": "mdi:power"
+    },
+    "turned_on": {
+      "trigger": "mdi:power"
     }
   }
 }

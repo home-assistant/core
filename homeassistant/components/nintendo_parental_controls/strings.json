@@ -65,6 +65,9 @@
     "time": {
       "bedtime_alarm": {
         "name": "Bedtime alarm"
+      },
+      "bedtime_end_time": {
+        "name": "Bedtime end time"
       }
     }
   },
@@ -74,6 +77,9 @@
     },
     "bedtime_alarm_out_of_range": {
       "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
+    },
+    "bedtime_end_time_out_of_range": {
+      "message": "{value} not accepted. Bedtime End Time must be between {bedtime_end_time_min} and {bedtime_end_time_max}. To disable, set to {bedtime_alarm_disable}."
     },
     "config_entry_not_found": {
       "message": "Config entry not found."

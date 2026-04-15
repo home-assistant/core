@@ -8,7 +8,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE, trigger as zone
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN, trigger as zone
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -31,7 +31,7 @@ TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN_ZONE),
+        vol.Required(CONF_ZONE): cv.entity_domain(ZONE_DOMAIN),
     }
 )
 
@@ -83,7 +83,7 @@ async def async_attach_trigger(
         event = zone.EVENT_LEAVE
 
     zone_config = {
-        CONF_PLATFORM: DOMAIN_ZONE,
+        CONF_PLATFORM: ZONE_DOMAIN,
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         CONF_ZONE: config[CONF_ZONE],
         CONF_EVENT: event,
@@ -100,7 +100,7 @@ async def async_get_trigger_capabilities(
     """List trigger capabilities."""
     zones = {
         ent.entity_id: ent.name
-        for ent in sorted(hass.states.async_all(DOMAIN_ZONE), key=attrgetter("name"))
+        for ent in sorted(hass.states.async_all(ZONE_DOMAIN), key=attrgetter("name"))
     }
     return {
         "extra_fields": vol.Schema(

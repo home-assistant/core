@@ -56,12 +56,12 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
         value_fn=lambda coordinator: coordinator.data.oper_info.get("iRainDelay"),
     ),
     YardianSensorEntityDescription(
         key="active_zone_count",
         translation_key="active_zone_count",
-        native_unit_of_measurement="zones",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda coordinator: len(coordinator.data.active_zones),
     ),
@@ -72,6 +72,7 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=_zone_delay_value,
     ),
     YardianSensorEntityDescription(
@@ -81,6 +82,7 @@ SENSOR_DESCRIPTIONS: tuple[YardianSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        suggested_display_precision=0,
         value_fn=lambda coordinator: coordinator.data.oper_info.get(
             "iWaterHammerDuration"
         ),

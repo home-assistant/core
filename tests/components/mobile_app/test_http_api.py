@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components.mobile_app.const import (
     CONF_CLOUDHOOK_URL,
+    CONF_REMOTE_UI_URL,
     CONF_SECRET,
     DOMAIN,
 )
@@ -159,6 +160,50 @@ async def test_registration_with_cloud(
     assert register_json.get(CONF_CLOUDHOOK_URL) == (
         cloudhook_url if cloud_is_connected else None
     )
+
+
+async def test_registration_with_cloud_local_only_user(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that cloudhook_url and remote_ui_url are not returned for local_only users."""
+    hass_admin_user.local_only = True
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    api_client = await hass_client()
+
+    with (
+        patch(
+            "homeassistant.components.mobile_app.http_api.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mobile_app.http_api.cloud.async_is_connected",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.mobile_app.http_api.async_create_cloud_hook",
+            return_value="https://hooks.nabu.casa/test123",
+        ) as mock_create_cloud_hook,
+        patch(
+            "homeassistant.components.mobile_app.http_api.cloud.async_remote_ui_url",
+            return_value="https://remote.ui",
+        ),
+        patch(
+            "homeassistant.components.person.async_add_user_device_tracker",
+            spec=True,
+        ),
+    ):
+        resp = await api_client.post(
+            "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
+        )
+
+    assert resp.status == HTTPStatus.CREATED
+    register_json = await resp.json()
+    assert register_json.get(CONF_CLOUDHOOK_URL) is None
+    assert register_json.get(CONF_REMOTE_UI_URL) is None
+    mock_create_cloud_hook.assert_not_called()
 
 
 async def test_registration_encryption_legacy(

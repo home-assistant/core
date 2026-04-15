@@ -304,7 +304,7 @@ async def _try_async_validate_config_item(
     """Validate config item."""
     try:
         return await _async_validate_config_item(hass, config, False, True)
-    except (vol.Invalid, HomeAssistantError):
+    except vol.Invalid, HomeAssistantError:
         return None
 
 

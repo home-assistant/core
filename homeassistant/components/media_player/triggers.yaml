@@ -15,4 +15,8 @@
             - any
 
 muted: *trigger_common
+paused_playing: *trigger_common
+started_playing: *trigger_common
 stopped_playing: *trigger_common
+turned_off: *trigger_common
+turned_on: *trigger_common

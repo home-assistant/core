@@ -1,7 +1,9 @@
 """Test the initialization."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from solarlog_cli.solarlog_exceptions import (
     SolarLogAuthenticationError,
@@ -9,10 +11,11 @@ from solarlog_cli.solarlog_exceptions import (
     SolarLogError,
     SolarLogUpdateError,
 )
+from solarlog_cli.solarlog_models import EnergyData
 
 from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -21,7 +24,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import setup_platform
 from .const import HOST
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload(
@@ -86,7 +89,7 @@ async def test_auth_error_during_first_refresh(
     """Test the correct exceptions are thrown for auth error during first refresh."""
 
     mock_solarlog_connector.password.return_value = ""
-    mock_solarlog_connector.update_data.side_effect = SolarLogAuthenticationError
+    mock_solarlog_connector.update_basic_data.side_effect = SolarLogAuthenticationError
 
     mock_solarlog_connector.login.return_value = login_return_value
     mock_solarlog_connector.login.side_effect = login_side_effect
@@ -112,7 +115,7 @@ async def test_other_exceptions_during_first_refresh(
 ) -> None:
     """Test the correct exceptions are thrown during first refresh."""
 
-    mock_solarlog_connector.update_data.side_effect = exception
+    mock_solarlog_connector.update_basic_data.side_effect = exception
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done()
@@ -180,3 +183,27 @@ async def test_migrate_config_entry(
     assert entry.minor_version == 3
     assert entry.data[CONF_HOST] == HOST
     assert entry.data[CONF_HAS_PWD] is False
+
+
+async def test_timeout_increase_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the correct timeout increase if API request for energy times out."""
+
+    mock_solarlog_connector.update_energy_data.side_effect = [
+        SolarLogConnectionError,
+        EnergyData(950, 545),
+    ]
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.data[CONF_TIMEOUT] == 60

@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "deviceId": "42a6aa8d-9bce-4f80-bc29-d9f8b8dc1af1",
+      "name": "Washer-v0.13",
+      "label": "Wasmachine",
+      "manufacturerName": "0A5j",
+      "presentationId": "0a504464-b2b6-3a32-b3ad-44ca2bb380f5",
+      "deviceManufacturerCode": "Siemens",
+      "locationId": "04b44aee-2bd7-44e3-8303-42834a57d568",
+      "ownerId": "3854926e-dee0-524a-0817-66f0f5613d77",
+      "roomId": "c934a1a9-c8d5-4a9a-bca5-a958282428b2",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "signalahead13665.washerprogramsv2",
+              "version": 1
+            },
+            {
+              "id": "signalahead13665.startstopprogramv2",
+              "version": 1
+            },
+            {
+              "id": "signalahead13665.pauseresumev2",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "signalahead13665.applianceoperationstatesv2",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Washer",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-11-18T19:30:58.002Z",
+      "profile": {
+        "id": "7a50ea9d-9b44-4265-9c47-28042358123f"
+      },
+      "viper": {
+        "uniqueIdentifier": "SIEMENS-WM14T6H6NL-68A40E366901",
+        "manufacturerName": "Siemens",
+        "modelName": "WM14T6H6NL",
+        "endpointAppId": "viper_f8009b80-d4c4-11eb-89df-5bbe1b05472c"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

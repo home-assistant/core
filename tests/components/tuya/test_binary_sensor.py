@@ -19,7 +19,13 @@ from . import MockDeviceListener, check_selective_state_update, initialize_entry
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
+@pytest.fixture(autouse=True)
+def platform_autouse():
+    """Platform fixture."""
+    with patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
@@ -42,8 +48,9 @@ async def test_platform_setup_and_discovery(
 @pytest.mark.parametrize(
     ("updates", "expected_state", "last_reported"),
     [
-        # Update without dpcode - state should not change, last_reported stays at initial
-        ({"battery_percentage": 80}, "off", "2024-01-01T00:00:00+00:00"),
+        # Update without dpcode - state should not change, last_reported stays
+        # at available_reported
+        ({"battery_percentage": 80}, "off", "2024-01-01T00:00:20+00:00"),
         # Update with dpcode - state should change, last_reported advances
         ({"doorcontact_state": True}, "on", "2024-01-01T00:01:00+00:00"),
         # Update with multiple properties including dpcode - state should change
@@ -54,7 +61,6 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
 @pytest.mark.freeze_time("2024-01-01")
 async def test_selective_state_update(
     hass: HomeAssistant,
@@ -97,7 +103,6 @@ async def test_selective_state_update(
         (0x83, "on", "on", "on"),
     ],
 )
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
 async def test_bitmap(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -116,9 +121,7 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == "off"
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == "off"
 
-    await mock_listener.async_send_device_update(
-        hass, mock_device, {"fault": fault_value}
-    )
+    await mock_listener.async_send_device_update(mock_device, {"fault": fault_value})
 
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost

@@ -1,0 +1,69 @@
+{
+  "entity": {
+    "sensor": {
+      "chess960_daily_draw": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess960_daily_lost": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess960_daily_rating": {
+        "default": "mdi:chart-line"
+      },
+      "chess960_daily_won": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_blitz_draw": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_blitz_lost": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_blitz_rating": {
+        "default": "mdi:chart-line"
+      },
+      "chess_blitz_won": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_bullet_draw": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_bullet_lost": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_bullet_rating": {
+        "default": "mdi:chart-line"
+      },
+      "chess_bullet_won": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_daily_draw": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_daily_lost": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_daily_rating": {
+        "default": "mdi:chart-line"
+      },
+      "chess_daily_won": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_rapid_draw": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_rapid_lost": {
+        "default": "mdi:chess-pawn"
+      },
+      "chess_rapid_rating": {
+        "default": "mdi:chart-line"
+      },
+      "chess_rapid_won": {
+        "default": "mdi:chess-pawn"
+      },
+      "followers": {
+        "default": "mdi:account-multiple"
+      }
+    }
+  }
+}

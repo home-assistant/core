@@ -1,6 +1,7 @@
 """The Dexcom integration."""
 
-from pydexcom import AccountError, Dexcom, SessionError
+from pydexcom import Dexcom, Region
+from pydexcom.errors import AccountError, SessionError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -14,10 +15,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> bo
     """Set up Dexcom from a config entry."""
     try:
         dexcom = await hass.async_add_executor_job(
-            Dexcom,
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            entry.data[CONF_SERVER] == SERVER_OUS,
+            lambda: Dexcom(
+                username=entry.data[CONF_USERNAME],
+                password=entry.data[CONF_PASSWORD],
+                region=Region.OUS
+                if entry.data[CONF_SERVER] == SERVER_OUS
+                else Region.US,
+            )
         )
     except AccountError:
         return False

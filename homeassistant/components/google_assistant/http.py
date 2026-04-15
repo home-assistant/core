@@ -283,7 +283,7 @@ class GoogleConfig(AbstractConfig):
         except ClientResponseError as error:
             _LOGGER.error("Request for %s failed: %d", url, error.status)
             return error.status
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             _LOGGER.error("Could not contact %s", url)
             return HTTPStatus.INTERNAL_SERVER_ERROR
 

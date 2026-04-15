@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.components.lawn_mower import (
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
@@ -108,7 +108,7 @@ async def test_mover_services(
     for test in tests:
         device._execute_command.reset_mock()
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            LAWN_MOWER_DOMAIN,
             test.service_name,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-from enum import IntFlag, StrEnum
 import functools as ft
 import logging
 from typing import Any, final
@@ -33,7 +32,21 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER  # noqa: F401
+from .condition import make_cover_is_closed_condition, make_cover_is_open_condition
+from .const import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+    ATTR_IS_CLOSED,
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN,
+    INTENT_CLOSE_COVER,
+    INTENT_OPEN_COVER,
+    CoverDeviceClass,
+    CoverEntityFeature,
+    CoverState,
+)
+from .trigger import make_cover_closed_trigger, make_cover_opened_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,56 +56,35 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=15)
 
-
-class CoverState(StrEnum):
-    """State of Cover entities."""
-
-    CLOSED = "closed"
-    CLOSING = "closing"
-    OPEN = "open"
-    OPENING = "opening"
-
-
-class CoverDeviceClass(StrEnum):
-    """Device class for cover."""
-
-    # Refer to the cover dev docs for device class descriptions
-    AWNING = "awning"
-    BLIND = "blind"
-    CURTAIN = "curtain"
-    DAMPER = "damper"
-    DOOR = "door"
-    GARAGE = "garage"
-    GATE = "gate"
-    SHADE = "shade"
-    SHUTTER = "shutter"
-    WINDOW = "window"
-
-
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(CoverDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
-
 
 # mypy: disallow-any-generics
 
 
-class CoverEntityFeature(IntFlag):
-    """Supported features of the cover entity."""
-
-    OPEN = 1
-    CLOSE = 2
-    SET_POSITION = 4
-    STOP = 8
-    OPEN_TILT = 16
-    CLOSE_TILT = 32
-    STOP_TILT = 64
-    SET_TILT_POSITION = 128
-
-
-ATTR_CURRENT_POSITION = "current_position"
-ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
-ATTR_POSITION = "position"
-ATTR_TILT_POSITION = "tilt_position"
+__all__ = [
+    "ATTR_CURRENT_POSITION",
+    "ATTR_CURRENT_TILT_POSITION",
+    "ATTR_IS_CLOSED",
+    "ATTR_POSITION",
+    "ATTR_TILT_POSITION",
+    "DEVICE_CLASSES",
+    "DEVICE_CLASSES_SCHEMA",
+    "DOMAIN",
+    "INTENT_CLOSE_COVER",
+    "INTENT_OPEN_COVER",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "CoverDeviceClass",
+    "CoverEntity",
+    "CoverEntityDescription",
+    "CoverEntityFeature",
+    "CoverState",
+    "make_cover_closed_trigger",
+    "make_cover_is_closed_condition",
+    "make_cover_is_open_condition",
+    "make_cover_opened_trigger",
+]
 
 
 @bind_hass
@@ -267,7 +259,9 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        data = {}
+        data: dict[str, Any] = {}
+
+        data[ATTR_IS_CLOSED] = self.is_closed
 
         if (current := self.current_cover_position) is not None:
             data[ATTR_CURRENT_POSITION] = current

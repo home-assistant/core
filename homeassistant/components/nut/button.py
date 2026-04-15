@@ -12,7 +12,7 @@ from homeassistant.components.button import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NutConfigEntry
+from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
 _LOGGER = logging.getLogger(__name__)

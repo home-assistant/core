@@ -19,8 +19,9 @@
 # ---
 # name: test_number_entities[HWE-SKT-11].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -113,8 +114,9 @@
 # ---
 # name: test_number_entities[HWE-SKT-21].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,

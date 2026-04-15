@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -52,8 +53,10 @@ class AirobotDataUpdateCoordinator(DataUpdateCoordinator[AirobotData]):
     async def _async_update_data(self) -> AirobotData:
         """Fetch data from API endpoint."""
         try:
-            status = await self.client.get_statuses()
-            settings = await self.client.get_settings()
+            status, settings = await asyncio.gather(
+                self.client.get_statuses(),
+                self.client.get_settings(),
+            )
         except AirobotAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,

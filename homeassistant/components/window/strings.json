@@ -1,0 +1,62 @@
+{
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_closed": {
+      "description": "Tests if one or more windows are closed.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::window::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Window is closed"
+    },
+    "is_open": {
+      "description": "Tests if one or more windows are open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::window::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Window is open"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Window",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more windows close.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::window::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Window closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more windows open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::window::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Window opened"
+    }
+  }
+}

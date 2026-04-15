@@ -211,6 +211,35 @@ async def test_generate_invalid_structured_data(
         )
 
 
+async def test_generate_data_empty_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task raises HomeAssistantError when API returns empty choices."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[],
+            created=1700000000,
+            model="x-ai/grok-3",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(completion_tokens=0, prompt_tokens=8, total_tokens=8),
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="API returned empty response"):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Generate test data",
+        )
+
+
 async def test_generate_data_with_attachments(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

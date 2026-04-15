@@ -7,6 +7,7 @@ from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_httpapi_bridge
 from linkplay.exceptions import LinkPlayRequestException
+from linkplay.manufacturers import MANUFACTURER_WIIM
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -44,6 +45,9 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Failed to connect to LinkPlay device at %s", discovery_info.host
             )
             return self.async_abort(reason="cannot_connect")
+
+        if bridge.device.manufacturer == MANUFACTURER_WIIM:
+            return self.async_abort(reason="not_linkplay_device")
 
         self.data[CONF_HOST] = discovery_info.host
         self.data[CONF_MODEL] = bridge.device.name

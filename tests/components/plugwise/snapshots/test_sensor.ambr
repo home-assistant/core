@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.adam_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -58,8 +59,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.anna_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -115,8 +117,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.anna_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -172,8 +175,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -229,8 +233,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -286,8 +291,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.bathroom_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -343,8 +349,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -397,8 +404,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -451,8 +459,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -508,8 +517,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.emma_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -565,8 +575,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -619,8 +630,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -673,8 +685,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -730,8 +743,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.jip_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -787,8 +801,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -841,8 +856,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -898,8 +914,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.lisa_badkamer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -955,8 +972,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1012,8 +1030,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1069,8 +1088,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1126,8 +1146,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.opentherm_intended_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1183,8 +1204,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.opentherm_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1240,8 +1262,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.test_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1297,8 +1320,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.test_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1354,8 +1378,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1408,8 +1433,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1465,8 +1491,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1522,8 +1549,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_temperature_difference-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1579,8 +1607,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_valve_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1632,8 +1661,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1689,8 +1719,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1746,8 +1777,9 @@
 # ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1803,8 +1835,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1857,8 +1890,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1914,8 +1948,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1971,8 +2006,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_intended_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2028,8 +2064,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_modulation_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2081,8 +2118,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_water_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2138,8 +2176,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.opentherm_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2195,8 +2234,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2252,8 +2292,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2309,8 +2350,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2366,8 +2408,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2423,8 +2466,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2480,8 +2524,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_consumed_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2537,8 +2582,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_phase_one_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2594,8 +2640,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_phase_one_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2651,8 +2698,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2708,8 +2756,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2765,8 +2814,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2822,8 +2872,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2879,8 +2930,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2936,8 +2988,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_electricity_produced_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2993,8 +3046,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_gas_consumed_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3050,8 +3104,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_gas_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3103,8 +3158,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_net_electricity_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3160,8 +3216,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_net_electricity_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3217,8 +3274,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.p1_voltage_phase_one-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3274,8 +3332,9 @@
 # ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.smile_anna_p1_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3331,8 +3390,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_cooling_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3388,8 +3448,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_heating_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3445,8 +3506,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3499,8 +3561,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3556,8 +3619,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_dhw_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3613,8 +3677,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_intended_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3670,8 +3735,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_modulation_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3723,8 +3789,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_outdoor_air_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3780,8 +3847,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_return_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3837,8 +3905,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3894,8 +3963,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3951,8 +4021,9 @@
 # ---
 # name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.smile_anna_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4008,8 +4079,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4065,8 +4137,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4122,8 +4195,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4179,8 +4253,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4236,8 +4311,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4293,8 +4369,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4350,8 +4427,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4407,8 +4485,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4464,8 +4543,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4521,8 +4601,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4578,8 +4659,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4635,8 +4717,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4692,8 +4775,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4749,8 +4833,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4806,8 +4891,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4863,8 +4949,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4920,8 +5007,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -4977,8 +5065,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5034,8 +5123,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5091,8 +5181,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5144,8 +5235,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5201,8 +5293,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5258,8 +5351,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_one-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5315,8 +5409,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_three-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5372,8 +5467,9 @@
 # ---
 # name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_two-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5429,8 +5525,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5486,8 +5583,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5543,8 +5641,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5600,8 +5699,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5657,8 +5757,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5714,8 +5815,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5771,8 +5873,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5828,8 +5931,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5885,8 +5989,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5942,8 +6047,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -5999,8 +6105,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6056,8 +6163,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6113,8 +6221,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6170,8 +6279,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6227,8 +6337,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_cumulative-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6284,8 +6395,9 @@
 # ---
 # name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6341,8 +6453,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6398,8 +6511,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6455,8 +6569,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6512,8 +6627,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6569,8 +6685,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6626,8 +6743,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6683,8 +6801,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6740,8 +6859,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6797,8 +6917,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6854,8 +6975,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6911,8 +7033,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -6968,8 +7091,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7025,8 +7149,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7082,8 +7207,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -7139,8 +7265,9 @@
 # ---
 # name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,

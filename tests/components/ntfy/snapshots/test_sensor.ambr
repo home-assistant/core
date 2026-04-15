@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.ntfy_sh_attachment_bandwidth_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -58,8 +59,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_attachment_expiry_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -115,8 +117,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_attachment_file_size_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -172,8 +175,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_attachment_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -229,8 +233,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_attachment_storage_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -286,8 +291,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_attachment_storage_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -343,8 +349,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_email_usage_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -393,8 +400,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_emails_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -443,8 +451,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_emails_sent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -493,8 +502,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_messages_expiry_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -550,8 +560,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_messages_published-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -600,8 +611,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_messages_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -650,8 +662,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_messages_usage_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,8 +713,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_phone_calls_made-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -750,8 +764,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_phone_calls_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -800,8 +815,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_phone_calls_usage_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -850,8 +866,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_reserved_topics-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -900,8 +917,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_reserved_topics_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -950,8 +968,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_reserved_topics_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1000,8 +1019,9 @@
 # ---
 # name: test_setup[sensor.ntfy_sh_subscription_tier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

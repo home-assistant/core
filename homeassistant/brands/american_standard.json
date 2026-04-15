@@ -1,0 +1,5 @@
+{
+  "domain": "american_standard",
+  "name": "American Standard",
+  "integrations": ["nexia", "trane"]
+}

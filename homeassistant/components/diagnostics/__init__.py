@@ -38,9 +38,9 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
-from .util import async_redact_data
+from .util import async_redact_data, entity_entry_as_dict
 
-__all__ = ["REDACTED", "async_redact_data"]
+__all__ = ["REDACTED", "async_redact_data", "entity_entry_as_dict"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class DiagnosticsData:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Diagnostics from a config entry."""
+    """Set up Diagnostics integration."""
     hass.data[_DIAGNOSTICS_DATA] = DiagnosticsData()
 
     await integration_platform.async_process_integration_platforms(

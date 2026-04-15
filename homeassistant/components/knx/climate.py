@@ -119,7 +119,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
+def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
     climate_mode = XknxClimateMode(
         xknx,
@@ -489,8 +489,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         hvac_modes = sorted(set(filter(None, ha_controller_modes)))
         return (
             hvac_modes
-            if hvac_modes
-            else [self.hvac_mode]  # mode read-only -> fall back to only current mode
+            or [self.hvac_mode]  # mode read-only -> fall back to only current mode
         )
 
     @property
@@ -647,9 +646,17 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
+        self._device = _create_climate_yaml(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_climate(knx_module.xknx, config),
+            unique_id=(
+                f"{self._device.temperature.group_address_state}_"
+                f"{self._device.target_temperature.group_address_state}_"
+                f"{self._device.target_temperature.group_address}_"
+                f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
+            ),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         default_hvac_mode: HVACMode = config[ClimateConf.DEFAULT_CONTROLLER_MODE]
         fan_max_step = config[ClimateConf.FAN_MAX_STEP]
@@ -659,14 +666,6 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
             default_hvac_mode=default_hvac_mode,
             fan_max_step=fan_max_step,
             fan_zero_mode=fan_zero_mode,
-        )
-
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = (
-            f"{self._device.temperature.group_address_state}_"
-            f"{self._device.target_temperature.group_address_state}_"
-            f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
         )
 
 

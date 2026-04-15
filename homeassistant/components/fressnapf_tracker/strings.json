@@ -92,5 +92,11 @@
     "not_seen_recently": {
       "message": "The flashlight cannot be activated when the tracker has not moved recently."
     }
+  },
+  "issues": {
+    "invalid_fressnapf_tracker": {
+      "description": "The Fressnapf GPS tracker with the serial number `{tracker_id}` is sending invalid data. This most likely indicates the tracker is broken or hasn't been properly registered with the app. Please remove the tracker via the Fressnapf app. You can then close this issue.",
+      "title": "Invalid Fressnapf GPS tracker detected"
+    }
   }
 }

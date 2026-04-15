@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 from miio import DeviceException
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -16,34 +15,19 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
-from .const import (
-    CONF_FLOW_TYPE,
-    SERVICE_CLEAN_SEGMENT,
-    SERVICE_CLEAN_ZONE,
-    SERVICE_GOTO,
-    SERVICE_MOVE_REMOTE_CONTROL,
-    SERVICE_MOVE_REMOTE_CONTROL_STEP,
-    SERVICE_START_REMOTE_CONTROL,
-    SERVICE_STOP_REMOTE_CONTROL,
-)
+from .const import CONF_FLOW_TYPE
 from .entity import XiaomiCoordinatedMiioEntity
 from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ERROR = "error"
-ATTR_RC_DURATION = "duration"
-ATTR_RC_ROTATION = "rotation"
-ATTR_RC_VELOCITY = "velocity"
 ATTR_STATUS = "status"
-ATTR_ZONE_ARRAY = "zone"
-ATTR_ZONE_REPEATER = "repeats"
 ATTR_TIMERS = "timers"
 
 STATE_CODE_TO_STATE = {
@@ -91,85 +75,6 @@ async def async_setup_entry(
             config_entry.runtime_data.device_coordinator,
         )
         entities.append(mirobo)
-
-        platform = entity_platform.async_get_current_platform()
-
-        platform.async_register_entity_service(
-            SERVICE_START_REMOTE_CONTROL,
-            None,
-            MiroboVacuum.async_remote_control_start.__name__,
-        )
-
-        platform.async_register_entity_service(
-            SERVICE_STOP_REMOTE_CONTROL,
-            None,
-            MiroboVacuum.async_remote_control_stop.__name__,
-        )
-
-        platform.async_register_entity_service(
-            SERVICE_MOVE_REMOTE_CONTROL,
-            {
-                vol.Optional(ATTR_RC_VELOCITY): vol.All(
-                    vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
-                ),
-                vol.Optional(ATTR_RC_ROTATION): vol.All(
-                    vol.Coerce(int), vol.Clamp(min=-179, max=179)
-                ),
-                vol.Optional(ATTR_RC_DURATION): cv.positive_int,
-            },
-            MiroboVacuum.async_remote_control_move.__name__,
-        )
-
-        platform.async_register_entity_service(
-            SERVICE_MOVE_REMOTE_CONTROL_STEP,
-            {
-                vol.Optional(ATTR_RC_VELOCITY): vol.All(
-                    vol.Coerce(float), vol.Clamp(min=-0.29, max=0.29)
-                ),
-                vol.Optional(ATTR_RC_ROTATION): vol.All(
-                    vol.Coerce(int), vol.Clamp(min=-179, max=179)
-                ),
-                vol.Optional(ATTR_RC_DURATION): cv.positive_int,
-            },
-            MiroboVacuum.async_remote_control_move_step.__name__,
-        )
-
-        platform.async_register_entity_service(
-            SERVICE_CLEAN_ZONE,
-            {
-                vol.Required(ATTR_ZONE_ARRAY): vol.All(
-                    list,
-                    [
-                        vol.ExactSequence(
-                            [
-                                vol.Coerce(int),
-                                vol.Coerce(int),
-                                vol.Coerce(int),
-                                vol.Coerce(int),
-                            ]
-                        )
-                    ],
-                ),
-                vol.Required(ATTR_ZONE_REPEATER): vol.All(
-                    vol.Coerce(int), vol.Clamp(min=1, max=3)
-                ),
-            },
-            MiroboVacuum.async_clean_zone.__name__,
-        )
-
-        platform.async_register_entity_service(
-            SERVICE_GOTO,
-            {
-                vol.Required("x_coord"): vol.Coerce(int),
-                vol.Required("y_coord"): vol.Coerce(int),
-            },
-            MiroboVacuum.async_goto.__name__,
-        )
-        platform.async_register_entity_service(
-            SERVICE_CLEAN_SEGMENT,
-            {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
-            MiroboVacuum.async_clean_segment.__name__,
-        )
 
     async_add_entities(entities, update_before_add=True)
 
