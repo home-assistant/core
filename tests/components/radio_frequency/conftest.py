@@ -45,32 +45,27 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
     _attr_has_entity_name = True
     _attr_name = "Test RF transmitter"
 
-    def __init__(self, unique_id: str) -> None:
+    def __init__(
+        self,
+        unique_id: str,
+        frequency_ranges: list[tuple[int, int]] | None = None,
+    ) -> None:
         """Initialize mock entity."""
         self._attr_unique_id = unique_id
+        self._frequency_ranges = frequency_ranges or [(433_000_000, 434_000_000)]
         self.send_command_calls: list[RadioFrequencyCommand] = []
+
+    @property
+    def supported_frequency_ranges(self) -> list[tuple[int, int]]:
+        """Return supported frequency ranges."""
+        return self._frequency_ranges
 
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Mock send command."""
         self.send_command_calls.append(command)
 
 
-class MockRadioFrequencyEntityWithRanges(MockRadioFrequencyEntity):
-    """Mock radio frequency entity with frequency ranges."""
-
-    @property
-    def supported_frequency_ranges(self) -> list[tuple[int, int]] | None:
-        """Return supported frequency ranges."""
-        return [(433_000_000, 434_000_000)]
-
-
 @pytest.fixture
 def mock_rf_entity() -> MockRadioFrequencyEntity:
     """Return a mock radio frequency entity."""
     return MockRadioFrequencyEntity("test_rf_transmitter")
-
-
-@pytest.fixture
-def mock_rf_entity_with_ranges() -> MockRadioFrequencyEntityWithRanges:
-    """Return a mock radio frequency entity with frequency ranges."""
-    return MockRadioFrequencyEntityWithRanges("test_rf_transmitter_ranged")

@@ -18,11 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import (
-    MockRadioFrequencyCommand,
-    MockRadioFrequencyEntity,
-    MockRadioFrequencyEntityWithRanges,
-)
+from .conftest import MockRadioFrequencyCommand, MockRadioFrequencyEntity
 
 from tests.common import mock_restore_cache
 
@@ -44,33 +40,17 @@ async def test_get_transmitters_no_entities(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_get_transmitters_no_frequency_ranges(
+async def test_get_transmitters_with_frequency_ranges(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
 ) -> None:
-    """Test transmitter with no frequency ranges matches any frequency."""
+    """Test transmitter with frequency ranges filters correctly."""
     component = hass.data[DATA_COMPONENT]
     await component.async_add_entities([mock_rf_entity])
 
-    result = async_get_transmitters(hass, 433_920_000, ModulationType.OOK)
-    assert result == [mock_rf_entity.entity_id]
-
-    result = async_get_transmitters(hass, 868_000_000, ModulationType.OOK)
-    assert result == [mock_rf_entity.entity_id]
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_get_transmitters_with_frequency_ranges(
-    hass: HomeAssistant,
-    mock_rf_entity_with_ranges: MockRadioFrequencyEntityWithRanges,
-) -> None:
-    """Test transmitter with frequency ranges filters correctly."""
-    component = hass.data[DATA_COMPONENT]
-    await component.async_add_entities([mock_rf_entity_with_ranges])
-
     # 433.92 MHz is within 433-434 MHz range
     result = async_get_transmitters(hass, 433_920_000, ModulationType.OOK)
-    assert result == [mock_rf_entity_with_ranges.entity_id]
+    assert result == [mock_rf_entity.entity_id]
 
     # 868 MHz is outside the range
     result = async_get_transmitters(hass, 868_000_000, ModulationType.OOK)

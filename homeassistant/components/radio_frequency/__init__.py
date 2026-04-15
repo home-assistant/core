@@ -90,15 +90,13 @@ def async_get_transmitters(
             translation_key="no_transmitters",
         )
 
-    result: list[str] = []
-    for entity in entities:
-        freq_ranges = entity.supported_frequency_ranges
-        if freq_ranges is None or any(
-            low <= frequency <= high for low, high in freq_ranges
-        ):
-            result.append(entity.entity_id)
-
-    return result
+    return [
+        entity.entity_id
+        for entity in entities
+        if any(
+            low <= frequency <= high for low, high in entity.supported_frequency_ranges
+        )
+    ]
 
 
 async def async_send_command(
@@ -151,9 +149,9 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
     __last_command_sent: str | None = None
 
     @property
-    def supported_frequency_ranges(self) -> list[tuple[int, int]] | None:
-        """Return list of (min_hz, max_hz) tuples, or None if unknown."""
-        return None
+    def supported_frequency_ranges(self) -> list[tuple[int, int]]:
+        """Return list of (min_hz, max_hz) tuples."""
+        raise NotImplementedError
 
     @property
     @final
