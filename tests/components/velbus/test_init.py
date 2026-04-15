@@ -13,7 +13,11 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import init_integration
 from .const import PORT_TCP
@@ -221,3 +225,80 @@ async def test_device_registry(
 
     device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "2")})
     assert device_no_sub.via_device_id is None
+
+
+async def test_stale_device_repair_issue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a repair issue is created for devices not found during scan."""
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module (VMBX)",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+
+    await init_integration(hass, config_entry)
+
+    issue = issue_registry.async_get_issue(DOMAIN, "stale_device_999")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders["address"] == "999"
+
+
+async def test_stale_device_issue_cleared_when_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that the stale device repair issue is cleared when module is found again."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "stale_device_1",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="stale_device",
+        translation_placeholders={"name": "Some Module", "address": "1"},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, "stale_device_1") is not None
+
+    await init_integration(hass, config_entry)
+
+    # Address "1" is found by the mock — issue must be cleared
+    assert issue_registry.async_get_issue(DOMAIN, "stale_device_1") is None
+
+
+async def test_stale_subdevice_no_repair_issue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that sub-devices (via_device_id set) do not trigger a stale device issue."""
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module",
+        manufacturer="Velleman",
+        model="VMB2BLE",
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999-1")},
+        name="Missing Module Channel 1",
+        manufacturer="Velleman",
+        model="VMB2BLE",
+        via_device=(DOMAIN, "999"),
+    )
+
+    await init_integration(hass, config_entry)
+
+    # Parent raises an issue, sub-device must not
+    assert issue_registry.async_get_issue(DOMAIN, "stale_device_999") is not None
+    assert issue_registry.async_get_issue(DOMAIN, "stale_device_999-1") is None

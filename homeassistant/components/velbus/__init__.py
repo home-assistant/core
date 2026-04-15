@@ -15,7 +15,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -60,11 +64,14 @@ async def velbus_scan_task(
         ) from ex
     # create all modules
     dev_reg = dr.async_get(hass)
+    found_addresses: set[str] = set()
     for module in controller.get_modules().values():
+        address = str(module.get_addresses()[0])
+        found_addresses.add(address)
         dev_reg.async_get_or_create(
             config_entry_id=entry_id,
             identifiers={
-                (DOMAIN, str(module.get_addresses()[0])),
+                (DOMAIN, address),
             },
             manufacturer="Velleman",
             model=module.get_type_name(),
@@ -72,6 +79,31 @@ async def velbus_scan_task(
             name=f"{module.get_name()} ({module.get_type_name()})",
             sw_version=module.get_sw_version(),
             serial_number=module.get_serial(),
+        )
+        ir.async_delete_issue(hass, DOMAIN, f"stale_device_{address}")
+
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        device_address: str | None = next(
+            (ident[1] for ident in device.identifiers if ident[0] == DOMAIN),
+            None,
+        )
+        if (
+            device_address is None
+            or device.via_device_id is not None
+            or device_address in found_addresses
+        ):
+            continue
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"stale_device_{device_address}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="stale_device",
+            translation_placeholders={
+                "name": device.name_by_user or device.name or device_address,
+                "address": device_address,
+            },
         )
 
 
