@@ -10,18 +10,15 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.components.common import (
     TriggerStateDescription,
-    arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     parametrize_target_entities,
     parametrize_trigger_states,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -106,6 +103,7 @@ def parametrize_muted_trigger_states() -> list[
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
+        *parametrize_muted_trigger_states(),
         *parametrize_trigger_states(
             trigger="media_player.paused_playing",
             target_states=[
@@ -202,56 +200,6 @@ async def test_media_player_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_muted_trigger_states(),
-    ],
-)
-async def test_media_player_state_attribute_trigger_behavior_any(
-    hass: HomeAssistant,
-    target_media_players: list[str],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test that the media player state trigger fires when any media player state changes to a specific state."""
-    calls: list[str] = []
-    await async_setup_component(hass, "media player", {})
-
-    other_entity_ids = set(target_media_players["included_entities"]) - {entity_id}
-
-    # Set all media players, including the tested media player, to the initial state
-    for eid in target_media_players["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {}, trigger_target_config, calls)
-
-    for state in states[1:]:
-        included_state = state["included_state"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(calls) == state["count"]
-        for call in calls:
-            assert call == entity_id
-        calls.clear()
-
-        # Check if changing other media players also triggers
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(calls) == (entities_in_target - 1) * state["count"]
-        calls.clear()
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("media_player"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
         *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
             target_states=[
@@ -299,61 +247,6 @@ async def test_media_player_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_muted_trigger_states(),
-    ],
-)
-async def test_media_player_state_attribute_trigger_behavior_first(
-    hass: HomeAssistant,
-    target_media_players: list[str],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test that the media player state trigger fires when the first media player state changes to a specific state."""
-    calls: list[str] = []
-    await async_setup_component(hass, "media_player", {})
-
-    other_entity_ids = set(target_media_players["included_entities"]) - {entity_id}
-
-    # Set all media players, including the tested media player, to the initial state
-    for eid in target_media_players["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(
-        hass,
-        trigger,
-        {"behavior": "first"},
-        trigger_target_config,
-        calls,
-    )
-
-    for state in states[1:]:
-        included_state = state["included_state"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(calls) == state["count"]
-        for call in calls:
-            assert call == entity_id
-        calls.clear()
-
-        # Triggering other media players should not cause the trigger to fire again
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(calls) == 0
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("media_player"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
         *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
             target_states=[
@@ -390,52 +283,3 @@ async def test_media_player_state_trigger_behavior_last(
         trigger_options=trigger_options,
         states=states,
     )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("media_player"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_muted_trigger_states(),
-    ],
-)
-async def test_media_player_state_attribute_trigger_behavior_last(
-    hass: HomeAssistant,
-    target_media_players: list[str],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test that the media player state trigger fires when the last media player state changes to a specific state."""
-    calls: list[str] = []
-    await async_setup_component(hass, "media_player", {})
-
-    other_entity_ids = set(target_media_players["included_entities"]) - {entity_id}
-
-    # Set all media players, including the tested media player, to the initial state
-    for eid in target_media_players["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config, calls)
-
-    for state in states[1:]:
-        included_state = state["included_state"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(calls) == state["count"]
-        for call in calls:
-            assert call == entity_id
-        calls.clear()
