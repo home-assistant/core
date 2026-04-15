@@ -1,9 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "absence_mode_active": { "default": "mdi:home-export-outline" },
-      "child_protect": { "default": "mdi:shield-lock-outline" }
-    },
     "sensor": {
       "online": { "default": "mdi:clock-outline" },
       "set_point_cooling": { "default": "mdi:thermometer" },

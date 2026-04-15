@@ -38,7 +38,7 @@ from .migration import migrate_entity_ids, migrate_sensor_units, migrate_statist
 
 _LOGGER = logging.getLogger(__name__)
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type BlancoConfigEntry = ConfigEntry[BlancoDataUpdateCoordinator]
 """Type alias for a config entry whose runtime_data is the coordinator."""
