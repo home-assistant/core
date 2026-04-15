@@ -35,5 +35,13 @@
         }
       }
     }
+  },
+  "services": {
+    "set_window_open": {
+      "service": "mdi:window-open"
+    },
+    "set_window_close": {
+      "service": "mdi:window-closed"
+    }
   }
 }
