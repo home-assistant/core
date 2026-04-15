@@ -490,15 +490,15 @@ async def test_get_condition_capabilities_value(
     assert capabilities and "extra_fields" in capabilities
 
     cc_options = [
-        (133, "Association"),
-        (128, "Battery"),
-        (98, "Door Lock"),
-        (122, "Firmware Update Meta Data"),
-        (114, "Manufacturer Specific"),
-        (113, "Notification"),
-        (152, "Security"),
-        (99, "User Code"),
-        (134, "Version"),
+        ("133", "Association"),
+        ("128", "Battery"),
+        ("98", "Door Lock"),
+        ("122", "Firmware Update Meta Data"),
+        ("114", "Manufacturer Specific"),
+        ("113", "Notification"),
+        ("152", "Security"),
+        ("99", "User Code"),
+        ("134", "Version"),
     ]
 
     assert voluptuous_serialize.convert(
@@ -552,11 +552,11 @@ async def test_get_condition_capabilities_config_parameter(
             "name": "value",
             "required": True,
             "options": [
-                (0, "Disabled"),
-                (1, "0.5° F"),
-                (2, "1.0° F"),
-                (3, "1.5° F"),
-                (4, "2.0° F"),
+                ("0", "Disabled"),
+                ("1", "0.5° F"),
+                ("2", "1.0° F"),
+                ("3", "1.5° F"),
+                ("4", "2.0° F"),
             ],
             "type": "select",
         }
@@ -694,3 +694,19 @@ async def test_get_value_from_config_failure(
                 "endpoint": 10,
             },
         )
+
+
+def test_condition_schema_coerces_string_command_class() -> None:
+    """Test that VALUE condition schema accepts and coerces string command_class."""
+    config = device_condition.CONDITION_SCHEMA(
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "device_id": "device123",
+            "type": "value",
+            "command_class": str(CommandClass.DOOR_LOCK.value),
+            "property": "latchStatus",
+            "value": "open",
+        }
+    )
+    assert config["command_class"] == CommandClass.DOOR_LOCK.value
