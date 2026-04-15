@@ -26,24 +26,20 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service_info.usb import UsbServiceInfo as _UsbServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .models import (
-    SerialDevice,  # noqa: F401
-    USBDevice,
-)
+from .models import SerialDevice, USBDevice
 from .utils import (
     async_scan_serial_ports,
-    scan_serial_ports,  # noqa: F401
-    usb_device_from_path,  # noqa: F401
-    usb_device_from_port,  # noqa: F401
+    scan_serial_ports,
+    usb_device_from_path,
     usb_device_matches_matcher,
     usb_service_info_from_device,
-    usb_unique_id_from_service_info,  # noqa: F401
+    usb_unique_id_from_service_info,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,9 +52,17 @@ REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to register
 
 __all__ = [
+    "SerialDevice",
     "USBCallbackMatcher",
+    "USBDevice",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
+    "async_scan_serial_ports",
+    "scan_serial_ports",
+    "usb_device_from_path",
+    "usb_device_matches_matcher",
+    "usb_service_info_from_device",
+    "usb_unique_id_from_service_info",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -358,7 +362,7 @@ class USBDiscovery:
 
         for matcher in matched:
             for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
-                _UsbServiceInfo,
+                UsbServiceInfo,
                 lambda flow_service_info: flow_service_info == service_info,
             ):
                 if matcher["domain"] != flow["handler"]:
