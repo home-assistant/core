@@ -45,9 +45,6 @@ API_DEVICE_CONTROL = "/device/pu/property/set"
 API_SELF_CHECK = "/basic/self_check/info"  # Get fault information
 API_GET_HOUR_POWER = "/clife-svc/pu/get_hour_power"  # Get power consumption information
 
-CLIENT_ID = "9793620883275788"
-CLIENT_SECRET = "7h1m3gZVlILyBvIFBNmzXwoFYLhkGqG9NQd2jBzuZCqJKCTyCtYwQtXi4tVBjg9B"
-
 # Token settings
 TOKEN_EXPIRY_MARGIN = 60  # seconds before token expiry to refresh
 

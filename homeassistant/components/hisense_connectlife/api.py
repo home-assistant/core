@@ -12,7 +12,6 @@ from connectlife_cloud.devices.base import BaseDeviceParser
 
 from homeassistant.core import HomeAssistant
 
-from .const import CLIENT_ID, CLIENT_SECRET
 from .models import DeviceInfo as HisenseDeviceInfo, HisenseApiError
 from .oauth2 import OAuth2Session
 
@@ -41,8 +40,6 @@ class HisenseApiClient:
 
         # Initialize the ConnectLife Cloud client
         self.client = ConnectLifeCloudClient(
-            client_id=CLIENT_ID,
-            client_secret=CLIENT_SECRET,
             session=oauth_session.session,
         )
 

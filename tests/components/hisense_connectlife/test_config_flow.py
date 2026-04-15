@@ -20,10 +20,8 @@ async def test_user_step_initial_form(mock_hass) -> None:
     flow = OAuth2FlowHandler()
     flow.hass = mock_hass
     flow.context = {}
-    flow._async_current_entries = lambda include_ignore=None: []
-
-    with patch.object(flow, "_async_current_entries", return_value=[]):
-        result = await flow.async_step_user()
+    mock_hass.config_entries.async_entry_for_domain_unique_id.return_value = None
+    result = await flow.async_step_user()
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -36,17 +34,16 @@ async def test_user_step_with_input(mock_hass, mock_oauth2_implementation) -> No
     flow = OAuth2FlowHandler()
     flow.hass = mock_hass
     flow.context = {}
-    flow._async_current_entries = lambda include_ignore=None: []
 
     with patch(
         "homeassistant.components.hisense_connectlife.config_flow.HisenseOAuth2Implementation"
     ) as mock_impl:
         mock_impl.return_value = mock_oauth2_implementation
 
-        with patch.object(flow, "_async_current_entries", return_value=[]):
-            result = await flow.async_step_user()
+    mock_hass.config_entries.async_entry_for_domain_unique_id.return_value = None
+    result = await flow.async_step_user()
 
-        assert result["type"] == FlowResultType.FORM
+    assert result["type"] == FlowResultType.FORM
 
 
 @pytest.mark.asyncio
@@ -78,11 +75,8 @@ async def test_single_instance_allowed(mock_hass) -> None:
     flow.hass = mock_hass
     flow.context = {}
 
-    # Mock existing entries
-    mock_hass.config_entries.async_entries.return_value = [MagicMock()]
-
-    with patch.object(flow, "_async_current_entries", return_value=[]):
-        result = await flow.async_step_user()
+    mock_hass.config_entries.async_entry_for_domain_unique_id.return_value = None
+    result = await flow.async_step_user()
 
     assert result["type"] == FlowResultType.FORM
 
@@ -93,7 +87,6 @@ async def test_authorize_url_fail(mock_hass, mock_oauth2_implementation) -> None
     flow = OAuth2FlowHandler()
     flow.hass = mock_hass
     flow.context = {}
-    flow._async_current_entries = list
 
     # Mock implementation that raises exception
     mock_oauth2_implementation.async_generate_authorize_url.side_effect = Exception(
@@ -105,7 +98,8 @@ async def test_authorize_url_fail(mock_hass, mock_oauth2_implementation) -> None
     ) as mock_impl:
         mock_impl.return_value = mock_oauth2_implementation
 
-        result = await flow.async_step_user({"confirm_auth": True})
+        mock_hass.config_entries.async_entry_for_domain_unique_id.return_value = None
+        result = await flow.async_step_user()
 
         assert result["type"] == FlowResultType.FORM
 

@@ -55,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ha_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     await ha_session.async_ensure_token_valid()
 
-    token_info = entry.data.get("token", {})
-    if "expires_in" in token_info:
-        token_info["expires_at"] = time.time() + token_info["expires_in"]
+    token_info = dict(ha_session.token or {})
 
     hisense_impl = HisenseOAuth2Implementation(hass)
     oauth_session = OAuth2Session(

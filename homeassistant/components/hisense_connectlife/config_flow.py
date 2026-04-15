@@ -10,8 +10,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
+from connectlife_cloud import CLIENT_ID
 
-from .const import CLIENT_ID, DOMAIN
+from .const import DOMAIN
 from .oauth2 import HisenseOAuth2Implementation
 
 _LOGGER = logging.getLogger(__name__)
