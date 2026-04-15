@@ -52,10 +52,7 @@ async def test_create_entry_success(hass: HomeAssistant) -> None:
     assert "password" not in result["data"]
 
 
-async def test_unique_id_includes_api_host(
-    hass: HomeAssistant,
-    MockConfigEntry: type[MockConfigEntry],
-) -> None:
+async def test_unique_id_includes_api_host(hass: HomeAssistant) -> None:
     """Test same username on different API hosts can be configured separately."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
