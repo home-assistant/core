@@ -126,7 +126,14 @@ async def async_setup_entry(
         if node.general.node_type in description.node_types
     )
 
-    if box_node := coordinator.data.get(1):
+    if box_node := next(
+        (
+            node
+            for node in coordinator.data.values()
+            if node.general.node_type == NodeType.BOX
+        ),
+        None,
+    ):
         async_add_entities(
             DucoBoxSensorEntity(coordinator, box_node, description)
             for description in BOX_SENSOR_DESCRIPTIONS
