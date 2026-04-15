@@ -437,7 +437,6 @@
       "description": "Triggers after one or more media players pause playing.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
@@ -447,7 +446,6 @@
       "description": "Triggers after one or more media players start playing.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
@@ -466,7 +464,6 @@
       "description": "Triggers after one or more media players turn off.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
@@ -476,7 +473,6 @@
       "description": "Triggers after one or more media players turn on.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
