@@ -492,6 +492,7 @@ class EntityTriggerBase(Trigger):
                         ATTR_ENTITY_ID: entity_id,
                         "from_state": from_state,
                         "to_state": to_state,
+                        "for": self._duration,
                     },
                     f"state of {entity_id}",
                     event.context,

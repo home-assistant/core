@@ -3186,6 +3186,9 @@ async def test_entity_trigger_fires_on_valid_transition(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == entity_id
+    assert calls[0]["from_state"].state == STATE_OFF
+    assert calls[0]["to_state"].state == STATE_ON
+    assert calls[0]["for"] is None
 
     # Transition back and trigger again
     calls.clear()
@@ -3409,6 +3412,9 @@ async def test_entity_trigger_with_duration(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == entity_id
+    assert calls[0]["from_state"].state == STATE_OFF
+    assert calls[0]["to_state"].state == STATE_ON
+    assert calls[0]["for"] == datetime.timedelta(seconds=5)
 
     unsub()
 
