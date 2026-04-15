@@ -35,28 +35,21 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return {"scope": " ".join(SCOPES)}
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Create an entry for the flow.
-
-        Decode the Eve SSO JWT access token to extract character_id and
-        character_name, then create a config entry for that character.
-        """
+        """Create an entry for the flow."""
         try:
             token = data["token"]["access_token"]
             character_info = _decode_eve_jwt(token)
         except ValueError, KeyError, jwt.DecodeError:
             return self.async_abort(reason="oauth_error")
 
-        character_id = character_info[CONF_CHARACTER_ID]
-        character_name = character_info[CONF_CHARACTER_NAME]
-
-        await self.async_set_unique_id(str(character_id))
+        await self.async_set_unique_id(str(character_info[CONF_CHARACTER_ID]))
         self._abort_if_unique_id_configured()
 
-        data[CONF_CHARACTER_ID] = character_id
-        data[CONF_CHARACTER_NAME] = character_name
+        data[CONF_CHARACTER_ID] = character_info[CONF_CHARACTER_ID]
+        data[CONF_CHARACTER_NAME] = character_info[CONF_CHARACTER_NAME]
 
         return self.async_create_entry(
-            title=character_name,
+            title=character_info[CONF_CHARACTER_NAME],
             data=data,
         )
 
