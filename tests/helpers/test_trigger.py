@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import io
+import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
@@ -22,6 +23,8 @@ from homeassistant.const import (
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -41,6 +44,10 @@ from homeassistant.helpers.automation import (
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.trigger import (
+    ATTR_BEHAVIOR,
+    BEHAVIOR_ANY,
+    BEHAVIOR_FIRST,
+    BEHAVIOR_LAST,
     DATA_PLUGGABLE_ACTIONS,
     TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
@@ -3080,3 +3087,280 @@ async def test_make_entity_origin_state_trigger(
 
     # To-state still matches from_state — not valid
     assert not trig.is_valid_state(from_state)
+
+
+class _OffToOnTrigger(EntityTriggerBase):
+    """Test trigger that fires when state becomes 'on'."""
+
+    _domain_specs = {"test": DomainSpec()}
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Valid if transitioning from a non-'on' state."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+        return from_state.state != STATE_ON
+
+    def is_valid_state(self, state: State) -> bool:
+        """Valid if the state is 'on'."""
+        return state.state == STATE_ON
+
+
+async def _arm_off_to_on_trigger(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+    behavior: str,
+    calls: list[dict[str, Any]],
+) -> CALLBACK_TYPE:
+    """Set up _OffToOnTrigger via async_initialize_triggers."""
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"off_to_on": _OffToOnTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    trigger_config = {
+        CONF_PLATFORM: "test.off_to_on",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"])
+
+    validated_config = await async_validate_trigger_config(hass, [trigger_config])
+    return await async_initialize_triggers(
+        hass,
+        validated_config,
+        action,
+        domain="test",
+        name="test_off_to_on",
+        log_cb=log.log,
+    )
+
+
+def _set_or_remove_state(
+    hass: HomeAssistant, entity_id: str, state: str | None
+) -> None:
+    """Set or remove state based on whether state is None."""
+    if state is None:
+        hass.states.async_remove(entity_id)
+    else:
+        hass.states.async_set(entity_id, state)
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+async def test_entity_trigger_fires_on_valid_transition(
+    hass: HomeAssistant, behavior: str
+) -> None:
+    """Test EntityTriggerBase fires on a valid off→on transition."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(hass, [entity_id], behavior, calls)
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_id
+
+    # Transition back and trigger again
+    calls.clear()
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize(
+    "initial_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN, None],
+    ids=["unavailable", "unknown", "no_state"],
+)
+async def test_entity_trigger_from_invalid_initial_state(
+    hass: HomeAssistant, behavior: str, initial_state: str | None
+) -> None:
+    """Test that the trigger does not fire when transitioning from unavailable, unknown, or no state."""
+    entity_id = "test.entity_1"
+    _set_or_remove_state(hass, entity_id, initial_state)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(hass, [entity_id], behavior, calls)
+
+    # Transition to "on" from the invalid initial state
+    _set_or_remove_state(hass, entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Should NOT fire — transition from invalid state is rejected
+    assert len(calls) == 0
+
+    # Now transition back to off and then to on — should fire
+    _set_or_remove_state(hass, entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    _set_or_remove_state(hass, entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_last_requires_all(
+    hass: HomeAssistant,
+) -> None:
+    """Test behavior last: trigger fires only when ALL entities are on."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls
+    )
+
+    # Turn only A on — not all match, should not fire
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn B on — now all match, should fire
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_first_requires_exactly_one(
+    hass: HomeAssistant,
+) -> None:
+    """Test behavior first: trigger fires only when exactly one entity matches."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls
+    )
+
+    # Turn A on — exactly one matches, should fire
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Turn B on — now two match, B's transition should NOT fire
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    "invalid_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+    ids=["unavailable", "unknown"],
+)
+async def test_entity_trigger_last_ignores_unavailable_and_unknownentity(
+    hass: HomeAssistant, invalid_state: str
+) -> None:
+    """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
+
+    With three entities (A=off, B=unavailable, C=off), turning A on should
+    not fire because C is still off, so the available entities do not all
+    match. Turning C on then fires because all *available* entities (A and C)
+    match. Without the exclusion, B would fail the "all match" check.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    entity_c = "test.entity_c"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, invalid_state)
+    hass.states.async_set(entity_c, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_LAST, calls
+    )
+
+    # Turn A on — B is unavailable and skipped, only A is on → all doesn't match
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn C on — B is unavailable and skipped, A and C are both on → all match
+    hass.states.async_set(entity_c, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_c
+
+    # B recovers to off — now not all available entities match, so
+    # turning A off→on should NOT fire
+    calls.clear()
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    "invalid_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+    ids=["unavailable", "unknown"],
+)
+async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
+    hass: HomeAssistant, invalid_state: str
+) -> None:
+    """Test behavior first: unavailable/unknown entities are excluded from check_one_match.
+
+    With three entities (A=off, B=unavailable, C=off), turning A on should
+    fire because exactly one *available* entity matches. B is skipped.
+    Then turning C on should NOT fire because now two available entities match.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    entity_c = "test.entity_c"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, invalid_state)
+    hass.states.async_set(entity_c, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_FIRST, calls
+    )
+
+    # Turn A on — B is unavailable and skipped, only A matches → exactly one
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
+
+    # Turn C on — now two available entities match (A and C), should NOT fire
+    hass.states.async_set(entity_c, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()

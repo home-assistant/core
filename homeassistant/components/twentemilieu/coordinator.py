@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from datetime import date
 
-from twentemilieu import TwenteMilieu, WasteType
+from twentemilieu import (
+    TwenteMilieu,
+    TwenteMilieuConnectionError,
+    TwenteMilieuError,
+    WasteType,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_HOUSE_LETTER,
@@ -46,4 +51,15 @@ class TwenteMilieuDataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[WasteType, list[date]]:
         """Fetch Twente Milieu data."""
-        return await self.twentemilieu.update()
+        try:
+            return await self.twentemilieu.update()
+        except TwenteMilieuConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+        except TwenteMilieuError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+            ) from err
