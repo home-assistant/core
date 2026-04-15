@@ -5,7 +5,7 @@
     "data_description_password": "Password for the FRITZ!Box.",
     "data_description_port": "Leave empty to use the default port.",
     "data_description_ssl": "Use SSL to connect to the FRITZ!Box.",
-    "data_description_username": "Username for the FRITZ!Box. FRITZ!Powerline devices do not require a username; enter any value.",
+    "data_description_username": "Username for the FRITZ!Box. FRITZ!Powerline devices ignore this information and accept any value.",
     "data_feature_device_tracking": "Enable network device tracking"
   },
   "config": {
