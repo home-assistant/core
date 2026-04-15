@@ -7,6 +7,7 @@ from aioswitcher.api import Command
 from aioswitcher.device import DeviceState
 from aioswitcher.schedule import Days
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switcher_kis.const import (
@@ -314,7 +315,10 @@ async def test_plug_unsupported_services(
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_get_schedules_service(
-    hass: HomeAssistant, mock_bridge: MagicMock, mock_api: MagicMock
+    hass: HomeAssistant,
+    mock_bridge: MagicMock,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the get schedules service."""
     await init_integration(hass)
@@ -350,16 +354,7 @@ async def test_get_schedules_service(
         assert mock_api.call_count == 2
         mock_get_schedules.assert_called_once_with()
 
-    assert result is not None
-    entity_result = result[entity_id]
-    assert len(entity_result["schedules"]) == 1
-    schedule = entity_result["schedules"][0]
-    assert schedule["schedule_id"] == "0"
-    assert schedule["recurring"] is True
-    assert set(schedule["days"]) == {"monday", "friday"}
-    assert schedule["start_time"] == "07:00"
-    assert schedule["end_time"] == "07:30"
-    assert schedule["duration"] == "0:30:00"
+    assert result == snapshot
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
