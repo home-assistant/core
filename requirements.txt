@@ -14,7 +14,7 @@ annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
 atomicwrites-homeassistant==1.4.1
-attrs==25.4.0
+attrs==26.1.0
 audioop-lts==0.2.1
 awesomeversion==25.8.0
 bcrypt==5.0.0
