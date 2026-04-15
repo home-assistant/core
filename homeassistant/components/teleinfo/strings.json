@@ -33,10 +33,10 @@
         "name": "Index"
       },
       "blue_day_off_peak_index": {
-        "name": "Index: blue day off-peak"
+        "name": "Blue day off-peak index"
       },
       "blue_day_peak_index": {
-        "name": "Index: blue day peak"
+        "name": "Blue day peak index"
       },
       "current_tariff_period": {
         "name": "Current tariff period",
@@ -61,22 +61,22 @@
         "name": "Instantaneous current"
       },
       "normal_hours_index": {
-        "name": "Index: normal hours"
+        "name": "Normal hours index"
       },
       "off_peak_index": {
-        "name": "Index: off-peak"
+        "name": "Off-peak index"
       },
       "peak_index": {
-        "name": "Index: peak"
+        "name": "Peak index"
       },
       "peak_mobile_hours_index": {
-        "name": "Index: peak mobile hours"
+        "name": "Peak mobile hours index"
       },
       "red_day_off_peak_index": {
-        "name": "Index: red day off-peak"
+        "name": "Red day off-peak index"
       },
       "red_day_peak_index": {
-        "name": "Index: red day peak"
+        "name": "Red day peak index"
       },
       "tomorrow_color": {
         "name": "Tomorrow color",
@@ -87,10 +87,10 @@
         }
       },
       "white_day_off_peak_index": {
-        "name": "Index: white day off-peak"
+        "name": "White day off-peak index"
       },
       "white_day_peak_index": {
-        "name": "Index: white day peak"
+        "name": "White day peak index"
       }
     }
   },

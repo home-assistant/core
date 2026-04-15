@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from types import ModuleType
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -102,24 +101,22 @@ def mock_setup_entry() -> Generator[None]:
 
 @pytest.fixture
 def mock_teleinfo() -> Generator[MagicMock]:
-    """Mock the teleinfo (pyteleinfo) library."""
-    mock_module = MagicMock(spec=ModuleType)
-    mock_module.decode = MagicMock(return_value=MOCK_DECODED_DATA)
-    mock_module.read_frame = MagicMock(return_value=MOCK_FRAME)
-    mock_module.TeleinfoError = type("TeleinfoError", (Exception,), {})
+    """Mock the teleinfo (pyteleinfo) library decode function."""
+    mock = MagicMock()
+    mock.decode = MagicMock(return_value=MOCK_DECODED_DATA)
+    mock.TeleinfoError = type("TeleinfoError", (Exception,), {})
 
     with (
-        patch.dict("sys.modules", {"teleinfo": mock_module}),
         patch(
             "homeassistant.components.teleinfo.coordinator.decode",
-            mock_module.decode,
+            mock.decode,
         ),
         patch(
             "homeassistant.components.teleinfo.config_flow.decode",
-            mock_module.decode,
+            mock.decode,
         ),
     ):
-        yield mock_module
+        yield mock
 
 
 @pytest.fixture

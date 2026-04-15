@@ -16,8 +16,6 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-PATCH_READ_FRAME = "homeassistant.components.teleinfo.config_flow.read_frame"
-
 
 @pytest.mark.usefixtures("mock_teleinfo")
 async def test_user_flow_success(
@@ -49,99 +47,68 @@ async def test_user_flow_success(
     }
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (serial.SerialException("Port not found"), "cannot_connect"),
+        (TimeoutError("No data received"), "timeout_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+)
 @pytest.mark.usefixtures("mock_teleinfo")
-async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle serial port that doesn't exist or has permission issues."""
-    with patch(
-        PATCH_READ_FRAME,
-        side_effect=serial.SerialException("Port not found"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-@pytest.mark.usefixtures("mock_teleinfo")
-async def test_user_flow_timeout(hass: HomeAssistant) -> None:
-    """Test we handle a port that exists but has no Teleinfo dongle (timeout)."""
-    with patch(
-        PATCH_READ_FRAME,
-        side_effect=TimeoutError("No data received"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "timeout_connect"}
-
-
-@pytest.mark.usefixtures("mock_teleinfo")
-async def test_user_flow_cannot_connect_recovery(
-    hass: HomeAssistant, mock_serial_port: MagicMock
+async def test_user_flow_errors(
+    hass: HomeAssistant,
+    mock_serial_port: MagicMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test recovery after a serial connection error."""
-    with patch(
-        PATCH_READ_FRAME,
-        side_effect=serial.SerialException("Port not found"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            },
-        )
+    """Test we surface the right error for each serial failure mode."""
+    mock_serial_port.side_effect = side_effect
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Recover: now the port works (mock_serial_port fixture takes over)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
             CONF_SERIAL_PORT: "/dev/ttyUSB0",
         },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Teleinfo (/dev/ttyUSB0)"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": expected_error}
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (serial.SerialException("Port not found"), "cannot_connect"),
+        (TimeoutError("No data"), "timeout_connect"),
+        (RuntimeError("unexpected"), "unknown"),
+    ],
+)
 @pytest.mark.usefixtures("mock_teleinfo")
-async def test_user_flow_timeout_recovery(
-    hass: HomeAssistant, mock_serial_port: MagicMock
+async def test_user_flow_error_recovery(
+    hass: HomeAssistant,
+    mock_serial_port: MagicMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test recovery after a timeout error."""
-    with patch(
-        PATCH_READ_FRAME,
-        side_effect=TimeoutError("No data"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            },
-        )
+    """Test the flow recovers after each failure mode when the port starts working."""
+    mock_serial_port.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "timeout_connect"}
+    assert result["errors"] == {"base": expected_error}
 
-    # Recover: now the dongle responds (mock_serial_port fixture takes over)
+    # Recover: the port now works.
+    mock_serial_port.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -172,57 +139,6 @@ async def test_user_flow_duplicate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_teleinfo")
-async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle unexpected exceptions."""
-    with patch(
-        PATCH_READ_FRAME,
-        side_effect=RuntimeError("unexpected"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
-
-
-@pytest.mark.usefixtures("mock_teleinfo")
-async def test_user_flow_unknown_error_recovery(
-    hass: HomeAssistant, mock_serial_port: MagicMock
-) -> None:
-    """Test recovery after an unknown error."""
-    with patch(
-        PATCH_READ_FRAME,
-        side_effect=RuntimeError("unexpected"),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={
-                CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    # Recover (mock_serial_port fixture takes over)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_decode_error(
@@ -283,16 +199,13 @@ async def test_usb_discovery_success(
 
 
 @pytest.mark.usefixtures("mock_teleinfo")
-async def test_usb_discovery_not_teleinfo(hass: HomeAssistant) -> None:
+async def test_usb_discovery_not_teleinfo(
+    hass: HomeAssistant, mock_serial_port: MagicMock
+) -> None:
     """Test USB discovery aborts when frame read times out (not a Teleinfo device)."""
+    mock_serial_port.side_effect = TimeoutError("No data received")
 
-    with (
-        patch(PATCH_GET_SERIAL_BY_ID, side_effect=lambda x: x),
-        patch(
-            PATCH_READ_FRAME,
-            side_effect=TimeoutError("No data received"),
-        ),
-    ):
+    with patch(PATCH_GET_SERIAL_BY_ID, side_effect=lambda x: x):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USB},

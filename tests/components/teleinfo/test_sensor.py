@@ -1,27 +1,42 @@
 """Test the Teleinfo sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import serial
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.teleinfo.const import DOMAIN
+from homeassistant.components.teleinfo.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     MOCK_DECODED_DATA_BASE,
     MOCK_DECODED_DATA_EJP,
     MOCK_DECODED_DATA_HC,
+    MOCK_DECODED_DATA_TEMPO,
+    MOCK_FRAME,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ADCO = "021861348497"
 
 
+@pytest.mark.parametrize(
+    ("decoded_data", "contract"),
+    [
+        (MOCK_DECODED_DATA_BASE, "base"),
+        (MOCK_DECODED_DATA_HC, "hc"),
+        (MOCK_DECODED_DATA_EJP, "ejp"),
+        (MOCK_DECODED_DATA_TEMPO, "tempo"),
+    ],
+    ids=["base", "hc", "ejp", "tempo"],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
@@ -30,8 +45,11 @@ async def test_all_entities(
     mock_serial_port: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    decoded_data: dict[str, str],
+    contract: str,
 ) -> None:
-    """Snapshot test all sensor entities."""
+    """Snapshot test all sensor entities for each supported contract type."""
+    mock_teleinfo.decode.return_value = decoded_data
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -39,333 +57,45 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_sensor_setup_tempo(
+@pytest.mark.parametrize(
+    ("side_effect_attr", "side_effect"),
+    [
+        ("mock_serial_port", serial.SerialException("device disconnected")),
+        ("mock_serial_port", TimeoutError("no data")),
+        ("mock_teleinfo_decode", RuntimeError("bad frame")),
+    ],
+    ids=["serial_error", "timeout", "decode_error"],
+)
+async def test_sensor_unavailable_on_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_teleinfo: MagicMock,
     mock_serial_port: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    side_effect_attr: str,
+    side_effect: Exception,
 ) -> None:
-    """Test Tempo sensor entities are created with correct states."""
+    """Test sensors become unavailable on each failure mode at the next poll."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
-    expected_values: dict[str, str] = {
-        f"{ADCO}_BBRHCJB": "18328702",
-        f"{ADCO}_BBRHPJB": "23739545",
-        f"{ADCO}_BBRHCJW": "1466099",
-        f"{ADCO}_BBRHPJW": "2132883",
-        f"{ADCO}_BBRHCJR": "860118",
-        f"{ADCO}_BBRHPJR": "844115",
-        f"{ADCO}_PAPP": "2830",
-        f"{ADCO}_PTEC": "off_peak_blue_day",
-    }
-
-    # These sensors are disabled by default; verify they are registered but have no state
-    disabled_unique_ids = [
-        f"{ADCO}_IINST",
-        f"{ADCO}_DEMAIN",
-    ]
-    for unique_id in disabled_unique_ids:
-        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        assert entity_id is not None, f"Entity with unique_id {unique_id} not found"
-        state = hass.states.get(entity_id)
-        assert state is None, f"Disabled entity {unique_id} should have no state"
-
-    for unique_id, expected_state in expected_values.items():
-        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        assert entity_id is not None, f"Entity with unique_id {unique_id} not found"
-        state = hass.states.get(entity_id)
-        assert state is not None, f"State for {entity_id} not found"
-        assert state.state == expected_state, (
-            f"Expected {expected_state} for {unique_id}, got {state.state}"
-        )
-
-    # Verify BASE/HC/EJP sensors are NOT created
-    for absent_unique_id in (
-        f"{ADCO}_BASE",
-        f"{ADCO}_HCHC",
-        f"{ADCO}_HCHP",
-        f"{ADCO}_EJPHN",
-        f"{ADCO}_EJPHPM",
-        f"{ADCO}_PEJP",
-    ):
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, absent_unique_id
-        )
-        assert entity_id is None, (
-            f"Entity {absent_unique_id} should not exist for Tempo contract"
-        )
-
-
-async def test_sensor_setup_base(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test BASE contract creates only the base index sensor."""
-    mock_teleinfo.decode.return_value = MOCK_DECODED_DATA_BASE
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    # BASE sensor should exist
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_BASE")
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "45367891"
-
-    # Common sensors should exist
-    for unique_id in (f"{ADCO}_PAPP", f"{ADCO}_PTEC"):
-        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        assert entity_id is not None, f"Common sensor {unique_id} not found"
-
-    # Tempo/HC/EJP sensors should NOT exist
-    for absent_unique_id in (
-        f"{ADCO}_BBRHCJB",
-        f"{ADCO}_HCHC",
-        f"{ADCO}_EJPHN",
-        f"{ADCO}_DEMAIN",
-    ):
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, absent_unique_id
-        )
-        assert entity_id is None, (
-            f"Entity {absent_unique_id} should not exist for BASE contract"
-        )
-
-
-async def test_sensor_setup_hc(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test HC contract creates off-peak and peak index sensors."""
-    mock_teleinfo.decode.return_value = MOCK_DECODED_DATA_HC
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    # HC sensors should exist
-    expected_values: dict[str, str] = {
-        f"{ADCO}_HCHC": "25643781",
-        f"{ADCO}_HCHP": "31285904",
-        f"{ADCO}_PAPP": "2830",
-        f"{ADCO}_PTEC": "off_peak",
-    }
-    for unique_id, expected_state in expected_values.items():
-        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        assert entity_id is not None, f"Entity with unique_id {unique_id} not found"
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == expected_state
-
-    # BASE/Tempo/EJP sensors should NOT exist
-    for absent_unique_id in (
-        f"{ADCO}_BASE",
-        f"{ADCO}_BBRHCJB",
-        f"{ADCO}_EJPHN",
-    ):
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, absent_unique_id
-        )
-        assert entity_id is None
-
-
-async def test_sensor_setup_ejp(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test EJP contract creates normal hours and peak mobile sensors."""
-    mock_teleinfo.decode.return_value = MOCK_DECODED_DATA_EJP
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    # EJP sensors should exist
-    expected_values: dict[str, str] = {
-        f"{ADCO}_EJPHN": "38912456",
-        f"{ADCO}_EJPHPM": "7654321",
-        f"{ADCO}_PAPP": "2830",
-        f"{ADCO}_PTEC": "normal_hours",
-    }
-    for unique_id, expected_state in expected_values.items():
-        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        assert entity_id is not None, f"Entity with unique_id {unique_id} not found"
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == expected_state
-
-    # EJP warning is disabled by default
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PEJP")
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is None  # disabled, no state
-
-    # BASE/Tempo/HC sensors should NOT exist
-    for absent_unique_id in (
-        f"{ADCO}_BASE",
-        f"{ADCO}_BBRHCJB",
-        f"{ADCO}_HCHC",
-        f"{ADCO}_DEMAIN",
-    ):
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, absent_unique_id
-        )
-        assert entity_id is None
-
-
-async def test_sensor_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test the device is registered correctly."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, ADCO)})
-    assert device is not None
-    assert device.name == f"Teleinfo {ADCO}"
-    assert device.manufacturer == "Enedis"
-
-
-async def test_sensor_unique_ids_tempo(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test sensor unique IDs for Tempo contract follow the expected pattern."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    expected_unique_ids = [
-        f"{ADCO}_BBRHCJB",
-        f"{ADCO}_BBRHPJB",
-        f"{ADCO}_BBRHCJW",
-        f"{ADCO}_BBRHPJW",
-        f"{ADCO}_BBRHCJR",
-        f"{ADCO}_BBRHPJR",
-        f"{ADCO}_PAPP",
-        f"{ADCO}_IINST",
-        f"{ADCO}_PTEC",
-        f"{ADCO}_DEMAIN",
-    ]
-
-    for unique_id in expected_unique_ids:
-        entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-        assert entry is not None, f"Entity with unique_id {unique_id} not found"
-
-
-async def test_sensor_unavailable_on_serial_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test sensors become unavailable when the dongle disconnects."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
+    assert hass.states.get(entity_id).state == "2830"
 
-    # Verify sensor is available initially
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "2830"
+    # Trigger the configured failure on the next scheduled poll.
+    if side_effect_attr == "mock_serial_port":
+        mock_serial_port.side_effect = side_effect
+    else:
+        mock_teleinfo.decode.side_effect = side_effect
 
-    # Simulate serial error on next update
-    mock_serial_port.side_effect = serial.SerialException("device disconnected")
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_sensor_unavailable_on_timeout_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test sensors become unavailable when a timeout occurs."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "2830"
-
-    # Simulate timeout on next update
-    mock_serial_port.side_effect = TimeoutError("no data")
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_sensor_unavailable_on_decode_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_teleinfo: MagicMock,
-    mock_serial_port: MagicMock,
-) -> None:
-    """Test sensors become unavailable when a decode error occurs."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "2830"
-
-    # Simulate decode failure on next update
-    mock_teleinfo.decode.side_effect = RuntimeError("bad frame")
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_sensor_recovers_after_error(
@@ -373,70 +103,57 @@ async def test_sensor_recovers_after_error(
     mock_config_entry: MockConfigEntry,
     mock_teleinfo: MagicMock,
     mock_serial_port: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors recover when the dongle reconnects after an error."""
-    from .conftest import MOCK_FRAME  # noqa: PLC0415
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
 
-    # Simulate serial error
+    # Simulate serial error on the next poll.
     mock_serial_port.side_effect = serial.SerialException("device disconnected")
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # Simulate recovery
+    # Simulate recovery on the following poll.
     mock_serial_port.side_effect = None
     mock_serial_port.return_value = MOCK_FRAME
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "2830"
+    assert hass.states.get(entity_id).state == "2830"
 
 
-async def test_sensor_returns_unknown_on_missing_key(
+async def test_sensor_returns_unavailable_on_missing_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_teleinfo: MagicMock,
     mock_serial_port: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sensors return unknown when a label is missing from the frame."""
+    """Test sensors become unavailable when a label is missing from the frame."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
     assert entity_id is not None
+    assert hass.states.get(entity_id).state == "2830"
 
-    # Verify sensor is available initially
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "2830"
-
-    # Simulate a frame missing the PAPP key
-    from .conftest import MOCK_DECODED_DATA, MOCK_FRAME  # noqa: PLC0415
-
-    incomplete_data = {k: v for k, v in MOCK_DECODED_DATA.items() if k != "PAPP"}
+    # Simulate a frame missing the PAPP key on the next poll.
+    incomplete_data = {k: v for k, v in MOCK_DECODED_DATA_TEMPO.items() if k != "PAPP"}
     mock_teleinfo.decode.return_value = incomplete_data
-    mock_serial_port.return_value = MOCK_FRAME
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

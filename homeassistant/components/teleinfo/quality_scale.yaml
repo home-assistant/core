@@ -5,7 +5,7 @@ rules:
     comment: No actions/services in this integration.
   appropriate-polling:
     status: done
-    comment: Real serial I/O exists since da30d338d59. 10s interval is valid for local serial (min 5s).
+    comment: 10s interval is valid for local serial (min 5s).
   brands: done
   common-modules: done
   config-flow: done
