@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError
+from duco.exceptions import DucoConnectionError, DucoError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -90,3 +90,61 @@ async def test_coordinator_update_marks_unavailable(
     state = hass.states.get("sensor.office_co2_carbon_dioxide")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_duco_error_marks_unavailable(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that sensor entities become unavailable when async_get_nodes raises DucoError."""
+    mock_duco_client.async_get_nodes = AsyncMock(side_effect=DucoError("api error"))
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_lan_info_duco_error_sets_rssi_wifi_unknown(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that rssi_wifi sensor becomes unknown when async_get_lan_info raises DucoError."""
+    mock_duco_client.async_get_lan_info = AsyncMock(
+        side_effect=DucoError("lan info error")
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_signal_strength")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_write_req_duco_error_sets_write_req_remaining_unknown(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that write_req_remaining sensor becomes unknown when async_get_write_req_remaining raises DucoError."""
+    mock_duco_client.async_get_write_req_remaining = AsyncMock(
+        side_effect=DucoError("write req error")
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_write_requests_remaining")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
