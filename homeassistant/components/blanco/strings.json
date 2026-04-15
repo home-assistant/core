@@ -1,19 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "connected": {
-        "name": "Connected to cloud"
-      },
-      "absence_mode_active": {
-        "name": "Mode: Absence"
-      },
-      "child_protect": {
-        "name": "Mode: Hot water"
-      },
-      "has_error": {
-        "name": "Error"
-      }
-    },
     "sensor": {
       "online": {
         "name": "Last online"

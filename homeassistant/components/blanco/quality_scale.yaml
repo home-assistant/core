@@ -27,9 +27,9 @@ rules:
   entity-unavailable: done    # CoordinatorEntity marks entities unavailable on coordinator failure
   integration-owner: done     # codeowners set in manifest.json
   log-when-unavailable: done  # Warnings logged per endpoint when requests fail
-  parallel-updates: done      # PARALLEL_UPDATES = 0 defined in sensor.py and binary_sensor.py
+  parallel-updates: done      # PARALLEL_UPDATES = 0 defined in sensor.py
   reauthentication-flow: done  # async_step_reauth + async_step_reauth_confirm implemented; ConfigEntryAuthFailed raised on token renewal failure
-  test-coverage: done  # test_coordinator.py, test_sensor.py, test_binary_sensor.py added; reauth tests added to test_config_flow.py
+  test-coverage: done  # test_coordinator.py, test_sensor.py added; reauth tests added to test_config_flow.py
 
   # Gold
   devices: done               # DeviceInfo with identifiers, manufacturer, model, serial, versions
