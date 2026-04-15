@@ -252,7 +252,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             [list[_EntityT], ServiceCall],
             Coroutine[Any, Any, EntityServiceResponse | None],
         ],
-        required_features: list[int] | None = None,
+        required_features: Iterable[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         *,
         description_placeholders: Mapping[str, str] | None = None,
