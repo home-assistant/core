@@ -3,7 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Cannot connect — no data received from the device.",
-      "unknown": "[%key:common::config_flow::abort::unknown%]"
+      "unknown": "Unexpected error"
     },
     "error": {
       "cannot_connect": "Cannot connect — no data received from the device. Verify the IP address and that the EARN-E is powered on.",

@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -119,9 +119,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up EARN-E P1 sensor entities."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        EarnEP1Sensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
-    )
+    added = False
+
+    @callback
+    def _async_add_sensors() -> None:
+        nonlocal added
+        if added or coordinator.data is None:
+            return
+        added = True
+        async_add_entities(
+            EarnEP1Sensor(coordinator, description)
+            for description in SENSOR_DESCRIPTIONS
+            if description.key in coordinator.data
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_sensors))
+    _async_add_sensors()
 
 
 class EarnEP1Sensor(EarnEP1Entity, SensorEntity):
@@ -140,11 +153,7 @@ class EarnEP1Sensor(EarnEP1Entity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if the sensor value is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self.entity_description.key in self.coordinator.data
-        )
+        return super().available and self.coordinator.data is not None
 
     @property
     def native_value(self) -> StateType:
