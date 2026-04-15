@@ -220,7 +220,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     def _set_retry_policy(self) -> None:
-        """Set Envoy retry policy if set in options."""
+        """Set the Envoy retry policy from options or the default value."""
         retries: int = self.config_entry.options.get(
             OPTION_SET_RETRY_ATTEMPTS, OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE
         )
