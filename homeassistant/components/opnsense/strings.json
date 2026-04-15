@@ -8,6 +8,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_interface": "Interface(s) do not exist",
+      "invalid_url": "URL is invalid or unreachable",
+      "invalid_version": "Unsupported OPNsense firmware version",
+      "ssl_error": "SSL certificate verification failed",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

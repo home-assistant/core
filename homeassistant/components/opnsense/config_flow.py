@@ -1,20 +1,26 @@
 """Config flow for OPNsense."""
 
-import asyncio
 import logging
 from typing import Any
 
-from pyopnsense import diagnostics
-from pyopnsense.exceptions import APIException
+from aiopnsense import (
+    OPNsenseBelowMinFirmware,
+    OPNsenseClient,
+    OPNsenseConnectionError,
+    OPNsenseInvalidURL,
+    OPNsenseSSLError,
+    OPNsenseTimeoutError,
+    OPNsenseUnknownFirmware,
+)
 from requests.exceptions import ConnectionError as requestsConnectionError
 import voluptuous as vol
 
+from homeassistant.components.version import async_get_clientsession
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
-from .types import APIData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,18 +80,19 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             tracker_interfaces = tracker_interfaces.replace(" ", "").split(",")
             user_input[CONF_TRACKER_INTERFACES] = tracker_interfaces
 
-        api_data: APIData = {
-            "api_key": user_input[CONF_API_KEY],
-            "api_secret": user_input[CONF_API_SECRET],
-            "base_url": user_input[CONF_URL],
-            "verify_cert": user_input[CONF_VERIFY_SSL],
-        }
+        verify_ssl = user_input[CONF_VERIFY_SSL]
+        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
+        client = OPNsenseClient(
+            user_input[CONF_URL],
+            user_input[CONF_API_KEY],
+            user_input[CONF_API_SECRET],
+            session,
+            opts={"verify_ssl": verify_ssl},
+        )
 
         try:
-            await asyncio.gather(
-                self._async_check_connection(api_data),
-                self._async_get_available_interfaces(api_data),
-            )
+            await self._async_check_connection(client)
+            await self._async_get_available_interfaces(client)
             if tracker_interfaces and self.available_interfaces:
                 # Verify that specified tracker interfaces are valid
                 for interface in tracker_interfaces:
@@ -95,9 +102,16 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(title=user_input[CONF_URL], data=user_input)
 
-        except (APIException, requestsConnectionError):
+        except OPNsenseInvalidURL:
+            errors["base"] = "invalid_url"
+        except OPNsenseSSLError:
+            errors["base"] = "ssl_error"
+        except OPNsenseConnectionError, OPNsenseTimeoutError, requestsConnectionError:
             errors["base"] = "cannot_connect"
-
+        except OPNsenseUnknownFirmware:
+            errors["base"] = "invalid_version"
+        except OPNsenseBelowMinFirmware:
+            errors["base"] = "invalid_version"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -118,16 +132,17 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 reconfigure_entry,
                 data_updates=data,
             )
-
-        api_data: APIData = {
-            "api_key": reconfigure_entry.data[CONF_API_KEY],
-            "api_secret": reconfigure_entry.data[CONF_API_SECRET],
-            "base_url": reconfigure_entry.data[CONF_URL],
-            "verify_cert": reconfigure_entry.data[CONF_VERIFY_SSL],
-        }
-        await asyncio.gather(
-            self._async_get_available_interfaces(api_data),
+        session = async_get_clientsession(
+            self.hass, verify_ssl=reconfigure_entry.data[CONF_VERIFY_SSL]
         )
+        client = OPNsenseClient(
+            reconfigure_entry.data[CONF_URL],
+            reconfigure_entry.data[CONF_API_KEY],
+            reconfigure_entry.data[CONF_API_SECRET],
+            session,
+            opts={"verify_ssl": reconfigure_entry.data[CONF_VERIFY_SSL]},
+        )
+        await self._async_get_available_interfaces(client)
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -160,36 +175,43 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
 
         # Test connection
-        api_data: APIData = {
-            "api_key": import_data[CONF_API_KEY],
-            "api_secret": import_data[CONF_API_SECRET],
-            "base_url": import_data[CONF_URL],
-            "verify_cert": import_data[CONF_VERIFY_SSL],
-        }
-        interfaces_client = diagnostics.InterfaceClient(**api_data)
+        session = async_get_clientsession(
+            self.hass, verify_ssl=import_data[CONF_VERIFY_SSL]
+        )
+        client = OPNsenseClient(
+            import_data[CONF_URL],
+            import_data[CONF_API_KEY],
+            import_data[CONF_API_SECRET],
+            session,
+            opts={"verify_ssl": import_data[CONF_VERIFY_SSL]},
+        )
         try:
-            await self.hass.async_add_executor_job(interfaces_client.get_arp)
-        except (APIException, requestsConnectionError):
+            await client.validate()
+        except OPNsenseInvalidURL:
+            return self.async_abort(reason="invalid_url")
+        except OPNsenseSSLError:
+            return self.async_abort(reason="ssl_error")
+        except OPNsenseConnectionError, OPNsenseTimeoutError, requestsConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except OPNsenseUnknownFirmware:
+            return self.async_abort(reason="invalid_version")
+        except OPNsenseBelowMinFirmware:
+            return self.async_abort(reason="invalid_version")
         except Exception:  # Allowed in config flows
             _LOGGER.exception("Unexpected exception during import")
             return self.async_abort(reason="unknown")
 
         return self.async_create_entry(title=import_data[CONF_URL], data=import_data)
 
-    async def _async_check_connection(self, api_data: APIData) -> None:
+    async def _async_check_connection(self, client: OPNsenseClient) -> None:
         """Check connection to OPNsense."""
-        interfaces_client = diagnostics.InterfaceClient(**api_data)
-        await self.hass.async_add_executor_job(interfaces_client.get_arp)
+        await client.validate()
 
-    async def _async_get_available_interfaces(self, api_data: APIData) -> None:
+    async def _async_get_available_interfaces(self, client: OPNsenseClient) -> None:
         """Fetch available interfaces from OPNsense."""
         try:
-            netinsight_client = diagnostics.NetworkInsightClient(**api_data)
-            interface_details = await self.hass.async_add_executor_job(
-                netinsight_client.get_interfaces
-            )
-            self.available_interfaces = list(interface_details.values())
+            interfaces_resp = await client.get_interfaces()
+            self.available_interfaces = list(interfaces_resp.values())
         except Exception:
             _LOGGER.exception("Failed to fetch available interfaces")
             self.available_interfaces = []

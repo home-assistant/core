@@ -5,13 +5,28 @@ from typing import Any, NewType
 from aiopnsense import OPNsenseClient
 
 from homeassistant.components.device_tracker import DeviceScanner
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, DOMAIN
+from .const import CONF_OPNSENSE_CLIENT, CONF_TRACKER_INTERFACES, DOMAIN
 
 DeviceDetails = NewType("DeviceDetails", dict[str, Any])
 DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up OPNsense entry."""
+    # scanner = OPNsenseDeviceScanner(
+    #     config_entry.runtime_data[CONF_OPNSENSE_CLIENT],
+    #     config_entry.runtime_data.get(CONF_TRACKER_INTERFACES, []),
+    # )
+    # async_add_entities([scanner], True)
 
 
 async def async_get_scanner(
@@ -21,7 +36,7 @@ async def async_get_scanner(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     scanner = OPNsenseDeviceScanner(
-        config_entry.runtime_data[CONF_INTERFACE_CLIENT],
+        config_entry.runtime_data[CONF_OPNSENSE_CLIENT],
         config_entry.runtime_data.get(CONF_TRACKER_INTERFACES, []),
     )
     return scanner if scanner.success_init else None
@@ -35,7 +50,7 @@ class OPNsenseDeviceScanner(DeviceScanner):
         self.last_results: dict[str, Any] = {}
         self.client = client
         self.interfaces = interfaces
-        self.success_init = self.update_info()
+        self.success_init = True
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC | dict:
         """Create dict with mac address keys from list of devices."""
