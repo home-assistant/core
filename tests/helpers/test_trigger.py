@@ -3282,27 +3282,44 @@ async def test_entity_trigger_last_ignores_unavailable_entity(
 ) -> None:
     """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
 
-    When one entity is unavailable/unknown, check_all_match should skip it
-    rather than failing the "all match" check. This means if entity B is
-    unavailable and entity A transitions to on, the trigger should fire
-    (only A is considered).
+    With three entities (A=off, B=unavailable, C=on), turning A on should
+    fire because all *available* entities (A and C) now match. B is skipped.
+    Without the exclusion, B would fail the "all match" check.
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
+    entity_c = "test.entity_c"
     hass.states.async_set(entity_a, STATE_OFF)
     hass.states.async_set(entity_b, invalid_state)
+    hass.states.async_set(entity_c, STATE_OFF)
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_LAST, calls
     )
 
-    # Turn A on — B is unavailable so it's excluded from the "all match" check
+    # Turn A on — B is unavailable and skipped, only A is on → all doesn't match
     hass.states.async_set(entity_a, STATE_ON)
     await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn C on — B is unavailable and skipped, A and C are both on → all match
+    hass.states.async_set(entity_c, STATE_ON)
+    await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0]["entity_id"] == entity_a
+    assert calls[0]["entity_id"] == entity_c
+
+    # B recovers to off — now not all available entities match, so
+    # turning A off→on should NOT fire
+    calls.clear()
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
 
     unsub()
 
@@ -3317,25 +3334,32 @@ async def test_entity_trigger_first_ignores_unavailable_entity(
 ) -> None:
     """Test behavior first: unavailable/unknown entities are excluded from check_one_match.
 
-    When one entity is unavailable/unknown, check_one_match should skip it.
-    If entity B is unavailable and entity A transitions to on, there is
-    exactly one valid match (A), so the trigger should fire.
+    With three entities (A=off, B=unavailable, C=off), turning A on should
+    fire because exactly one *available* entity matches. B is skipped.
+    Then turning C on should NOT fire because now two available entities match.
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
+    entity_c = "test.entity_c"
     hass.states.async_set(entity_a, STATE_OFF)
     hass.states.async_set(entity_b, invalid_state)
+    hass.states.async_set(entity_c, STATE_OFF)
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_FIRST, calls
     )
 
-    # Turn A on — B is unavailable so only A counts in "one match" check
+    # Turn A on — B is unavailable and skipped, only A matches → exactly one
     hass.states.async_set(entity_a, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == entity_a
+
+    # Turn C on — now two available entities match (A and C), should NOT fire
+    hass.states.async_set(entity_c, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
     unsub()
