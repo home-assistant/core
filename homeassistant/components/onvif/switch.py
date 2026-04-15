@@ -127,6 +127,7 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
     """An ONVIF relay output switch."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, device: ONVIFDevice, relay: RelayOutput) -> None:
         """Initialize the relay switch."""

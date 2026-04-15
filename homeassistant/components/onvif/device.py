@@ -7,7 +7,7 @@ from contextlib import suppress
 import datetime as dt
 import os
 import time
-from typing import Any
+from typing import Any, Literal
 
 import aiohttp
 import onvif
@@ -52,6 +52,8 @@ RELAY_DISCOVERY_EXCEPTIONS = (
     TypeError,
     ValueError,
 )
+
+RELAY_OUTPUT_STATES: set[Literal["active", "inactive"]] = {"active", "inactive"}
 
 
 class ONVIFDevice:
@@ -744,7 +746,9 @@ class ONVIFDevice:
 
         return []
 
-    async def async_set_relay_output_state(self, relay_token: str, state: str) -> None:
+    async def async_set_relay_output_state(
+        self, relay_token: str, state: Literal["active", "inactive"]
+    ) -> None:
         """Set relay output state.
 
         NOTE: Per ONVIF Core Specification 8.6.3, SetRelayOutputState elements
@@ -764,6 +768,7 @@ class ONVIFDevice:
 
         Raises:
             ONVIFError: If the relay output state cannot be set
+            ValueError: If the relay output state is invalid
 
         """
         if not self.capabilities.deviceio:
@@ -774,6 +779,9 @@ class ONVIFDevice:
 
         # Use Device service per ONVIF spec design
         device_service = await self.device.create_devicemgmt_service()
+
+        if state not in RELAY_OUTPUT_STATES:
+            raise ValueError(f"Invalid relay output state: {state}")
 
         LOGGER.debug(
             "Setting Relay Output State | Token = %s, State = %s", relay_token, state
