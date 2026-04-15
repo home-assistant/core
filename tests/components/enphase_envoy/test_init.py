@@ -661,7 +661,7 @@ async def test_retry_option_in_config_file(
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
-    mock_envoy.set_retry_policy.assert_called_once_with(max_delay=240, max_attempts=7)
+    mock_envoy.set_retry_policy.assert_called_once_with(max_delay=240, max_attempts=8)
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")

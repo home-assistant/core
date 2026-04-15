@@ -232,22 +232,24 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # limit number of attempts on fast failures,
         #
         # For HA users we implement 'number of request attempts', each
-        # allowed 45 seconds. Envoy class default is 150 seconds and 6
-        # attempts. This matches our default of
-        # OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE.
+        # allowed 45 seconds. Envoy class default is 150 seconds
+        # stop_after_delay and 6 for stop_after_attempt. This matches our
+        # default of OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE for
+        # our HA 'number of request attempts'.
         #
         # Only set the retry policy if the retry attempts option is
         # changed from its default value.
         if retries != OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE:
             # Envoy uses 45 sec timeouts. Set allowed time to
             # to the mid of a 45 sec period to allow for some
-            # random wait time between attempts. I.e 65 allows 2
-            # attempts and ends request at the end of second
+            # random wait time between attempts. I.e 60 allows
+            # 2 attempts and ends request at the end of second
             # attempt when 90 seconds have elapsed.
             retry_delay: int = 15 + max(0, (retries - 1) * 45)
-            # set attempts no lower than 4 and add 1 extra
-            # this one is used for retry on fast failures.
-            retry_attempts = max(4, retries + 1)
+            # set attempts no lower than 4 and add 2 extra
+            # to match pyenphase value logic. this one is used for
+            # retry on fast failures.
+            retry_attempts = max(4, retries + 2)
             self.envoy.set_retry_policy(
                 max_delay=retry_delay, max_attempts=retry_attempts
             )
