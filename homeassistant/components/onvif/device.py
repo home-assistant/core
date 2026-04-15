@@ -229,7 +229,10 @@ class ONVIFDevice:
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
-            except (IndexError, Fault):
+            except IndexError:
+                if idx == timezone_max_idx:
+                    raise
+            except Fault:
                 if idx == timezone_max_idx:
                     raise
             else:
