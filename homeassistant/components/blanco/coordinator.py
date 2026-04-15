@@ -64,7 +64,7 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 REQUEST_PAGE_SIZE = 300
 """Number of action events requested per API call (backfill pages and incremental polls)."""
 
-_ACTIONS_504_LIMIT: int = 1
+_ACTIONS_504_LIMIT: int = 3
 """Consecutive HTTP 504 responses on /actions before _last_action_ts is advanced to now."""
 
 _STATS_WATER_PARAM: dict[BlancoDeviceType, str] = {
@@ -115,8 +115,8 @@ def _compute_stats_ranges(now_utc: datetime, tz_name: str) -> list[dict[str, Any
     """
     local_now = now_utc.astimezone(ZoneInfo(tz_name))
     utc_offset_td = local_now.utcoffset()
-    utc_offset: int = (
-        int(utc_offset_td.total_seconds() // 3600) if utc_offset_td is not None else 0
+    utc_offset: float = (
+        utc_offset_td.total_seconds() / 3600 if utc_offset_td is not None else 0.0
     )
 
     # Midnight of the current local day.

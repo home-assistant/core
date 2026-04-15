@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup: done          # No custom HA actions defined — rule is not applicable
   appropriate-polling: done   # DataUpdateCoordinator with UPDATE_INTERVAL used
-  brands: done                # icon.png / logo.png etc. present in component folder
+  brands: todo                # Brand assets submitted via home-assistant/brands#10139
   common-modules: done        # coordinator.py used for polling; const.py holds config entry keys
   config-flow-test-coverage: done
   config-flow: done           # Full ConfigFlow with error handling implemented
