@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from tfa_me_ha_local.client import (
+    TFAmeClient,
     TFAmeConnectionError,
     TFAmeException,
     TFAmeHTTPError,
@@ -14,7 +15,7 @@ from tfa_me_ha_local.client import (
 )
 
 from homeassistant.components.hassio import datetime
-from homeassistant.components.tfa_me.coordinator import TFAmeDataCoordinator
+from homeassistant.components.tfa_me.coordinator import TFAmeUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -60,7 +61,7 @@ async def test_update_data_with_ip(
         ],
     }
 
-    coordinator = TFAmeDataCoordinator(
+    coordinator = TFAmeUpdateCoordinator(
         hass,
         tfa_me_options_flow_mock_entry,
     )
@@ -94,8 +95,9 @@ async def test_update_data_with_ip(
     }
 
     # Assert: TFAmeJSONError
+    tfa_me_client = TFAmeClient("192.168.1.60", "sensors", timeout=7, log_level=1)
     with pytest.raises(TFAmeJSONError, match="Invalid JSON response"):
-        coordinator.parse_json(bad_json)
+        tfa_me_client.parse_and_filter_json(json_data=bad_json, valid_keys=[])
 
 
 @pytest.mark.asyncio
@@ -114,7 +116,7 @@ async def test_async_update_data_exceptions_first_init(
 ) -> None:
     """Test that coordinator maps exceptions correctly on first init."""
 
-    coordinator = TFAmeDataCoordinator(
+    coordinator = TFAmeUpdateCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
     )
@@ -146,7 +148,7 @@ async def test_async_update_data_exceptions_after_first_init(
 ) -> None:
     """Test that coordinator maps exceptions correctly after first init."""
 
-    coordinator = TFAmeDataCoordinator(
+    coordinator = TFAmeUpdateCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
     )

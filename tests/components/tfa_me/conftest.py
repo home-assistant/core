@@ -11,7 +11,7 @@ from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOM
 from homeassistant.components.tfa_me.coordinator import (
     TFAmeConfigEntry,
     TFAmeCoordinatorData,
-    TFAmeDataCoordinator,
+    TFAmeUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
@@ -26,7 +26,7 @@ def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
     entry = MagicMock(spec=TFAmeConfigEntry)
     entry.entry_id = "test-1234"
     entry.domain = DOMAIN
-    coordy = TFAmeDataCoordinator(
+    coordy = TFAmeUpdateCoordinator(
         hass=hass,
         config_entry=tfa_me_mock_entry,
         host="192.168.1.46",
@@ -65,7 +65,7 @@ def tfa_me_options_flow_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def tfa_me_mock_coordinator():
     """Return a mock coordinator with dummy data."""
-    coordinator = MagicMock(spec=TFAmeDataCoordinator)
+    coordinator = MagicMock(spec=TFAmeUpdateCoordinator)
 
     coordinator.async_add_listener = Mock(return_value=lambda: None)
     coordinator.async_request_refresh = AsyncMock()

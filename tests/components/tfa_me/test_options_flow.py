@@ -21,7 +21,7 @@ async def test_options_flow_action_rain(
     # Fake JSON reply from gateway
     fake_json = {"gateway_id": "012345678", "sensors": []}
     with patch(
-        "homeassistant.components.tfa_me.coordinator.TFAmeDataCoordinator._async_update_data",
+        "homeassistant.components.tfa_me.coordinator.TFAmeUpdateCoordinator._async_update_data",
         new=AsyncMock(return_value=fake_json),
     ):
         result = await hass.config_entries.async_setup(

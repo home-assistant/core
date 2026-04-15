@@ -14,15 +14,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
-
-# from homeassistant import config_entries
-# from homeassistant.components import zeroconf
-# from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN, RAIN_KEYS
-from .coordinator import TFAmeDataCoordinator
-from .data import TFAmeData, TFAmeException
+from .coordinator import TFAmeUpdateCoordinator
+from .data import TFAmeException, TFAmeUniqueID
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -84,7 +80,9 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
                     title_str = f"{DEFAULT_STATION_NAME} '{ip_host_str.upper()}'"
 
                 try:
-                    data_helper: TFAmeData = TFAmeData(self.hass, str(ip_host_str))
+                    data_helper: TFAmeUniqueID = TFAmeUniqueID(
+                        self.hass, str(ip_host_str)
+                    )
                     identifier = await data_helper.get_identifier()
 
                 except TFAmeException:
@@ -167,7 +165,7 @@ class OptionsFlowHandler(OptionsFlow):
                 )
 
                 # Set rain reset marker and update all entities on dashboard
-                cordy: TFAmeDataCoordinator = coordinator
+                cordy: TFAmeUpdateCoordinator = coordinator
                 for entity in cordy.sensor_entity_list:
                     if any(k in entity for k in RAIN_KEYS):
                         coordinator.data.entities[entity]["reset_rain"] = True

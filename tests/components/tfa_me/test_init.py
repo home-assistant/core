@@ -34,7 +34,7 @@ async def test_full_entry_setup(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.tfa_me.TFAmeDataCoordinator.async_config_entry_first_refresh",
+        "homeassistant.components.tfa_me.TFAmeUpdateCoordinator.async_config_entry_first_refresh",
         new=AsyncMock(return_value=True),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -56,7 +56,7 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.tfa_me.TFAmeDataCoordinator.async_config_entry_first_refresh",
+        "homeassistant.components.tfa_me.TFAmeUpdateCoordinator.async_config_entry_first_refresh",
         new=AsyncMock(return_value=True),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

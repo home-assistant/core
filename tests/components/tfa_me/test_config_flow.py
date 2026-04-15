@@ -44,7 +44,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     ),
     [
         (  # 1) TFAmeException raised -> error stored under "base"
-            "homeassistant.components.tfa_me.config_flow.TFAmeData",
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeException("host_empty")},
             {
                 CONF_IP_ADDRESS: "192.168.0.10",
@@ -77,7 +77,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
             True,  # check error via values()
         ),
         (  # 4) Generic exception while connecting -> error on "base"
-            "homeassistant.components.tfa_me.config_flow.TFAmeData.get_identifier",
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
             {"side_effect": Exception("connection error")},
             {
                 CONF_IP_ADDRESS: "192.168.1.10",
@@ -140,7 +140,7 @@ async def test_config_flow_errors_recover(
     # Step 2: User corrects the input and retries
     with (
         patch(
-            "homeassistant.components.tfa_me.config_flow.TFAmeData.get_identifier",
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
             return_value="192.168.1.10",
         ),
         patch(

@@ -26,7 +26,7 @@ from .const import (
     MEASUREMENT_TO_TRANSLATION_KEY,
     TIMEOUT_MAPPING,
 )
-from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator, resolve_tfa_host
+from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator, resolve_tfa_host
 
 PARALLEL_UPDATES = 1
 
@@ -232,7 +232,7 @@ async def async_setup_entry(
     async_add_entities(sensors_start, True)
 
 
-class TFAmeSensorEntity(CoordinatorEntity[TFAmeDataCoordinator], SensorEntity):
+class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity):
     """TFA.me sensor entity, represents in HA a single measurement value of a sensor."""
 
     # Narrow the type of entity_description for this entity class
@@ -241,7 +241,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeDataCoordinator], SensorEntity):
 
     def __init__(
         self,
-        coordinator: TFAmeDataCoordinator,
+        coordinator: TFAmeUpdateCoordinator,
         sensor_id: str,
         unique_id: str,
     ) -> None:
@@ -249,7 +249,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeDataCoordinator], SensorEntity):
         try:
             super().__init__(coordinator)
             self._initialized_once = False
-            self.coordinator: TFAmeDataCoordinator = coordinator
+            self.coordinator: TFAmeUpdateCoordinator = coordinator
             self._attr_unique_id = unique_id  # Unique ID (sets unique_id), will never be changed, name schema "StationID_SensorID_MeasurementValue"
             self.host = coordinator.host
             self.name_with_station_id = coordinator.name_with_station_id

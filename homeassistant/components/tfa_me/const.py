@@ -76,8 +76,8 @@ TIMEOUT_MAPPING = {
     "A6": TIMEOUT_FOR_1_MIN,  # Sensor Prof. A6: T/H
 }
 
-# Valid JSON keys
-VALID_JSON_KEYS = [
+# Valid JSON measurement keys
+VALID_JSON_MEASUREMENT_KEYS = [
     "temperature",
     "temperature_probe",
     "humidity",

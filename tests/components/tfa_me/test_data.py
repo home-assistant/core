@@ -15,7 +15,7 @@ from tfa_me_ha_local.client import (
     TFAmeTimeoutError,
 )
 
-from homeassistant.components.tfa_me.data import TFAmeData
+from homeassistant.components.tfa_me.data import TFAmeUniqueID
 from homeassistant.core import HomeAssistant
 
 
@@ -29,7 +29,7 @@ async def test_get_identifier_success_ip(hass: HomeAssistant) -> None:
             return_value={"gateway_id": "012345678"}
         )
 
-        data = TFAmeData(hass, "192.168.1.10")
+        data = TFAmeUniqueID(hass, "192.168.1.10")
         identifier = await data.get_identifier()
 
         # Check returned identifier
@@ -54,7 +54,7 @@ async def test_get_identifier_success_station_id(hass: HomeAssistant) -> None:
         )
 
         # User inputs a station ID in format "XXX-XXX-XXX"
-        data = TFAmeData(hass, "012-345-678")
+        data = TFAmeUniqueID(hass, "012-345-678")
         identifier = await data.get_identifier()
 
         assert identifier == "012345678"
@@ -107,7 +107,7 @@ async def test_get_identifier_error_mapping(
         else:
             mock_client.async_get_sensors = AsyncMock(return_value=return_value)
 
-        data = TFAmeData(hass, "192.168.1.10")
+        data = TFAmeUniqueID(hass, "192.168.1.10")
 
         with pytest.raises(TFAmeException) as excinfo:
             await data.get_identifier()
