@@ -136,7 +136,7 @@ async def async_setup_entry(
                 err,
             )
             return None
-        return bool(result.get("RoomUUID"))
+        return result.get("RoomUUID") not in (None, "")
 
     def _get_tv_ungroup_autoplay_state(speaker: SonosSpeaker) -> bool | None:
         """Return initial TV ungroup-on-autoplay state, or None if not supported."""
@@ -300,7 +300,7 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
     def poll_state(self) -> None:
         """Poll the current TV autoplay state from the device."""
         result = self.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
-        self.speaker.tv_autoplay = bool(result.get("RoomUUID", ""))
+        self.speaker.tv_autoplay = result.get("RoomUUID") not in (None, "")
 
     @property
     def is_on(self) -> bool:
