@@ -151,9 +151,9 @@ class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
     @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._status.user_aircon_settings.set_temperature(temperature=temp)
+        await self._status.user_aircon_settings.set_temperature(
+            temperature=kwargs[ATTR_TEMPERATURE]
+        )
 
 
 class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
@@ -222,6 +222,4 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
     @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._zone.set_temperature(temperature=temp)
+        await self._zone.set_temperature(temperature=kwargs[ATTR_TEMPERATURE])
