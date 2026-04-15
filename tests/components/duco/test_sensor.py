@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -111,12 +111,12 @@ async def test_coordinator_update_duco_error_marks_unavailable(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_lan_info_duco_error_sets_rssi_wifi_unknown(
+async def test_lan_info_duco_error_retains_last_known_rssi_wifi(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that rssi_wifi sensor becomes unknown when async_get_lan_info raises DucoError."""
+    """Test that rssi_wifi sensor retains its last known value when async_get_lan_info raises DucoError."""
     mock_duco_client.async_get_lan_info = AsyncMock(
         side_effect=DucoError("lan info error")
     )
@@ -127,16 +127,16 @@ async def test_lan_info_duco_error_sets_rssi_wifi_unknown(
 
     state = hass.states.get("sensor.living_signal_strength")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "-60"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_write_req_duco_error_sets_write_req_remaining_unknown(
+async def test_write_req_duco_error_retains_last_known_write_req_remaining(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that write_req_remaining sensor becomes unknown when async_get_write_req_remaining raises DucoError."""
+    """Test that write_req_remaining sensor retains its last known value when async_get_write_req_remaining raises DucoError."""
     mock_duco_client.async_get_write_req_remaining = AsyncMock(
         side_effect=DucoError("write req error")
     )
@@ -147,4 +147,4 @@ async def test_write_req_duco_error_sets_write_req_remaining_unknown(
 
     state = hass.states.get("sensor.living_write_requests_remaining")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "100"
