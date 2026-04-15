@@ -129,7 +129,17 @@ def process_wifi(strength: StateType) -> str | None:
 class NetatmoSensorEntityDescription(SensorEntityDescription):
     """Describes Netatmo sensor entity."""
 
-    netatmo_name: str
+    # For legacy sensors netatmo_name is set and is used as the translation_key!
+    # Legacy sensors are: weather, climate, switch and meter sensors, as they were the first ones implemented.
+    # For new sensors, translation_key should be set explicitly on key
+    # and netatmo_name should be used only to retrieve the value from the device.
+    # If the netatmo_name is not set, the key is used to retrieve the value from the device.
+    netatmo_name: str | None = None
+    # New attribute to mark sensors as sticky, meaning the native_value will be kept even if the device is not reachable,
+    # to avoid disappearing entities and losing historical data in Home Assistant. This should be used for sensors
+    # where the value is still relevant even if the device is not currently reachable, such as battery level or
+    # last known state.
+    is_sticky: bool | None = True
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
@@ -409,6 +419,7 @@ NETATMO_OPENING_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]]
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
+        is_sticky=True,
     ),
     NetatmoSensorEntityDescription(
         key="rf_status",
@@ -508,9 +519,11 @@ async def async_setup_entry(
 
         # Create sensors for module
         for description in descriptions_to_add:
-            # In contrast to binary_sensor, netatmo_name is required for sensor entities
-            # So we rather use it regardless of key
-            if description.netatmo_name in netatmo_device.device.features:
+            if description.netatmo_name is None:
+                feature_check = description.key
+            else:
+                feature_check = description.netatmo_name
+            if feature_check in netatmo_device.device.features:
                 _LOGGER.debug(
                     'Adding "%s" (native: "%s") sensor for device %s',
                     description.key,
@@ -704,6 +717,8 @@ class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
             ]
         )
 
+    # Legacy value retrieval for weather, climate, switch and meter sensors to prevent breaking changes,
+    # as they were the first ones implemented.
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
@@ -742,14 +757,22 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoSensor):
         """Return True if entity is available."""
         return (
             self.device.reachable
-            or getattr(self.device, self.entity_description.netatmo_name) is not None
+            or getattr(
+                self.device,
+                self.entity_description.netatmo_name or self.entity_description.key,
+            )
+            is not None
         )
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         value = cast(
-            StateType, getattr(self.device, self.entity_description.netatmo_name)
+            StateType,
+            getattr(
+                self.device,
+                self.entity_description.netatmo_name or self.entity_description.key,
+            ),
         )
         if value is not None:
             value = self.entity_description.value_fn(value)
@@ -771,6 +794,34 @@ class NetatmoOpeningSensor(NetatmoSensor):
         super().__init__(netatmo_device, description=description)
 
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
+
+    # New sensor implementation optional netatmo_name to retrieve value from device, if not set key is used
+    # Value is set unavailable if device is not reachable, otherwise it is set to the processed value
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self.device.reachable:
+            if self.available:
+                self._attr_available = False
+            if not self.entity_description.is_sticky:
+                self._attr_native_value = None
+        else:
+            if self.entity_description.netatmo_name is None:
+                raw_value = getattr(self.device, self.entity_description.key, None)
+            else:
+                raw_value = getattr(
+                    self.device, self.entity_description.netatmo_name, None
+                )
+
+            if raw_value is not None:
+                value = self.entity_description.value_fn(raw_value)
+            else:
+                value = None
+
+            self._attr_available = True
+            self._attr_native_value = value
+
+        self.async_write_ha_state()
 
 
 class NetatmoClimateSensor(NetatmoWeatherSensor):
