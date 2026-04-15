@@ -1753,34 +1753,41 @@ async def test_failure_scenarios(
 
 
 def test_trigger_schema_coerces_string_values() -> None:
-    """Test that trigger schemas accept and coerce string values for numeric fields."""
-    # Central scene: string command_class and string value are both coerced to int
-    config = device_trigger.TRIGGER_SCHEMA(
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": "device123",
-            "type": "event.value_notification.central_scene",
-            "command_class": str(CommandClass.CENTRAL_SCENE.value),
-            "property": "scene",
-            "property_key": "001",
-            "endpoint": 0,
-            "subtype": "Endpoint 0 Scene 001",
-            "value": "2",
-        }
-    )
-    assert config["command_class"] == CommandClass.CENTRAL_SCENE.value
-    assert config["value"] == 2
+    """Test that trigger schemas accept both int and string values for numeric fields."""
+    for command_class_value in (
+        CommandClass.CENTRAL_SCENE.value,
+        str(CommandClass.CENTRAL_SCENE.value),
+    ):
+        for value in (2, "2"):
+            config = device_trigger.TRIGGER_SCHEMA(
+                {
+                    "platform": "device",
+                    "domain": DOMAIN,
+                    "device_id": "device123",
+                    "type": "event.value_notification.central_scene",
+                    "command_class": command_class_value,
+                    "property": "scene",
+                    "property_key": "001",
+                    "endpoint": 0,
+                    "subtype": "Endpoint 0 Scene 001",
+                    "value": value,
+                }
+            )
+            assert config["command_class"] == CommandClass.CENTRAL_SCENE.value
+            assert config["value"] == 2
 
-    # Value updated: string command_class is coerced to int
-    config = device_trigger.TRIGGER_SCHEMA(
-        {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": "device123",
-            "type": "zwave_js.value_updated.value",
-            "command_class": str(CommandClass.DOOR_LOCK.value),
-            "property": "latchStatus",
-        }
-    )
-    assert config["command_class"] == CommandClass.DOOR_LOCK.value
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_trigger.TRIGGER_SCHEMA(
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "device123",
+                "type": "zwave_js.value_updated.value",
+                "command_class": command_class_value,
+                "property": "latchStatus",
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value

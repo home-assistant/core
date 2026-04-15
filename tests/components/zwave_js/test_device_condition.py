@@ -697,16 +697,20 @@ async def test_get_value_from_config_failure(
 
 
 def test_condition_schema_coerces_string_command_class() -> None:
-    """Test that VALUE condition schema accepts and coerces string command_class."""
-    config = device_condition.CONDITION_SCHEMA(
-        {
-            "condition": "device",
-            "domain": DOMAIN,
-            "device_id": "device123",
-            "type": "value",
-            "command_class": str(CommandClass.DOOR_LOCK.value),
-            "property": "latchStatus",
-            "value": "open",
-        }
-    )
-    assert config["command_class"] == CommandClass.DOOR_LOCK.value
+    """Test that VALUE condition schema accepts both int and string command_class."""
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_condition.CONDITION_SCHEMA(
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "device_id": "device123",
+                "type": "value",
+                "command_class": command_class_value,
+                "property": "latchStatus",
+                "value": "open",
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value

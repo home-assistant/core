@@ -838,15 +838,19 @@ async def test_unavailable_entity_actions(
 
 
 def test_action_schema_coerces_string_command_class() -> None:
-    """Test that SET_VALUE action schema accepts and coerces string command_class."""
-    config = device_action.SET_VALUE_SCHEMA(
-        {
-            "device_id": "device123",
-            "domain": DOMAIN,
-            "type": "set_value",
-            "command_class": str(CommandClass.DOOR_LOCK.value),
-            "property": "targetMode",
-            "value": 255,
-        }
-    )
-    assert config["command_class"] == CommandClass.DOOR_LOCK.value
+    """Test that SET_VALUE action schema accepts both int and string command_class."""
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_action.SET_VALUE_SCHEMA(
+            {
+                "device_id": "device123",
+                "domain": DOMAIN,
+                "type": "set_value",
+                "command_class": command_class_value,
+                "property": "targetMode",
+                "value": 255,
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value
