@@ -252,6 +252,12 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
+    # https://github.com/tkdrob/pyefergy
+    # pyefergy declares codecov as a runtime dependency, which pulls in
+    # coverage; coverage ships an 'a1_coverage.pth' file starting from
+    # 7.13.x. Upstream fix pending in
+    # https://github.com/tkdrob/pyefergy/pull/47
+    "efergy": {"codecov": {"coverage"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
     "fitbit": {
         # Setuptools - distutils-precedence.pth
