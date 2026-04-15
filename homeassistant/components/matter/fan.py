@@ -266,11 +266,9 @@ class MatterFan(MatterEntity, FanEntity):
         if feature_map & FanControlFeature.kMultiSpeed:
             # kMultiSpeed devices expose SpeedMax for step granularity.
             # SpeedMax is a fixed, non-nullable attribute per the Matter spec.
-            speed_max = int(
+            self._attr_speed_count = int(
                 self.get_matter_attribute_value(clusters.FanControl.Attributes.SpeedMax)
             )
-            if speed_max > 0:
-                self._attr_speed_count = speed_max
 
         if feature_map & FanControlFeature.kRocking:
             # NOTE: the Matter model allows that a device can have multiple/different
@@ -337,6 +335,8 @@ DISCOVERY_SCHEMAS = [
             clusters.FanControl.Attributes.PercentCurrent,
             clusters.FanControl.Attributes.PercentSetting,
         ),
+        # PercentSetting SHALL be null when FanMode is set to Auto (spec 4.4.6.3),
+        # so allow null values to not block discovery in that state.
         allow_none_value=True,
         optional_attributes=(
             clusters.FanControl.Attributes.SpeedMax,
