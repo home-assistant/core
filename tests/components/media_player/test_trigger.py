@@ -52,12 +52,14 @@ async def test_media_player_triggers_gated_by_labs_flag(
                 MediaPlayerState.PAUSED,
             ],
             other_states=[
+                MediaPlayerState.BUFFERING,
                 MediaPlayerState.PLAYING,
             ],
         ),
         *parametrize_trigger_states(
             trigger="media_player.started_playing",
             target_states=[
+                MediaPlayerState.BUFFERING,
                 MediaPlayerState.PLAYING,
             ],
             other_states=[

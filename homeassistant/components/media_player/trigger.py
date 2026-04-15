@@ -10,6 +10,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "paused_playing": make_entity_transition_trigger(
         DOMAIN,
         from_states={
+            MediaPlayerState.BUFFERING,
             MediaPlayerState.PLAYING,
         },
         to_states={
@@ -25,6 +26,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
             MediaPlayerState.PAUSED,
         },
         to_states={
+            MediaPlayerState.BUFFERING,
             MediaPlayerState.PLAYING,
         },
     ),
