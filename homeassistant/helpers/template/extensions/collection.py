@@ -197,7 +197,7 @@ class CollectionExtension(BaseTemplateExtension):
 
         if isinstance(alg, Undefined):
             raise TypeError(
-                f"alg expected a string or integer, got an undefined variable: {type(alg).__name__}"
+                f"alg expected a string, got an undefined variable: {type(alg).__name__}"
             )
 
         def _get_key(v: Any) -> Any:
