@@ -96,6 +96,7 @@
       "invalid_auth": "Invalid authentication",
       "access_not_granted": "Invalid authentication. Please grant access via the BLANCO UNIT app and try again. You must be within Bluetooth range of the device to grant access.",
       "device_type_not_supported": "This device type is currently not supported for Smart Home applications.",
+      "serial_mismatch": "The serial number does not match the existing device. Please enter the original serial number.",
       "unknown": "Unexpected error"
     },
     "abort": {

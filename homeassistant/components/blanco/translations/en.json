@@ -10,6 +10,7 @@
       "cannot_connect": "Failed to connect",
       "device_type_not_supported": "This device type is currently not supported for Smart Home applications.",
       "invalid_auth": "Invalid authentication",
+      "serial_mismatch": "The serial number does not match the existing device. Please enter the original serial number.",
       "unknown": "Unexpected error"
     },
     "step": {

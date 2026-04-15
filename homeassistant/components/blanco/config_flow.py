@@ -177,6 +177,8 @@ class BlancoConfigFlow(ConfigFlow, domain=DOMAIN):
                         **reauth_entry.data,
                         CONF_TOKEN: info[CONF_TOKEN],
                         CONF_TOKEN_TYPE: info[CONF_TOKEN_TYPE],
+                        CONF_DEV_ID: info[CONF_DEV_ID],
+                        CONF_DEV_TYPE: info[CONF_DEV_TYPE],
                         CONF_APP_ID: info[CONF_APP_ID],
                         CONF_APP_LOCALE: info[CONF_APP_LOCALE],
                     },
@@ -199,32 +201,35 @@ class BlancoConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-            except BlancoConnectionError:
-                errors["base"] = "cannot_connect"
-            except BlancoAuthError:
-                errors["base"] = "access_not_granted"
-            except BlancoInvalidTokenError:
-                errors["base"] = "invalid_auth"
-            except BlancoDeviceTypeError:
-                errors["base"] = "device_type_not_supported"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during reconfiguration")
-                errors["base"] = "unknown"
+            if user_input[CONF_SERIAL] != reconfigure_entry.data.get(CONF_SERIAL):
+                errors[CONF_SERIAL] = "serial_mismatch"
             else:
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data={
-                        CONF_SERIAL: user_input[CONF_SERIAL],
-                        CONF_TOKEN: info[CONF_TOKEN],
-                        CONF_TOKEN_TYPE: info[CONF_TOKEN_TYPE],
-                        CONF_DEV_TYPE: info[CONF_DEV_TYPE],
-                        CONF_DEV_ID: info[CONF_DEV_ID],
-                        CONF_APP_ID: info[CONF_APP_ID],
-                        CONF_APP_LOCALE: info[CONF_APP_LOCALE],
-                    },
-                )
+                try:
+                    info = await validate_input(self.hass, user_input)
+                except BlancoConnectionError:
+                    errors["base"] = "cannot_connect"
+                except BlancoAuthError:
+                    errors["base"] = "access_not_granted"
+                except BlancoInvalidTokenError:
+                    errors["base"] = "invalid_auth"
+                except BlancoDeviceTypeError:
+                    errors["base"] = "device_type_not_supported"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception during reconfiguration")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data={
+                            CONF_SERIAL: user_input[CONF_SERIAL],
+                            CONF_TOKEN: info[CONF_TOKEN],
+                            CONF_TOKEN_TYPE: info[CONF_TOKEN_TYPE],
+                            CONF_DEV_TYPE: info[CONF_DEV_TYPE],
+                            CONF_DEV_ID: info[CONF_DEV_ID],
+                            CONF_APP_ID: info[CONF_APP_ID],
+                            CONF_APP_LOCALE: info[CONF_APP_LOCALE],
+                        },
+                    )
 
         return self.async_show_form(
             step_id="reconfigure",
