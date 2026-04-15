@@ -79,6 +79,50 @@
       "labels": ["dependency", "core"]
     },
     {
+      "description": "Common Python utilities (allowlisted)",
+      "matchPackageNames": [
+        "astral",
+        "atomicwrites-homeassistant",
+        "audioop-lts",
+        "awesomeversion",
+        "bcrypt",
+        "ciso8601",
+        "cronsim",
+        "defusedxml",
+        "fnv-hash-fast",
+        "getmac",
+        "ical",
+        "ifaddr",
+        "lru-dict",
+        "mutagen",
+        "propcache",
+        "pyserial",
+        "python-slugify",
+        "PyTurboJPEG",
+        "securetar",
+        "standard-aifc",
+        "standard-telnetlib",
+        "ulid-transform",
+        "url-normalize",
+        "xmltodict"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Home Assistant ecosystem packages (core-maintained, no cooldown)",
+      "matchPackageNames": [
+        "hassil",
+        "home-assistant-bluetooth",
+        "home-assistant-frontend",
+        "home-assistant-intents",
+        "infrared-protocols"
+      ],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency", "core"]
+    },
+    {
       "description": "Test dependencies (allowlisted)",
       "matchPackageNames": [
         "pytest",
