@@ -53,7 +53,6 @@
       'device_class': 'speaker',
       'friendly_name': 'Vizio',
       'is_volume_muted': False,
-      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'sound_mode': 'Music',
       'sound_mode_list': list([
         'Music',
@@ -131,7 +130,6 @@
       'device_class': 'tv',
       'friendly_name': 'Vizio',
       'is_volume_muted': False,
-      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'sound_mode': 'Music',
       'sound_mode_list': list([
         'Music',
