@@ -6,7 +6,6 @@ import array
 import asyncio
 from collections import defaultdict, deque
 from collections.abc import AsyncGenerator, AsyncIterable, Callable
-import contextlib
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
@@ -1635,12 +1634,24 @@ def _pipeline_debug_recording_thread_proc(
 async def _close_async_generators(
     *generators: AsyncIterable[Any] | None,
 ) -> None:
-    """Close async generators, suppressing non-cancellation errors."""
+    """Close async generators, suppressing non-cancellation errors.
+
+    If ``aclose()`` on one generator is cancelled, the others are still
+    attempted; the cancellation is re-raised once all generators have
+    been processed.
+    """
+    cancelled_exc: asyncio.CancelledError | None = None
     for gen in generators:
         aclose = getattr(gen, "aclose", None)
         if aclose is not None:
-            with contextlib.suppress(Exception):
+            try:
                 await aclose()
+            except asyncio.CancelledError as exc:
+                cancelled_exc = exc
+            except Exception:  # noqa: BLE001
+                pass
+    if cancelled_exc is not None:
+        raise cancelled_exc
 
 
 @dataclass(kw_only=True)
@@ -1816,19 +1827,44 @@ class PipelineInput:
                 )
             )
         finally:
-            # Close async generators so buffered audio chunks and the
-            # audio enhancer's VAD state are released promptly instead of
-            # waiting on garbage collection (which is especially slow on
-            # Python 3.14+).  Close the wrapper first, then the upstream.
-            # Skip if both refer to the same object to avoid double-close.
+            await self._cleanup(stt_input_stream, stt_processed_stream)
+
+    async def _cleanup(
+        self,
+        stt_input_stream: AsyncIterable[EnhancedAudioChunk] | None,
+        stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None,
+    ) -> None:
+        """Release pipeline resources.
+
+        Close the STT audio stream async generators so buffered audio
+        chunks and the audio enhancer's VAD state are released promptly
+        instead of waiting on garbage collection (especially slow on
+        Python 3.14+).  Close the wrapper first, then the upstream; skip
+        if both refer to the same object to avoid double-close.
+
+        Catch CancelledError around each cleanup step so a cancelled
+        pipeline (WebSocket unsubscribe, timeout) still runs the full
+        cleanup chain — otherwise cancellation reintroduces the very
+        leaks this code is trying to prevent.  Re-raise at the end.
+        """
+        cancelled_exc: asyncio.CancelledError | None = None
+        try:
             await _close_async_generators(
                 None if stt_input_stream is stt_processed_stream else stt_input_stream,
                 stt_processed_stream,
             )
+        except asyncio.CancelledError as exc:
+            cancelled_exc = exc
 
-            # Always end the run since it needs to shut down the debug recording
-            # thread, etc.
+        try:
+            # Always end the run since it needs to shut down the debug
+            # recording thread, etc.
             await self.run.end()
+        except asyncio.CancelledError as exc:
+            cancelled_exc = cancelled_exc or exc
+
+        if cancelled_exc is not None:
+            raise cancelled_exc
 
     async def validate(self) -> None:
         """Validate pipeline input against start stage."""

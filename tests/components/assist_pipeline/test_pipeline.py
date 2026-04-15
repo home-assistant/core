@@ -2201,6 +2201,40 @@ async def test_close_async_generators_suppresses_errors() -> None:
     await _close_async_generators(gen)
 
 
+async def test_close_async_generators_closes_all_on_cancellation() -> None:
+    """Test all generators get a chance to close even on cancellation.
+
+    Regression guard for the leak scenario: if one generator's aclose()
+    raises CancelledError, the remaining generators must still be
+    closed so no audio buffers or VAD state are orphaned.
+    """
+    closed: list[str] = []
+
+    async def cancel_gen() -> AsyncGenerator[bytes]:
+        try:
+            yield b""
+        finally:
+            closed.append("cancel")
+            raise asyncio.CancelledError
+
+    async def normal_gen() -> AsyncGenerator[bytes]:
+        try:
+            yield b""
+        finally:
+            closed.append("normal")
+
+    gen_a = cancel_gen()
+    gen_b = normal_gen()
+    await gen_a.__anext__()
+    await gen_b.__anext__()
+
+    with pytest.raises(asyncio.CancelledError):
+        await _close_async_generators(gen_a, gen_b)
+
+    # Both generators must have been attempted, not just the first.
+    assert closed == ["cancel", "normal"]
+
+
 async def test_pipeline_execute_closes_stt_generators(
     hass: HomeAssistant,
     mock_wake_word_provider_entity: MockWakeWordEntity,

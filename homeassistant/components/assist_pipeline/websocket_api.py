@@ -155,9 +155,9 @@ async def websocket_run(
     if start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
         # Audio pipeline that will receive audio as binary websocket messages
         msg_input = msg["input"]
-        # ~4s of 16kHz mono audio at 8ms chunks — enough to absorb brief
-        # stalls but bounded so a stalled consumer can't grow memory
-        # unboundedly.
+        # ~2.6s of 16kHz mono audio at 10ms chunks — enough to absorb
+        # brief stalls but bounded so a stalled consumer can't grow
+        # memory unboundedly.
         audio_queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=256)
         incoming_sample_rate = msg_input["sample_rate"]
         wake_word_phrase: str | None = None
