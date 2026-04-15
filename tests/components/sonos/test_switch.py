@@ -457,7 +457,7 @@ async def test_tv_autoplay_toggle_failure_raises(
     await async_setup_sonos()
 
     soco.deviceProperties.SetAutoplayRoomUUID = Mock(
-        side_effect=SoCoUPnPException("Toggle failed", "500", "")
+        side_effect=SoCoUPnPException("Toggle failed", 500, "")
     )
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -618,7 +618,7 @@ async def test_tv_ungroup_autoplay_toggle_failure_raises(
     await async_setup_sonos()
 
     soco.deviceProperties.SetAutoplayLinkedZones = Mock(
-        side_effect=SoCoUPnPException("Toggle failed", "500", "")
+        side_effect=SoCoUPnPException("Toggle failed", 500, "")
     )
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

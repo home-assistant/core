@@ -311,11 +311,11 @@ class SoCoMockFactory:
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
         mock_soco.deviceProperties.GetAutoplayRoomUUID = Mock(
-            side_effect=SoCoUPnPException("Not supported", "714", "")
+            side_effect=SoCoUPnPException("Not supported", 714, "")
         )
         mock_soco.deviceProperties.SetAutoplayRoomUUID = Mock()
         mock_soco.deviceProperties.GetAutoplayLinkedZones = Mock(
-            side_effect=SoCoUPnPException("Not supported", "714", "")
+            side_effect=SoCoUPnPException("Not supported", 714, "")
         )
         mock_soco.deviceProperties.SetAutoplayLinkedZones = Mock()
         mock_soco.zone_group_state = Mock()
