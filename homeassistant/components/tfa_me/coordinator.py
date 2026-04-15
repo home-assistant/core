@@ -1,6 +1,5 @@
 """TFA.me station integration: coordinator.py."""
 
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -24,28 +23,17 @@ from .const import (
     CONF_NAME_WITH_STATION_ID,
     DOMAIN,
     LOCAL_POLL_INTERVAL,
-    VALID_JSON_KEYS,
+    VALID_JSON_MEASUREMENT_KEYS,
 )
-from .data import resolve_tfa_host
+from .data import TFAmeCoordinatorData, resolve_tfa_host
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class TFAmeCoordinatorData:
-    """Typed coordinator payload."""
-
-    entities: dict[
-        str, dict[str, Any]
-    ]  # dict with unique IDs & measurement data, units, timestamp and more
-    gateway_id: str  # 9 digit gateway/station serial hex number
-    gateway_sw: str  # SW numbers (gateway/station & display unit)
+type TFAmeConfigEntry = ConfigEntry[TFAmeUpdateCoordinator]
 
 
-type TFAmeConfigEntry = ConfigEntry[TFAmeDataCoordinator]
-
-
-class TFAmeDataCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
+class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
     """Class for managing data updates."""
 
     def __init__(
@@ -79,15 +67,18 @@ class TFAmeDataCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
 
     async def _async_update_data(self) -> TFAmeCoordinatorData:
         """Request and update data."""
-        parsed_list: dict[str, dict[str, Any]] = {}  # dict for coordinator data
+        filtered_list: dict[str, dict[str, Any]] = {}  # filtered entity list
 
         # Try to update data from station URL: e.g. "http://192.168.1.38/sensors"
         try:
-            # Fetch all available sensors as JSON from TFA.me station
+            # Fetch all available sensors as JSON from TFA.me station/gateway
             json_data = await self._client.async_get_sensors()
 
             # Convert JSON to values for TFAmeCoordinatorData for coordinator
-            parsed_list, gateway_id, gateway_sw = self.parse_json(json_data)
+            # Also filter/remove values/entities that integration is unable to process
+            filtered_list, gateway_id, gateway_sw = self._client.parse_and_filter_json(
+                json_data=json_data, valid_keys=VALID_JSON_MEASUREMENT_KEYS
+            )
 
         # Specific error mapping
         except (TFAmeHTTPError, TFAmeJSONError) as err:
@@ -107,75 +98,5 @@ class TFAmeDataCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
         else:
             # values are available at self.coordinator.data.entities[self.entity_id]["keyword"]
             return TFAmeCoordinatorData(
-                entities=parsed_list, gateway_id=gateway_id, gateway_sw=gateway_sw
+                entities=filtered_list, gateway_id=gateway_id, gateway_sw=gateway_sw
             )
-
-    def parse_json(
-        self, json_data: dict[str, Any]
-    ) -> tuple[dict[str, dict[str, Any]], str, str]:
-        """Parse a TFA.me JSON dictionary to get TFAmeCoordinatorData values for coordinator."""
-        parsed_list: dict[
-            str, dict[str, Any]
-        ] = {}  # dict with unique IDs & measurement data, units, etc.
-
-        try:
-            # Get gateway ID, SW version & sensor list
-            gateway_id = str(json_data.get("gateway_id", "tfame")).lower()
-            gateway_sw = str(json_data.get("gateway_sw", "?"))
-            sensors = json_data.get("sensors", [])
-
-            for sensor in sensors:
-                sensor_id = sensor["sensor_id"]
-
-                for m_name, values in sensor.get("measurements", {}).items():
-                    if measurement_in_list(m_name, VALID_JSON_KEYS):
-                        # Unique ID build of "unique station/gateway ID" & "unique sensor ID"  & measurement name
-                        # (IDs set while production process)
-                        unique_id = f"sensor.{gateway_id}_{sensor_id}_{m_name}"
-
-                        # Minimum base data for all entities: value, unit, ts (timestamp)
-                        base = {
-                            "value": values["value"],  # Measurement value
-                            "unit": values["unit"],  # Measurement unit
-                            "ts": sensor["ts"],  # UTC reception time stamp in seconds
-                        }
-                        parsed_list[unique_id] = base
-
-                        # Special cases
-                        # Wind direction: create extra entity for degrees
-                        if m_name == "wind_direction":
-                            deg_id = f"{unique_id}_deg"
-                            parsed_list[deg_id] = {
-                                **base,
-                                "unit": "°",
-                            }
-
-                        # Rain: create extra entity relative, 1 hour, 24 hours
-                        if m_name == "rain":
-                            # relative
-                            parsed_list[f"{unique_id}_rel"] = {
-                                **base,
-                                "reset_rain": False,
-                            }
-
-                            # 1 hour rain
-                            parsed_list[f"{unique_id}_1_hour"] = {
-                                **base,
-                                "reset_rain": False,
-                            }
-
-                            # 24 hours rain
-                            parsed_list[f"{unique_id}_24_hours"] = {
-                                **base,
-                                "reset_rain": False,
-                            }
-
-        except Exception as err:
-            raise TFAmeJSONError(f"Invalid JSON response: {err}") from err
-        else:
-            return parsed_list, gateway_id, gateway_sw
-
-
-def measurement_in_list(s: str, m_list: list[str]) -> bool:
-    """Search whether a string is in list or not."""
-    return s in m_list

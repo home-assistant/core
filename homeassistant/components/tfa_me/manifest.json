@@ -8,7 +8,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["tfa-me-ha-local==1.0.5"],
+  "requirements": ["tfa-me-ha-local==1.0.6"],
   "zeroconf": [
     {
       "type": "_tfa_me._tcp.local."

@@ -4,7 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import TFAmeConfigEntry, TFAmeDataCoordinator
+from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -12,7 +12,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> bool:
     """Set up a TFA.me station."""
     # First request for sensor data
-    entry.runtime_data = coordinator = TFAmeDataCoordinator(hass, entry)
+    entry.runtime_data = coordinator = TFAmeUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

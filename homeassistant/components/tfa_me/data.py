@@ -1,5 +1,6 @@
 """TFA.me station integration: data.py."""
 
+from dataclasses import dataclass
 from typing import Any
 
 from tfa_me_ha_local.client import (
@@ -17,8 +18,19 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .helper import resolve_tfa_host
 
 
-class TFAmeData:
-    """Small helper used by the config flow to talk to a TFA.me station to get the unique ID."""
+@dataclass
+class TFAmeCoordinatorData:
+    """Typed coordinator payload."""
+
+    entities: dict[
+        str, dict[str, Any]
+    ]  # dict with unique IDs & measurement data, units, timestamp and more
+    gateway_id: str  # 9 digit gateway/station serial hex number
+    gateway_sw: str  # SW numbers (gateway/station & display unit)
+
+
+class TFAmeUniqueID:
+    """Helper for config flow to connect to a TFA.me station/gateway & to fetch the unique station/gateway ID."""
 
     def __init__(self, hass: HomeAssistant, address: str) -> None:
         """Initialize helper with user-provided address (IP or station ID)."""
