@@ -856,6 +856,25 @@ async def test_add_job_with_none(hass: HomeAssistant) -> None:
         hass.async_add_job(None, "test_arg")
 
 
+async def test_add_job_callback_from_executor(hass: HomeAssistant) -> None:
+    """Test add_job with @callback from executor schedules directly.
+
+    A @callback target should be scheduled via call_soon_threadsafe without
+    the extra deferral through _async_add_hass_job + call_soon, so a single
+    async_block_till_done() is sufficient to execute it.
+    """
+    result: list[str] = []
+
+    @ha.callback
+    def my_callback() -> None:
+        result.append("called")
+
+    await hass.async_add_executor_job(hass.add_job, my_callback)
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
 def test_event_eq() -> None:
     """Test events."""
     now = dt_util.utcnow()
