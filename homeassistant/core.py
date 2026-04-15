@@ -599,8 +599,9 @@ class HomeAssistant:
     ) -> asyncio.Future[_R] | None:
         """Add a job to be executed by the event loop or by an executor.
 
-        If the job is either a coroutine or decorated with @callback, it will be
-        run by the event loop, if not it will be run by an executor.
+        If the job is a coroutine, coroutine function, or decorated with
+        @callback, it will be run by the event loop, if not it will be run
+        by an executor.
 
         This method must be run in the event loop.
 
