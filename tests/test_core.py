@@ -856,6 +856,120 @@ async def test_add_job_with_none(hass: HomeAssistant) -> None:
         hass.async_add_job(None, "test_arg")
 
 
+async def test_add_job_coroutine_object(hass: HomeAssistant) -> None:
+    """Test add_job with a coroutine object from an executor thread."""
+    result: list[str] = []
+
+    async def my_coro() -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append("called")
+
+    await hass.async_add_executor_job(hass.add_job, my_coro())
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_coroutine_function(hass: HomeAssistant) -> None:
+    """Test add_job with a coroutine function from an executor thread."""
+    result: list[str] = []
+
+    async def my_coro(value: str) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_coro, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_callback(hass: HomeAssistant) -> None:
+    """Test add_job with a @callback from an executor thread."""
+    result: list[str] = []
+
+    @ha.callback
+    def my_callback(value: str) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_callback, "called")
+    # Callback targets go through two deferrals: call_soon_threadsafe
+    # schedules _async_add_hass_job, which then call_soon's the actual target.
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_executor(hass: HomeAssistant) -> None:
+    """Test add_job with a regular function from an executor thread."""
+    result: list[str] = []
+
+    def my_func(value: str) -> None:
+        with pytest.raises(RuntimeError):
+            asyncio.get_running_loop()
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_func, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_partial_callback(hass: HomeAssistant) -> None:
+    """Test add_job with a partial-wrapped @callback from an executor thread."""
+    result: list[tuple[str, int]] = []
+
+    @ha.callback
+    def my_callback(name: str, value: int) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append((name, value))
+
+    await hass.async_add_executor_job(
+        hass.add_job, functools.partial(my_callback, "partial"), 1
+    )
+    # Callback targets go through two deferrals: call_soon_threadsafe
+    # schedules _async_add_hass_job, which then call_soon's the actual target.
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert result == [("partial", 1)]
+
+
+async def test_add_job_partial_coroutine_function(
+    hass: HomeAssistant,
+) -> None:
+    """Test add_job with a partial-wrapped coroutine function from an executor thread."""
+    result: list[tuple[str, int]] = []
+
+    async def my_coro(name: str, value: int) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append((name, value))
+
+    await hass.async_add_executor_job(
+        hass.add_job, functools.partial(my_coro, "partial"), 2
+    )
+    await hass.async_block_till_done()
+
+    assert result == [("partial", 2)]
+
+
+async def test_add_job_async_with_callback_decorator(hass: HomeAssistant) -> None:
+    """Test add_job with an async function incorrectly marked as @callback."""
+    result: list[str] = []
+
+    @ha.callback
+    async def my_async(value: str) -> None:  # pylint: disable=hass-async-callback-decorator
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_async, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
 def test_event_eq() -> None:
     """Test events."""
     now = dt_util.utcnow()
