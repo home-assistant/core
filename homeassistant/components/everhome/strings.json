@@ -48,14 +48,8 @@
       "power_avg": {
         "name": "Power average"
       },
-      "power_phase1": {
-        "name": "Power phase 1"
-      },
-      "power_phase2": {
-        "name": "Power phase 2"
-      },
-      "power_phase3": {
-        "name": "Power phase 3"
+      "power_phase": {
+        "name": "Power phase {phase_number}"
       },
       "rssi": {
         "name": "WIFI RSSI"

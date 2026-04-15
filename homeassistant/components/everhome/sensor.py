@@ -45,7 +45,8 @@ SENSOR_TYPES: tuple[EcoTrackerSensorEntityDescription, ...] = (
     ),
     EcoTrackerSensorEntityDescription(
         key="power_phase1",
-        translation_key="power_phase1",
+        translation_key="power_phase",
+        translation_placeholders={"phase_number": "1"},
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -53,7 +54,8 @@ SENSOR_TYPES: tuple[EcoTrackerSensorEntityDescription, ...] = (
     ),
     EcoTrackerSensorEntityDescription(
         key="power_phase2",
-        translation_key="power_phase2",
+        translation_key="power_phase",
+        translation_placeholders={"phase_number": "2"},
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -61,7 +63,8 @@ SENSOR_TYPES: tuple[EcoTrackerSensorEntityDescription, ...] = (
     ),
     EcoTrackerSensorEntityDescription(
         key="power_phase3",
-        translation_key="power_phase3",
+        translation_key="power_phase",
+        translation_placeholders={"phase_number": "3"},
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
