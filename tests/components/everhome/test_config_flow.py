@@ -1,4 +1,4 @@
-"""Tests for the AirGradient integration."""
+"""Tests for the everHome/EcoTracker integration."""
 
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
