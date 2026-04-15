@@ -304,9 +304,14 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         self.speaker.tv_autoplay = result.get("RoomUUID") not in (None, "")
 
     @property
-    def is_on(self) -> bool:
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return super().available and self.speaker.tv_autoplay is not None
+
+    @property
+    def is_on(self) -> bool | None:
         """Return True if TV autoplay is enabled."""
-        return bool(self.speaker.tv_autoplay)
+        return self.speaker.tv_autoplay
 
     def turn_on(self, **kwargs: Any) -> None:
         """Enable TV autoplay."""
