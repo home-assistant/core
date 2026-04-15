@@ -28,6 +28,7 @@ from . import (
 
 from tests.common import (
     MockModule,
+    MockUser,
     async_fire_time_changed,
     mock_config_flow,
     mock_integration,
@@ -1646,3 +1647,79 @@ async def test_removal_aborts_discovery_flows(
         final_flows = hass.config_entries.flow.async_progress()
         assert len(final_flows) == 1
         assert final_flows[0]["handler"] == "test2"
+
+
+@pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_list_serial_ports(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test listing serial ports via websocket."""
+    mock_ports = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="10C4",
+            pid="EA60",
+            serial_number="001234",
+            manufacturer="Silicon Labs",
+            description="CP2102 USB to UART",
+        ),
+        SerialDevice(
+            device="/dev/ttyS0",
+            serial_number=None,
+            manufacturer=None,
+            description="ttyS0",
+        ),
+    ]
+
+    with (
+        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
+        patch_scanned_serial_ports(return_value=mock_ports),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+        await hass.async_block_till_done()
+
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert len(result) == 2
+
+    assert result[0]["device"] == "/dev/ttyUSB0"
+    assert result[0]["vid"] == "10C4"
+    assert result[0]["pid"] == "EA60"
+    assert result[0]["serial_number"] == "001234"
+    assert result[0]["manufacturer"] == "Silicon Labs"
+    assert result[0]["description"] == "CP2102 USB to UART"
+
+    assert result[1]["device"] == "/dev/ttyS0"
+    assert result[1]["serial_number"] is None
+    assert result[1]["manufacturer"] is None
+    assert result[1]["description"] == "ttyS0"
+    assert "vid" not in result[1]
+    assert "pid" not in result[1]
+
+
+@pytest.mark.usefixtures("force_usb_polling_watcher")
+async def test_list_serial_ports_require_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that listing serial ports requires admin."""
+    hass_admin_user.groups = []
+
+    with (
+        patch("homeassistant.components.usb.async_get_usb", return_value=[]),
+        patch_scanned_serial_ports(return_value=[]),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+        await hass.async_block_till_done()
+
+        ws_client = await hass_ws_client(hass)
+        await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+        response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
