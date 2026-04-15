@@ -12,6 +12,7 @@ from soco.exceptions import SoCoSlaveException, SoCoUPnPException
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import ATTR_TIME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -324,8 +325,9 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
                 [("RoomUUID", room_uuid), *_TV_SOURCE]
             )
         except SoCoUPnPException as exc:
-            _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
-            return
+            raise HomeAssistantError(
+                f"Could not toggle {self.entity_id}: {exc}"
+            ) from exc
         self.poll_state()
         # Refresh ungroup state: the device may change it as a side effect
         # (e.g. disabling TV autoplay automatically disables ungroup on autoplay).
@@ -395,8 +397,9 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
             )
             self.speaker.tv_ungroup_autoplay = enable
         except SoCoUPnPException as exc:
-            _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
-            return
+            raise HomeAssistantError(
+                f"Could not toggle {self.entity_id}: {exc}"
+            ) from exc
         self.speaker.write_entity_states()
 
 
