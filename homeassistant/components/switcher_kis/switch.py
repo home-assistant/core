@@ -45,6 +45,7 @@ from .const import (
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_TURN_ON_WITH_TIMER_NAME,
     SIGNAL_DEVICE_ADD,
+    SwitcherEntityFeature,
 )
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
@@ -117,7 +118,7 @@ async def async_setup_entry(
         SERVICE_GET_SCHEDULES_NAME,
         {},
         "async_get_schedules_service",
-        entity_device_classes=(SwitchDeviceClass.SWITCH,),
+        required_features=[SwitcherEntityFeature.SCHEDULES],
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -125,14 +126,14 @@ async def async_setup_entry(
         SERVICE_CREATE_SCHEDULE_NAME,
         SERVICE_CREATE_SCHEDULE_SCHEMA,
         "async_create_schedule_service",
-        entity_device_classes=(SwitchDeviceClass.SWITCH,),
+        required_features=[SwitcherEntityFeature.SCHEDULES],
     )
 
     platform.async_register_entity_service(
         SERVICE_DELETE_SCHEDULE_NAME,
         SERVICE_DELETE_SCHEDULE_SCHEMA,
         "async_delete_schedule_service",
-        entity_device_classes=(SwitchDeviceClass.SWITCH,),
+        required_features=[SwitcherEntityFeature.SCHEDULES],
     )
 
     @callback
@@ -213,6 +214,12 @@ class SwitcherHeaterSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher heater switch entity."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+
+    def __init__(self, coordinator: SwitcherDataUpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        if coordinator.data.device_type.category == DeviceCategory.WATER_HEATER:
+            self._attr_supported_features = SwitcherEntityFeature.SCHEDULES
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""

@@ -1,6 +1,15 @@
 """Constants for the Switcher integration."""
 
+from enum import IntFlag
+
 DOMAIN = "switcher_kis"
+
+
+class SwitcherEntityFeature(IntFlag):
+    """Supported features of Switcher entities."""
+
+    SCHEDULES = 1
+
 
 API_CONTROL_BREEZE_DEVICE = "control_breeze_device"
 

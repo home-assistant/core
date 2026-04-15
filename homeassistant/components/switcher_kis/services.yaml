@@ -31,14 +31,16 @@ get_schedules:
     entity:
       integration: switcher_kis
       domain: switch
-      device_class: switch
+      supported_features:
+        - switcher_kis.SwitcherEntityFeature.SCHEDULES
 
 create_schedule:
   target:
     entity:
       integration: switcher_kis
       domain: switch
-      device_class: switch
+      supported_features:
+        - switcher_kis.SwitcherEntityFeature.SCHEDULES
   fields:
     start_time:
       required: true
@@ -70,7 +72,8 @@ delete_schedule:
     entity:
       integration: switcher_kis
       domain: switch
-      device_class: switch
+      supported_features:
+        - switcher_kis.SwitcherEntityFeature.SCHEDULES
   fields:
     schedule_id:
       required: true

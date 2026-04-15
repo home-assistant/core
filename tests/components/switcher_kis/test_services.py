@@ -541,6 +541,49 @@ async def test_delete_schedule_service(
         mock_delete_schedule.assert_called_once_with("0")
 
 
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
+async def test_heater_unsupported_schedule_services(
+    hass: HomeAssistant, mock_bridge: MagicMock, mock_api: MagicMock
+) -> None:
+    """Test that schedule services are not supported on Switcher Heater devices (DeviceCategory.HEATER), only on water heater boiler devices (DeviceCategory.WATER_HEATER)."""
+    await init_integration(hass, USERNAME, TOKEN)
+    assert mock_bridge
+
+    device = DUMMY_HEATER_DEVICE
+    entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SCHEDULES_NAME,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+            return_response=True,
+        )
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CREATE_SCHEDULE_NAME,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                CONF_SCHEDULE_START_TIME: time(7, 0),
+                CONF_SCHEDULE_END_TIME: time(7, 30),
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DELETE_SCHEDULE_NAME,
+            {ATTR_ENTITY_ID: entity_id, CONF_SCHEDULE_ID: "0"},
+            blocking=True,
+        )
+
+    assert mock_api.call_count == 0
+
+
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_delete_schedule_service_fail(
     hass: HomeAssistant, mock_bridge: MagicMock, mock_api: MagicMock

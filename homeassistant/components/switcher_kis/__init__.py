@@ -12,7 +12,14 @@ from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import DOMAIN, SwitcherEntityFeature
+
+# SwitcherEntityFeature must be re-exported here (not just in const.py) so that
+# hassfest can resolve "switcher_kis.SwitcherEntityFeature.SCHEDULES" in services.yaml
+# target filters. hassfest resolves supported_features strings by importing from the
+# integration's package root (__init__.py), following the same pattern as e.g.
+# alarm_control_panel.AlarmControlPanelEntityFeature.
+__all__ = ["DOMAIN", "SwitcherEntityFeature"]
 from .coordinator import SwitcherDataUpdateCoordinator
 
 PLATFORMS = [
