@@ -422,3 +422,129 @@ async def test_ceiling_light_turn_off(
         )
     state = hass.states.get(entity_id)
     assert state.state is STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "device_type", ["RGBIC Neon Rope Light", "RGBIC Neon Wire Rope Light"]
+)
+async def test_rgbic_neon_rope_light(
+    hass: HomeAssistant, mock_list_devices, mock_get_status, device_type
+) -> None:
+    """Test rgbic neon rope light."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="light-id-1",
+            deviceName="light-1",
+            deviceType=device_type,
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {"power": "off", "brightness": 1, "color": "0:0:0"},
+        {"power": "on", "brightness": 10, "color": "0:0:0"},
+        {
+            "power": "on",
+            "brightness": 10,
+            "color": "255:255:255",
+        },
+        {
+            "power": "on",
+            "brightness": 10,
+            "color": "255:255:255",
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = "light.light_1"
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_OFF
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "rgb_color": (255, 246, 158)},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+
+async def test_candle_warmer_lamp(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test candle warmer lamp."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="light-id-1",
+            deviceName="light-1",
+            deviceType="Candle Warmer Lamp",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {
+            "power": "off",
+            "brightness": 1,
+        },
+        {
+            "power": "on",
+            "brightness": 10,
+        },
+        {
+            "power": "on",
+            "brightness": 10,
+        },
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = "light.light_1"
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_OFF
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, "brightness": 99},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called()
+    state = hass.states.get(entity_id)
+    assert state.state is STATE_ON

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
+from matter_server.common.errors import MatterError
 from matter_server.common.models import EventType, MatterNodeEvent
 
 from homeassistant.components.lock import (
@@ -17,30 +18,54 @@ from homeassistant.components.lock import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LOGGER
+from .const import (
+    ATTR_CREDENTIAL_DATA,
+    ATTR_CREDENTIAL_INDEX,
+    ATTR_CREDENTIAL_RULE,
+    ATTR_CREDENTIAL_TYPE,
+    ATTR_USER_INDEX,
+    ATTR_USER_NAME,
+    ATTR_USER_STATUS,
+    ATTR_USER_TYPE,
+    LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    LOGGER,
+)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
+from .lock_helpers import (
+    DoorLockFeature,
+    GetLockCredentialStatusResult,
+    GetLockInfoResult,
+    GetLockUsersResult,
+    SetLockCredentialResult,
+    clear_lock_credential,
+    clear_lock_user,
+    get_lock_credential_status,
+    get_lock_info,
+    get_lock_users,
+    set_lock_credential,
+    set_lock_user,
+)
 from .models import MatterDiscoverySchema
 
-DOOR_LOCK_OPERATION_SOURCE = {
-    # mapping from operation source id's to textual representation
-    0: "Unspecified",
-    1: "Manual",  # [Optional]
-    2: "Proprietary Remote",  # [Optional]
-    3: "Keypad",  # [Optional]
-    4: "Auto",  # [Optional]
-    5: "Button",  # [Optional]
-    6: "Schedule",  # [HDSCH]
-    7: "Remote",  # [M]
-    8: "RFID",  # [RID]
-    9: "Biometric",  # [USR]
-    10: "Aliro",  # [Aliro]
+# Door lock operation source mapping (Matter DoorLock OperationSourceEnum)
+_OperationSource = clusters.DoorLock.Enums.OperationSourceEnum
+DOOR_LOCK_OPERATION_SOURCE: dict[int, str] = {
+    _OperationSource.kUnspecified: "Unspecified",
+    _OperationSource.kManual: "Manual",
+    _OperationSource.kProprietaryRemote: "Proprietary Remote",
+    _OperationSource.kKeypad: "Keypad",
+    _OperationSource.kAuto: "Auto",
+    _OperationSource.kButton: "Button",
+    _OperationSource.kSchedule: "Schedule",
+    _OperationSource.kRemote: "Remote",
+    _OperationSource.kRfid: "RFID",
+    _OperationSource.kBiometric: "Biometric",
+    _OperationSource.kAliro: "Aliro",
 }
-
-
-DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
 
 async def async_setup_entry(
@@ -98,17 +123,15 @@ class MatterLock(MatterEntity, LockEntity):
             node_event.data,
         )
 
-        # handle the DoorLock events
+        # Handle the DoorLock events
         node_event_data: dict[str, int] = node_event.data or {}
         match node_event.event_id:
-            case (
-                clusters.DoorLock.Events.LockOperation.event_id
-            ):  # Lock cluster event 2
-                # update the changed_by attribute to indicate lock operation source
+            case clusters.DoorLock.Events.LockOperation.event_id:
                 operation_source: int = node_event_data.get("operationSource", -1)
-                self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
+                source_name = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
+                self._attr_changed_by = source_name
                 self.async_write_ha_state()
 
     @property
@@ -146,7 +169,7 @@ class MatterLock(MatterEntity, LockEntity):
         code_bytes = code.encode() if code else None
         await self.send_device_command(
             command=clusters.DoorLock.Commands.LockDoor(code_bytes),
-            timed_request_timeout_ms=1000,
+            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -168,12 +191,12 @@ class MatterLock(MatterEntity, LockEntity):
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
                 command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
-                timed_request_timeout_ms=1000,
+                timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
         else:
             await self.send_device_command(
                 command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
-                timed_request_timeout_ms=1000,
+                timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
 
     async def async_open(self, **kwargs: Any) -> None:
@@ -190,7 +213,7 @@ class MatterLock(MatterEntity, LockEntity):
         code_bytes = code.encode() if code else None
         await self.send_device_command(
             command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
-            timed_request_timeout_ms=1000,
+            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
 
     @callback
@@ -255,6 +278,109 @@ class MatterLock(MatterEntity, LockEntity):
         if bool(feature_map & DoorLockFeature.kUnbolt):
             supported_features |= LockEntityFeature.OPEN
         self._attr_supported_features = supported_features
+
+    # --- Entity service methods ---
+
+    async def async_set_lock_user(self, **kwargs: Any) -> None:
+        """Set a lock user (full CRUD)."""
+        try:
+            await set_lock_user(
+                self.matter_client,
+                self._endpoint.node,
+                user_index=kwargs.get(ATTR_USER_INDEX),
+                user_name=kwargs.get(ATTR_USER_NAME),
+                user_type=kwargs.get(ATTR_USER_TYPE),
+                credential_rule=kwargs.get(ATTR_CREDENTIAL_RULE),
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set lock user on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_lock_user(self, **kwargs: Any) -> None:
+        """Clear a lock user."""
+        try:
+            await clear_lock_user(
+                self.matter_client,
+                self._endpoint.node,
+                kwargs[ATTR_USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear lock user on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_lock_info(self) -> GetLockInfoResult:
+        """Get lock capabilities and configuration info."""
+        try:
+            return await get_lock_info(
+                self.matter_client,
+                self._endpoint.node,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get lock info for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_lock_users(self) -> GetLockUsersResult:
+        """Get all users from the lock."""
+        try:
+            return await get_lock_users(
+                self.matter_client,
+                self._endpoint.node,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get lock users for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_set_lock_credential(self, **kwargs: Any) -> SetLockCredentialResult:
+        """Set a credential on the lock."""
+        try:
+            return await set_lock_credential(
+                self.matter_client,
+                self._endpoint.node,
+                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
+                credential_data=kwargs[ATTR_CREDENTIAL_DATA],
+                credential_index=kwargs.get(ATTR_CREDENTIAL_INDEX),
+                user_index=kwargs.get(ATTR_USER_INDEX),
+                user_status=kwargs.get(ATTR_USER_STATUS),
+                user_type=kwargs.get(ATTR_USER_TYPE),
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set lock credential on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_lock_credential(self, **kwargs: Any) -> None:
+        """Clear a credential from the lock."""
+        try:
+            await clear_lock_credential(
+                self.matter_client,
+                self._endpoint.node,
+                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
+                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear lock credential on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_lock_credential_status(
+        self, **kwargs: Any
+    ) -> GetLockCredentialStatusResult:
+        """Get the status of a credential slot on the lock."""
+        try:
+            return await get_lock_credential_status(
+                self.matter_client,
+                self._endpoint.node,
+                credential_type=kwargs[ATTR_CREDENTIAL_TYPE],
+                credential_index=kwargs[ATTR_CREDENTIAL_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get credential status for {self.entity_id}: {err}"
+            ) from err
 
 
 DISCOVERY_SCHEMAS = [

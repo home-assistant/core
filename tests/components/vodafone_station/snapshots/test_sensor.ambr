@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.vodafone_station_m123456789_active_connection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active connection',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -61,8 +63,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_cpu_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -80,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -110,8 +114,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -129,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -159,8 +165,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_reboot_cause-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -178,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reboot cause',
     'options': dict({
     }),
     'original_device_class': None,
@@ -207,8 +215,9 @@
 # ---
 # name: test_all_entities[sensor.vodafone_station_m123456789_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -226,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

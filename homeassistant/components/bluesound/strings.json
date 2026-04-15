@@ -37,17 +37,9 @@
     }
   },
   "issues": {
-    "deprecated_service_clear_sleep_timer": {
-      "description": "Use `button.{name}_clear_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts.",
-      "title": "Detected use of deprecated action bluesound.clear_sleep_timer"
-    },
     "deprecated_service_join": {
       "description": "Use the `media_player.join` action instead.\n\nPlease replace this action and adjust your automations and scripts.",
       "title": "Detected use of deprecated action bluesound.join"
-    },
-    "deprecated_service_set_sleep_timer": {
-      "description": "Use `button.{name}_set_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts.",
-      "title": "Detected use of deprecated action bluesound.set_sleep_timer"
     },
     "deprecated_service_unjoin": {
       "description": "Use the `media_player.unjoin` action instead.\n\nPlease replace this action and adjust your automations and scripts.",
@@ -55,16 +47,6 @@
     }
   },
   "services": {
-    "clear_sleep_timer": {
-      "description": "Clears a Bluesound timer.",
-      "fields": {
-        "entity_id": {
-          "description": "Name(s) of entities that will have the timer cleared.",
-          "name": "Entity"
-        }
-      },
-      "name": "Clear sleep timer"
-    },
     "join": {
       "description": "Groups players together under a single master speaker.",
       "fields": {
@@ -78,16 +60,6 @@
         }
       },
       "name": "Join"
-    },
-    "set_sleep_timer": {
-      "description": "Sets a Bluesound timer that will turn off the speaker. It will increase in steps: 15, 30, 45, 60, 90, 0.",
-      "fields": {
-        "entity_id": {
-          "description": "Name(s) of entities that will have a timer set.",
-          "name": "Entity"
-        }
-      },
-      "name": "Set sleep timer"
     },
     "unjoin": {
       "description": "Separates a player from a group.",

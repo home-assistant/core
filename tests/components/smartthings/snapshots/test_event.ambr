@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button1',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -62,8 +64,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -87,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button2',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -123,8 +127,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -148,6 +153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button3',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -184,8 +190,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -209,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button4',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -245,8 +253,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -270,6 +279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button5',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -306,8 +316,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -331,6 +342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button6',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,

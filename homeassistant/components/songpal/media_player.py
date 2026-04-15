@@ -16,7 +16,6 @@ from songpal import (
     VolumeChange,
 )
 from songpal.containers import Setting
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -28,11 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -40,7 +35,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY, SET_SOUND_SETTING
+from .const import CONF_ENDPOINT, DOMAIN, ERROR_REQUEST_RETRY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,13 +80,6 @@ async def async_setup_entry(
 
     songpal_entity = SongpalEntity(name, device)
     async_add_entities([songpal_entity], True)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SET_SOUND_SETTING,
-        {vol.Required(PARAM_NAME): cv.string, vol.Required(PARAM_VALUE): cv.string},
-        "async_set_sound_setting",
-    )
 
 
 class SongpalEntity(MediaPlayerEntity):
@@ -300,6 +288,8 @@ class SongpalEntity(MediaPlayerEntity):
             self._volume_min = volume.minVolume
             self._volume = volume.volume
             self._volume_control = volume
+            if self._volume_max:
+                self._attr_volume_step = 1 / self._volume_max
             self._attr_is_volume_muted = self._volume_control.is_muted
 
             status = await self._dev.get_power()
@@ -392,14 +382,6 @@ class SongpalEntity(MediaPlayerEntity):
         volume = int(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
-
-    async def async_volume_up(self) -> None:
-        """Set volume up."""
-        return await self._volume_control.set_volume(self._volume + 1)
-
-    async def async_volume_down(self) -> None:
-        """Set volume down."""
-        return await self._volume_control.set_volume(self._volume - 1)
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""

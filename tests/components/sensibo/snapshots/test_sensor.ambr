@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[load_platforms0][sensor.bedroom_filter_last_reset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter last reset',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.bedroom_pure_aqi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure AQI',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -110,8 +114,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.bedroom_pure_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -129,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -158,8 +164,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_climate_react_high_temperature_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -179,6 +186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate React high temperature threshold',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -222,8 +230,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_climate_react_low_temperature_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -243,6 +252,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate React low temperature threshold',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -286,8 +296,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_climate_react_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -305,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate React type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -334,8 +346,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_filter_last_reset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -353,6 +366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter last reset',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -383,8 +397,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_battery_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -404,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -439,8 +455,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -460,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -492,8 +510,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_rssi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -513,6 +532,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -545,8 +565,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -566,6 +587,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -601,8 +623,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_temperature_feels_like-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -622,6 +645,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -657,8 +681,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.hallway_timer_end_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -676,6 +701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer end time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -708,8 +734,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.kitchen_filter_last_reset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -727,6 +754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter last reset',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -757,8 +785,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.kitchen_pure_aqi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -782,6 +811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure AQI',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -817,8 +847,9 @@
 # ---
 # name: test_sensor[load_platforms0][sensor.kitchen_pure_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -836,6 +867,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure sensitivity',
     'options': dict({
     }),
     'original_device_class': None,

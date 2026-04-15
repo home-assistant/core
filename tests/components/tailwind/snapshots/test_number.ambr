@@ -19,8 +19,9 @@
 # ---
 # name: test_number_entities.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -43,6 +44,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status LED brightness',
     'options': dict({
     }),
     'original_device_class': None,

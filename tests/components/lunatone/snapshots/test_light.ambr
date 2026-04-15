@@ -1,8 +1,131 @@
 # serializer version: 1
+# name: test_setup[light.dali_line_0-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.dali_line_0',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[light.dali_line_0-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'DALI Line 0',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.dali_line_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[light.dali_line_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.dali_line_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-line1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[light.dali_line_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'DALI Line 1',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.dali_line_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup[light.device_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -24,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,7 +158,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '12345-device1',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device1',
     'unit_of_measurement': None,
   })
 # ---
@@ -58,12 +182,13 @@
 # ---
 # name: test_setup[light.device_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        <ColorMode.ONOFF: 'onoff'>,
+        <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -81,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,17 +217,18 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '12345-device2',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device2',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_setup[light.device_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'brightness': None,
       'color_mode': None,
       'friendly_name': 'Device 2',
       'supported_color_modes': list([
-        <ColorMode.ONOFF: 'onoff'>,
+        <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),
@@ -113,14 +240,17 @@
     'state': 'off',
   })
 # ---
-# name: test_setup[light.lunatone_12345_line0-entry]
+# name: test_setup[light.device_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
+      'max_color_temp_kelvin': 10000,
+      'min_color_temp_kelvin': 1000,
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -130,14 +260,15 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lunatone_12345_line0',
-    'has_entity_name': False,
+    'entity_id': 'light.device_3',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -148,37 +279,44 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '12345-line0',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[light.lunatone_12345_line0-state]
+# name: test_setup[light.device_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
       'brightness': None,
       'color_mode': None,
+      'color_temp_kelvin': None,
+      'friendly_name': 'Device 3',
+      'hs_color': None,
+      'max_color_temp_kelvin': 10000,
+      'min_color_temp_kelvin': 1000,
+      'rgb_color': None,
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lunatone_12345_line0',
+    'entity_id': 'light.device_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
-# name: test_setup[light.lunatone_12345_line1-entry]
+# name: test_setup[light.device_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.RGB: 'rgb'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -188,14 +326,15 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lunatone_12345_line1',
-    'has_entity_name': False,
+    'entity_id': 'light.device_4',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -206,26 +345,93 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '12345-line1',
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[light.lunatone_12345_line1-state]
+# name: test_setup[light.device_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
       'brightness': None,
       'color_mode': None,
+      'friendly_name': 'Device 4',
+      'hs_color': None,
+      'rgb_color': None,
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lunatone_12345_line1',
+    'entity_id': 'light.device_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
+  })
+# ---
+# name: test_setup[light.device_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.RGBW: 'rgbw'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.device_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'lunatone',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'be37ca9c47c24498a38bc62c7c711840-device5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[light.device_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'Device 5',
+      'hs_color': None,
+      'rgb_color': None,
+      'rgbw_color': None,
+      'supported_color_modes': list([
+        <ColorMode.RGBW: 'rgbw'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.device_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---

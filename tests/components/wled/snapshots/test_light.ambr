@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_snapshots[cct][light.wled_cct_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -195,9 +196,7 @@
         'Akemi',
       ]),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
@@ -218,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -237,7 +237,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 339,
       'color_temp_kelvin': 2942,
       'effect': 'Solid',
       'effect_list': list([
@@ -435,9 +434,7 @@
         58.494,
       ),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         175,
@@ -464,8 +461,9 @@
 # ---
 # name: test_snapshots[rgb][light.wled_rgb_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -676,6 +674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -914,8 +913,9 @@
 # ---
 # name: test_snapshots[rgb][light.wled_rgb_light_main-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -937,6 +937,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main',
     'options': dict({
     }),
     'original_device_class': None,
@@ -972,8 +973,9 @@
 # ---
 # name: test_snapshots[rgb][light.wled_rgb_light_segment_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -1184,6 +1186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Segment 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1422,8 +1425,9 @@
 # ---
 # name: test_snapshots[rgb_single_segment][light.wled_rgb_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -1634,6 +1638,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1872,8 +1877,9 @@
 # ---
 # name: test_snapshots[rgb_websocket][light.wled_websocket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -2084,6 +2090,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2322,8 +2329,9 @@
 # ---
 # name: test_snapshots[rgbw][light.wled_rgbw_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -2534,6 +2542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

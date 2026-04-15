@@ -51,7 +51,7 @@ class HMLight(HMDevice, LightEntity):
     _attr_max_color_temp_kelvin = 6500  # 153 Mireds
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         # Is dimmer?
         if self._state == "LEVEL":
@@ -59,7 +59,7 @@ class HMLight(HMDevice, LightEntity):
         return None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         try:
             return self._hm_get_state() > 0
@@ -98,7 +98,7 @@ class HMLight(HMDevice, LightEntity):
         return features
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if ColorMode.HS not in self.supported_color_modes:
             return None
@@ -116,14 +116,14 @@ class HMLight(HMDevice, LightEntity):
         )
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         if not self.supported_features & LightEntityFeature.EFFECT:
             return None
         return self._hmdevice.get_effect_list()
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the current color change program of the light."""
         if not self.supported_features & LightEntityFeature.EFFECT:
             return None
@@ -166,7 +166,7 @@ class HMLight(HMDevice, LightEntity):
 
         self._hmdevice.off(self._channel)
 
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate a data dict (self._data) from the Homematic metadata."""
         # Use LEVEL
         self._state = "LEVEL"

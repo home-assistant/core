@@ -52,7 +52,6 @@ async def test_async_setup_entry_errors(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
@@ -67,7 +66,6 @@ async def test_async_setup_entry_success(
         )
 
 
-@pytest.mark.asyncio
 async def test_async_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
@@ -87,7 +85,6 @@ async def test_async_unload_entry(
         assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio
 async def test_platforms_forwarded(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,

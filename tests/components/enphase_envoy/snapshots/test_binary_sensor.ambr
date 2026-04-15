@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_dc_switch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC switch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -98,8 +102,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.c6_combiner_482523040549_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -117,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -147,8 +153,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.collar_482520020939_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -166,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -196,8 +204,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -215,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -245,8 +255,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.encharge_123456_dc_switch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -264,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC switch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -293,8 +305,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_communicating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -312,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -342,8 +356,9 @@
 # ---
 # name: test_binary_sensor[envoy_metered_batt_relay][binary_sensor.enpower_654321_grid_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -361,6 +376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid status',
     'options': dict({
     }),
     'original_device_class': None,

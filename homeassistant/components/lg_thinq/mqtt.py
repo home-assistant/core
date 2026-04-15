@@ -60,7 +60,7 @@ class ThinQMQTT:
         if self.client is not None:
             try:
                 await self.client.async_disconnect()
-            except (ThinQAPIException, TypeError, ValueError):
+            except ThinQAPIException, TypeError, ValueError:
                 _LOGGER.exception("Failed to disconnect")
 
     def _get_failed_device_count(

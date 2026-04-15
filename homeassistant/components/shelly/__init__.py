@@ -66,6 +66,7 @@ from .repairs import (
 from .services import async_setup_services
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_migrate_rpc_sensor_description_unique_ids,
     async_migrate_rpc_virtual_components_unique_ids,
     get_coap_context,
     get_device_entry_gen,
@@ -175,6 +176,7 @@ async def _async_setup_block_entry(
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
+        LOGGER.debug("Detected first time setup for device %s", entry.title)
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
@@ -288,11 +290,18 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
+        LOGGER.debug("Detected first time setup for device %s", entry.title)
         device_entry = None
 
     sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
     runtime_data = entry.runtime_data
     runtime_data.platforms = RPC_SLEEPING_PLATFORMS
+
+    await er.async_migrate_entries(
+        hass,
+        entry.entry_id,
+        async_migrate_rpc_sensor_description_unique_ids,
+    )
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup

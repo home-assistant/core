@@ -49,7 +49,7 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
         """Set the state with the value fetched from the inverter."""
         try:
             status = await self._api.get_max_power()
-        except (TimeoutError, ClientConnectorError):
+        except TimeoutError, ClientConnectorError:
             self._attr_available = False
         else:
             self._attr_available = True

@@ -21,7 +21,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CONF_NAME, UnitOfInformation
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -44,6 +44,16 @@ MAP_JOIN_RESTRICTIONS = {
     "followed": "joinable",
 }
 
+MAP_PLATFORM_NAME = {
+    "Android": "Android",
+    "iOS": "iOS",
+    "Nintendo": "Nintendo Switch",
+    "Scarlett": "Xbox Series X|S",
+    "WindowsOneCore": "Windows",
+    "Xbox360": "Xbox 360",
+    "XboxOne": "Xbox One",
+}
+
 
 class XboxSensor(StrEnum):
     """Xbox sensor."""
@@ -63,6 +73,9 @@ class XboxSensor(StrEnum):
     FREE_STORAGE = "free_storage"
 
 
+PRESENCE_ACTIVE = "Active"
+
+
 @dataclass(kw_only=True, frozen=True)
 class XboxSensorEntityDescription(XboxBaseEntityDescription, SensorEntityDescription):
     """Xbox sensor description."""
@@ -79,7 +92,7 @@ class XboxStorageDeviceSensorEntityDescription(
     value_fn: Callable[[StorageDevice], StateType]
 
 
-def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
+def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any]:
     """Attributes of the currently played title."""
     attributes: dict[str, Any] = {
         "short_description": None,
@@ -91,9 +104,35 @@ def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
         "achievements": None,
         "gamerscore": None,
         "progress": None,
+        "platform": None,
     }
+
+    if person.presence_details:
+        active_entry = next(
+            (
+                d
+                for d in person.presence_details
+                if d.state == PRESENCE_ACTIVE and d.is_game
+            ),
+            None,
+        ) or next(
+            (d for d in person.presence_details if d.state == PRESENCE_ACTIVE),
+            None,
+        )
+
+        if active_entry:
+            platform = active_entry.device
+            if platform == "Scarlett" and title and title.devices:
+                if "Xbox360" in title.devices:
+                    platform = "Xbox360"
+                elif "XboxOne" in title.devices:
+                    platform = "XboxOne"
+
+            attributes["platform"] = MAP_PLATFORM_NAME.get(platform, platform)
+
     if not title:
         return attributes
+
     if title.detail is not None:
         attributes.update(
             {
@@ -160,6 +199,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.GAMER_SCORE,
         translation_key=XboxSensor.GAMER_SCORE,
         value_fn=lambda x, _: x.gamer_score,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.ACCOUNT_TIER,
@@ -175,9 +215,11 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.LAST_ONLINE,
         translation_key=XboxSensor.LAST_ONLINE,
         value_fn=(
-            lambda x, _: x.last_seen_date_time_utc.replace(tzinfo=UTC)
-            if x.last_seen_date_time_utc
-            else None
+            lambda x, _: (
+                x.last_seen_date_time_utc.replace(tzinfo=UTC)
+                if x.last_seen_date_time_utc
+                else None
+            )
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -185,11 +227,13 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.FOLLOWING,
         translation_key=XboxSensor.FOLLOWING,
         value_fn=lambda x, _: x.detail.following_count if x.detail else None,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.FOLLOWER,
         translation_key=XboxSensor.FOLLOWER,
         value_fn=lambda x, _: x.detail.follower_count if x.detail else None,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.NOW_PLAYING,
@@ -202,14 +246,15 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         key=XboxSensor.FRIENDS,
         translation_key=XboxSensor.FRIENDS,
         value_fn=lambda x, _: x.detail.friend_count if x.detail else None,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     XboxSensorEntityDescription(
         key=XboxSensor.IN_PARTY,
         translation_key=XboxSensor.IN_PARTY,
         value_fn=(
-            lambda x, _: x.multiplayer_summary.in_party
-            if x.multiplayer_summary
-            else None
+            lambda x, _: (
+                x.multiplayer_summary.in_party if x.multiplayer_summary else None
+            )
         ),
     ),
     XboxSensorEntityDescription(
@@ -253,12 +298,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    coordinator = config_entry.runtime_data.status
+    presence = config_entry.runtime_data.presence
     if TYPE_CHECKING:
         assert config_entry.unique_id
     async_add_entities(
         [
-            XboxSensorEntity(coordinator, config_entry.unique_id, description)
+            XboxSensorEntity(presence, config_entry.unique_id, description)
             for description in SENSOR_DESCRIPTIONS
             if check_deprecated_entity(
                 hass, config_entry.unique_id, description, SENSOR_DOMAIN
@@ -268,31 +313,45 @@ async def async_setup_entry(
     for subentry_id, subentry in config_entry.subentries.items():
         async_add_entities(
             [
-                XboxSensorEntity(coordinator, subentry.unique_id, description)
+                XboxSensorEntity(presence, subentry.unique_id, description)
                 for description in SENSOR_DESCRIPTIONS
                 if subentry.unique_id
                 and check_deprecated_entity(
                     hass, subentry.unique_id, description, SENSOR_DOMAIN
                 )
-                and subentry.unique_id in coordinator.data.presence
+                and subentry.unique_id in presence.data.presence
                 and subentry.subentry_type == "friend"
             ],
             config_subentry_id=subentry_id,
         )
 
-    consoles_coordinator = config_entry.runtime_data.consoles
+    consoles = config_entry.runtime_data.consoles
 
-    async_add_entities(
-        [
-            XboxStorageDeviceSensorEntity(
-                console, storage_device, consoles_coordinator, description
+    devices_added: set[str] = set()
+
+    @callback
+    def add_entities() -> None:
+        nonlocal devices_added
+
+        new_devices = set(consoles.data) - devices_added
+
+        if new_devices:
+            async_add_entities(
+                [
+                    XboxStorageDeviceSensorEntity(
+                        consoles.data[console_id], storage_device, consoles, description
+                    )
+                    for description in STORAGE_SENSOR_DESCRIPTIONS
+                    for console_id in new_devices
+                    if (storage_devices := consoles.data[console_id].storage_devices)
+                    for storage_device in storage_devices
+                ]
             )
-            for description in STORAGE_SENSOR_DESCRIPTIONS
-            for console in coordinator.consoles.result
-            if console.storage_devices
-            for storage_device in console.storage_devices
-        ]
-    )
+            devices_added |= new_devices
+        devices_added &= set(consoles.data)
+
+    config_entry.async_on_unload(consoles.async_add_listener(add_entities))
+    add_entities()
 
 
 class XboxSensorEntity(XboxBaseEntity, SensorEntity):
@@ -344,9 +403,9 @@ class XboxStorageDeviceSensorEntity(
     @property
     def data(self) -> StorageDevice | None:
         """Storage device data."""
-        consoles = self.coordinator.data.result
-        console = next((c for c in consoles if c.id == self._console.id), None)
-        if not console or not console.storage_devices:
+        console = self.coordinator.data[self._console.id]
+
+        if not console.storage_devices:
             return None
 
         return next(

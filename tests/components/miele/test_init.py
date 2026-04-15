@@ -109,7 +109,7 @@ async def test_devices_multiple_created_count(
     """Test that multiple devices are created."""
     await setup_integration(hass, mock_config_entry)
 
-    assert len(device_registry.devices) == 7
+    assert len(device_registry.devices) == 8
 
 
 async def test_device_info(

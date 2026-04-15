@@ -86,7 +86,13 @@ def assert_entities_alt(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that all entities match their alt snapshot."""
+    """Test that all entities match their alt snapshot.
+
+    The `_alt` test variants use VEHICLE_DATA_ALT fixture data to verify
+    entity behavior with alternative vehicle state values (different charge
+    levels, door states, climate settings, etc.). This ensures entities
+    handle varied data correctly.
+    """
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry_id)
 
     assert entity_entries

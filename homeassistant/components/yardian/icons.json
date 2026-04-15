@@ -20,6 +20,20 @@
         }
       }
     },
+    "sensor": {
+      "active_zone_count": {
+        "default": "mdi:counter"
+      },
+      "rain_delay": {
+        "default": "mdi:timer-sand"
+      },
+      "water_hammer_duration": {
+        "default": "mdi:hammer"
+      },
+      "zone_delay": {
+        "default": "mdi:timer-pause"
+      }
+    },
     "switch": {
       "switch": {
         "default": "mdi:water"

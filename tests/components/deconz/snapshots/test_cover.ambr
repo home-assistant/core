@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover[light_payload0][cover.window_covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window covering device',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -40,6 +42,7 @@
       'current_position': 0,
       'device_class': 'shade',
       'friendly_name': 'Window covering device',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -52,8 +55,9 @@
 # ---
 # name: test_level_controllable_output_cover[light_payload0][cover.vent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -71,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vent',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
@@ -92,6 +97,7 @@
       'current_tilt_position': 97,
       'device_class': 'damper',
       'friendly_name': 'Vent',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
@@ -104,8 +110,9 @@
 # ---
 # name: test_tilt_cover[light_payload0][cover.covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -123,6 +130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Covering device',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
@@ -144,6 +152,7 @@
       'current_tilt_position': 100,
       'device_class': 'shade',
       'friendly_name': 'Covering device',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,

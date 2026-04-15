@@ -58,6 +58,15 @@ async def test_list_entities(
                 unique_id="6789",
                 platform="test_platform",
             ),
+            "test_domain.unprefixed": RegistryEntryWithDefaults(
+                device_id="device123",
+                entity_id="test_domain.unprefixed",
+                has_entity_name=False,
+                original_name="Device Bla Sensor",
+                original_name_unprefixed="Sensor",
+                platform="test_platform",
+                unique_id="AAAA",
+            ),
         },
     )
 
@@ -107,6 +116,29 @@ async def test_list_entities(
             "name": None,
             "options": {},
             "original_name": None,
+            "platform": "test_platform",
+            "translation_key": None,
+            "unique_id": ANY,
+        },
+        {
+            "area_id": None,
+            "categories": {},
+            "config_entry_id": None,
+            "config_subentry_id": None,
+            "created_at": utcnow().timestamp(),
+            "device_id": "device123",
+            "disabled_by": None,
+            "entity_category": None,
+            "entity_id": "test_domain.unprefixed",
+            "has_entity_name": False,
+            "hidden_by": None,
+            "icon": None,
+            "id": ANY,
+            "labels": [],
+            "modified_at": utcnow().timestamp(),
+            "name": None,
+            "options": {},
+            "original_name": "Sensor",
             "platform": "test_platform",
             "translation_key": None,
             "unique_id": ANY,
@@ -193,6 +225,16 @@ async def test_list_entities_for_display(
                 platform="test_platform",
                 unique_id="2345",
             ),
+            "test_domain.empty_name": RegistryEntryWithDefaults(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.empty_name",
+                has_entity_name=True,
+                name="",
+                original_name="Original Name",
+                platform="test_platform",
+                unique_id="BCDE",
+            ),
             "test_domain.renamed": RegistryEntryWithDefaults(
                 area_id="area52",
                 device_id="device123",
@@ -203,10 +245,19 @@ async def test_list_entities_for_display(
                 platform="test_platform",
                 unique_id="3456",
             ),
+            "test_domain.unprefixed": RegistryEntryWithDefaults(
+                area_id="area52",
+                device_id="device123",
+                entity_id="test_domain.unprefixed",
+                original_name="Device Name Sensor",
+                original_name_unprefixed="Sensor",
+                platform="test_platform",
+                unique_id="4567",
+            ),
             "test_domain.boring": RegistryEntryWithDefaults(
                 entity_id="test_domain.boring",
                 platform="test_platform",
-                unique_id="4567",
+                unique_id="5678",
             ),
             "test_domain.disabled": RegistryEntryWithDefaults(
                 disabled_by=RegistryEntryDisabler.USER,
@@ -267,9 +318,26 @@ async def test_list_entities_for_display(
             {
                 "ai": "area52",
                 "di": "device123",
+                "ei": "test_domain.empty_name",
+                "en": "",
+                "hn": True,
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
                 "ei": "test_domain.renamed",
                 "en": "User name",
                 "hn": True,
+                "lb": [],
+                "pl": "test_platform",
+            },
+            {
+                "ai": "area52",
+                "di": "device123",
+                "ei": "test_domain.unprefixed",
+                "en": "Sensor",
                 "lb": [],
                 "pl": "test_platform",
             },
@@ -589,7 +657,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
@@ -673,7 +741,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
@@ -720,7 +788,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id"},
@@ -766,7 +834,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "id"},
@@ -812,7 +880,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope2": "id", "scope3": "other_id"},
@@ -858,7 +926,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2"]),
+            "aliases": ["alias_1", "alias_2"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
@@ -892,7 +960,7 @@ async def test_update_entity(
         {
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
-            "aliases": ["alias_1", "alias_2", "", " alias_3 ", " "],
+            "aliases": [None, "alias_1", "alias_2", "", " alias_3 ", " "],
         }
     )
 
@@ -901,7 +969,7 @@ async def test_update_entity(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": unordered(["alias_1", "alias_2", "alias_3"]),
+            "aliases": [None, "alias_1", "alias_2", "alias_3"],
             "area_id": "mock-area-id",
             "capabilities": None,
             "categories": {"scope1": "id", "scope3": "other_id"},
@@ -964,7 +1032,7 @@ async def test_update_entity_require_restart(
 
     assert msg["result"] == {
         "entity_entry": {
-            "aliases": [],
+            "aliases": [None],
             "area_id": None,
             "capabilities": None,
             "categories": {},
@@ -1002,7 +1070,7 @@ async def test_enable_entity_disabled_device(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test enabling entity of disabled device."""
-    entity_id = "test_domain.test_platform_1234"
+    entity_id = "test_domain.test_device"
     config_entry = MockConfigEntry(domain="test_platform")
     config_entry.add_to_hass(hass)
 
@@ -1012,6 +1080,7 @@ async def test_enable_entity_disabled_device(
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
+        name="Test Device",
         disabled_by=DeviceEntryDisabler.USER,
     )
     device_info = {
@@ -1350,19 +1419,18 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.test_1",
                 unique_id="uniq1",
                 platform="test_domain",
+                object_id_base="test_1",
             ),
             "test_domain.test_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_2",
                 unique_id="uniq2",
                 platform="test_domain",
-                suggested_object_id="collision",
             ),
             "test_domain.test_3": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_3",
                 name="Name by User 3",
                 unique_id="uniq3",
                 platform="test_domain",
-                suggested_object_id="suggested_3",
             ),
             "test_domain.test_4": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_4",
@@ -1385,13 +1453,11 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.test_7",
                 unique_id="uniq7",
                 platform="test_domain",
-                suggested_object_id="test_7",
             ),
             "test_domain.not_unique": RegistryEntryWithDefaults(
                 entity_id="test_domain.not_unique",
                 unique_id="not_unique_1",
                 platform="test_domain",
-                suggested_object_id="not_unique",
             ),
             "test_domain.not_unique_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.not_unique_2",
@@ -1403,7 +1469,6 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.not_unique_3",
                 unique_id="not_unique_3",
                 platform="test_domain",
-                suggested_object_id="not_unique",
             ),
             "test_domain.also_not_unique_changed_1": RegistryEntryWithDefaults(
                 entity_id="test_domain.also_not_unique_changed_1",
@@ -1425,15 +1490,25 @@ async def test_get_automatic_entity_ids(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
-    entity2 = MockEntity(unique_id="uniq2", name="Entity Name 2")
-    entity3 = MockEntity(unique_id="uniq3", name="Entity Name 3")
+    entity2 = MockEntity(unique_id="uniq2", entity_id="test_domain.collision")
+    entity3 = MockEntity(
+        unique_id="uniq3", name="Entity Name 3", entity_id="test_domain.suggested_3"
+    )
     entity4 = MockEntity(unique_id="uniq4", name="Entity Name 4")
     entity5 = MockEntity(unique_id="uniq5", name="Entity Name 5")
     entity6 = MockEntity(unique_id="uniq6", name="Entity Name 6")
-    entity7 = MockEntity(unique_id="uniq7", name="Entity Name 7")
-    entity8 = MockEntity(unique_id="not_unique_1", name="Entity Name 8")
+    entity7 = MockEntity(
+        unique_id="uniq7", name="Entity Name 7", entity_id="test_domain.test_7"
+    )
+    entity8 = MockEntity(
+        unique_id="not_unique_1",
+        name="Entity Name 8",
+        entity_id="test_domain.not_unique",
+    )
     entity9 = MockEntity(unique_id="not_unique_2", name="Entity Name 9")
-    entity10 = MockEntity(unique_id="not_unique_3", name="Not unique")
+    entity10 = MockEntity(
+        unique_id="not_unique_3", name="Not unique", entity_id="test_domain.not_unique"
+    )
     entity11 = MockEntity(unique_id="also_not_unique_1", name="Also not unique")
     entity12 = MockEntity(unique_id="also_not_unique_2", name="Also not unique")
     await component.async_add_entities(
@@ -1477,8 +1552,9 @@ async def test_get_automatic_entity_ids(
 
     assert msg["success"]
     assert msg["result"] == {
-        # No entity object for test_domain.test_1
-        "test_domain.test_1": None,
+        # No entity object for test_domain.test_1,
+        # but still works thanks to stored object_id_base
+        "test_domain.test_1": "test_domain.test_1",
         # The suggested_object_id is taken, fall back to suggested_object_id + _2
         "test_domain.test_2": "test_domain.collision_2",
         # name set by user has higher priority than suggested_object_id or entity

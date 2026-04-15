@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.backyard_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -58,8 +60,9 @@
 # ---
 # name: test_all_entities[number.backyard_bass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -82,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -115,8 +119,9 @@
 # ---
 # name: test_all_entities[number.backyard_treble-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -139,6 +144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
     'original_device_class': None,
@@ -172,8 +178,9 @@
 # ---
 # name: test_all_entities[number.backyard_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -196,6 +203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,8 +237,9 @@
 # ---
 # name: test_all_entities[number.bedroom_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -253,6 +262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -286,8 +296,9 @@
 # ---
 # name: test_all_entities[number.bedroom_bass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -310,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -343,8 +355,9 @@
 # ---
 # name: test_all_entities[number.bedroom_treble-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -367,6 +380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
     'original_device_class': None,
@@ -400,8 +414,9 @@
 # ---
 # name: test_all_entities[number.bedroom_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -424,6 +439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -457,8 +473,9 @@
 # ---
 # name: test_all_entities[number.kitchen_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -481,6 +498,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -514,8 +532,9 @@
 # ---
 # name: test_all_entities[number.kitchen_bass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -538,6 +557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -571,8 +591,9 @@
 # ---
 # name: test_all_entities[number.kitchen_treble-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -595,6 +616,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
     'original_device_class': None,
@@ -628,8 +650,9 @@
 # ---
 # name: test_all_entities[number.kitchen_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -652,6 +675,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -685,8 +709,9 @@
 # ---
 # name: test_all_entities[number.living_room_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -709,6 +734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -742,8 +768,9 @@
 # ---
 # name: test_all_entities[number.living_room_bass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -766,6 +793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bass',
     'options': dict({
     }),
     'original_device_class': None,
@@ -799,8 +827,9 @@
 # ---
 # name: test_all_entities[number.living_room_treble-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -823,6 +852,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Treble',
     'options': dict({
     }),
     'original_device_class': None,
@@ -856,8 +886,9 @@
 # ---
 # name: test_all_entities[number.living_room_turn_on_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -880,6 +911,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn-on volume',
     'options': dict({
     }),
     'original_device_class': None,

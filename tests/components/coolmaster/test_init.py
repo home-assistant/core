@@ -10,12 +10,11 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_load_entry(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
+    hass: HomeAssistant, load_int: ConfigEntry, unit_count: int
 ) -> None:
     """Test Coolmaster initial load."""
-    # 2 units times 4 entities (climate, binary_sensor, sensor, button).
-    assert hass.states.async_entity_ids_count() == 8
+    # 4 units times 4 entities (climate, binary_sensor, sensor, button).
+    assert hass.states.async_entity_ids_count() == unit_count * 4
     assert load_int.state is ConfigEntryState.LOADED
 
 
@@ -33,6 +32,7 @@ async def test_registry_cleanup(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     hass_ws_client: WebSocketGenerator,
+    unit_count: int,
 ) -> None:
     """Test being able to remove a disconnected device."""
     entry_id = load_int.entry_id
@@ -40,7 +40,9 @@ async def test_registry_cleanup(
     live_id = "L1.100"
     dead_id = "L2.200"
 
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry_id)) == unit_count
+    )
     device_registry.async_get_or_create(
         config_entry_id=entry_id,
         identifiers={(DOMAIN, dead_id)},
@@ -50,7 +52,10 @@ async def test_registry_cleanup(
         sw_version="1.0",
     )
 
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 3
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry_id))
+        == unit_count + 1
+    )
 
     assert await async_setup_component(hass, "config", {})
     client = await hass_ws_client(hass)
@@ -59,7 +64,10 @@ async def test_registry_cleanup(
     assert device is not None
     response = await client.remove_device(device.id, entry_id)
     assert not response["success"]
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 3
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry_id))
+        == unit_count + 1
+    )
     assert device_registry.async_get_device(identifiers={(DOMAIN, live_id)}) is not None
 
     # Try to remove "L2.200" - succeeds since it is dead
@@ -67,5 +75,7 @@ async def test_registry_cleanup(
     assert device is not None
     response = await client.remove_device(device.id, entry_id)
     assert response["success"]
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry_id)) == unit_count
+    )
     assert device_registry.async_get_device(identifiers={(DOMAIN, dead_id)}) is None

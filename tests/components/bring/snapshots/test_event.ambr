@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[event.baumarkt_activities-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activities',
     'options': dict({
     }),
     'original_device_class': None,
@@ -86,8 +88,9 @@
 # ---
 # name: test_setup[event.einkauf_activities-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -111,6 +114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activities',
     'options': dict({
     }),
     'original_device_class': None,

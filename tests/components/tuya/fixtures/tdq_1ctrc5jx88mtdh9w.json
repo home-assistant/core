@@ -1,0 +1,303 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Puerta Casa ",
+  "category": "tdq",
+  "product_id": "1ctrc5jx88mtdh9w",
+  "product_name": "WiFi Breaker",
+  "online": true,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2023-12-17T14:43:05+00:00",
+  "create_time": "2023-12-17T14:43:05+00:00",
+  "update_time": "2023-12-17T14:43:05+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "random_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["flip", "sync", "button"]
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "test_bit": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 5,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["ov_cr", "ov_vol", "ov_pwr", "ls_cr", "ls_vol", "ls_pow"]
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "random_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["flip", "sync", "button"]
+      }
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "countdown_1": 0,
+    "test_bit": 0,
+    "fault": 0,
+    "relay_status": "0",
+    "random_time": "",
+    "cycle_time": "",
+    "switch_inching": "AQAB",
+    "switch_type": "flip"
+  },
+  "set_up": true,
+  "support_local": true,
+  "local_strategy": {
+    "1": {
+      "value_convert": "default",
+      "status_code": "switch_1",
+      "config_item": {
+        "statusFormat": {
+          "switch_1": "$"
+        },
+        "valueDesc": {},
+        "valueType": "Boolean",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "9": {
+      "value_convert": "default",
+      "status_code": "countdown_1",
+      "config_item": {
+        "statusFormat": {
+          "countdown_1": "$"
+        },
+        "valueDesc": {
+          "unit": "s",
+          "min": 0,
+          "max": 86400,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "24": {
+      "value_convert": "default",
+      "status_code": "test_bit",
+      "config_item": {
+        "statusFormat": {
+          "test_bit": "$"
+        },
+        "valueDesc": {
+          "min": 0,
+          "max": 5,
+          "scale": 0,
+          "step": 1
+        },
+        "valueType": "Integer",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "29": {
+      "value_convert": "default",
+      "status_code": "fault",
+      "config_item": {
+        "statusFormat": {
+          "fault": "$"
+        },
+        "valueDesc": {
+          "label": ["ov_cr", "ov_vol", "ov_pwr", "ls_cr", "ls_vol", "ls_pow"]
+        },
+        "valueType": "Bitmap",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "38": {
+      "value_convert": "enum",
+      "status_code": "relay_status",
+      "config_item": {
+        "statusFormat": {
+          "relay_status": "$"
+        },
+        "valueDesc": {
+          "range": ["0", "1", "2"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {
+          "0": {
+            "code": "relay_status",
+            "value": "0"
+          },
+          "1": {
+            "code": "relay_status",
+            "value": "1"
+          },
+          "2": {
+            "code": "relay_status",
+            "value": "2"
+          },
+          "memory": {
+            "code": "relay_status",
+            "value": "2"
+          },
+          "off": {
+            "code": "relay_status",
+            "value": "0"
+          },
+          "on": {
+            "code": "relay_status",
+            "value": "1"
+          }
+        },
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "42": {
+      "value_convert": "default",
+      "status_code": "random_time",
+      "config_item": {
+        "statusFormat": {
+          "random_time": "$"
+        },
+        "valueDesc": {
+          "maxlen": 255
+        },
+        "valueType": "String",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "43": {
+      "value_convert": "default",
+      "status_code": "cycle_time",
+      "config_item": {
+        "statusFormat": {
+          "cycle_time": "$"
+        },
+        "valueDesc": {
+          "maxlen": 255
+        },
+        "valueType": "String",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "44": {
+      "value_convert": "default",
+      "status_code": "switch_inching",
+      "config_item": {
+        "statusFormat": {
+          "switch_inching": "$"
+        },
+        "valueDesc": {
+          "maxlen": 255
+        },
+        "valueType": "String",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    },
+    "47": {
+      "value_convert": "default",
+      "status_code": "switch_type",
+      "config_item": {
+        "statusFormat": {
+          "switch_type": "$"
+        },
+        "valueDesc": {
+          "range": ["flip", "sync", "button"]
+        },
+        "valueType": "Enum",
+        "enumMappingMap": {},
+        "pid": "1ctrc5jx88mtdh9w"
+      }
+    }
+  }
+}

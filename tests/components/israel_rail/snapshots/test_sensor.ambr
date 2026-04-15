@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_valid_config[sensor.mock_title_departure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -51,8 +53,9 @@
 # ---
 # name: test_valid_config[sensor.mock_title_departure_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure +1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -101,8 +105,9 @@
 # ---
 # name: test_valid_config[sensor.mock_title_departure_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure +2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -151,8 +157,9 @@
 # ---
 # name: test_valid_config[sensor.mock_title_platform-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -200,8 +208,9 @@
 # ---
 # name: test_valid_config[sensor.mock_title_train_number-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -219,6 +228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Train number',
     'options': dict({
     }),
     'original_device_class': None,
@@ -249,8 +259,9 @@
 # ---
 # name: test_valid_config[sensor.mock_title_trains-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -268,6 +279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trains',
     'options': dict({
     }),
     'original_device_class': None,

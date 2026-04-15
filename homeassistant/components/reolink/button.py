@@ -7,22 +7,17 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
-import voluptuous as vol
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import SUPPORT_PTZ_SPEED
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
@@ -32,9 +27,6 @@ from .entity import (
 from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
-ATTR_SPEED = "speed"
-SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
-SERVICE_PTZ_MOVE = "ptz_move"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -114,6 +106,46 @@ BUTTON_ENTITIES = (
         ptz_cmd=PtzEnum.zoomout.value,
     ),
     ReolinkButtonEntityDescription(
+        key="ptz_left_up",
+        translation_key="ptz_left_up",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.leftup.value),
+        ptz_cmd=PtzEnum.leftup.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_left_down",
+        translation_key="ptz_left_down",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.leftdown.value),
+        ptz_cmd=PtzEnum.leftdown.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_right_up",
+        translation_key="ptz_right_up",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.rightup.value),
+        ptz_cmd=PtzEnum.rightup.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_right_down",
+        translation_key="ptz_right_down",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_diagonal"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.rightdown.value),
+        ptz_cmd=PtzEnum.rightdown.value,
+    ),
+    ReolinkButtonEntityDescription(
+        key="ptz_auto",
+        translation_key="ptz_auto",
+        entity_registry_enabled_default=False,
+        supported=lambda api, ch: api.supported(ch, "ptz_auto"),
+        method=lambda api, ch: api.set_ptz_command(ch, command=PtzEnum.auto.value),
+        ptz_cmd=PtzEnum.auto.value,
+    ),
+    ReolinkButtonEntityDescription(
         key="ptz_calibrate",
         translation_key="ptz_calibrate",
         entity_category=EntityCategory.CONFIG,
@@ -178,14 +210,6 @@ async def async_setup_entry(
     )
     async_add_entities(entities)
 
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_PTZ_MOVE,
-        {vol.Required(ATTR_SPEED): cv.positive_int},
-        "async_ptz_move",
-        [SUPPORT_PTZ_SPEED],
-    )
-
 
 class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
     """Base button entity class for Reolink IP cameras."""
@@ -219,9 +243,8 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         await self.entity_description.method(self._host.api, self._channel)
 
     @raise_translated_error
-    async def async_ptz_move(self, **kwargs: Any) -> None:
+    async def async_ptz_move(self, speed: int) -> None:
         """PTZ move with speed."""
-        speed = kwargs[ATTR_SPEED]
         await self._host.api.set_ptz_command(
             self._channel, command=self.entity_description.ptz_cmd, speed=speed
         )

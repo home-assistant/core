@@ -8,64 +8,84 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-from .coordinator import SolarLogCoordinator
+from .coordinator import (
+    SolarLogBasicDataCoordinator,
+    SolarLogDeviceDataCoordinator,
+    SolarLogLongtimeDataCoordinator,
+)
 
 
-class SolarLogBaseEntity(CoordinatorEntity[SolarLogCoordinator]):
-    """SolarLog base entity."""
+class SolarLogBasicCoordinatorEntity(CoordinatorEntity[SolarLogBasicDataCoordinator]):
+    """Base SolarLog Coordinator entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: SolarLogCoordinator,
+        coordinator: SolarLogBasicDataCoordinator,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize the SolarLogCoordinator sensor."""
+        """Initialize the SolarLogBasicCoordinator sensor."""
         super().__init__(coordinator)
 
-        self.entity_description = description
-
-
-class SolarLogCoordinatorEntity(SolarLogBaseEntity):
-    """Base SolarLog Coordinator entity."""
-
-    def __init__(
-        self,
-        coordinator: SolarLogCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the SolarLogCoordinator sensor."""
-        super().__init__(coordinator, description)
-
-        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
             model="Controller",
-            identifiers={(DOMAIN, coordinator.unique_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name="SolarLog",
-            configuration_url=coordinator.host,
+            configuration_url=coordinator.solarlog.host,
         )
+        self.entity_description = description
 
 
-class SolarLogInverterEntity(SolarLogBaseEntity):
+class SolarLogInverterEntity(CoordinatorEntity[SolarLogDeviceDataCoordinator]):
     """Base SolarLog inverter entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: SolarLogCoordinator,
+        coordinator: SolarLogDeviceDataCoordinator,
         description: SensorEntityDescription,
         device_id: int,
     ) -> None:
         """Initialize the SolarLogInverter sensor."""
-        super().__init__(coordinator, description)
-        name = f"{coordinator.unique_id}_{slugify(coordinator.solarlog.device_name(device_id))}"
+        super().__init__(coordinator)
+        name = f"{coordinator.config_entry.entry_id}_{slugify(coordinator.solarlog.device_name(device_id))}"
         self._attr_unique_id = f"{name}_{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
             model="Inverter",
             identifiers={(DOMAIN, name)},
             name=coordinator.solarlog.device_name(device_id),
-            via_device=(DOMAIN, coordinator.unique_id),
+            via_device=(DOMAIN, coordinator.config_entry.entry_id),
         )
         self.device_id = device_id
+        self.entity_description = description
+
+
+class SolarLogLongtimeCoordinatorEntity(
+    CoordinatorEntity[SolarLogLongtimeDataCoordinator]
+):
+    """Base SolarLog Coordinator entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: SolarLogLongtimeDataCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the SolarLogLongtimeCoordinator sensor."""
+        super().__init__(coordinator)
+
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            manufacturer="Solar-Log",
+            model="Controller",
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name="SolarLog",
+            configuration_url=coordinator.solarlog.host,
+        )
+        self.entity_description = description

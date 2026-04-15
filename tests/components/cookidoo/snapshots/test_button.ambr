@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[button.cookidoo_clear_shopping_list_and_additional_purchases-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clear shopping list and additional purchases',
     'options': dict({
     }),
     'original_device_class': None,

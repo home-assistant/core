@@ -84,3 +84,10 @@ def get_remote_keys() -> list[str]:
             for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
         ],
     ]
+
+
+async def supports_battery(client: MozartClient) -> bool:
+    """Get if a Mozart device has a battery."""
+    battery_state = await client.get_battery_state()
+
+    return battery_state.state != "BatteryNotPresent"

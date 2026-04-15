@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_device[cury_gen4][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_device[cury_gen4][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_device[cury_gen4][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_device[cury_gen4][number.test_name_left_slot_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -172,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -206,8 +214,9 @@
 # ---
 # name: test_device[cury_gen4][number.test_name_right_slot_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -230,6 +239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -264,8 +274,9 @@
 # ---
 # name: test_device[cury_gen4][select.test_name_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -293,6 +304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -331,8 +343,9 @@
 # ---
 # name: test_device[cury_gen4][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -350,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -380,8 +394,9 @@
 # ---
 # name: test_device[cury_gen4][sensor.test_name_left_slot_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -401,6 +416,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -432,8 +448,9 @@
 # ---
 # name: test_device[cury_gen4][sensor.test_name_left_slot_vial-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -451,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot vial',
     'options': dict({
     }),
     'original_device_class': None,
@@ -480,8 +498,9 @@
 # ---
 # name: test_device[cury_gen4][sensor.test_name_right_slot_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -501,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -532,8 +552,9 @@
 # ---
 # name: test_device[cury_gen4][sensor.test_name_right_slot_vial-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -551,6 +572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot vial',
     'options': dict({
     }),
     'original_device_class': None,
@@ -580,8 +602,9 @@
 # ---
 # name: test_device[cury_gen4][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -601,6 +624,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -633,8 +657,9 @@
 # ---
 # name: test_device[cury_gen4][switch.test_name_away_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -652,6 +677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -681,8 +707,9 @@
 # ---
 # name: test_device[cury_gen4][switch.test_name_left_slot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,6 +727,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -729,8 +757,9 @@
 # ---
 # name: test_device[cury_gen4][switch.test_name_left_slot_boost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -748,6 +777,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left slot boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -777,8 +807,9 @@
 # ---
 # name: test_device[cury_gen4][switch.test_name_right_slot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -796,6 +827,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -825,8 +857,9 @@
 # ---
 # name: test_device[cury_gen4][switch.test_name_right_slot_boost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -844,6 +877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Right slot boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -873,8 +907,9 @@
 # ---
 # name: test_device[cury_gen4][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -892,6 +927,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -912,7 +948,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '1.8.99-dev144746',
@@ -934,8 +970,9 @@
 # ---
 # name: test_device[cury_gen4][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -953,6 +990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -973,7 +1011,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '1.8.99-dev144746',
@@ -995,8 +1033,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1014,6 +1053,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1044,8 +1084,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1063,6 +1104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1093,8 +1135,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1112,6 +1155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -1142,14 +1186,13 @@
 # ---
 # name: test_device[duo_bulb_gen3][light.test_name_living_room_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -1169,6 +1212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Living room lamp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1188,14 +1232,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Test name Living room lamp',
       'hs_color': None,
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -1213,8 +1254,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1232,6 +1274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1262,8 +1305,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1283,6 +1327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Living room lamp energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1321,8 +1366,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1342,6 +1388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Living room lamp power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1377,8 +1424,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1398,6 +1446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1430,8 +1479,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1449,6 +1499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1469,7 +1520,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '1.8.99-dev144333',
@@ -1491,8 +1542,9 @@
 # ---
 # name: test_device[duo_bulb_gen3][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1510,6 +1562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1530,7 +1583,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '1.8.99-dev144333',
@@ -1552,8 +1605,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1571,6 +1625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1601,8 +1656,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1620,6 +1676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1650,8 +1707,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overpowering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1669,6 +1727,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1699,8 +1758,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1718,6 +1778,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1748,8 +1809,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1767,6 +1829,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1797,8 +1860,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1816,6 +1880,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1846,8 +1911,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overpowering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1865,6 +1931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1895,8 +1962,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1914,6 +1982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1944,8 +2013,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1963,6 +2033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -1993,8 +2064,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2012,6 +2084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2042,8 +2115,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2061,6 +2135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2091,8 +2166,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overpowering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2110,6 +2186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2140,8 +2217,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2159,6 +2237,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2189,8 +2268,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2208,6 +2288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2238,8 +2319,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2257,6 +2339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2287,8 +2370,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overpowering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2306,6 +2390,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2336,8 +2421,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2355,6 +2441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2385,8 +2472,9 @@
 # ---
 # name: test_device[power_strip_gen4][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2404,6 +2492,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2434,8 +2523,9 @@
 # ---
 # name: test_device[power_strip_gen4][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2453,6 +2543,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -2483,8 +2574,9 @@
 # ---
 # name: test_device[power_strip_gen4][light.test_name_output_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -2506,6 +2598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -2540,8 +2633,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_1_name_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2561,6 +2655,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2596,8 +2691,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_1_name_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2617,6 +2713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2655,8 +2752,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_1_name_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2676,6 +2774,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2714,8 +2813,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_1_name_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2735,6 +2835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2773,8 +2874,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_1_name_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2794,6 +2896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2829,8 +2932,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_1_name_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2850,6 +2954,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2885,8 +2990,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_1_name_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2906,6 +3012,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2941,8 +3048,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_3_name_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2962,6 +3070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2997,8 +3106,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_3_name_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3018,6 +3128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3056,8 +3167,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_3_name_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3077,6 +3189,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3115,8 +3228,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_3_name_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3136,6 +3250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3174,8 +3289,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_3_name_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3195,6 +3311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3230,8 +3347,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_3_name_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3251,6 +3369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3286,8 +3405,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.switch_3_name_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3307,6 +3427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3342,8 +3463,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3361,6 +3483,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3391,8 +3514,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3412,6 +3536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3447,8 +3572,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3468,6 +3594,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3506,8 +3633,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3527,6 +3655,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3565,8 +3694,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3586,6 +3716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3624,8 +3755,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3645,6 +3777,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3680,8 +3813,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3701,6 +3835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3736,8 +3871,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3757,6 +3893,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3792,8 +3929,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3813,6 +3951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3848,8 +3987,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3869,6 +4009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3907,8 +4048,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3928,6 +4070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3966,8 +4109,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3987,6 +4131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4025,8 +4170,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4046,6 +4192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4081,8 +4228,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4102,6 +4250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4137,8 +4286,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4158,6 +4308,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4193,8 +4344,9 @@
 # ---
 # name: test_device[power_strip_gen4][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4214,6 +4366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -4246,8 +4399,9 @@
 # ---
 # name: test_device[power_strip_gen4][switch.switch_1_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4265,6 +4419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4294,8 +4449,9 @@
 # ---
 # name: test_device[power_strip_gen4][switch.switch_3_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4313,6 +4469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4342,8 +4499,9 @@
 # ---
 # name: test_device[power_strip_gen4][switch.test_name_output_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4361,6 +4519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4390,8 +4549,9 @@
 # ---
 # name: test_device[power_strip_gen4][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4409,6 +4569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -4429,7 +4590,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '1.8.99-dev134818',
@@ -4451,8 +4612,9 @@
 # ---
 # name: test_device[power_strip_gen4][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4470,6 +4632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -4490,7 +4653,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '1.8.99-dev134818',
@@ -4512,8 +4675,9 @@
 # ---
 # name: test_device[presence_gen4][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4531,6 +4695,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -4561,8 +4726,9 @@
 # ---
 # name: test_device[presence_gen4][binary_sensor.test_name_my_zone_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4580,6 +4746,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My zone occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -4610,8 +4777,9 @@
 # ---
 # name: test_device[presence_gen4][binary_sensor.test_name_new_zone_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4629,6 +4797,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'New zone occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -4659,8 +4828,9 @@
 # ---
 # name: test_device[presence_gen4][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4678,6 +4848,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -4708,8 +4879,9 @@
 # ---
 # name: test_device[presence_gen4][binary_sensor.test_name_room_occupancy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4727,6 +4899,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
@@ -4757,8 +4930,9 @@
 # ---
 # name: test_device[presence_gen4][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4776,6 +4950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -4806,8 +4981,9 @@
 # ---
 # name: test_device[presence_gen4][sensor.test_name_illuminance_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4831,6 +5007,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4866,8 +5043,9 @@
 # ---
 # name: test_device[presence_gen4][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4885,6 +5063,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4915,8 +5094,9 @@
 # ---
 # name: test_device[presence_gen4][sensor.test_name_my_zone_detected_objects-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4936,6 +5116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My zone detected objects',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4967,8 +5148,9 @@
 # ---
 # name: test_device[presence_gen4][sensor.test_name_new_zone_detected_objects-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4988,6 +5170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'New zone detected objects',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5019,8 +5202,9 @@
 # ---
 # name: test_device[presence_gen4][sensor.test_name_room_detected_objects-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5040,6 +5224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room detected objects',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5071,8 +5256,9 @@
 # ---
 # name: test_device[presence_gen4][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5092,6 +5278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -5124,8 +5311,9 @@
 # ---
 # name: test_device[presence_gen4][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5143,6 +5331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -5163,7 +5352,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '1.8.99',
@@ -5185,8 +5374,9 @@
 # ---
 # name: test_device[presence_gen4][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5204,6 +5394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -5224,7 +5415,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '1.8.99',
@@ -5246,8 +5437,9 @@
 # ---
 # name: test_device[wall_display_xl][binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5265,6 +5457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -5295,8 +5488,9 @@
 # ---
 # name: test_device[wall_display_xl][binary_sensor.test_name_external_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5314,6 +5508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -5344,8 +5539,9 @@
 # ---
 # name: test_device[wall_display_xl][binary_sensor.test_name_input_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5363,6 +5559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -5393,8 +5590,9 @@
 # ---
 # name: test_device[wall_display_xl][binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5412,6 +5610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -5442,8 +5641,9 @@
 # ---
 # name: test_device[wall_display_xl][button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5461,6 +5661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -5491,8 +5692,9 @@
 # ---
 # name: test_device[wall_display_xl][button.test_name_turn_off_the_screen-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5510,6 +5712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn off the screen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5539,8 +5742,9 @@
 # ---
 # name: test_device[wall_display_xl][button.test_name_turn_on_the_screen-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5558,6 +5762,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn on the screen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5587,8 +5792,9 @@
 # ---
 # name: test_device[wall_display_xl][event.test_name_input_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -5607,6 +5813,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 0',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -5646,8 +5853,9 @@
 # ---
 # name: test_device[wall_display_xl][event.test_name_input_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -5666,6 +5874,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 3',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -5705,8 +5914,9 @@
 # ---
 # name: test_device[wall_display_xl][event.test_name_input_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -5725,6 +5935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 4',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -5764,8 +5975,9 @@
 # ---
 # name: test_device[wall_display_xl][sensor.test_name_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5785,6 +5997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5798,7 +6011,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123456789ABC-humidity:0-humidity_0',
+    'unique_id': '123456789ABC-humidity:0-humidity_rh',
     'unit_of_measurement': '%',
   })
 # ---
@@ -5820,8 +6033,9 @@
 # ---
 # name: test_device[wall_display_xl][sensor.test_name_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5841,6 +6055,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -5873,8 +6088,9 @@
 # ---
 # name: test_device[wall_display_xl][sensor.test_name_illuminance_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5898,6 +6114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5933,8 +6150,9 @@
 # ---
 # name: test_device[wall_display_xl][sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5952,6 +6170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -5982,8 +6201,9 @@
 # ---
 # name: test_device[wall_display_xl][sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6003,6 +6223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -6035,8 +6256,9 @@
 # ---
 # name: test_device[wall_display_xl][sensor.test_name_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6056,6 +6278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6069,7 +6292,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123456789ABC-temperature:0-temperature_0',
+    'unique_id': '123456789ABC-temperature:0-temperature_tc',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -6091,8 +6314,9 @@
 # ---
 # name: test_device[wall_display_xl][switch.test_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6110,6 +6334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -6139,8 +6364,9 @@
 # ---
 # name: test_device[wall_display_xl][update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6158,6 +6384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -6178,7 +6405,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '2.4.4',
@@ -6200,8 +6427,9 @@
 # ---
 # name: test_device[wall_display_xl][update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6219,6 +6447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -6239,7 +6468,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '2.4.4',
@@ -6261,8 +6490,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6280,6 +6510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -6310,8 +6541,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6329,6 +6561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -6359,8 +6592,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6378,6 +6612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -6408,8 +6643,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6427,6 +6663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6457,8 +6694,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6476,6 +6714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6506,8 +6745,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overpowering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6525,6 +6765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6555,8 +6796,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6574,6 +6816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6604,8 +6847,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6623,6 +6867,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -6653,8 +6898,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6672,6 +6918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -6702,8 +6949,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[cover.test_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6721,6 +6969,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
@@ -6740,6 +6989,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'shutter',
       'friendly_name': 'Test name',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -6752,8 +7002,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6773,6 +7024,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6808,8 +7060,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6829,6 +7082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6867,8 +7121,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6888,6 +7143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6923,8 +7179,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6942,6 +7199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -6972,8 +7230,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6993,6 +7252,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7028,8 +7288,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7049,6 +7310,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -7081,8 +7343,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7102,6 +7365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7137,8 +7401,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7158,6 +7423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7193,8 +7459,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7212,6 +7479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -7232,7 +7500,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '1.6.1',
@@ -7254,8 +7522,9 @@
 # ---
 # name: test_shelly_2pm_gen3_cover[update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7273,6 +7542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -7293,7 +7563,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '1.6.1',
@@ -7315,8 +7585,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7334,6 +7605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -7364,8 +7636,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7383,6 +7656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -7413,8 +7687,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7432,6 +7707,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -7462,8 +7738,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7481,6 +7758,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7511,8 +7789,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7530,6 +7809,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7560,8 +7840,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overpowering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7579,6 +7860,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7609,8 +7891,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7628,6 +7911,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7658,8 +7942,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overcurrent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7677,6 +7962,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7707,8 +7993,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overheating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7726,6 +8013,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7756,8 +8044,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overpowering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7775,6 +8064,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overpowering',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7805,8 +8095,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overvoltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7824,6 +8115,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overvoltage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7854,8 +8146,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7873,6 +8166,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -7903,8 +8197,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7922,6 +8217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -7952,8 +8248,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7971,6 +8268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -8001,8 +8299,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8022,6 +8321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8057,8 +8357,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8078,6 +8379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8116,8 +8418,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8137,6 +8440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8175,8 +8479,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8196,6 +8501,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8234,8 +8540,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8255,6 +8562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8290,8 +8598,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8311,6 +8620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8346,8 +8656,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8367,6 +8678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8402,8 +8714,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8423,6 +8736,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8458,8 +8772,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8479,6 +8794,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8514,8 +8830,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8535,6 +8852,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8573,8 +8891,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8594,6 +8913,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8632,8 +8952,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8653,6 +8974,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8691,8 +9013,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8712,6 +9035,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8747,8 +9071,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8768,6 +9093,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8803,8 +9129,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8824,6 +9151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8859,8 +9187,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8880,6 +9209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8915,8 +9245,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8936,6 +9267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -8968,8 +9300,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[switch.test_name_output_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8987,6 +9320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -9016,8 +9350,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[switch.test_name_output_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9035,6 +9370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -9064,8 +9400,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9083,6 +9420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -9103,7 +9441,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '1.6.1',
@@ -9125,8 +9463,9 @@
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9144,6 +9483,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -9164,7 +9504,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '1.6.1',
@@ -9186,8 +9526,9 @@
 # ---
 # name: test_shelly_pro_3em[binary_sensor.test_name_cloud-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9205,6 +9546,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -9235,8 +9577,9 @@
 # ---
 # name: test_shelly_pro_3em[binary_sensor.test_name_restart_required-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9254,6 +9597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -9284,8 +9628,9 @@
 # ---
 # name: test_shelly_pro_3em[button.test_name_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9303,6 +9648,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -9333,8 +9679,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9354,6 +9701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9389,8 +9737,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9410,6 +9759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9445,8 +9795,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9466,6 +9817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9504,8 +9856,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9525,6 +9878,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9563,8 +9917,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9582,6 +9937,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -9612,8 +9968,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_neutral_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9633,6 +9990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Neutral current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9668,8 +10026,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9689,6 +10048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9724,8 +10084,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9745,6 +10106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9780,8 +10142,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9801,6 +10164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9839,8 +10203,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9860,6 +10225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9898,8 +10264,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9919,6 +10286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9954,8 +10322,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9975,6 +10344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10010,8 +10380,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_power_factor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10031,6 +10402,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -10062,8 +10434,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10083,6 +10456,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10118,8 +10492,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10139,6 +10514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10174,8 +10550,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10195,6 +10572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10230,8 +10608,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10251,6 +10630,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10289,8 +10669,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10310,6 +10691,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10348,8 +10730,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10369,6 +10752,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10404,8 +10788,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10425,6 +10810,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10460,8 +10846,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_power_factor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10481,6 +10868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -10512,8 +10900,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10533,6 +10922,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10568,8 +10958,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10589,6 +10980,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10624,8 +11016,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10645,6 +11038,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10680,8 +11074,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10701,6 +11096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10739,8 +11135,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_energy_returned-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10760,6 +11157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy returned',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -10798,8 +11196,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10819,6 +11218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10854,8 +11254,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10875,6 +11276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10910,8 +11312,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_power_factor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10931,6 +11334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -10962,8 +11366,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10983,6 +11388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11018,8 +11424,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11039,6 +11446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -11074,8 +11482,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11095,6 +11504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -11127,8 +11537,9 @@
 # ---
 # name: test_shelly_pro_3em[sensor.test_name_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -11148,6 +11559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -11161,7 +11573,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123456789ABC-temperature:0-temperature_0',
+    'unique_id': '123456789ABC-temperature:0-temperature_tc',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -11183,8 +11595,9 @@
 # ---
 # name: test_shelly_pro_3em[update.test_name_beta_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11202,6 +11615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Beta firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -11222,7 +11636,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Beta firmware',
       'in_progress': False,
       'installed_version': '1.6.1',
@@ -11244,8 +11658,9 @@
 # ---
 # name: test_shelly_pro_3em[update.test_name_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -11263,6 +11678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -11283,7 +11699,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/shelly/icon.png',
+      'entity_picture': '/api/brands/integration/shelly/icon.png',
       'friendly_name': 'Test name Firmware',
       'in_progress': False,
       'installed_version': '1.6.1',

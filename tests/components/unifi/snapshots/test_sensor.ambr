@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_clients-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -52,8 +54,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -86,6 +89,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -130,8 +134,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -149,6 +154,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -183,8 +189,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.device_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -202,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -232,8 +240,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_ac_power_budget-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -253,6 +262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC Power Budget',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -288,8 +298,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_ac_power_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -309,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC Power Consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -344,8 +356,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_clients-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -365,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -395,8 +409,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_cpu_utilization-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -416,6 +431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU utilization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -447,8 +463,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_memory_utilization-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -468,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory utilization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -499,8 +517,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_outlet_2_outlet_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -520,6 +539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outlet 2 Outlet Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -555,8 +575,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -589,6 +610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -633,8 +655,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.dummy_usp_pdu_pro_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -652,6 +675,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -682,8 +706,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_clients-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -703,6 +728,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -733,8 +759,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_cloudflare_wan2_latency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -754,6 +781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloudflare WAN2 latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -789,8 +817,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_cloudflare_wan_latency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -810,6 +839,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloudflare WAN latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -845,8 +875,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_google_wan2_latency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -866,6 +897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google WAN2 latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -901,8 +933,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_google_wan_latency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -922,6 +955,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google WAN latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -957,8 +991,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_microsoft_wan2_latency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -978,6 +1013,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microsoft WAN2 latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1013,8 +1049,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_microsoft_wan_latency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1034,6 +1071,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microsoft WAN latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1069,8 +1107,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_poe_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1090,6 +1129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 PoE Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1125,8 +1165,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1146,6 +1187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1184,8 +1226,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_1_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1205,6 +1248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1243,8 +1287,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_poe_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1264,6 +1309,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 PoE Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1299,8 +1345,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1320,6 +1367,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1358,8 +1406,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_2_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1379,6 +1428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1417,8 +1467,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_3_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1438,6 +1489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 3 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1476,8 +1528,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_3_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1497,6 +1550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 3 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1535,8 +1589,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_poe_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1556,6 +1611,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 PoE Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1591,8 +1647,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1612,6 +1669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1650,8 +1708,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_port_4_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1671,6 +1730,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1709,8 +1769,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1743,6 +1804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1787,8 +1849,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1806,6 +1869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1836,8 +1900,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1857,6 +1922,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1887,8 +1953,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_link_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1908,6 +1975,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1943,8 +2011,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1964,6 +2033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1999,8 +2069,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2020,6 +2091,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2055,8 +2127,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wired_client_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2074,6 +2147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2104,8 +2178,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_rx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2125,6 +2200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2160,8 +2236,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_tx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2181,6 +2258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2216,8 +2294,9 @@
 # ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.wireless_client_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2235,6 +2314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

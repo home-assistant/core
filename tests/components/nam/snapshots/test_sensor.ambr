@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.nettigo_air_monitor_bh1750_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BH1750 illuminance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -57,8 +59,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -113,8 +117,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -169,8 +175,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -190,6 +197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -225,8 +233,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp180_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -246,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP180 pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -281,8 +291,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp180_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -302,6 +313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP180 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -337,8 +349,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp280_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -358,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP280 pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -393,8 +407,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp280_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -414,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP280 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -449,8 +465,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_dht22_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -470,6 +487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHT22 humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -505,8 +523,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_dht22_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -526,6 +545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHT22 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -561,8 +581,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_ds18b20_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -582,6 +603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -617,8 +639,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_heca_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -638,6 +661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HECA humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -673,8 +697,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_heca_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -694,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HECA temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -729,8 +755,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_last_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -748,6 +775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -778,8 +806,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_mh_z14a_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -799,6 +828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'MH-Z14A carbon dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -834,8 +864,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_common_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -853,6 +884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 common air quality index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -882,8 +914,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_common_air_quality_index_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -909,6 +942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 common air quality index level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -946,8 +980,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -967,6 +1002,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 PM1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1002,8 +1038,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1023,6 +1060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1058,8 +1096,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1079,6 +1118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1114,8 +1154,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_common_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1133,6 +1174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 common air quality index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1162,8 +1204,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_common_air_quality_index_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1189,6 +1232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 common air quality index level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1226,8 +1270,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1247,6 +1292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1282,8 +1328,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1303,6 +1350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1338,8 +1386,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sht3x_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1359,6 +1408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SHT3X humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1394,8 +1444,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sht3x_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1415,6 +1466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SHT3X temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1450,8 +1502,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1471,6 +1524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1506,8 +1560,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_common_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1525,6 +1580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 common air quality index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1554,8 +1610,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_common_air_quality_index_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1581,6 +1638,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 common air quality index level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1618,8 +1676,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1639,6 +1698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1674,8 +1734,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1695,6 +1756,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1730,8 +1792,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1751,6 +1814,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1786,8 +1850,9 @@
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1807,6 +1872,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

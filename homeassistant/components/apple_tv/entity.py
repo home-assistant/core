@@ -18,7 +18,6 @@ class AppleTVEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _attr_name = None
     atv: AppleTVInterface | None = None
 
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:

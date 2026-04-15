@@ -54,10 +54,12 @@ from .const import (
     TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
-from .expose import KNXExposeSensor, KNXExposeTime
+from .expose import KnxExposeEntity, KnxExposeTime
 from .project import KNXProject
 from .repairs import data_secure_group_key_issue_dispatcher
 from .storage.config_store import KNXConfigStore
+from .storage.expose_controller import ExposeController
+from .storage.time_server import TimeServerController
 from .telegrams import Telegrams
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,8 +75,10 @@ class KNXModule:
         self.hass = hass
         self.config_yaml = config
         self.connected = False
-        self.exposures: list[KNXExposeSensor | KNXExposeTime] = []
-        self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
+        self.yaml_exposures: list[KnxExposeEntity | KnxExposeTime] = []
+        self.service_exposures: dict[str, KnxExposeEntity | KnxExposeTime] = {}
+        self.ui_expose_controller = ExposeController()
+        self.ui_time_server_controller = TimeServerController()
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)

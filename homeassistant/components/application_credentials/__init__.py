@@ -181,9 +181,9 @@ async def async_import_client_credential(
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
         CONF_CLIENT_SECRET: credential.client_secret,
-        CONF_AUTH_DOMAIN: auth_domain if auth_domain else domain,
+        CONF_AUTH_DOMAIN: auth_domain or domain,
     }
-    item[CONF_NAME] = credential.name if credential.name else DEFAULT_IMPORT_NAME
+    item[CONF_NAME] = credential.name or DEFAULT_IMPORT_NAME
     await hass.data[DATA_COMPONENT].async_import_item(item)
 
 

@@ -8,11 +8,26 @@ from typing import Any
 from pysaunum import SaunumClient, SaunumException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from . import LeilSaunaConfigEntry
+from .const import (
+    DEFAULT_PRESET_NAME_TYPE_1,
+    DEFAULT_PRESET_NAME_TYPE_2,
+    DEFAULT_PRESET_NAME_TYPE_3,
+    DOMAIN,
+    OPT_PRESET_NAME_TYPE_1,
+    OPT_PRESET_NAME_TYPE_2,
+    OPT_PRESET_NAME_TYPE_3,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,14 +45,13 @@ async def validate_input(data: dict[str, Any]) -> None:
     """
     host = data[CONF_HOST]
 
-    client = SaunumClient(host=host)
+    client = await SaunumClient.create(host)
 
     try:
-        await client.connect()
         # Try to read data to verify communication
         await client.async_get_data()
     finally:
-        client.close()
+        await client.async_close()
 
 
 class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -45,6 +59,14 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: LeilSaunaConfigEntry,
+    ) -> LeilSaunaOptionsFlow:
+        """Get the options flow for this handler."""
+        return LeilSaunaOptionsFlow()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -82,4 +104,41 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+
+class LeilSaunaOptionsFlow(OptionsFlow):
+    """Handle options flow for Saunum Leil Sauna Control Unit."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options for preset mode names."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        OPT_PRESET_NAME_TYPE_1,
+                        default=self.config_entry.options.get(
+                            OPT_PRESET_NAME_TYPE_1, DEFAULT_PRESET_NAME_TYPE_1
+                        ),
+                    ): cv.string,
+                    vol.Optional(
+                        OPT_PRESET_NAME_TYPE_2,
+                        default=self.config_entry.options.get(
+                            OPT_PRESET_NAME_TYPE_2, DEFAULT_PRESET_NAME_TYPE_2
+                        ),
+                    ): cv.string,
+                    vol.Optional(
+                        OPT_PRESET_NAME_TYPE_3,
+                        default=self.config_entry.options.get(
+                            OPT_PRESET_NAME_TYPE_3, DEFAULT_PRESET_NAME_TYPE_3
+                        ),
+                    ): cv.string,
+                }
+            ),
         )

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
 from concord232 import client as concord232_client
 import requests
@@ -29,8 +30,7 @@ CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Alarm"
-DEFAULT_PORT = "5007"
-DEFAULT_SSL = False
+DEFAULT_PORT = 5007
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
@@ -56,10 +56,10 @@ def setup_platform(
 ) -> None:
     """Set up the Concord232 binary sensor platform."""
 
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    exclude = config[CONF_EXCLUDE_ZONES]
-    zone_types = config[CONF_ZONE_TYPES]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
+    exclude: list[int] = config[CONF_EXCLUDE_ZONES]
+    zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
     sensors = []
 
     try:
@@ -84,7 +84,6 @@ def setup_platform(
         if zone["number"] not in exclude:
             sensors.append(
                 Concord232ZoneSensor(
-                    hass,
                     client,
                     zone,
                     zone_types.get(zone["number"], get_opening_type(zone)),
@@ -110,26 +109,25 @@ def get_opening_type(zone):
 class Concord232ZoneSensor(BinarySensorEntity):
     """Representation of a Concord232 zone as a sensor."""
 
-    def __init__(self, hass, client, zone, zone_type):
+    def __init__(
+        self,
+        client: concord232_client.Client,
+        zone: dict[str, Any],
+        zone_type: BinarySensorDeviceClass,
+    ) -> None:
         """Initialize the Concord232 binary sensor."""
-        self._hass = hass
         self._client = client
         self._zone = zone
         self._number = zone["number"]
-        self._zone_type = zone_type
+        self._attr_device_class = zone_type
 
     @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
-
-    @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return bool(self._zone["state"] != "Normal")
@@ -145,5 +143,5 @@ class Concord232ZoneSensor(BinarySensorEntity):
 
         if hasattr(self._client, "zones"):
             self._zone = next(
-                (x for x in self._client.zones if x["number"] == self._number), None
+                x for x in self._client.zones if x["number"] == self._number
             )

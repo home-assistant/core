@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+from aiohttp import ClientError
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import ATTR_CONFIG_ENTRY, ATTR_TXT, DOMAIN, SERVICE_SET_TXT
 from .coordinator import DuckDnsConfigEntry
 from .helpers import update_duckdns
+from .issue import action_called_without_config_entry
 
 SERVICE_TXT_SCHEMA = vol.Schema(
     {
@@ -41,18 +43,15 @@ def get_config_entry(
     """Return config entry or raise if not found or not loaded."""
 
     if entry_id is None:
+        action_called_without_config_entry(hass)
         if len(entries := hass.config_entries.async_entries(DOMAIN)) != 1:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="entry_not_selected",
             )
-        return entries[0]
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-        )
-    return entry
+        entry_id = entries[0].entry_id
+
+    return service.async_get_config_entry(hass, DOMAIN, entry_id)
 
 
 async def update_domain_service(call: ServiceCall) -> None:
@@ -62,9 +61,25 @@ async def update_domain_service(call: ServiceCall) -> None:
 
     session = async_get_clientsession(call.hass)
 
-    await update_duckdns(
-        session,
-        entry.data[CONF_DOMAIN],
-        entry.data[CONF_ACCESS_TOKEN],
-        txt=call.data.get(ATTR_TXT),
-    )
+    try:
+        if not await update_duckdns(
+            session,
+            entry.data[CONF_DOMAIN],
+            entry.data[CONF_ACCESS_TOKEN],
+            txt=call.data.get(ATTR_TXT),
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={
+                    CONF_DOMAIN: entry.data[CONF_DOMAIN],
+                },
+            )
+    except ClientError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={
+                CONF_DOMAIN: entry.data[CONF_DOMAIN],
+            },
+        ) from e

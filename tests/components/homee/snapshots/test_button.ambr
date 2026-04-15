@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_snapshot[button.test_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_automatic_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_briefly_open-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Briefly open',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -194,8 +202,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_impulse_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -213,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -242,8 +252,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_impulse_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -261,6 +272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -290,8 +302,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -309,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -338,8 +352,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_open_partially-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -357,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open partially',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,8 +402,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_open_permanently-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -405,6 +422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open permanently',
     'options': dict({
     }),
     'original_device_class': None,
@@ -434,8 +452,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_reset_meter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -453,6 +472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -482,8 +502,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_reset_meter_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -501,6 +522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -530,8 +552,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_ventilate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -549,6 +572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilate',
     'options': dict({
     }),
     'original_device_class': None,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.garden_light_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 8.0,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -58,8 +60,9 @@
 # ---
 # name: test_all_entities[number.garden_plants_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 999.0,
@@ -82,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plants age',
     'options': dict({
     }),
     'original_device_class': None,

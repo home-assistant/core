@@ -2,16 +2,10 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 
 from .coordinator import TwenteMilieuConfigEntry, TwenteMilieuDataUpdateCoordinator
-
-SERVICE_UPDATE = "update"
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 

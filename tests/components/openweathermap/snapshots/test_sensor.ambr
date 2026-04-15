@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_states[air_pollution][sensor.openweathermap_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -108,8 +112,9 @@
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -129,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
@@ -162,8 +168,9 @@
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_nitrogen_monoxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -183,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen monoxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.NITROGEN_MONOXIDE: 'nitrogen_monoxide'>,
@@ -216,8 +224,9 @@
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_ozone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -237,6 +246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.OZONE: 'ozone'>,
@@ -270,8 +280,9 @@
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -291,6 +302,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -324,8 +336,9 @@
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -345,6 +358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -378,8 +392,9 @@
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -399,6 +414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SULPHUR_DIOXIDE: 'sulphur_dioxide'>,
@@ -432,8 +448,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_apparent_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -453,6 +470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -489,8 +507,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -510,6 +529,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud coverage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -542,8 +562,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_condition-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -561,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -591,8 +613,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_dew_point_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -612,6 +635,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -648,8 +672,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -669,6 +694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -702,8 +728,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_precipitation_kind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -721,6 +748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation kind',
     'options': dict({
     }),
     'original_device_class': None,
@@ -751,8 +779,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -772,6 +801,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -808,8 +838,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_rain_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -829,6 +860,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -865,8 +897,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_snow_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -886,6 +919,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snow intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -922,8 +956,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -943,6 +978,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -979,8 +1015,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_uv_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1000,6 +1037,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1032,8 +1070,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_visibility-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1053,6 +1092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visibility',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1089,8 +1129,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_weather-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1108,6 +1149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1138,8 +1180,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_weather_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1157,6 +1200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1187,8 +1231,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_wind_direction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
@@ -1208,6 +1253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -1241,8 +1287,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_wind_gust_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1262,6 +1309,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1301,8 +1349,9 @@
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_wind_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1322,6 +1371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1361,8 +1411,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_apparent_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1382,6 +1433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1418,8 +1470,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1439,6 +1492,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud coverage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1471,8 +1525,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_condition-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1490,6 +1545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1520,8 +1576,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_dew_point_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1541,6 +1598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1577,8 +1635,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1598,6 +1657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1631,8 +1691,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_precipitation_kind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1650,6 +1711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation kind',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1680,8 +1742,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1701,6 +1764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1737,8 +1801,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_rain_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1758,6 +1823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1794,8 +1860,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_snow_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1815,6 +1882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snow intensity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1851,8 +1919,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1872,6 +1941,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1908,8 +1978,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_uv_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1929,6 +2000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1961,8 +2033,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_visibility-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1982,6 +2055,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visibility',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2018,8 +2092,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_weather-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2037,6 +2112,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2067,8 +2143,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_weather_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2086,6 +2163,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weather code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2116,8 +2194,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_wind_direction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
@@ -2137,6 +2216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -2170,8 +2250,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_wind_gust_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2191,6 +2272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2230,8 +2312,9 @@
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_wind_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2251,6 +2334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

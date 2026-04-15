@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_snapshot[sensor.test_multisensor_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -54,8 +56,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_current_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -88,7 +92,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_instance',
-    'unique_id': '00055511EECC-1-7',
+    'unique_id': '00055511EECC-1-8',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -110,8 +114,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_current_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -131,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -144,7 +150,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_instance',
-    'unique_id': '00055511EECC-1-8',
+    'unique_id': '00055511EECC-1-9',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -166,8 +172,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_dawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -187,6 +194,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dawn',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -197,7 +205,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dawn',
-    'unique_id': '00055511EECC-1-10',
+    'unique_id': '00055511EECC-1-11',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -219,8 +227,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_device_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -240,6 +249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -253,7 +263,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_temperature',
-    'unique_id': '00055511EECC-1-11',
+    'unique_id': '00055511EECC-1-12',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -275,8 +285,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_energy_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -296,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -331,8 +343,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_energy_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -352,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -387,8 +401,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_exhaust_motor_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -408,6 +423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust motor speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -418,7 +434,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'exhaust_motor_revs',
-    'unique_id': '00055511EECC-1-12',
+    'unique_id': '00055511EECC-1-13',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -439,8 +455,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_external_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -460,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -473,7 +491,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'external_temperature',
-    'unique_id': '00055511EECC-1-34',
+    'unique_id': '00055511EECC-1-35',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -495,8 +513,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_floor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -516,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Floor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -529,7 +549,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'floor_temperature',
-    'unique_id': '00055511EECC-1-35',
+    'unique_id': '00055511EECC-1-36',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -551,8 +571,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -572,6 +593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -582,7 +604,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': '00055511EECC-1-22',
+    'unique_id': '00055511EECC-1-23',
     'unit_of_measurement': '%',
   })
 # ---
@@ -604,8 +626,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -625,6 +648,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -656,8 +680,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -677,6 +702,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -707,10 +733,66 @@
     'state': '175.0',
   })
 # ---
+# name: test_sensor_snapshot[sensor.test_multisensor_illuminance_1_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_multisensor_illuminance_1_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Illuminance 1',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance 1',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness_instance',
+    'unique_id': '00055511EECC-1-6',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_multisensor_illuminance_1_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Test MultiSensor Illuminance 1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_multisensor_illuminance_1_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '175.0',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.test_multisensor_illuminance_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -730,6 +812,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -740,7 +823,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'brightness_instance',
-    'unique_id': '00055511EECC-1-6',
+    'unique_id': '00055511EECC-1-7',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -762,8 +845,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_indoor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -783,6 +867,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -793,7 +878,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indoor_humidity',
-    'unique_id': '00055511EECC-1-13',
+    'unique_id': '00055511EECC-1-14',
     'unit_of_measurement': '%',
   })
 # ---
@@ -815,8 +900,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_indoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -836,6 +922,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -849,7 +936,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indoor_temperature',
-    'unique_id': '00055511EECC-1-14',
+    'unique_id': '00055511EECC-1-15',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -871,8 +958,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_intake_motor_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -892,6 +980,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intake motor speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -902,7 +991,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'intake_motor_revs',
-    'unique_id': '00055511EECC-1-15',
+    'unique_id': '00055511EECC-1-16',
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -923,8 +1012,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -944,6 +1034,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -957,7 +1048,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'level',
-    'unique_id': '00055511EECC-1-16',
+    'unique_id': '00055511EECC-1-17',
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
@@ -979,8 +1070,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_link_quality-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1000,6 +1092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1010,7 +1103,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'link_quality',
-    'unique_id': '00055511EECC-1-17',
+    'unique_id': '00055511EECC-1-18',
     'unit_of_measurement': None,
   })
 # ---
@@ -1030,8 +1123,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_node_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1066,6 +1160,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Node state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1112,8 +1207,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_operating_hours-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1133,6 +1229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating hours',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1146,7 +1243,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operating_hours',
-    'unique_id': '00055511EECC-1-18',
+    'unique_id': '00055511EECC-1-19',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -1168,8 +1265,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_outdoor_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1189,6 +1287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1199,7 +1298,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outdoor_humidity',
-    'unique_id': '00055511EECC-1-19',
+    'unique_id': '00055511EECC-1-20',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1221,8 +1320,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1242,6 +1342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1255,7 +1356,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outdoor_temperature',
-    'unique_id': '00055511EECC-1-20',
+    'unique_id': '00055511EECC-1-21',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1277,8 +1378,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1298,6 +1400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1308,7 +1411,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'position',
-    'unique_id': '00055511EECC-1-21',
+    'unique_id': '00055511EECC-1-22',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1329,8 +1432,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1356,6 +1460,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1366,7 +1471,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'up_down',
-    'unique_id': '00055511EECC-1-28',
+    'unique_id': '00055511EECC-1-29',
     'unit_of_measurement': None,
   })
 # ---
@@ -1393,8 +1498,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1414,6 +1520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1427,7 +1534,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': '00055511EECC-1-23',
+    'unique_id': '00055511EECC-1-24',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1449,8 +1556,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1470,6 +1578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1483,7 +1592,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_current',
-    'unique_id': '00055511EECC-1-25',
+    'unique_id': '00055511EECC-1-26',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1505,8 +1614,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1526,6 +1636,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1539,7 +1650,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy',
-    'unique_id': '00055511EECC-1-24',
+    'unique_id': '00055511EECC-1-25',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1561,8 +1672,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1582,6 +1694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1595,7 +1708,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_power',
-    'unique_id': '00055511EECC-1-26',
+    'unique_id': '00055511EECC-1-27',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1617,8 +1730,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_total_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1638,6 +1752,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1651,7 +1766,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_voltage',
-    'unique_id': '00055511EECC-1-27',
+    'unique_id': '00055511EECC-1-28',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1673,8 +1788,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_ultraviolet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1694,6 +1810,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ultraviolet',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1704,7 +1821,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv',
-    'unique_id': '00055511EECC-1-29',
+    'unique_id': '00055511EECC-1-30',
     'unit_of_measurement': None,
   })
 # ---
@@ -1724,8 +1841,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_voltage_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1745,6 +1863,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1758,7 +1877,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_instance',
-    'unique_id': '00055511EECC-1-30',
+    'unique_id': '00055511EECC-1-31',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1780,8 +1899,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_voltage_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1801,6 +1921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1814,7 +1935,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_instance',
-    'unique_id': '00055511EECC-1-31',
+    'unique_id': '00055511EECC-1-32',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1836,8 +1957,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_wind_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1857,6 +1979,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1873,7 +1996,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed',
-    'unique_id': '00055511EECC-1-32',
+    'unique_id': '00055511EECC-1-33',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -1895,8 +2018,9 @@
 # ---
 # name: test_sensor_snapshot[sensor.test_multisensor_window_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1920,6 +2044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Window position',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1930,7 +2055,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'window_position',
-    'unique_id': '00055511EECC-1-33',
+    'unique_id': '00055511EECC-1-34',
     'unit_of_measurement': None,
   })
 # ---

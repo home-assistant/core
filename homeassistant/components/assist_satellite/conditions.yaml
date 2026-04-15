@@ -1,0 +1,19 @@
+.condition_common: &condition_common
+  target:
+    entity:
+      domain: assist_satellite
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+is_idle: *condition_common
+is_listening: *condition_common
+is_processing: *condition_common
+is_responding: *condition_common

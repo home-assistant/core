@@ -129,7 +129,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return CONDITION_MAP.get(identifier)
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition which is only available on the hourly forecast data."""
         forecast = self._hourly_forecast
 
@@ -139,7 +139,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._condition_conversion(forecast[0].weather_type.id, None)
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if not self._observation:
             return None
@@ -147,7 +147,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.temperature
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the current pressure."""
         if not self._observation:
             return None
@@ -155,7 +155,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.pressure
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the name of the sensor."""
         if not self._observation:
             return None
@@ -163,7 +163,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.humidity
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
         if not self._observation:
             return None
@@ -171,7 +171,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.wind_intensity_km
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the current wind bearing (degrees)."""
         if not self._observation:
             return None

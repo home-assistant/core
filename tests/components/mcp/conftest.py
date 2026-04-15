@@ -2,11 +2,13 @@
 
 from collections.abc import Generator
 import datetime
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -24,7 +26,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 TEST_API_NAME = "Memory Server"
-MCP_SERVER_URL = "http://1.1.1.1:8080/sse"
+MCP_SERVER_URL = "http://1.1.1.1:8080/mcp"
 CLIENT_ID = "test-client-id"
 CLIENT_SECRET = "test-client-secret"
 AUTH_DOMAIN = "some-auth-domain"
@@ -42,10 +44,34 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_mcp_client() -> Generator[AsyncMock]:
+def mock_sse_client() -> Generator[AsyncMock]:
+    """Fixture to mock the MCP client."""
+    with patch(
+        "homeassistant.components.mcp.coordinator.sse_client"
+    ) as mock_sse_client:
+        yield mock_sse_client
+
+
+@pytest.fixture
+def mock_http_streamable_client() -> Generator[AsyncMock]:
+    """Fixture to mock the MCP client."""
+    with patch(
+        "homeassistant.components.mcp.coordinator.streamable_http_client"
+    ) as mock_streamable_client:
+        mock_streamable_client.return_value.__aenter__.return_value = (
+            AsyncMock(),
+            AsyncMock(),
+            AsyncMock(),
+        )
+        yield mock_streamable_client
+
+
+@pytest.fixture
+def mock_mcp_client(
+    mock_sse_client: Any, mock_http_streamable_client: Any
+) -> Generator[AsyncMock]:
     """Fixture to mock the MCP client."""
     with (
-        patch("homeassistant.components.mcp.coordinator.sse_client"),
         patch("homeassistant.components.mcp.coordinator.ClientSession") as mock_session,
         patch("homeassistant.components.mcp.coordinator.TIMEOUT", 1),
     ):
@@ -67,7 +93,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture(name="credential")
 async def mock_credential(hass: HomeAssistant) -> None:
     """Fixture that provides the ClientCredential for the test."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

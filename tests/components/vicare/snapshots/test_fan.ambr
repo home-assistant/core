@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[fan.model0_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -72,8 +74,9 @@
 # ---
 # name: test_all_entities[fan.model1_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -97,6 +100,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,8 +145,9 @@
 # ---
 # name: test_all_entities[fan.model2_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -166,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
     'original_device_class': None,
