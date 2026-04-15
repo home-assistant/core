@@ -118,7 +118,7 @@ async def test_get_capabilities_deviceio_missing_relay_outputs_fallback(
     relay_response = MagicMock()
     relay_response.RelayOutput = [MagicMock(), MagicMock(), MagicMock()]
     deviceio_service = AsyncMock()
-    deviceio_service.GetServiceCapabilities = AsyncMock(return_value=MagicMock())
+    deviceio_service.GetServiceCapabilities = AsyncMock(return_value=object())
     deviceio_service.GetRelayOutputs = AsyncMock(return_value=relay_response)
 
     device.device = MagicMock(
