@@ -167,7 +167,7 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
         ATTR_EDITABLE: False,
     }
 
-    results: list[tuple[Event, str]] = []
+    results: list[tuple[Event, State | None]] = []
 
     @callback
     def fake_event_listener(event: Event):
