@@ -217,9 +217,13 @@ def setup_service_functions(
 
         if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(coordinator.tcs, call.data)
+            unique_id = _resolve_ctl_unique_id(hass, call, coordinator.tcs.id)
+        else:
+            # this service call will be deprecated altogther, so no need to do so here
+            unique_id = coordinator.tcs.id
 
         payload = {
-            "unique_id": _resolve_ctl_unique_id(hass, call, coordinator.tcs.id),
+            "unique_id": unique_id,
             "service": call.service,
             "data": call.data,
         }
