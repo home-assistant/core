@@ -28,7 +28,11 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "media_player.paused_playing",
+        "media_player.started_playing",
         "media_player.stopped_playing",
+        "media_player.turned_off",
+        "media_player.turned_on",
     ],
 )
 async def test_media_player_triggers_gated_by_labs_flag(
