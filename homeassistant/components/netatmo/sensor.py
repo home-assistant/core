@@ -50,7 +50,7 @@ from .const import (
     CONF_WEATHER_AREAS,
     DOMAIN,
     NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
-    NETATMO_CREATE_OPENING_BATTERY_SENSOR,
+    NETATMO_CREATE_OPENING_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
@@ -131,7 +131,6 @@ class NetatmoSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
-# SENSOR_TYPES: tuple[NetatmoSensorEntityDescription, ...] = (
 NETATMO_WEATHER_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
     NetatmoSensorEntityDescription(
         key="temperature",
@@ -292,7 +291,6 @@ NETATMO_WEATHER_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]]
         device_class=SensorDeviceClass.POWER,
     ),
 ]
-# SENSOR_TYPES_KEYS = [desc.key for desc in SENSOR_TYPES]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -401,9 +399,7 @@ NETATMO_CLIMATE_BATTERY_SENSOR_DESCRIPTIONS: Final[
     )
 ]
 
-NETATMO_OPENING_BATTERY_SENSOR_DESCRIPTIONS: Final[
-    list[NetatmoSensorEntityDescription]
-] = [
+NETATMO_OPENING_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
     NetatmoSensorEntityDescription(
         key="battery",
         netatmo_name="battery",
@@ -411,6 +407,13 @@ NETATMO_OPENING_BATTERY_SENSOR_DESCRIPTIONS: Final[
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
+    ),
+    NetatmoSensorEntityDescription(
+        key="rf_status",
+        netatmo_name="rf_strength",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=process_rf,
     ),
 ]
 
@@ -420,10 +423,10 @@ DEVICE_CATEGORY_CLIMATE_BATTERY_SENSORS: Final[
     NetatmoDeviceCategory.climate: NETATMO_CLIMATE_BATTERY_SENSOR_DESCRIPTIONS,
 }
 
-DEVICE_CATEGORY_OPENING_BATTERY_SENSORS: Final[
+DEVICE_CATEGORY_OPENING_SENSORS: Final[
     dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]]
 ] = {
-    NetatmoDeviceCategory.opening: NETATMO_OPENING_BATTERY_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.opening: NETATMO_OPENING_SENSOR_DESCRIPTIONS,
 }
 
 DEVICE_CATEGORY_WEATHER_SENSORS: Final[
@@ -458,9 +461,7 @@ async def async_setup_entry(
     @callback
     def _create_sensor_entity(
         sensorClass: type[
-            NetatmoClimateBatterySensor
-            | NetatmoWeatherSensor
-            | NetatmoOpeningBatterySensor
+            NetatmoClimateBatterySensor | NetatmoWeatherSensor | NetatmoOpeningSensor
         ],
         descriptions: dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]],
         netatmo_device: NetatmoDevice,
@@ -475,9 +476,7 @@ async def async_setup_entry(
         )
 
         entities: list[
-            NetatmoClimateBatterySensor
-            | NetatmoWeatherSensor
-            | NetatmoOpeningBatterySensor
+            NetatmoClimateBatterySensor | NetatmoWeatherSensor | NetatmoOpeningSensor
         ] = []
 
         # Create sensors for module
@@ -516,11 +515,11 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            NETATMO_CREATE_OPENING_BATTERY_SENSOR,
+            NETATMO_CREATE_OPENING_SENSOR,
             partial(
                 _create_sensor_entity,
-                NetatmoOpeningBatterySensor,
-                DEVICE_CATEGORY_OPENING_BATTERY_SENSORS,
+                NetatmoOpeningSensor,
+                DEVICE_CATEGORY_OPENING_SENSORS,
             ),
         )
     )
@@ -682,7 +681,7 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoSensor):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_device, description=description)
+        super().__init__(netatmo_device)
         self.entity_description = description
         self._attr_translation_key = description.netatmo_name
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
@@ -707,7 +706,7 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoSensor):
         self.async_write_ha_state()
 
 
-class NetatmoOpeningBatterySensor(NetatmoSensor):
+class NetatmoOpeningSensor(NetatmoSensor):
     """Implementation of a Netatmo Opening Battery sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -754,14 +753,8 @@ class NetatmoClimateBatterySensor(NetatmoClimateSensor):
         """Initialize the sensor."""
         super().__init__(netatmo_device, description=description)
 
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": netatmo_device.device.home.entity_id,
-                    SIGNAL_NAME: netatmo_device.signal_name,
-                },
-            ]
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{self.device.entity_id}-{description.key}"
         )
 
         self._attr_device_info = DeviceInfo(
@@ -782,6 +775,7 @@ class NetatmoClimateBatterySensor(NetatmoClimateSensor):
 
         self._attr_available = True
         self._attr_native_value = self.device.battery
+        self.async_write_ha_state()
 
 
 class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):

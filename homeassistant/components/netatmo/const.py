@@ -39,7 +39,6 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
     "write_mhs1",
 ]
 
-NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CLIMATE_BATTERY_SENSOR = "netatmo_create_climate_battery_sensor"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
@@ -49,8 +48,8 @@ NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR = "netatmo_create_connectivity_binary_
 NETATMO_CREATE_BUTTON = "netatmo_create_button"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
-NETATMO_CREATE_OPENING_BATTERY_SENSOR = "netatmo_create_opening_battery_sensor"
 NETATMO_CREATE_OPENING_BINARY_SENSOR = "netatmo_create_opening_binary_sensor"
+NETATMO_CREATE_OPENING_SENSOR = "netatmo_create_opening_sensor"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
 NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
