@@ -9,6 +9,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .api import (
     StipsApiAuthError,
@@ -84,7 +89,9 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_API_HOST, default=DEFAULT_API_HOST): str,
                 vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_PASSWORD): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

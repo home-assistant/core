@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import aiohttp
+from yarl import URL
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -15,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -380,7 +382,9 @@ class StipsIruClimate(ClimateEntity):
             name=self._device_name,
             manufacturer="STIPS",
             model="IRU1",
-            connections={("mac", self._device_mac)} if self._device_mac else set(),
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_mac)}
+            if self._device_mac
+            else set(),
             configuration_url=f"http://{self._device_unique_name}/device_info",
         )
 
@@ -540,7 +544,7 @@ class StipsIruClimate(ClimateEntity):
         last_error: Exception | None = None
         sent_ok = False
         for host in hosts:
-            url = f"http://{host}/local-ir/ac-command"
+            url = str(URL.build(scheme="http", host=host, path="/local-ir/ac-command"))
             try:
                 async with session.post(
                     url,
@@ -694,7 +698,9 @@ class StipsIruLearnedAcClimate(ClimateEntity):
             name=self._device_name,
             manufacturer="STIPS",
             model="IRU1",
-            connections={("mac", self._device_mac)} if self._device_mac else set(),
+            connections={(dr.CONNECTION_NETWORK_MAC, self._device_mac)}
+            if self._device_mac
+            else set(),
             configuration_url=f"http://{self._device_unique_name}/device_info",
         )
 
@@ -722,14 +728,8 @@ class StipsIruLearnedAcClimate(ClimateEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Expose debugging metadata for the learned-AC remote."""
+        """Expose non-sensitive metadata for the learned-AC remote."""
         return {
-            "device_unique_name": self._device_unique_name,
-            "unique_name": self._device_unique_name,
-            "device_ip": self._device_ip_live or self._device_ip or None,
-            "device_ip_backend": self._device_ip or None,
-            "device_ip_live": self._device_ip_live or None,
-            "device_mac": self._device_mac or None,
             "device_online": self._device_online,
             "remote_type": self._remote_type,
             "learned_signal_count": len(self._signals),
@@ -772,6 +772,8 @@ class StipsIruLearnedAcClimate(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Apply a new fan mode."""
         key = _fan_to_name(fan_mode)
+        if key not in self._attr_fan_modes:
+            raise HomeAssistantError(f"Unsupported fan mode: {fan_mode}")
         await self._send_state(power=1, fan=key)
 
     async def _send_state(self, **overrides: Any) -> None:
@@ -831,7 +833,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         }
         last_error: Exception | None = None
         for host in hosts:
-            url = f"http://{host}/local-ir/send"
+            url = str(URL.build(scheme="http", host=host, path="/local-ir/send"))
             try:
                 async with session.post(
                     url, data=params, auth=auth, timeout=timeout

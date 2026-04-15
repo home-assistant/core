@@ -38,7 +38,8 @@ def remote_uses_signal_buttons(remote_type: str | None) -> bool:
     """True if HA should expose a signal-based `remote.*` for this STIPS remote.
 
     Protocol AC remotes are controlled via IRac status (type/model/power/mode/...), not
-    per-button raw signals. LearnedAc / TV / LearnedTv (and similar) use downloaded signals.
+    per-button raw signals. LearnedAc is exposed via `climate.*` and does not get a signal
+    button remote entity. Learned TV-like remotes (and similar) use downloaded button signals.
     """
     t = normalize_remote_type(remote_type)
     if not t:

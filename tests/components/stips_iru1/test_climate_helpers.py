@@ -1,7 +1,11 @@
 """Helper-level tests for stips_iru1 climate module."""
 
+import pytest
+
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.stips_iru1 import climate as stips_climate
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 
 def test_swing_mode_roundtrip() -> None:
@@ -60,3 +64,36 @@ def test_learned_ac_signal_extraction_and_pick() -> None:
         entries, HVACMode.COOL, 23, "medium"
     )
     assert picked == "B"
+
+
+async def test_learned_ac_rejects_unsupported_fan_mode(
+    hass: HomeAssistant,
+) -> None:
+    """Unsupported fan mode should raise instead of silently mapping values."""
+    entity = stips_climate.StipsIruLearnedAcClimate(
+        hass=hass,
+        device_unique_name="stips-iru1-abc123",
+        device_name="IR Unit",
+        device_ip="",
+        device_mac="",
+        device_online=True,
+        remote_id="1",
+        friendly_name="Living Room",
+        remote_snapshot={
+            "type": "LearnedAc",
+            "model": {
+                "frequency": 38000,
+                "signals": [
+                    {
+                        "mode": "cool",
+                        "temperature": 24,
+                        "fanSpeed": "medium",
+                        "signal": "SIGNAL",
+                    }
+                ],
+            },
+        },
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await entity.async_set_fan_mode("unsupported")
