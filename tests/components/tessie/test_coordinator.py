@@ -225,7 +225,7 @@ async def test_coordinator_energy_history_cold_start_invalid_data(
     assert coordinator.data["_period_start"] == dt_util.utcnow()
 
     # Sensor should reflect the numeric fallback value, not become unavailable
-    assert hass.states.get("sensor.energy_site_grid_imported").state == "0"
+    assert hass.states.get("sensor.energy_site_grid_imported").state == "0.0"
 
     # Now recover: restore valid energy history data and trigger an update
     mock_energy_history.side_effect = None
