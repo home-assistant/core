@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This IR device is already configured"
+      "already_configured": "This STIPS account/API host is already configured"
     },
     "error": {
       "cannot_connect": "Cannot connect to STIPS API",
