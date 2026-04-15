@@ -3336,7 +3336,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Runs after a config flow has created a config entry.
 
-        Can be overwritten by integrations to add additional data to the result.
+        Can be overridden by integrations to add additional data to the result.
         Example: creating next flow entries to the result which needs a
         config entry created before it can start.
         """
