@@ -362,8 +362,7 @@ async def test_tv_autoplay_switch(
     )
     await async_setup_sonos()
 
-    switch = entity_registry.entities.get(entity_id)
-    assert switch is not None
+    assert entity_registry.entities.get(entity_id) is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -460,8 +459,7 @@ async def test_tv_ungroup_autoplay_switch(
     )
     await async_setup_sonos()
 
-    switch = entity_registry.entities.get(entity_id)
-    assert switch is not None
+    assert entity_registry.entities.get(entity_id) is not None
 
     state = hass.states.get(entity_id)
     assert state is not None

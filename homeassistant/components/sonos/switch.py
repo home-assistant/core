@@ -127,7 +127,13 @@ async def async_setup_entry(
         """Return initial TV autoplay state, or None if not supported."""
         try:
             result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
-        except SoCoUPnPException:
+        except (SoCoUPnPException, SoCoSlaveException, OSError) as err:
+            _LOGGER.debug(
+                "Unable to read %s state for %s: %s",
+                ATTR_TV_AUTOPLAY,
+                speaker.zone_name,
+                err,
+            )
             return None
         return bool(result.get("RoomUUID"))
 
@@ -135,7 +141,13 @@ async def async_setup_entry(
         """Return initial TV ungroup-on-autoplay state, or None if not supported."""
         try:
             result = speaker.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
-        except SoCoUPnPException:
+        except (SoCoUPnPException, SoCoSlaveException, OSError) as err:
+            _LOGGER.debug(
+                "Unable to read %s state for %s: %s",
+                ATTR_TV_UNGROUP_AUTOPLAY,
+                speaker.zone_name,
+                err,
+            )
             return None
         # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
         return result.get("IncludeLinkedZones") == "0"
