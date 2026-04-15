@@ -48,7 +48,9 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
     async def async_setup(self) -> None:
         """Set up the device coordinator."""
         if not await self.client.async_update():
-            raise ConfigEntryNotReady("Connection failed: not ready")
+            raise ConfigEntryNotReady(
+                f"Unable to connect to EcoTracker device at {self.host}"
+            )
 
     async def _async_update_data(self) -> EcoTrackerData:
         """Fetch data from the EcoTracker device."""
