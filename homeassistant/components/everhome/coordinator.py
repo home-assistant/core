@@ -8,7 +8,6 @@ from ecotracker.data import EcoTrackerData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -44,13 +43,6 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
         )
         self.client = EcoTracker(host, session=async_get_clientsession(hass))
         self.host = host
-
-    async def async_setup(self) -> None:
-        """Set up the device coordinator."""
-        if not await self.client.async_update():
-            raise ConfigEntryNotReady(
-                f"Unable to connect to EcoTracker device at {self.host}"
-            )
 
     async def _async_update_data(self) -> EcoTrackerData:
         """Fetch data from the EcoTracker device."""
