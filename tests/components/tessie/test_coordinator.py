@@ -202,9 +202,6 @@ async def test_coordinator_energy_history_invalid_data(
     mock_energy_history.assert_called_once()
 
     # Sensor should retain last good state rather than becoming unavailable
-    assert (
-        hass.states.get("sensor.energy_site_grid_imported").state != STATE_UNAVAILABLE
-    )
     assert hass.states.get("sensor.energy_site_grid_imported").state == state_before
     assert coordinator.last_exception is None
 
@@ -229,3 +226,15 @@ async def test_coordinator_energy_history_cold_start_invalid_data(
 
     # Sensor should reflect the numeric fallback value, not become unavailable
     assert hass.states.get("sensor.energy_site_grid_imported").state == "0"
+
+    # Now recover: restore valid energy history data and trigger an update
+    mock_energy_history.side_effect = None
+    mock_energy_history.reset_mock()
+    freezer.tick(TESSIE_ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_energy_history.assert_called_once()
+
+    # Coordinator should have real data and no exception
+    assert coordinator.last_exception is None
+    assert coordinator.data["solar_energy_exported"] == 724

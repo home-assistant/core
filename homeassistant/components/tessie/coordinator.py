@@ -231,12 +231,12 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Return last good data if we have it, otherwise zeros
             if self.data:
                 return self.data.copy()
-            output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
-            output["_period_start"] = dt_util.utcnow()
-            return output
+            fallback: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
+            fallback["_period_start"] = dt_util.utcnow()
+            return fallback
 
         time_series = data["time_series"]
-        output = {}
+        output: dict[str, Any] = {}
         for key in ENERGY_HISTORY_FIELDS:
             values = [p[key] for p in time_series if key in p]
             output[key] = sum(values) if values else None
