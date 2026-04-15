@@ -582,7 +582,7 @@ async def async_setup_entry(
             NETATMO_CREATE_METER_SENSOR,
             partial(
                 _create_sensor_entity,
-                NetatmoOpeningSensor,
+                NetatmoMeterSensor,
                 DEVICE_CATEGORY_METER_SENSORS,
             ),
         )
@@ -594,7 +594,7 @@ async def async_setup_entry(
             NETATMO_CREATE_SWITCH_SENSOR,
             partial(
                 _create_sensor_entity,
-                NetatmoOpeningSensor,
+                NetatmoSwitchSensor,
                 DEVICE_CATEGORY_SWITCH_SENSORS,
             ),
         )
@@ -747,7 +747,7 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoSensor):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_device)
+        super().__init__(netatmo_device, description=description)
         self.entity_description = description
         self._attr_translation_key = description.netatmo_name
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
@@ -791,7 +791,7 @@ class NetatmoOpeningSensor(NetatmoSensor):
         description: NetatmoSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(netatmo_device, description=description)
+        super().__init__(netatmo_device, description)
 
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
