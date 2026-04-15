@@ -59,13 +59,8 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_IGNORE_HOSTNAME] is False
-    assert result["data"][CONF_CA_DATA] is None
-    assert result["result"].unique_id == f"{HOST}:{PORT}"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_CA_DATA: "validation_failed"}
 
 
 async def test_user_with_ignore_hostname_and_ca_data(hass: HomeAssistant) -> None:
