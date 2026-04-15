@@ -21,11 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import (
-    force_usb_polling_watcher,  # noqa: F401
-    patch_scanned_serial_ports,
-    setup_usb_fixture,  # noqa: F401
-)
+from . import patch_scanned_serial_ports
 
 from tests.common import (
     MockModule,
