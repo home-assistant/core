@@ -156,6 +156,7 @@ async def _check_for_new_devices(
 
     coordinators = entry.runtime_data.coordinators
     appliances = await fetch_appliance_data(client)
+    entry.runtime_data.appliances = appliances
 
     existing_ids = set(coordinators.keys())
 
