@@ -277,9 +277,7 @@ async def test_set_relay_output_state_invalid_state(hass: HomeAssistant) -> None
     )
 
     with pytest.raises(ValueError, match="Invalid relay output state"):
-        await device.async_set_relay_output_state(
-            "relay-token", cast(Any, "invalid")
-        )
+        await device.async_set_relay_output_state("relay-token", cast(Any, "invalid"))
 
     device.device.create_devicemgmt_service.assert_awaited_once()
     device_service.create_type.assert_not_called()
