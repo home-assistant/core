@@ -433,14 +433,50 @@
   },
   "title": "Media player",
   "triggers": {
+    "paused_playing": {
+      "description": "Triggers after one or more media players pause playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Media player paused playing"
+    },
+    "started_playing": {
+      "description": "Triggers after one or more media players start playing.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Media player started playing"
+    },
     "stopped_playing": {
-      "description": "Triggers after one or more media players stop playing media.",
+      "description": "Triggers after one or more media players stop playing.",
       "fields": {
         "behavior": {
           "name": "[%key:component::media_player::common::trigger_behavior_name%]"
         }
       },
       "name": "Media player stopped playing"
+    },
+    "turned_off": {
+      "description": "Triggers after one or more media players turn off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Media player turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more media players turn on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Media player turned on"
     }
   }
 }
