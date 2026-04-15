@@ -3295,7 +3295,7 @@ async def test_entity_trigger_first_requires_exactly_one(
     [STATE_UNAVAILABLE, STATE_UNKNOWN],
     ids=["unavailable", "unknown"],
 )
-async def test_entity_trigger_last_ignores_unavailable_and_unknownentity(
+async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
     """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
@@ -3839,7 +3839,10 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     expected_calls: int,
     invalid_state: str | None,
 ) -> None:
-    """Test that the duration timer is cancelled if entity becomes unavailable, unknown, or is removed."""
+    """Test if the duration timer is cancelled if entity becomes unavailable, unknown, or is removed.
+
+    This is expected to happen in first and any modes, but not in last mode.
+    """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     _set_or_remove_state(hass, entity_a, STATE_OFF)
