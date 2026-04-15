@@ -9,6 +9,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+from homeassistant.util.ssl import get_default_context
 
 from .const import TIMEOUT
 from .errors import (
@@ -41,7 +42,7 @@ async def async_get_cert(
             )
         else:
             context = await hass.async_add_executor_job(
-                functools.partial(ssl.create_default_context, ssl.Purpose.SERVER_AUTH)
+                functools.partial(get_default_context)
             )
         context.check_hostname = not ignore_hostname
         transport, _ = await hass.loop.create_connection(

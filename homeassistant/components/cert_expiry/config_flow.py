@@ -94,7 +94,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         except ConnectionReset:
             self._errors[CONF_HOST] = "connection_reset"
         except ValidationFailure:
-            return True
+            self._errors[CONF_HOST] = "validation_failed"
         else:
             return True
         return False
@@ -110,7 +110,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
             ignore_hostname = user_input.get(CONF_IGNORE_HOSTNAME, False)
             ca_data = user_input.get(CONF_CA_DATA, None)
-
+            if (ca_data is not None) and (not ca_data.strip()):
+                ca_data = None
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
