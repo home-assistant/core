@@ -2179,6 +2179,9 @@ async def test_server_sock_connect_and_disconnect(
     # Should have failed
     assert len(recorded_calls) == 0
 
+    # Cleanup. Server is closed earlier already.
+    client.close()
+
 
 async def test_server_sock_buffer_size(
     hass: HomeAssistant,
@@ -2201,6 +2204,10 @@ async def test_server_sock_buffer_size(
         mqtt_client_mock.on_socket_register_write(mqtt_client_mock, None, client)
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
+
+    # Cleanup
+    client.close()
+    server.close()
 
 
 async def test_server_sock_buffer_size_with_websocket(
@@ -2233,6 +2240,10 @@ async def test_server_sock_buffer_size_with_websocket(
         )
         await hass.async_block_till_done()
     assert "Unable to increase the socket buffer size" in caplog.text
+
+    # Cleanup
+    client.close()
+    server.close()
 
 
 async def test_client_sock_failure_after_connect(
@@ -2267,6 +2278,9 @@ async def test_client_sock_failure_after_connect(
     unsub()
     # Should have failed
     assert len(recorded_calls) == 0
+
+    # Cleanup. Client is closed earlier already.
+    server.close()
 
 
 async def test_loop_write_failure(
@@ -2308,3 +2322,6 @@ async def test_loop_write_failure(
     await hass.async_block_till_done()
 
     assert "Error returned from MQTT server: The connection was lost." in caplog.text
+
+    # Cleanup. Server is closed earlier already.
+    client.close()
