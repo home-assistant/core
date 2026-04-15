@@ -21,7 +21,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from . import BlancoConfigEntry
 from .const import DOMAIN
@@ -423,12 +422,6 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.dev_id}_{description.key}"
-        # Force English entity_id regardless of the HA UI language setting.
-        # Without this, HA derives the entity_id from the translated name at
-        # first registration, producing locale-specific IDs (e.g. "co2_restkapazitat").
-        self.entity_id = (
-            f"sensor.blanco_{slugify(coordinator.serial)}_{description.key}"
-        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -442,8 +435,15 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
             manufacturer="BLANCO",
             model=BLANCO_DEVICE_NAMES.get(self.coordinator.dev_type, "UNKNOWN"),
             serial_number=self.coordinator.serial,
-            hw_version=system_params.get("sw_ver_main_con"),
-            sw_version=system_params.get("sw_ver_comm_con"),
+            sw_version=", ".join(
+                v
+                for v in (
+                    system_params.get("sw_ver_main_con"),
+                    system_params.get("sw_ver_comm_con"),
+                )
+                if v is not None
+            )
+            or None,
         )
 
     @property

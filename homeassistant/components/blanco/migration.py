@@ -106,6 +106,16 @@ def migrate_entity_ids(
         expected_entity_id = f"{platform}.blanco_{serial_slug}_{key}"
         if entity_entry.entity_id == expected_entity_id:
             continue
+        # Skip if the target entity_id is already occupied by a different entity.
+        if registry.async_get(expected_entity_id) is not None:
+            blanco_log(
+                _LOGGER,
+                BlancoLogLevel.WARNING,
+                "Cannot migrate %s → %s: target entity_id already exists",
+                entity_entry.entity_id,
+                expected_entity_id,
+            )
+            continue
         blanco_log(
             _LOGGER,
             BlancoLogLevel.INFO,

@@ -8,16 +8,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from blanco_smart_home_api_client import (
     BlancoActionType,
     BlancoApiClient,
-    BlancoErrorType,
     BlancoWaterType,
 )
 from blanco_smart_home_api_client.mask import mask_dev_id, mask_headers
-from blanco_smart_home_api_client.results import (
-    StatTotalItem,
-    _normalise_action,
-    _parse_errors,
-    _parse_event,
-)
+from blanco_smart_home_api_client.results import StatTotalItem
 import pytest
 
 from homeassistant.components.blanco.const import (
@@ -261,116 +255,6 @@ class TestStatIdPart:
     def test_mixed_valid_and_special_chars(self) -> None:
         """Mixed input with valid and special chars is correctly sanitised."""
         assert _stat_id_part("Hello World!") == "hello_world"
-
-
-# ── _parse_event ──────────────────────────────────────────────────────────────
-
-
-class TestParseEvent:
-    """Tests for the module-level _parse_event function in api.py."""
-
-    def test_returns_first_result_and_info(self) -> None:
-        """First element of results ends up in params; info is returned as-is."""
-        body = {
-            "results": [{"co2_rest": 75}],
-            "info": {"connected": True},
-        }
-        result = _parse_event(body)
-        assert result == {"params": {"co2_rest": 75}, "info": {"connected": True}}
-
-    def test_empty_results_yields_empty_params(self) -> None:
-        """An empty results list yields an empty params dict."""
-        body = {"results": [], "info": {}}
-        result = _parse_event(body)
-        assert result["params"] == {}
-
-    def test_missing_results_key_yields_empty_params(self) -> None:
-        """A body without a results key yields an empty params dict."""
-        body = {"info": {"connected": False}}
-        result = _parse_event(body)
-        assert result["params"] == {}
-
-    def test_missing_info_key_yields_empty_info(self) -> None:
-        """A body without an info key yields an empty info dict."""
-        body = {"results": [{"dev_name": "My BLANCO"}]}
-        result = _parse_event(body)
-        assert result["info"] == {}
-
-
-# ── _parse_errors ─────────────────────────────────────────────────────────────
-
-
-class TestParseErrors:
-    """Tests for the module-level _parse_errors function in api.py."""
-
-    def test_normalises_known_err_type(self) -> None:
-        """A known numeric err_type value is converted to the matching BlancoErrorType."""
-        body = {
-            "results": [{"err_code": 101, "err_type": 1, "err_ts": 1700000000000}],
-            "info": {},
-        }
-        result = _parse_errors(body)
-        assert result["errors"][0]["err_type"] is BlancoErrorType.CRITICAL
-
-    def test_unknown_err_type_becomes_undef(self) -> None:
-        """An unrecognised err_type value falls back to BlancoErrorType.UNDEF."""
-        body = {
-            "results": [{"err_code": 999, "err_type": 9999, "err_ts": 1700000000000}],
-            "info": {},
-        }
-        result = _parse_errors(body)
-        assert result["errors"][0]["err_type"] is BlancoErrorType.UNDEF
-
-    def test_empty_results_yields_empty_errors_list(self) -> None:
-        """An empty results list yields an empty errors list."""
-        body = {"results": [], "info": {}}
-        result = _parse_errors(body)
-        assert result["errors"] == []
-
-    def test_missing_results_key_yields_empty_errors_list(self) -> None:
-        """A body without a results key yields an empty errors list."""
-        body = {"info": {}}
-        result = _parse_errors(body)
-        assert result["errors"] == []
-
-
-# ── _normalise_action ─────────────────────────────────────────────────────────
-
-
-class TestNormaliseAction:
-    """Tests for the module-level _normalise_action function in api.py."""
-
-    def test_standard_soda_action_with_disp_wtr_amt_and_tap_state(self) -> None:
-        """A standard SODA/AIO entry with disp_wtr_amt and tap_state is preserved."""
-        entry = {
-            "act_type": 1000,
-            "evt_ts": 1700000001000,
-            "tap_state": 1,
-            "disp_wtr_amt": 250,
-        }
-        result = _normalise_action(entry)
-        assert result["act_type"] is BlancoActionType.WATER_DISPENSE
-        assert result["tap_state"] is BlancoWaterType.STILL
-        assert result["disp_wtr_amt"] == 250
-        assert result["evt_ts"] == 1700000001000
-
-    def test_aqua_style_wtr_flow_maps_to_disp_wtr_amt_and_forces_still(self) -> None:
-        """An AQUA-style entry with wtr_flow uses that as disp_wtr_amt and forces STILL."""
-        entry = {
-            "act_type": 9000,
-            "evt_ts": 1700000002000,
-            "wtr_flow": 300,
-        }
-        result = _normalise_action(entry)
-        assert result["act_type"] is BlancoActionType.WATER_FLOW
-        assert result["disp_wtr_amt"] == 300
-        assert result["tap_state"] is BlancoWaterType.STILL
-
-    def test_unknown_act_type_falls_back_to_undef(self) -> None:
-        """An unrecognised act_type value falls back to BlancoActionType.UNDEF."""
-        entry = {"act_type": 9999, "evt_ts": 1700000003000}
-        result = _normalise_action(entry)
-        assert result["act_type"] is BlancoActionType.UNDEF
 
 
 # ── _update_water_totals ───────────────────────────────────────────────────────
