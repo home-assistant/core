@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state_entity_device_snapshots[device_tracker.fluffy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,6 +42,8 @@
       'entity_picture': 'http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg',
       'friendly_name': 'Fluffy',
       'gps_accuracy': 10.0,
+      'in_zones': list([
+      ]),
       'latitude': 52.520008,
       'longitude': 13.404954,
       'source_type': <SourceType.GPS: 'gps'>,

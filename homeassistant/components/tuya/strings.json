@@ -756,6 +756,9 @@
           "work": "Working"
         }
       },
+      "oxydo_reduction_potential": {
+        "name": "Oxydo reduction potential"
+      },
       "phase_a_current": {
         "name": "Phase A current"
       },

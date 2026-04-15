@@ -51,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         session=async_create_clientsession(
             hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
         ),
+        request_timeout=30,
         max_retries=API_MAX_RETRIES,
     )
 

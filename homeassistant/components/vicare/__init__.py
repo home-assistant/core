@@ -6,7 +6,6 @@ from contextlib import suppress
 import logging
 import os
 
-from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
@@ -68,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     return True
 
 
-def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
+def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> ViCareData:
     """Set up PyVicare API."""
     client = login(hass, entry.data)
 

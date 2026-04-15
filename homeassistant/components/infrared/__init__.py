@@ -61,13 +61,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def async_get_emitters(hass: HomeAssistant) -> list[InfraredEntity]:
-    """Get all infrared emitters."""
+def async_get_emitters(hass: HomeAssistant) -> list[str]:
+    """Get all infrared emitter entity IDs."""
     component = hass.data.get(DATA_COMPONENT)
     if component is None:
         return []
 
-    return list(component.entities)
+    return [entity.entity_id for entity in component.entities]
 
 
 async def async_send_command(

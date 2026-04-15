@@ -415,6 +415,7 @@ def _normalize_name(name: str) -> str:
 
 
 def _filter_by_name(
+    hass: HomeAssistant,
     name: str,
     candidates: Iterable[MatchTargetsCandidate],
 ) -> Iterable[MatchTargetsCandidate]:
@@ -422,31 +423,19 @@ def _filter_by_name(
     name_norm = _normalize_name(name)
 
     for candidate in candidates:
-        # Accept name or entity id
-        if (candidate.state.entity_id == name) or _normalize_name(
-            candidate.state.name
-        ) == name_norm:
+        # Accept entity id
+        if candidate.state.entity_id == name:
             candidate.matched_name = name
             yield candidate
             continue
 
-        if candidate.entity is None:
-            continue
-
-        if candidate.entity.name and (
-            _normalize_name(candidate.entity.name) == name_norm
+        for candidate_name in async_get_entity_aliases(
+            hass, candidate.entity, state=candidate.state
         ):
-            candidate.matched_name = name
-            yield candidate
-            continue
-
-        # Check aliases
-        if candidate.entity.aliases:
-            for alias in candidate.entity.aliases:
-                if _normalize_name(alias) == name_norm:
-                    candidate.matched_name = name
-                    yield candidate
-                    break
+            if _normalize_name(candidate_name) == name_norm:
+                candidate.matched_name = name
+                yield candidate
+                break
 
 
 def _filter_by_features(
@@ -583,7 +572,7 @@ def async_match_targets(  # noqa: C901
 
     if constraints.name:
         # Filter by entity name or alias
-        candidates = list(_filter_by_name(constraints.name, candidates))
+        candidates = list(_filter_by_name(hass, constraints.name, candidates))
         if not candidates:
             return MatchTargetsResult(False, MatchFailedReason.NAME)
 
@@ -1079,16 +1068,9 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Update intent slots to include any transformations done by the schemas
         intent_obj.slots = slots
 
-        response = await self.async_handle_states(
+        return await self.async_handle_states(
             intent_obj, match_result, match_constraints, match_preferences
         )
-
-        # Make the matched states available in the response
-        response.async_set_states(
-            matched_states=match_result.states, unmatched_states=[]
-        )
-
-        return response
 
     async def async_handle_states(
         self,
@@ -1199,17 +1181,11 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         After the timeout the task will continue to run in the background.
         """
-        try:
-            await asyncio.wait({task}, timeout=self.service_timeout)
-        except TimeoutError:
-            pass
-        except asyncio.CancelledError:
-            # Task calling us was cancelled, so cancel service call task, and wait for
-            # it to be cancelled, within reason, before leaving.
-            _LOGGER.debug("Service call was cancelled: %s", task.get_name())
-            task.cancel()
-            await asyncio.wait({task}, timeout=5)
-            raise
+        done, _ = await asyncio.wait({task}, timeout=self.service_timeout)
+        if done:
+            # Task finished within the timeout. Re-raise any exception
+            # (e.g. validation errors) so the caller can handle it.
+            task.result()
 
 
 class ServiceIntentHandler(DynamicServiceIntentHandler):
@@ -1382,7 +1358,6 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.error_code: IntentResponseErrorCode | None = None
-        self.intent_targets: list[IntentResponseTarget] = []
         self.success_results: list[IntentResponseTarget] = []
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
@@ -1433,14 +1408,6 @@ class IntentResponse:
         self.async_set_speech(message)
 
     @callback
-    def async_set_targets(
-        self,
-        intent_targets: list[IntentResponseTarget],
-    ) -> None:
-        """Set response targets."""
-        self.intent_targets = intent_targets
-
-    @callback
     def async_set_results(
         self,
         success_results: list[IntentResponseTarget],
@@ -1467,16 +1434,16 @@ class IntentResponse:
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
-            "speech": self.speech,
-            "card": self.card,
+            "speech": {k: dict(v) for k, v in self.speech.items()},
+            "card": {k: dict(v) for k, v in self.card.items()},
             "language": self.language,
             "response_type": self.response_type.value,
         }
 
         if self.reprompt:
-            response_dict["reprompt"] = self.reprompt
+            response_dict["reprompt"] = {k: dict(v) for k, v in self.reprompt.items()}
         if self.speech_slots:
-            response_dict["speech_slots"] = self.speech_slots
+            response_dict["speech_slots"] = self.speech_slots.copy()
 
         response_data: dict[str, Any] = {}
 
@@ -1485,11 +1452,6 @@ class IntentResponse:
             response_data["code"] = self.error_code.value
         else:
             # action done or query answer
-            response_data["targets"] = [
-                dataclasses.asdict(target) for target in self.intent_targets
-            ]
-
-            # Add success/failed targets
             response_data["success"] = [
                 dataclasses.asdict(target) for target in self.success_results
             ]
@@ -1501,3 +1463,25 @@ class IntentResponse:
         response_dict["data"] = response_data
 
         return response_dict
+
+
+@callback
+def async_get_entity_aliases(
+    hass: HomeAssistant,
+    entity_entry: er.RegistryEntry | None,
+    *,
+    state: State,
+    allow_empty: bool = True,
+) -> list[str]:
+    """Get all names/aliases for an entity.
+
+    If no entity registry entry is provided, returns a list with just the
+    state name. Otherwise, delegates to the entity registry to resolve aliases,
+    where COMPUTED_NAME aliases are replaced with the computed full entity name.
+
+    The returned list preserves the order set by the user.
+    """
+    if entity_entry is None:
+        return [state.name.strip()]
+
+    return er.async_get_entity_aliases(hass, entity_entry, allow_empty=allow_empty)

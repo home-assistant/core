@@ -21,8 +21,8 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import PranaConfigEntry
-from .entity import PranaBaseEntity, PranaCoordinator
+from .coordinator import PranaConfigEntry, PranaCoordinator
+from .entity import PranaBaseEntity
 
 PARALLEL_UPDATES = 1
 

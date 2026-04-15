@@ -538,19 +538,35 @@ def create_devices(
                     ATTR_SERIAL_NUMBER: matter.serial_number,
                 }
             )
-        if (main_component := device.status.get(MAIN)) is not None and (
-            device_identification := main_component.get(
-                Capability.SAMSUNG_CE_DEVICE_IDENTIFICATION
-            )
-        ) is not None:
-            new_kwargs = {
-                ATTR_SERIAL_NUMBER: device_identification[Attribute.SERIAL_NUMBER].value
-            }
-            if ATTR_MODEL_ID not in kwargs:
-                new_kwargs[ATTR_MODEL_ID] = device_identification[
-                    Attribute.MODEL_NAME
-                ].value
-            kwargs.update(new_kwargs)
+        if (main_component := device.status.get(MAIN)) is not None:
+            if (
+                device_identification := main_component.get(
+                    Capability.SAMSUNG_CE_DEVICE_IDENTIFICATION
+                )
+            ) is not None:
+                new_kwargs = {
+                    ATTR_SERIAL_NUMBER: device_identification[
+                        Attribute.SERIAL_NUMBER
+                    ].value
+                }
+                if ATTR_MODEL_ID not in kwargs:
+                    new_kwargs[ATTR_MODEL_ID] = device_identification[
+                        Attribute.MODEL_NAME
+                    ].value
+                kwargs.update(new_kwargs)
+            if (
+                device_status := main_component.get(Capability.SAMSUNG_IM_DEVICESTATUS)
+            ) is not None:
+                mac_connections: set[tuple[str, str]] = set()
+                status = cast(dict[str, str], device_status[Attribute.STATUS].value)
+                if wifi_mac := status.get("wifiMac"):
+                    mac_connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
+                if bluetooth_address := status.get("btAddr"):
+                    mac_connections.add(
+                        (dr.CONNECTION_BLUETOOTH, bluetooth_address.lower())
+                    )
+                if mac_connections:
+                    kwargs.setdefault(ATTR_CONNECTIONS, set()).update(mac_connections)
         if (
             device_registry.async_get_device({(DOMAIN, device.device.device_id)})
             is None

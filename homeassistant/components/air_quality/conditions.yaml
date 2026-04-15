@@ -1,0 +1,449 @@
+# --- Common condition fields ---
+
+.condition_behavior: &condition_behavior
+  required: true
+  default: any
+  selector:
+    select:
+      translation_key: condition_behavior
+      options:
+        - all
+        - any
+
+# --- Unit lists for multi-unit pollutants ---
+
+.co_units: &co_units
+  - "ppb"
+  - "ppm"
+  - "mg/m³"
+  - "μg/m³"
+
+.ozone_units: &ozone_units
+  - "ppb"
+  - "ppm"
+  - "μg/m³"
+
+.voc_units: &voc_units
+  - "μg/m³"
+  - "mg/m³"
+
+.voc_ratio_units: &voc_ratio_units
+  - "ppb"
+  - "ppm"
+
+.no_units: &no_units
+  - "ppb"
+  - "μg/m³"
+
+.no2_units: &no2_units
+  - "ppb"
+  - "ppm"
+  - "μg/m³"
+
+.so2_units: &so2_units
+  - "ppb"
+  - "μg/m³"
+
+# --- Entity filter anchors ---
+
+.co_threshold_entity: &co_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *co_units
+  - domain: sensor
+    device_class: carbon_monoxide
+  - domain: number
+    device_class: carbon_monoxide
+
+.co2_threshold_entity: &co2_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "ppm"
+  - domain: sensor
+    device_class: carbon_dioxide
+  - domain: number
+    device_class: carbon_dioxide
+
+.pm1_threshold_entity: &pm1_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "μg/m³"
+  - domain: sensor
+    device_class: pm1
+  - domain: number
+    device_class: pm1
+
+.pm25_threshold_entity: &pm25_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "μg/m³"
+  - domain: sensor
+    device_class: pm25
+  - domain: number
+    device_class: pm25
+
+.pm4_threshold_entity: &pm4_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "μg/m³"
+  - domain: sensor
+    device_class: pm4
+  - domain: number
+    device_class: pm4
+
+.pm10_threshold_entity: &pm10_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "μg/m³"
+  - domain: sensor
+    device_class: pm10
+  - domain: number
+    device_class: pm10
+
+.ozone_threshold_entity: &ozone_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *ozone_units
+  - domain: sensor
+    device_class: ozone
+  - domain: number
+    device_class: ozone
+
+.voc_threshold_entity: &voc_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *voc_units
+  - domain: sensor
+    device_class: volatile_organic_compounds
+  - domain: number
+    device_class: volatile_organic_compounds
+
+.voc_ratio_threshold_entity: &voc_ratio_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *voc_ratio_units
+  - domain: sensor
+    device_class: volatile_organic_compounds_parts
+  - domain: number
+    device_class: volatile_organic_compounds_parts
+
+.no_threshold_entity: &no_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *no_units
+  - domain: sensor
+    device_class: nitrogen_monoxide
+  - domain: number
+    device_class: nitrogen_monoxide
+
+.no2_threshold_entity: &no2_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *no2_units
+  - domain: sensor
+    device_class: nitrogen_dioxide
+  - domain: number
+    device_class: nitrogen_dioxide
+
+.n2o_threshold_entity: &n2o_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "μg/m³"
+  - domain: sensor
+    device_class: nitrous_oxide
+  - domain: number
+    device_class: nitrous_oxide
+
+.so2_threshold_entity: &so2_threshold_entity
+  - domain: input_number
+    unit_of_measurement: *so2_units
+  - domain: sensor
+    device_class: sulphur_dioxide
+  - domain: number
+    device_class: sulphur_dioxide
+
+# --- Number anchors for single-unit pollutants ---
+
+.co2_threshold_number: &co2_threshold_number
+  mode: box
+  unit_of_measurement: "ppm"
+
+.ugm3_threshold_number: &ugm3_threshold_number
+  mode: box
+  unit_of_measurement: "μg/m³"
+
+# --- Binary sensor targets ---
+
+.target_gas: &target_gas
+  entity:
+    - domain: binary_sensor
+      device_class: gas
+
+.target_co_binary: &target_co_binary
+  entity:
+    - domain: binary_sensor
+      device_class: carbon_monoxide
+
+.target_smoke: &target_smoke
+  entity:
+    - domain: binary_sensor
+      device_class: smoke
+
+# --- Sensor targets ---
+
+.target_co_sensor: &target_co_sensor
+  entity:
+    - domain: sensor
+      device_class: carbon_monoxide
+
+.target_co2: &target_co2
+  entity:
+    - domain: sensor
+      device_class: carbon_dioxide
+
+.target_pm1: &target_pm1
+  entity:
+    - domain: sensor
+      device_class: pm1
+
+.target_pm25: &target_pm25
+  entity:
+    - domain: sensor
+      device_class: pm25
+
+.target_pm4: &target_pm4
+  entity:
+    - domain: sensor
+      device_class: pm4
+
+.target_pm10: &target_pm10
+  entity:
+    - domain: sensor
+      device_class: pm10
+
+.target_ozone: &target_ozone
+  entity:
+    - domain: sensor
+      device_class: ozone
+
+.target_voc: &target_voc
+  entity:
+    - domain: sensor
+      device_class: volatile_organic_compounds
+
+.target_voc_ratio: &target_voc_ratio
+  entity:
+    - domain: sensor
+      device_class: volatile_organic_compounds_parts
+
+.target_no: &target_no
+  entity:
+    - domain: sensor
+      device_class: nitrogen_monoxide
+
+.target_no2: &target_no2
+  entity:
+    - domain: sensor
+      device_class: nitrogen_dioxide
+
+.target_n2o: &target_n2o
+  entity:
+    - domain: sensor
+      device_class: nitrous_oxide
+
+.target_so2: &target_so2
+  entity:
+    - domain: sensor
+      device_class: sulphur_dioxide
+
+# --- Binary sensor conditions ---
+
+.condition_binary_common: &condition_binary_common
+  fields:
+    behavior: *condition_behavior
+
+is_gas_detected:
+  <<: *condition_binary_common
+  target: *target_gas
+
+is_gas_cleared:
+  <<: *condition_binary_common
+  target: *target_gas
+
+is_co_detected:
+  <<: *condition_binary_common
+  target: *target_co_binary
+
+is_co_cleared:
+  <<: *condition_binary_common
+  target: *target_co_binary
+
+is_smoke_detected:
+  <<: *condition_binary_common
+  target: *target_smoke
+
+is_smoke_cleared:
+  <<: *condition_binary_common
+  target: *target_smoke
+
+# --- Numerical sensor conditions with unit conversion ---
+
+is_co_value:
+  target: *target_co_sensor
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *co_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *co_units
+
+is_ozone_value:
+  target: *target_ozone
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *ozone_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *ozone_units
+
+is_voc_value:
+  target: *target_voc
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *voc_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *voc_units
+
+is_voc_ratio_value:
+  target: *target_voc_ratio
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *voc_ratio_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *voc_ratio_units
+
+is_no_value:
+  target: *target_no
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *no_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *no_units
+
+is_no2_value:
+  target: *target_no2
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *no2_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *no2_units
+
+is_so2_value:
+  target: *target_so2
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *so2_threshold_entity
+          mode: is
+          number:
+            mode: box
+          unit_of_measurement: *so2_units
+
+# --- Numerical sensor conditions without unit conversion ---
+
+is_co2_value:
+  target: *target_co2
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *co2_threshold_entity
+          mode: is
+          number: *co2_threshold_number
+
+is_pm1_value:
+  target: *target_pm1
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *pm1_threshold_entity
+          mode: is
+          number: *ugm3_threshold_number
+
+is_pm25_value:
+  target: *target_pm25
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *pm25_threshold_entity
+          mode: is
+          number: *ugm3_threshold_number
+
+is_pm4_value:
+  target: *target_pm4
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *pm4_threshold_entity
+          mode: is
+          number: *ugm3_threshold_number
+
+is_pm10_value:
+  target: *target_pm10
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *pm10_threshold_entity
+          mode: is
+          number: *ugm3_threshold_number
+
+is_n2o_value:
+  target: *target_n2o
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *n2o_threshold_entity
+          mode: is
+          number: *ugm3_threshold_number

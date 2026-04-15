@@ -1,7 +1,7 @@
 {
   "domain": "smarla",
   "name": "Swing2Sleep Smarla",
-  "codeowners": ["@explicatis", "@rlint-explicatis"],
+  "codeowners": ["@explicatis", "@johannes-exp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smarla",
   "integration_type": "device",
