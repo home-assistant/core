@@ -19,8 +19,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = 60
-
 
 @dataclass
 class EveOnlineData:
@@ -52,7 +50,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=SCAN_INTERVAL),
+            update_interval=timedelta(minutes=1),
         )
         self.client = client
         self.character_id = character_id
