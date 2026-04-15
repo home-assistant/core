@@ -2672,7 +2672,7 @@ tuya-device-handlers==0.0.17
 tuya-device-sharing-sdk==0.2.8
 
 # homeassistant.components.twentemilieu
-twentemilieu==2.2.1
+twentemilieu==3.0.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
