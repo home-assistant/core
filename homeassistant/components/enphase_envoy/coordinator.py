@@ -238,28 +238,23 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # while its default max_attempts of 6 remains higher so fast
         # failures can still be retried more times.
         #
-        # Only set the retry policy if the retry attempts option is
-        # changed from its default value.
-        if retries != OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE:
-            # Envoy uses 45 sec timeouts. Set the allowed time to
-            # the middle of a 45 sec period to allow for some
-            # random wait time between attempts. For example, 60 allows
-            # 2 attempts and ends the request at the end of the second
-            # attempt when 90 seconds have elapsed.
-            retry_delay: int = 15 + max(0, (retries - 1) * 45)
-            # set attempts no lower than 4 and add 2 extra
-            # to match pyenphase value logic. this one is used for
-            # retry on fast failures.
-            retry_attempts = max(4, retries + 2)
-            self.envoy.set_retry_policy(
-                max_delay=retry_delay, max_attempts=retry_attempts
-            )
-            _LOGGER.debug(
-                "Set retry policy step %s: %s and %s",
-                retries,
-                retry_delay,
-                retry_attempts,
-            )
+        # Envoy uses 45 sec timeouts. Add a 15 second buffer to
+        # account for random wait time between attempts, then add
+        # 45 seconds for each additional timeout-length attempt.
+        # For example, 60 seconds allows 2 timeout-length attempts
+        # plus up to 15 seconds of wait time between them.
+        retry_delay: int = 15 + max(0, (retries - 1) * 45)
+        # set attempts no lower than 4 and add 2 extra
+        # to match pyenphase value logic. this one is used for
+        # retry on fast failures.
+        retry_attempts = max(4, retries + 2)
+        self.envoy.set_retry_policy(max_delay=retry_delay, max_attempts=retry_attempts)
+        _LOGGER.debug(
+            "Set retry policy step %s: %s and %s",
+            retries,
+            retry_delay,
+            retry_attempts,
+        )
 
     async def _async_setup_and_authenticate(self) -> None:
         """Set up and authenticate with the envoy."""
