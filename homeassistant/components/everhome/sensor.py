@@ -37,7 +37,6 @@ class EcoTrackerSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[EcoTrackerSensorEntityDescription, ...] = (
     EcoTrackerSensorEntityDescription(
         key="power",
-        translation_key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -112,7 +111,6 @@ SENSOR_TYPES: tuple[EcoTrackerSensorEntityDescription, ...] = (
     ),
     EcoTrackerSensorEntityDescription(
         key="rssi",
-        translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
