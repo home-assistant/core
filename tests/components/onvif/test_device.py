@@ -136,6 +136,36 @@ async def test_get_capabilities_deviceio_missing_relay_outputs_fallback(
     deviceio_service.GetRelayOutputs.assert_awaited_once()
 
 
+async def test_get_capabilities_deviceio_zero_relay_outputs(
+    hass: HomeAssistant,
+) -> None:
+    """Test explicit zero relay outputs does not trigger fallback."""
+    device = _create_onvif_device(hass)
+
+    media_service = AsyncMock()
+    media_service.GetServiceCapabilities = AsyncMock(return_value=None)
+    imaging_service = AsyncMock()
+    deviceio_service = AsyncMock()
+    deviceio_service.GetServiceCapabilities = AsyncMock(
+        return_value=MagicMock(RelayOutputs="0")
+    )
+    deviceio_service.GetRelayOutputs = AsyncMock()
+
+    device.device = MagicMock(
+        create_media_service=AsyncMock(return_value=media_service),
+        get_definition=MagicMock(),
+        create_imaging_service=AsyncMock(return_value=imaging_service),
+        create_deviceio_service=AsyncMock(return_value=deviceio_service),
+    )
+
+    capabilities = await device.async_get_capabilities()
+
+    assert capabilities.deviceio
+    assert capabilities.relay_outputs == 0
+    deviceio_service.GetServiceCapabilities.assert_awaited_once()
+    deviceio_service.GetRelayOutputs.assert_not_called()
+
+
 async def test_get_relay_outputs(hass: HomeAssistant) -> None:
     """Test relay outputs retrieval from DeviceIO."""
     device = _create_onvif_device(hass)
@@ -211,10 +241,13 @@ async def test_set_relay_output_state(hass: HomeAssistant) -> None:
     device_service.create_type.return_value = request
     device_service.SetRelayOutputState = AsyncMock()
 
-    device.device = MagicMock(devicemgmt=device_service)
+    device.device = MagicMock(
+        create_devicemgmt_service=AsyncMock(return_value=device_service)
+    )
 
     await device.async_set_relay_output_state("relay-token", "active")
 
+    device.device.create_devicemgmt_service.assert_awaited_once()
     device_service.create_type.assert_called_once_with("SetRelayOutputState")
     assert request.RelayOutputToken == "relay-token"
     assert request.LogicalState == "active"
@@ -225,7 +258,7 @@ async def test_set_relay_output_state_without_deviceio(hass: HomeAssistant) -> N
     """Test setting relay output state raises when DeviceIO unsupported."""
     device = _create_onvif_device(hass)
     device.capabilities = Capabilities(deviceio=False)
-    device.device = MagicMock(devicemgmt=MagicMock())
+    device.device = MagicMock(create_devicemgmt_service=AsyncMock())
 
     with pytest.raises(ONVIFError):
         await device.async_set_relay_output_state("relay-token", "active")

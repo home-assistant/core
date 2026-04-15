@@ -404,7 +404,7 @@ class ONVIFDevice:
             imaging = True
 
         deviceio = False
-        relay_outputs = 0
+        relay_outputs: int | None = None
         with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             deviceio_service = await self.device.create_deviceio_service()
             deviceio = True
@@ -418,7 +418,7 @@ class ONVIFDevice:
             # Fall back to GetRelayOutputs if relay count is still unknown,
             # e.g. when GetServiceCapabilities() succeeds but omits RelayOutputs
             # or when it raised an exception that was suppressed above
-            if relay_outputs == 0:
+            if relay_outputs is None:
                 try:
                     relay_list = await deviceio_service.GetRelayOutputs()
                     if relay_list and hasattr(relay_list, "RelayOutput"):
@@ -435,7 +435,7 @@ class ONVIFDevice:
             ptz=ptz,
             imaging=imaging,
             deviceio=deviceio,
-            relay_outputs=relay_outputs,
+            relay_outputs=relay_outputs or 0,
         )
 
     async def async_start_events(self):
@@ -773,7 +773,7 @@ class ONVIFDevice:
             raise ONVIFError("DeviceIO service not supported")
 
         # Use Device service per ONVIF spec design
-        device_service = self.device.devicemgmt
+        device_service = await self.device.create_devicemgmt_service()
 
         LOGGER.debug(
             "Setting Relay Output State | Token = %s, State = %s", relay_token, state
