@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.tis_control.const import DOMAIN
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -32,7 +34,7 @@ MOCK_RAW_API_RESPONSE = [
 
 
 @pytest.fixture
-async def setup_mock_switch(
+async def tis_switch(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> AsyncGenerator[MagicMock]:
     """Set up the TIS integration with a single mock switch and return the mock API instance."""
@@ -63,15 +65,29 @@ async def setup_mock_switch(
 
 
 async def test_setup_and_properties(
-    hass: HomeAssistant, setup_mock_switch: MagicMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tis_switch: MagicMock
 ) -> None:
     """Test switch setup, initial state, and properties."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.name == "TIS Device 1_2_3 Test Switch"
 
-    setup_mock_switch.register_callback.assert_called_once()
-    setup_mock_switch.request_update.assert_awaited_once()
+    tis_switch.register_callback.assert_called_once()
+    tis_switch.request_update.assert_awaited_once()
+
+    # Verify device-registry scoping
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_mock_gateway_1_2_3")}
+    )
+    assert device is not None
+    assert device.name == "TIS Device 1_2_3"
+
+    # Verify entity-registry scoping
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == f"{mock_config_entry.entry_id}_tis_1_2_3_ch1"
 
 
 async def test_setup_no_switches(
@@ -87,80 +103,76 @@ async def test_setup_no_switches(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_turn_on_service(
-    hass: HomeAssistant, setup_mock_switch: MagicMock
-) -> None:
+async def test_turn_on_service(hass: HomeAssistant, tis_switch: MagicMock) -> None:
     """Test the turn_on service call."""
     # Successful turn_on
-    setup_mock_switch.turn_switch_on.return_value = True
+    tis_switch.turn_switch_on.return_value = True
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
     )
 
-    setup_mock_switch.turn_switch_on.assert_awaited_once()
+    tis_switch.turn_switch_on.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     # Failed turn_on
-    setup_mock_switch.turn_switch_on.reset_mock()
-    setup_mock_switch.turn_switch_on.return_value = False
+    tis_switch.turn_switch_on.reset_mock()
+    tis_switch.turn_switch_on.return_value = False
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": ENTITY_ID}, blocking=True
     )
 
-    setup_mock_switch.turn_switch_on.assert_awaited_once()
+    tis_switch.turn_switch_on.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-async def test_turn_off_service(
-    hass: HomeAssistant, setup_mock_switch: MagicMock
-) -> None:
+async def test_turn_off_service(hass: HomeAssistant, tis_switch: MagicMock) -> None:
     """Test the turn_off service call."""
     # Successful turn_off
-    setup_mock_switch.turn_switch_off.return_value = True
+    tis_switch.turn_switch_off.return_value = True
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": ENTITY_ID}, blocking=True
     )
 
-    setup_mock_switch.turn_switch_off.assert_awaited_once()
+    tis_switch.turn_switch_off.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     # Failed turn_off
-    setup_mock_switch.turn_switch_off.reset_mock()
-    setup_mock_switch.turn_switch_off.return_value = False
+    tis_switch.turn_switch_off.reset_mock()
+    tis_switch.turn_switch_off.return_value = False
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_OFF, {"entity_id": ENTITY_ID}, blocking=True
     )
 
-    setup_mock_switch.turn_switch_off.assert_awaited_once()
+    tis_switch.turn_switch_off.assert_awaited_once()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 async def test_state_updates_from_callback(
-    hass: HomeAssistant, setup_mock_switch: MagicMock
+    hass: HomeAssistant, tis_switch: MagicMock
 ) -> None:
     """Test entity state updates when the device pushes a new state."""
-    callback = setup_mock_switch.register_callback.call_args[0][0]
+    callback = tis_switch.register_callback.call_args[0][0]
 
     # Device updates to ON
-    setup_mock_switch.is_on = True
-    setup_mock_switch.available = True
+    tis_switch.is_on = True
+    tis_switch.available = True
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     # Device updates to OFF
-    setup_mock_switch.is_on = False
-    setup_mock_switch.available = True
+    tis_switch.is_on = False
+    tis_switch.available = True
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
     # Device updates to Unavailable
-    setup_mock_switch.available = False
+    tis_switch.available = False
     callback()
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
