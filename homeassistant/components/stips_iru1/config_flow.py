@@ -7,11 +7,23 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import StipsApiAuthError, StipsApiClient, StipsApiError, StipsApiPermissionError
-from .catalog import async_fetch_catalog_devices
-from .const import CONF_API_HOST, CONF_PASSWORD, CONF_USERNAME, DEFAULT_API_HOST, DOMAIN
+from homeassistant.components.stips_iru1.api import (
+    StipsApiAuthError,
+    StipsApiClient,
+    StipsApiError,
+    StipsApiPermissionError,
+)
+from homeassistant.components.stips_iru1.catalog import async_fetch_catalog_devices
+from homeassistant.components.stips_iru1.const import (
+    CONF_API_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DEFAULT_API_HOST,
+    DOMAIN,
+)
 
 
 class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -19,7 +31,7 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Single-step setup: login and download full account IR catalog."""
         errors: dict[str, str] = {}
         if user_input is not None:

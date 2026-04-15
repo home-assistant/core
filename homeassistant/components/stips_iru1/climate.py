@@ -16,22 +16,25 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+)
 
-from .catalog import (
+from homeassistant.components.stips_iru1.catalog import (
     model_has_ir_signals,
     normalize_device_ip,
     normalize_device_mac,
     normalize_device_online,
 )
-from .const import (
+from homeassistant.components.stips_iru1.const import (
     DOMAIN,
     LOCAL_HTTP_PASSWORD,
     LOCAL_HTTP_USERNAME,
     is_learned_ac,
     is_protocol_ac,
 )
-from .local_http import async_build_control_hosts
+from homeassistant.components.stips_iru1.local_http import async_build_control_hosts
 
 
 _MODE_TO_HVAC: dict[int, HVACMode] = {
@@ -89,7 +92,7 @@ def _normalize_mode_label(value: Any) -> str:
     return s
 
 
-def _mode_to_hvac(mode: str) -> HVACMode:
+def _mode_to_hvac(mode: Any) -> HVACMode:
     m = _normalize_mode_label(mode)
     if m == "auto":
         return HVACMode.AUTO
@@ -123,7 +126,7 @@ def _extract_learned_ac_signals(
     remote_snapshot: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], str | None, str | None, int]:
     model = remote_snapshot.get("model") or {}
-    frequency = int(model.get("frequency") or model.get("Frequency") or 38000)
+    frequency = _safe_int(model.get("frequency") or model.get("Frequency"), 38000)
     out: list[dict[str, Any]] = []
     for raw in model.get("signals") or model.get("Signals") or []:
         if not isinstance(raw, dict):
@@ -231,7 +234,7 @@ def _extract_initial_ac_state(remote: dict[str, Any]) -> dict[str, int]:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create climate entities for protocol AC and LearnedAc remotes."""
     entities: list[ClimateEntity] = []
@@ -335,6 +338,7 @@ class StipsIruClimate(ClimateEntity):
         friendly_name: str,
         remote_snapshot: dict[str, Any],
     ) -> None:
+        """Initialize a protocol AC climate entity."""
         super().__init__()
         self.hass = hass
         self._device_unique_name = device_unique_name
@@ -355,36 +359,46 @@ class StipsIruClimate(ClimateEntity):
         self._state = _extract_initial_ac_state(remote_snapshot)
 
     @property
-    def device_info(self) -> dict[str, Any]:
-        return {
-            "identifiers": {(DOMAIN, self._device_unique_name)},
-            "name": self._device_name,
-            "manufacturer": "STIPS",
-            "model": "IRU1",
-            "connections": {("mac", self._device_mac)} if self._device_mac else set(),
-            "configuration_url": f"http://{self._device_unique_name}/device_info",
-        }
+    def device_info(self) -> DeviceInfo | None:
+        """Return device registry metadata for this climate entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_unique_name)},
+            name=self._device_name,
+            manufacturer="STIPS",
+            model="IRU1",
+            connections={
+                ("mac", self._device_mac)
+            }
+            if self._device_mac
+            else set(),
+            configuration_url=f"http://{self._device_unique_name}/device_info",
+        )
 
     @property
     def available(self) -> bool:
+        """Protocol AC remotes are treated as available once loaded."""
         return True
 
     @property
     def hvac_mode(self) -> HVACMode:
+        """Current HVAC mode derived from the last known AC state."""
         if _safe_int(self._state.get("power"), 0) == 0:
             return HVACMode.OFF
         return _MODE_TO_HVAC.get(_safe_int(self._state.get("mode"), 1), HVACMode.COOL)
 
     @property
     def target_temperature(self) -> float:
+        """Current target temperature in Celsius."""
         return float(_safe_int(self._state.get("temp"), 22))
 
     @property
     def fan_mode(self) -> str:
+        """Current fan mode label."""
         return _FAN_INT_TO_NAME.get(_safe_int(self._state.get("fan"), 3), "medium")
 
     @property
     def swing_mode(self) -> str:
+        """Current swing mode label."""
         return _normalize_swing_mode(
             _safe_int(self._state.get("swingV"), 0),
             _safe_int(self._state.get("swingH"), 0),
@@ -392,6 +406,7 @@ class StipsIruClimate(ClimateEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose debugging metadata for the backing STIPS device."""
         return {
             "device_unique_name": self._device_unique_name,
             "unique_name": self._device_unique_name,
@@ -413,12 +428,15 @@ class StipsIruClimate(ClimateEntity):
         }
 
     async def async_turn_on(self) -> None:
+        """Turn the AC on using the cached protocol state."""
         await self._send_update(power=1)
 
     async def async_turn_off(self) -> None:
+        """Turn the AC off using the cached protocol state."""
         await self._send_update(power=0)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Apply a new HVAC mode."""
         if hvac_mode == HVACMode.OFF:
             await self._send_update(power=0)
             return
@@ -428,6 +446,7 @@ class StipsIruClimate(ClimateEntity):
         await self._send_update(power=1, mode=mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Apply a new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise HomeAssistantError("Temperature is required")
         requested = int(float(kwargs[ATTR_TEMPERATURE]))
@@ -435,12 +454,14 @@ class StipsIruClimate(ClimateEntity):
         await self._send_update(power=1, temp=requested)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Apply a new fan mode."""
         key = (fan_mode or "").strip().lower()
         if key not in _FAN_NAME_TO_INT:
             raise HomeAssistantError(f"Unsupported fan mode: {fan_mode}")
         await self._send_update(power=1, fan=_FAN_NAME_TO_INT[key])
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Apply a new swing mode."""
         swing_v, swing_h = _split_swing_mode(swing_mode)
         await self._send_update(power=1, swingV=swing_v, swingH=swing_h)
 
@@ -558,6 +579,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         friendly_name: str,
         remote_snapshot: dict[str, Any],
     ) -> None:
+        """Initialize a learned-AC climate entity."""
         super().__init__()
         self.hass = hass
         self._device_unique_name = device_unique_name
@@ -582,18 +604,27 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         self._attr_available = True
 
         modes = {_mode_to_hvac(v.get("mode")) for v in self._signals}
-        self._attr_hvac_modes = [HVACMode.OFF] + [
-            m
-            for m in [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY, HVACMode.FAN_ONLY]
-            if m in modes
-        ]
+        self._attr_hvac_modes = (
+            HVACMode.OFF,
+            *[
+                m
+                for m in (
+                    HVACMode.AUTO,
+                    HVACMode.COOL,
+                    HVACMode.HEAT,
+                    HVACMode.DRY,
+                    HVACMode.FAN_ONLY,
+                )
+                if m in modes
+            ],
+        )
         if len(self._attr_hvac_modes) == 1:
-            self._attr_hvac_modes.append(HVACMode.COOL)
+            self._attr_hvac_modes = (HVACMode.OFF, HVACMode.COOL)
 
         fans = sorted({_fan_to_name(v.get("fan")) for v in self._signals})
-        self._attr_fan_modes = [f for f in ["auto", "min", "low", "medium", "high", "max"] if f in fans] or [
-            "medium"
-        ]
+        self._attr_fan_modes = tuple(
+            f for f in ("auto", "min", "low", "medium", "high", "max") if f in fans
+        ) or ("medium",)
 
         default_mode = next((m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL)
         default_temp = int((self._attr_min_temp + self._attr_max_temp) / 2)
@@ -606,36 +637,46 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         }
 
     @property
-    def device_info(self) -> dict[str, Any]:
-        return {
-            "identifiers": {(DOMAIN, self._device_unique_name)},
-            "name": self._device_name,
-            "manufacturer": "STIPS",
-            "model": "IRU1",
-            "connections": {("mac", self._device_mac)} if self._device_mac else set(),
-            "configuration_url": f"http://{self._device_unique_name}/device_info",
-        }
+    def device_info(self) -> DeviceInfo | None:
+        """Return device registry metadata for this learned-AC entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_unique_name)},
+            name=self._device_name,
+            manufacturer="STIPS",
+            model="IRU1",
+            connections={
+                ("mac", self._device_mac)
+            }
+            if self._device_mac
+            else set(),
+            configuration_url=f"http://{self._device_unique_name}/device_info",
+        )
 
     @property
     def available(self) -> bool:
+        """Learned-AC remotes are treated as available once loaded."""
         return True
 
     @property
     def hvac_mode(self) -> HVACMode:
+        """Current HVAC mode derived from the learned AC state."""
         if int(self._state.get("power", 0)) == 0:
             return HVACMode.OFF
         return self._state.get("hvac_mode", HVACMode.COOL)
 
     @property
     def target_temperature(self) -> float:
+        """Current target temperature in Celsius."""
         return float(int(self._state.get("temp", self._attr_min_temp)))
 
     @property
     def fan_mode(self) -> str:
+        """Current fan mode label."""
         return _fan_to_name(self._state.get("fan", "medium"))
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose debugging metadata for the learned-AC remote."""
         return {
             "device_unique_name": self._device_unique_name,
             "unique_name": self._device_unique_name,
@@ -649,6 +690,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         }
 
     async def async_turn_on(self) -> None:
+        """Turn the remote on using the best matching learned signal."""
         if self.hvac_mode == HVACMode.OFF:
             mode = next((m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL)
             await self._send_state(power=1, hvac_mode=mode)
@@ -656,6 +698,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         await self._send_state(power=1)
 
     async def async_turn_off(self) -> None:
+        """Turn the remote off using the learned power-off signal when available."""
         if self._power_off_signal:
             await self._post_signal(self._power_off_signal)
             self._state["power"] = 0
@@ -664,12 +707,14 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         await self._send_state(power=0)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Apply a new HVAC mode."""
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
             return
         await self._send_state(power=1, hvac_mode=hvac_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Apply a new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             raise HomeAssistantError("Temperature is required")
         requested = int(float(kwargs[ATTR_TEMPERATURE]))
@@ -677,6 +722,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         await self._send_state(power=1, temp=requested)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Apply a new fan mode."""
         key = _fan_to_name(fan_mode)
         await self._send_state(power=1, fan=key)
 
