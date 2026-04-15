@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import logging
 
@@ -22,6 +23,7 @@ class TISData:
     """TIS Control data stored in the ConfigEntry."""
 
     tis_api: TISApi
+    listener_task: asyncio.Task | None = None
 
 
 # Define the Home Assistant platforms that this integration will support.
@@ -49,16 +51,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
 
     entry.runtime_data = TISData(tis_api=tis_api)
 
-    async def listen_for_events():
-        # This will run forever, pulling data from the library.
-        async for event in tis_api.consume_events():
-            try:
+    async def listen_for_events() -> None:
+        """Listen for events from TIS."""
+        try:
+            # This will run forever, pulling data from the library.
+            async for event in tis_api.consume_events():
                 hass.bus.async_fire(f"{DOMAIN}_event", event)
-            except Exception:
-                _LOGGER.exception("Unexpected error while processing TIS event")
+        except asyncio.CancelledError:
+            _LOGGER.debug("TIS event listener task cancelled")
+        except Exception:
+            _LOGGER.exception("Unexpected error while processing TIS event")
 
     # Add this listener to the HA loop as a background task.
-    entry.async_create_background_task(hass, listen_for_events(), "tis_event_listener")
+    # async_create_background_task automatically tracks the task and ensures it is cancelled on unload.
+    entry.runtime_data.listener_task = entry.async_create_background_task(
+        hass, listen_for_events(), "tis_event_listener"
+    )
 
     try:
         await tis_api.scan_devices()
@@ -80,5 +88,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool
 
     # Only disconnect the API if the platforms successfully unloaded
     if unload_ok:
+        # The background task is automatically cancelled by Home Assistant on unload.
+        # However, we can be explicit to ensure it stops before disconnecting the API.
+        if (task := entry.runtime_data.listener_task) is not None:
+            task.cancel()
+
         entry.runtime_data.tis_api.disconnect()
+
     return unload_ok
