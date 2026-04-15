@@ -323,10 +323,10 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
             self.soco.deviceProperties.SetAutoplayRoomUUID(
                 [("RoomUUID", room_uuid), *_TV_SOURCE]
             )
-            self.speaker.tv_autoplay = enable
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
             return
+        self.poll_state()
         # Refresh ungroup state: the device may change it as a side effect
         # (e.g. disabling TV autoplay automatically disables ungroup on autoplay).
         try:
