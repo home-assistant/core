@@ -37,12 +37,9 @@ class EsphomeRadioFrequencyEntity(
     """ESPHome radio frequency entity using native API."""
 
     @property
-    def supported_frequency_ranges(self) -> list[tuple[int, int]] | None:
+    def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return supported frequency ranges from device info."""
-        info = self._static_info
-        if info.frequency_min == 0 and info.frequency_max == 0:
-            return None
-        return [(info.frequency_min, info.frequency_max)]
+        return [(self._static_info.frequency_min, self._static_info.frequency_max)]
 
     @callback
     def _on_device_update(self) -> None:

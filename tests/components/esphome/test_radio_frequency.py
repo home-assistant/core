@@ -209,27 +209,3 @@ async def test_radio_frequency_supported_frequency_ranges(
         hass, 868_000_000, ModulationType.OOK
     )
     assert len(transmitters) == 0
-
-
-async def test_radio_frequency_no_frequency_ranges(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test entity with no frequency ranges matches any frequency."""
-    await _mock_rf_device(
-        mock_esphome_device,
-        mock_client,
-        frequency_min=0,
-        frequency_max=0,
-    )
-
-    transmitters = radio_frequency.async_get_transmitters(
-        hass, 433_920_000, ModulationType.OOK
-    )
-    assert len(transmitters) == 1
-
-    transmitters = radio_frequency.async_get_transmitters(
-        hass, 868_000_000, ModulationType.OOK
-    )
-    assert len(transmitters) == 1
