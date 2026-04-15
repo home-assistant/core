@@ -2256,7 +2256,7 @@ async def test_on_create_entry_with_options_flow(
             )
 
     class TestOptionsFlowHandler(config_entries.OptionsFlow):
-        """Handle Yale options."""
+        """Handle options."""
 
         async def async_step_init(
             self, user_input: dict[str, Any] | None = None
