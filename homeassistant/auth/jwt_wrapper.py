@@ -66,7 +66,7 @@ class _PyJWTWithVerify(PyJWT):
         # We require exp and iat claims to be present
         super().__init__(Options(require=["exp", "iat"]))
         # Override the _jws instance with our cached version
-        self._jws = _PyJWSWithLoadCache(options=self._get_sig_options())
+        self._jws = _PyJWSWithLoadCache()
 
     def verify_and_decode(
         self,
