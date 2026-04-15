@@ -506,9 +506,11 @@ class EntityTriggerBase(Trigger):
                 self._duration,
                 call_action,
                 state_still_valid,
-                entity_ids=entity_id
-                if behavior == BEHAVIOR_ANY
-                else target_state_change_data.targeted_entity_ids,
+                entity_ids=(
+                    entity_id
+                    if behavior == BEHAVIOR_ANY
+                    else target_state_change_data.targeted_entity_ids
+                ),
             )
 
         unsub = async_track_target_selector_state_change_event(
