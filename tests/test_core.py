@@ -874,11 +874,11 @@ async def test_add_job_coroutine_function(hass: HomeAssistant) -> None:
     """Test add_job with a coroutine function from an executor thread."""
     result: list[str] = []
 
-    async def my_coro() -> None:
+    async def my_coro(value: str) -> None:
         assert asyncio.get_running_loop() is hass.loop
-        result.append("called")
+        result.append(value)
 
-    await hass.async_add_executor_job(hass.add_job, my_coro)
+    await hass.async_add_executor_job(hass.add_job, my_coro, "called")
     await hass.async_block_till_done()
 
     assert result == ["called"]
@@ -889,11 +889,11 @@ async def test_add_job_callback(hass: HomeAssistant) -> None:
     result: list[str] = []
 
     @ha.callback
-    def my_callback() -> None:
+    def my_callback(value: str) -> None:
         assert asyncio.get_running_loop() is hass.loop
-        result.append("called")
+        result.append(value)
 
-    await hass.async_add_executor_job(hass.add_job, my_callback)
+    await hass.async_add_executor_job(hass.add_job, my_callback, "called")
     # Callback targets go through two deferrals: call_soon_threadsafe
     # schedules _async_add_hass_job, which then call_soon's the actual target.
     await hass.async_block_till_done()
@@ -906,12 +906,12 @@ async def test_add_job_executor(hass: HomeAssistant) -> None:
     """Test add_job with a regular function from an executor thread."""
     result: list[str] = []
 
-    def my_func() -> None:
+    def my_func(value: str) -> None:
         with pytest.raises(RuntimeError):
             asyncio.get_running_loop()
-        result.append("called")
+        result.append(value)
 
-    await hass.async_add_executor_job(hass.add_job, my_func)
+    await hass.async_add_executor_job(hass.add_job, my_func, "called")
     await hass.async_block_till_done()
 
     assert result == ["called"]
