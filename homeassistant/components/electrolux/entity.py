@@ -6,7 +6,6 @@ import logging
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
-from electrolux_group_developer_sdk.client.dto.appliance_details import ApplianceInfo
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -35,9 +34,13 @@ class ElectroluxBaseEntity[T: ApplianceData](
         appliance_name = appliance_data.appliance.applianceName
         appliance_id = appliance_data.appliance.applianceId
 
-        appliance_info: ApplianceInfo | None = None
-        if appliance_data.details:
-            appliance_info = appliance_data.details.applianceInfo
+        if appliance_data.details is None:
+            _LOGGER.error(
+                "Appliance details are missing for appliance with ID %s", appliance_id
+            )
+            raise ValueError("Appliance details are missing")
+
+        appliance_info = appliance_data.details.applianceInfo
 
         # Set appliance info
         self._appliance_data = appliance_data
@@ -51,19 +54,12 @@ class ElectroluxBaseEntity[T: ApplianceData](
                 "reported"
             )
 
-        self._attr_device_info = (
-            DeviceInfo(
-                identifiers={(DOMAIN, appliance_id)},
-                name=appliance_name,
-                manufacturer=appliance_info.brand,
-                model=appliance_info.model,
-                serial_number=appliance_info.serialNumber,
-            )
-            if appliance_info is not None
-            else DeviceInfo(
-                identifiers={(DOMAIN, appliance_id)},
-                name=appliance_name,
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, appliance_id)},
+            name=appliance_name,
+            manufacturer=appliance_info.brand,
+            model=appliance_info.model,
+            serial_number=appliance_info.serialNumber,
         )
 
         self._is_entity_available = True
