@@ -773,9 +773,10 @@ class StipsIruLearnedAcClimate(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Apply a new fan mode."""
-        key = _fan_to_name(fan_mode)
-        if key not in self._attr_fan_modes:
+        # Validate that the requested fan mode is supported before normalizing
+        if fan_mode.strip().lower() not in self._attr_fan_modes:
             raise HomeAssistantError(f"Unsupported fan mode: {fan_mode}")
+        key = _fan_to_name(fan_mode)
         await self._send_state(power=1, fan=key)
 
     async def _send_state(self, **overrides: Any) -> None:

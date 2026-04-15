@@ -18,6 +18,11 @@
           "password": "Password",
           "username": "Username"
         },
+        "data_description": {
+          "api_host": "The STIPS API host (e.g., stips.api.staging.visionalization.net)",
+          "password": "Your STIPS account password",
+          "username": "Your STIPS account username"
+        },
         "description": "Login is used only to download your full IR catalog (all areas/devices/remotes). Control runs locally over LAN, so internet is not required for normal IR sends after setup.",
         "title": "Connect STIPS account"
       }
