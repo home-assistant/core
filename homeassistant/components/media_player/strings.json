@@ -441,7 +441,7 @@
   "title": "Media player",
   "triggers": {
     "paused_playing": {
-      "description": "Triggers after one or more media players paus playing.",
+      "description": "Triggers after one or more media players pause playing.",
       "fields": {
         "behavior": {
           "description": "[%key:component::media_player::common::trigger_behavior_description%]",
@@ -461,7 +461,7 @@
       "name": "Media player started playing"
     },
     "stopped_playing": {
-      "description": "Triggers after one or more media players stop playing media.",
+      "description": "Triggers after one or more media players stop playing.",
       "fields": {
         "behavior": {
           "description": "[%key:component::media_player::common::trigger_behavior_description%]",
