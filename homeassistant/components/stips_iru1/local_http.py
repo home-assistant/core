@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 import ipaddress
 import json
 from typing import Any
 
 import aiohttp
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -93,7 +93,7 @@ async def async_fetch_device_info_live_ip(
             if not isinstance(payload, dict):
                 return ""
             return _extract_live_ip(payload)
-    except (aiohttp.ClientError, asyncio.TimeoutError):
+    except (TimeoutError, aiohttp.ClientError):
         return ""
 
 

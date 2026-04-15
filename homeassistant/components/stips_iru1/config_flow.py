@@ -17,13 +17,7 @@ from .api import (
     StipsApiPermissionError,
 )
 from .catalog import async_fetch_catalog_devices
-from .const import (
-    CONF_API_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DEFAULT_API_HOST,
-    DOMAIN,
-)
+from .const import CONF_API_HOST, CONF_PASSWORD, CONF_USERNAME, DEFAULT_API_HOST, DOMAIN
 
 
 class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

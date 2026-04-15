@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import aiohttp
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -17,9 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .catalog import (
     model_has_ir_signals,
@@ -27,16 +25,8 @@ from .catalog import (
     normalize_device_mac,
     normalize_device_online,
 )
-from .const import (
-    DOMAIN,
-    is_learned_ac,
-    is_protocol_ac,
-)
-from .local_http import (
-    _local_http_auth,
-    async_build_control_hosts,
-)
-
+from .const import DOMAIN, is_learned_ac, is_protocol_ac
+from .local_http import _local_http_auth, async_build_control_hosts
 
 _MODE_TO_HVAC: dict[int, HVACMode] = {
     0: HVACMode.AUTO,
@@ -539,7 +529,7 @@ class StipsIruClimate(ClimateEntity):
                     self._attr_available = True
                     last_error = None
                     break
-            except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+            except (TimeoutError, aiohttp.ClientError) as err:
                 last_error = err
                 continue
         if not sent_ok and isinstance(last_error, HomeAssistantError):
@@ -825,7 +815,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
                         continue
                     self._attr_available = True
                     return
-            except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+            except (TimeoutError, aiohttp.ClientError) as err:
                 last_error = err
                 continue
         if isinstance(last_error, HomeAssistantError):

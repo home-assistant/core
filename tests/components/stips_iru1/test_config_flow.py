@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant import config_entries
 from homeassistant.components.stips_iru1.const import DOMAIN
 from homeassistant.core import HomeAssistant
+
 from tests.common import MockConfigEntry
 
 

@@ -12,8 +12,8 @@ from stips_api_bridge.api import (
 )
 
 __all__ = [
+    "StipsApiAuthError",
     "StipsApiClient",
     "StipsApiError",
-    "StipsApiAuthError",
     "StipsApiPermissionError",
 ]
