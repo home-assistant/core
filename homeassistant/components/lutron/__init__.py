@@ -29,6 +29,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SWITCH,
 ]
 
@@ -215,14 +216,15 @@ def _setup_keypad(
                 entry_data.client.guid,
             )
             if led is not None:
-                _async_check_entity_unique_id(
-                    hass,
-                    entity_registry,
-                    Platform.SWITCH,
-                    led.uuid,
-                    led.legacy_uuid,
-                    entry_data.client.guid,
-                )
+                for platform in (Platform.SWITCH, Platform.SELECT):
+                    _async_check_entity_unique_id(
+                        hass,
+                        entity_registry,
+                        platform,
+                        led.uuid,
+                        led.legacy_uuid,
+                        entry_data.client.guid,
+                    )
         if button.button_type:
             entry_data.buttons.append((area_name, keypad, button))
 
