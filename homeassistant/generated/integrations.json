@@ -6682,7 +6682,7 @@
       "name": "STIPS IR Remote",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_polling"
     },
     "stookwijzer": {
       "name": "Stookwijzer",
