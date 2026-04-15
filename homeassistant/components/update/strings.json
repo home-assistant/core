@@ -1,6 +1,27 @@
 {
   "common": {
+    "condition_behavior_name": "Condition passes if",
     "trigger_behavior_name": "Trigger when"
+  },
+  "conditions": {
+    "is_available": {
+      "description": "Tests if one or more updates are available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Update is available"
+    },
+    "is_not_available": {
+      "description": "Tests if one or more updates are not available.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::update::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Update is not available"
+    }
   },
   "device_automation": {
     "extra_fields": {
@@ -59,6 +80,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
