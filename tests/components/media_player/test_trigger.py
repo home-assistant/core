@@ -28,7 +28,11 @@ async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "media_player.paused_playing",
+        "media_player.started_playing",
         "media_player.stopped_playing",
+        "media_player.turned_off",
+        "media_player.turned_on",
     ],
 )
 async def test_media_player_triggers_gated_by_labs_flag(
@@ -47,6 +51,29 @@ async def test_media_player_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
+            trigger="media_player.paused_playing",
+            target_states=[
+                MediaPlayerState.PAUSED,
+            ],
+            other_states=[
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.PLAYING,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="media_player.started_playing",
+            target_states=[
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.PLAYING,
+            ],
+            other_states=[
+                MediaPlayerState.IDLE,
+                MediaPlayerState.OFF,
+                MediaPlayerState.ON,
+                MediaPlayerState.PAUSED,
+            ],
+        ),
+        *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
             target_states=[
                 MediaPlayerState.IDLE,
@@ -57,6 +84,32 @@ async def test_media_player_triggers_gated_by_labs_flag(
                 MediaPlayerState.BUFFERING,
                 MediaPlayerState.PAUSED,
                 MediaPlayerState.PLAYING,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="media_player.turned_off",
+            target_states=[
+                MediaPlayerState.OFF,
+            ],
+            other_states=[
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.IDLE,
+                MediaPlayerState.ON,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.PLAYING,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="media_player.turned_on",
+            target_states=[
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.IDLE,
+                MediaPlayerState.ON,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.PLAYING,
+            ],
+            other_states=[
+                MediaPlayerState.OFF,
             ],
         ),
     ],
