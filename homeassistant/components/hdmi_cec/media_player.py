@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 from pycec.const import (
@@ -31,7 +30,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-    MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,20 +43,20 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = MP_DOMAIN + ".{}"
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Find and return HDMI devices as +switches."""
+    """Find and return HDMI devices as media players."""
     if discovery_info and ATTR_NEW in discovery_info:
         _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data[DOMAIN][device]
             entities.append(CecPlayerEntity(hdmi_device, hdmi_device.logical_address))
-        add_entities(entities, True)
+        async_add_entities(entities, True)
 
 
 class CecPlayerEntity(CecEntity, MediaPlayerEntity):
@@ -79,78 +77,61 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
 
     def send_playback(self, key):
         """Send playback status to CEC adapter."""
-        self._device.async_send_command(CecCommand(key, dst=self._logical_address))
+        self._device.send_command(CecCommand(key, dst=self._logical_address))
 
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute volume."""
         self.send_keypress(KEY_MUTE_TOGGLE)
 
-    def media_previous_track(self) -> None:
+    async def async_media_previous_track(self) -> None:
         """Go to previous track."""
         self.send_keypress(KEY_BACKWARD)
 
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn device on."""
         self._device.turn_on()
         self._attr_state = MediaPlayerState.ON
+        self.async_write_ha_state()
 
-    def clear_playlist(self) -> None:
-        """Clear players playlist."""
-        raise NotImplementedError
-
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn device off."""
         self._device.turn_off()
         self._attr_state = MediaPlayerState.OFF
+        self.async_write_ha_state()
 
-    def media_stop(self) -> None:
+    async def async_media_stop(self) -> None:
         """Stop playback."""
         self.send_keypress(KEY_STOP)
         self._attr_state = MediaPlayerState.IDLE
+        self.async_write_ha_state()
 
-    def play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
-    ) -> None:
-        """Not supported."""
-        raise NotImplementedError
-
-    def media_next_track(self) -> None:
+    async def async_media_next_track(self) -> None:
         """Skip to next track."""
         self.send_keypress(KEY_FORWARD)
 
-    def media_seek(self, position: float) -> None:
-        """Not supported."""
-        raise NotImplementedError
-
-    def set_volume_level(self, volume: float) -> None:
-        """Set volume level, range 0..1."""
-        raise NotImplementedError
-
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Pause playback."""
         self.send_keypress(KEY_PAUSE)
         self._attr_state = MediaPlayerState.PAUSED
+        self.async_write_ha_state()
 
-    def select_source(self, source: str) -> None:
-        """Not supported."""
-        raise NotImplementedError
-
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Start playback."""
         self.send_keypress(KEY_PLAY)
         self._attr_state = MediaPlayerState.PLAYING
+        self.async_write_ha_state()
 
-    def volume_up(self) -> None:
+    async def async_volume_up(self) -> None:
         """Increase volume."""
         _LOGGER.debug("%s: volume up", self._logical_address)
         self.send_keypress(KEY_VOLUME_UP)
 
-    def volume_down(self) -> None:
+    async def async_volume_down(self) -> None:
         """Decrease volume."""
         _LOGGER.debug("%s: volume down", self._logical_address)
         self.send_keypress(KEY_VOLUME_DOWN)
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update device status."""
         device = self._device
         if device.power_status in [POWER_OFF, 3]:
