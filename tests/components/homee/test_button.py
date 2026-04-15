@@ -8,7 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -88,6 +88,62 @@ async def test_homeegram_button_disabled_by_default(
     entry = entity_registry.async_get("button.homeegrams_test_hg_1")
     assert entry is not None
     assert entry.disabled_by == "integration"
+
+
+async def test_homeegram_connection_listener(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test if loss of connection is sensed correctly for homeegram buttons."""
+    await setup_mock_button(hass, mock_config_entry, mock_homee)
+
+    states = hass.states.get("button.homeegrams_test_hg_2")
+    assert states.state is not None
+
+    await mock_homee.add_connection_listener.call_args_list[13][0][0](False)
+    await hass.async_block_till_done()
+
+    states = hass.states.get("button.homeegrams_test_hg_2")
+    assert states.state is STATE_UNAVAILABLE
+
+    await mock_homee.add_connection_listener.call_args_list[13][0][0](True)
+    await hass.async_block_till_done()
+
+    states = hass.states.get("button.homeegrams_test_hg_2")
+    assert states.state is not STATE_UNAVAILABLE
+
+
+async def test_homeegram_inactive(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test if inactive homeegram is sensed correctly for homeegram buttons."""
+    await setup_mock_button(hass, mock_config_entry, mock_homee)
+
+    states = hass.states.get("button.homeegrams_test_hg_2")
+    assert states.state is not None
+
+    # Simulate homeegram becoming inactive
+    mock_homee.homeegrams[1].active = False
+    mock_homee.homeegrams[1].add_on_changed_listener.call_args_list[0][0][0](
+        mock_homee.homeegrams[1]
+    )
+    await hass.async_block_till_done()
+
+    states = hass.states.get("button.homeegrams_test_hg_2")
+    assert states.state is STATE_UNAVAILABLE
+
+    # Simulate homeegram becoming active again
+    mock_homee.homeegrams[1].active = True
+    mock_homee.homeegrams[1].add_on_changed_listener.call_args_list[0][0][0](
+        mock_homee.homeegrams[1]
+    )
+    await hass.async_block_till_done()
+
+    states = hass.states.get("button.homeegrams_test_hg_2")
+    assert states.state is not STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("enable_all_entities")
