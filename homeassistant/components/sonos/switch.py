@@ -395,11 +395,11 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
                 # enable=True (ungroup) → IncludeLinkedZones=0 (don't include linked zones)
                 [("IncludeLinkedZones", "0" if enable else "1"), *_TV_SOURCE]
             )
-            self.speaker.tv_ungroup_autoplay = enable
         except SoCoUPnPException as exc:
             raise HomeAssistantError(
                 f"Could not toggle {self.entity_id}: {exc}"
             ) from exc
+        self.poll_state()
         self.speaker.write_entity_states()
 
 
