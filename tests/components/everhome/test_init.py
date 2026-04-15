@@ -1,4 +1,4 @@
-"""Tests for the AirGradient integration."""
+"""Tests for the everHome/EcoTracker integration."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock
