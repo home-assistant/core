@@ -58,17 +58,17 @@ dependencies = [
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==46.0.7",
-  "Pillow==12.1.1",
+  "Pillow==12.2.0",
   "propcache==0.4.1",
   "pyOpenSSL==26.0.0",
-  "orjson==3.11.7",
+  "orjson==3.11.8",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
   "PyYAML==6.0.3",
   "requests==2.33.1",
   "securetar==2026.4.1",
-  "SQLAlchemy==2.0.41",
+  "SQLAlchemy==2.0.49",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.15.0,<5.0",
@@ -415,7 +415,7 @@ per-file-ignores = [
   # redefined-outer-name: Tests reference fixtures in the test function
   # use-implicit-booleaness-not-comparison: Tests need to validate that a list
   # or a dict is returned
-  "/tests/:redefined-outer-name,use-implicit-booleaness-not-comparison",
+  "tests/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
@@ -583,16 +583,6 @@ filterwarnings = [
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:homeassistant.components.hddtemp.sensor",
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:ndms2_client.connection",
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:pyws66i",
-
-  # -- Pydantic V1 models
-  # https://github.com/madpilot/amberelectric.py - v2.0.12 - 2024-11-19
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:amberelectric.api.amber_api",
-  # https://github.com/elevenlabs/elevenlabs-python - v2.18.0 - 2024-10-14
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:elevenlabs.core.pydantic_utilities",
-  # https://github.com/Lektrico/lektricowifi - v0.1 - 2025-05-19
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:lektricowifi.models",
-  # https://github.com/sstallion/sensorpush-api - v2.1.3 - 2025-06-10
-  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:sensorpush_api.api.api_api",
 
   # -- New in Python 3.14
   # https://github.com/litl/backoff/pull/220 - v2.2.1 - 2022-10-05 (archived)
