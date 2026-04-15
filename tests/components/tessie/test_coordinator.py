@@ -1,5 +1,6 @@
 """Test the Tessie sensor platform."""
 
+from copy import deepcopy
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,7 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .common import ERROR_AUTH, ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
+from .common import (
+    ENERGY_HISTORY,
+    ERROR_AUTH,
+    ERROR_CONNECTION,
+    ERROR_UNKNOWN,
+    setup_platform,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -228,7 +235,7 @@ async def test_coordinator_energy_history_cold_start_invalid_data(
     assert hass.states.get("sensor.energy_site_grid_imported").state == "0.0"
 
     # Now recover: restore valid energy history data and trigger an update
-    mock_energy_history.side_effect = None
+    mock_energy_history.side_effect = lambda *a, **kw: deepcopy(ENERGY_HISTORY)
     mock_energy_history.reset_mock()
     freezer.tick(TESSIE_ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
