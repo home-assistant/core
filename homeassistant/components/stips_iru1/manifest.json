@@ -1,0 +1,15 @@
+{
+  "domain": "stips_iru1",
+  "name": "STIPS IR Remote",
+  "documentation": "https://github.com/stips/iru1",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "dependencies": [],
+  "codeowners": [
+    "@stips"
+  ],
+  "config_flow": true,
+  "requirements": [
+    "stips-api-bridge==0.1.0"
+  ]
+}
