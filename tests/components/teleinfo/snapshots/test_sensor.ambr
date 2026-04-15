@@ -1,4 +1,82 @@
 # serializer version: 1
+# name: test_all_entities[base][sensor.teleinfo_021861348497-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_tariff_period',
+    'unique_id': '021861348497_PTEC',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[base][sensor.teleinfo_021861348497-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Teleinfo 021861348497',
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'all_hours',
+  })
+# ---
 # name: test_all_entities[base][sensor.teleinfo_021861348497_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -57,143 +135,7 @@
     'state': '2830',
   })
 # ---
-# name: test_all_entities[base][sensor.teleinfo_021861348497_current_tariff_period-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current tariff period',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Current tariff period',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'current_tariff_period',
-    'unique_id': '021861348497_PTEC',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[base][sensor.teleinfo_021861348497_current_tariff_period-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Teleinfo 021861348497 Current tariff period',
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'all_hours',
-  })
-# ---
-# name: test_all_entities[base][sensor.teleinfo_021861348497_index-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'base_index',
-    'unique_id': '021861348497_BASE',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[base][sensor.teleinfo_021861348497_index-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '45367891',
-  })
-# ---
-# name: test_all_entities[base][sensor.teleinfo_021861348497_instantaneous_current-entry]
+# name: test_all_entities[base][sensor.teleinfo_021861348497_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -209,7 +151,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -217,7 +159,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Instantaneous current',
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -225,7 +167,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Instantaneous current',
+    'original_name': 'Current',
     'platform': 'teleinfo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -235,20 +177,156 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[base][sensor.teleinfo_021861348497_instantaneous_current-state]
+# name: test_all_entities[base][sensor.teleinfo_021861348497_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Teleinfo 021861348497 Instantaneous current',
+      'friendly_name': 'Teleinfo 021861348497 Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
+  })
+# ---
+# name: test_all_entities[base][sensor.teleinfo_021861348497_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'base_index',
+    'unique_id': '021861348497_BASE',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[base][sensor.teleinfo_021861348497_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45367891',
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_tariff_period',
+    'unique_id': '021861348497_PTEC',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Teleinfo 021861348497',
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal_hours',
   })
 # ---
 # name: test_all_entities[ejp][sensor.teleinfo_021861348497_apparent_power-entry]
@@ -309,85 +387,7 @@
     'state': '2830',
   })
 # ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_current_tariff_period-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current tariff period',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Current tariff period',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'current_tariff_period',
-    'unique_id': '021861348497_PTEC',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_current_tariff_period-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Teleinfo 021861348497 Current tariff period',
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'normal_hours',
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_ejp_warning-entry]
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -403,7 +403,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_ejp_warning',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -411,181 +411,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'EJP warning',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'EJP warning',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'ejp_warning',
-    'unique_id': '021861348497_PEJP',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_ejp_warning-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Teleinfo 021861348497 EJP warning',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_ejp_warning',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30',
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_index_normal_hours-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_normal_hours',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: normal hours',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: normal hours',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'normal_hours_index',
-    'unique_id': '021861348497_EJPHN',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_index_normal_hours-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: normal hours',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_normal_hours',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '38912456',
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_index_peak_mobile_hours-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_peak_mobile_hours',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: peak mobile hours',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: peak mobile hours',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'peak_mobile_hours_index',
-    'unique_id': '021861348497_EJPHPM',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_index_peak_mobile_hours-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: peak mobile hours',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_peak_mobile_hours',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7654321',
-  })
-# ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_instantaneous_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Instantaneous current',
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -593,7 +419,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Instantaneous current',
+    'original_name': 'Current',
     'platform': 'teleinfo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -603,20 +429,272 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[ejp][sensor.teleinfo_021861348497_instantaneous_current-state]
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Teleinfo 021861348497 Instantaneous current',
+      'friendly_name': 'Teleinfo 021861348497 Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Duration',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Duration',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ejp_warning',
+    'unique_id': '021861348497_PEJP',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Teleinfo 021861348497 Duration',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'normal_hours_index',
+    'unique_id': '021861348497_EJPHN',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38912456',
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_energy_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_mobile_hours_index',
+    'unique_id': '021861348497_EJPHPM',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[ejp][sensor.teleinfo_021861348497_energy_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7654321',
+  })
+# ---
+# name: test_all_entities[hc][sensor.teleinfo_021861348497-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_tariff_period',
+    'unique_id': '021861348497_PTEC',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[hc][sensor.teleinfo_021861348497-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Teleinfo 021861348497',
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off_peak',
   })
 # ---
 # name: test_all_entities[hc][sensor.teleinfo_021861348497_apparent_power-entry]
@@ -677,201 +755,7 @@
     'state': '2830',
   })
 # ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_current_tariff_period-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current tariff period',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Current tariff period',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'current_tariff_period',
-    'unique_id': '021861348497_PTEC',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_current_tariff_period-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Teleinfo 021861348497 Current tariff period',
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off_peak',
-  })
-# ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_index_off_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_off_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: off-peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: off-peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'off_peak_index',
-    'unique_id': '021861348497_HCHC',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_index_off_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: off-peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_off_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '25643781',
-  })
-# ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_index_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'peak_index',
-    'unique_id': '021861348497_HCHP',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_index_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '31285904',
-  })
-# ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_instantaneous_current-entry]
+# name: test_all_entities[hc][sensor.teleinfo_021861348497_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -887,7 +771,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -895,7 +779,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Instantaneous current',
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -903,7 +787,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Instantaneous current',
+    'original_name': 'Current',
     'platform': 'teleinfo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -913,20 +797,276 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[hc][sensor.teleinfo_021861348497_instantaneous_current-state]
+# name: test_all_entities[hc][sensor.teleinfo_021861348497_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Teleinfo 021861348497 Instantaneous current',
+      'friendly_name': 'Teleinfo 021861348497 Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
+  })
+# ---
+# name: test_all_entities[hc][sensor.teleinfo_021861348497_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_peak_index',
+    'unique_id': '021861348497_HCHC',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[hc][sensor.teleinfo_021861348497_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25643781',
+  })
+# ---
+# name: test_all_entities[hc][sensor.teleinfo_021861348497_energy_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'peak_index',
+    'unique_id': '021861348497_HCHP',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[hc][sensor.teleinfo_021861348497_energy_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31285904',
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_tariff_period',
+    'unique_id': '021861348497_PTEC',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Teleinfo 021861348497',
+      'options': list([
+        'all_hours',
+        'off_peak',
+        'peak',
+        'normal_hours',
+        'mobile_peak',
+        'off_peak_blue_day',
+        'off_peak_white_day',
+        'off_peak_red_day',
+        'peak_blue_day',
+        'peak_white_day',
+        'peak_red_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off_peak_blue_day',
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'blue',
+        'white',
+        'red',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tomorrow_color',
+    'unique_id': '021861348497_DEMAIN',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Teleinfo 021861348497',
+      'options': list([
+        'blue',
+        'white',
+        'red',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'red',
   })
 # ---
 # name: test_all_entities[tempo][sensor.teleinfo_021861348497_apparent_power-entry]
@@ -987,433 +1127,7 @@
     'state': '2830',
   })
 # ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_current_tariff_period-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current tariff period',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Current tariff period',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'current_tariff_period',
-    'unique_id': '021861348497_PTEC',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_current_tariff_period-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Teleinfo 021861348497 Current tariff period',
-      'options': list([
-        'all_hours',
-        'off_peak',
-        'peak',
-        'normal_hours',
-        'mobile_peak',
-        'off_peak_blue_day',
-        'off_peak_white_day',
-        'off_peak_red_day',
-        'peak_blue_day',
-        'peak_white_day',
-        'peak_red_day',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_current_tariff_period',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off_peak_blue_day',
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_blue_day_off_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_blue_day_off_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: blue day off-peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: blue day off-peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'blue_day_off_peak_index',
-    'unique_id': '021861348497_BBRHCJB',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_blue_day_off_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: blue day off-peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_blue_day_off_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '18328702',
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_blue_day_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_blue_day_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: blue day peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: blue day peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'blue_day_peak_index',
-    'unique_id': '021861348497_BBRHPJB',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_blue_day_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: blue day peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_blue_day_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23739545',
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_red_day_off_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_red_day_off_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: red day off-peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: red day off-peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'red_day_off_peak_index',
-    'unique_id': '021861348497_BBRHCJR',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_red_day_off_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: red day off-peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_red_day_off_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '860118',
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_red_day_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_red_day_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: red day peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: red day peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'red_day_peak_index',
-    'unique_id': '021861348497_BBRHPJR',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_red_day_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: red day peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_red_day_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '844115',
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_white_day_off_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_white_day_off_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: white day off-peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: white day off-peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'white_day_off_peak_index',
-    'unique_id': '021861348497_BBRHCJW',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_white_day_off_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: white day off-peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_white_day_off_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1466099',
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_white_day_peak-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_index_white_day_peak',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Index: white day peak',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Index: white day peak',
-    'platform': 'teleinfo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'white_day_peak_index',
-    'unique_id': '021861348497_BBRHPJW',
-    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_index_white_day_peak-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Teleinfo 021861348497 Index: white day peak',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_index_white_day_peak',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2132883',
-  })
-# ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_instantaneous_current-entry]
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1429,7 +1143,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1437,7 +1151,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Instantaneous current',
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1445,7 +1159,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Instantaneous current',
+    'original_name': 'Current',
     'platform': 'teleinfo',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1455,34 +1169,30 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_instantaneous_current-state]
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Teleinfo 021861348497 Instantaneous current',
+      'friendly_name': 'Teleinfo 021861348497 Current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_instantaneous_current',
+    'entity_id': 'sensor.teleinfo_021861348497_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
   })
 # ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_tomorrow_color-entry]
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
-        'blue',
-        'white',
-        'red',
-      ]),
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1491,7 +1201,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.teleinfo_021861348497_tomorrow_color',
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1499,37 +1209,327 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Tomorrow color',
+    'object_id_base': 'Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Tomorrow color',
+    'original_name': 'Energy',
     'platform': 'teleinfo',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'tomorrow_color',
-    'unique_id': '021861348497_DEMAIN',
-    'unit_of_measurement': None,
+    'translation_key': 'blue_day_off_peak_index',
+    'unique_id': '021861348497_BBRHCJB',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_entities[tempo][sensor.teleinfo_021861348497_tomorrow_color-state]
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Teleinfo 021861348497 Tomorrow color',
-      'options': list([
-        'blue',
-        'white',
-        'red',
-      ]),
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.teleinfo_021861348497_tomorrow_color',
+    'entity_id': 'sensor.teleinfo_021861348497_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'red',
+    'state': '18328702',
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blue_day_peak_index',
+    'unique_id': '021861348497_BBRHPJB',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23739545',
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_day_off_peak_index',
+    'unique_id': '021861348497_BBRHCJW',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1466099',
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'white_day_peak_index',
+    'unique_id': '021861348497_BBRHPJW',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2132883',
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'red_day_off_peak_index',
+    'unique_id': '021861348497_BBRHCJR',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '860118',
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'teleinfo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'red_day_peak_index',
+    'unique_id': '021861348497_BBRHPJR',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_all_entities[tempo][sensor.teleinfo_021861348497_energy_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Teleinfo 021861348497 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.teleinfo_021861348497_energy_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '844115',
   })
 # ---
