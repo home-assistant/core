@@ -447,10 +447,10 @@ def setup_connection_for_dialect(
     slow_dependent_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
-            old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
-            dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
+            old_isolation = dbapi_connection.isolation_level
+            dbapi_connection.isolation_level = None
             execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
-            dbapi_connection.isolation_level = old_isolation  # type: ignore[attr-defined]
+            dbapi_connection.isolation_level = old_isolation
             # WAL mode only needs to be setup once
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
