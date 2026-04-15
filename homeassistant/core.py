@@ -559,7 +559,7 @@ class HomeAssistant:
             return
         # For @callback targets, schedule directly via call_soon_threadsafe
         # to avoid the extra deferral through _async_add_hass_job + call_soon.
-        # Check iscoroutinefunction first to gracefully handle incorrectly labeled @callback functions.
+        # Check iscoroutinefunction to gracefully handle incorrectly labeled @callback functions.
         if is_callback_check_partial(target) and not inspect.iscoroutinefunction(
             target
         ):
