@@ -65,6 +65,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> bool:
         """Test connection to the server and try to get the certificate."""
         ca_data = user_input.get(CONF_CA_DATA) or None
+        if ca_data and not ca_data.strip():
+            ca_data = None
         if ca_data:
             try:
                 pem_blocks = _iter_pem_certs(ca_data)
@@ -83,7 +85,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
                 user_input.get(CONF_IGNORE_HOSTNAME, False),
-                user_input.get(CONF_CA_DATA) or None,
+                ca_data,
             )
         except ResolveFailed:
             self._errors[CONF_HOST] = "resolve_failed"
@@ -110,7 +112,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
             ignore_hostname = user_input.get(CONF_IGNORE_HOSTNAME, False)
             ca_data = user_input.get(CONF_CA_DATA, None)
-            if (ca_data is not None) and (not ca_data.strip()):
+            if ca_data and not ca_data.strip():
                 ca_data = None
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
