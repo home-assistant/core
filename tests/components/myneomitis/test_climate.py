@@ -10,10 +10,10 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.components.myneomitis.climate import MyNeoClimate
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 CLIMATE_DEVICE = {
     "_id": "climate1",
@@ -82,18 +82,14 @@ async def test_entities(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.domain == "climate"
-    assert entry.entity_id == "climate.climate_device"
-    assert entry.unique_id == "climate1"
+    entity_registry.async_update_entity("climate.climate_device", aliases=set())
 
-    state = hass.states.get("climate.climate_device")
-    assert state is not None
-    assert state == snapshot(name="climate.climate_device-state")
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
+    )
 
 
 async def test_set_temperature(
@@ -167,47 +163,81 @@ async def test_set_hvac_mode(
     assert state.state == "off"
 
 
-async def test_direct_async_set_preset_mode_unknown_no_api_call() -> None:
-    """Calling async_set_preset_mode directly with an unknown preset does nothing and no API call is made."""
-    api = AsyncMock()
-    device = dict(CLIMATE_DEVICE)
-    ent = MyNeoClimate(api, device)
-    ent.async_write_ha_state = Mock()
+async def test_set_preset_mode_unknown_no_api_call(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Unknown preset mode should not call the API and should keep current mode."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    await ent.async_set_preset_mode("not-a-mode")
-    api.set_device_mode.assert_not_awaited()
-    assert ent._attr_preset_mode == "comfort"
+    entity_id = "climate.climate_device"
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "not-a-mode"},
+            blocking=True,
+        )
+
+    mock_pyaxenco_client.set_device_mode.assert_not_awaited()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["preset_mode"] == "comfort"
 
 
-async def test_set_device_mode_subdevice_timeout_direct() -> None:
-    """_set_device_mode should return False when sub-device API times out."""
-    api = AsyncMock()
-    api.set_sub_device_mode.side_effect = TimeoutError
-    ent = MyNeoClimate(api, CLIMATE_SUB_DEVICE)
+async def test_set_preset_mode_sub_device_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Sub-device preset mode timeout should raise HomeAssistantError."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_SUB_DEVICE]
+    mock_pyaxenco_client.set_sub_device_mode.side_effect = TimeoutError
 
-    result = await ent._set_device_mode("eco")
-    assert result is False
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "climate.climate_sub_device"
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "eco"},
+            blocking=True,
+        )
+
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 2)
 
 
-async def test_set_device_temperature_missing_parents_direct() -> None:
-    """_set_device_temperature should return False when parents/rfid missing for sub-device."""
-    api = AsyncMock()
+async def test_set_temperature_sub_device_missing_parents(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Missing parents/rfid for sub-device should fail temperature set without API call."""
     bad_sub = {**CLIMATE_SUB_DEVICE, "parents": {}, "rfid": None}
-    ent = MyNeoClimate(api, bad_sub)
+    mock_pyaxenco_client.get_devices.return_value = [bad_sub]
 
-    result = await ent._set_device_temperature(21.0)
-    assert result is False
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
+    entity_id = "climate.climate_sub_device"
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 21.0},
+            blocking=True,
+        )
 
-async def test_direct_async_set_preset_mode_calls_api() -> None:
-    """Calling async_set_preset_mode directly will call API for a known preset and update attribute."""
-    api = AsyncMock()
-    ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = Mock()
-
-    await ent.async_set_preset_mode("eco")
-    api.set_device_mode.assert_awaited_with("climate1", 2)
-    assert ent._attr_preset_mode == "eco"
+    mock_pyaxenco_client.set_sub_device_mode.assert_not_awaited()
+    mock_pyaxenco_client.set_sub_device_temperature.assert_not_awaited()
 
 
 async def test_websocket_state_update(
