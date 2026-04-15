@@ -19,13 +19,7 @@
       "power_avg": {
         "default": "mdi:flash"
       },
-      "power_phase1": {
-        "default": "mdi:flash"
-      },
-      "power_phase2": {
-        "default": "mdi:flash"
-      },
-      "power_phase3": {
+      "power_phase": {
         "default": "mdi:flash"
       }
     }
