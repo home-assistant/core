@@ -244,7 +244,9 @@ async def test_stale_device_repair_issue(
 
     await init_integration(hass, config_entry)
 
-    issue = issue_registry.async_get_issue(DOMAIN, "stale_device_999")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"stale_device_{config_entry.entry_id}_999"
+    )
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders["address"] == "999"
@@ -257,21 +259,22 @@ async def test_stale_device_issue_cleared_when_found(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that the stale device repair issue is cleared when module is found again."""
+    issue_id = f"stale_device_{config_entry.entry_id}_1"
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "stale_device_1",
+        issue_id,
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="stale_device",
         translation_placeholders={"name": "Some Module", "address": "1"},
     )
-    assert issue_registry.async_get_issue(DOMAIN, "stale_device_1") is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await init_integration(hass, config_entry)
 
     # Address "1" is found by the mock — issue must be cleared
-    assert issue_registry.async_get_issue(DOMAIN, "stale_device_1") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_stale_subdevice_no_repair_issue(
@@ -300,5 +303,15 @@ async def test_stale_subdevice_no_repair_issue(
     await init_integration(hass, config_entry)
 
     # Parent raises an issue, sub-device must not
-    assert issue_registry.async_get_issue(DOMAIN, "stale_device_999") is not None
-    assert issue_registry.async_get_issue(DOMAIN, "stale_device_999-1") is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"stale_device_{config_entry.entry_id}_999"
+        )
+        is not None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"stale_device_{config_entry.entry_id}_999-1"
+        )
+        is None
+    )

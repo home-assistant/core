@@ -80,7 +80,7 @@ async def velbus_scan_task(
             sw_version=module.get_sw_version(),
             serial_number=module.get_serial(),
         )
-        ir.async_delete_issue(hass, DOMAIN, f"stale_device_{address}")
+        ir.async_delete_issue(hass, DOMAIN, f"stale_device_{entry_id}_{address}")
 
     for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
         device_address: str | None = next(
@@ -96,7 +96,7 @@ async def velbus_scan_task(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"stale_device_{device_address}",
+            f"stale_device_{entry_id}_{device_address}",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="stale_device",
