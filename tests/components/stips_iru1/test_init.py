@@ -1,12 +1,16 @@
 """Init tests for stips_iru1."""
 
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.stips_iru1 import DOMAIN
 from homeassistant.components.stips_iru1.const import PLATFORMS
+from homeassistant.core import HomeAssistant
 
 
-async def test_async_setup_entry_forwards_only_climate(hass, MockConfigEntry):
+async def test_async_setup_entry_forwards_only_climate(
+    hass: HomeAssistant, MockConfigEntry: Any
+) -> None:
     """Test integration forwards only the climate platform for initial core PR scope."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -6,8 +6,8 @@ import asyncio
 from typing import Any
 
 import aiohttp
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
+    ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -137,9 +137,10 @@ def _extract_learned_ac_signals(
             continue
         mode = _normalize_mode_label(raw.get("mode") or "")
         temp: int | None = None
-        if raw.get("temperature") is not None:
+        temperature = raw.get("temperature")
+        if temperature is not None:
             try:
-                temp = int(raw.get("temperature"))
+                temp = int(temperature)
             except (TypeError, ValueError):
                 temp = None
         fan = _fan_to_name(raw.get("fanSpeed") or raw.get("fan") or "")

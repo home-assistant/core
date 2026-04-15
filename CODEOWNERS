@@ -1657,6 +1657,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
 /tests/components/stiebel_eltron/ @fucm @ThyMYthOS
+/homeassistant/components/stips_iru1/ @stips
+/tests/components/stips_iru1/ @stips
 /homeassistant/components/stookwijzer/ @fwestenberg
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
