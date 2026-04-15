@@ -557,7 +557,11 @@ class HomeAssistant:
                 functools.partial(self.async_create_task, target, eager_start=True)
             )
             return
-        if is_callback_check_partial(target):
+        # For @callback targets, schedule directly via call_soon_threadsafe
+        # to avoid the extra deferral through _async_add_hass_job + call_soon.
+        # Use get_hassjob_callable_job_type (not just is_callback_check_partial)
+        # to ensure coroutine functions are not mistakenly treated as callbacks.
+        if get_hassjob_callable_job_type(target) is HassJobType.Callback:
             self.loop.call_soon_threadsafe(target, *args)
             return
         self.loop.call_soon_threadsafe(
