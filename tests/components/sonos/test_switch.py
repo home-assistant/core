@@ -536,6 +536,38 @@ async def test_tv_ungroup_autoplay_available_independently_of_tv_autoplay(
     assert state.state != STATE_UNAVAILABLE
 
 
+async def test_tv_ungroup_autoplay_unavailable_when_linked_zones_missing(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+) -> None:
+    """Test ungroup-on-autoplay becomes unavailable when IncludeLinkedZones is absent."""
+    entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+    )
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        return_value={"IncludeLinkedZones": "0", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # Simulate a poll where the response is missing IncludeLinkedZones
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(return_value={"Source": "TV"})
+    await async_update_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_tv_ungroup_autoplay_not_created_for_non_ht(
     hass: HomeAssistant,
     async_autosetup_sonos,

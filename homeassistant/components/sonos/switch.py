@@ -360,13 +360,22 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
     def poll_state(self) -> None:
         """Poll the current ungroup-on-autoplay state from the device."""
         result = self.soco.deviceProperties.GetAutoplayLinkedZones(_TV_SOURCE)
+        linked_zones = result.get("IncludeLinkedZones")
+        if linked_zones is None:
+            self.speaker.tv_ungroup_autoplay = None
+            return
         # IncludeLinkedZones=0 means "don't include linked zones" = ungroup = ON
-        self.speaker.tv_ungroup_autoplay = result.get("IncludeLinkedZones") == "0"
+        self.speaker.tv_ungroup_autoplay = linked_zones == "0"
 
     @property
-    def is_on(self) -> bool:
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return super().available and self.speaker.tv_ungroup_autoplay is not None
+
+    @property
+    def is_on(self) -> bool | None:
         """Return True if ungroup on autoplay is enabled."""
-        return bool(self.speaker.tv_ungroup_autoplay)
+        return self.speaker.tv_ungroup_autoplay
 
     def turn_on(self, **kwargs: Any) -> None:
         """Enable ungroup on autoplay."""
