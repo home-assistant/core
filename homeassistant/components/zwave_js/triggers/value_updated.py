@@ -7,6 +7,7 @@ import functools
 from typing import Any
 
 import voluptuous as vol
+from zwave_js_server.const import CommandClass
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, get_value_id_str
 
@@ -18,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 
-from ..config_validation import COMMAND_CLASS_SCHEMA, VALUE_SCHEMA
+from ..config_validation import VALUE_SCHEMA
 from ..const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
@@ -50,7 +51,9 @@ ATTR_TO = "to"
 _OPTIONS_SCHEMA_DICT = {
     vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_COMMAND_CLASS): COMMAND_CLASS_SCHEMA,
+    vol.Required(ATTR_COMMAND_CLASS): vol.All(
+        vol.Coerce(int), vol.In({cc.value: cc.name for cc in CommandClass})
+    ),
     vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
     vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
     vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
