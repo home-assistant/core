@@ -98,7 +98,7 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _hass: HomeAssistant,
     entry: TISConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -114,7 +114,7 @@ async def async_setup_entry(
 
     # Create an entity object for each switch found and add them to Home Assistant.
     async_add_entities(
-        [TISSwitch(TISAPISwitch(tis_api, **sd)) for sd in switch_dicts],
+        [TISSwitch(entry.entry_id, TISAPISwitch(tis_api, **sd)) for sd in switch_dicts],
         update_before_add=True,
     )
 
@@ -124,7 +124,7 @@ class TISSwitch(SwitchEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device_api: TISAPISwitch) -> None:
+    def __init__(self, entry_id: str, device_api: TISAPISwitch) -> None:
         """Initialize the switch entity."""
         self.device_api = device_api
 
@@ -133,7 +133,7 @@ class TISSwitch(SwitchEntity):
         identifier_str = f"{gateway}_{dev_id_str}" if gateway else dev_id_str
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier_str)},
+            identifiers={(DOMAIN, f"{entry_id}_{identifier_str}")},
             name=f"TIS Device {dev_id_str}",
             manufacturer="TIS Control",
         )
@@ -143,7 +143,7 @@ class TISSwitch(SwitchEntity):
         else:
             self._attr_name = f"Channel {self.device_api.channel_number}"
 
-        self._attr_unique_id = self.device_api.unique_id
+        self._attr_unique_id = f"{entry_id}_{self.device_api.unique_id}"
         self._attr_should_poll = False
         self._attr_available = self.device_api.available
 
