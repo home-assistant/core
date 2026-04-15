@@ -2339,7 +2339,7 @@ async def test_next_flow_with_unsupported_flow_type(
     invalid_next_flow: tuple[str, str],
     error: type[Exception],
 ) -> None:
-    """Test use async_on_create_entry with creating an options flow."""
+    """Test use next_flow parameter with unsupported flow types."""
 
     async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Mock setup."""
@@ -2378,7 +2378,10 @@ async def test_next_flow_with_unsupported_flow_type(
         await hass.async_block_till_done()
         with pytest.raises(
             error,
-            match="next_flow only supports FlowType.CONFIG_FLOW; use async_on_create_entry for options or subentry flows",
+            match=(
+                "next_flow only supports FlowType.CONFIG_FLOW;"
+                " use async_on_create_entry for options or subentry flows"
+            ),
         ):
             await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -10086,7 +10089,13 @@ async def test_config_flow_abort_with_invalid_next_flow_type(
 
     with (
         mock_config_flow("test", TestFlow),
-        pytest.raises(HomeAssistantError, match="Invalid flow type: invalid_type"),
+        pytest.raises(
+            HomeAssistantError,
+            match=(
+                "next_flow only supports FlowType.CONFIG_FLOW;"
+                " use async_on_create_entry for options or subentry flows"
+            ),
+        ),
     ):
         await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_USER}

@@ -3306,8 +3306,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if next_flow is None:
             return
         flow_type, flow_id = next_flow
-        if flow_type not in FlowType:
-            raise HomeAssistantError(f"Invalid flow type: {flow_type}")
         if flow_type != FlowType.CONFIG_FLOW:
             raise HomeAssistantError(
                 "next_flow only supports FlowType.CONFIG_FLOW; "
