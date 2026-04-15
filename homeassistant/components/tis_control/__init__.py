@@ -48,7 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
     except (ConnectionError, OSError) as e:
         # If connection fails, raise ConfigEntryNotReady
         # to prompt Home Assistant to retry setup later.
-        raise ConfigEntryNotReady("Unable to connect to TIS Control") from e
+        raise ConfigEntryNotReady(
+            f"Unable to connect to TIS Control on port {entry.data[CONF_PORT]}: {e}"
+        ) from e
 
     entry.runtime_data = TISData(tis_api=tis_api)
 
