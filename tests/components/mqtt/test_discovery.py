@@ -2830,7 +2830,7 @@ async def test_clean_up_registry_monitoring(
     }
     # Publish it config
     # Since it is not enabled_by_default the sensor will not be loaded
-    # it should register a hook for monitoring the entiry registry
+    # it should register a hook for monitoring the entity registry
     async_fire_mqtt_message(
         hass,
         "homeassistant/sensor/sbfspot_0/sbfspot_12345/config",
