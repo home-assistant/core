@@ -44,9 +44,9 @@ rules:
   docs-troubleshooting: done  # README has Troubleshooting section
   docs-use-cases: done        # README has Use Cases section
   dynamic-devices: done       # One device per config entry by design — not applicable
-  entity-category: done       # No diagnostic-only entities; all entities are user-facing
-  entity-device-class: done   # Device classes set on all relevant sensor/binary sensor entities
-  entity-disabled-by-default: done  # All entities are user-facing; none warrants disabling by default
+  entity-category: done       # Diagnostic entities (online, error_count) set EntityCategory.DIAGNOSTIC
+  entity-device-class: done   # Device classes set on all relevant sensor entities
+  entity-disabled-by-default: done  # Diagnostic entities (online, error_count) are enabled by default as they are relevant to most users
   entity-translations: done   # translation_key set on all entities
   exception-translations: done  # All error keys mapped in strings.json and translations/
   icon-translations: done
