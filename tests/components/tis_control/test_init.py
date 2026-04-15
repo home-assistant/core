@@ -1,5 +1,7 @@
 """Tests for the TIS Control integration."""
 
+import asyncio
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -138,3 +140,42 @@ async def test_async_setup_entry_event_listener_exception(
 
     # Verify that the exception was caught and logged.
     assert "Unexpected error while processing TIS event" in caplog.text
+
+
+async def test_async_setup_entry_event_listener_cancelled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tis_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the background task handles cancellation correctly."""
+
+    # Loop forever until cancelled
+    async def _mock_event_generator():
+        while True:
+            await asyncio.sleep(0)
+            yield {"test": "event"}
+
+    mock_tis_api.consume_events.side_effect = _mock_event_generator
+
+    with (
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+        caplog.at_level(logging.DEBUG),
+    ):
+        await async_setup_entry(hass, mock_config_entry)
+
+        # The task is stored in runtime_data
+        task = mock_config_entry.runtime_data.listener_task
+        assert task is not None
+        assert not task.done()
+
+        # Unload the entry, which should cancel the task
+        with patch.object(
+            hass.config_entries, "async_unload_platforms", return_value=True
+        ):
+            await async_unload_entry(hass, mock_config_entry)
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify that the cancel debug message was logged.
+    assert "TIS event listener task cancelled" in caplog.text
