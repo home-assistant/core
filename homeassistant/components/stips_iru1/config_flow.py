@@ -65,8 +65,9 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             errors["base"] = "no_devices"
                         else:
                             normalized_host = str(api_host).strip().lower()
+                            normalized_username = str(username).strip().lower()
                             await self.async_set_unique_id(
-                                f"{DOMAIN}_{normalized_host}_{username.lower()}"
+                                f"{DOMAIN}_{normalized_host}_{normalized_username}"
                             )
                             self._abort_if_unique_id_configured()
                             return self.async_create_entry(
