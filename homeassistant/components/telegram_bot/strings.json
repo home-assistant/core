@@ -951,6 +951,45 @@
         }
       }
     },
+    "send_message_draft": {
+      "description": "Stream a partial message to a user while the message is being generated.",
+      "fields": {
+        "chat_id": {
+          "description": "One or more pre-authorized chat IDs to send the message draft to.",
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the message draft.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "draft_id": {
+          "description": "Unique identifier of the message draft. Changes of drafts with the same identifier are animated.",
+          "name": "Draft ID"
+        },
+        "entity_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::entity_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::entity_id::name%]"
+        },
+        "message": {
+          "description": "Available part of the message for temporary notification.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message::name%]"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        }
+      },
+      "name": "Send message draft",
+      "sections": {
+        "advanced": {
+          "name": "[%key:component::telegram_bot::services::send_message::sections::advanced::name%]"
+        }
+      }
+    },
     "send_photo": {
       "description": "Sends a photo.",
       "fields": {
