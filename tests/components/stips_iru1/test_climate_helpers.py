@@ -1,6 +1,6 @@
 """Helper-level tests for stips_iru1 climate module."""
 
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.stips_iru1 import climate as stips_climate
 
 
