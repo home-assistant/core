@@ -1297,33 +1297,55 @@ async def test_register_port_event_callback_failure(
     assert "Failure 2" in caplog.text
 
 
-async def test_async_scan_serial_ports_no_vid_pid(hass: HomeAssistant) -> None:
-    """Test async_scan_serial_ports returns devices without VID:PID."""
-    mock_port = SerialPortInfo(
-        device="/dev/ttyAMA1",
-        resolved_device="/dev/ttyAMA1",
-        vid=None,
-        pid=None,
-        serial_number=None,
-        manufacturer=None,
-        product=None,
-        bcd_device=None,
-        interface_description=None,
-        interface_num=None,
-    )
-
+async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
+    """Test async_scan_serial_ports parsing."""
     with patch(
         "homeassistant.components.usb.utils.list_serial_ports",
-        return_value=[mock_port],
+        return_value=[
+            SerialPortInfo(
+                device="/dev/ttyAMA1",
+                resolved_device="/dev/ttyAMA1",
+                vid=None,
+                pid=None,
+                serial_number=None,
+                manufacturer=None,
+                product=None,
+                bcd_device=None,
+                interface_description=None,
+                interface_num=None,
+            ),
+            SerialPortInfo(
+                device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+                resolved_device="/dev/ttyACM0",
+                vid=12346,
+                pid=16385,
+                serial_number="10B41DE589FC",
+                manufacturer="Nabu Casa",
+                product="ZBT-2",
+                bcd_device=257,
+                interface_description="Nabu Casa ZBT-2",
+                interface_num=0,
+            ),
+        ],
     ):
         devices = await async_scan_serial_ports(hass)
 
-    assert len(devices) == 1
-    assert isinstance(devices[0], SerialDevice)
-    assert devices[0].device == "/dev/ttyAMA1"
-    assert devices[0].serial_number is None
-    assert devices[0].manufacturer is None
-    assert devices[0].description is None
+    assert devices == [
+        SerialDevice(
+            device="/dev/ttyAMA1",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        ),
+        USBDevice(
+            device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+            vid="303A",
+            pid="4001",
+            serial_number="10B41DE589FC",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+        ),
+    ]
 
 
 def test_usb_device_from_path_finds_by_symlink() -> None:
