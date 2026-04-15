@@ -1,5 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 
+import asyncio
 from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 from typing import Any
@@ -35,6 +36,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     PipelineStorageCollection,
     PipelineStore,
     _async_local_fallback_intent_filter,
+    _close_async_generators,
     async_create_default_pipeline,
     async_get_pipeline,
     async_get_pipelines,
@@ -2153,3 +2155,104 @@ async def test_acknowledge_other_agents(
         text_to_speech.assert_not_called()
         async_converse.assert_called_once()
         get_all_targets_in_satellite_area.assert_not_called()
+
+
+async def test_close_async_generators_closes_generators() -> None:
+    """Test the _close_async_generators helper closes every generator."""
+    closed: list[str] = []
+
+    async def make_gen(name: str) -> AsyncGenerator[bytes]:
+        try:
+            yield b""
+        finally:
+            closed.append(name)
+
+    gen_a = make_gen("a")
+    gen_b = make_gen("b")
+
+    # Start them so there is something to close.
+    await gen_a.__anext__()
+    await gen_b.__anext__()
+
+    await _close_async_generators(gen_a, gen_b)
+
+    assert closed == ["a", "b"]
+
+
+async def test_close_async_generators_handles_none() -> None:
+    """Test the helper skips None and non-generator objects."""
+    # Should not raise on None or objects without aclose.
+    await _close_async_generators(None, "not a generator", None)  # type: ignore[arg-type]
+
+
+async def test_close_async_generators_suppresses_errors() -> None:
+    """Test the helper suppresses errors raised during aclose()."""
+
+    async def bad_gen() -> AsyncGenerator[bytes]:
+        try:
+            yield b""
+        finally:
+            raise RuntimeError("boom")
+
+    gen = bad_gen()
+    await gen.__anext__()
+
+    # Must not propagate the RuntimeError from the generator's finally.
+    await _close_async_generators(gen)
+
+
+async def test_pipeline_execute_closes_stt_generators(
+    hass: HomeAssistant,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test that PipelineInput.execute closes the STT audio generators.
+
+    Regression coverage for a leak where early exits of the pipeline (here:
+    no wake word detected) left the upstream audio generator un-closed,
+    keeping audio buffers and the audio enhancer's VAD state alive.
+    """
+    closed = asyncio.Event()
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        try:
+            yield make_10ms_chunk(b"silence!")
+            yield b""
+        finally:
+            closed.set()
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        session=mock_chat_session,
+        device_id=None,
+        stt_metadata=stt.SpeechMetadata(
+            language="",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            event_callback=events.append,
+            tts_audio_output=None,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        ),
+    )
+    await pipeline_input.validate()
+    await pipeline_input.execute()
+
+    # Pipeline aborted (no wake word) — generator must have been closed.
+    assert closed.is_set()
