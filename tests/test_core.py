@@ -894,9 +894,6 @@ async def test_add_job_callback(hass: HomeAssistant) -> None:
         result.append(value)
 
     await hass.async_add_executor_job(hass.add_job, my_callback, "called")
-    # Callback targets go through two deferrals: call_soon_threadsafe
-    # schedules _async_add_hass_job, which then call_soon's the actual target.
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert result == ["called"]
@@ -929,9 +926,6 @@ async def test_add_job_partial_callback(hass: HomeAssistant) -> None:
     await hass.async_add_executor_job(
         hass.add_job, functools.partial(my_callback, "partial"), 1
     )
-    # Callback targets go through two deferrals: call_soon_threadsafe
-    # schedules _async_add_hass_job, which then call_soon's the actual target.
-    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert result == [("partial", 1)]
