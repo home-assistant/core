@@ -1,0 +1,161 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+
+  "enabledManagers": [
+    "pep621",
+    "pip_requirements",
+    "pre-commit",
+    "homeassistant-manifest"
+  ],
+
+  "pre-commit": {
+    "enabled": true
+  },
+
+  "pip_requirements": {
+    "managerFilePatterns": [
+      "/(^|/)requirements[\\w_-]*\\.txt$/",
+      "/(^|/)homeassistant/package_constraints\\.txt$/"
+    ]
+  },
+
+  "homeassistant-manifest": {
+    "managerFilePatterns": [
+      "/^homeassistant/components/[^/]+/manifest\\.json$/"
+    ]
+  },
+
+  "minimumReleaseAge": "7 days",
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 2,
+  "schedule": ["before 6am"],
+
+  "semanticCommits": "disabled",
+  "commitMessageAction": "Update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+
+  "automerge": false,
+
+  "vulnerabilityAlerts": {
+    "enabled": false
+  },
+
+  "packageRules": [
+    {
+      "description": "Deny all by default — allowlist below re-enables specific packages",
+      "matchPackageNames": ["*"],
+      "enabled": false
+    },
+    {
+      "description": "Core runtime dependencies (allowlisted)",
+      "matchPackageNames": [
+        "aiohttp",
+        "aiohttp-fast-zlib",
+        "aiohttp_cors",
+        "aiohttp-asyncmdnsresolver",
+        "yarl",
+        "httpx",
+        "requests",
+        "urllib3",
+        "certifi",
+        "orjson",
+        "PyYAML",
+        "Jinja2",
+        "cryptography",
+        "pyOpenSSL",
+        "PyJWT",
+        "SQLAlchemy",
+        "Pillow",
+        "attrs",
+        "uv",
+        "voluptuous",
+        "voluptuous-serialize",
+        "voluptuous-openapi",
+        "zeroconf"
+      ],
+      "enabled": true,
+      "labels": ["dependency", "core"]
+    },
+    {
+      "description": "Test dependencies (allowlisted)",
+      "matchPackageNames": [
+        "pytest",
+        "pytest-asyncio",
+        "pytest-aiohttp",
+        "pytest-cov",
+        "pytest-freezer",
+        "pytest-github-actions-annotate-failures",
+        "pytest-socket",
+        "pytest-sugar",
+        "pytest-timeout",
+        "pytest-unordered",
+        "pytest-picked",
+        "pytest-xdist",
+        "pylint",
+        "pylint-per-file-ignores",
+        "astroid",
+        "coverage",
+        "freezegun",
+        "syrupy",
+        "respx",
+        "requests-mock",
+        "ruff",
+        "codespell",
+        "yamllint",
+        "zizmor"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "matchPackageNames": ["/^types-/"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Pre-commit hook repos (allowlisted, matched by owner/repo)",
+      "matchPackageNames": [
+        "astral-sh/ruff-pre-commit",
+        "codespell-project/codespell",
+        "adrienverge/yamllint",
+        "zizmorcore/zizmor-pre-commit"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["astral-sh/ruff-pre-commit", "ruff"],
+      "groupName": "ruff",
+      "groupSlug": "ruff"
+    },
+    {
+      "description": "Group codespell pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["codespell-project/codespell", "codespell"],
+      "groupName": "codespell",
+      "groupSlug": "codespell"
+    },
+    {
+      "description": "Group yamllint pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["adrienverge/yamllint", "yamllint"],
+      "groupName": "yamllint",
+      "groupSlug": "yamllint"
+    },
+    {
+      "description": "Group zizmor pre-commit hook with its PyPI twin into one PR",
+      "matchPackageNames": ["zizmorcore/zizmor-pre-commit", "zizmor"],
+      "groupName": "zizmor",
+      "groupSlug": "zizmor"
+    },
+    {
+      "description": "Group pylint with astroid (their versions are linked and must move together)",
+      "matchPackageNames": ["pylint", "astroid"],
+      "groupName": "pylint",
+      "groupSlug": "pylint"
+    }
+  ]
+}

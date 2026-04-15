@@ -1181,17 +1181,11 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         After the timeout the task will continue to run in the background.
         """
-        try:
-            await asyncio.wait({task}, timeout=self.service_timeout)
-        except TimeoutError:
-            pass
-        except asyncio.CancelledError:
-            # Task calling us was cancelled, so cancel service call task, and wait for
-            # it to be cancelled, within reason, before leaving.
-            _LOGGER.debug("Service call was cancelled: %s", task.get_name())
-            task.cancel()
-            await asyncio.wait({task}, timeout=5)
-            raise
+        done, _ = await asyncio.wait({task}, timeout=self.service_timeout)
+        if done:
+            # Task finished within the timeout. Re-raise any exception
+            # (e.g. validation errors) so the caller can handle it.
+            task.result()
 
 
 class ServiceIntentHandler(DynamicServiceIntentHandler):
@@ -1440,16 +1434,16 @@ class IntentResponse:
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
-            "speech": self.speech,
-            "card": self.card,
+            "speech": {k: dict(v) for k, v in self.speech.items()},
+            "card": {k: dict(v) for k, v in self.card.items()},
             "language": self.language,
             "response_type": self.response_type.value,
         }
 
         if self.reprompt:
-            response_dict["reprompt"] = self.reprompt
+            response_dict["reprompt"] = {k: dict(v) for k, v in self.reprompt.items()}
         if self.speech_slots:
-            response_dict["speech_slots"] = self.speech_slots
+            response_dict["speech_slots"] = self.speech_slots.copy()
 
         response_data: dict[str, Any] = {}
 
