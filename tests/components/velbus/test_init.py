@@ -7,7 +7,10 @@ from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.velbus import VelbusConfigEntry
+from homeassistant.components.velbus import (
+    VelbusConfigEntry,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
@@ -221,3 +224,59 @@ async def test_device_registry(
 
     device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "2")})
     assert device_no_sub.via_device_id is None
+
+
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that any Velbus device can be removed."""
+    await init_integration(hass, config_entry)
+
+    # Active device (found on bus) can be removed; scan will recreate it
+    active_device = device_registry.async_get_device(identifiers={(DOMAIN, "1")})
+    assert active_device is not None
+    result = await async_remove_config_entry_device(hass, config_entry, active_device)
+    assert result is True
+
+    # Stale device (not on bus) can also be removed
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+    result = await async_remove_config_entry_device(hass, config_entry, stale_device)
+    assert result is True
+
+
+async def test_remove_config_entry_device_removes_subdevices(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that removing a device also removes its sub-devices."""
+    await init_integration(hass, config_entry)
+
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999")},
+        name="Missing Module",
+        manufacturer="Velleman",
+        model="VMBX",
+    )
+    sub_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "999-1")},
+        name="Missing Module Channel 1",
+        manufacturer="Velleman",
+        model="VMBX",
+        via_device=(DOMAIN, "999"),
+    )
+
+    result = await async_remove_config_entry_device(hass, config_entry, stale_device)
+    assert result is True
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "999-1")}) is None
+    assert sub_device.id not in device_registry.devices

@@ -135,6 +135,35 @@ async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> N
     )
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Allow removal of a Velbus device.
+
+    When a parent device is removed, its sub-devices are removed as well.
+    If the device is still on the bus, it will be recreated on the next scan.
+    """
+    address = next(
+        (ident[1] for ident in device_entry.identifiers if ident[0] == DOMAIN),
+        None,
+    )
+    # Only parent devices (plain address, no dash) can have sub-devices
+    if address and "-" not in address:
+        dev_reg = dr.async_get(hass)
+        for sub_device in dr.async_entries_for_config_entry(
+            dev_reg, config_entry.entry_id
+        ):
+            sub_address = next(
+                (ident[1] for ident in sub_device.identifiers if ident[0] == DOMAIN),
+                None,
+            )
+            if sub_address and sub_address.startswith(f"{address}-"):
+                dev_reg.async_remove_device(sub_device.id)
+    return True
+
+
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VelbusConfigEntry
 ) -> bool:
