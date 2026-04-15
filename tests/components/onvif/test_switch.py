@@ -17,8 +17,7 @@ async def test_wiper_switch(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test states of the Wiper switch."""
-    _config, _camera, device = await setup_onvif_integration(hass)
-    device.profiles = device.async_get_profiles()
+    await setup_onvif_integration(hass)
 
     state = hass.states.get("switch.testcamera_wiper")
     assert state
@@ -31,20 +30,18 @@ async def test_wiper_switch(
 
 async def test_wiper_switch_no_ptz(hass: HomeAssistant) -> None:
     """Test the wiper switch does not get created if the camera does not support ptz."""
-    _config, _camera, device = await setup_onvif_integration(
+    await setup_onvif_integration(
         hass, capabilities=Capabilities(imaging=True, ptz=False)
     )
-    device.profiles = device.async_get_profiles()
 
     assert hass.states.get("switch.testcamera_wiper") is None
 
 
 async def test_wiper_switch_with_ptz_only(hass: HomeAssistant) -> None:
     """Test the wiper switch gets created for PTZ-only devices."""
-    _config, _camera, device = await setup_onvif_integration(
+    await setup_onvif_integration(
         hass, capabilities=Capabilities(imaging=False, ptz=True, deviceio=False)
     )
-    device.profiles = device.async_get_profiles()
 
     state = hass.states.get("switch.testcamera_wiper")
     assert state
@@ -91,8 +88,7 @@ async def test_autofocus_switch(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test states of the autofocus switch."""
-    _config, _camera, device = await setup_onvif_integration(hass)
-    device.profiles = device.async_get_profiles()
+    await setup_onvif_integration(hass)
 
     state = hass.states.get("switch.testcamera_autofocus")
     assert state
@@ -105,10 +101,9 @@ async def test_autofocus_switch(
 
 async def test_auto_focus_switch_no_imaging(hass: HomeAssistant) -> None:
     """Test the autofocus switch does not get created if the camera does not support imaging."""
-    _config, _camera, device = await setup_onvif_integration(
+    await setup_onvif_integration(
         hass, capabilities=Capabilities(imaging=False, ptz=True)
     )
-    device.profiles = device.async_get_profiles()
 
     assert hass.states.get("switch.testcamera_autofocus") is None
 
@@ -153,8 +148,7 @@ async def test_infrared_switch(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test states of the autofocus switch."""
-    _config, _camera, device = await setup_onvif_integration(hass)
-    device.profiles = device.async_get_profiles()
+    await setup_onvif_integration(hass)
 
     state = hass.states.get("switch.testcamera_ir_lamp")
     assert state
@@ -167,10 +161,9 @@ async def test_infrared_switch(
 
 async def test_infrared_switch_no_imaging(hass: HomeAssistant) -> None:
     """Test the infrared switch does not get created if the camera does not support imaging."""
-    _config, _camera, device = await setup_onvif_integration(
+    await setup_onvif_integration(
         hass, capabilities=Capabilities(imaging=False, ptz=False)
     )
-    device.profiles = device.async_get_profiles()
 
     assert hass.states.get("switch.testcamera_ir_lamp") is None
 
@@ -245,6 +238,17 @@ async def test_relay_switch_no_deviceio(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.testcamera_relay_relayoutputtoken_0") is None
+
+
+async def test_relay_switch_fetches_relays_when_count_is_zero(
+    hass: HomeAssistant,
+) -> None:
+    """Test relay discovery still runs when the reported count is zero."""
+    _, _camera, device = await setup_onvif_integration(
+        hass, capabilities=Capabilities(deviceio=True, relay_outputs=0)
+    )
+
+    device.async_get_relay_outputs.assert_awaited_once()
 
 
 async def test_turn_relay_switch_on(hass: HomeAssistant) -> None:

@@ -777,11 +777,11 @@ class ONVIFDevice:
             )
             raise ONVIFError("DeviceIO service not supported")
 
-        # Use Device service per ONVIF spec design
-        device_service = await self.device.create_devicemgmt_service()
-
         if state not in RELAY_OUTPUT_STATES:
             raise ValueError(f"Invalid relay output state: {state}")
+
+        # Use Device service per ONVIF spec design
+        device_service = await self.device.create_devicemgmt_service()
 
         LOGGER.debug(
             "Setting Relay Output State | Token = %s, State = %s", relay_token, state

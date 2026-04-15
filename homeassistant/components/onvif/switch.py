@@ -85,7 +85,7 @@ async def async_setup_entry(
     ]
 
     # Add relay output switches
-    if device.capabilities.deviceio and device.capabilities.relay_outputs > 0:
+    if device.capabilities.deviceio:
         relays = await device.async_get_relay_outputs()
         entities.extend(ONVIFRelaySwitch(device, relay) for relay in relays)
 
