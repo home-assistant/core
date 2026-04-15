@@ -11,6 +11,7 @@ from aioesphomeapi import (
     WaterHeaterInfo,
     WaterHeaterMode,
     WaterHeaterState,
+    WaterHeaterTemperatureUnit,
 )
 
 from homeassistant.components.water_heater import (
@@ -44,6 +45,15 @@ _WATER_HEATER_MODES: EsphomeEnumMapper[WaterHeaterMode, str] = EsphomeEnumMapper
     }
 )
 
+_WATER_HEATER_TEMPERATURE_UNIT_MAP: dict[
+    WaterHeaterTemperatureUnit, UnitOfTemperature
+] = {
+    WaterHeaterTemperatureUnit.UNSET: UnitOfTemperature.CELSIUS,
+    WaterHeaterTemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    WaterHeaterTemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    WaterHeaterTemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
+}
+
 
 class EsphomeWaterHeater(
     EsphomeEntity[WaterHeaterInfo, WaterHeaterState], WaterHeaterEntity
@@ -58,6 +68,9 @@ class EsphomeWaterHeater(
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
+        self._attr_temperature_unit = _WATER_HEATER_TEMPERATURE_UNIT_MAP[
+            static_info.temperature_unit
+        ]
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step

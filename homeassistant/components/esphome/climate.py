@@ -15,6 +15,7 @@ from aioesphomeapi import (
     ClimatePreset,
     ClimateState,
     ClimateSwingMode,
+    ClimateTemperatureUnit,
     EntityInfo,
 )
 
@@ -128,6 +129,12 @@ _PRESETS: EsphomeEnumMapper[ClimatePreset, str] = EsphomeEnumMapper(
         ClimatePreset.ACTIVITY: PRESET_ACTIVITY,
     }
 )
+_CLIMATE_TEMPERATURE_UNIT_MAP: dict[ClimateTemperatureUnit, UnitOfTemperature] = {
+    ClimateTemperatureUnit.UNSET: UnitOfTemperature.CELSIUS,
+    ClimateTemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
+    ClimateTemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+    ClimateTemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
+}
 
 
 class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEntity):
@@ -145,6 +152,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
+        self._attr_temperature_unit = _CLIMATE_TEMPERATURE_UNIT_MAP[
+            static_info.temperature_unit
+        ]
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes
