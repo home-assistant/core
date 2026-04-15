@@ -435,6 +435,9 @@ async def test_create_event_service_invalid_params(
                             "summary": "Future Event",
                             "description": "Future Description",
                             "location": "Future Location",
+                            "uid": "calendar-event-uid-1",
+                            "rrule": "FREQ=WEEKLY;COUNT=3",
+                            "recurrence_id": "20260415",
                         }
                     ]
                 }
@@ -749,6 +752,9 @@ async def test_websocket_handle_subscribe_calendar_events(
     events = msg["event"]["events"]
     assert len(events) == 1
     assert events[0]["summary"] == "Future Event"
+    assert events[0]["uid"] == "calendar-event-uid-1"
+    assert events[0]["rrule"] == "FREQ=WEEKLY;COUNT=3"
+    assert events[0]["recurrence_id"] == "20260415"
 
 
 async def test_websocket_subscribe_updates_on_state_change(
