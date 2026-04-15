@@ -10,9 +10,11 @@ from requests.exceptions import RequestException
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .const import DOMAIN, Platform
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseEntity
 
@@ -20,6 +22,32 @@ _LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+
+async def _migrate_to_new_unique_id(
+    hass: HomeAssistant, avm_wrapper: AvmWrapper, ssid: str
+) -> None:
+    """Migrate old unique id to new unique id."""
+
+    old_unique_id = slugify(f"{avm_wrapper.unique_id}-{ssid}-qr-code")
+    new_unique_id = f"{avm_wrapper.unique_id}-guest_wifi_qr_code"
+
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.IMAGE,
+        DOMAIN,
+        old_unique_id,
+    )
+
+    if entity_id is None:
+        return
+
+    entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+    _LOGGER.debug(
+        "Migrating guest Wi-Fi image unique_id from [%s] to [%s]",
+        old_unique_id,
+        new_unique_id,
+    )
 
 
 async def async_setup_entry(
@@ -33,6 +61,8 @@ async def async_setup_entry(
     guest_wifi_info = await hass.async_add_executor_job(
         avm_wrapper.fritz_guest_wifi.get_info
     )
+
+    await _migrate_to_new_unique_id(hass, avm_wrapper, guest_wifi_info["NewSSID"])
 
     async_add_entities(
         [
@@ -60,7 +90,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
     ) -> None:
         """Initialize the image entity."""
         self._attr_name = ssid
-        self._attr_unique_id = slugify(f"{avm_wrapper.unique_id}-{ssid}-qr-code")
+        self._attr_unique_id = f"{avm_wrapper.unique_id}-guest_wifi_qr_code"
         self._current_qr_bytes: bytes | None = None
         super().__init__(avm_wrapper, device_friendly_name)
         ImageEntity.__init__(self, hass)

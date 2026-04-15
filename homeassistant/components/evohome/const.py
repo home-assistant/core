@@ -19,14 +19,11 @@ STORAGE_KEY: Final = DOMAIN
 
 CONF_LOCATION_IDX: Final = "location_idx"
 
-USER_DATA: Final = "user_data"
-
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
-ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
-
+ATTR_PERIOD: Final = "period"  # number of days
 ATTR_SETPOINT: Final = "setpoint"
 
 
@@ -39,3 +36,4 @@ class EvoService(StrEnum):
     RESET_SYSTEM = "reset_system"
     SET_ZONE_OVERRIDE = "set_zone_override"
     CLEAR_ZONE_OVERRIDE = "clear_zone_override"
+    SET_DHW_OVERRIDE = "set_dhw_override"
