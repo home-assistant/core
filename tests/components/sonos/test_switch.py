@@ -33,6 +33,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -506,25 +507,35 @@ async def test_tv_ungroup_autoplay_available_independently_of_tv_autoplay(
 
     speaker_info["model_name"] = "Sonos Beam"
     soco.get_speaker_info.return_value = speaker_info
+    # TV autoplay is disabled — the scenario we're testing
     soco.deviceProperties.GetAutoplayRoomUUID = Mock(
-        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+        return_value={"RoomUUID": "", "Source": "TV"}
     )
-    # IncludeLinkedZones=0 means ungroup = ON
+    # IncludeLinkedZones=0 means ungroup = ON, even when TV autoplay is disabled.
     soco.deviceProperties.GetAutoplayLinkedZones = Mock(
         return_value={"IncludeLinkedZones": "0", "Source": "TV"}
     )
     await async_setup_sonos()
 
-    assert hass.states.get(ungroup_id).state == STATE_ON
+    state = hass.states.get(ungroup_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.state != STATE_UNAVAILABLE
 
-    # Simulate the device reporting ungroup as off (e.g. after TV autoplay is
-    # disabled on the device side). The switch should show OFF, not unavailable.
+    # Simulate the device reporting ungroup as off while TV autoplay remains
+    # disabled. The switch should show OFF, not unavailable.
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": "", "Source": "TV"}
+    )
     soco.deviceProperties.GetAutoplayLinkedZones = Mock(
         return_value={"IncludeLinkedZones": "1", "Source": "TV"}
     )
     await async_update_entity(hass, ungroup_id)
 
-    assert hass.states.get(ungroup_id).state == STATE_OFF
+    state = hass.states.get(ungroup_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_tv_ungroup_autoplay_not_created_for_non_ht(

@@ -284,9 +284,7 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_AUTOPLAY}"
 
     async def _async_fallback_poll(self) -> None:
-        """Handle polling for TV autoplay state when subscriptions fail."""
-        if not self.should_poll:
-            await self.hass.async_add_executor_job(self.poll_state)
+        """No-op: entity is already polled by HA's built-in poller."""
 
     @soco_error()
     def poll_state(self) -> None:
@@ -347,9 +345,7 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
         self._attr_unique_id = f"{speaker.soco.uid}-{ATTR_TV_UNGROUP_AUTOPLAY}"
 
     async def _async_fallback_poll(self) -> None:
-        """Handle polling for ungroup-on-autoplay state when subscriptions fail."""
-        if not self.should_poll:
-            await self.hass.async_add_executor_job(self.poll_state)
+        """No-op: entity is already polled by HA's built-in poller."""
 
     @soco_error()
     def poll_state(self) -> None:
