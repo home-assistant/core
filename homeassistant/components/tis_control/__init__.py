@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 import logging
 
@@ -88,10 +89,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool
 
     # Only disconnect the API if the platforms successfully unloaded
     if unload_ok:
-        # The background task is automatically cancelled by Home Assistant on unload.
-        # However, we can be explicit to ensure it stops before disconnecting the API.
+        # However, we also explicitly cancel and await it to ensure it has stopped
+        # before disconnecting the API.
         if (task := entry.runtime_data.listener_task) is not None:
             task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+            entry.runtime_data.listener_task = None
 
         entry.runtime_data.tis_api.disconnect()
 

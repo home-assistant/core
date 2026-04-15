@@ -90,6 +90,7 @@ async def test_async_unload_entry_success(
 ) -> None:
     """Test successful unload of entry."""
     mock_config_entry.runtime_data = MagicMock()
+    mock_config_entry.runtime_data.listener_task = None
 
     with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
         result = await async_unload_entry(hass, mock_config_entry)
@@ -102,6 +103,7 @@ async def test_async_unload_entry_failure(
 ) -> None:
     """Test unsuccessful unload of entry."""
     mock_config_entry.runtime_data = MagicMock()
+    mock_config_entry.runtime_data.listener_task = None
 
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=False
