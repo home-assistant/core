@@ -3,12 +3,12 @@
     "abort": {
       "already_configured": "Device is already configured",
       "reauth_successful": "Re-authentication was successful",
-      "reconfigure_successful": "Credentials successfully updated"
+      "reconfigure_successful": "Reconfiguration was successful"
     },
     "error": {
       "access_not_granted": "Invalid authentication. Please grant access via the BLANCO UNIT app and try again. You must be within Bluetooth range of the device to grant access.",
       "cannot_connect": "Failed to connect",
-      "device_type_not_supported": "This device type is currently not supported for Smart Home applications.",
+      "device_type_not_supported": "This device type is currently not supported for smart home applications.",
       "invalid_auth": "Invalid authentication",
       "serial_mismatch": "The serial number does not match the existing device. Please enter the original serial number.",
       "unknown": "Unexpected error"
