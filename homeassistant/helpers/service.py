@@ -974,8 +974,6 @@ async def batched_entity_service_call(
     ],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-    *,
-    entity_device_classes: Iterable[str | None] | None = None,
 ) -> EntityServiceResponse | None:
     """Handle a batched entity service call.
 
@@ -983,7 +981,7 @@ async def batched_entity_service_call(
     instead of once per entity.
     """
     entities = await _resolve_entity_service_call_entities(
-        hass, registered_entities, call, required_features, entity_device_classes
+        hass, registered_entities, call, required_features
     )
     if entities is None:
         return None
