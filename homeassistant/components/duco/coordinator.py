@@ -6,7 +6,7 @@ import logging
 
 from duco import DucoClient
 from duco.exceptions import DucoConnectionError, DucoError
-from duco.models import BoardInfo, LanInfo, Node
+from duco.models import BoardInfo, Node
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,7 +26,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
-    lan_info: LanInfo | None
     rssi_wifi: int | None
     write_req_remaining: int | None
 
