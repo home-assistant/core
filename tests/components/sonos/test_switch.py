@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
+from soco.exceptions import SoCoUPnPException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
@@ -36,6 +37,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
@@ -438,6 +440,34 @@ async def test_tv_autoplay_not_created_for_non_ht(
     assert entity_id not in entity_registry.entities
 
 
+async def test_tv_autoplay_toggle_failure_raises(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+) -> None:
+    """Test that HomeAssistantError is raised when TV autoplay toggle fails."""
+    entity_id = f"switch.zone_a_{ATTR_TV_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": "", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    soco.deviceProperties.SetAutoplayRoomUUID = Mock(
+        side_effect=SoCoUPnPException("Toggle failed", "500", "")
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
 async def test_tv_ungroup_autoplay_switch(
     hass: HomeAssistant,
     async_setup_sonos,
@@ -566,6 +596,37 @@ async def test_tv_ungroup_autoplay_unavailable_when_linked_zones_missing(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_tv_ungroup_autoplay_toggle_failure_raises(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    speaker_info: dict[str, str],
+) -> None:
+    """Test that HomeAssistantError is raised when ungroup-on-autoplay toggle fails."""
+    entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
+
+    speaker_info["model_name"] = "Sonos Beam"
+    soco.get_speaker_info.return_value = speaker_info
+    soco.deviceProperties.GetAutoplayRoomUUID = Mock(
+        return_value={"RoomUUID": soco.uid, "Source": "TV"}
+    )
+    soco.deviceProperties.GetAutoplayLinkedZones = Mock(
+        return_value={"IncludeLinkedZones": "0", "Source": "TV"}
+    )
+    await async_setup_sonos()
+
+    soco.deviceProperties.SetAutoplayLinkedZones = Mock(
+        side_effect=SoCoUPnPException("Toggle failed", "500", "")
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
 
 async def test_tv_ungroup_autoplay_not_created_for_non_ht(
