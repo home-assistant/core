@@ -34,10 +34,10 @@ ATTR_WITH_GROUP = "with_group"
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register Sonos services."""
 
-    async def async_service_handle(
+    async def async_handle_snapshot_restore(
         entities: list[SonosMediaPlayerEntity], service_call: ServiceCall
     ) -> None:
-        """Handle dispatched services."""
+        """Handle snapshot and restore services."""
         speakers = [entity.speaker for entity in entities]
         config_entry = speakers[0].config_entry  # All speakers share the same entry
 
@@ -56,7 +56,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SNAPSHOT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
-        func=async_service_handle,
+        func=async_handle_snapshot_restore,
     )
 
     service.async_register_batched_platform_entity_service(
@@ -65,7 +65,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_RESTORE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean},
-        func=async_service_handle,
+        func=async_handle_snapshot_restore,
     )
 
     service.async_register_platform_entity_service(

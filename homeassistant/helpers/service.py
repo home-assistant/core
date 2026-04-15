@@ -947,8 +947,6 @@ async def entity_service_call(
     if entities is None:
         return None
 
-    return_response = call.return_response
-
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
         data: dict | ServiceCall = remove_entity_service_fields(call)
@@ -964,7 +962,7 @@ async def entity_service_call(
         context=call.context,
     )
 
-    return response_data if return_response else None
+    return response_data if call.return_response else None
 
 
 async def batched_entity_service_call(
@@ -992,7 +990,7 @@ async def batched_entity_service_call(
 
     return_response = call.return_response
 
-    # Create a new ServiceCall with entity service fields stripped.
+    # Create a new ServiceCall without entity service fields.
     call = ServiceCall(
         hass,
         call.domain,
