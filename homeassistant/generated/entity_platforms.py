@@ -31,6 +31,7 @@ class EntityPlatforms(StrEnum):
     IMAGE_PROCESSING = "image_processing"
     INFRARED = "infrared"
     LAWN_MOWER = "lawn_mower"
+    RADIO_FREQUENCY = "radio_frequency"
     LIGHT = "light"
     LOCK = "lock"
     MEDIA_PLAYER = "media_player"
