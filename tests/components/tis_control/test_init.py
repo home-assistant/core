@@ -82,10 +82,15 @@ async def test_async_setup_entry_event_listener(
 
     with patch.object(hass.config_entries, "async_forward_entry_setups"):
         await async_setup_entry(hass, mock_config_entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
 
     assert len(captured_events) == 1
     assert captured_events[0].data == fake_event
+
+    # Cleanup: unload the entry to stop the background task
+    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+        await async_unload_entry(hass, mock_config_entry)
+        await hass.async_block_till_done()
 
 
 async def test_async_unload_entry_success(
@@ -141,10 +146,15 @@ async def test_async_setup_entry_event_listener_exception(
         ),
     ):
         await async_setup_entry(hass, mock_config_entry)
-        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done()
 
     # Verify that the exception was caught and logged.
     assert "Unexpected error while processing TIS event" in caplog.text
+
+    # Cleanup: unload the entry to stop the background task
+    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+        await async_unload_entry(hass, mock_config_entry)
+        await hass.async_block_till_done()
 
 
 async def test_async_setup_entry_event_listener_cancelled(
@@ -184,3 +194,49 @@ async def test_async_setup_entry_event_listener_cancelled(
 
     # Verify that the cancel debug message was logged.
     assert "TIS event listener task cancelled" in caplog.text
+
+
+async def test_async_setup_entry_event_listener_generator_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tis_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the background task restarts the generator on failure."""
+
+    # Track calls to consume_events
+    call_count = 0
+
+    async def _mock_event_generator():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            # First call: yield one event then fail
+            yield {"event": 1}
+            raise RuntimeError("Generator crash")
+        # Second call: hang to prevent further restarts during test
+        await asyncio.Event().wait()
+
+    mock_tis_api.consume_events.side_effect = _mock_event_generator
+
+    with (
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+        patch(
+            "homeassistant.components.tis_control.asyncio.sleep",
+            side_effect=lambda _: asyncio.sleep(0),
+        ),
+    ):
+        await async_setup_entry(hass, mock_config_entry)
+
+        # Give the loop a chance to run and restart
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    # Verify that the exception was logged.
+    assert "Unexpected error in TIS event listener, restarting in 1s" in caplog.text
+    assert call_count >= 2
+
+    # Cleanup: unload the entry to stop the background task
+    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+        await async_unload_entry(hass, mock_config_entry)
+        await hass.async_block_till_done()
