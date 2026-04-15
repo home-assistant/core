@@ -18,8 +18,6 @@ rules:
       - Large inline test data payloads should be moved to JSON fixtures.
       - test_entity_and_device_data (test_sensor.py) uses if statements inside the
         test body; tests should not branch, use parametrize instead.
-      - Mocking should happen at library level (aiounifi) rather than at the
-        integration API level where possible.
   config-flow: done
   dependency-transparency: done
   docs-actions: done
