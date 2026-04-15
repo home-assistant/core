@@ -178,7 +178,7 @@ async def async_setup_entry(
                     for s in parsed_data
                     if s in SENSOR_TYPES and s not in ("battery", "battery_range")
                 ),
-                "battery",
+                *(("battery",) if "battery" in parsed_data else ()),
                 "battery_range",
             )
         )
