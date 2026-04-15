@@ -3277,14 +3277,15 @@ async def test_entity_trigger_first_requires_exactly_one(
     [STATE_UNAVAILABLE, STATE_UNKNOWN],
     ids=["unavailable", "unknown"],
 )
-async def test_entity_trigger_last_ignores_unavailable_entity(
+async def test_entity_trigger_last_ignores_unavailable_and_unknownentity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
     """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
 
-    With three entities (A=off, B=unavailable, C=on), turning A on should
-    fire because all *available* entities (A and C) now match. B is skipped.
-    Without the exclusion, B would fail the "all match" check.
+    With three entities (A=off, B=unavailable, C=off), turning A on should
+    not fire because C is still off, so the available entities do not all
+    match. Turning C on then fires because all *available* entities (A and C)
+    match. Without the exclusion, B would fail the "all match" check.
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
@@ -3329,7 +3330,7 @@ async def test_entity_trigger_last_ignores_unavailable_entity(
     [STATE_UNAVAILABLE, STATE_UNKNOWN],
     ids=["unavailable", "unknown"],
 )
-async def test_entity_trigger_first_ignores_unavailable_entity(
+async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
     """Test behavior first: unavailable/unknown entities are excluded from check_one_match.
