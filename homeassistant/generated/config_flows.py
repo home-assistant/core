@@ -766,6 +766,7 @@ FLOWS = {
         "ukraine_alarm",
         "unifi",
         "unifi_access",
+        "unifi_discovery",
         "unifiprotect",
         "upb",
         "upcloud",
