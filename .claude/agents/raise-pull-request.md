@@ -186,15 +186,11 @@ If `CHANGE_TYPE` IS "Breaking change" or "Deprecation", keep the `## Breaking ch
 
 ## Step 10: Push Branch and Create PR
 
-```bash
-# Get branch name and GitHub username
-BRANCH=$(git branch --show-current)
-PUSH_REMOTE=$(git config "branch.$BRANCH.remote" 2>/dev/null || git remote | head -1)
-GITHUB_USER=$(gh api user --jq .login 2>/dev/null || git remote get-url "$PUSH_REMOTE" | sed -E 's#.*[:/]([^/]+)/([^/]+)(\.git)?$#\1#')
+Push the branch with upstream tracking, and create a PR against `home-assistant/core` with the generated title and body:
 
+```bash
 # Create PR (gh pr create pushes the branch automatically)
 gh pr create --repo home-assistant/core --base dev \
-  --head "$GITHUB_USER:$BRANCH" \
   --draft \
   --title "TITLE_HERE" \
   --body "$(cat <<'EOF'
