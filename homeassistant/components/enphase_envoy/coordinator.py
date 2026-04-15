@@ -227,15 +227,16 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Pyenphase Envoy class uses tenacity retry stop_after_delay and
         # stop_after_attempt to end failing request retries. Timeouts used
         # are 45 seconds request timeout and 10 sec connection timeout.
-        # Stop_after_delay is intended to limit maximum time spent on
-        # responses that timeout, while stop_after_attempt is intended to
-        # limit number of attempts on fast failures,
+        # stop_after_delay limits total time spent retrying requests that
+        # keep timing out, while stop_after_attempt limits retries for
+        # fast failures that do not consume the full timeout.
         #
-        # For HA users we implement 'number of request attempts', each
-        # allowed 45 seconds. Envoy class default is 150 seconds
-        # stop_after_delay and 6 for stop_after_attempt. This matches our
-        # default of OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE for
-        # our HA 'number of request attempts'.
+        # In HA we expose a simpler "number of request attempts" option
+        # based on the 45 second request timeout. Pyenphase's default
+        # max_delay of 150 seconds therefore maps to roughly
+        # OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE timeout-length attempts,
+        # while its default max_attempts of 6 remains higher so fast
+        # failures can still be retried more times.
         #
         # Only set the retry policy if the retry attempts option is
         # changed from its default value.
