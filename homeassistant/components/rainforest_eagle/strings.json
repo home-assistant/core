@@ -6,7 +6,10 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "no_meters_connected": "No meters are currently connected. Ensure your meter is connected and try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_device_type": "Unable to determine the type of Rainforest Eagle device. Please ensure your device is supported.",
+      "unsupported_device_type": "This type of Rainforest Eagle device is not supported."
     },
     "step": {
       "user": {

@@ -6,9 +6,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.subaru.const import DOMAIN
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
-    DOMAIN,
     EV_SENSORS,
     SAFETY_SENSORS,
 )

@@ -372,7 +372,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if self.api_version != "v1":
             raise ServiceValidationError(
-                "Updating time segments requires token authentication"
+                translation_domain=DOMAIN,
+                translation_key="token_auth_required",
             )
 
         try:
@@ -388,7 +389,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 enabled,
             )
         except growattServer.GrowattV1ApiError as err:
-            raise HomeAssistantError(f"API error updating time segment: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # Update coordinator's cached data without making an API call (avoids rate limit)
         if self.data:
@@ -411,7 +416,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if self.api_version != "v1":
             raise ServiceValidationError(
-                "Reading time segments requires token authentication"
+                translation_domain=DOMAIN,
+                translation_key="token_auth_required",
             )
 
         # Ensure we have current data
@@ -496,7 +502,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         if self.api_version != "v1":
             raise ServiceValidationError(
-                "Updating AC charge times requires token authentication"
+                translation_domain=DOMAIN,
+                translation_key="token_auth_required",
             )
 
         try:
@@ -510,7 +517,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except growattServer.GrowattV1ApiError as err:
             raise HomeAssistantError(
-                f"API error updating AC charge times: {err}"
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         if self.data:
@@ -544,7 +553,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         if self.api_version != "v1":
             raise ServiceValidationError(
-                "Updating AC discharge times requires token authentication"
+                translation_domain=DOMAIN,
+                translation_key="token_auth_required",
             )
 
         try:
@@ -557,7 +567,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except growattServer.GrowattV1ApiError as err:
             raise HomeAssistantError(
-                f"API error updating AC discharge times: {err}"
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         if self.data:
@@ -579,7 +591,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Read AC charge time settings from SPH device cache."""
         if self.api_version != "v1":
             raise ServiceValidationError(
-                "Reading AC charge times requires token authentication"
+                translation_domain=DOMAIN,
+                translation_key="token_auth_required",
             )
 
         if not self.data:
@@ -591,7 +604,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Read AC discharge time settings from SPH device cache."""
         if self.api_version != "v1":
             raise ServiceValidationError(
-                "Reading AC discharge times requires token authentication"
+                translation_domain=DOMAIN,
+                translation_key="token_auth_required",
             )
 
         if not self.data:

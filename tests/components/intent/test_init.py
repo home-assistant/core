@@ -85,7 +85,7 @@ async def test_http_handle_intent(
         },
         "language": hass.config.language,
         "response_type": intent.IntentResponseType.ACTION_DONE.value,
-        "data": {"targets": [], "success": [], "failed": []},
+        "data": {"success": [], "failed": []},
     }
 
 
@@ -149,7 +149,7 @@ async def test_http_language_device_satellite_id(
         },
         "language": language,
         "response_type": "action_done",
-        "data": {"targets": [], "success": [], "failed": []},
+        "data": {"success": [], "failed": []},
     }
 
 

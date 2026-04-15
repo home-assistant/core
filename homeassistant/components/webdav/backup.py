@@ -22,7 +22,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
-from homeassistant.util.json import json_loads_object
+from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import WebDavConfigEntry
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -222,13 +222,19 @@ class WebDavBackupAgent(BackupAgent):
         if time() <= self._cache_expiration:
             return self._cache_metadata_files
 
-        async def _download_metadata(path: str) -> AgentBackup:
+        async def _download_metadata(path: str) -> AgentBackup | None:
             """Download metadata file."""
             iterator = await self._client.download_iter(path)
             metadata_bytes = bytearray()
             async for chunk in iterator:
                 metadata_bytes.extend(chunk)
-            return AgentBackup.from_dict(json_loads_object(metadata_bytes))
+            try:
+                return AgentBackup.from_dict(json_loads_object(metadata_bytes))
+            except (*JSON_DECODE_EXCEPTIONS, KeyError, TypeError, ValueError) as err:
+                _LOGGER.warning(
+                    "Skipping invalid backup metadata file %s: %s", path, err
+                )
+                return None
 
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""

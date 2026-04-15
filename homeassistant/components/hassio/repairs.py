@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from . import get_addons_list, get_issues_info
+from . import get_addons_list
 from .const import (
     ATTR_SLUG,
     EXTRA_PLACEHOLDERS,
@@ -31,6 +31,7 @@ from .const import (
     PLACEHOLDER_KEY_COMPONENTS,
     PLACEHOLDER_KEY_REFERENCE,
 )
+from .coordinator import get_issues_info
 from .handler import get_supervisor_client
 from .issues import Issue, Suggestion
 

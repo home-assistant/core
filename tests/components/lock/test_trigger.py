@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.lock import DOMAIN, LockState
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -74,7 +74,6 @@ async def test_lock_triggers_gated_by_labs_flag(
 )
 async def test_lock_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_locks: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -86,7 +85,6 @@ async def test_lock_state_trigger_behavior_any(
     """Test that the lock state trigger fires when any lock state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_locks,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -129,7 +127,6 @@ async def test_lock_state_trigger_behavior_any(
 )
 async def test_lock_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_locks: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -141,7 +138,6 @@ async def test_lock_state_trigger_behavior_first(
     """Test that the lock state trigger fires when the first lock changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_locks,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -184,7 +180,6 @@ async def test_lock_state_trigger_behavior_first(
 )
 async def test_lock_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_locks: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -196,7 +191,6 @@ async def test_lock_state_trigger_behavior_last(
     """Test that the lock state trigger fires when the last lock changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_locks,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

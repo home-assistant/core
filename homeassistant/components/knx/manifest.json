@@ -13,7 +13,7 @@
   "requirements": [
     "xknx==3.15.0",
     "xknxproject==3.8.2",
-    "knx-frontend==2026.3.2.183756"
+    "knx-frontend==2026.3.28.223133"
   ],
   "single_config_entry": true
 }
