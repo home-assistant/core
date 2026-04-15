@@ -155,7 +155,7 @@ async def _check_for_new_devices(
     device_registry = dr.async_get(hass)
 
     coordinators = entry.runtime_data.coordinators
-    appliances = await fetch_appliance_data(client)
+    appliances = await fetch_appliance_data(client, Exception)
     entry.runtime_data.appliances = appliances
 
     existing_ids = set(coordinators.keys())
@@ -198,13 +198,15 @@ async def _check_for_new_devices(
             device_registry.async_remove_device(device_entry.id)
 
 
-async def fetch_appliance_data(client: ApplianceClient) -> list[ApplianceData]:
+async def fetch_appliance_data(
+    client: ApplianceClient, exception_type: type[Exception] = ConfigEntryNotReady
+) -> list[ApplianceData]:
     """Helper method to retrieve all the appliances data from the Electrolux APIs."""
     try:
         appliances = await client.get_appliance_data()
     except ApplianceClientException as e:
         _LOGGER.warning("Failed to get appliances: %s", e)
-        raise ConfigEntryNotReady from e
+        raise exception_type from e
 
     # Filter out appliances where details or state is None
     return [
