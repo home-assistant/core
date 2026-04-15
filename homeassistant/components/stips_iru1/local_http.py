@@ -29,7 +29,9 @@ def _dedupe_hosts(hosts: list[str]) -> list[str]:
     return out
 
 
-def iter_dns_host_candidates(device_unique_name: str, backend_ip: str = "") -> list[str]:
+def iter_dns_host_candidates(
+    device_unique_name: str, backend_ip: str = ""
+) -> list[str]:
     """Build DNS-first host candidates with backend IP as a last resort."""
     hosts: list[str] = []
     unique_name = str(device_unique_name or "").strip()
@@ -109,10 +111,14 @@ async def async_build_control_hosts(
     if not hosts:
         return [], ""
 
-    probe_timeout = aiohttp.ClientTimeout(total=2, connect=1, sock_connect=1, sock_read=1.5)
+    probe_timeout = aiohttp.ClientTimeout(
+        total=2, connect=1, sock_connect=1, sock_read=1.5
+    )
     live_ip = ""
     for host in hosts:
-        ip = await async_fetch_device_info_live_ip(hass, host=host, timeout=probe_timeout)
+        ip = await async_fetch_device_info_live_ip(
+            hass, host=host, timeout=probe_timeout
+        )
         if ip:
             live_ip = ip
             break

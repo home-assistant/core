@@ -1,26 +1,26 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect STIPS account",
-        "description": "Login is used only to download your full IR catalog (all areas/devices/remotes). Control runs locally over LAN, so internet is not required for normal IR sends after setup.",
-        "data": {
-          "api_host": "API host",
-          "username": "Username",
-          "password": "Password"
-        }
-      }
+    "abort": {
+      "already_configured": "This IR device is already configured"
     },
     "error": {
-      "invalid_auth": "Invalid username/password",
-      "no_catalog_permission": "Login succeeded, but this account has no permission to read IR catalog endpoints",
       "cannot_connect": "Cannot connect to STIPS API",
+      "invalid_auth": "Invalid username/password",
       "no_areas": "No areas found for this account",
+      "no_catalog_permission": "Login succeeded, but this account has no permission to read IR catalog endpoints",
       "no_devices": "No IR devices found in selected area",
       "unknown": "Unexpected error"
     },
-    "abort": {
-      "already_configured": "This IR device is already configured"
+    "step": {
+      "user": {
+        "data": {
+          "api_host": "API host",
+          "password": "Password",
+          "username": "Username"
+        },
+        "description": "Login is used only to download your full IR catalog (all areas/devices/remotes). Control runs locally over LAN, so internet is not required for normal IR sends after setup.",
+        "title": "Connect STIPS account"
+      }
     }
   }
 }

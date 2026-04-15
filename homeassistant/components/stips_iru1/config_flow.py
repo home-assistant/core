@@ -59,7 +59,9 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "no_areas"
                 else:
                     try:
-                        _, catalog_devices = await async_fetch_catalog_devices(client, areas)
+                        _, catalog_devices = await async_fetch_catalog_devices(
+                            client, areas
+                        )
                     except StipsApiError:
                         errors["base"] = "cannot_connect"
                     else:
@@ -90,4 +92,3 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
-

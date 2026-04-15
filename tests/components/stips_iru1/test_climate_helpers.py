@@ -31,18 +31,32 @@ def test_learned_ac_signal_extraction_and_pick() -> None:
         "model": {
             "frequency": 38000,
             "signals": [
-                {"mode": "cool", "temperature": 22, "fanSpeed": "medium", "signal": "A"},
-                {"mode": "cool", "temperature": 23, "fanSpeed": "medium", "signal": "B"},
+                {
+                    "mode": "cool",
+                    "temperature": 22,
+                    "fanSpeed": "medium",
+                    "signal": "A",
+                },
+                {
+                    "mode": "cool",
+                    "temperature": 23,
+                    "fanSpeed": "medium",
+                    "signal": "B",
+                },
             ],
             "powerOnSignal": "PON",
             "powerOffSignal": "POFF",
         }
     }
-    entries, power_on, power_off, freq = stips_climate._extract_learned_ac_signals(remote_snapshot)
+    entries, power_on, power_off, freq = stips_climate._extract_learned_ac_signals(
+        remote_snapshot
+    )
     assert len(entries) == 2
     assert power_on == "PON"
     assert power_off == "POFF"
     assert freq == 38000
 
-    picked = stips_climate._pick_best_learned_signal(entries, HVACMode.COOL, 23, "medium")
+    picked = stips_climate._pick_best_learned_signal(
+        entries, HVACMode.COOL, 23, "medium"
+    )
     assert picked == "B"

@@ -1,16 +1,12 @@
 {
   "domain": "stips_iru1",
   "name": "STIPS IR Remote",
-  "codeowners": [
-    "@stips"
-  ],
+  "codeowners": ["@stips"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/stips_iru1/",
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": [
-    "stips-api-bridge==0.1.0"
-  ]
+  "requirements": ["stips-api-bridge==0.1.0"]
 }

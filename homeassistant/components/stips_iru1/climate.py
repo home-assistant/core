@@ -154,8 +154,16 @@ def _extract_learned_ac_signals(
         )
     power_on = model.get("powerOnSignal") or model.get("PowerOnSignal")
     power_off = model.get("powerOffSignal") or model.get("PowerOffSignal")
-    on_s = str(power_on).strip() if power_on is not None and str(power_on).strip() else None
-    off_s = str(power_off).strip() if power_off is not None and str(power_off).strip() else None
+    on_s = (
+        str(power_on).strip()
+        if power_on is not None and str(power_on).strip()
+        else None
+    )
+    off_s = (
+        str(power_off).strip()
+        if power_off is not None and str(power_off).strip()
+        else None
+    )
     return out, on_s, off_s, frequency
 
 
@@ -354,10 +362,14 @@ class StipsIruClimate(ClimateEntity):
         self._device_mac = device_mac
         self._device_online = device_online
         self._remote_snapshot = remote_snapshot
-        self._proto = _safe_int((remote_snapshot.get("model") or {}).get("protocol"), -1)
+        self._proto = _safe_int(
+            (remote_snapshot.get("model") or {}).get("protocol"), -1
+        )
         self._model = 0
 
-        safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in remote_id)[:80]
+        safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in remote_id)[
+            :80
+        ]
         self._attr_unique_id = f"{DOMAIN}_{device_unique_name}_climate_{safe_rid}"
         self._attr_name = f"{friendly_name} Climate"
         self._attr_available = bool(device_online)
@@ -372,11 +384,7 @@ class StipsIruClimate(ClimateEntity):
             name=self._device_name,
             manufacturer="STIPS",
             model="IRU1",
-            connections={
-                ("mac", self._device_mac)
-            }
-            if self._device_mac
-            else set(),
+            connections={("mac", self._device_mac)} if self._device_mac else set(),
             configuration_url=f"http://{self._device_unique_name}/device_info",
         )
 
@@ -507,7 +515,9 @@ class StipsIruClimate(ClimateEntity):
 
         session = async_get_clientsession(self.hass)
         auth = _local_http_auth()
-        timeout = aiohttp.ClientTimeout(total=3, connect=1.5, sock_connect=1.5, sock_read=2)
+        timeout = aiohttp.ClientTimeout(
+            total=3, connect=1.5, sock_connect=1.5, sock_read=2
+        )
         last_error: Exception | None = None
         sent_ok = False
         for host in hosts:
@@ -546,7 +556,9 @@ class StipsIruClimate(ClimateEntity):
         if not sent_ok:
             self._attr_available = False
             self.async_write_ha_state()
-            raise HomeAssistantError(f"Cannot reach IR device locally (hosts: {', '.join(hosts)})")
+            raise HomeAssistantError(
+                f"Cannot reach IR device locally (hosts: {', '.join(hosts)})"
+            )
 
         self._state = payload_state
         self.async_write_ha_state()
@@ -601,15 +613,22 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         self._remote_snapshot = remote_snapshot
         self._remote_type = str(remote_snapshot.get("type") or "LearnedAc")
 
-        self._signals, self._power_on_signal, self._power_off_signal, self._frequency = (
-            _extract_learned_ac_signals(remote_snapshot)
-        )
+        (
+            self._signals,
+            self._power_on_signal,
+            self._power_off_signal,
+            self._frequency,
+        ) = _extract_learned_ac_signals(remote_snapshot)
         temps = [int(v["temp"]) for v in self._signals if v.get("temp") is not None]
         self._attr_min_temp = min(temps) if temps else 16
         self._attr_max_temp = max(temps) if temps else 30
 
-        safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in remote_id)[:80]
-        self._attr_unique_id = f"{DOMAIN}_{device_unique_name}_climate_learned_ac_{safe_rid}"
+        safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in remote_id)[
+            :80
+        ]
+        self._attr_unique_id = (
+            f"{DOMAIN}_{device_unique_name}_climate_learned_ac_{safe_rid}"
+        )
         self._attr_name = f"{friendly_name} Climate"
         self._attr_available = bool(device_online)
 
@@ -636,7 +655,9 @@ class StipsIruLearnedAcClimate(ClimateEntity):
             f for f in ("auto", "min", "low", "medium", "high", "max") if f in fans
         ] or ["medium"]
 
-        default_mode = next((m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL)
+        default_mode = next(
+            (m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL
+        )
         default_temp = int((self._attr_min_temp + self._attr_max_temp) / 2)
         default_fan = self._attr_fan_modes[0]
         self._state: dict[str, Any] = {
@@ -654,11 +675,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
             name=self._device_name,
             manufacturer="STIPS",
             model="IRU1",
-            connections={
-                ("mac", self._device_mac)
-            }
-            if self._device_mac
-            else set(),
+            connections={("mac", self._device_mac)} if self._device_mac else set(),
             configuration_url=f"http://{self._device_unique_name}/device_info",
         )
 
@@ -702,7 +719,9 @@ class StipsIruLearnedAcClimate(ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn the remote on using the best matching learned signal."""
         if self.hvac_mode == HVACMode.OFF:
-            mode = next((m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL)
+            mode = next(
+                (m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL
+            )
             await self._send_state(power=1, hvac_mode=mode)
             return
         await self._send_state(power=1)
@@ -749,7 +768,11 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         temp = int(payload_state.get("temp", self._attr_min_temp))
         fan = _fan_to_name(payload_state.get("fan", "medium"))
         signal = _pick_best_learned_signal(self._signals, hvac_mode, temp, fan)
-        if not signal and self._power_on_signal and int(payload_state.get("power", 1)) == 1:
+        if (
+            not signal
+            and self._power_on_signal
+            and int(payload_state.get("power", 1)) == 1
+        ):
             await self._post_signal(self._power_on_signal)
             self._state = payload_state
             self.async_write_ha_state()
@@ -779,7 +802,9 @@ class StipsIruLearnedAcClimate(ClimateEntity):
 
         session = async_get_clientsession(self.hass)
         auth = _local_http_auth()
-        timeout = aiohttp.ClientTimeout(total=3, connect=1.5, sock_connect=1.5, sock_read=2)
+        timeout = aiohttp.ClientTimeout(
+            total=3, connect=1.5, sock_connect=1.5, sock_read=2
+        )
         params = {
             "signal": signal,
             "frequency": str(self._frequency),
@@ -789,7 +814,9 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         for host in hosts:
             url = f"http://{host}/local-ir/send"
             try:
-                async with session.post(url, data=params, auth=auth, timeout=timeout) as response:
+                async with session.post(
+                    url, data=params, auth=auth, timeout=timeout
+                ) as response:
                     if response.status >= 400:
                         body = await response.text()
                         last_error = HomeAssistantError(
@@ -814,4 +841,6 @@ class StipsIruLearnedAcClimate(ClimateEntity):
             ) from last_error
         self._attr_available = False
         self.async_write_ha_state()
-        raise HomeAssistantError(f"Cannot reach IR device locally (hosts: {', '.join(hosts)})")
+        raise HomeAssistantError(
+            f"Cannot reach IR device locally (hosts: {', '.join(hosts)})"
+        )
