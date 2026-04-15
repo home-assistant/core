@@ -10,16 +10,12 @@
   "requirements": ["grandstream-home-api==0.1.5"],
   "zeroconf": [
     {
-      "name": "gds*",
+      "name": "gds_*",
       "type": "_https._tcp.local."
     },
     {
-      "name": "gsc*",
+      "name": "gsc_*",
       "type": "_https._tcp.local."
-    },
-    {
-      "name": "*",
-      "type": "_device-info._tcp.local."
     }
   ]
 }

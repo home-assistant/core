@@ -7,27 +7,14 @@ import logging
 
 from grandstream_home_api import get_by_path
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    PERCENTAGE,
-    UnitOfDataRate,
-    UnitOfInformation,
-    UnitOfTemperature,
-    UnitOfTime,
-)
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import GrandstreamConfigEntry
-from .const import DEVICE_TYPE_GNS_NAS
 from .coordinator import GrandstreamCoordinator
-from .device import GrandstreamDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 class GrandstreamSensorEntityDescription(SensorEntityDescription):
     """Describes Grandstream sensor entity."""
 
-    key_path: str | None = None  # For nested data paths like "disks[0].temperature_c"
+    key_path: str | None = None
 
 
 # Device status sensors
@@ -46,163 +33,6 @@ DEVICE_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
         key_path="phone_status",
         translation_key="device_status",
         icon="mdi:account-badge",
-    ),
-)
-
-# SIP account sensors (multiple accounts supported)
-SIP_ACCOUNT_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
-    GrandstreamSensorEntityDescription(
-        key="sip_registration_status",
-        key_path="sip_accounts[{index}].status",
-        translation_key="sip_registration_status",
-        icon="mdi:phone-check",
-    ),
-)
-
-# System monitoring sensors
-SYSTEM_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
-    GrandstreamSensorEntityDescription(
-        key="cpu_usage_percent",
-        key_path="cpu_usage_percent",
-        translation_key="cpu_usage",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:chip",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="memory_used_gb",
-        key_path="memory_used_gb",
-        translation_key="memory_used_gb",
-        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
-        device_class=SensorDeviceClass.DATA_SIZE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:memory",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="memory_usage_percent",
-        key_path="memory_usage_percent",
-        translation_key="memory_usage_percent",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:memory",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="system_temperature_c",
-        key_path="system_temperature_c",
-        translation_key="system_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    GrandstreamSensorEntityDescription(
-        key="cpu_temperature_c",
-        key_path="cpu_temperature_c",
-        translation_key="cpu_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    GrandstreamSensorEntityDescription(
-        key="running_time",
-        key_path="running_time",
-        translation_key="system_uptime",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.DAYS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:clock",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="network_sent_speed",
-        key_path="network_sent_bytes_per_sec",
-        translation_key="network_upload_speed",
-        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
-        suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.DATA_RATE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:upload",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="network_received_speed",
-        key_path="network_received_bytes_per_sec",
-        translation_key="network_download_speed",
-        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
-        suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.DATA_RATE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:download",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="fan_mode",
-        key_path="fan_mode",
-        translation_key="fan_mode",
-        icon="mdi:fan",
-    ),
-)
-
-# Fan sensors
-FAN_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
-    GrandstreamSensorEntityDescription(
-        key="fan_status",
-        key_path="fans[{index}]",
-        translation_key="fan_status",
-        icon="mdi:fan",
-    ),
-)
-
-# Disk sensors
-DISK_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
-    GrandstreamSensorEntityDescription(
-        key="disk_temperature",
-        key_path="disks[{index}].temperature_c",
-        translation_key="disk_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="disk_status",
-        key_path="disks[{index}].status",
-        translation_key="disk_status",
-        icon="mdi:harddisk",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="disk_size",
-        key_path="disks[{index}].size_gb",
-        translation_key="disk_size",
-        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
-        device_class=SensorDeviceClass.DATA_SIZE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:harddisk",
-    ),
-)
-
-# Pool sensors
-POOL_SENSORS: tuple[GrandstreamSensorEntityDescription, ...] = (
-    GrandstreamSensorEntityDescription(
-        key="pool_size",
-        key_path="pools[{index}].size_gb",
-        translation_key="pool_size",
-        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
-        device_class=SensorDeviceClass.DATA_SIZE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:database",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="pool_usage",
-        key_path="pools[{index}].usage_percent",
-        translation_key="pool_usage",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:database",
-    ),
-    GrandstreamSensorEntityDescription(
-        key="pool_status",
-        key_path="pools[{index}].status",
-        translation_key="pool_status",
-        icon="mdi:database",
     ),
 )
 
@@ -216,32 +46,16 @@ class GrandstreamSensor(SensorEntity):
     def __init__(
         self,
         coordinator: GrandstreamCoordinator,
-        device: GrandstreamDevice,
+        device_info: DeviceInfo,
+        unique_id: str,
         description: GrandstreamSensorEntityDescription,
-        index: int | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__()
         self.coordinator = coordinator
-        self._device = device
+        self._attr_device_info = device_info
         self.entity_description = description
-        self._index = index
-
-        # Set unique ID
-        unique_id = f"{device.unique_id}_{description.key}"
-        if index is not None:
-            unique_id = f"{unique_id}_{index}"
-        self._attr_unique_id = unique_id
-
-        # Set device info
-        self._attr_device_info = device.device_info
-
-        # Set name based on device name and translation key
-        # Note: We're using _attr_has_entity_name = True, so only the translation key will be used
-
-        # Set translation placeholders for indexed entities
-        if index is not None:
-            self._attr_translation_placeholders = {"index": str(index + 1)}
+        self._attr_unique_id = f"{unique_id}_{description.key}"
 
     @property
     def available(self) -> bool:
@@ -261,18 +75,6 @@ class GrandstreamSensor(SensorEntity):
         )
 
 
-class GrandstreamSystemSensor(GrandstreamSensor):
-    """Representation of a Grandstream system sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        if not self.entity_description.key_path:
-            return None
-
-        return get_by_path(self.coordinator.data, self.entity_description.key_path)
-
-
 class GrandstreamDeviceSensor(GrandstreamSensor):
     """Representation of a Grandstream device sensor."""
 
@@ -290,7 +92,6 @@ class GrandstreamDeviceSensor(GrandstreamSensor):
             ):
                 api = config_entry.runtime_data.api
                 # Return connection status key if there's any issue
-                # Translation keys: ha_control_disabled, offline, account_locked, auth_failed
                 if (
                     hasattr(api, "is_ha_control_enabled")
                     and not api.is_ha_control_enabled
@@ -303,179 +104,25 @@ class GrandstreamDeviceSensor(GrandstreamSensor):
                 if hasattr(api, "is_authenticated") and not api.is_authenticated:
                     return "auth_failed"
 
-        if self.entity_description.key_path and self._index is not None:
-            value = get_by_path(
-                self.coordinator.data, self.entity_description.key_path, self._index
-            )
-        elif self.entity_description.key_path:
-            value = get_by_path(self.coordinator.data, self.entity_description.key_path)
-        else:
-            return None
-
-        return value
-
-
-class GrandstreamSipAccountSensor(GrandstreamSensor):
-    """Representation of a Grandstream SIP account sensor."""
-
-    def __init__(
-        self,
-        coordinator: GrandstreamCoordinator,
-        device: GrandstreamDevice,
-        description: GrandstreamSensorEntityDescription,
-        account_id: str,
-    ) -> None:
-        """Initialize the SIP account sensor."""
-        # Call parent init with index=None (will be determined dynamically)
-        super().__init__(coordinator, device, description, index=None)
-
-        # Store account_id for dynamic lookup
-        self._account_id = account_id
-
-        # Override unique ID to use account_id instead of index
-        self._attr_unique_id = f"{device.unique_id}_{description.key}_{account_id}"
-
-        # Set translation placeholders for account ID
-        self._attr_translation_placeholders = {"account_id": account_id}
-
-    def _find_account_index(self) -> int | None:
-        """Find the current index of this account in the accounts list."""
-        sip_accounts = self.coordinator.data.get("sip_accounts", [])
-        for idx, account in enumerate(sip_accounts):
-            if isinstance(account, dict) and account.get("id") == self._account_id:
-                return idx
+        if self.entity_description.key_path:
+            return get_by_path(self.coordinator.data, self.entity_description.key_path)
         return None
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        # Check if coordinator is available
-        if not self.coordinator.last_update_success:
-            return False
-
-        # Check if this account still exists by ID
-        return self._find_account_index() is not None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
-        )
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        if not self.entity_description.key_path:
-            return None
-
-        # Find current index of this account
-        current_index = self._find_account_index()
-        if current_index is None:
-            return None
-
-        return get_by_path(
-            self.coordinator.data, self.entity_description.key_path, current_index
-        )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     config_entry: GrandstreamConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
     runtime_data = config_entry.runtime_data
     coordinator = runtime_data.coordinator
-    device = runtime_data.device
+    device_info = runtime_data.device_info
+    unique_id = runtime_data.unique_id
 
-    entities: list[GrandstreamSensor] = []
-
-    # Track created SIP account sensors by account ID
-    created_sip_sensors: set[str] = set()
-
-    if getattr(device, "device_type", None) == DEVICE_TYPE_GNS_NAS:
-        # Add system sensors
-        entities.extend(
-            GrandstreamSystemSensor(coordinator, device, description)
-            for description in SYSTEM_SENSORS
-        )
-
-        # Add fan sensors (multiple)
-        fan_count = max(len(coordinator.data.get("fans", [])), 1)
-        entities.extend(
-            GrandstreamDeviceSensor(coordinator, device, description, idx)
-            for idx in range(fan_count)
-            for description in FAN_SENSORS
-        )
-
-        # Add disk sensors (multiple)
-        disk_count = max(len(coordinator.data.get("disks", [])), 1)
-        entities.extend(
-            GrandstreamDeviceSensor(coordinator, device, description, idx)
-            for idx in range(disk_count)
-            for description in DISK_SENSORS
-        )
-
-        # Add pool sensors (multiple)
-        pool_count = max(len(coordinator.data.get("pools", [])), 1)
-        entities.extend(
-            GrandstreamDeviceSensor(coordinator, device, description, idx)
-            for idx in range(pool_count)
-            for description in POOL_SENSORS
-        )
-    else:
-        # Add phone device sensors
-        entities.extend(
-            GrandstreamDeviceSensor(coordinator, device, description)
-            for description in DEVICE_SENSORS
-        )
-
-        # Add SIP account sensors (only if accounts exist)
-        # Track by account ID instead of index
-        sip_accounts = coordinator.data.get("sip_accounts", [])
-        for account in sip_accounts:
-            if isinstance(account, dict):
-                account_id = account.get("id", "")
-                if account_id:
-                    entities.extend(
-                        GrandstreamSipAccountSensor(
-                            coordinator, device, description, account_id
-                        )
-                        for description in SIP_ACCOUNT_SENSORS
-                    )
-                    created_sip_sensors.add(account_id)
-
-        # Add listener to dynamically add new SIP account sensors
-        @callback
-        def _async_add_sip_sensors() -> None:
-            """Add new SIP account sensors when accounts are added."""
-            sip_accounts = coordinator.data.get("sip_accounts", [])
-            new_entities: list[GrandstreamSipAccountSensor] = []
-
-            for account in sip_accounts:
-                if isinstance(account, dict):
-                    account_id = account.get("id", "")
-                    if account_id and account_id not in created_sip_sensors:
-                        new_entities.extend(
-                            GrandstreamSipAccountSensor(
-                                coordinator, device, description, account_id
-                            )
-                            for description in SIP_ACCOUNT_SENSORS
-                        )
-                        created_sip_sensors.add(account_id)
-
-            if new_entities:
-                async_add_entities(new_entities)
-
-        # Register listener
-        config_entry.async_on_unload(
-            coordinator.async_add_listener(_async_add_sip_sensors)
-        )
+    entities = [
+        GrandstreamDeviceSensor(coordinator, device_info, unique_id, description)
+        for description in DEVICE_SENSORS
+    ]
 
     async_add_entities(entities)
