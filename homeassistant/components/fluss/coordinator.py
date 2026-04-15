@@ -40,15 +40,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         )
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
-        """Return devices keyed by deviceId with internetConnected merged in.
-
-        Only devices where the user has canUseWiFi permission are included;
-        per-device status errors mark that device offline.
-
-        Raises:
-            ConfigEntryError: credentials rejected by async_get_devices.
-            UpdateFailed: device list fetch failed for another reason.
-        """
+        """Fetch Fluss+ devices and merge per-device connectivity status."""
         try:
             devices = await self.api.async_get_devices()
         except FlussApiClientAuthenticationError as err:
@@ -56,21 +48,10 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 
-        if not isinstance(devices, dict):
-            raise UpdateFailed("Error fetching Fluss devices: invalid response data")
-
-        raw_device_list = devices.get("devices")
-        if not isinstance(raw_device_list, list):
-            raise UpdateFailed("Error fetching Fluss devices: invalid devices data")
-
-        device_list: list[dict[str, Any]] = [
+        device_list = [
             device
-            for device in raw_device_list
-            if isinstance(device, dict)
-            and isinstance(device.get("userPermissions"), dict)
-            and bool(device["userPermissions"].get("canUseWiFi"))
-            and isinstance(device.get("deviceId"), str)
-            and bool(device["deviceId"])
+            for device in devices["devices"]
+            if device["userPermissions"]["canUseWiFi"]
         ]
         statuses = await asyncio.gather(
             *(self.api.async_get_device_status(d["deviceId"]) for d in device_list),
@@ -84,15 +65,8 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                 continue
             if isinstance(status, BaseException):
                 raise status
-
-            internet_connected = False
-            if isinstance(status, dict):
-                status_data = status.get("status")
-                if isinstance(status_data, dict):
-                    internet_connected = bool(status_data.get("internetConnected"))
-
             result[device["deviceId"]] = {
                 **device,
-                "internetConnected": internet_connected,
+                "internetConnected": status["status"]["internetConnected"],
             }
         return result
