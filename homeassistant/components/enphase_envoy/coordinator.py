@@ -224,13 +224,29 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         retries: int = self.config_entry.options.get(
             OPTION_SET_RETRY_ATTEMPTS, OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE
         )
-        # Keep the Envoy default retry policy unless the retry attempts option
-        # is changed from its default value.
+        # Pyenphase Envoy class uses tenacity retry stop_after_delay and
+        # stop_after_attempt to end failing request retries. Timeouts used
+        # are 45 seconds request timeout and 10 sec connection timeout.
+        # Stop_after_delay is intended to limit maximum time spend on
+        # responses that timeout, while stop_after_attempt is intended to
+        # limit number of attempts on fast failures,
+        #
+        # For HA users we implement 'number of request attempts', each
+        # allowed 45 seconds. Envoy class default is 150 seconds and 6
+        # attempts. This matches our default of
+        # OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE.
+        #
+        # Only set the retry policy if the retry attempts option is
+        # changed from its default value.
         if retries != OPTION_SET_RETRY_ATTEMPTS_DEFAULT_VALUE:
-            # Envoy uses 45 sec timeouts, set allowed time
-            # a bit larger to allow for wait time.
-            retry_delay: int = 15 + (retries - 1) * 45
-            # set attempts no lower than 4.
+            # Envoy uses 45 sec timeouts. Set allowed time to
+            # to the mid of a 45 sec period to allow for some
+            # random wait time between attempts. I.e 65 allows 2
+            # attempts and ends request at the end of second
+            # attempt when 90 seconds have elapsed.
+            retry_delay: int = 15 + max(0, (retries - 1) * 45)
+            # set attempts no lower than 4 and add 1 extra
+            # this one is used for retry on fast failures.
             retry_attempts = max(4, retries + 1)
             self.envoy.set_retry_policy(
                 max_delay=retry_delay, max_attempts=retry_attempts
