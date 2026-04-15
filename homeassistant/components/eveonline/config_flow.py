@@ -63,5 +63,5 @@ def _decode_eve_jwt(token: str) -> dict[str, Any]:
         raise ValueError(sub)
     return {
         CONF_CHARACTER_ID: int(sub_parts[2]),
-        CONF_CHARACTER_NAME: decoded.get("name", "Unknown"),
+        CONF_CHARACTER_NAME: decoded["name"],
     }
