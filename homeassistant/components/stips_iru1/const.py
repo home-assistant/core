@@ -10,18 +10,9 @@ CONF_AREA_ID = "area_id"
 CONF_DEVICE_UNIQUE_NAME = "device_unique_name"
 CONF_DEVICE_IP = "device_ip"
 
-DEFAULT_API_HOST = "stips.api.stagging.visionalization.net"
-
-# Mobile app OAuth (same as STIPS mobile / ex_login.txt). Staging ABP /account/Login may reject app passwords.
-OAUTH_TOKEN_URL = "https://accounts.visionalization.net/connect/token"
-OAUTH_CLIENT_ID = "stips.mobile.app"
-OAUTH_CLIENT_SECRET = "J04DGjtG9F6EKJ48SJAFEPTki04tK0YN"
-OAUTH_SCOPE = "IdentityServerApi openid stips.fullaccess offline_access"
+DEFAULT_API_HOST = "stips.api.staging.visionalization.net"
 
 DATA_CLIENT = "client"
-
-LOCAL_HTTP_USERNAME = "jarvis"
-LOCAL_HTTP_PASSWORD = "8ass"
 
 
 def normalize_remote_type(remote_type: str | None) -> str:

@@ -1,7 +1,7 @@
 {
   "domain": "stips_iru1",
   "name": "STIPS IR Remote",
-  "documentation": "https://github.com/stips/iru1",
+  "documentation": "https://www.home-assistant.io/integrations/stips_iru1/",
   "integration_type": "hub",
   "iot_class": "local_push",
   "dependencies": [],

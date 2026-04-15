@@ -7,17 +7,17 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import ConfigFlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from homeassistant.components.stips_iru1.api import (
+from .api import (
     StipsApiAuthError,
     StipsApiClient,
     StipsApiError,
     StipsApiPermissionError,
 )
-from homeassistant.components.stips_iru1.catalog import async_fetch_catalog_devices
-from homeassistant.components.stips_iru1.const import (
+from .catalog import async_fetch_catalog_devices
+from .const import (
     CONF_API_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -31,7 +31,7 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Single-step setup: login and download full account IR catalog."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -50,7 +50,7 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_catalog_permission"
             except StipsApiError:
                 errors["base"] = "cannot_connect"
-            except Exception:
+            except (TypeError, ValueError):
                 errors["base"] = "unknown"
             else:
                 if not areas:
@@ -64,14 +64,16 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         if not catalog_devices:
                             errors["base"] = "no_devices"
                         else:
-                            await self.async_set_unique_id(f"{DOMAIN}_{username.lower()}")
+                            normalized_host = str(api_host).strip().lower()
+                            await self.async_set_unique_id(
+                                f"{DOMAIN}_{normalized_host}_{username.lower()}"
+                            )
                             self._abort_if_unique_id_configured()
                             return self.async_create_entry(
                                 title=f"STIPS ({username})",
                                 data={
                                     CONF_API_HOST: api_host,
                                     CONF_USERNAME: username,
-                                    CONF_PASSWORD: password,
                                     "areas": areas,
                                     "devices": catalog_devices,
                                 },

@@ -11,7 +11,13 @@ import aiohttp
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import LOCAL_HTTP_PASSWORD, LOCAL_HTTP_USERNAME
+
+def _local_http_auth() -> aiohttp.BasicAuth | None:
+    """Build optional auth for local endpoint calls.
+
+    LAN auth credentials are device/user-specific and must not be hardcoded in core.
+    """
+    return None
 
 
 def _dedupe_hosts(hosts: list[str]) -> list[str]:
@@ -53,9 +59,10 @@ def _extract_live_ip(payload: dict[str, Any]) -> str:
             continue
         try:
             ipaddress.ip_address(s)
-            return s
         except ValueError:
             continue
+        else:
+            return s
     return ""
 
 
@@ -67,7 +74,7 @@ async def async_fetch_device_info_live_ip(
 ) -> str:
     """Try GET /device_info on one host and return a validated IP when available."""
     session = async_get_clientsession(hass)
-    auth = aiohttp.BasicAuth(LOCAL_HTTP_USERNAME, LOCAL_HTTP_PASSWORD)
+    auth = _local_http_auth()
     url = f"http://{host}/device_info"
     try:
         async with session.get(url, auth=auth, timeout=timeout) as response:
@@ -75,11 +82,11 @@ async def async_fetch_device_info_live_ip(
                 return ""
             try:
                 payload = await response.json(content_type=None)
-            except Exception:
+            except (aiohttp.ContentTypeError, ValueError):
                 body = await response.text()
                 try:
                     payload = json.loads(body)
-                except Exception:
+                except json.JSONDecodeError:
                     return ""
             if not isinstance(payload, dict):
                 return ""

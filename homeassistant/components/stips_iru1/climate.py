@@ -21,20 +21,21 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
 )
 
-from homeassistant.components.stips_iru1.catalog import (
+from .catalog import (
     model_has_ir_signals,
     normalize_device_ip,
     normalize_device_mac,
     normalize_device_online,
 )
-from homeassistant.components.stips_iru1.const import (
+from .const import (
     DOMAIN,
-    LOCAL_HTTP_PASSWORD,
-    LOCAL_HTTP_USERNAME,
     is_learned_ac,
     is_protocol_ac,
 )
-from homeassistant.components.stips_iru1.local_http import async_build_control_hosts
+from .local_http import (
+    _local_http_auth,
+    async_build_control_hosts,
+)
 
 
 _MODE_TO_HVAC: dict[int, HVACMode] = {
@@ -178,7 +179,11 @@ def _pick_best_learned_signal(
         if row_mode == wanted_mode:
             score += 4
         if row_temp is not None:
-            if int(row_temp) != int(temp):
+            try:
+                row_temp_int = int(row_temp)
+            except (TypeError, ValueError):
+                continue
+            if row_temp_int != temp:
                 continue
             score += 2
         if row_fan and row_fan != wanted_fan:
@@ -354,7 +359,7 @@ class StipsIruClimate(ClimateEntity):
         safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in remote_id)[:80]
         self._attr_unique_id = f"{DOMAIN}_{device_unique_name}_climate_{safe_rid}"
         self._attr_name = f"{friendly_name} Climate"
-        self._attr_available = True
+        self._attr_available = bool(device_online)
 
         self._state = _extract_initial_ac_state(remote_snapshot)
 
@@ -376,8 +381,8 @@ class StipsIruClimate(ClimateEntity):
 
     @property
     def available(self) -> bool:
-        """Protocol AC remotes are treated as available once loaded."""
-        return True
+        """Return latest known availability state for this remote."""
+        return bool(self._attr_available)
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -473,7 +478,8 @@ class StipsIruClimate(ClimateEntity):
         )
         if not hosts:
             raise HomeAssistantError(
-                "Device host is missing; run stips_iru1.refresh_catalog while the IRU is online."
+                "Device host is missing; verify the IRU is online and its mDNS name resolves, "
+                "then reload or reconfigure the integration."
             )
         if live_ip:
             self._device_ip_live = live_ip
@@ -503,7 +509,7 @@ class StipsIruClimate(ClimateEntity):
         }
 
         session = async_get_clientsession(self.hass)
-        auth = aiohttp.BasicAuth(LOCAL_HTTP_USERNAME, LOCAL_HTTP_PASSWORD)
+        auth = _local_http_auth()
         timeout = aiohttp.ClientTimeout(total=3, connect=1.5, sock_connect=1.5, sock_read=2)
         last_error: Exception | None = None
         sent_ok = False
@@ -523,19 +529,26 @@ class StipsIruClimate(ClimateEntity):
                         )
                         continue
                     sent_ok = True
+                    self._attr_available = True
                     last_error = None
                     break
             except (aiohttp.ClientError, asyncio.TimeoutError) as err:
                 last_error = err
                 continue
         if not sent_ok and isinstance(last_error, HomeAssistantError):
+            self._attr_available = False
+            self.async_write_ha_state()
             raise HomeAssistantError(f"{last_error} | hosts={', '.join(hosts)}")
         if not sent_ok and last_error is not None:
+            self._attr_available = False
+            self.async_write_ha_state()
             detail = str(last_error).strip() or type(last_error).__name__
             raise HomeAssistantError(
                 f"Cannot reach IR device locally (hosts: {', '.join(hosts)}): {detail}"
             ) from last_error
         if not sent_ok:
+            self._attr_available = False
+            self.async_write_ha_state()
             raise HomeAssistantError(f"Cannot reach IR device locally (hosts: {', '.join(hosts)})")
 
         self._state = payload_state
@@ -601,10 +614,10 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         safe_rid = "".join(c if c.isalnum() or c in "-_" else "_" for c in remote_id)[:80]
         self._attr_unique_id = f"{DOMAIN}_{device_unique_name}_climate_learned_ac_{safe_rid}"
         self._attr_name = f"{friendly_name} Climate"
-        self._attr_available = True
+        self._attr_available = bool(device_online)
 
         modes = {_mode_to_hvac(v.get("mode")) for v in self._signals}
-        self._attr_hvac_modes = (
+        self._attr_hvac_modes = [
             HVACMode.OFF,
             *[
                 m
@@ -617,14 +630,14 @@ class StipsIruLearnedAcClimate(ClimateEntity):
                 )
                 if m in modes
             ],
-        )
+        ]
         if len(self._attr_hvac_modes) == 1:
-            self._attr_hvac_modes = (HVACMode.OFF, HVACMode.COOL)
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
 
         fans = sorted({_fan_to_name(v.get("fan")) for v in self._signals})
-        self._attr_fan_modes = tuple(
+        self._attr_fan_modes = [
             f for f in ("auto", "min", "low", "medium", "high", "max") if f in fans
-        ) or ("medium",)
+        ] or ["medium"]
 
         default_mode = next((m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL)
         default_temp = int((self._attr_min_temp + self._attr_max_temp) / 2)
@@ -654,8 +667,8 @@ class StipsIruLearnedAcClimate(ClimateEntity):
 
     @property
     def available(self) -> bool:
-        """Learned-AC remotes are treated as available once loaded."""
-        return True
+        """Return latest known availability state for this remote."""
+        return bool(self._attr_available)
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -761,13 +774,14 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         )
         if not hosts:
             raise HomeAssistantError(
-                "Device host is missing; run stips_iru1.refresh_catalog while the IRU is online."
+                "Device host is missing; verify the IRU is online and its mDNS name resolves, "
+                "then reload or reconfigure the integration."
             )
         if live_ip:
             self._device_ip_live = live_ip
 
         session = async_get_clientsession(self.hass)
-        auth = aiohttp.BasicAuth(LOCAL_HTTP_USERNAME, LOCAL_HTTP_PASSWORD)
+        auth = _local_http_auth()
         timeout = aiohttp.ClientTimeout(total=3, connect=1.5, sock_connect=1.5, sock_read=2)
         params = {
             "signal": signal,
@@ -785,15 +799,22 @@ class StipsIruLearnedAcClimate(ClimateEntity):
                             f"Local IR request failed ({response.status}) via {host}: {body[:160]}"
                         )
                         continue
+                    self._attr_available = True
                     return
             except (aiohttp.ClientError, asyncio.TimeoutError) as err:
                 last_error = err
                 continue
         if isinstance(last_error, HomeAssistantError):
+            self._attr_available = False
+            self.async_write_ha_state()
             raise HomeAssistantError(f"{last_error} | hosts={', '.join(hosts)}")
         if last_error is not None:
+            self._attr_available = False
+            self.async_write_ha_state()
             detail = str(last_error).strip() or type(last_error).__name__
             raise HomeAssistantError(
                 f"Cannot reach IR device locally (hosts: {', '.join(hosts)}): {detail}"
             ) from last_error
+        self._attr_available = False
+        self.async_write_ha_state()
         raise HomeAssistantError(f"Cannot reach IR device locally (hosts: {', '.join(hosts)})")
