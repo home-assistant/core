@@ -3823,7 +3823,10 @@ async def test_entity_trigger_duration_any_retrigger_resets_timer(
     unsub()
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize(
+    ("behavior", "expected_calls"),
+    [(BEHAVIOR_ANY, 0), (BEHAVIOR_FIRST, 0), (BEHAVIOR_LAST, 1)],
+)
 @pytest.mark.parametrize(
     "invalid_state",
     [STATE_UNAVAILABLE, STATE_UNKNOWN, None],
@@ -3833,6 +3836,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     behavior: str,
+    expected_calls: int,
     invalid_state: str | None,
 ) -> None:
     """Test that the duration timer is cancelled if entity becomes unavailable, unknown, or is removed."""
@@ -3864,6 +3868,6 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == expected_calls
 
     unsub()

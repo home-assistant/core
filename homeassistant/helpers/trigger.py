@@ -441,9 +441,6 @@ class EntityTriggerBase(Trigger):
                 For behavior any, checks the individual entity's state.
                 For behavior first/last, checks the combined state.
                 """
-                if not from_state or not to_state:
-                    return False
-
                 if behavior == BEHAVIOR_LAST:
                     return self.check_all_match(
                         target_state_change_data.targeted_entity_ids
@@ -454,6 +451,8 @@ class EntityTriggerBase(Trigger):
                         >= 1
                     )
                 # Behavior any: check the individual entity's state
+                if not to_state:
+                    return False
                 return self.is_valid_state(to_state)
 
             if not from_state or not to_state:
