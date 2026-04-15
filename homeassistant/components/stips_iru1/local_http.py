@@ -84,7 +84,13 @@ async def async_fetch_device_info_live_ip(
                 return ""
             try:
                 payload = await response.json(content_type=None)
-            except (aiohttp.ContentTypeError, ValueError):
+            except aiohttp.ContentTypeError:
+                body = await response.text()
+                try:
+                    payload = json.loads(body)
+                except json.JSONDecodeError:
+                    return ""
+            except ValueError:
                 body = await response.text()
                 try:
                     payload = json.loads(body)
@@ -93,7 +99,9 @@ async def async_fetch_device_info_live_ip(
             if not isinstance(payload, dict):
                 return ""
             return _extract_live_ip(payload)
-    except (TimeoutError, aiohttp.ClientError):
+    except TimeoutError:
+        return ""
+    except aiohttp.ClientError:
         return ""
 
 

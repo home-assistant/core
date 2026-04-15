@@ -51,7 +51,9 @@ _FAN_NAME_TO_INT: dict[str, int] = {v: k for k, v in _FAN_INT_TO_NAME.items()}
 def _safe_int(value: Any, default: int) -> int:
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError:
+        return default
+    except ValueError:
         return default
 
 
@@ -131,7 +133,9 @@ def _extract_learned_ac_signals(
         if temperature is not None:
             try:
                 temp = int(temperature)
-            except (TypeError, ValueError):
+            except TypeError:
+                temp = None
+            except ValueError:
                 temp = None
         fan = _fan_to_name(raw.get("fanSpeed") or raw.get("fan") or "")
         out.append(
@@ -180,7 +184,9 @@ def _pick_best_learned_signal(
         if row_temp is not None:
             try:
                 row_temp_int = int(row_temp)
-            except (TypeError, ValueError):
+            except TypeError:
+                continue
+            except ValueError:
                 continue
             if row_temp_int != temp:
                 continue

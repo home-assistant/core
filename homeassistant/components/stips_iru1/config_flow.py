@@ -46,7 +46,9 @@ class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_catalog_permission"
             except StipsApiError:
                 errors["base"] = "cannot_connect"
-            except (TypeError, ValueError):
+            except TypeError:
+                errors["base"] = "unknown"
+            except ValueError:
                 errors["base"] = "unknown"
             else:
                 if not areas:
