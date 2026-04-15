@@ -479,4 +479,220 @@ class TestStipsIruLearnedAcClimate:
                     await learned_ac_entity._post_signal("TEST_SIGNAL")
                 
                 assert learned_ac_entity._attr_available is False
+                                mock_write.assert_called()
+
+
+                class TestStipsIruClimateHTTPFailures:
+                    """Tests for protocol AC climate entity HTTP failures."""
+
+                    async def test_send_update_http_error_response(
+                        self,
+                        protocol_ac_entity: stips_climate.StipsIruClimate,
+                    ) -> None:
+                        """Test _send_update handles HTTP 400+ responses."""
+                        import aiohttp
+
+                        mock_response = AsyncMock()
+                        mock_response.status = 500
+                        mock_response.text = AsyncMock(return_value="Server error")
+
+                        with patch(
+                            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                            return_value=(["host1"], None),
+                        ):
+                            with patch(
+                                "homeassistant.components.stips_iru1.climate.async_get_clientsession",
+                            ) as mock_session_fn:
+                                mock_session = MagicMock()
+                                mock_session_fn.return_value = mock_session
+                                mock_session.post = AsyncMock(
+                                    return_value=mock_response.__aenter__.return_value
+                                )
+                                mock_response.__aenter__.return_value = mock_response
+                                mock_response.__aexit__.return_value = None
+
+                                with pytest.raises(HomeAssistantError):
+                                    await protocol_ac_entity._send_update(power=1)
+
+                    async def test_send_update_timeout_error(
+                        self,
+                        protocol_ac_entity: stips_climate.StipsIruClimate,
+                    ) -> None:
+                        """Test _send_update handles timeout errors."""
+                        with patch(
+                            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                            return_value=(["host1"], None),
+                        ):
+                            with patch(
+                                "homeassistant.components.stips_iru1.climate.async_get_clientsession",
+                            ) as mock_session_fn:
+                                mock_session = MagicMock()
+                                mock_session_fn.return_value = mock_session
+                                mock_session.post = AsyncMock(side_effect=TimeoutError())
+
+                                with pytest.raises(HomeAssistantError, match="Cannot reach IR device"):
+                                    await protocol_ac_entity._send_update(power=1)
+                
+                                assert protocol_ac_entity._attr_available is False
+
+                    async def test_send_update_success_sets_available(
+                        self,
+                        protocol_ac_entity: stips_climate.StipsIruClimate,
+                    ) -> None:
+                        """Test _send_update sets available when successful."""
+                        protocol_ac_entity._attr_available = False
+        
+                        mock_response = AsyncMock()
+                        mock_response.status = 200
+
+                        with patch(
+                            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                            return_value=(["host1"], None),
+                        ):
+                            with patch(
+                                "homeassistant.components.stips_iru1.climate.async_get_clientsession",
+                            ) as mock_session_fn:
+                                mock_session = MagicMock()
+                                mock_session_fn.return_value = mock_session
+                                mock_session.post = AsyncMock(
+                                    return_value=mock_response.__aenter__.return_value
+                                )
+                                mock_response.__aenter__.return_value = mock_response
+                                mock_response.__aexit__.return_value = None
+
+                                with patch.object(
+                                    protocol_ac_entity, "async_write_ha_state"
+                                ):
+                                    await protocol_ac_entity._send_update(power=1)
+
+                                assert protocol_ac_entity._attr_available is True
+                                assert protocol_ac_entity._state["power"] == 1
+
+                    async def test_send_update_live_ip_updates(
+                        self,
+                        protocol_ac_entity: stips_climate.StipsIruClimate,
+                    ) -> None:
+                        """Test _send_update updates device_ip_live when provided."""
+                        mock_response = AsyncMock()
+                        mock_response.status = 200
+
+                        with patch(
+                            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                            return_value=(["host1"], "10.0.0.99"),
+                        ):
+                            with patch(
+                                "homeassistant.components.stips_iru1.climate.async_get_clientsession",
+                            ) as mock_session_fn:
+                                mock_session = MagicMock()
+                                mock_session_fn.return_value = mock_session
+                                mock_session.post = AsyncMock(
+                                    return_value=mock_response.__aenter__.return_value
+                                )
+                                mock_response.__aenter__.return_value = mock_response
+                                mock_response.__aexit__.return_value = None
+
+                                with patch.object(
+                                    protocol_ac_entity, "async_write_ha_state"
+                                ):
+                                    await protocol_ac_entity._send_update(power=1)
+                
+                                assert protocol_ac_entity._device_ip_live == "10.0.0.99"
+
+
+                class TestStipsIruLearnedAcHTTPFailures:
+                    """Tests for learned AC climate entity HTTP failures."""
+
+                    async def test_post_signal_http_error(
+                        self,
+                        learned_ac_entity: stips_climate.StipsIruLearnedAcClimate,
+                    ) -> None:
+                        """Test _post_signal handles HTTP errors."""
+                        mock_response = AsyncMock()
+                        mock_response.status = 400
+                        mock_response.text = AsyncMock(return_value="Bad request")
+
+                        with patch(
+                            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                            return_value=(["host1"], None),
+                        ):
+                            with patch(
+                                "homeassistant.components.stips_iru1.climate.async_get_clientsession",
+                            ) as mock_session_fn:
+                                mock_session = MagicMock()
+                                mock_session_fn.return_value = mock_session
+                                mock_session.post = AsyncMock(
+                                    return_value=mock_response.__aenter__.return_value
+                                )
+                                mock_response.__aenter__.return_value = mock_response
+                                mock_response.__aexit__.return_value = None
+
+                                with patch.object(
+                                    learned_ac_entity, "async_write_ha_state"
+                                ):
+                                    with pytest.raises(HomeAssistantError):
+                                        await learned_ac_entity._post_signal("TEST_SIGNAL")
+
+                    async def test_post_signal_aiohttp_error(
+                        self,
+                        learned_ac_entity: stips_climate.StipsIruLearnedAcClimate,
+                    ) -> None:
+                        """Test _post_signal handles aiohttp errors."""
+                        import aiohttp
+
+                        with patch(
+                            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                            return_value=(["host1"], None),
+                        ):
+                            with patch(
+                                "homeassistant.components.stips_iru1.climate.async_get_clientsession",
+                            ) as mock_session_fn:
+                                mock_session = MagicMock()
+                                mock_session_fn.return_value = mock_session
+                                mock_session.post = AsyncMock(
+                                    side_effect=aiohttp.ClientError("Connection failed")
+                                )
+
+                                with patch.object(
+                                    learned_ac_entity, "async_write_ha_state"
+                                ):
+                                    with pytest.raises(HomeAssistantError, match="Cannot reach IR device"):
+                                        await learned_ac_entity._post_signal("TEST_SIGNAL")
+
+                    async def test_post_signal_fallback_to_next_host(
+                        self,
+                        learned_ac_entity: stips_climate.StipsIruLearnedAcClimate,
+                    ) -> None:
+                        """Test _post_signal tries next host on failure."""
+                        from unittest.mock import call
+
+                        mock_response = AsyncMock()
+                        mock_response.status = 200
+
+                        with patch(
+                            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                            return_value=(["host1", "host2"], None),
+                        ):
+                            with patch(
+                                "homeassistant.components.stips_iru1.climate.async_get_clientsession",
+                            ) as mock_session_fn:
+                                mock_session = MagicMock()
+                                mock_session_fn.return_value = mock_session
+
+                                # First host fails, second succeeds
+                                mock_session.post = AsyncMock(
+                                    side_effect=[
+                                        TimeoutError(),
+                                        mock_response.__aenter__.return_value,
+                                    ]
+                                )
+                                mock_response.__aenter__.return_value = mock_response
+                                mock_response.__aexit__.return_value = None
+
+                                with patch.object(
+                                    learned_ac_entity, "async_write_ha_state"
+                                ):
+                                    await learned_ac_entity._post_signal("TEST_SIGNAL")
+                
+                                # Should have been called twice (once for each host)
+                                assert mock_session.post.call_count == 2
                 mock_write.assert_called()
