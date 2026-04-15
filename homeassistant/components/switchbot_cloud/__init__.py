@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, ENTRY_TITLE, DeviceSupportMap
+from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
@@ -254,8 +254,8 @@ async def make_device_data(
         devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
 
-    if device.device_type in DeviceSupportMap:
-        default_config = DeviceSupportMap[device.device_type]
+    if device.device_type in DEVICE_SUPPORT_MAP:
+        default_config = DEVICE_SUPPORT_MAP[device.device_type]
 
         default_webhook_status = default_config.get("webhook")
         assert default_webhook_status is not None
