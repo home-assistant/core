@@ -38,7 +38,10 @@ async def test_async_setup_entry_connect_failure(
 
     with (
         patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
-        pytest.raises(ConfigEntryNotReady),
+        pytest.raises(
+            ConfigEntryNotReady,
+            match="Unable to connect to TIS Control on port 6000: Test error",
+        ),
     ):
         await async_setup_entry(hass, mock_config_entry)
 
