@@ -856,20 +856,109 @@ async def test_add_job_with_none(hass: HomeAssistant) -> None:
         hass.async_add_job(None, "test_arg")
 
 
-async def test_add_job_callback_from_executor(hass: HomeAssistant) -> None:
-    """Test add_job with @callback from executor schedules directly.
+async def test_add_job_coroutine_object(hass: HomeAssistant) -> None:
+    """Test add_job with a coroutine object from an executor thread."""
+    result: list[str] = []
 
-    A @callback target should be scheduled via call_soon_threadsafe without
-    the extra deferral through _async_add_hass_job + call_soon, so a single
-    async_block_till_done() is sufficient to execute it.
-    """
+    async def my_coro() -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append("called")
+
+    await hass.async_add_executor_job(hass.add_job, my_coro())
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_coroutine_function(hass: HomeAssistant) -> None:
+    """Test add_job with a coroutine function from an executor thread."""
+    result: list[str] = []
+
+    async def my_coro(value: str) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_coro, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_callback(hass: HomeAssistant) -> None:
+    """Test add_job with a @callback from an executor thread."""
     result: list[str] = []
 
     @ha.callback
-    def my_callback() -> None:
-        result.append("called")
+    def my_callback(value: str) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
 
-    await hass.async_add_executor_job(hass.add_job, my_callback)
+    await hass.async_add_executor_job(hass.add_job, my_callback, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_executor(hass: HomeAssistant) -> None:
+    """Test add_job with a regular function from an executor thread."""
+    result: list[str] = []
+
+    def my_func(value: str) -> None:
+        with pytest.raises(RuntimeError):
+            asyncio.get_running_loop()
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_func, "called")
+    await hass.async_block_till_done()
+
+    assert result == ["called"]
+
+
+async def test_add_job_partial_callback(hass: HomeAssistant) -> None:
+    """Test add_job with a partial-wrapped @callback from an executor thread."""
+    result: list[tuple[str, int]] = []
+
+    @ha.callback
+    def my_callback(name: str, value: int) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append((name, value))
+
+    await hass.async_add_executor_job(
+        hass.add_job, functools.partial(my_callback, "partial"), 1
+    )
+    await hass.async_block_till_done()
+
+    assert result == [("partial", 1)]
+
+
+async def test_add_job_partial_coroutine_function(
+    hass: HomeAssistant,
+) -> None:
+    """Test add_job with a partial-wrapped coroutine function from an executor thread."""
+    result: list[tuple[str, int]] = []
+
+    async def my_coro(name: str, value: int) -> None:
+        assert asyncio.get_running_loop() is hass.loop
+        result.append((name, value))
+
+    await hass.async_add_executor_job(
+        hass.add_job, functools.partial(my_coro, "partial"), 2
+    )
+    await hass.async_block_till_done()
+
+    assert result == [("partial", 2)]
+
+
+async def test_add_job_async_with_callback_decorator(hass: HomeAssistant) -> None:
+    """Test add_job with an async function incorrectly marked as @callback."""
+    result: list[str] = []
+
+    @ha.callback
+    async def my_async(value: str) -> None:  # pylint: disable=hass-async-callback-decorator
+        assert asyncio.get_running_loop() is hass.loop
+        result.append(value)
+
+    await hass.async_add_executor_job(hass.add_job, my_async, "called")
     await hass.async_block_till_done()
 
     assert result == ["called"]
