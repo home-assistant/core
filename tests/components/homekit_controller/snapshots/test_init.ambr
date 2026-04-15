@@ -18319,7 +18319,6 @@
             'attributes': dict({
               'device_class': 'tv',
               'friendly_name': 'LG webOS TV AF80',
-              'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
               'source': 'HDMI 4',
               'source_list': list([
                 'AirPlay',
