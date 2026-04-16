@@ -50,7 +50,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=DOMAIN,
+            name=f"{DOMAIN} {character_name} ({character_id})",
             update_interval=timedelta(minutes=1),
         )
         self.client = client
@@ -61,7 +61,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         """Fetch character data from ESI."""
         try:
             wallet = await self.client.async_get_wallet_balance(self.character_id)
-        except (EveOnlineError, aiohttp.ClientError) as err:
+        except (EveOnlineError, aiohttp.ClientError, TimeoutError) as err:
             raise UpdateFailed(
                 f"Error communicating with Eve Online API: {err}"
             ) from err
