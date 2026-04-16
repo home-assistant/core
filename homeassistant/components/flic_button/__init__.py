@@ -54,35 +54,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     """Set up Flic Button from a config entry."""
 
     address: str = entry.data[CONF_ADDRESS]
-
-    # Try to get BLE device (may be None if device is not in range)
     ble_device = bluetooth.async_ble_device_from_address(
         hass, address.upper(), connectable=True
     )
-
-    # Load pairing key from hex string
     pairing_key = bytes.fromhex(entry.data[CONF_PAIRING_KEY])
-
-    # Get serial number (may not exist for older config entries)
     serial_number = entry.data.get(CONF_SERIAL_NUMBER)
-
-    # Get battery level from pairing (may not exist for older config entries)
     battery_level = entry.data.get(CONF_BATTERY_LEVEL)
-
     device_type = DeviceType(entry.data[CONF_DEVICE_TYPE])
-
-    # Get sig_bits for Twist quick verify (may not exist for older config entries)
     sig_bits = entry.data.get(CONF_SIG_BITS, 0)
+    push_twist_mode = PushTwistMode(
+        entry.options.get(CONF_PUSH_TWIST_MODE, PushTwistMode.DEFAULT)
+    )
 
-    # Get push_twist_mode option for Twist devices
-    push_twist_mode_str = entry.options.get(CONF_PUSH_TWIST_MODE, PushTwistMode.DEFAULT)
-    try:
-        push_twist_mode = PushTwistMode(push_twist_mode_str)
-    except ValueError:
-        push_twist_mode = PushTwistMode.DEFAULT
-
-    # Create client with stored pairing credentials and device type
-    # ble_device may be None if the device is not currently in range
     client = FlicClient(
         address=address,
         ble_device=ble_device,
@@ -94,14 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         push_twist_mode=push_twist_mode,
     )
 
-    # Store runtime data
     entry.runtime_data = FlicButtonData(
         client=client,
         serial_number=serial_number,
         battery_level=battery_level,
     )
 
-    # Try to connect if device is currently available
     if ble_device:
         try:
             await client.start()
@@ -111,9 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
                 address,
             )
 
-    # Register BLE callback AFTER initial connection attempt to prevent
-    # a BLE advertisement from triggering async_reconnect() concurrently
-    # with the start() call above.
     @callback
     def _async_bluetooth_callback(
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -131,7 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         )
     )
 
-    # Register state callback for device registry updates on connect
     @callback
     def _handle_state_change(state: FlicState) -> None:
         """Update device registry when connection state changes."""
@@ -160,17 +137,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
 
     entry.async_on_unload(client.register_state_callback(_handle_state_change))
 
-    # Forward entry setup to platforms (creates device registry entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Look up device_id after platform setup so the device registry entry exists
     device_id: str | None = None
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, client.address)})
     if device:
         device_id = device.id
 
-    # Register bus event callbacks (for automations)
     @callback
     def _fire_button_bus_event(event_type: str, event_data: dict[str, Any]) -> None:
         """Fire a Home Assistant bus event for button events."""
@@ -187,7 +161,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     entry.async_on_unload(client.register_button_event_callback(_fire_button_bus_event))
     entry.async_on_unload(client.register_rotate_event_callback(_fire_button_bus_event))
 
-    # Register device name listener to push HA renames to the physical device
     unsub = _register_device_name_listener(hass, entry, client)
     if unsub:
         entry.async_on_unload(unsub)
