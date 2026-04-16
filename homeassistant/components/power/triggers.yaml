@@ -9,6 +9,11 @@
           - first
           - last
           - any
+  for: &trigger_for
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
 
 .power_units: &power_units
   - "mW"
@@ -49,6 +54,7 @@ crossed_threshold:
   target: *trigger_target
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
     threshold:
       required: true
       selector:

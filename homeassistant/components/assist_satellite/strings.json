@@ -1,7 +1,8 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_idle": {
@@ -160,6 +161,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }
       },
       "name": "Satellite became idle"
@@ -169,6 +173,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }
       },
       "name": "Satellite started listening"
@@ -178,6 +185,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }
       },
       "name": "Satellite started processing"
@@ -187,6 +197,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::assist_satellite::common::trigger_for_name%]"
         }
       },
       "name": "Satellite started responding"

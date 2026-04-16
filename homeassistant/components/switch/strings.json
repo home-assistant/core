@@ -1,7 +1,8 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_off": {
@@ -101,6 +102,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::trigger_for_name%]"
         }
       },
       "name": "Switch turned off"
@@ -110,6 +114,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::switch::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::switch::common::trigger_for_name%]"
         }
       },
       "name": "Switch turned on"

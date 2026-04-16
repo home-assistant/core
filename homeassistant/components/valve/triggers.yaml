@@ -13,6 +13,11 @@
             - first
             - last
             - any
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 closed: *trigger_common
 opened: *trigger_common

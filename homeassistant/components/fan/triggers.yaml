@@ -13,6 +13,11 @@
             - last
             - any
           translation_key: trigger_behavior
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 turned_on: *trigger_common
 turned_off: *trigger_common
