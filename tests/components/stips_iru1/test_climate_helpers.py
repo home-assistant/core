@@ -29,6 +29,21 @@ def test_mode_and_fan_normalization() -> None:
     assert stips_climate._fan_to_name("med") == "medium"
 
 
+def test_helper_edge_case_normalization() -> None:
+    """Helper normalization should cover fallback and alias branches."""
+    assert stips_climate._safe_int(None, 7) == 7
+    assert stips_climate._safe_int("bad", 9) == 9
+    assert stips_climate._mode_to_hvac("auto") == HVACMode.AUTO
+    assert stips_climate._mode_to_hvac("heat") == HVACMode.HEAT
+    assert stips_climate._mode_to_hvac("dry") == HVACMode.DRY
+    assert stips_climate._mode_to_hvac("fanonly") == HVACMode.FAN_ONLY
+    assert stips_climate._mode_to_hvac("unknown") == HVACMode.COOL
+    assert stips_climate._fan_to_name("mid") == "medium"
+    assert stips_climate._fan_to_name("maximum") == "max"
+    assert stips_climate._fan_to_name("minimum") == "min"
+    assert stips_climate._fan_to_name("99") == "medium"
+
+
 def test_learned_ac_signal_extraction_and_pick() -> None:
     """Learned AC helpers should parse signals and pick best match."""
     remote_snapshot = {
@@ -64,6 +79,90 @@ def test_learned_ac_signal_extraction_and_pick() -> None:
         entries, HVACMode.COOL, 23, "medium"
     )
     assert picked == "B"
+
+
+def test_learned_ac_helpers_cover_uppercase_and_fallback_paths() -> None:
+    """Learned AC helpers should cover uppercase keys and invalid rows."""
+    remote_snapshot = {
+        "model": {
+            "Frequency": "39000",
+            "Signals": [
+                "skip-me",
+                {"Signal": "   "},
+                {
+                    "Signal": "FAN_SIG",
+                    "mode": "fanonly",
+                    "temperature": "bad",
+                    "fan": "maximum",
+                },
+                {
+                    "Signal": "AUTO_SIG",
+                    "mode": "auto",
+                    "temperature": 25,
+                    "fan": "minimum",
+                },
+            ],
+            "PowerOnSignal": "  ",
+            "PowerOffSignal": "POFF",
+        }
+    }
+
+    entries, power_on, power_off, freq = stips_climate._extract_learned_ac_signals(
+        remote_snapshot
+    )
+
+    assert freq == 39000
+    assert power_on is None
+    assert power_off == "POFF"
+    assert entries == [
+        {"mode": "fan", "temp": None, "fan": "max", "signal": "FAN_SIG"},
+        {"mode": "auto", "temp": 25, "fan": "min", "signal": "AUTO_SIG"},
+    ]
+
+    assert (
+        stips_climate._pick_best_learned_signal(entries, HVACMode.FAN_ONLY, 22, "max")
+        == "FAN_SIG"
+    )
+    assert (
+        stips_climate._pick_best_learned_signal(entries, HVACMode.HEAT, 25, "min")
+        is None
+    )
+
+
+def test_extract_initial_ac_state_fallback_paths() -> None:
+    """Initial AC state extraction should fall back cleanly."""
+    fallback_remote = {
+        "acStatus": {
+            "lastModeName": "missing",
+            "modeStates": {
+                "first": {
+                    "power": "1",
+                    "mode": "4",
+                    "fan": "2",
+                    "temperature": "21",
+                }
+            },
+        }
+    }
+    assert stips_climate._extract_initial_ac_state(fallback_remote)["mode"] == 4
+
+    default_remote = {"acStatus": {"modeStates": ["not-a-dict"]}}
+    assert stips_climate._extract_initial_ac_state(default_remote) == {
+        "power": 0,
+        "mode": 1,
+        "fan": 3,
+        "temp": 22,
+        "swingV": 0,
+        "swingH": 0,
+        "light": 1,
+        "beep": 1,
+        "econo": 0,
+        "filter": 0,
+        "turbo": 0,
+        "quiet": 0,
+        "clean": 0,
+        "sleep": 0,
+    }
 
 
 async def test_learned_ac_rejects_unsupported_fan_mode(

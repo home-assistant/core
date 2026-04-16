@@ -109,6 +109,24 @@ class TestProtocolAcClimate:
         assert protocol_ac_entity.swing_mode == "vertical"
         assert protocol_ac_entity.extra_state_attributes["protocol"] == 42
 
+    def test_device_info_without_mac(self, hass: HomeAssistant) -> None:
+        """Device info should omit network connections when MAC is missing."""
+        entity = stips_climate.StipsIruClimate(
+            hass=hass,
+            device_unique_name="stips-iru1-no-mac",
+            device_name="No MAC Device",
+            device_ip="192.168.1.100",
+            device_mac="",
+            device_online=True,
+            remote_id="1",
+            friendly_name="No MAC",
+            remote_snapshot={"type": "AC", "model": {"protocol": 42}},
+        )
+
+        info = entity.device_info
+        assert info is not None
+        assert info["connections"] == set()
+
     async def test_basic_controls(
         self, protocol_ac_entity: stips_climate.StipsIruClimate
     ) -> None:
@@ -327,6 +345,16 @@ class TestLearnedAcClimate:
                 await learned_ac_entity.async_turn_off()
             post.assert_called_once_with("POWER_OFF")
 
+        learned_ac_entity._state["power"] = 1
+        with patch.object(learned_ac_entity, "_send_state", new=AsyncMock()) as send:
+            await learned_ac_entity.async_turn_on()
+            send.assert_called_once_with(power=1)
+
+        learned_ac_entity._power_off_signal = None
+        with patch.object(learned_ac_entity, "_send_state", new=AsyncMock()) as send:
+            await learned_ac_entity.async_turn_off()
+            send.assert_called_once_with(power=0)
+
     async def test_fan_mode_validation(
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
     ) -> None:
@@ -417,6 +445,24 @@ class TestLearnedAcClimate:
                 await learned_ac_entity._post_signal("SIG")
 
             assert session.post.call_count == 2
+
+        with (
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                return_value=(["host1"], "10.0.0.9"),
+            ),
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_get_clientsession"
+            ) as get_session,
+        ):
+            session = MagicMock()
+            get_session.return_value = session
+            _mock_success_post(session)
+
+            with patch.object(learned_ac_entity, "async_write_ha_state"):
+                await learned_ac_entity._post_signal("SIG")
+
+            assert learned_ac_entity._device_ip_live == "10.0.0.9"
 
     async def test_post_signal_http_error(
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
