@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -70,12 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     # Get battery level from pairing (may not exist for older config entries)
     battery_level = entry.data.get(CONF_BATTERY_LEVEL)
 
-    # Get device type from config entry (may not exist for older config entries)
-    device_type_str = entry.data.get(CONF_DEVICE_TYPE)
-    device_type: DeviceType | None = None
-    if device_type_str:
-        with contextlib.suppress(ValueError):
-            device_type = DeviceType(device_type_str)
+    device_type = DeviceType(entry.data[CONF_DEVICE_TYPE])
 
     # Get sig_bits for Twist quick verify (may not exist for older config entries)
     sig_bits = entry.data.get(CONF_SIG_BITS, 0)

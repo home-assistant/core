@@ -219,3 +219,33 @@ async def test_ha_rename_while_disconnected_no_crash(
 
     # set_name should NOT have been called
     mock_flic_client.set_name.assert_not_called()
+
+
+async def test_ha_rename_push_fails_no_crash(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_flic_client: MagicMock,
+    mock_ble_device_from_address: MagicMock,
+) -> None:
+    """Test that push name failure does not crash."""
+    mock_flic_client.state.device_name = None
+    mock_flic_client.set_name = AsyncMock(side_effect=Exception("BLE write failed"))
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.flic_button.FlicClient",
+        return_value=mock_flic_client,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Rename device in HA - set_name will raise, but should not crash
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, FLIC2_ADDRESS)})
+    assert device is not None
+
+    device_registry.async_update_device(device.id, name_by_user="New Name")
+    await hass.async_block_till_done()
+
+    mock_flic_client.set_name.assert_called_once_with("New Name")
