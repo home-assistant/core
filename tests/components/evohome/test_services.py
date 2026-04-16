@@ -14,6 +14,7 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
+    RESET_BREAKS_IN_HA_VERSION,
     EvoService,
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
@@ -21,6 +22,7 @@ from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, ATTR_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
 
 from .const import TEST_INSTALLS
@@ -43,10 +45,11 @@ async def test_refresh_system(hass: HomeAssistant) -> None:
         mock_fcn.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)  # some don't support AutoWithReset
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 @pytest.mark.usefixtures("evohome")
 async def test_reset_system(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's reset_system service (for a temperature control system)."""
 
@@ -60,6 +63,13 @@ async def test_reset_system(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_reset_system_service")
+    assert issue is not None
+    assert issue.translation_key == "deprecated_reset_system_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -122,6 +132,7 @@ async def test_set_system_mode(
 async def test_clear_zone_override(
     hass: HomeAssistant,
     zone_id: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's clear_zone_override service (for a heating zone)."""
 
@@ -137,11 +148,21 @@ async def test_clear_zone_override(
 
         mock_fcn.assert_awaited_once_with()
 
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_clear_zone_override_service"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_clear_zone_override_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
+
 
 @pytest.mark.parametrize("install", ["default"])
 async def test_clear_zone_override_legacy(
     hass: HomeAssistant,
     zone_id: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's clear_zone_override service with the legacy entity_id."""
 
@@ -157,6 +178,15 @@ async def test_clear_zone_override_legacy(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_clear_zone_override_service"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_clear_zone_override_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])

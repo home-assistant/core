@@ -49,6 +49,14 @@ SENSOR_TYPES = {
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("fs", "disk_size"): GlancesSensorEntityDescription(
+        key="disk_size",
+        type="fs",
+        translation_key="disk_size",
+        native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     ("fs", "disk_free"): GlancesSensorEntityDescription(
         key="disk_free",
         type="fs",
