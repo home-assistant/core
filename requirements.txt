@@ -44,7 +44,7 @@ pymicro-vad==1.0.1
 pyOpenSSL==26.0.0
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
-PyTurboJPEG==1.8.3
+PyTurboJPEG==2.2.0
 PyYAML==6.0.3
 requests==2.33.1
 securetar==2026.4.1
