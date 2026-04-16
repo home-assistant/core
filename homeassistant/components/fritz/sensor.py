@@ -184,8 +184,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         value_fn=_retrieve_external_ipv6_state,
         is_suitable=lambda info: info.ipv6_active,
     ),
-<<<<<<< chemelli74-new-sensor-uptime-device-class
-    FritzSensorEntityDescription(
+    FritzConnectionSensorEntityDescription(
         key="device_uptime",
         translation_key="device_uptime",
         device_class=SensorDeviceClass.UPTIME,
@@ -193,10 +192,7 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         value_fn=_retrieve_device_uptime_state,
         is_suitable=lambda info: True,
     ),
-    FritzSensorEntityDescription(
-=======
     FritzConnectionSensorEntityDescription(
->>>>>>> dev
         key="connection_uptime",
         translation_key="connection_uptime",
         device_class=SensorDeviceClass.UPTIME,
