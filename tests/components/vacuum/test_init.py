@@ -372,15 +372,13 @@ async def test_clean_area_no_segments(
         },
     )
 
-    targeted_areas.append("area_3")
-
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLEAN_AREA,
             {
                 "entity_id": [mock_vacuum.entity_id, mock_vacuum_2.entity_id],
-                "cleaning_area_id": targeted_areas,
+                "cleaning_area_id": [*targeted_areas, "area_3"],
             },
             blocking=True,
         )
@@ -392,6 +390,9 @@ async def test_clean_area_no_segments(
     else:
         assert len(mock_vacuum.clean_segments_calls) == 1
         assert mock_vacuum.clean_segments_calls[0][0] == cleaned_segments
+
+    assert len(mock_vacuum_2.clean_segments_calls) == 1
+    assert mock_vacuum_2.clean_segments_calls[0][0] == ["seg_3"]
 
 
 @pytest.mark.usefixtures("config_flow_fixture")
