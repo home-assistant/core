@@ -11,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration, ScaledQualityScaleTiers
+from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
     action_setup,
@@ -212,6 +212,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -985,7 +986,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -1021,7 +1021,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "wake_on_lan",
     "wallbox",
     "waqi",
-    "waterfurnace",
     "watson_tts",
     "watttime",
     "waze_travel_time",
@@ -1184,6 +1183,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -1817,7 +1817,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "rympro",
     "saj",
     "sanix",
-    "satel_integra",
     "schlage",
     "schluter",
     "scrape",
@@ -2024,7 +2023,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "wake_on_lan",
     "wallbox",
     "waqi",
-    "waterfurnace",
     "watson_tts",
     "watttime",
     "waze_travel_time",
@@ -2094,6 +2092,7 @@ NO_QUALITY_SCALE = [
     "application_credentials",
     "auth",
     "automation",
+    "battery",
     "blueprint",
     "brands",
     "config",
@@ -2119,6 +2118,7 @@ NO_QUALITY_SCALE = [
     "homeassistant_sky_connect",
     "homeassistant_yellow",
     "humidity",
+    "illuminance",
     "image_upload",
     "input_boolean",
     "input_button",
@@ -2133,11 +2133,13 @@ NO_QUALITY_SCALE = [
     "logger",
     "lovelace",
     "media_source",
+    "moisture",
     "motion",
     "my",
     "occupancy",
     "onboarding",
     "panel_custom",
+    "power",
     "proxy",
     "python_script",
     "raspberry_pi",
@@ -2148,7 +2150,9 @@ NO_QUALITY_SCALE = [
     "search",
     "system_health",
     "system_log",
+    "unifi_discovery",
     "tag",
+    "temperature",
     "timer",
     "trace",
     "usage_prediction",
@@ -2168,7 +2172,7 @@ SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Optional("comment"): str,
+                            vol.Required("comment"): str,
                         }
                     ),
                     vol.Schema(
@@ -2198,7 +2202,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         if (
             integration.domain not in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE
             and integration.domain not in NO_QUALITY_SCALE
-            and integration.integration_type != "virtual"
+            and integration.integration_type != IntegrationType.VIRTUAL
         ):
             integration.add_error(
                 "quality_scale",
@@ -2216,7 +2220,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             )
             return
         return
-    if integration.integration_type == "virtual":
+    if integration.integration_type == IntegrationType.VIRTUAL:
         integration.add_error(
             "quality_scale",
             "Virtual integrations are not allowed to have a quality scale file.",

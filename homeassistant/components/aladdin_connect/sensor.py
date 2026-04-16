@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
@@ -49,13 +49,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Aladdin Connect sensor devices."""
-    coordinators = entry.runtime_data
+    coordinator = entry.runtime_data
+    known_devices: set[str] = set()
 
-    async_add_entities(
-        AladdinConnectSensor(coordinator, description)
-        for coordinator in coordinators.values()
-        for description in SENSOR_TYPES
-    )
+    @callback
+    def _async_add_new_devices() -> None:
+        """Detect and add entities for new doors."""
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                AladdinConnectSensor(coordinator, door_id, description)
+                for door_id in new_devices
+                for description in SENSOR_TYPES
+            )
+
+    _async_add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
 class AladdinConnectSensor(AladdinConnectEntity, SensorEntity):
@@ -66,14 +77,15 @@ class AladdinConnectSensor(AladdinConnectEntity, SensorEntity):
     def __init__(
         self,
         coordinator: AladdinConnectCoordinator,
+        door_id: str,
         entity_description: AladdinConnectSensorEntityDescription,
     ) -> None:
         """Initialize the Aladdin Connect sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, door_id)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.data.unique_id}-{entity_description.key}"
+        self._attr_unique_id = f"{door_id}-{entity_description.key}"
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.door)

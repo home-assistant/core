@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from . import (
@@ -72,7 +71,6 @@ SPEECH_TYPE_SSML = "ssml"
 
 
 @callback
-@bind_hass
 def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
@@ -90,7 +88,6 @@ def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
 
 
 @callback
-@bind_hass
 def async_remove(hass: HomeAssistant, intent_type: str) -> None:
     """Remove an intent from Home Assistant."""
     if (intents := hass.data.get(DATA_KEY)) is None:
@@ -105,7 +102,6 @@ def async_get(hass: HomeAssistant) -> Iterable[IntentHandler]:
     return hass.data.get(DATA_KEY, {}).values()
 
 
-@bind_hass
 async def async_handle(
     hass: HomeAssistant,
     platform: str,
@@ -774,7 +770,6 @@ def async_match_targets(  # noqa: C901
 
 
 @callback
-@bind_hass
 def async_match_states(
     hass: HomeAssistant,
     name: str | None = None,
@@ -1068,16 +1063,9 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Update intent slots to include any transformations done by the schemas
         intent_obj.slots = slots
 
-        response = await self.async_handle_states(
+        return await self.async_handle_states(
             intent_obj, match_result, match_constraints, match_preferences
         )
-
-        # Make the matched states available in the response
-        response.async_set_states(
-            matched_states=match_result.states, unmatched_states=[]
-        )
-
-        return response
 
     async def async_handle_states(
         self,
@@ -1188,17 +1176,11 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         After the timeout the task will continue to run in the background.
         """
-        try:
-            await asyncio.wait({task}, timeout=self.service_timeout)
-        except TimeoutError:
-            pass
-        except asyncio.CancelledError:
-            # Task calling us was cancelled, so cancel service call task, and wait for
-            # it to be cancelled, within reason, before leaving.
-            _LOGGER.debug("Service call was cancelled: %s", task.get_name())
-            task.cancel()
-            await asyncio.wait({task}, timeout=5)
-            raise
+        done, _ = await asyncio.wait({task}, timeout=self.service_timeout)
+        if done:
+            # Task finished within the timeout. Re-raise any exception
+            # (e.g. validation errors) so the caller can handle it.
+            task.result()
 
 
 class ServiceIntentHandler(DynamicServiceIntentHandler):
@@ -1371,7 +1353,6 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.error_code: IntentResponseErrorCode | None = None
-        self.intent_targets: list[IntentResponseTarget] = []
         self.success_results: list[IntentResponseTarget] = []
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
@@ -1422,14 +1403,6 @@ class IntentResponse:
         self.async_set_speech(message)
 
     @callback
-    def async_set_targets(
-        self,
-        intent_targets: list[IntentResponseTarget],
-    ) -> None:
-        """Set response targets."""
-        self.intent_targets = intent_targets
-
-    @callback
     def async_set_results(
         self,
         success_results: list[IntentResponseTarget],
@@ -1456,16 +1429,16 @@ class IntentResponse:
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of an intent response."""
         response_dict: dict[str, Any] = {
-            "speech": self.speech,
-            "card": self.card,
+            "speech": {k: dict(v) for k, v in self.speech.items()},
+            "card": {k: dict(v) for k, v in self.card.items()},
             "language": self.language,
             "response_type": self.response_type.value,
         }
 
         if self.reprompt:
-            response_dict["reprompt"] = self.reprompt
+            response_dict["reprompt"] = {k: dict(v) for k, v in self.reprompt.items()}
         if self.speech_slots:
-            response_dict["speech_slots"] = self.speech_slots
+            response_dict["speech_slots"] = self.speech_slots.copy()
 
         response_data: dict[str, Any] = {}
 
@@ -1474,11 +1447,6 @@ class IntentResponse:
             response_data["code"] = self.error_code.value
         else:
             # action done or query answer
-            response_data["targets"] = [
-                dataclasses.asdict(target) for target in self.intent_targets
-            ]
-
-            # Add success/failed targets
             response_data["success"] = [
                 dataclasses.asdict(target) for target in self.success_results
             ]

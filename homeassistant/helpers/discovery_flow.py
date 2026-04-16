@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.hass_dict import HassKey
 
@@ -37,7 +36,6 @@ class DiscoveryKey:
         return cls(domain=json_dict["domain"], key=key, version=json_dict["version"])
 
 
-@bind_hass
 @callback
 def async_create_flow(
     hass: HomeAssistant,

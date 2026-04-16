@@ -180,18 +180,16 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.BINARY_SENSOR:
-        schema |= _SCHEMA_STATE
-        if flow_type == "config":
-            schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in BinarySensorDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="binary_sensor_device_class",
-                        sort=True,
-                    ),
+        schema |= _SCHEMA_STATE | {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in BinarySensorDeviceClass],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="binary_sensor_device_class",
+                    sort=True,
                 ),
-            }
+            ),
+        }
 
     if domain == Platform.BUTTON:
         schema |= {

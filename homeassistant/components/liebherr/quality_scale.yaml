@@ -68,9 +68,9 @@ rules:
   repair-issues:
     status: exempt
     comment: No repair issues to implement at this time.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
