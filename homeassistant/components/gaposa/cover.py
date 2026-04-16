@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -63,10 +64,19 @@ async def async_setup_entry(
         if new_entities:
             async_add_entities(new_entities)
 
+        entity_registry = er.async_get(hass)
         for motor_id in list(known_entities):
             if motor_id not in latest_ids:
                 stale = known_entities.pop(motor_id)
-                hass.async_create_task(stale.async_remove())
+                # stale.async_remove() only drops the runtime state but
+                # leaves the entity_registry entry (and the associated
+                # device) behind. For a motor that has been removed from
+                # the Gaposa account, fully remove the registry entry so
+                # it doesn't linger as an orphan.
+                if stale.entity_id:
+                    entity_registry.async_remove(stale.entity_id)
+                else:
+                    hass.async_create_task(stale.async_remove())
 
     _async_add_remove_entities()
     config_entry.async_on_unload(
