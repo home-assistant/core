@@ -161,9 +161,9 @@ async def test_cover_entities_snapshot(
             ),
         ),
         (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        (SHUTTER, SERVICE_STOP_COVER, "stop", None),
-        (AWNING, SERVICE_STOP_COVER, "stop", None),
-        (GARAGE, SERVICE_STOP_COVER, "stop", None),
+        (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
+        (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
+        (GARAGE, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
     ],
     ids=[
         "open-roller-shutter",
@@ -184,7 +184,7 @@ async def test_cover_service_actions(
     device: FixtureDevice,
     service: str,
     command_name: str,
-    expected_state: str | None,
+    expected_state: CoverState,
 ) -> None:
     """Test open, close, and stop cover services."""
     await setup_overkiz_integration(fixture=device.fixture)
@@ -197,9 +197,7 @@ async def test_cover_service_actions(
     )
     await hass.async_block_till_done()
 
-    # Stop does not change the cover state, so expected_state is None for stop cases
-    if expected_state is not None:
-        assert hass.states.get(device.entity_id).state == expected_state
+    assert hass.states.get(device.entity_id).state == expected_state
 
     assert_command_call(
         mock_client,
