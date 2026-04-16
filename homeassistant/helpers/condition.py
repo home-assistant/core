@@ -345,6 +345,16 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     }
 )
 
+ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
+                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            },
+        }
+    )
+)
+
 
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
@@ -368,6 +378,7 @@ class EntityConditionBase(Condition):
             assert config.options
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
+        self._duration: timedelta | None = config.options.get(CONF_FOR)
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -390,11 +401,25 @@ class EntityConditionBase(Condition):
 
         def check_any_match_state(states: list[State]) -> bool:
             """Test if any entity matches the state."""
-            return any(self.is_valid_state(state) for state in states)
+            if not self._duration:
+                # Skip duration check if duration is not specified or 0
+                return any(self.is_valid_state(state) for state in states)
+            duration = dt_util.utcnow() - self._duration
+            return any(
+                self.is_valid_state(state) and duration > state.last_changed
+                for state in states
+            )
 
         def check_all_match_state(states: list[State]) -> bool:
             """Test if all entities match the state."""
-            return all(self.is_valid_state(state) for state in states)
+            if not self._duration:
+                # Skip duration check if duration is not specified or 0
+                return all(self.is_valid_state(state) for state in states)
+            duration = dt_util.utcnow() - self._duration
+            return all(
+                self.is_valid_state(state) and duration > state.last_changed
+                for state in states
+            )
 
         matcher: Callable[[list[State]], bool]
         if self._behavior == BEHAVIOR_ANY:
@@ -444,6 +469,8 @@ def _normalize_domain_specs(
 def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     states: str | bool | set[str | bool],
+    *,
+    support_duration: bool = False,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -461,6 +488,11 @@ def make_entity_state_condition(
         """Condition for entity state."""
 
         _domain_specs = specs
+        _schema = (
+            ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
+            if support_duration
+            else ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+        )
         _states = states_set
 
     return CustomCondition
