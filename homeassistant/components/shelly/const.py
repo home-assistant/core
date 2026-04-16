@@ -290,9 +290,7 @@ OTA_SUCCESS = "ota_success"
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
-WALL_DISPLAY_RELEASE_URL = (
-    "https://github.com/ShellyGroup/Wall-Display-Changelog?tab=readme-ov-file#readme"
-)
+WALL_DISPLAY_RELEASE_URL = "https://github.com/ShellyGroup/Wall-Display-Changelog"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_MOTION,
     MODEL_MOTION_2,
