@@ -25,11 +25,7 @@ from .catalog import (
     normalize_device_mac,
     normalize_device_online,
 )
-from .const import (
-    DOMAIN,
-    is_learned_ac,
-    is_protocol_ac,
-)
+from .const import DOMAIN, is_learned_ac, is_protocol_ac
 from .local_http import async_build_control_hosts
 
 _MODE_TO_HVAC: dict[int, HVACMode] = {
