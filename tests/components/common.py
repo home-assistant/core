@@ -1140,9 +1140,10 @@ async def assert_trigger_options_supported(
         return {**(base_options or {}), **extra}
 
     # Behavior
-    await _validate_trigger_options(
-        hass, trigger, _merge({"behavior": "first"}), valid=supports_behavior
-    )
+    for behavior in ("any", "first", "last"):
+        await _validate_trigger_options(
+            hass, trigger, _merge({"behavior": behavior}), valid=supports_behavior
+        )
 
     # Duration
     await _validate_trigger_options(
