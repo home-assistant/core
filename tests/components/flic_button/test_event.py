@@ -377,11 +377,7 @@ async def test_flic2_button_event_triggers_entity(
 
     callbacks = await _setup_entry_with_callbacks(hass, entry, mock_client)
 
-    # Entity callback is registered first (during platform setup),
-    # then bus callback from __init__.py
-    assert len(callbacks["button"]) >= 2
-
-    # Entity callback is first (registered during async_added_to_hass)
+    assert len(callbacks["button"]) >= 1
     entity_cb = callbacks["button"][0]
     entity_cb("click", {})
     await hass.async_block_till_done()
@@ -421,8 +417,7 @@ async def test_duo_button_event_filters_by_index(
     event_entities = [e for e in entities if e.domain == "event"]
     assert len(event_entities) == 2
 
-    # Entity callbacks are registered first (during async_added_to_hass),
-    # then bus callback from __init__.py. Duo has 2 entity callbacks.
+    # Duo has 2 entity callbacks (big + small)
     entity_cbs = callbacks["button"][:2]
 
     # Fire event for button_index 0 (big button)
@@ -469,10 +464,7 @@ async def test_twist_rotate_event_triggers_entity(
 
     callbacks = await _setup_entry_with_callbacks(hass, entry, mock_client)
 
-    # Twist has rotation: entity rotate callback first, then bus callback
-    assert len(callbacks["rotate"]) >= 2
-
-    # Entity rotate callback is first (registered during async_added_to_hass)
+    assert len(callbacks["rotate"]) >= 1
     entity_rotate_cb = callbacks["rotate"][0]
     entity_rotate_cb("twist_increment", {"value": 5})
     await hass.async_block_till_done()
@@ -509,7 +501,6 @@ async def test_twist_rotate_event_filtered_by_event_types(
 
     callbacks = await _setup_entry_with_callbacks(hass, entry, mock_client)
 
-    # Entity rotate callback is first
     entity_rotate_cb = callbacks["rotate"][0]
     # rotate_clockwise is NOT in DEFAULT mode event_types — should be filtered out
     entity_rotate_cb("rotate_clockwise", {"value": 5})
@@ -551,7 +542,7 @@ async def test_duo_rotate_event_filters_by_button_index(
     event_entities = [e for e in entities if e.domain == "event"]
     assert len(event_entities) == 2
 
-    # Entity rotate callbacks are first (2 for Duo), then bus callback
+    # Duo has 2 entity rotate callbacks (big + small)
     entity_rotate_cbs = callbacks["rotate"][:2]
     for cb in entity_rotate_cbs:
         cb("rotate_clockwise", {"button_index": 1, "value": 3})

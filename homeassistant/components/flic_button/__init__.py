@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from bleak import BleakError
-from pyflic_ble import FlicClient, FlicProtocolError, FlicState
+from pyflic_ble import FlicClient, FlicProtocolError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_device_registry_updated_event
 
@@ -26,7 +26,6 @@ from .const import (
     CONF_SERIAL_NUMBER,
     CONF_SIG_BITS,
     DOMAIN,
-    FLIC_BUTTON_EVENT,
     DeviceType,
     PushTwistMode,
 )
@@ -86,11 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     if ble_device:
         try:
             await client.start()
-        except TimeoutError, BleakError, FlicProtocolError:
-            _LOGGER.debug(
-                "Initial connection to %s failed, will retry when device is available",
-                address,
-            )
+        except (TimeoutError, BleakError, FlicProtocolError) as err:
+            raise ConfigEntryNotReady(f"Unable to connect to {address}") from err
 
     @callback
     def _async_bluetooth_callback(
@@ -109,57 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         )
     )
 
-    @callback
-    def _handle_state_change(state: FlicState) -> None:
-        """Update device registry when connection state changes."""
-        if not state.connected:
-            return
-
-        device_registry_inner = dr.async_get(hass)
-        device_entry = device_registry_inner.async_get_device(
-            identifiers={(DOMAIN, client.address)}
-        )
-        if not device_entry:
-            return
-
-        update_kwargs: dict[str, Any] = {}
-        if state.firmware_version is not None:
-            update_kwargs["sw_version"] = str(state.firmware_version)
-        if state.device_name and device_entry.name_by_user is None:
-            update_kwargs["name_by_user"] = state.device_name
-            _LOGGER.debug(
-                "Synced device name from %s: %s",
-                client.address,
-                state.device_name,
-            )
-        if update_kwargs:
-            device_registry_inner.async_update_device(device_entry.id, **update_kwargs)
-
-    entry.async_on_unload(client.register_state_callback(_handle_state_change))
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    device_id: str | None = None
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, client.address)})
-    if device:
-        device_id = device.id
-
-    @callback
-    def _fire_button_bus_event(event_type: str, event_data: dict[str, Any]) -> None:
-        """Fire a Home Assistant bus event for button events."""
-        hass.bus.async_fire(
-            FLIC_BUTTON_EVENT,
-            {
-                "device_id": device_id,
-                "address": client.address,
-                "event_type": event_type,
-                **event_data,
-            },
-        )
-
-    entry.async_on_unload(client.register_button_event_callback(_fire_button_bus_event))
-    entry.async_on_unload(client.register_rotate_event_callback(_fire_button_bus_event))
 
     unsub = _register_device_name_listener(hass, entry, client)
     if unsub:
