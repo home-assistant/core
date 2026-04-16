@@ -69,9 +69,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         location: CharacterLocation | None = None
         ship: CharacterShip | None = None
         try:
-            location = await self.client.async_get_character_location(
-                self.character_id
-            )
+            location = await self.client.async_get_character_location(self.character_id)
         except (EveOnlineError, aiohttp.ClientError) as err:
             _LOGGER.debug("Failed to fetch location: %s", err)
         try:
