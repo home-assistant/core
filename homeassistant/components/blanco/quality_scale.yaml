@@ -28,8 +28,8 @@ rules:
   integration-owner: done     # codeowners set in manifest.json
   log-when-unavailable: done  # Warnings logged per endpoint when requests fail
   parallel-updates: done      # PARALLEL_UPDATES = 0 defined in sensor.py
-  reauthentication-flow: done  # async_step_reauth + async_step_reauth_confirm implemented; ConfigEntryAuthFailed raised on token renewal failure
-  test-coverage: done  # test_coordinator.py, test_sensor.py added; reauth tests added to test_config_flow.py
+  reauthentication-flow: todo  # Deferred to a follow-up PR per reviewer request
+  test-coverage: done  # test_coordinator.py, test_sensor.py, test_config_flow.py added
 
   # Gold
   devices: done               # DeviceInfo with identifiers, manufacturer, model, serial, versions
@@ -50,7 +50,7 @@ rules:
   entity-translations: done   # translation_key set on all entities
   exception-translations: done  # All error keys mapped in strings.json and translations/
   icon-translations: done
-  reconfiguration-flow: done  # async_step_reconfigure implemented in config_flow.py
+  reconfiguration-flow: todo  # Deferred to a follow-up PR per reviewer request
   repair-issues: done         # Repair issue created/deleted per poll cycle in coordinator.py
   stale-devices: done         # One device per config entry — stale device cleanup not applicable
 
