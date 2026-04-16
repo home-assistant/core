@@ -178,10 +178,11 @@ async def async_setup_entry(
                     for s in parsed_data
                     if s in SENSOR_TYPES and s not in ("battery", "battery_range")
                 ),
-                *(("battery",) if "battery" in parsed_data else ()),
                 "battery_range",
             )
         )
+        if "battery" in parsed_data:
+            sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
     else:
         sensor_entities.extend(
             SwitchBotSensor(coordinator, sensor)
