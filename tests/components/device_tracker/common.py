@@ -21,13 +21,11 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import ATTR_GPS_ACCURACY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType, GPSType
-from homeassistant.loader import bind_hass
 
 from tests.common import MockPlatform, mock_platform
 
 
 @callback
-@bind_hass
 def async_see(
     hass: HomeAssistant,
     mac: str | None = None,

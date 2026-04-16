@@ -11,12 +11,11 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER
-from .coordinator import RomyVacuumCoordinator
+from .const import LOGGER
+from .coordinator import RomyConfigEntry, RomyVacuumCoordinator
 from .entity import RomyEntity
 
 FAN_SPEED_NONE = "default"
@@ -50,13 +49,11 @@ SUPPORT_ROMY_ROBOT = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RomyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
-
-    coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([RomyVacuumEntity(coordinator)])
+    async_add_entities([RomyVacuumEntity(config_entry.runtime_data)])
 
 
 class RomyVacuumEntity(RomyEntity, StateVacuumEntity):

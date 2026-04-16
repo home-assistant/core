@@ -14,20 +14,29 @@ from evohomeasync2.schemas.const import (
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_MODE
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.const import ATTR_MODE, ATTR_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
+    DOMAIN,
+    RESET_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
+from .helpers import async_create_deprecation_issue_once
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     # unsupported modes are rejected at runtime with ServiceValidationError
-    vol.Required(ATTR_MODE): cv.string,  # avoid vol.In(SystemMode)
+    vol.Required(ATTR_MODE): cv.string,  # ... so, don't use SystemMode enum here
     vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
@@ -43,6 +52,15 @@ SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     vol.Required(ATTR_SETPOINT): vol.All(
         vol.Coerce(float), vol.Range(min=4.0, max=35.0)
     ),
+    vol.Optional(ATTR_DURATION): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
+    ),
+}
+
+# DHW service schemas (registered as entity services)
+SET_DHW_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
+    vol.Required(ATTR_STATE): cv.boolean,
     vol.Optional(ATTR_DURATION): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
@@ -68,6 +86,19 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         entity_domain=CLIMATE_DOMAIN,
         schema=SET_ZONE_OVERRIDE_SCHEMA,
         func="async_set_zone_override",
+    )
+
+
+def _register_dhw_entity_services(hass: HomeAssistant) -> None:
+    """Register entity-level services for DHW zones."""
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        EvoService.SET_DHW_OVERRIDE,
+        entity_domain=WATER_HEATER_DOMAIN,
+        schema=SET_DHW_OVERRIDE_SCHEMA,
+        func="async_set_dhw_override",
     )
 
 
@@ -135,6 +166,13 @@ def setup_service_functions(
         # via that service call may be able to emulate the reset even if the system
         # doesn't support AutoWithReset natively
 
+        if call.service == EvoService.RESET_SYSTEM:
+            async_create_deprecation_issue_once(
+                hass,
+                "deprecated_reset_system_service",
+                RESET_BREAKS_IN_HA_VERSION,
+            )
+
         if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(coordinator.tcs, call.data)
 
@@ -156,3 +194,4 @@ def setup_service_functions(
     )
 
     _register_zone_entity_services(hass)
+    _register_dhw_entity_services(hass)

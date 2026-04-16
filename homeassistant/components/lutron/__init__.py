@@ -4,11 +4,20 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
+from pylutron import (
+    Button,
+    Keypad,
+    Led,
+    Lutron,
+    LutronException,
+    OccupancyGroup,
+    Output,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
@@ -57,8 +66,12 @@ async def async_setup_entry(
     pwd = config_entry.data[CONF_PASSWORD]
 
     lutron_client = Lutron(host, uid, pwd)
-    await hass.async_add_executor_job(lutron_client.load_xml_db)
-    lutron_client.connect()
+    try:
+        await hass.async_add_executor_job(lutron_client.load_xml_db)
+        lutron_client.connect()
+    except LutronException as ex:
+        raise ConfigEntryNotReady(f"Failed to connect to Lutron repeater: {ex}") from ex
+
     _LOGGER.debug("Connected to main repeater at %s", host)
 
     entity_registry = er.async_get(hass)
@@ -79,83 +92,15 @@ async def async_setup_entry(
     for area in lutron_client.areas:
         _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
-            platform = None
-            _LOGGER.debug("Working on output %s", output.type)
-            if output.type == "SYSTEM_SHADE":
-                entry_data.covers.append((area.name, output))
-                platform = Platform.COVER
-            elif output.type == "CEILING_FAN_TYPE":
-                entry_data.fans.append((area.name, output))
-                platform = Platform.FAN
-            elif output.is_dimmable:
-                entry_data.lights.append((area.name, output))
-                platform = Platform.LIGHT
-            else:
-                entry_data.switches.append((area.name, output))
-                platform = Platform.SWITCH
-
-            _async_check_entity_unique_id(
-                hass,
-                entity_registry,
-                platform,
-                output.uuid,
-                output.legacy_uuid,
-                entry_data.client.guid,
-            )
-            _async_check_device_identifiers(
-                hass,
-                device_registry,
-                output.uuid,
-                output.legacy_uuid,
-                entry_data.client.guid,
+            _setup_output(
+                hass, entry_data, output, area.name, entity_registry, device_registry
             )
 
         for keypad in area.keypads:
-            _async_check_keypad_identifiers(
-                hass,
-                device_registry,
-                keypad.id,
-                keypad.uuid,
-                keypad.legacy_uuid,
-                entry_data.client.guid,
+            _setup_keypad(
+                hass, entry_data, keypad, area.name, entity_registry, device_registry
             )
-            for button in keypad.buttons:
-                # If the button has a function assigned to it, add it as a scene
-                if button.name != "Unknown Button" and button.button_type in (
-                    "SingleAction",
-                    "Toggle",
-                    "SingleSceneRaiseLower",
-                    "MasterRaiseLower",
-                    "AdvancedToggle",
-                ):
-                    # Associate an LED with a button if there is one
-                    led = next(
-                        (led for led in keypad.leds if led.number == button.number),
-                        None,
-                    )
-                    entry_data.scenes.append((area.name, keypad, button, led))
 
-                    platform = Platform.SCENE
-                    _async_check_entity_unique_id(
-                        hass,
-                        entity_registry,
-                        platform,
-                        button.uuid,
-                        button.legacy_uuid,
-                        entry_data.client.guid,
-                    )
-                    if led is not None:
-                        platform = Platform.SWITCH
-                        _async_check_entity_unique_id(
-                            hass,
-                            entity_registry,
-                            platform,
-                            led.uuid,
-                            led.legacy_uuid,
-                            entry_data.client.guid,
-                        )
-                if button.button_type:
-                    entry_data.buttons.append((area.name, keypad, button))
         if area.occupancy_group is not None:
             entry_data.binary_sensors.append((area.name, area.occupancy_group))
             platform = Platform.BINARY_SENSOR
@@ -187,6 +132,99 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
+
+
+def _setup_output(
+    hass: HomeAssistant,
+    entry_data: LutronData,
+    output: Output,
+    area_name: str,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Set up a Lutron output."""
+    _LOGGER.debug("Working on output %s", output.type)
+    if output.type == "SYSTEM_SHADE":
+        entry_data.covers.append((area_name, output))
+        platform = Platform.COVER
+    elif output.type == "CEILING_FAN_TYPE":
+        entry_data.fans.append((area_name, output))
+        platform = Platform.FAN
+    elif output.is_dimmable:
+        entry_data.lights.append((area_name, output))
+        platform = Platform.LIGHT
+    else:
+        entry_data.switches.append((area_name, output))
+        platform = Platform.SWITCH
+
+    _async_check_entity_unique_id(
+        hass,
+        entity_registry,
+        platform,
+        output.uuid,
+        output.legacy_uuid,
+        entry_data.client.guid,
+    )
+    _async_check_device_identifiers(
+        hass,
+        device_registry,
+        output.uuid,
+        output.legacy_uuid,
+        entry_data.client.guid,
+    )
+
+
+def _setup_keypad(
+    hass: HomeAssistant,
+    entry_data: LutronData,
+    keypad: Keypad,
+    area_name: str,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Set up a Lutron keypad."""
+
+    _async_check_keypad_identifiers(
+        hass,
+        device_registry,
+        keypad.id,
+        keypad.uuid,
+        keypad.legacy_uuid,
+        entry_data.client.guid,
+    )
+    leds_by_number = {led.number: led for led in keypad.leds}
+    for button in keypad.buttons:
+        # If the button has a function assigned to it, add it as a scene
+        if button.name != "Unknown Button" and button.button_type in (
+            "SingleAction",
+            "Toggle",
+            "SingleSceneRaiseLower",
+            "MasterRaiseLower",
+            "AdvancedToggle",
+        ):
+            # Associate an LED with a button if there is one
+            led = leds_by_number.get(button.number)
+            entry_data.scenes.append((area_name, keypad, button, led))
+
+            _async_check_entity_unique_id(
+                hass,
+                entity_registry,
+                Platform.SCENE,
+                button.uuid,
+                button.legacy_uuid,
+                entry_data.client.guid,
+            )
+            if led is not None:
+                _async_check_entity_unique_id(
+                    hass,
+                    entity_registry,
+                    Platform.SWITCH,
+                    led.uuid,
+                    led.legacy_uuid,
+                    entry_data.client.guid,
+                )
+        if button.button_type:
+            entry_data.buttons.append((area_name, keypad, button))
 
 
 def _async_check_entity_unique_id(

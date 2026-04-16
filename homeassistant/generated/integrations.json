@@ -1323,6 +1323,12 @@
           "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
         },
+        "denon_rs232": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Denon RS232"
+        },
         "heos": {
           "integration_type": "hub",
           "config_flow": true,
@@ -1520,6 +1526,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "duco": {
+      "name": "Duco",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "dunehd": {
       "name": "Dune HD",
@@ -1918,6 +1930,12 @@
           "name": "EufyLife"
         }
       }
+    },
+    "eurotronic_cometblue": {
+      "name": "Eurotronic Comet Blue",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "eve": {
       "name": "Eve",
@@ -7599,6 +7617,12 @@
     "victron": {
       "name": "Victron",
       "integrations": {
+        "victron_gx": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Victron GX"
+        },
         "victron_ble": {
           "integration_type": "device",
           "config_flow": true,
