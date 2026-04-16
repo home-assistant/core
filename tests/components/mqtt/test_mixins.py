@@ -532,7 +532,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test to enable an entity that is was not enabled by default or not."""
+    """Test enabling an entity that was not enabled by default."""
     await mqtt_mock_entry()
 
     discovery_topic = "homeassistant/sensor/bla/config"
