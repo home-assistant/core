@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AlexaSampleState:
-    """Keeps track for the 'timeOfSampe' computation."""
+    """Keeps track for the 'timeOfSample' computation."""
 
     sampled_value: str | None = None
     time_of_sample: str
@@ -97,7 +97,7 @@ class AbstractConfig(ABC):
         return self._unsub_proactive_report is not None
 
     def inject_time_of_sample(self, entity_id: str, prop: dict[str, Any]) -> bool:
-        """Injects the timeOfSample and uncertainly value for a given property reported to the alexa API.
+        """Injects the timeOfSample and uncertainty value for a given property reported to the alexa API.
 
         This method returns True, if the update was successful, i.e.
         the value was dirty.

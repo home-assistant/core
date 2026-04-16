@@ -227,8 +227,8 @@ class AlexaResponse:
         asynchronously. Thus, handlers should call this method to confirm
         changes before returning.
 
-        For state and change report, the a 'timeOfSamle' and
-        'uncertainlyInMillis' value may be added to the prop argument.
+        For state and change report, a 'timeOfSample' and
+        'uncertaintyInMilliseconds' value may be added to the prop argument.
         """
         self._properties().append(prop)
 
@@ -247,10 +247,7 @@ class AlexaResponse:
     def update_tos_for_state_report(
         self, entity_id: str, config: AbstractConfig
     ) -> None:
-        """Injects the time of sample values for a state report.
-
-        Note: It took me a some time, to figure out, that the JSON in the
-        StateReport and ChangeReport is slightly different.
+        """Inject the time of sample values for a state report.
 
         StateReport:
         - Polled by the Alexa Skill (lambda expression).
@@ -258,12 +255,13 @@ class AlexaResponse:
         - https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-statereport.html
 
         ChangeReport:
-        - Send proactively to an endpoint
-        - Changed properties with timestamps are in the "event.payload" path
+        - Sent proactively to an endpoint.
+        - Changed properties with timestamps are in the "event.payload" path.
         - Unchanged properties are in the "context" path.
         - https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-changereport.html
+
         The separation into changed and unchanged properties is handled in
-        _async_entity_state_listener
+        _async_entity_state_listener.
         """
         for prop in self._properties():
             config.inject_time_of_sample(entity_id, prop)
@@ -360,8 +358,8 @@ async def async_enable_proactive_mode(
         ):
             return
 
-        # sort the alexa_properties depending on their last sample state
-        # into changed and unchanged properties
+        # Partition alexa_properties by whether their time of sample changed
+        # into changed and unchanged properties.
         changed_properties: list[dict[str, Any]] = []
         unchanged_properties: list[dict[str, Any]] = []
         for prop in alexa_properties:
