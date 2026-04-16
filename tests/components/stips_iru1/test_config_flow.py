@@ -163,6 +163,28 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "unknown"
 
 
+async def test_unknown_value_error(hass: HomeAssistant) -> None:
+    """Test unexpected value errors are handled."""
+    user_input = {
+        "api_host": "stips.api.staging.visionalization.net",
+        "username": "demo",
+        "password": "secret",
+    }
+
+    with patch(
+        "homeassistant.components.stips_iru1.config_flow.StipsApiClient.login",
+        new=AsyncMock(side_effect=ValueError()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=user_input,
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "unknown"
+
+
 async def test_auth_error(hass: HomeAssistant) -> None:
     """Test auth error is handled."""
     user_input = {

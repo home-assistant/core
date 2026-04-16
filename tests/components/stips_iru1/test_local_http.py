@@ -177,6 +177,28 @@ async def test_async_fetch_device_info_live_ip_content_type_fallback(
         assert ip == "10.0.0.124"
 
 
+async def test_async_fetch_device_info_live_ip_value_error_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test value errors also fall back to parsing response text as JSON."""
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(side_effect=ValueError())
+    mock_response.text = AsyncMock(return_value='{"ipAddress": "10.0.0.125"}')
+    context = AsyncMock()
+    context.__aenter__.return_value = mock_response
+    context.__aexit__.return_value = None
+
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get = MagicMock(return_value=context)
+
+        timeout = aiohttp.ClientTimeout(total=2)
+        ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
+        assert ip == "10.0.0.125"
+
+
 async def test_async_fetch_device_info_live_ip_client_error(
     hass: HomeAssistant,
 ) -> None:
