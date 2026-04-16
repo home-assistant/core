@@ -762,7 +762,9 @@ class StipsIruLearnedAcClimate(ClimateEntity):
             self._state["power"] = 0
             self.async_write_ha_state()
             return
-        await self._send_state(power=0)
+        raise HomeAssistantError(
+            "This learned AC remote does not have a dedicated power-off signal"
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Apply a new HVAC mode."""
