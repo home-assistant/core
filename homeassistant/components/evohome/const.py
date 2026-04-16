@@ -26,6 +26,9 @@ ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 ATTR_PERIOD: Final = "period"  # number of days
 ATTR_SETPOINT: Final = "setpoint"
 
+# Support for the reset service calls/presets is being deprecated
+RESET_BREAKS_IN_HA_VERSION: Final = "2026.11.0"
+
 
 @unique
 class EvoService(StrEnum):
