@@ -1,20 +1,46 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'WasteType.NON_RECYCLABLE': list([
-      '2021-11-01',
-      '2021-12-01',
-    ]),
-    'WasteType.ORGANIC': list([
-      '2021-11-02',
-    ]),
-    'WasteType.PACKAGES': list([
-      '2021-11-03',
-    ]),
-    'WasteType.PAPER': list([
-    ]),
-    'WasteType.TREE': list([
-      '2022-01-06',
-    ]),
+    'data': dict({
+      'WasteType.NON_RECYCLABLE': list([
+        '2021-11-01',
+        '2021-12-01',
+      ]),
+      'WasteType.ORGANIC': list([
+        '2021-11-02',
+      ]),
+      'WasteType.PACKAGES': list([
+        '2021-11-03',
+      ]),
+      'WasteType.PAPER': list([
+      ]),
+      'WasteType.TREE': list([
+        '2022-01-06',
+      ]),
+    }),
+    'entry': dict({
+      'data': dict({
+        'house_letter': '**REDACTED**',
+        'house_number': '**REDACTED**',
+        'id': '**REDACTED**',
+        'post_code': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'twentemilieu',
+      'entry_id': '01JWHZD0JS7ACCE0JA3ABCDEF1',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '1234AB 1',
+      'unique_id': '12345',
+      'version': 2,
+    }),
   })
 # ---
