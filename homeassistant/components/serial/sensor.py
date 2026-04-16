@@ -185,7 +185,7 @@ class SerialSensor(SensorEntity):
                     dsrdtr=dsrdtr,
                     **kwargs,
                 )
-            except OSError, SerialException:
+            except OSError, SerialException, TimeoutError:
                 if not logged_error:
                     _LOGGER.exception(
                         "Unable to connect to the serial device %s. Will retry", device
