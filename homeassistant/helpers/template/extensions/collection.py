@@ -6,6 +6,9 @@ from collections.abc import Iterable, MutableSequence
 import random
 from typing import TYPE_CHECKING, Any
 
+from jinja2 import Undefined
+from natsort import natsorted, ns
+
 from .base import BaseTemplateExtension, TemplateFunction
 
 if TYPE_CHECKING:
@@ -42,6 +45,12 @@ class CollectionExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "difference",
                     self.difference,
+                    as_global=True,
+                    as_filter=True,
+                ),
+                TemplateFunction(
+                    "natural_sort",
+                    self.natural_sort,
                     as_global=True,
                     as_filter=True,
                 ),
@@ -169,6 +178,69 @@ class CollectionExtension(BaseTemplateExtension):
             )
 
         return list(set(value) ^ set(other))
+
+    def natural_sort(
+        self,
+        lst: Iterable[Any],
+        key: str | int | None = None,
+        alg: str | None = None,
+        reverse: bool = False,
+    ) -> list[Any]:
+        """Return elements sorted naturally."""
+        DEFAULT_ALG = ns.FLOAT | ns.SIGNED
+        ALG_MAP = {name: getattr(ns, name) for name in dir(ns) if name.isupper()}
+
+        if not isinstance(lst, list):
+            raise TypeError(
+                f"natural_sort expected an iterable list, got {type(lst).__name__}"
+            )
+
+        if isinstance(alg, Undefined):
+            raise TypeError(
+                f"alg expected a string, got an undefined variable: {type(alg).__name__}"
+            )
+
+        def _get_key(v: Any) -> Any:
+            """Get the key."""
+            if isinstance(key, str):
+                if isinstance(v, dict):
+                    return v.get(key)
+                return getattr(v, key, None)
+            if not isinstance(key, int):
+                raise TypeError(
+                    f"key expected a string or integer, got {type(key).__name__}"
+                )
+            return v[key]
+
+        def _get_alg(expr: str) -> int:
+            """Get the alg via an alg mask."""
+            if expr is None or not isinstance(expr, str):
+                raise TypeError(f"alg expected a string, got {type(expr).__name__}")
+
+            expr = expr.strip()
+
+            if expr.lower().startswith("alg="):
+                expr = expr[4:].strip()
+
+            parts = [p.strip().replace("ns.", "").upper() for p in expr.split("|")]
+
+            alg = DEFAULT_ALG
+
+            for p in parts:
+                if not p:
+                    raise ValueError("alg expected non-empty tokens separated by '|")
+                if p not in ALG_MAP:
+                    raise ValueError(f"alg contained an unknown token: {p}")
+                alg |= ALG_MAP[p]
+
+            return alg
+
+        return natsorted(
+            lst,
+            key=_get_key if key is not None else None,
+            alg=_get_alg(alg) if alg is not None else DEFAULT_ALG,
+            reverse=reverse,
+        )
 
     def to_set(self, value: Any) -> set[Any]:
         """Convert value to set."""
