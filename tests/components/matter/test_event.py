@@ -298,10 +298,7 @@ async def test_deprecated_multi_press_entity(
     # Verify no deprecated entity (key="GenericSwitch") exists
     deprecated_entity_id = None
     for entry in entity_registry.entities.values():
-        if (
-            entry.platform == "matter"
-            and "-1-GenericSwitch-" in entry.unique_id
-        ):
+        if entry.platform == "matter" and "-1-GenericSwitch-" in entry.unique_id:
             deprecated_entity_id = entry.entity_id
             break
     assert deprecated_entity_id is None, (

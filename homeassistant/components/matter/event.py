@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -20,6 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -58,17 +60,21 @@ async def async_setup_entry(
 
     @callback
     def async_add_entities_filtered(
-        entities: list[MatterEventEntity],
+        entities: Iterable[Entity],
+        update_before_add: bool = False,
     ) -> None:
         async_add_entities(
-            entity
-            for entity in entities
-            if async_check_create_deprecated(
-                hass,
-                Platform.EVENT,
-                entity.unique_id or "",
-                entity.entity_description,
-            )
+            (
+                entity
+                for entity in entities
+                if async_check_create_deprecated(
+                    hass,
+                    Platform.EVENT,
+                    entity.unique_id or "",
+                    cast(MatterEventEntityDescription, entity.entity_description),
+                )
+            ),
+            update_before_add,
         )
 
     matter.register_platform_handler(Platform.EVENT, async_add_entities_filtered)
