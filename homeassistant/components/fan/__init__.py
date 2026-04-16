@@ -25,7 +25,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -88,7 +87,6 @@ class NotValidPresetModeError(ServiceValidationError):
         )
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity = hass.states.get(entity_id)

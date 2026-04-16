@@ -3,6 +3,7 @@
     "condition_behavior_name": "Condition passes if",
     "condition_threshold_name": "Threshold type",
     "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
@@ -68,6 +69,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::moisture::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::moisture::common::trigger_for_name%]"
         }
       },
       "name": "Moisture cleared"
@@ -77,6 +81,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::moisture::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::moisture::common::trigger_for_name%]"
         },
         "threshold": {
           "name": "[%key:component::moisture::common::trigger_threshold_name%]"
@@ -89,6 +96,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::moisture::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::moisture::common::trigger_for_name%]"
         }
       },
       "name": "Moisture detected"
