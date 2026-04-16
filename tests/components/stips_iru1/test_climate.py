@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def protocol_ac_entity(hass: HomeAssistant) -> stips_climate.StipsIruClimate:
@@ -86,6 +88,27 @@ class TestProtocolAcClimate:
         assert (DOMAIN, "stips-iru1-12345") in info["identifiers"]
         assert (CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF") in info["connections"]
 
+    def test_properties(
+        self, protocol_ac_entity: stips_climate.StipsIruClimate
+    ) -> None:
+        """Validate protocol AC property mapping."""
+        protocol_ac_entity._state.update(
+            {
+                "power": 1,
+                "mode": 2,
+                "fan": 4,
+                "temp": 24,
+                "swingV": 1,
+                "swingH": 0,
+            }
+        )
+
+        assert protocol_ac_entity.hvac_mode is HVACMode.HEAT
+        assert protocol_ac_entity.target_temperature == 24.0
+        assert protocol_ac_entity.fan_mode == "high"
+        assert protocol_ac_entity.swing_mode == "vertical"
+        assert protocol_ac_entity.extra_state_attributes["protocol"] == 42
+
     async def test_basic_controls(
         self, protocol_ac_entity: stips_climate.StipsIruClimate
     ) -> None:
@@ -118,6 +141,8 @@ class TestProtocolAcClimate:
             await protocol_ac_entity.async_set_temperature()
         with pytest.raises(HomeAssistantError, match="Unsupported fan mode"):
             await protocol_ac_entity.async_set_fan_mode("bad")
+        with pytest.raises(HomeAssistantError, match="Unsupported HVAC mode"):
+            await protocol_ac_entity.async_set_hvac_mode(HVACMode.HEAT_COOL)
 
     async def test_send_update_error_paths(
         self, protocol_ac_entity: stips_climate.StipsIruClimate, hass: HomeAssistant
@@ -182,6 +207,90 @@ class TestProtocolAcClimate:
                 assert protocol_ac_entity._attr_available is True
                 assert protocol_ac_entity._device_ip_live == "10.0.0.8"
 
+    async def test_send_update_http_error(
+        self, protocol_ac_entity: stips_climate.StipsIruClimate
+    ) -> None:
+        """Validate HTTP error handling for local AC requests."""
+        response = AsyncMock()
+        response.status = 500
+        response.text = AsyncMock(return_value="failure")
+        context = AsyncMock()
+        context.__aenter__.return_value = response
+        context.__aexit__.return_value = None
+
+        with (
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                return_value=(["host1"], None),
+            ),
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_get_clientsession"
+            ) as get_session,
+        ):
+            session = MagicMock()
+            session.post = MagicMock(return_value=context)
+            get_session.return_value = session
+
+            with pytest.raises(HomeAssistantError, match="Local AC request failed"):
+                await protocol_ac_entity._send_update(power=1)
+
+
+async def test_async_setup_entry_creates_expected_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Climate setup should create protocol and learned AC entities only."""
+    entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "devices": [
+                {
+                    "uniqueName": "stips-iru1-12345",
+                    "name": "Main Device",
+                    "deviceIP": "192.168.1.10",
+                    "deviceMac": "AA:BB:CC:DD:EE:FF",
+                    "online": True,
+                    "remotes": [
+                        {
+                            "id": 0,
+                            "type": "AC",
+                            "friendlyName": "Protocol AC",
+                            "model": {"protocol": 7},
+                        },
+                        {
+                            "id": "skip-ac",
+                            "type": "AC",
+                            "friendlyName": "Broken AC",
+                            "model": {},
+                        },
+                        {
+                            "id": "learned-ac",
+                            "type": "LearnedAc",
+                            "friendlyName": "Learned AC",
+                            "model": {
+                                "frequency": 38000,
+                                "signals": [
+                                    {
+                                        "mode": "cool",
+                                        "temperature": 22,
+                                        "fanSpeed": "medium",
+                                        "signal": "COOL",
+                                    }
+                                ],
+                            },
+                        },
+                    ],
+                }
+            ]
+        },
+    )
+    entities: list[stips_climate.ClimateEntity] = []
+
+    await stips_climate.async_setup_entry(hass, entry, entities.extend)
+
+    assert len(entities) == 2
+    assert any(entity.unique_id.endswith("_climate_0") for entity in entities)
+    assert any("learned_ac" in entity.unique_id for entity in entities)
+
 
 class TestLearnedAcClimate:
     """Tests for learned AC climate entity."""
@@ -195,6 +304,28 @@ class TestLearnedAcClimate:
         assert HVACMode.COOL in learned_ac_entity._attr_hvac_modes
         assert "medium" in learned_ac_entity._attr_fan_modes
         assert learned_ac_entity.extra_state_attributes["learned_signal_count"] == 2
+
+    async def test_basic_controls(
+        self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
+    ) -> None:
+        """Validate learned AC control methods map to _send_state or _post_signal."""
+        with patch.object(learned_ac_entity, "_send_state", new=AsyncMock()) as send:
+            await learned_ac_entity.async_turn_on()
+            send.assert_called_with(power=1, hvac_mode=HVACMode.COOL)
+
+            await learned_ac_entity.async_set_hvac_mode(HVACMode.HEAT)
+            assert send.call_args.kwargs["hvac_mode"] == HVACMode.HEAT
+
+            await learned_ac_entity.async_set_temperature(temperature=50)
+            assert send.call_args.kwargs["temp"] == 22
+
+            await learned_ac_entity.async_set_fan_mode("low")
+            assert send.call_args.kwargs["fan"] == "low"
+
+        with patch.object(learned_ac_entity, "_post_signal", new=AsyncMock()) as post:
+            with patch.object(learned_ac_entity, "async_write_ha_state"):
+                await learned_ac_entity.async_turn_off()
+            post.assert_called_once_with("POWER_OFF")
 
     async def test_fan_mode_validation(
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
@@ -286,3 +417,30 @@ class TestLearnedAcClimate:
                 await learned_ac_entity._post_signal("SIG")
 
             assert session.post.call_count == 2
+
+    async def test_post_signal_http_error(
+        self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
+    ) -> None:
+        """Validate HTTP error handling for learned AC signal posts."""
+        response = AsyncMock()
+        response.status = 500
+        response.text = AsyncMock(return_value="failure")
+        context = AsyncMock()
+        context.__aenter__.return_value = response
+        context.__aexit__.return_value = None
+
+        with (
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                return_value=(["host1"], None),
+            ),
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_get_clientsession"
+            ) as get_session,
+        ):
+            session = MagicMock()
+            session.post = MagicMock(return_value=context)
+            get_session.return_value = session
+
+            with pytest.raises(HomeAssistantError, match="Local IR request failed"):
+                await learned_ac_entity._post_signal("SIG")

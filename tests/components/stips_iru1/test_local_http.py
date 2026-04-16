@@ -53,6 +53,42 @@ async def test_async_build_control_hosts_uses_short_ttl_cache(
     assert mock_probe.await_count == 1
 
 
+async def test_async_build_control_hosts_returns_empty_when_no_candidates(
+    hass: HomeAssistant,
+) -> None:
+    """Invalid host and backend IP should yield no control hosts."""
+    local_http._HOST_CACHE.clear()
+
+    hosts, live_ip = await local_http.async_build_control_hosts(
+        hass,
+        device_unique_name="http://evil/path",
+        backend_ip="not-an-ip",
+    )
+
+    assert hosts == []
+    assert live_ip == ""
+
+
+async def test_async_build_control_hosts_appends_discovered_live_ip(
+    hass: HomeAssistant,
+) -> None:
+    """Discovered live IP should be appended after DNS candidates."""
+    local_http._HOST_CACHE.clear()
+
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_fetch_device_info_live_ip",
+        new=AsyncMock(return_value="10.0.0.123"),
+    ):
+        hosts, live_ip = await local_http.async_build_control_hosts(
+            hass,
+            device_unique_name="stips-iru1-98eea1",
+            backend_ip="",
+        )
+
+    assert hosts == ["stips-iru1-98eea1", "stips-iru1-98eea1.local", "10.0.0.123"]
+    assert live_ip == "10.0.0.123"
+
+
 def test_is_valid_catalog_hostname() -> None:
     """Test hostname validation."""
     assert _is_valid_catalog_hostname("stips-iru1-98eea1") is True
@@ -111,6 +147,44 @@ async def test_async_fetch_device_info_live_ip_http_error(
         "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
     ) as mock_session:
         mock_session.return_value.get = MagicMock(return_value=context)
+
+        timeout = aiohttp.ClientTimeout(total=2)
+        ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
+        assert ip == ""
+
+
+async def test_async_fetch_device_info_live_ip_content_type_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test fallback to parsing response text as JSON."""
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(
+        side_effect=aiohttp.ContentTypeError(request_info=MagicMock(), history=())
+    )
+    mock_response.text = AsyncMock(return_value='{"ip": "10.0.0.124"}')
+    context = AsyncMock()
+    context.__aenter__.return_value = mock_response
+    context.__aexit__.return_value = None
+
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get = MagicMock(return_value=context)
+
+        timeout = aiohttp.ClientTimeout(total=2)
+        ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
+        assert ip == "10.0.0.124"
+
+
+async def test_async_fetch_device_info_live_ip_client_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test client errors are handled."""
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get = MagicMock(side_effect=aiohttp.ClientError())
 
         timeout = aiohttp.ClientTimeout(total=2)
         ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
