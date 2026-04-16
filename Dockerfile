@@ -50,7 +50,7 @@ RUN \
         -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
-COPY --parents CODEOWNERS LICENSE* README* homeassistant/ pyproject.toml homeassistant/
+COPY --parents LICENSE* README* homeassistant/ pyproject.toml homeassistant/
 RUN \
     uv pip install \
         -e ./homeassistant \
