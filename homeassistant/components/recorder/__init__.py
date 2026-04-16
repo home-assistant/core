@@ -25,7 +25,6 @@ from homeassistant.helpers.integration_platform import (
 )
 from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
 
 # Pre-import backup to avoid it being imported
@@ -128,7 +127,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
     """Check if an entity is being recorded.
 
