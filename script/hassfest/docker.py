@@ -43,8 +43,7 @@ COPY rootfs /
 COPY --from=ghcr.io/alexxit/go2rtc@sha256:{go2rtc} /usr/local/bin/go2rtc /bin/go2rtc
 
 ## Setup Home Assistant Core dependencies
-COPY requirements.txt homeassistant/
-COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
+COPY --parents requirements.txt homeassistant/package_constraints.txt homeassistant/
 RUN \
     # Verify go2rtc can be executed
     go2rtc --version \
@@ -64,7 +63,7 @@ RUN \
         -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
-COPY . homeassistant/
+COPY --parents LICENSE* README* homeassistant/ pyproject.toml homeassistant/
 RUN \
     uv pip install \
         -e ./homeassistant \
