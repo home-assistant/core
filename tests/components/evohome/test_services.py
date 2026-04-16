@@ -65,9 +65,7 @@ async def test_reset_system(
 
         mock_fcn.assert_awaited_once_with()
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_reset_system_service_call"
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_reset_system_service")
     assert issue is not None
     assert issue.translation_key == "deprecated_reset_system_service"
     assert issue.translation_placeholders == {
