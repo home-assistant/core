@@ -74,6 +74,31 @@ async def test_network_failure_during_login_retries(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_login_failure_closes_gaposa_client(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
+) -> None:
+    """A failed login should close the Gaposa client so nothing leaks.
+
+    Gaposa.__init__ constructs a Firebase client and may hold resources
+    even before login succeeds; on failure the coordinator closes the
+    instance and doesn't store it on ``self.gaposa``.
+    """
+    mock_gaposa_instance.login.side_effect = OSError("cloud unreachable")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # SETUP_RETRY plus gaposa.close() called exactly once (on the failure
+    # path inside _async_setup). If our fix regressed, close() wouldn't be
+    # called at all since we'd never have reached the unload path.
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_gaposa_instance.close.assert_called_once()
+
+
 @pytest.mark.parametrize(
     "exc",
     [GaposaAuthException, FirebaseAuthException],

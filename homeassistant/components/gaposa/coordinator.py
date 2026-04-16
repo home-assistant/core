@@ -55,17 +55,23 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
 
         ``DataUpdateCoordinator`` calls this method exactly once as part
         of ``async_config_entry_first_refresh``, so it's the right place
-        to do any one-time connection / authentication work.
+        to do any one-time connection / authentication work. If login
+        fails, the freshly-constructed Gaposa client is closed so nothing
+        is left hanging; ``self.gaposa`` is only assigned on success so
+        async_shutdown never sees a half-initialized client.
         """
         websession = async_get_clientsession(self.hass)
-        self.gaposa = Gaposa(self._api_key, websession=websession)
+        gaposa = Gaposa(self._api_key, websession=websession)
         try:
             async with timeout(10):
-                await self.gaposa.login(self._username, self._password)
+                await gaposa.login(self._username, self._password)
         except (GaposaAuthException, FirebaseAuthException) as exc:
+            await gaposa.close()
             raise ConfigEntryAuthFailed("Gaposa authentication failed") from exc
         except (ClientError, TimeoutError, OSError) as exc:
+            await gaposa.close()
             raise ConfigEntryNotReady(f"Error connecting to Gaposa: {exc}") from exc
+        self.gaposa = gaposa
 
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
