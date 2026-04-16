@@ -12,6 +12,17 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "discovery_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::unifi_access::config::step::user::data_description::api_token%]",
+          "verify_ssl": "[%key:component::unifi_access::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "A UniFi Access controller was discovered at {ip_address} ({name})."
+      },
       "reauth_confirm": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"

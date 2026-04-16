@@ -54,6 +54,8 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
         "climate.target_temperature_crossed_threshold",
         "climate.turned_off",
         "climate.turned_on",
+        "climate.started_cooling",
+        "climate.started_drying",
         "climate.started_heating",
     ],
 )

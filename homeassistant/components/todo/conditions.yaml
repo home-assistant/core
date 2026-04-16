@@ -1,0 +1,37 @@
+.condition_common: &condition_common
+  target: &condition_todo_target
+    entity:
+      domain: todo
+  fields:
+    behavior: &condition_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+.incomplete_threshold_entity: &incomplete_threshold_entity
+  - domain: input_number
+  - domain: number
+  - domain: sensor
+
+.incomplete_threshold_number: &incomplete_threshold_number
+  min: 0
+  mode: box
+
+all_completed: *condition_common
+
+incomplete:
+  target: *condition_todo_target
+  fields:
+    behavior: *condition_behavior
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *incomplete_threshold_entity
+          mode: is
+          number: *incomplete_threshold_number
