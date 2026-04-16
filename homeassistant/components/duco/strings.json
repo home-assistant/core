@@ -29,6 +29,36 @@
           }
         }
       }
+    },
+    "sensor": {
+      "iaq_co2": {
+        "name": "CO2 air quality index"
+      },
+      "iaq_rh": {
+        "name": "Humidity air quality index"
+      },
+      "ventilation_state": {
+        "name": "Ventilation state",
+        "state": {
+          "aut1": "Automatic boost (15 min)",
+          "aut2": "Automatic boost (30 min)",
+          "aut3": "Automatic boost (45 min)",
+          "auto": "Automatic",
+          "cnt1": "Continuous low speed",
+          "cnt2": "Continuous medium speed",
+          "cnt3": "Continuous high speed",
+          "empt": "Empty house",
+          "man1": "Manual low speed (15 min)",
+          "man1x2": "Manual low speed (30 min)",
+          "man1x3": "Manual low speed (45 min)",
+          "man2": "Manual medium speed (15 min)",
+          "man2x2": "Manual medium speed (30 min)",
+          "man2x3": "Manual medium speed (45 min)",
+          "man3": "Manual high speed (15 min)",
+          "man3x2": "Manual high speed (30 min)",
+          "man3x3": "Manual high speed (45 min)"
+        }
+      }
     }
   },
   "exceptions": {

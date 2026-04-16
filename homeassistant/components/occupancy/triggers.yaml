@@ -9,6 +9,11 @@
           - first
           - last
           - any
+  for:
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
 
 detected:
   fields: *trigger_common_fields
