@@ -1771,6 +1771,28 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
+class SerialSelectorConfig(BaseSelectorConfig):
+    """Class to represent a serial selector config."""
+
+
+@SELECTORS.register("serial")
+class SerialSelector(Selector[SerialSelectorConfig]):
+    """Selector for a serial port."""
+
+    selector_type = "serial"
+
+    CONFIG_SCHEMA = make_selector_config_schema()
+
+    def __init__(self, config: SerialSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        serial: str = vol.Schema(str)(data)
+        return serial
+
+
 class StateSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an state selector config."""
 

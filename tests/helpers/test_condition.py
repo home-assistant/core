@@ -28,6 +28,8 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -56,6 +58,7 @@ from homeassistant.helpers.condition import (
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
+    make_entity_state_condition,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
@@ -3938,4 +3941,189 @@ async def test_numerical_condition_with_unit_behavior(
         "25",
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
+    assert test(hass) is False
+
+
+async def _setup_state_condition(
+    hass: HomeAssistant,
+    entity_ids: str | list[str],
+    states: str | bool | set[str | bool],
+    condition_options: dict[str, Any] | None = None,
+    domain_specs: Mapping[str, DomainSpec] | None = None,
+) -> condition.ConditionCheckerType:
+    """Set up a state condition via a mock platform and return the checker."""
+    condition_cls = make_entity_state_condition(
+        domain_specs or _DEFAULT_DOMAIN_SPECS,
+        states,
+    )
+
+    async def async_get_conditions(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Condition]]:
+        return {"_": condition_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
+    )
+
+    if isinstance(entity_ids, str):
+        entity_ids = [entity_ids]
+
+    config: dict[str, Any] = {
+        CONF_CONDITION: "test",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: condition_options or {},
+    }
+
+    config = await async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+    assert test is not None
+    return test
+
+
+async def test_state_condition_single_entity(hass: HomeAssistant) -> None:
+    """Test state condition with a single entity."""
+    test = await _setup_state_condition(
+        hass, entity_ids="test.entity_1", states=STATE_ON
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    assert test(hass) is False
+
+
+async def test_state_condition_multiple_target_states(hass: HomeAssistant) -> None:
+    """Test state condition matching any of multiple target states."""
+    test = await _setup_state_condition(
+        hass, entity_ids="test.entity_1", states={"on", "heat"}
+    )
+
+    hass.states.async_set("test.entity_1", "on")
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", "heat")
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", "off")
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+)
+async def test_state_condition_unavailable_unknown(
+    hass: HomeAssistant, state_value: str
+) -> None:
+    """Test state condition with unavailable/unknown entities.
+
+    Uses three entities: entity_1 is on, entity_2 is unavailable/unknown,
+    entity_3 varies. Unavailable/unknown entities are excluded from
+    evaluation, so:
+    - behavior any: passes if at least one *available* entity matches
+    - behavior all: passes if all *available* entities match
+    """
+    # Single entity: unavailable/unknown → False
+    test_single = await _setup_state_condition(
+        hass, entity_ids="test.entity_1", states=STATE_ON
+    )
+    hass.states.async_set("test.entity_1", state_value)
+    assert test_single(hass) is False
+
+    # behavior any: entity_1=on, entity_2=unavailable, entity_3=off
+    # → True (entity_1 matches, entity_2 is skipped)
+    test_any = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY},
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    assert test_any(hass) is True
+
+    # behavior any: entity_1=off, entity_2=unavailable, entity_3=off
+    # → False (no available entity matches)
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    assert test_any(hass) is False
+
+    # behavior all: entity_1=on, entity_2=unavailable, entity_3=on
+    # → True (all *available* entities match, entity_2 is skipped)
+    test_all = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL},
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_ON)
+    assert test_all(hass) is True
+
+    # behavior all: entity_1=on, entity_2=unavailable, entity_3=off
+    # → False (entity_3 is available and doesn't match)
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    assert test_all(hass) is False
+
+
+async def test_state_condition_entity_not_found(hass: HomeAssistant) -> None:
+    """Test state condition when entity does not exist."""
+    test = await _setup_state_condition(
+        hass, entity_ids="test.nonexistent", states=STATE_ON
+    )
+
+    # Entity doesn't exist — condition should be false
+    assert test(hass) is False
+
+
+async def test_state_condition_attribute_value_source(hass: HomeAssistant) -> None:
+    """Test state condition reads from attribute when value_source is set."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states="heat",
+        domain_specs={"test": DomainSpec(value_source="hvac_action")},
+    )
+
+    hass.states.async_set("test.entity_1", "on", {"hvac_action": "heat"})
+    assert test(hass) is True
+
+    hass.states.async_set("test.entity_1", "on", {"hvac_action": "idle"})
+    assert test(hass) is False
+
+    # Missing attribute
+    hass.states.async_set("test.entity_1", "on", {})
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    ("behavior", "one_match_expected"),
+    [(BEHAVIOR_ANY, True), (BEHAVIOR_ALL, False)],
+)
+async def test_state_condition_behavior(
+    hass: HomeAssistant, behavior: str, one_match_expected: bool
+) -> None:
+    """Test state condition with behavior any/all."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: behavior},
+    )
+
+    # Both on → True for any and all
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", STATE_ON)
+    assert test(hass) is True
+
+    # Only one on → depends on behavior
+    hass.states.async_set("test.entity_2", STATE_OFF)
+    assert test(hass) is one_match_expected
+
+    # Neither on → False for any and all
+    hass.states.async_set("test.entity_1", STATE_OFF)
     assert test(hass) is False

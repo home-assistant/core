@@ -16,6 +16,7 @@ from .const import DOMAIN
 from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
     Platform.CLIMATE,
 ]
 
