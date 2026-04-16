@@ -253,59 +253,6 @@
     'state': 'auto',
   })
 # ---
-# name: test_sensor_entities_state[sensor.living_write_requests_remaining-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_write_requests_remaining',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Write requests remaining',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Write requests remaining',
-    'platform': 'duco',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'write_req_remaining',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_1_write_req_remaining',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_entities_state[sensor.living_write_requests_remaining-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Write requests remaining',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.living_write_requests_remaining',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
 # name: test_sensor_entities_state[sensor.office_co2_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

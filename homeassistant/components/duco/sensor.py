@@ -100,14 +100,6 @@ BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda coordinator: coordinator.rssi_wifi,
     ),
-    DucoBoxSensorEntityDescription(
-        key="write_req_remaining",
-        translation_key="write_req_remaining",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda coordinator: coordinator.write_req_remaining,
-    ),
 )
 
 

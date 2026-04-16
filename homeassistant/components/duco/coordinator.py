@@ -28,7 +28,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     config_entry: DucoConfigEntry
     board_info: BoardInfo
     rssi_wifi: int | None
-    write_req_remaining: int | None
 
     def __init__(
         self,
@@ -46,7 +45,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self.rssi_wifi = None
-        self.write_req_remaining = None
 
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
@@ -63,10 +61,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
-        nodes_result, lan_result, write_result = await asyncio.gather(
+        nodes_result, lan_result = await asyncio.gather(
             self.client.async_get_nodes(),
             self.client.async_get_lan_info(),
-            self.client.async_get_write_req_remaining(),
             return_exceptions=True,
         )
 
@@ -85,8 +82,5 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         if not isinstance(lan_result, BaseException):
             self.rssi_wifi = lan_result.rssi_wifi
-
-        if not isinstance(write_result, BaseException):
-            self.write_req_remaining = write_result
 
         return {node.node_id: node for node in nodes_result}
