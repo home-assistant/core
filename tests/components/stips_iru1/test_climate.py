@@ -77,14 +77,18 @@ def _mock_success_post(mock_session: MagicMock, status: int = 200) -> None:
 class TestProtocolAcClimate:
     """Tests for protocol AC climate entity."""
 
-    def test_device_info(self, protocol_ac_entity: stips_climate.StipsIruClimate) -> None:
+    def test_device_info(
+        self, protocol_ac_entity: stips_climate.StipsIruClimate
+    ) -> None:
         """Validate device registry metadata."""
         info = protocol_ac_entity.device_info
         assert info is not None
         assert (DOMAIN, "stips-iru1-12345") in info.identifiers
         assert (CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF") in info.connections
 
-    async def test_basic_controls(self, protocol_ac_entity: stips_climate.StipsIruClimate) -> None:
+    async def test_basic_controls(
+        self, protocol_ac_entity: stips_climate.StipsIruClimate
+    ) -> None:
         """Validate user control methods map to _send_update."""
         with patch.object(protocol_ac_entity, "_send_update", new=AsyncMock()) as send:
             await protocol_ac_entity.async_turn_on()
@@ -106,7 +110,9 @@ class TestProtocolAcClimate:
             assert send.call_args.kwargs["swingV"] == 1
             assert send.call_args.kwargs["swingH"] == 1
 
-    async def test_invalid_controls(self, protocol_ac_entity: stips_climate.StipsIruClimate) -> None:
+    async def test_invalid_controls(
+        self, protocol_ac_entity: stips_climate.StipsIruClimate
+    ) -> None:
         """Validate validation errors for invalid control inputs."""
         with pytest.raises(HomeAssistantError, match="Temperature is required"):
             await protocol_ac_entity.async_set_temperature()
@@ -117,13 +123,15 @@ class TestProtocolAcClimate:
         self, protocol_ac_entity: stips_climate.StipsIruClimate, hass: HomeAssistant
     ) -> None:
         """Validate _send_update failure branches."""
-        with patch.object(
-            protocol_ac_entity,
-            "async_resolve_control_hosts",
-            return_value=([], None),
+        with (
+            patch.object(
+                protocol_ac_entity,
+                "async_resolve_control_hosts",
+                return_value=([], None),
+            ),
+            pytest.raises(HomeAssistantError, match="Device host is missing"),
         ):
-            with pytest.raises(HomeAssistantError, match="Device host is missing"):
-                await protocol_ac_entity._send_update(power=1)
+            await protocol_ac_entity._send_update(power=1)
 
         no_proto = stips_climate.StipsIruClimate(
             hass=hass,
@@ -136,7 +144,9 @@ class TestProtocolAcClimate:
             friendly_name="test",
             remote_snapshot={"type": "AC", "model": {}},
         )
-        with patch.object(no_proto, "async_resolve_control_hosts", return_value=(["host"], None)):
+        with patch.object(
+            no_proto, "async_resolve_control_hosts", return_value=(["host"], None)
+        ):
             with pytest.raises(HomeAssistantError, match="AC protocol is missing"):
                 await no_proto._send_update(power=1)
 
@@ -175,7 +185,9 @@ class TestProtocolAcClimate:
 class TestLearnedAcClimate:
     """Tests for learned AC climate entity."""
 
-    def test_properties(self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate) -> None:
+    def test_properties(
+        self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
+    ) -> None:
         """Validate baseline properties and derived modes."""
         assert learned_ac_entity.available is True
         assert HVACMode.OFF in learned_ac_entity._attr_hvac_modes
@@ -183,12 +195,16 @@ class TestLearnedAcClimate:
         assert "medium" in learned_ac_entity._attr_fan_modes
         assert learned_ac_entity.extra_state_attributes["learned_signal_count"] == 2
 
-    async def test_fan_mode_validation(self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate) -> None:
+    async def test_fan_mode_validation(
+        self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
+    ) -> None:
         """Unsupported fan mode should raise immediately."""
         with pytest.raises(HomeAssistantError, match="Unsupported fan mode"):
             await learned_ac_entity.async_set_fan_mode("unsupported")
 
-    async def test_send_state_paths(self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate) -> None:
+    async def test_send_state_paths(
+        self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
+    ) -> None:
         """Validate matching signal, fallback signal, and no-match errors."""
         with patch.object(learned_ac_entity, "_post_signal", new=AsyncMock()) as post:
             await learned_ac_entity._send_state(
@@ -212,46 +228,52 @@ class TestLearnedAcClimate:
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
     ) -> None:
         """Validate host missing, timeout, and fallback-to-second-host behavior."""
-        with patch(
-            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
-            return_value=([], None),
+        with (
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                return_value=([], None),
+            ),
+            pytest.raises(HomeAssistantError, match="Device host is missing"),
         ):
-            with pytest.raises(HomeAssistantError, match="Device host is missing"):
-                await learned_ac_entity._post_signal("SIG")
+            await learned_ac_entity._post_signal("SIG")
 
-        with patch(
-            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
-            return_value=(["host1"], None),
-        ):
-            with patch(
+        with (
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                return_value=(["host1"], None),
+            ),
+            patch(
                 "homeassistant.components.stips_iru1.climate.async_get_clientsession"
-            ) as get_session:
-                session = MagicMock()
-                get_session.return_value = session
-                session.post = AsyncMock(side_effect=TimeoutError())
-
-                with patch.object(learned_ac_entity, "async_write_ha_state"):
-                    with pytest.raises(HomeAssistantError, match="Cannot reach IR device"):
-                        await learned_ac_entity._post_signal("SIG")
-
-        with patch(
-            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
-            return_value=(["host1", "host2"], None),
+            ) as get_session,
         ):
-            with patch(
-                "homeassistant.components.stips_iru1.climate.async_get_clientsession"
-            ) as get_session:
-                session = MagicMock()
-                get_session.return_value = session
+            session = MagicMock()
+            get_session.return_value = session
+            session.post = AsyncMock(side_effect=TimeoutError())
 
-                response = AsyncMock()
-                response.status = 200
-                context = AsyncMock()
-                context.__aenter__.return_value = response
-                context.__aexit__.return_value = None
-                session.post.side_effect = [TimeoutError(), context]
-
-                with patch.object(learned_ac_entity, "async_write_ha_state"):
+            with patch.object(learned_ac_entity, "async_write_ha_state"):
+                with pytest.raises(HomeAssistantError, match="Cannot reach IR device"):
                     await learned_ac_entity._post_signal("SIG")
 
-                assert session.post.call_count == 2
+        with (
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                return_value=(["host1", "host2"], None),
+            ),
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_get_clientsession"
+            ) as get_session,
+        ):
+            session = MagicMock()
+            get_session.return_value = session
+
+            response = AsyncMock()
+            response.status = 200
+            context = AsyncMock()
+            context.__aenter__.return_value = response
+            context.__aexit__.return_value = None
+            session.post.side_effect = [TimeoutError(), context]
+
+            with patch.object(learned_ac_entity, "async_write_ha_state"):
+                await learned_ac_entity._post_signal("SIG")
+
+            assert session.post.call_count == 2
