@@ -64,12 +64,14 @@ def _async_get_target(
         )
 
     for entry_id in device.config_entries:
-        try:
-            config_entry: UnifiAccessConfigEntry = service.async_get_config_entry(
-                hass, DOMAIN, entry_id
-            )
-        except ServiceValidationError:
+        if (
+            entry := hass.config_entries.async_get_entry(entry_id)
+        ) is None or entry.domain != DOMAIN:
             continue
+
+        config_entry: UnifiAccessConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, entry_id
+        )
         coordinator = config_entry.runtime_data
         for identifier_domain, identifier_value in device.identifiers:
             if (
