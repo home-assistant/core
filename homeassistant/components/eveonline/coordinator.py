@@ -76,13 +76,13 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         )
         if isinstance(location_result, EveOnlineError | aiohttp.ClientError):
             _LOGGER.debug("Failed to fetch location: %s", location_result)
-        elif isinstance(location_result, Exception):
+        elif isinstance(location_result, BaseException):
             raise location_result
         else:
             location = location_result
         if isinstance(ship_result, EveOnlineError | aiohttp.ClientError):
             _LOGGER.debug("Failed to fetch ship: %s", ship_result)
-        elif isinstance(ship_result, Exception):
+        elif isinstance(ship_result, BaseException):
             raise ship_result
         else:
             ship = ship_result
