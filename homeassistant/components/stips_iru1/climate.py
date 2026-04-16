@@ -654,7 +654,6 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         self._attr_unique_id = (
             f"{DOMAIN}_{device_unique_name}_climate_learned_ac_{safe_rid}"
         )
-        self._attr_name = f"{friendly_name} Climate"
         self._attr_available = bool(device_online)
 
         modes = {_mode_to_hvac(v.get("mode")) for v in self._signals}
