@@ -7,7 +7,6 @@ from homeassistant import core
 from homeassistant.util import executor, thread
 
 from .model import Config, Integration
-from .requirements import PACKAGE_REGEX, PIP_VERSION_RANGE_SEPARATOR
 
 _GO2RTC_SHA = (
     "675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae"  # 1.9.14
@@ -138,10 +137,12 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ENTRYPOINT ["/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"]
 WORKDIR "/github/workspace"
 
-COPY . /usr/src/homeassistant
+COPY --parents requirements.txt homeassistant/ script /usr/src/homeassistant/
 
 # Uv creates a lock file in /tmp
 RUN --mount=type=tmpfs,target=/tmp \
+    --mount=type=bind,source=requirements_test.txt,target=/tmp/requirements_test.txt,readonly \
+    --mount=type=bind,source=requirements_test_pre_commit.txt,target=/tmp/requirements_test_pre_commit.txt,readonly \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
     # Install uv at the version pinned in the requirements file
@@ -151,9 +152,9 @@ RUN --mount=type=tmpfs,target=/tmp \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        pipdeptree=={pipdeptree} \
-        tqdm=={tqdm} \
-        ruff=={ruff}
+        "pipdeptree==$(awk -F'==' '/^pipdeptree==/{{print $2}}' /tmp/requirements_test.txt)" \
+        "tqdm==$(awk -F'==' '/^tqdm==/{{print $2}}' /tmp/requirements_test.txt)" \
+        "ruff==$(awk -F'==' '/^ruff==/{{print $2}}' /tmp/requirements_test_pre_commit.txt)"
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"
@@ -163,36 +164,6 @@ LABEL "com.github.actions.description"="Run hassfest to validate standalone inte
 LABEL "com.github.actions.icon"="terminal"
 LABEL "com.github.actions.color"="gray-dark"
 """
-
-
-def _get_package_versions(file: Path, packages: set[str]) -> dict[str, str]:
-    package_versions: dict[str, str] = {}
-    with file.open(encoding="UTF-8") as fp:
-        for _, line in enumerate(fp):
-            if package_versions.keys() == packages:
-                return package_versions
-
-            if match := PACKAGE_REGEX.match(line):
-                pkg, sep, version = match.groups()
-
-                if pkg not in packages:
-                    continue
-
-                if sep != "==" or not version:
-                    raise RuntimeError(
-                        f'Requirement {pkg} need to be pinned "{pkg}==<version>".'
-                    )
-
-                for part in version.split(";", 1)[0].split(","):
-                    version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
-                    if version_part:
-                        package_versions[pkg] = version_part.group(2)
-                        break
-
-    if package_versions.keys() == packages:
-        return package_versions
-
-    raise RuntimeError("At least one package was not found in the requirements file.")
 
 
 @dataclass
@@ -214,27 +185,16 @@ def _generate_files(config: Config) -> list[File]:
         + 10
     ) * 1000
 
-    package_versions = _get_package_versions(
-        config.root / "requirements_test.txt", {"pipdeptree", "tqdm"}
-    )
-    package_versions |= _get_package_versions(
-        config.root / "requirements_test_pre_commit.txt", {"ruff"}
-    )
-
     files = [
         File(
             DOCKERFILE_TEMPLATE.format(
                 timeout=timeout,
-                **package_versions,
                 go2rtc=_GO2RTC_SHA,
             ),
             config.root / "Dockerfile",
         ),
         File(
-            _HASSFEST_TEMPLATE.format(
-                timeout=timeout,
-                **package_versions,
-            ),
+            _HASSFEST_TEMPLATE.format(),
             config.root / "script/hassfest/docker/Dockerfile",
         ),
     ]
