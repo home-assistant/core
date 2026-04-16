@@ -1452,7 +1452,7 @@ class MqttEntity(
 
         # Store discovery hash for new entities that are initial disabled
         # or for entries that are disabled in the registry,
-        # so then can be removed removed with an empty discovery payload
+        # so they can be removed with an empty discovery payload
         if (
             existing_entity_id is None
             or (existing_entry and existing_entry.disabled_by is not None)
