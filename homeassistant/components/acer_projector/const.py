@@ -6,10 +6,11 @@ from typing import Final
 
 from homeassistant.const import STATE_OFF, STATE_ON
 
+CONF_READ_TIMEOUT: Final = "timeout"
 CONF_WRITE_TIMEOUT: Final = "write_timeout"
 
 DEFAULT_NAME: Final = "Acer Projector"
-DEFAULT_TIMEOUT: Final = 1
+DEFAULT_READ_TIMEOUT: Final = 1
 DEFAULT_WRITE_TIMEOUT: Final = 1
 
 ECO_MODE: Final = "ECO Mode"
