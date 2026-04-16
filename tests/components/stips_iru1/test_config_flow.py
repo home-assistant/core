@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
+from homeassistant.components.stips_iru1.api import StipsApiAuthError
 from homeassistant.components.stips_iru1.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -49,62 +50,60 @@ async def test_create_entry_success(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "create_entry"
-
-
-    async def test_auth_error(hass: HomeAssistant) -> None:
-        """Test auth error is handled."""
-        from homeassistant.components.stips_iru1.api import StipsApiAuthError
-
-        user_input = {
-            "api_host": "stips.api.staging.visionalization.net",
-            "username": "bad",
-            "password": "wrong",
-        }
-
-        with patch(
-            "homeassistant.components.stips_iru1.config_flow.StipsApiClient.login",
-            new=AsyncMock(side_effect=StipsApiAuthError()),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data=user_input,
-            )
-
-        assert result["type"] == "form"
-
-
-    async def test_no_devices_error(hass: HomeAssistant) -> None:
-        """Test no devices error is handled."""
-        user_input = {
-            "api_host": "stips.api.staging.visionalization.net",
-            "username": "demo",
-            "password": "secret",
-        }
-
-        with (
-            patch(
-                "homeassistant.components.stips_iru1.config_flow.StipsApiClient.login",
-                new=AsyncMock(return_value=None),
-            ),
-            patch(
-                "homeassistant.components.stips_iru1.config_flow.StipsApiClient.get_areas",
-                new=AsyncMock(return_value=[{"id": 1, "name": "Home"}]),
-            ),
-            patch(
-                "homeassistant.components.stips_iru1.config_flow.async_fetch_catalog_devices",
-                new=AsyncMock(return_value=([], [])),
-            ),
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data=user_input,
-            )
-
-        assert result["type"] == "form"
     assert result["title"] == "STIPS (demo)"
     assert "password" not in result["data"]
+
+
+async def test_auth_error(hass: HomeAssistant) -> None:
+    """Test auth error is handled."""
+    user_input = {
+        "api_host": "stips.api.staging.visionalization.net",
+        "username": "bad",
+        "password": "wrong",
+    }
+
+    with patch(
+        "homeassistant.components.stips_iru1.config_flow.StipsApiClient.login",
+        new=AsyncMock(side_effect=StipsApiAuthError()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=user_input,
+        )
+
+    assert result["type"] == "form"
+
+
+async def test_no_devices_error(hass: HomeAssistant) -> None:
+    """Test no devices error is handled."""
+    user_input = {
+        "api_host": "stips.api.staging.visionalization.net",
+        "username": "demo",
+        "password": "secret",
+    }
+
+    with (
+        patch(
+            "homeassistant.components.stips_iru1.config_flow.StipsApiClient.login",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.stips_iru1.config_flow.StipsApiClient.get_areas",
+            new=AsyncMock(return_value=[{"id": 1, "name": "Home"}]),
+        ),
+        patch(
+            "homeassistant.components.stips_iru1.config_flow.async_fetch_catalog_devices",
+            new=AsyncMock(return_value=([], [])),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=user_input,
+        )
+
+    assert result["type"] == "form"
 
 
 async def test_unique_id_includes_api_host(hass: HomeAssistant) -> None:

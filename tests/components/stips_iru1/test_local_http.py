@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
+
 from homeassistant.components.stips_iru1 import local_http
+from homeassistant.components.stips_iru1.local_http import (
+    _is_valid_catalog_hostname,
+    async_fetch_device_info_live_ip,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -49,8 +55,6 @@ async def test_async_build_control_hosts_uses_short_ttl_cache(
 
 def test_is_valid_catalog_hostname() -> None:
     """Test hostname validation."""
-    from homeassistant.components.stips_iru1.local_http import _is_valid_catalog_hostname
-
     assert _is_valid_catalog_hostname("stips-iru1-98eea1") is True
     assert _is_valid_catalog_hostname("stips.iru1.local") is True
     assert _is_valid_catalog_hostname("http://evil.com") is False
@@ -62,11 +66,6 @@ def test_is_valid_catalog_hostname() -> None:
 
 async def test_async_fetch_device_info_live_ip_success(hass: HomeAssistant) -> None:
     """Test fetching live IP from device info endpoint."""
-    from homeassistant.components.stips_iru1.local_http import (
-        async_fetch_device_info_live_ip,
-    )
-    import aiohttp
-
     mock_response = AsyncMock()
     mock_response.status = 200
     mock_response.json = AsyncMock(return_value={"ip_address": "10.0.0.123"})
@@ -89,11 +88,6 @@ async def test_async_fetch_device_info_live_ip_timeout(
     hass: HomeAssistant,
 ) -> None:
     """Test fetch handles timeout."""
-    from homeassistant.components.stips_iru1.local_http import (
-        async_fetch_device_info_live_ip,
-    )
-    import aiohttp
-
     with patch(
         "homeassistant.helpers.aiohttp_client.async_get_clientsession"
     ) as mock_session:
@@ -108,11 +102,6 @@ async def test_async_fetch_device_info_live_ip_http_error(
     hass: HomeAssistant,
 ) -> None:
     """Test fetch handles HTTP errors."""
-    from homeassistant.components.stips_iru1.local_http import (
-        async_fetch_device_info_live_ip,
-    )
-    import aiohttp
-
     mock_response = AsyncMock()
     mock_response.status = 500
 
@@ -125,7 +114,6 @@ async def test_async_fetch_device_info_live_ip_http_error(
         mock_response.__aenter__.return_value = mock_response
         mock_response.__aexit__.return_value = None
 
-        import aiohttp
         timeout = aiohttp.ClientTimeout(total=2)
         ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
         assert ip == ""
