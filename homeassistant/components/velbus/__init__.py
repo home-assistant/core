@@ -139,7 +139,9 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
         device = dev_reg.async_get(entry.device_id)
         if device is None:
             continue
-        serial = device.serial_number or next(iter(device.identifiers))[1]
+        serial = device.serial_number or next(
+            (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
+        )
 
         expected_unique_id = f"{serial}-{property_key}"
         if entry.unique_id != expected_unique_id:
