@@ -124,7 +124,7 @@ backoff>=2.0
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.12.2
+pydantic==2.13.1
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -225,6 +225,15 @@ auth0-python<5.0
 
 # Setuptools >=82.0.0 doesn't contain pkg_resources anymore
 setuptools<82.0.0
+
+# Pin dependencies with '.pth' files to exact versions, only update manually!
+# https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
+# https://github.com/xolox/python-coloredlogs -> unmaintained
+# https://github.com/pypa/setuptools
+azure-kusto-data==4.5.1
+azure-kusto-ingest==4.5.1
+coloredlogs==15.0.1
+setuptools==81.0.0
 """
 
 GENERATED_MESSAGE = (

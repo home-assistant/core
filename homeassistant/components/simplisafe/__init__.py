@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
-from typing import Any, cast
+from typing import Any
 
 from simplipy import API
 from simplipy.errors import (
@@ -40,7 +39,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_ID,
@@ -65,7 +64,7 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     ATTR_ALARM_DURATION,
@@ -86,7 +85,10 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import SimpliSafeDataUpdateCoordinator
 from .typing import SystemType
+
+type SimpliSafeConfigEntry = ConfigEntry[SimpliSafe]
 
 ATTR_CATEGORY = "category"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
@@ -98,8 +100,6 @@ ATTR_PIN_LABEL = "label"
 ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
 ATTR_TIMESTAMP = "timestamp"
-
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 WEBSOCKET_RECONNECT_RETRIES = 3
 WEBSOCKET_RETRY_DELAY = 2
@@ -225,10 +225,15 @@ def _async_get_system_for_service_call(
     ]
     system_id = int(system_id_str)
 
+    entry: SimpliSafeConfigEntry | None
     for entry_id in base_station_device_entry.config_entries:
-        if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
+        if (
+            (entry := hass.config_entries.async_get_entry(entry_id)) is None
+            or entry.domain != DOMAIN
+            or entry.state != ConfigEntryState.LOADED
+        ):
             continue
-        return cast(SystemType, simplisafe.systems[system_id])
+        return entry.runtime_data.systems[system_id]
 
     raise ValueError(f"No system for device ID: {device_id}")
 
@@ -288,7 +293,7 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
@@ -312,8 +317,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = simplisafe
+    entry.runtime_data = simplisafe
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -398,11 +402,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # If this is the last loaded instance of SimpliSafe, deregister any services
@@ -428,7 +430,7 @@ class SimpliSafe:
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator[None] | None = None
+        self.coordinator: SimpliSafeDataUpdateCoordinator | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
@@ -588,13 +590,11 @@ class SimpliSafe:
                 LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
-        self.coordinator = DataUpdateCoordinator(
+        self.coordinator = SimpliSafeDataUpdateCoordinator(
             self._hass,
-            LOGGER,
+            self.entry,
             name=self.entry.title,
-            config_entry=self.entry,
-            update_interval=DEFAULT_SCAN_INTERVAL,
-            update_method=self.async_update,
+            simplisafe=self,
         )
 
         @callback

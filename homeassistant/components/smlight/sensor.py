@@ -105,6 +105,7 @@ SENSORS: list[SmSensorEntityDescription] = [
     ),
 ]
 
+
 EXTRA_SENSOR = SmSensorEntityDescription(
     key="zigbee_temperature_2",
     translation_key="zigbee_temperature",
@@ -113,6 +114,15 @@ EXTRA_SENSOR = SmSensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
     suggested_display_precision=1,
     value_fn=lambda x: x.zb_temp2,
+)
+
+PSRAM_SENSOR = SmSensorEntityDescription(
+    key="psram_usage",
+    translation_key="psram_usage",
+    device_class=SensorDeviceClass.DATA_SIZE,
+    native_unit_of_measurement=UnitOfInformation.KILOBYTES,
+    entity_registry_enabled_default=False,
+    value_fn=lambda x: x.psram_usage,
 )
 
 UPTIME: list[SmSensorEntityDescription] = [
@@ -155,6 +165,9 @@ async def async_setup_entry(
 
     if coordinator.data.sensors.zb_temp2 is not None:
         entities.append(SmSensorEntity(coordinator, EXTRA_SENSOR))
+
+    if coordinator.data.info.u_device:
+        entities.append(SmSensorEntity(coordinator, PSRAM_SENSOR))
 
     async_add_entities(entities)
 

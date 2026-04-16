@@ -3,6 +3,7 @@
 import asyncio
 from unittest.mock import patch
 
+from wyoming.asr import Transcript
 from wyoming.event import Event
 from wyoming.info import (
     AsrModel,
@@ -172,13 +173,14 @@ EMPTY_INFO = Info()
 class MockAsyncTcpClient:
     """Mock AsyncTcpClient."""
 
-    def __init__(self, responses: list[Event]) -> None:
+    def __init__(self, responses: list[Event | None]) -> None:
         """Initialize."""
         self.host: str | None = None
         self.port: int | None = None
         self.written: list[Event] = []
         self.responses = responses
         self.is_connected: bool | None = None
+        self.transcript: Transcript | None = None
 
     async def connect(self) -> None:
         """Connect."""
@@ -191,6 +193,9 @@ class MockAsyncTcpClient:
     async def write_event(self, event: Event):
         """Send."""
         self.written.append(event)
+
+        if Transcript.is_type(event.type):
+            self.transcript = Transcript.from_event(event)
 
     async def read_event(self) -> Event | None:
         """Receive."""

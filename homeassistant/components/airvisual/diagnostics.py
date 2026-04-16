@@ -15,8 +15,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import AirVisualConfigEntry
 from .const import CONF_CITY
+from .coordinator import AirVisualConfigEntry
 
 CONF_COORDINATES = "coordinates"
 CONF_TITLE = "title"

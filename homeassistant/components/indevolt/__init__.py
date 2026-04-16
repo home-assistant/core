@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

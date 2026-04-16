@@ -24,13 +24,11 @@
       "user": {
         "data": {
           "client_id": "Client ID",
-          "heating_type": "Heating type",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
         },
         "data_description": {
           "client_id": "The ID of the API client created in the [Viessmann developer portal]({viessmann_developer_portal}).",
-          "heating_type": "Allows to overrule the device auto detection.",
           "password": "The password to log in to your ViCare account.",
           "username": "The email address to log in to your ViCare account."
         },
@@ -158,6 +156,16 @@
       },
       "reduced_temperature": {
         "name": "Reduced temperature"
+      }
+    },
+    "select": {
+      "dhw_operating_mode": {
+        "name": "DHW operating mode",
+        "state": {
+          "efficient": "Efficient",
+          "efficient_with_min_comfort": "Efficient with minimum comfort",
+          "off": "[%key:common::state::off%]"
+        }
       }
     },
     "sensor": {
@@ -288,6 +296,12 @@
       },
       "energy_consumption_cooling_today": {
         "name": "Cooling electricity consumption today"
+      },
+      "energy_consumption_dhw_this_year": {
+        "name": "DHW energy consumption this year"
+      },
+      "energy_consumption_heating_this_year": {
+        "name": "Heating energy consumption this year"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
         "name": "DHW electricity consumption today"

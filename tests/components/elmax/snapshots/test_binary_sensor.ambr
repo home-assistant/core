@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_binary_sensors[binary_sensor.zona_01-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_01',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_01',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -35,24 +36,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_01-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  01',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  01',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_01',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_01',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_02e-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_02e-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -62,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_02e',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_02e',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -85,24 +87,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_02e-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_02e-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  02e',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  02e',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_02e',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_02e',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_03a-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_03a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -112,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_03a',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_03a',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -135,24 +138,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_03a-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_03a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  03a',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  03a',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_03a',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_03a',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_04-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_04-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -162,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_04',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_04',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -185,24 +189,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_04-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_04-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  04',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  04',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_04',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_04',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_05-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_05-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,7 +217,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_05',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_05',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -235,24 +240,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_05-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_05-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  05',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  05',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_05',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_05',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_06-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_06-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -262,7 +268,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_06',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_06',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -285,24 +291,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_06-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_06-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  06',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  06',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_06',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_06',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_07-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_07-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -312,7 +319,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_07',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_07',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -335,24 +342,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_07-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_07-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  07',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  07',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_07',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_07',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_08-entry]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_08-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -362,7 +370,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.zona_08',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_08',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -385,14 +393,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.zona_08-state]
+# name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_08-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'ZONA  08',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  08',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.zona_08',
+    'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_08',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -7,9 +7,11 @@ from typing import Any, Literal, override
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
+from eheimdigital.reeflex import EheimDigitalReeflexUV
 from eheimdigital.types import (
     FilterMode,
     FilterModeProf,
+    ReeflexMode,
     UnitOfMeasurement as EheimDigitalUnitOfMeasurement,
 )
 
@@ -35,6 +37,20 @@ class EheimDigitalSelectDescription[_DeviceT: EheimDigitalDevice](
     value_fn: Callable[[_DeviceT], str | None]
     set_value_fn: Callable[[_DeviceT, str], Awaitable[None] | None]
 
+
+REEFLEX_DESCRIPTIONS: tuple[
+    EheimDigitalSelectDescription[EheimDigitalReeflexUV], ...
+] = (
+    EheimDigitalSelectDescription[EheimDigitalReeflexUV](
+        key="mode",
+        translation_key="mode",
+        value_fn=lambda device: device.mode.name.lower(),
+        set_value_fn=(
+            lambda device, value: device.set_mode(ReeflexMode[value.upper()])
+        ),
+        options=[name.lower() for name in ReeflexMode.__members__],
+    ),
+)
 
 FILTER_DESCRIPTIONS: tuple[EheimDigitalSelectDescription[EheimDigitalFilter], ...] = (
     EheimDigitalSelectDescription[EheimDigitalFilter](
@@ -175,6 +191,13 @@ async def async_setup_entry(
                 entities.extend(
                     EheimDigitalFilterSelect(coordinator, device, description)
                     for description in FILTER_DESCRIPTIONS
+                )
+            if isinstance(device, EheimDigitalReeflexUV):
+                entities.extend(
+                    EheimDigitalSelect[EheimDigitalReeflexUV](
+                        coordinator, device, description
+                    )
+                    for description in REEFLEX_DESCRIPTIONS
                 )
 
         async_add_entities(entities)

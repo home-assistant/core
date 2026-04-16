@@ -23,6 +23,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -30,7 +31,6 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
 from .websocket import async_register_websocket_handlers
@@ -63,7 +63,6 @@ SERVICE_STOP = "stop"
 DEFAULT_NAME = "Vacuum cleaner robot"
 
 ISSUE_SEGMENTS_CHANGED = "segments_changed"
-ISSUE_SEGMENTS_MAPPING_NOT_CONFIGURED = "segments_mapping_not_configured"
 
 _BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
@@ -71,7 +70,6 @@ _BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the vacuum is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -438,7 +436,14 @@ class StateVacuumEntity(
             )
 
         options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        area_mapping: dict[str, list[str]] = options.get("area_mapping", {})
+        area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
+
+        if area_mapping is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="area_mapping_not_configured",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
 
         # We use a dict to preserve the order of segments.
         segment_ids: dict[str, None] = {}

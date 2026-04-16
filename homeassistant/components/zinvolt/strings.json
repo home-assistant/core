@@ -26,8 +26,26 @@
   },
   "entity": {
     "binary_sensor": {
+      "charge": {
+        "name": "Charge"
+      },
+      "communication": {
+        "name": "Communication"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "discharge": {
+        "name": "Discharge"
+      },
       "on_grid": {
         "name": "Grid connection"
+      },
+      "other": {
+        "name": "Other problems"
+      },
+      "voltage": {
+        "name": "Voltage"
       }
     },
     "number": {

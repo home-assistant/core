@@ -77,7 +77,9 @@ EVENT_JOB = "job"
 UPDATE_KEY_SUPERVISOR = "supervisor"
 STARTUP_COMPLETE = "complete"
 
+MAIN_COORDINATOR = "hassio_main_coordinator"
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
+STATS_COORDINATOR = "hassio_stats_coordinator"
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
@@ -93,7 +95,10 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
+DATA_ADDONS_LIST = "hassio_addons_list"
+HASSIO_MAIN_UPDATE_INTERVAL = timedelta(minutes=5)
+HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)
+HASSIO_STATS_UPDATE_INTERVAL = timedelta(seconds=60)
 
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
@@ -106,6 +111,7 @@ ATTR_STATE = "state"
 ATTR_STARTED = "started"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
+ATTR_REPOSITORIES = "repositories"
 
 DATA_KEY_ADDONS = "addons"
 DATA_KEY_OS = "os"
@@ -130,6 +136,7 @@ ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
+ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
@@ -170,6 +177,7 @@ EXTRA_PLACEHOLDERS = {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
     },
     ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH: HELP_URLS,
 }
 
 

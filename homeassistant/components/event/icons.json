@@ -12,5 +12,10 @@
     "motion": {
       "default": "mdi:motion-sensor"
     }
+  },
+  "triggers": {
+    "received": {
+      "trigger": "mdi:eye-check"
+    }
   }
 }

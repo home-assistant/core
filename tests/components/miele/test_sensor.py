@@ -4,11 +4,12 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pymiele import MieleDevices
+from pymiele import MieleDevices, MieleTemperature
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
+from homeassistant.components.miele.sensor import _convert_temperature
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -96,7 +97,7 @@ async def test_oven_temperatures_scenario(
 ) -> None:
     """Parametrized test for verifying temperature sensors for oven devices."""
 
-    # Initial state when the oven is and created for the first time - don't know if it supports core temperature (probe)
+    # Initial state when the oven is created for the first time — no core probe entities yet
     check_sensor_state(hass, "sensor.oven_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_target_temperature", "unknown", 0)
     check_sensor_state(hass, "sensor.oven_core_temperature", None, 0)
@@ -204,6 +205,95 @@ def check_sensor_state(
         assert state.state == expected, (
             f"[{sensor_entity}] Step {step + 1}: got {state.state}, expected {expected}"
         )
+
+
+@pytest.mark.parametrize("load_device_file", ["oven.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+async def test_oven_core_probe_sensors_unknown_when_inactive(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+    device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Oven food-probe (core) sensors must not expose API inactive sentinels as temperatures.
+
+    Miele uses raw value -32768 (centidegrees) when the probe is not in use. After the
+    probe has reported a valid reading once, those entities must stay in the UI but
+    their state must be unknown—not a bogus numeric temperature.
+    """
+    core_temp = "sensor.oven_core_temperature"
+    core_target = "sensor.oven_core_target_temperature"
+
+    assert hass.states.get(core_temp) is None
+    assert hass.states.get(core_target) is None
+
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0]["value_raw"] = 3000
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0][
+        "value_localized"
+    ] = 30.0
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(core_temp) is not None
+    assert hass.states.get(core_temp).state == "22.0"
+    assert hass.states.get(core_target) is not None
+    assert hass.states.get(core_target).state == "30.0"
+
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0][
+        "value_raw"
+    ] = -32768
+    device_fixture["DummyOven"]["state"]["coreTargetTemperature"][0][
+        "value_localized"
+    ] = None
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = -32768
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = None
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(core_temp).state == STATE_UNKNOWN
+    assert hass.states.get(core_target).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("load_device_file", ["oven.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+async def test_oven_core_probe_unknown_when_inactive_raw_scaled(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: None,
+    device_fixture: MieleDevices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Some ovens report int16-min as centidegrees (-32768 -> -327.68 °C); others as -3276800 raw (-32768 °C).
+
+    Both must map to unknown, not a numeric sensor state.
+    """
+    core_temp = "sensor.oven_core_temperature"
+
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = 2200
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = 22.0
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(core_temp) is not None
+    assert hass.states.get(core_temp).state == "22.0"
+
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_raw"] = -3276800
+    device_fixture["DummyOven"]["state"]["coreTemperature"][0]["value_localized"] = None
+
+    freezer.tick(timedelta(seconds=130))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(core_temp).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("load_device_file", ["oven.json"])
@@ -747,3 +837,36 @@ async def test_elapsed_time_sensor_restored(
     state = hass.states.get(entity_id_abs)
     assert state is not None
     assert state.state == "2025-05-31T14:15:00+00:00"
+
+
+def _core_temperature_entry(value_raw: object | None) -> MieleTemperature:
+    """Build a MieleTemperature like the API returns for core/zone readings."""
+    return MieleTemperature({"value_raw": value_raw})
+
+
+@pytest.mark.parametrize(
+    ("entries", "index", "expected"),
+    [
+        ([], 0, None),
+        ([_core_temperature_entry(2200)], 1, None),
+        ([_core_temperature_entry(None)], 0, None),
+        ([_core_temperature_entry(-32768)], 0, None),
+        ([_core_temperature_entry(-32766)], 0, None),
+        ([_core_temperature_entry(-3276800)], 0, None),
+        ([_core_temperature_entry(-3276600)], 0, None),
+        ([_core_temperature_entry(2150)], 0, 21.5),
+    ],
+)
+def test_convert_temperature(
+    entries: list[MieleTemperature],
+    index: int,
+    expected: float | None,
+) -> None:
+    """Cover _convert_temperature branches (sentinels, scaling, bounds, valid values)."""
+    assert _convert_temperature(entries, index) == expected
+
+
+def test_convert_temperature_invalid_raw_types() -> None:
+    """int() must not raise: bad API payloads become unknown."""
+    assert _convert_temperature([_core_temperature_entry("n/a")], 0) is None
+    assert _convert_temperature([_core_temperature_entry([1])], 0) is None

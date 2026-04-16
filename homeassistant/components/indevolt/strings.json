@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "Failed to connect (aborted)"
+      "cannot_connect": "Failed to connect (aborted)",
+      "different_device": "The device at the new host has a different serial number. Please ensure the new host is the same device.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,6 +12,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::indevolt::config::step::user::data_description::host%]"
+        },
+        "description": "Update the connection details for your Indevolt device.",
+        "title": "Reconfigure Indevolt device"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -23,6 +35,11 @@
     }
   },
   "entity": {
+    "button": {
+      "stop": {
+        "name": "Enable standby mode"
+      }
+    },
     "number": {
       "discharge_limit": {
         "name": "Discharge limit"
@@ -276,6 +293,20 @@
       "light": {
         "name": "LED indicator"
       }
+    }
+  },
+  "exceptions": {
+    "energy_mode_change_unavailable_outdoor_portable": {
+      "message": "Energy mode cannot be changed when the device is in outdoor/portable mode"
+    },
+    "failed_to_execute_realtime_action": {
+      "message": "Failed to execute real-time action"
+    },
+    "failed_to_retrieve_current_energy_mode": {
+      "message": "Failed to retrieve current energy mode"
+    },
+    "failed_to_switch_energy_mode": {
+      "message": "Failed to switch to requested energy mode"
     }
   }
 }

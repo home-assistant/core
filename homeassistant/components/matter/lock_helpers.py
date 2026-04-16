@@ -9,11 +9,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import NullValue
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
-    CLEAR_ALL_INDEX,
     CRED_TYPE_FACE,
     CRED_TYPE_FINGER_VEIN,
     CRED_TYPE_FINGERPRINT,
@@ -71,6 +71,8 @@ class LockUserData(TypedDict):
     user_type: str
     credential_rule: str
     credentials: list[LockUserCredentialData]
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_user_index: int | None
 
 
@@ -115,6 +117,8 @@ class GetLockCredentialStatusResult(TypedDict):
 
     credential_exists: bool
     user_index: int | None
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_credential_index: int | None
 
 
@@ -156,11 +160,17 @@ def _get_attr(obj: Any, attr: str) -> Any:
     """Get attribute from object or dict.
 
     Matter SDK responses can be either dataclass objects or dicts depending on
-    the SDK version and serialization context.
+    the SDK version and serialization context. NullValue (a truthy,
+    non-iterable singleton) is normalized to None.
     """
     if isinstance(obj, dict):
-        return obj.get(attr)
-    return getattr(obj, attr, None)
+        value = obj.get(attr)
+    else:
+        value = getattr(obj, attr, None)
+    # The Matter SDK uses NullValue for nullable fields instead of None.
+    if value is NullValue:
+        return None
+    return value
 
 
 def _get_supported_credential_types(feature_map: int) -> list[str]:
@@ -208,47 +218,13 @@ def _format_user_response(user_data: Any) -> LockUserData | None:
             _get_attr(user_data, "credentialRule"), "unknown"
         ),
         credentials=credentials,
+        creator_fabric_index=_get_attr(user_data, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(user_data, "lastModifiedFabricIndex"),
         next_user_index=_get_attr(user_data, "nextUserIndex"),
     )
 
 
 # --- Credential management helpers ---
-
-
-async def _clear_user_credentials(
-    matter_client: MatterClient,
-    node_id: int,
-    endpoint_id: int,
-    user_index: int,
-) -> None:
-    """Clear all credentials for a specific user.
-
-    Fetches the user to get credential list, then clears each credential.
-    """
-    get_user_response = await matter_client.send_device_command(
-        node_id=node_id,
-        endpoint_id=endpoint_id,
-        command=clusters.DoorLock.Commands.GetUser(userIndex=user_index),
-    )
-
-    creds = _get_attr(get_user_response, "credentials")
-    if not creds:
-        return
-
-    for cred in creds:
-        cred_type = _get_attr(cred, "credentialType")
-        cred_index = _get_attr(cred, "credentialIndex")
-        await matter_client.send_device_command(
-            node_id=node_id,
-            endpoint_id=endpoint_id,
-            command=clusters.DoorLock.Commands.ClearCredential(
-                credential=clusters.DoorLock.Structs.CredentialStruct(
-                    credentialType=cred_type,
-                    credentialIndex=cred_index,
-                ),
-            ),
-            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-        )
 
 
 class LockEndpointNotFoundError(HomeAssistantError):
@@ -550,32 +526,15 @@ async def clear_lock_user(
     node: MatterNode,
     user_index: int,
 ) -> None:
-    """Clear a user from the lock, cleaning up credentials first.
+    """Clear a user from the lock.
 
+    Per the Matter spec, ClearUser also clears all associated credentials
+    and schedules for the user.
     Use index 0xFFFE (CLEAR_ALL_INDEX) to clear all users.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
     _ensure_usr_support(lock_endpoint)
-
-    if user_index == CLEAR_ALL_INDEX:
-        # Clear all: clear all credentials first, then all users
-        await matter_client.send_device_command(
-            node_id=node.node_id,
-            endpoint_id=lock_endpoint.endpoint_id,
-            command=clusters.DoorLock.Commands.ClearCredential(
-                credential=None,
-            ),
-            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
-        )
-    else:
-        # Clear credentials for this specific user before deleting them
-        await _clear_user_credentials(
-            matter_client,
-            node.node_id,
-            lock_endpoint.endpoint_id,
-            user_index,
-        )
 
     await matter_client.send_device_command(
         node_id=node.node_id,
@@ -596,6 +555,13 @@ _CREDENTIAL_TYPE_FEATURE_MAP: dict[str, int] = {
     CRED_TYPE_FINGERPRINT: DoorLockFeature.kFingerCredentials,
     CRED_TYPE_FINGER_VEIN: DoorLockFeature.kFingerCredentials,
     CRED_TYPE_FACE: DoorLockFeature.kFaceCredentials,
+}
+
+# Map credential type strings to the capacity attribute for slot iteration.
+# Biometric types have no dedicated capacity attribute; fall back to total users.
+_CREDENTIAL_TYPE_CAPACITY_ATTR = {
+    CRED_TYPE_PIN: clusters.DoorLock.Attributes.NumberOfPINUsersSupported,
+    CRED_TYPE_RFID: clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported,
 }
 
 
@@ -736,13 +702,15 @@ async def set_lock_credential(
     operation_type = clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
 
     if credential_index is None:
-        # Auto-find first available credential slot
+        # Auto-find first available credential slot.
+        # Use the credential-type-specific capacity as the upper bound.
+        max_creds_attr = _CREDENTIAL_TYPE_CAPACITY_ATTR.get(
+            credential_type,
+            clusters.DoorLock.Attributes.NumberOfTotalUsersSupported,
+        )
+        max_creds_raw = lock_endpoint.get_attribute_value(None, max_creds_attr)
         max_creds = (
-            lock_endpoint.get_attribute_value(
-                None,
-                clusters.DoorLock.Attributes.NumberOfCredentialsSupportedPerUser,
-            )
-            or 5
+            max_creds_raw if isinstance(max_creds_raw, int) and max_creds_raw > 0 else 5
         )
         for idx in range(1, max_creds + 1):
             status_response = await matter_client.send_device_command(
@@ -855,7 +823,8 @@ async def get_lock_credential_status(
 ) -> GetLockCredentialStatusResult:
     """Get the status of a credential slot on the lock.
 
-    Returns typed dict with credential_exists, user_index, next_credential_index.
+    Returns typed dict with credential_exists, user_index, creator_fabric_index,
+    last_modified_fabric_index, and next_credential_index.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
@@ -877,5 +846,7 @@ async def get_lock_credential_status(
     return GetLockCredentialStatusResult(
         credential_exists=bool(_get_attr(response, "credentialExists")),
         user_index=_get_attr(response, "userIndex"),
+        creator_fabric_index=_get_attr(response, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(response, "lastModifiedFabricIndex"),
         next_credential_index=_get_attr(response, "nextCredentialIndex"),
     )

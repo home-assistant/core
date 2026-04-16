@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entity[number.huum_sauna_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
