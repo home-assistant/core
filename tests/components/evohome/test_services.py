@@ -388,6 +388,30 @@ async def test_controller_services_with_zone_id(
     }
 
 
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_set_system_mode_entity_not_found(hass: HomeAssistant) -> None:
+    """Test set_system_mode with a non-existent entity_id raises entity_not_found."""
+
+    non_existent_entity_id = "climate.non_existent_entity"
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_SYSTEM_MODE,
+            {
+                ATTR_MODE: "Auto",
+                ATTR_ENTITY_ID: non_existent_entity_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "entity_not_found"
+    assert exc_info.value.translation_placeholders == {
+        ATTR_ENTITY_ID: non_existent_entity_id,
+    }
+
+
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
         {ATTR_MODE: "NotARealMode"},
