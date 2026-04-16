@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-import importlib.resources
-import json
 import logging
 import os
-from pathlib import Path
 import shutil
 
 from velbusaio.controller import Velbus
 from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.helpers import get_property_key_map
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
@@ -137,27 +135,12 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
             dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
 
-def _build_property_key_map() -> dict[str, str]:
-    """Build spec_key → class name mapping from velbusaio module_spec files."""
-    spec_path = Path(
-        str(importlib.resources.files("velbusaio").joinpath("module_spec"))
-    )
-    mapping: dict[str, str] = {}
-    for spec_file in spec_path.glob("*.json"):
-        data = json.loads(spec_file.read_text())
-        for key, prop_data in data.get("Properties", {}).items():
-            type_ = prop_data.get("Type")
-            if type_ and key not in mapping:
-                mapping[key] = type_
-    return mapping
-
-
 async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
     """Ensure property entity unique_ids use {serial}-{property_key} format."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
-    property_key_map = await hass.async_add_executor_job(_build_property_key_map)
+    property_key_map = await hass.async_add_executor_job(get_property_key_map)
     for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
         if not entry.original_name or not entry.device_id:
             continue
