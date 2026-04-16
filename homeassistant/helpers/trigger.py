@@ -7,6 +7,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import timedelta
 import functools
 import inspect
 import logging
@@ -31,6 +32,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_EVENT_DATA,
+    CONF_FOR,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -74,6 +76,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
+from .event import async_track_same_state
 from .integration_platform import async_process_integration_platforms
 from .selector import (
     NumericThresholdMode,
@@ -340,6 +343,7 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
+            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
         },
     }
 )
@@ -368,6 +372,7 @@ class EntityTriggerBase(Trigger):
         if TYPE_CHECKING:
             assert config.target is not None
         self._options = config.options or {}
+        self._duration: timedelta | None = self._options.get(CONF_FOR)
         self._target = config.target
 
     def entity_filter(self, entities: set[str]) -> set[str]:
@@ -398,16 +403,13 @@ class EntityTriggerBase(Trigger):
             and state.state not in self._excluded_states
         )
 
-    def check_one_match(self, entity_ids: set[str]) -> bool:
-        """Check that only one entity state matches."""
-        return (
-            sum(
-                self.is_valid_state(state)
-                for entity_id in entity_ids
-                if (state := self._hass.states.get(entity_id)) is not None
-                and state.state not in self._excluded_states
-            )
-            == 1
+    def count_matches(self, entity_ids: set[str]) -> int:
+        """Count the number of entity states that match."""
+        return sum(
+            self.is_valid_state(state)
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+            and state.state not in self._excluded_states
         )
 
     @override
@@ -416,7 +418,8 @@ class EntityTriggerBase(Trigger):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
-        behavior = self._options.get(ATTR_BEHAVIOR)
+        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_ANY)
+        unsub_track_same: dict[str, Callable[[], None]] = {}
 
         @callback
         def state_change_listener(
@@ -427,6 +430,30 @@ class EntityTriggerBase(Trigger):
             entity_id = event.data["entity_id"]
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
+
+            def state_still_valid(
+                _: str, from_state: State | None, to_state: State | None
+            ) -> bool:
+                """Check if the state is still valid during the duration wait.
+
+                Called by async_track_same_state on each state change to
+                determine whether to cancel the timer.
+                For behavior any, checks the individual entity's state.
+                For behavior first/last, checks the combined state.
+                """
+                if behavior == BEHAVIOR_LAST:
+                    return self.check_all_match(
+                        target_state_change_data.targeted_entity_ids
+                    )
+                if behavior == BEHAVIOR_FIRST:
+                    return (
+                        self.count_matches(target_state_change_data.targeted_entity_ids)
+                        >= 1
+                    )
+                # Behavior any: check the individual entity's state
+                if not to_state:
+                    return False
+                return self.is_valid_state(to_state)
 
             if not from_state or not to_state:
                 return
@@ -445,24 +472,64 @@ class EntityTriggerBase(Trigger):
                 ):
                     return
             elif behavior == BEHAVIOR_FIRST:
-                if not self.check_one_match(
-                    target_state_change_data.targeted_entity_ids
+                # Note: It's enough to test for exactly 1 match here because if there
+                # were previously 2 matches the transition would not be valid and we
+                # would have returned already.
+                if (
+                    self.count_matches(target_state_change_data.targeted_entity_ids)
+                    != 1
                 ):
                     return
 
-            run_action(
-                {
-                    ATTR_ENTITY_ID: entity_id,
-                    "from_state": from_state,
-                    "to_state": to_state,
-                },
-                f"state of {entity_id}",
-                event.context,
+            @callback
+            def call_action() -> None:
+                """Call action with right context."""
+                # After a `for` delay, keep the original triggering event payload.
+                # `async_track_same_state` only verifies the state remained valid
+                # for the configured duration before firing the action.
+                run_action(
+                    {
+                        ATTR_ENTITY_ID: entity_id,
+                        "from_state": from_state,
+                        "to_state": to_state,
+                        "for": self._duration,
+                    },
+                    f"state of {entity_id}",
+                    event.context,
+                )
+
+            if not self._duration:
+                call_action()
+                return
+
+            subscription_key = entity_id if behavior == BEHAVIOR_ANY else behavior
+            if subscription_key in unsub_track_same:
+                unsub_track_same.pop(subscription_key)()
+            unsub_track_same[subscription_key] = async_track_same_state(
+                self._hass,
+                self._duration,
+                call_action,
+                state_still_valid,
+                entity_ids=(
+                    entity_id
+                    if behavior == BEHAVIOR_ANY
+                    else target_state_change_data.targeted_entity_ids
+                ),
             )
 
-        return async_track_target_selector_state_change_event(
+        unsub = async_track_target_selector_state_change_event(
             self._hass, self._target, state_change_listener, self.entity_filter
         )
+
+        @callback
+        def async_remove() -> None:
+            """Remove state listeners async."""
+            unsub()
+            for async_remove in unsub_track_same.values():
+                async_remove()
+            unsub_track_same.clear()
+
+        return async_remove
 
 
 class EntityTargetStateTriggerBase(EntityTriggerBase):
