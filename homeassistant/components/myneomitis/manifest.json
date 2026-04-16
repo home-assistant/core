@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["pyaxencoapi==1.0.6"]
+  "requirements": ["pyaxencoapi==1.0.7"]
 }
