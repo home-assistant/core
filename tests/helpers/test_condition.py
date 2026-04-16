@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_OPTIONS,
     CONF_TARGET,
     STATE_OFF,
@@ -3950,11 +3952,13 @@ async def _setup_state_condition(
     states: str | bool | set[str | bool],
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
+    support_duration: bool = False,
 ) -> condition.ConditionCheckerType:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,
         states,
+        support_duration=support_duration,
     )
 
     async def async_get_conditions(
@@ -4127,3 +4131,213 @@ async def test_state_condition_behavior(
     # Neither on → False for any and all
     hass.states.async_set("test.entity_1", STATE_OFF)
     assert test(hass) is False
+
+
+async def test_state_condition_duration_not_met(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: entity hasn't been in state long enough."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Just turned on — duration not met
+    assert test(hass) is False
+
+    # Advance 5 seconds — still not enough
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is False
+
+
+async def test_state_condition_duration_met(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: entity has been in state long enough."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Advance past duration
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is True
+
+
+async def test_state_condition_duration_zero_behaves_like_no_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test that for: 0 behaves the same as omitting for.
+
+    The UI defaults to 00:00:00, so a zero duration must not require the
+    entity to have been in the state for any time — it should pass
+    immediately, just like when for is not specified.
+    """
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 0}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Should pass immediately — zero duration is the same as no duration
+    assert test(hass) is True
+
+
+async def test_state_condition_duration_wrong_state(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: entity in wrong state even after duration."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is False
+
+
+async def test_state_condition_duration_reset_on_state_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state condition with duration: timer resets when state changes."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Advance 8 seconds, then toggle off and back on — resets last_changed
+    freezer.tick(timedelta(seconds=8))
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # 5 seconds after retrigger — not enough
+    freezer.tick(timedelta(seconds=5))
+    assert test(hass) is False
+
+    # 6 more seconds (11 from retrigger) — now met
+    freezer.tick(timedelta(seconds=6))
+    assert test(hass) is True
+
+
+@pytest.mark.parametrize(
+    ("behavior", "one_match_expected"),
+    [(BEHAVIOR_ANY, True), (BEHAVIOR_ALL, False)],
+)
+async def test_state_condition_duration_behavior(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    behavior: str,
+    one_match_expected: bool,
+) -> None:
+    """Test state condition with duration and behavior any/all."""
+    test = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: behavior, CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Both on but duration not met
+    assert test(hass) is False
+
+    # Advance past duration — both on for long enough
+    freezer.tick(timedelta(seconds=11))
+    assert test(hass) is True
+
+    # Turn entity_2 off — only one on for duration → depends on behavior
+    hass.states.async_set("test.entity_2", STATE_OFF)
+    await hass.async_block_till_done()
+    assert test(hass) is one_match_expected
+
+    # Neither on → False for any and all
+    hass.states.async_set("test.entity_1", STATE_OFF)
+    await hass.async_block_till_done()
+    assert test(hass) is False
+
+
+@pytest.mark.parametrize(
+    "state_value",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN],
+)
+async def test_state_condition_duration_unavailable_unknown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, state_value: str
+) -> None:
+    """Test state condition with duration: unavailable/unknown entities are skipped.
+
+    Uses three entities: entity_1=on, entity_2=unavailable, entity_3 varies.
+    """
+    # behavior any: entity_1=on (long enough), entity_2=unavailable, entity_3=off
+    # → True (entity_1 matches and meets duration, entity_2 skipped)
+    test_any = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ANY, CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=11))
+    assert test_any(hass) is True
+
+    # behavior all: entity_1=on, entity_2=unavailable, entity_3=on (all long enough)
+    # → True (all available entities match and meet duration)
+    test_all = await _setup_state_condition(
+        hass,
+        entity_ids=["test.entity_1", "test.entity_2", "test.entity_3"],
+        states=STATE_ON,
+        condition_options={ATTR_BEHAVIOR: BEHAVIOR_ALL, CONF_FOR: {"seconds": 10}},
+        support_duration=True,
+    )
+    hass.states.async_set("test.entity_1", STATE_ON)
+    hass.states.async_set("test.entity_2", state_value)
+    hass.states.async_set("test.entity_3", STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=11))
+    assert test_all(hass) is True
+
+    # entity_3 off → not all available match
+    hass.states.async_set("test.entity_3", STATE_OFF)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=11))
+    assert test_all(hass) is False

@@ -19,9 +19,23 @@
       "message": "Only zones support the `{service}` action"
     }
   },
+  "issues": {
+    "deprecated_clear_zone_override_service": {
+      "description": "Using the `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
+      "title": "Evohome clear zone override action is deprecated"
+    },
+    "deprecated_preset_reset": {
+      "description": "Using the `Reset` preset on an Evohome controller is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
+      "title": "Evohome Reset preset is deprecated"
+    },
+    "deprecated_reset_system_service": {
+      "description": "Using the `reset_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
+      "title": "Evohome reset system action is deprecated"
+    }
+  },
   "services": {
     "clear_zone_override": {
-      "description": "Sets the zone to follow its schedule.",
+      "description": "Sets a zone to follow its schedule (deprecated).",
       "name": "Clear zone override"
     },
     "refresh_system": {
@@ -29,11 +43,11 @@
       "name": "Refresh system"
     },
     "reset_system": {
-      "description": "Sets the system mode to `Auto` mode and resets all the zones to follow their schedules. Not all Evohome systems support this feature (i.e. `AutoWithReset` mode).",
+      "description": "Sets a system's mode to `Auto` mode and resets all its zones to follow their schedules (deprecated). Some older systems may not support this feature.",
       "name": "Reset system"
     },
     "set_dhw_override": {
-      "description": "Overrides the DHW state, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
+      "description": "Overrides a DHW's state, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
       "fields": {
         "duration": {
           "description": "The DHW will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",
@@ -47,7 +61,7 @@
       "name": "Set DHW override"
     },
     "set_system_mode": {
-      "description": "Sets the system mode, either indefinitely or until a specified end time, after which it will revert to `Auto`. Not all systems support all modes.",
+      "description": "Sets a system's mode, either indefinitely or until a specified end time, after which it will revert to `Auto`. Not all systems support all modes.",
       "fields": {
         "duration": {
           "description": "The duration in hours; used only with `AutoWithEco` mode (up to 24 hours).",
@@ -65,7 +79,7 @@
       "name": "Set system mode"
     },
     "set_zone_override": {
-      "description": "Overrides the zone setpoint, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
+      "description": "Overrides a zone's setpoint, either indefinitely or for a specified duration, after which it will revert to following its schedule.",
       "fields": {
         "duration": {
           "description": "The zone will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",

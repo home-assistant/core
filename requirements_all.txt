@@ -806,6 +806,9 @@ deluge-client==1.10.2
 # homeassistant.components.lametric
 demetriek==1.3.0
 
+# homeassistant.components.denon_rs232
+denon-rs232==4.1.0
+
 # homeassistant.components.denonavr
 denonavr==1.3.2
 
@@ -1081,7 +1084,7 @@ gios==7.0.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.8.0
+glances-api==0.10.0
 
 # homeassistant.components.go2rtc
 go2rtc-client==0.4.0
