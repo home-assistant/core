@@ -68,7 +68,7 @@ def make_mock_entry(data: dict | None = None) -> MagicMock:
         CONF_APP_ID: TEST_APP_ID,
         CONF_SERIAL: TEST_SERIAL,
         CONF_APP_LOCALE: "en",
-        CONF_DEV_TYPE: BlancoDeviceType.AIO,
+        CONF_DEV_TYPE: int(BlancoDeviceType.AIO),
     }
     entry = MagicMock()
     entry.data = {**default_data, **(data or {})}

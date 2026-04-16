@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_APP_ID,
@@ -96,8 +95,6 @@ async def _async_setup_language_listener(
 
 async def async_setup_entry(hass: HomeAssistant, entry: BlancoConfigEntry) -> bool:
     """Set up blanco from a config entry."""
-    integration = await async_get_integration(hass, DOMAIN)
-    build = integration.manifest.get("build")
     _LOGGER.debug("Setting up %s", DOMAIN)
 
     app_id = await _async_ensure_app_registered(hass, entry)
@@ -111,8 +108,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlancoConfigEntry) -> bo
         dev_type=entry.data.get(CONF_DEV_TYPE),
         serial=entry.data[CONF_SERIAL],
         app_id=app_id,
-        app_version=str(integration.version or ""),
-        app_build=str(build or ""),
+        app_version="",
+        app_build="",
     )
     await coordinator.async_config_entry_first_refresh()
     dev_name = coordinator.data.get("system", {}).get("params", {}).get("dev_name")
