@@ -4689,11 +4689,7 @@ async def test_bluetooth_provision_secure_device_both_enabled(
     )
 
     # Provision and verify security calls
-    mock_device = AsyncMock()
-    mock_device.initialize = AsyncMock()
-    mock_device.wifi_setconfig = AsyncMock(return_value={})
-    mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
-    mock_device.shutdown = AsyncMock()
+    mock_device = create_mock_rpc_device()
 
     with (
         patch(
@@ -4802,10 +4798,7 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
     )
 
     # Provision and verify only AP disabled
-    mock_device = AsyncMock()
-    mock_device.initialize = AsyncMock()
-    mock_device.wifi_setconfig = AsyncMock(return_value={})
-    mock_device.shutdown = AsyncMock()
+    mock_device = create_mock_rpc_device()
 
     with (
         patch(
@@ -4864,10 +4857,7 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
     )
 
     # Provision and verify only BLE disabled
-    mock_device = AsyncMock()
-    mock_device.initialize = AsyncMock()
-    mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": False})
-    mock_device.shutdown = AsyncMock()
+    mock_device = create_mock_rpc_device()
 
     with (
         patch(
@@ -4926,12 +4916,8 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
     )
 
     # Provision and verify restart is triggered
-    mock_device = AsyncMock()
-    mock_device.initialize = AsyncMock()
-    mock_device.wifi_setconfig = AsyncMock(return_value={})
+    mock_device = create_mock_rpc_device()
     mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": True})
-    mock_device.trigger_reboot = AsyncMock()
-    mock_device.shutdown = AsyncMock()
 
     with (
         patch(
@@ -4990,10 +4976,8 @@ async def test_bluetooth_provision_secure_device_fails_gracefully(
     )
 
     # Provision with security calls failing - wifi_setconfig will fail
-    mock_device = AsyncMock()
-    mock_device.initialize = AsyncMock()
+    mock_device = create_mock_rpc_device()
     mock_device.wifi_setconfig = AsyncMock(side_effect=RpcCallError("RPC call failed"))
-    mock_device.shutdown = AsyncMock()
 
     with (
         patch(
@@ -5121,9 +5105,8 @@ async def test_bluetooth_ble_initialize_failure_cleans_up(
     hass: HomeAssistant,
 ) -> None:
     """Test that initialize failure properly cleans up the device."""
-    mock_device = AsyncMock()
+    mock_device = create_mock_rpc_device()
     mock_device.initialize = AsyncMock(side_effect=DeviceConnectionError)
-    mock_device.shutdown = AsyncMock()
 
     inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
 
