@@ -117,10 +117,16 @@ def _resolve_ctl_unique_id(
 
     entry = er.async_get(hass).async_get(entity_id)
 
+    if entry is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="entity_not_found",
+            translation_placeholders={ATTR_ENTITY_ID: entity_id},
+        )
+
     # currently, evohome supports only 1 controller
     if (
-        entry is None
-        or entry.domain != CLIMATE_DOMAIN
+        entry.domain != CLIMATE_DOMAIN
         or entry.platform != DOMAIN
         or entry.unique_id != tcs_id
     ):

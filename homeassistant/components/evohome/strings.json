@@ -3,6 +3,9 @@
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"
     },
+    "entity_not_found": {
+      "message": "The specified Evohome entity `{entity_id}` could not be found"
+    },
     "invalid_system_mode": {
       "message": "The requested system mode is not supported: {error}"
     },
