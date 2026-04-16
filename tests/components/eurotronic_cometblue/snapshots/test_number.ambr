@@ -182,7 +182,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_minutes-entry]
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -201,7 +201,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_minutes',
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_delay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -209,26 +209,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Window open minutes',
+    'object_id_base': 'Window open delay',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Window open minutes',
+    'original_name': 'Window open delay',
     'platform': 'eurotronic_cometblue',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'window_open_minutes',
-    'unique_id': 'aa:bb:cc:dd:ee:ff-window_open_minutes',
+    'translation_key': 'window_open_delay',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-window_open_delay',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_minutes-state]
+# name: test_number_state[number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Window open minutes',
+      'friendly_name': 'Comet Blue aa:bb:cc:dd:ee:ff Window open delay',
       'max': 15.0,
       'min': 5.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -236,7 +236,7 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_minutes',
+    'entity_id': 'number.comet_blue_aa_bb_cc_dd_ee_ff_window_open_delay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

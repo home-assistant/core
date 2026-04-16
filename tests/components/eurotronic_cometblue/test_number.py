@@ -49,7 +49,7 @@ async def test_number_disabled_by_default_entities(
     """Test disabled-by-default number entities are not available."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
 
-    for key in ("offset", "window_open_minutes"):
+    for key in ("offset", "window_open_delay"):
         entity_id = _number_entity_id(entity_registry, key)
 
         assert (entry := entity_registry.async_get(entity_id))

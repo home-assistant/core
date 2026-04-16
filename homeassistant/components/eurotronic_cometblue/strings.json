@@ -46,8 +46,8 @@
       "target_temp_low": {
         "name": "Target temperature low"
       },
-      "window_open_minutes": {
-        "name": "Window open minutes"
+      "window_open_delay": {
+        "name": "Window open delay"
       }
     }
   }

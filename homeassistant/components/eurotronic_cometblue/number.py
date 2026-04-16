@@ -88,9 +88,9 @@ DESCRIPTIONS = [
         entity_registry_enabled_default=True,
     ),
     CometBlueNumberEntityDescription(
-        key="window_open_minutes",
+        key="window_open_delay",
         cometblue_key="windowOpenMinutes",
-        translation_key="window_open_minutes",
+        translation_key="window_open_delay",
         device_class=NumberDeviceClass.DURATION,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.MINUTES,
