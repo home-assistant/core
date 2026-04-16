@@ -3143,16 +3143,18 @@ async def test_register_batched_platform_entity_service(
     await entity_platform.async_add_entities([entity1, entity2])
 
     await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": entity1.entity_id}, blocking=True
+    )
+    assert len(calls) == 1
+    assert calls[0][0] == [entity1]
+    # Verify entity service fields are stripped from the ServiceCall
+    assert calls[0][1].data == {}
+
+    await hass.services.async_call(
         "mock_platform", "hello", {"entity_id": "all"}, blocking=True
     )
-
-    assert len(calls) == 1
-    assert {e.entity_id for e in calls[0][0]} == {
-        "mock_integration.entity1",
-        "mock_integration.entity2",
-    }
-    # Verify entity service fields are stripped from the ServiceCall
-    assert ATTR_ENTITY_ID not in calls[0][1].data
+    assert len(calls) == 2
+    assert calls[1][0] == unordered([entity1, entity2])
 
 
 async def test_register_batched_platform_entity_service_response_data(

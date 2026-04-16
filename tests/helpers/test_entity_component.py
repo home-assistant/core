@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_HOMEASSISTANT_STOP,
@@ -719,10 +719,8 @@ async def test_register_batched_entity_service(hass: HomeAssistant) -> None:
         blocking=True,
     )
     assert len(calls) == 1
-    assert len(calls[0][0]) == 1
-    assert calls[0][0][0].entity_id == f"{DOMAIN}.entity1"
+    assert calls[0][0] == [entity1]
     # Verify entity service fields are stripped from the ServiceCall
-    assert ATTR_ENTITY_ID not in calls[0][1].data
     assert calls[0][1].data == {"some": "data"}
 
     await hass.services.async_call(
@@ -732,7 +730,7 @@ async def test_register_batched_entity_service(hass: HomeAssistant) -> None:
         blocking=True,
     )
     assert len(calls) == 2
-    assert len(calls[1][0]) == 2
+    assert calls[1][0] == unordered([entity1, entity2])
 
     await hass.services.async_call(
         DOMAIN,
