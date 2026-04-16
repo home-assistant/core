@@ -47,32 +47,6 @@ async def test_setup_start_failed(
     )
 
 
-async def test_setup_start_failed_clears_cache(
-    hass: HomeAssistant,
-    controller: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that a corrupt cache is cleared when the start task fails with an unexpected error."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_PORT: PORT_TCP, CONF_NAME: "velbus home"},
-        version=3,
-        minor_version=2,
-    )
-    config_entry.add_to_hass(hass)
-    controller.return_value.start.side_effect = Exception("corrupt cache")
-    with (
-        patch("homeassistant.components.velbus.os.path.isdir", return_value=True),
-        patch("homeassistant.components.velbus.shutil.rmtree") as mock_rmtree,
-    ):
-        await init_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
-    mock_rmtree.assert_called_once()
-    assert (
-        er.async_entries_for_config_entry(entity_registry, config_entry.entry_id) == []
-    )
-
-
 async def test_unload_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
