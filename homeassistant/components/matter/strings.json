@@ -179,6 +179,8 @@
               "multi_press_6": "Pressed 6 times",
               "multi_press_7": "Pressed 7 times",
               "multi_press_8": "Pressed 8 times",
+              "multi_press_complete": "Multiple presses finished",
+              "multi_press_ongoing": "Multiple presses in progress",
               "short_release": "Released after being pressed",
               "switch_latched": "Switch latched"
             }
