@@ -6,7 +6,6 @@ import asyncio
 from asyncio import Task
 import json
 import logging
-from typing import cast
 
 from serialx import Parity, SerialException, StopBits, open_serial_connection
 import voluptuous as vol
@@ -79,28 +78,17 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Serial sensor platform."""
-    name = cast(str, config[CONF_NAME])
-    port = cast(str, config[CONF_SERIAL_PORT])
-    baudrate = cast(int, config[CONF_BAUDRATE])
-    bytesize = cast(int, config[CONF_BYTESIZE])
-    parity = cast(Parity, config[CONF_PARITY])
-    stopbits = cast(StopBits, config[CONF_STOPBITS])
-    xonxoff = cast(bool, config[CONF_XONXOFF])
-    rtscts = cast(bool, config[CONF_RTSCTS])
-    dsrdtr = cast(bool, config[CONF_DSRDTR])
-    value_template = cast(Template, config[CONF_VALUE_TEMPLATE])
-
     sensor = SerialSensor(
-        name,
-        port,
-        baudrate,
-        bytesize,
-        parity,
-        stopbits,
-        xonxoff,
-        rtscts,
-        dsrdtr,
-        value_template,
+        name=config[CONF_NAME],
+        port=config[CONF_SERIAL_PORT],
+        baudrate=config[CONF_BAUDRATE],
+        bytesize=config[CONF_BYTESIZE],
+        parity=config[CONF_PARITY],
+        stopbits=config[CONF_STOPBITS],
+        xonxoff=config[CONF_XONXOFF],
+        rtscts=config[CONF_RTSCTS],
+        dsrdtr=config[CONF_DSRDTR],
+        value_template=config.get(CONF_VALUE_TEMPLATE),
     )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read)
@@ -123,7 +111,7 @@ class SerialSensor(SensorEntity):
         xonxoff: bool,
         rtscts: bool,
         dsrdtr: bool,
-        value_template: Template,
+        value_template: Template | None,
     ) -> None:
         """Initialize the Serial sensor."""
         self._attr_name = name
