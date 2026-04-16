@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError, Plane
+from forecast_solar import (
+    Estimate,
+    ForecastSolar,
+    ForecastSolarConfigError,
+    ForecastSolarConnectionError,
+    Plane,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -96,3 +102,5 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             return await self.forecast.estimate()
         except ForecastSolarConnectionError as error:
             raise UpdateFailed(error) from error
+        except ForecastSolarConfigError as error:
+            raise UpdateFailed(f"Invalid configuration: {error}") from error
