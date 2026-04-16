@@ -99,11 +99,9 @@ async def test_set_system_mode_deprecated(
 
         mock_fcn.assert_awaited_once_with("Auto", until=None)
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, "deprecated_set_system_mode_service_call"
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")
     assert issue
-    assert issue.translation_key == "deprecated_controller_service_call"
+    assert issue.translation_key == "deprecated_controller_service"
     assert issue.translation_placeholders == {
         "breaks_in_ha_version": SERVICE_BREAKS_IN_HA_VERSION,
         "service": EvoService.SET_SYSTEM_MODE,
@@ -188,7 +186,7 @@ async def test_set_system_mode(
             "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_controller_service_call")
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_controller_service")
     assert issue is None
 
 

@@ -27,7 +27,7 @@
       "description": "Using the `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
       "title": "Evohome clear zone override action is deprecated"
     },
-    "deprecated_controller_service_call": {
+    "deprecated_controller_service": {
       "description": "Calling the `{service}` service without `entity_id` is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Update any automation or script to include the Evohome controller climate `entity_id`.",
       "title": "Untargeted Evohome controller service call deprecated"
     },

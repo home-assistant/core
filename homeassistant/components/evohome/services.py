@@ -108,9 +108,9 @@ def _resolve_ctl_unique_id(
     if (entity_id := call.data.get(ATTR_ENTITY_ID)) is None:
         async_create_deprecation_issue_once(
             hass,
-            f"deprecated_{call.service}_service_call",
+            f"deprecated_{call.service}_service",
             SERVICE_BREAKS_IN_HA_VERSION,
-            translation_key="deprecated_controller_service_call",
+            translation_key="deprecated_controller_service",
             translation_placeholders={"service": call.service},
         )
         return tcs_id
