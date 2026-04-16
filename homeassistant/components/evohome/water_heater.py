@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -39,11 +40,12 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create a DHW controller."""
+    """Set up the water heater platform for Evohome."""
+
     if discovery_info is None:
         return
 
@@ -69,7 +71,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for any evohome-compatible DHW controller."""
 
     _attr_name = "DHW controller"
-    _attr_icon = "mdi:thermometer-lines"
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_supported_features = (
         WaterHeaterEntityFeature.AWAY_MODE
@@ -96,6 +97,28 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._attr_precision = (
             PRECISION_TENTHS if coordinator.client_v1 else PRECISION_WHOLE
         )
+
+    async def async_set_dhw_override(
+        self, state: bool, duration: timedelta | None = None
+    ) -> None:
+        """Override the DHW zone's on/off state, either permanently or for a duration."""
+
+        if duration is None:
+            until = None  # indefinitely, aka permanent override
+        elif duration.total_seconds() == 0:
+            await self._update_schedule()
+            until = self.setpoints.get("next_sp_from")
+        else:
+            until = dt_util.now() + duration
+
+        until = dt_util.as_utc(until) if until else None
+
+        if state:
+            await self.coordinator.call_client_api(self._evo_device.set_on(until=until))
+        else:
+            await self.coordinator.call_client_api(
+                self._evo_device.set_off(until=until)
+            )
 
     @property
     def current_operation(self) -> str | None:

@@ -2151,6 +2151,7 @@ NO_QUALITY_SCALE = [
     "search",
     "system_health",
     "system_log",
+    "unifi_discovery",
     "tag",
     "temperature",
     "timer",
@@ -2172,7 +2173,7 @@ SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Optional("comment"): str,
+                            vol.Required("comment"): str,
                         }
                     ),
                     vol.Schema(
