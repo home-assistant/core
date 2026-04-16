@@ -124,9 +124,8 @@ class TestProtocolAcClimate:
     ) -> None:
         """Validate _send_update failure branches."""
         with (
-            patch.object(
-                protocol_ac_entity,
-                "async_resolve_control_hosts",
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
                 return_value=([], None),
             ),
             pytest.raises(HomeAssistantError, match="Device host is missing"),
@@ -144,19 +143,21 @@ class TestProtocolAcClimate:
             friendly_name="test",
             remote_snapshot={"type": "AC", "model": {}},
         )
-        with patch.object(
-            no_proto, "async_resolve_control_hosts", return_value=(["host"], None)
+        with (
+            patch(
+                "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
+                return_value=(["host"], None),
+            ),
+            pytest.raises(HomeAssistantError, match="AC protocol is missing"),
         ):
-            with pytest.raises(HomeAssistantError, match="AC protocol is missing"):
-                await no_proto._send_update(power=1)
+            await no_proto._send_update(power=1)
 
     async def test_send_update_success_and_timeout(
         self, protocol_ac_entity: stips_climate.StipsIruClimate
     ) -> None:
         """Validate timeout and success behavior of _send_update."""
-        with patch.object(
-            protocol_ac_entity,
-            "async_resolve_control_hosts",
+        with patch(
+            "homeassistant.components.stips_iru1.climate.async_build_control_hosts",
             return_value=(["host1"], "10.0.0.8"),
         ):
             with patch(

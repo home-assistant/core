@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
 )
@@ -255,7 +255,7 @@ async def async_setup_entry(
             friendly = remote.get("friendlyName") or remote.get("type") or "AC"
             rid = (
                 str(remote_id)
-                if remote_id
+                if remote_id is not None
                 else f"{idx}_{str(friendly).strip().lower().replace(' ', '_')}"
             )
 
@@ -365,7 +365,7 @@ class StipsIruClimate(ClimateEntity):
             manufacturer="STIPS",
             model="IRU1",
             connections={
-                ("mac", self._device_mac)
+                (CONNECTION_NETWORK_MAC, self._device_mac)
             }
             if self._device_mac
             else set(),
@@ -408,10 +408,6 @@ class StipsIruClimate(ClimateEntity):
         return {
             "device_unique_name": self._device_unique_name,
             "unique_name": self._device_unique_name,
-            "device_ip": self._device_ip_live or self._device_ip or None,
-            "device_ip_backend": self._device_ip or None,
-            "device_ip_live": self._device_ip_live or None,
-            "device_mac": self._device_mac or None,
             "device_online": self._device_online,
             "remote_type": self._remote_snapshot.get("type"),
             "protocol": self._proto,
@@ -471,7 +467,8 @@ class StipsIruClimate(ClimateEntity):
         )
         if not hosts:
             raise HomeAssistantError(
-                "Device host is missing; run stips_iru1.refresh_catalog while the IRU is online."
+                "Device host is missing; reload or reconfigure the STIPS IRU1 integration, "
+                "or update the device IP in the config entry if it has changed."
             )
         if live_ip:
             self._device_ip_live = live_ip
@@ -643,7 +640,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
             manufacturer="STIPS",
             model="IRU1",
             connections={
-                ("mac", self._device_mac)
+                (CONNECTION_NETWORK_MAC, self._device_mac)
             }
             if self._device_mac
             else set(),
@@ -678,10 +675,6 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         return {
             "device_unique_name": self._device_unique_name,
             "unique_name": self._device_unique_name,
-            "device_ip": self._device_ip_live or self._device_ip or None,
-            "device_ip_backend": self._device_ip or None,
-            "device_ip_live": self._device_ip_live or None,
-            "device_mac": self._device_mac or None,
             "device_online": self._device_online,
             "remote_type": self._remote_type,
             "learned_signal_count": len(self._signals),
@@ -759,7 +752,8 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         )
         if not hosts:
             raise HomeAssistantError(
-                "Device host is missing; run stips_iru1.refresh_catalog while the IRU is online."
+                "Device host is missing; reload or reconfigure the STIPS IRU1 integration, "
+                "or update the device IP in the config entry if it has changed."
             )
         if live_ip:
             self._device_ip_live = live_ip

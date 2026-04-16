@@ -71,7 +71,7 @@ async def test_async_fetch_device_info_live_ip_success(hass: HomeAssistant) -> N
     mock_response.json = AsyncMock(return_value={"ip_address": "10.0.0.123"})
 
     with patch(
-        "homeassistant.helpers.aiohttp_client.async_get_clientsession"
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
     ) as mock_session:
         mock_session.return_value.get = AsyncMock(
             return_value=mock_response.__aenter__.return_value
@@ -89,7 +89,7 @@ async def test_async_fetch_device_info_live_ip_timeout(
 ) -> None:
     """Test fetch handles timeout."""
     with patch(
-        "homeassistant.helpers.aiohttp_client.async_get_clientsession"
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
     ) as mock_session:
         mock_session.return_value.get = AsyncMock(side_effect=TimeoutError())
 
@@ -106,7 +106,7 @@ async def test_async_fetch_device_info_live_ip_http_error(
     mock_response.status = 500
 
     with patch(
-        "homeassistant.helpers.aiohttp_client.async_get_clientsession"
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
     ) as mock_session:
         mock_session.return_value.get = AsyncMock(
             return_value=mock_response.__aenter__.return_value
