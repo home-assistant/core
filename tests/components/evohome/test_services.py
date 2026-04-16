@@ -365,31 +365,27 @@ async def test_zone_services_with_ctl_id(
 
 
 @pytest.mark.parametrize("install", ["default"])
-@pytest.mark.parametrize(
-    ("service", "service_data"),
-    [
-        (EvoService.RESET_SYSTEM, {}),
-        (EvoService.SET_SYSTEM_MODE, {ATTR_MODE: "Auto"}),
-    ],
-)
 async def test_controller_services_with_zone_id(
     hass: HomeAssistant,
     zone_id: str,
-    service: EvoService,
-    service_data: dict[str, Any],
 ) -> None:
     """Test calling controller-only service calls with a zone entity_id fails."""
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            service,
-            {**service_data, ATTR_ENTITY_ID: zone_id},
+            EvoService.SET_SYSTEM_MODE,
+            {
+                ATTR_MODE: "Auto",
+                ATTR_ENTITY_ID: zone_id,
+            },
             blocking=True,
         )
 
     assert exc_info.value.translation_key == "controller_only_service"
-    assert exc_info.value.translation_placeholders == {"service": service}
+    assert exc_info.value.translation_placeholders == {
+        "service": EvoService.SET_SYSTEM_MODE,
+    }
 
 
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [

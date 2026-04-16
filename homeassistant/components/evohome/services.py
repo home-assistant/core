@@ -227,7 +227,7 @@ def setup_service_functions(
             _validate_set_system_mode_params(coordinator.tcs, call.data)
             unique_id = _resolve_ctl_unique_id(hass, call, coordinator.tcs.id)
         else:
-            # this service call will be deprecated altogther, so no need to do so here
+            # this service call to be deprecated, so no need to _resolve_ctl_unique_id
             unique_id = coordinator.tcs.id
 
         payload = {
