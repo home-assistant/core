@@ -12,10 +12,12 @@ SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ENTRYPOINT ["/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"]
 WORKDIR "/github/workspace"
 
-COPY . /usr/src/homeassistant
+COPY --parents requirements.txt homeassistant/ script /usr/src/homeassistant/
 
 # Uv creates a lock file in /tmp
 RUN --mount=type=tmpfs,target=/tmp \
+    --mount=type=bind,source=requirements_test.txt,target=/tmp/requirements_test.txt,readonly \
+    --mount=type=bind,source=requirements_test_pre_commit.txt,target=/tmp/requirements_test_pre_commit.txt,readonly \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
     # Install uv at the version pinned in the requirements file
@@ -25,9 +27,9 @@ RUN --mount=type=tmpfs,target=/tmp \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        pipdeptree==2.26.1 \
-        tqdm==4.67.1 \
-        ruff==0.15.1
+        "pipdeptree==$(awk -F'==' '/^pipdeptree==/{print $2}' /tmp/requirements_test.txt)" \
+        "tqdm==$(awk -F'==' '/^tqdm==/{print $2}' /tmp/requirements_test.txt)" \
+        "ruff==$(awk -F'==' '/^ruff==/{print $2}' /tmp/requirements_test_pre_commit.txt)"
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"
