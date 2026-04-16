@@ -5,12 +5,7 @@ from __future__ import annotations
 import contextlib
 import logging
 
-from blanco_smart_home_api_client import (
-    BlancoApiClient,
-    BlancoConnectionError,
-    BlancoLogLevel,
-    blanco_log,
-)
+from blanco_smart_home_api_client import BlancoApiClient, BlancoConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -104,17 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlancoConfigEntry) -> bo
     """Set up blanco from a config entry."""
     integration = await async_get_integration(hass, DOMAIN)
     build = integration.manifest.get("build")
-    version: str = str(integration.version or "")
-    version_str: str = (
-        f"{version} ({build})" if (version and build is not None) else (version or "—")
-    )
-    blanco_log(
-        _LOGGER,
-        BlancoLogLevel.INFO,
-        "Starting %s v%s",
-        integration.name,
-        version_str,
-    )
+    _LOGGER.debug("Setting up %s", DOMAIN)
 
     migrate_sensor_units(hass, entry.entry_id)
     migrate_entity_ids(

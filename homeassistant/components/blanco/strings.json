@@ -60,34 +60,14 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please enter the serial number and the Service Code of your BLANCO device.\nMake sure that the RCA (secure connection link) has been activated beforehand in the UNIT app under Settings → Smart Home.",
+        "description": "Please enter the serial number and the service code of your BLANCO device.\nMake sure that the RCA (secure connection link) has been activated beforehand in the UNIT app under Settings → Smart Home.",
         "data": {
           "serial": "Serial number",
-          "service_code": "Service Code"
+          "service_code": "Service code"
         },
         "data_description": {
           "serial": "The serial number of your BLANCO device, found on the device label (e.g. 123456789012).",
-          "service_code": "The Service Code shown in the BLANCO UNIT app under Settings → Smart Home."
-        }
-      },
-      "reauth_confirm": {
-        "description": "Re-enter the Service Code for your BLANCO device ({serial}) to restore the connection.",
-        "data": {
-          "service_code": "[%key:component::blanco::config::step::user::data::service_code%]"
-        },
-        "data_description": {
-          "service_code": "[%key:component::blanco::config::step::user::data_description::service_code%]"
-        }
-      },
-      "reconfigure": {
-        "description": "Update the credentials for your BLANCO device. The serial number must match the existing entry.",
-        "data": {
-          "serial": "[%key:component::blanco::config::step::user::data::serial%]",
-          "service_code": "[%key:component::blanco::config::step::user::data::service_code%]"
-        },
-        "data_description": {
-          "serial": "[%key:component::blanco::config::step::user::data_description::serial%]",
-          "service_code": "[%key:component::blanco::config::step::user::data_description::service_code%]"
+          "service_code": "The service code shown in the BLANCO UNIT app under Settings → Smart Home."
         }
       }
     },
@@ -96,13 +76,10 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "access_not_granted": "Invalid authentication. Please grant access via the BLANCO UNIT app and try again. You must be within Bluetooth range of the device to grant access.",
       "device_type_not_supported": "This device type is currently not supported for smart home applications.",
-      "serial_mismatch": "The serial number does not match the existing device. Please enter the original serial number.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "issues": {

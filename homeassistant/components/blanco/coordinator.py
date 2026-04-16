@@ -14,12 +14,10 @@ from blanco_smart_home_api_client import (
     BlancoApiError,
     BlancoConnectionError,
     BlancoErrorType,
-    BlancoLogLevel,
     BlancoTokenExpiredError,
     BlancoWaterType,
     HttpStatus,
     StatTotalItem,
-    blanco_log,
 )
 
 from homeassistant.components.recorder.models import (
@@ -323,11 +321,11 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         Returns True if the token was successfully renewed, False otherwise.
         """
-        blanco_log(_LOGGER, BlancoLogLevel.INFO, "Attempting token renewal...")
+        _LOGGER.debug("Attempting token renewal...")
         try:
             auth = await self._api.renew_token(self._entry.data[CONF_DEV_ID])
         except BlancoApiError as err:
-            blanco_log(_LOGGER, BlancoLogLevel.ERROR, "Token renewal failed: %s", err)
+            _LOGGER.error("Token renewal failed: %s", err)
             return False
 
         new_token = auth["token"]
@@ -343,7 +341,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         # Update authorization in api client for subsequent requests.
         self._api.update_authorization(new_token, new_token_type)
-        blanco_log(_LOGGER, BlancoLogLevel.INFO, "Token successfully renewed")
+        _LOGGER.debug("Token successfully renewed")
         return True
 
     async def _async_get_with_retry(
@@ -360,9 +358,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await api_method(*args)
         except BlancoTokenExpiredError:
-            blanco_log(
-                _LOGGER, BlancoLogLevel.WARNING, "Token expired, attempting renewal..."
-            )
+            _LOGGER.warning("Token expired, attempting renewal...")
             if not await self._async_renew_token():
                 raise ConfigEntryAuthFailed(
                     "Token renewal failed — reauthentication required"
@@ -378,9 +374,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         self._actions_504_count += 1
         suffix = " during backfill" if is_backfill else ""
-        blanco_log(
-            _LOGGER,
-            BlancoLogLevel.WARNING,
+        _LOGGER.warning(
             "Actions endpoint returned 504%s (consecutive: %d/%d)",
             suffix,
             self._actions_504_count,
@@ -397,9 +391,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._entry,
                 data={**self._entry.data, **extra},
             )
-            blanco_log(
-                _LOGGER,
-                BlancoLogLevel.WARNING,
+            _LOGGER.warning(
                 "504 limit reached — advancing _last_action_ts to %d ms%s",
                 now_ts,
                 ", marking backfill as done" if is_backfill else "",
@@ -410,7 +402,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         Raises BlancoConnectionError if any page request fails.
         """
-        blanco_log(_LOGGER, BlancoLogLevel.INFO, "Starting historical actions backfill")
+        _LOGGER.debug("Starting historical actions backfill")
         all_actions: list[dict[str, Any]] = []
         fetch_from = 0
         actions_info: dict[str, Any] = {}
@@ -435,12 +427,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if len(page) < REQUEST_PAGE_SIZE:
                 break  # last page reached
             fetch_from = max((a.get("evt_ts") or 0) for a in page) + 1
-        blanco_log(
-            _LOGGER,
-            BlancoLogLevel.INFO,
-            "Backfill complete: %d events fetched",
-            len(all_actions),
-        )
+        _LOGGER.debug("Backfill complete: %d events fetched", len(all_actions))
         # Persist the backfill flag so this loop only runs once.
         self.hass.config_entries.async_update_entry(
             self._entry,
@@ -519,12 +506,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     async_add_external_statistics(self.hass, metadata, data_points)
 
         except BlancoConnectionError as err:
-            blanco_log(
-                _LOGGER,
-                BlancoLogLevel.WARNING,
-                "GET /actions → %s, using previous data",
-                err,
-            )
+            _LOGGER.warning("GET /actions → %s, using previous data", err)
             # Re-use previous totals so consumption sensors keep their last value.
             prev_actions = prev.get("actions", {})
             actions_data = {
@@ -564,14 +546,11 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         range_result["total"], water_param
                     )
             else:
-                blanco_log(
-                    _LOGGER,
-                    BlancoLogLevel.WARNING,
-                    "Stats endpoint returned HTTP %s, using None values",
-                    status,
+                _LOGGER.warning(
+                    "Stats endpoint returned HTTP %s, using None values", status
                 )
         except BlancoConnectionError as err:
-            blanco_log(_LOGGER, BlancoLogLevel.WARNING, "POST /stats → %s", err)
+            _LOGGER.warning("POST /stats → %s", err)
         return stats_data
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -592,20 +571,12 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if status == HttpStatus.OK:
                 system_data: dict[str, Any] = dict(result)
             else:
-                blanco_log(
-                    _LOGGER,
-                    BlancoLogLevel.WARNING,
-                    "System endpoint returned HTTP %s, using previous data",
-                    status,
+                _LOGGER.warning(
+                    "System endpoint returned HTTP %s, using previous data", status
                 )
                 system_data = prev.get("system", {"params": {}, "info": {}})
         except BlancoConnectionError as err:
-            blanco_log(
-                _LOGGER,
-                BlancoLogLevel.WARNING,
-                "GET /system → %s, using previous data",
-                err,
-            )
+            _LOGGER.warning("GET /system → %s, using previous data", err)
             system_data = prev.get("system", {"params": {}, "info": {}})
 
         # ── /status ───────────────────────────────────────────────────────────
@@ -616,20 +587,12 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if status == HttpStatus.OK:
                 status_data: dict[str, Any] = dict(result)
             else:
-                blanco_log(
-                    _LOGGER,
-                    BlancoLogLevel.WARNING,
-                    "Status endpoint returned HTTP %s, using previous data",
-                    status,
+                _LOGGER.warning(
+                    "Status endpoint returned HTTP %s, using previous data", status
                 )
                 status_data = prev.get("status", {"params": {}, "info": {}})
         except BlancoConnectionError as err:
-            blanco_log(
-                _LOGGER,
-                BlancoLogLevel.WARNING,
-                "GET /status → %s, using previous data",
-                err,
-            )
+            _LOGGER.warning("GET /status → %s, using previous data", err)
             status_data = prev.get("status", {"params": {}, "info": {}})
 
         # ── /settings ─────────────────────────────────────────────────────────
@@ -640,20 +603,12 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if status == HttpStatus.OK:
                 settings_data: dict[str, Any] = dict(result)
             else:
-                blanco_log(
-                    _LOGGER,
-                    BlancoLogLevel.WARNING,
-                    "Settings endpoint returned HTTP %s, using previous data",
-                    status,
+                _LOGGER.warning(
+                    "Settings endpoint returned HTTP %s, using previous data", status
                 )
                 settings_data = prev.get("settings", {"params": {}, "info": {}})
         except BlancoConnectionError as err:
-            blanco_log(
-                _LOGGER,
-                BlancoLogLevel.WARNING,
-                "GET /settings → %s, using previous data",
-                err,
-            )
+            _LOGGER.warning("GET /settings → %s, using previous data", err)
             settings_data = prev.get("settings", {"params": {}, "info": {}})
 
         # ── /errors ───────────────────────────────────────────────────────────
@@ -664,20 +619,12 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if status == HttpStatus.OK:
                 errors_data: dict[str, Any] = dict(result)
             else:
-                blanco_log(
-                    _LOGGER,
-                    BlancoLogLevel.WARNING,
-                    "Errors endpoint returned HTTP %s, using previous data",
-                    status,
+                _LOGGER.warning(
+                    "Errors endpoint returned HTTP %s, using previous data", status
                 )
                 errors_data = prev.get("errors", {"errors": [], "info": {}})
         except BlancoConnectionError as err:
-            blanco_log(
-                _LOGGER,
-                BlancoLogLevel.WARNING,
-                "GET /errors → %s, using previous data",
-                err,
-            )
+            _LOGGER.warning("GET /errors → %s, using previous data", err)
             errors_data = prev.get("errors", {"errors": [], "info": {}})
 
         # ── /actions ──────────────────────────────────────────────────────────
@@ -737,9 +684,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         self._entry,
                         data={**self._entry.data, CONF_DEV_TYPE: raw},
                     )
-                    blanco_log(
-                        _LOGGER,
-                        BlancoLogLevel.INFO,
+                    _LOGGER.debug(
                         "dev_type discovered from API response: %s (%s)",
                         raw,
                         self.dev_type,
