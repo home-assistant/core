@@ -29,8 +29,6 @@ from homeassistant.components.stips_iru1.catalog import (
 )
 from homeassistant.components.stips_iru1.const import (
     DOMAIN,
-    LOCAL_HTTP_PASSWORD,
-    LOCAL_HTTP_USERNAME,
     is_learned_ac,
     is_protocol_ac,
 )
@@ -138,7 +136,7 @@ def _extract_learned_ac_signals(
         temp: int | None = None
         if raw.get("temperature") is not None:
             try:
-                temp = int(raw.get("temperature"))
+                temp = int(str(raw.get("temperature")))
             except (TypeError, ValueError):
                 temp = None
         fan = _fan_to_name(raw.get("fanSpeed") or raw.get("fan") or "")
@@ -503,7 +501,7 @@ class StipsIruClimate(ClimateEntity):
         }
 
         session = async_get_clientsession(self.hass)
-        auth = aiohttp.BasicAuth(LOCAL_HTTP_USERNAME, LOCAL_HTTP_PASSWORD)
+        auth = None
         timeout = aiohttp.ClientTimeout(total=3, connect=1.5, sock_connect=1.5, sock_read=2)
         last_error: Exception | None = None
         sent_ok = False
@@ -604,7 +602,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
         self._attr_available = True
 
         modes = {_mode_to_hvac(v.get("mode")) for v in self._signals}
-        self._attr_hvac_modes = (
+        self._attr_hvac_modes = [
             HVACMode.OFF,
             *[
                 m
@@ -617,14 +615,14 @@ class StipsIruLearnedAcClimate(ClimateEntity):
                 )
                 if m in modes
             ],
-        )
+        ]
         if len(self._attr_hvac_modes) == 1:
-            self._attr_hvac_modes = (HVACMode.OFF, HVACMode.COOL)
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
 
         fans = sorted({_fan_to_name(v.get("fan")) for v in self._signals})
-        self._attr_fan_modes = tuple(
+        self._attr_fan_modes = [
             f for f in ("auto", "min", "low", "medium", "high", "max") if f in fans
-        ) or ("medium",)
+        ] or ["medium"]
 
         default_mode = next((m for m in self._attr_hvac_modes if m != HVACMode.OFF), HVACMode.COOL)
         default_temp = int((self._attr_min_temp + self._attr_max_temp) / 2)
@@ -767,7 +765,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
             self._device_ip_live = live_ip
 
         session = async_get_clientsession(self.hass)
-        auth = aiohttp.BasicAuth(LOCAL_HTTP_USERNAME, LOCAL_HTTP_PASSWORD)
+        auth = None
         timeout = aiohttp.ClientTimeout(total=3, connect=1.5, sock_connect=1.5, sock_read=2)
         params = {
             "signal": signal,
