@@ -986,7 +986,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",

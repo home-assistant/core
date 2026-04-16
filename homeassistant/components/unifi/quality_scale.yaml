@@ -1,0 +1,96 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Several config flow test improvements needed:
+      - test_flow_works does not assert that the unique_id is set on the config entry.
+      - test_flow_fails_user_credentials_faulty (and test_flow_fails_hub_unavailable)
+        should also verify recovery by completing with CREATE_ENTRY; the two tests
+        can be parametrized together.
+      - aiounifi.Controller.login is patched at library level; it should be patched
+        where it is actually used (homeassistant.components.unifi…).
+  config-flow:
+    status: todo
+    comment: |
+      The user step is missing data_description for port, site, username, password
+      and verify_ssl fields, and the site step has no data_description at all.
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name:
+    status: todo
+    comment: |
+      Not all entities have has_entity_name set to True. Requires migration
+      with breaking change support.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations:
+    status: todo
+    comment: |
+      Multiple entities still use name_fn to set the entity name instead of
+      translation_key: button.py (Restart, Power Cycle, Regenerate Password),
+      image.py (QR Code), sensor.py (RX, TX, Link speed, PoE Power, temperature,
+      latency, Uptime), switch.py (firewall policy, outlet, port forward, traffic
+      rule, traffic route, PoE, port, DPI restriction). Requires migration with
+      breaking change support.
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      The user flow currently allows updating existing config entry data
+      (host/credentials), which should be handled by a dedicated
+      async_step_reconfigure instead.
+  repair-issues: todo
+  stale-devices:
+    status: todo
+    comment: |
+      Only manual removal via async_remove_config_entry_device; no automatic
+      cleanup of devices removed from the UniFi controller. Consider also
+      whether device tracker clients should be split into their own device
+      registry entries.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
