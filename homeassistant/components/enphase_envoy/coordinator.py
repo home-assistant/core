@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
+from pyenphase.const import LOCAL_TIMEOUT
 from pyenphase.models.home import EnvoyInterfaceInformation
 
 from homeassistant.config_entries import ConfigEntry
@@ -243,7 +244,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # 45 seconds for each additional timeout-length attempt.
         # For example, 60 seconds allows 2 timeout-length attempts
         # plus up to 15 seconds of wait time between them.
-        retry_delay: int = 15 + max(0, (retries - 1) * 45)
+        # use timeout value defined by pyenphase in calculation.
+        timeout = int(45 if LOCAL_TIMEOUT.total is None else LOCAL_TIMEOUT.total)
+        retry_delay: int = 15 + max(0, (retries - 1) * timeout)
         # set attempts no lower than 4 and add 2 extra
         # to match pyenphase value logic. this one is used for
         # retry on fast failures.
