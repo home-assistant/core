@@ -96,23 +96,24 @@ async def _async_setup_local_entry(
         return False
 
     async def _error(error: Exception) -> None:
-        if isinstance(error, OperationError):
-            message = str(error)
-            if CLOCK_TIMEOUT_ERROR_FRAGMENT in message:
-                _LOGGER.warning(
-                    "Risco keep-alive timeout for entry %s (host: %s)",
-                    entry.title,
-                    data.get(CONF_HOST, "unknown"),
+        if isinstance(error, OperationError) and CLOCK_TIMEOUT_ERROR_FRAGMENT in str(
+            error
+        ):
+            _LOGGER.warning(
+                "Risco keep-alive timeout for entry %s (host: %s)",
+                entry.title,
+                data.get(CONF_HOST, "unknown"),
+            )
+        else:
+            _LOGGER.error(
+                "Error in Risco library",
+                exc_info=error,
+            )
+            if isinstance(error, ConnectionResetError) and not hass.is_stopping:
+                _LOGGER.debug("Disconnected from panel. Reloading integration")
+                hass.async_create_task(
+                    hass.config_entries.async_reload(entry.entry_id)
                 )
-                return
-
-        _LOGGER.error(
-            "Error in Risco library",
-            exc_info=error,
-        )
-        if isinstance(error, ConnectionResetError) and not hass.is_stopping:
-            _LOGGER.debug("Disconnected from panel. Reloading integration")
-            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
     entry.async_on_unload(risco.add_error_handler(_error))
 
@@ -192,7 +193,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bo
             await local_data.system.disconnect()
         except CancelledError:
             raise
-        except Exception:
+        except OSError:
             _LOGGER.exception(
                 "Failed to disconnect from local Risco panel for entry %s (host: %s)",
                 entry.title,
