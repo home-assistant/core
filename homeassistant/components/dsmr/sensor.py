@@ -87,6 +87,7 @@ class MbusDeviceType(IntEnum):
     GAS = 3
     HEAT = 4
     WATER = 7
+    HEAT_COOL = 12
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
@@ -568,6 +569,16 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             obis_reference="MBUS_METER_READING",
             is_water=True,
             device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
+    MbusDeviceType.HEAT_COOL: (
+        DSMRSensorEntityDescription(
+            key="heat_reading",
+            translation_key="heat_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_heat=True,
+            device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
