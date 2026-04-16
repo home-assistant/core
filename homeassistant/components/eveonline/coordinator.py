@@ -19,8 +19,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type EveOnlineConfigEntry = ConfigEntry[EveOnlineCoordinator]
 
-@dataclass
+
+@dataclass(slots=True, kw_only=True)
 class EveOnlineData:
     """Eve Online character data."""
 
@@ -104,6 +106,3 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
             ship=ship,
             ship_type_name=ship_type_name,
         )
-
-
-type EveOnlineConfigEntry = ConfigEntry[EveOnlineCoordinator]
