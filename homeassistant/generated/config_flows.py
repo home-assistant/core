@@ -142,6 +142,7 @@ FLOWS = {
         "deconz",
         "decora_wifi",
         "deluge",
+        "denon_rs232",
         "denonavr",
         "devialet",
         "devolo_home_control",
