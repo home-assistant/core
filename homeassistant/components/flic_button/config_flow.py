@@ -79,6 +79,12 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 name=f"{DOMAIN}_config_flow_cleanup",
             )
 
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: FlicButtonConfigEntry) -> bool:
+        """Only show options for Twist devices."""
+        return config_entry.data.get(CONF_DEVICE_TYPE) == DeviceType.TWIST.value
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -367,16 +373,6 @@ class FlicButtonOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        # Only show options for Twist devices
-        device_type = self.config_entry.data.get(CONF_DEVICE_TYPE)
-        _LOGGER.debug(
-            "Options flow init: device_type=%s, expected=%s",
-            device_type,
-            DeviceType.TWIST.value,
-        )
-        if device_type != DeviceType.TWIST.value:
-            return self.async_abort(reason="not_twist_device")
-
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 

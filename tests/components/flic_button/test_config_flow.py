@@ -451,8 +451,10 @@ async def test_options_flow_twist_device(hass: HomeAssistant) -> None:
     assert result["data"] == {CONF_PUSH_TWIST_MODE: PushTwistMode.SELECTOR}
 
 
-async def test_options_flow_non_twist_device_aborts(hass: HomeAssistant) -> None:
-    """Test options flow aborts for non-Twist devices."""
+async def test_options_flow_not_supported_for_non_twist(
+    hass: HomeAssistant,
+) -> None:
+    """Test options flow is not supported for non-Twist devices."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=f"Flic 2 ({FLIC2_SERIAL})",
@@ -469,10 +471,7 @@ async def test_options_flow_non_twist_device_aborts(hass: HomeAssistant) -> None
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "not_twist_device"
+    assert not FlicButtonConfigFlow.async_supports_options_flow(entry)
 
 
 async def test_config_flow_version() -> None:
