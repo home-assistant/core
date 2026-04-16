@@ -251,7 +251,7 @@ async def async_setup_entry(
     """Create climate entities for protocol AC and LearnedAc remotes."""
     entities: list[ClimateEntity] = []
 
-    for device in entry.data.get("devices", []):
+    for device in entry.runtime_data.devices:
         device_unique_name = device.get("uniqueName")
         if not device_unique_name:
             continue
