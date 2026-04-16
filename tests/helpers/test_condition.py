@@ -3944,19 +3944,16 @@ async def test_numerical_condition_with_unit_behavior(
     assert test(hass) is False
 
 
-_DEFAULT_STATE_DOMAIN_SPECS: Mapping[str, DomainSpec] = {"test": DomainSpec()}
-
-
 async def _setup_state_condition(
     hass: HomeAssistant,
     entity_ids: str | list[str],
-    states: str | set[str],
+    states: str | bool | set[str | bool],
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
 ) -> condition.ConditionCheckerType:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
-        domain_specs or _DEFAULT_STATE_DOMAIN_SPECS,
+        domain_specs or _DEFAULT_DOMAIN_SPECS,
         states,
     )
 
