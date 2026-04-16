@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import (
     SetupPhases,
     async_prepare_setup_platform,
@@ -159,7 +159,6 @@ def async_setup_legacy(
     ]
 
 
-@bind_hass
 async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
     """Register notify services for an integration."""
     if not _async_integration_has_notify_services(hass, integration_name):
@@ -173,7 +172,6 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
     await asyncio.gather(*tasks)
 
 
-@bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
     notify_discovery_dispatcher = hass.data.get(NOTIFY_DISCOVERY_DISPATCHER)
