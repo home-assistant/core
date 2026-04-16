@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -233,6 +233,38 @@ async def test_cover_device_registry_entry(
     assert len(gaposa_devices) == 2
     names = {d.name for d in gaposa_devices}
     assert names == {"Living Room", "Bedroom"}
+
+
+async def test_stale_motor_removes_entity_registry_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+) -> None:
+    """Removing a motor also drops the entity registry entry.
+
+    entity.async_remove() alone would leave a stale registry entry
+    behind. After this fix the registry entry is fully cleaned up via
+    entity_registry.async_remove(entity_id).
+    """
+    entity_registry = er.async_get(hass)
+
+    # Sanity: both covers start with a registry entry.
+    assert entity_registry.async_get(LIVING_ROOM_ENTITY) is not None
+    assert entity_registry.async_get(BEDROOM_ENTITY) is not None
+
+    # Simulate the Bedroom motor having been removed from the user's
+    # Gaposa account: drop it from the mocked pygaposa device.
+    client, _user = mock_gaposa_instance.clients[0]
+    device = client.devices[0]
+    device.motors = [m for m in device.motors if m.id != "motor-2"]
+
+    # A coordinator refresh now reports only the Living Room motor.
+    await init_integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    # Living Room still present; Bedroom registry entry is fully gone.
+    assert entity_registry.async_get(LIVING_ROOM_ENTITY) is not None
+    assert entity_registry.async_get(BEDROOM_ENTITY) is None
 
 
 async def test_motion_window_collapses_after_delay(
