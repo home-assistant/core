@@ -574,8 +574,8 @@ async def async_start(  # noqa: C901
         else:
             if (
                 (
-                    entity_hash := mqtt_data.discovery_discovered_and_disabled.get(
-                        discovery_hash
+                    entity_hash := mqtt_data.discovery_discovered_and_disabled.pop(
+                        discovery_hash, None
                     )
                 )
                 and (entity_registry := er.async_get(hass))

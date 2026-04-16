@@ -578,7 +578,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
     assert device_registry.async_get(device_id) is not None
 
     # Remove the entity and device
-    # At this stage no entry existsed during the initization
+    # At this stage no entry existed during the initialization
     async_fire_mqtt_message(hass, discovery_topic, "")
     await hass.async_block_till_done(wait_background_tasks=True)
     entry = entity_registry.async_get("sensor.test")
