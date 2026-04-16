@@ -7,8 +7,10 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from .const import DOMAIN
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_home": make_entity_state_condition(DOMAIN, STATE_HOME),
-    "is_not_home": make_entity_state_condition(DOMAIN, STATE_NOT_HOME),
+    "is_home": make_entity_state_condition(DOMAIN, STATE_HOME, support_duration=True),
+    "is_not_home": make_entity_state_condition(
+        DOMAIN, STATE_NOT_HOME, support_duration=True
+    ),
 }
 
 
