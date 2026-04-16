@@ -26,7 +26,7 @@ fnv-hash-fast==2.0.2
 ha-ffmpeg==3.2.2
 hass-nabucasa==2.2.0
 hassil==3.5.0
-home-assistant-bluetooth==1.13.1
+home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.3.24
 httpx==0.28.1
 ifaddr==0.2.0
