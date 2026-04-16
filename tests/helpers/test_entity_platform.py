@@ -281,24 +281,28 @@ async def test_platform_slow_setup_cancel_warning(hass: HomeAssistant) -> None:
     with patch.object(hass.loop, "call_at") as mock_call:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
         await hass.async_block_till_done()
+        assert mock_call.called
 
-        # Find the platform setup warning call by matching on the logger method
+        # Find the platform setup warning by matching the exact format string
         platform_warn_call = next(
-            call for call in mock_call.call_args_list if call[0][1] == _LOGGER.warning
+            call
+            for call in mock_call.call_args_list
+            if len(call[0]) >= 3
+            and call[0][1] == _LOGGER.warning
+            and call[0][2] == "Setup of %s platform %s is taking over %s seconds."
         )
         scheduled_time = platform_warn_call[0][0]
 
-        assert mock_call.called
         assert scheduled_time - hass.loop.time() == pytest.approx(
             entity_platform.SLOW_SETUP_WARNING, 0.5
         )
-        assert mock_call().cancel.called
+        assert mock_call.return_value.cancel.called
 
 
-async def test_platform_slow_setup_warning(
+async def test_platform_slow_setup_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
+    """Test that platform setup is aborted after SLOW_SETUP_MAX_WAIT."""
     with patch.object(entity_platform, "SLOW_SETUP_MAX_WAIT", 0):
         called = []
 
