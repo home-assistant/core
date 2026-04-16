@@ -22,7 +22,9 @@ type GuntamaticConfigEntry = ConfigEntry[GuntamaticCoordinator]
 class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
     """Guntamatic data coordinator."""
 
-    def __init__(self, hass: HomeAssistant, heater: Heater, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, heater: Heater, entry: GuntamaticConfigEntry
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,

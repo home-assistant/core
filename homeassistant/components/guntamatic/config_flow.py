@@ -66,9 +66,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 # set serial as unique id for deduplication, ip isn't a good match
                 serial = data["Serial"][0]
                 await self.async_set_unique_id(serial)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title="Guntamatic Heater", data=user_input

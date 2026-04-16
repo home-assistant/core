@@ -239,56 +239,6 @@
     'state': 'HEAT',
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_serial-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.guntamatic_heater_serial',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Serial',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Serial',
-    'platform': 'guntamatic',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '959103_Serial',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.guntamatic_heater_serial-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Guntamatic Heater Serial',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.guntamatic_heater_serial',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '959103',
-  })
-# ---
 # name: test_all_entities[sensor.guntamatic_heater_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -337,55 +287,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Service Ign.',
-  })
-# ---
-# name: test_all_entities[sensor.guntamatic_heater_version-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.guntamatic_heater_version',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Version',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Version',
-    'platform': 'guntamatic',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '959103_Version',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.guntamatic_heater_version-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Guntamatic Heater Version',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.guntamatic_heater_version',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '32a',
   })
 # ---

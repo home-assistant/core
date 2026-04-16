@@ -36,8 +36,6 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
             "DHW BOOST",
         ],
     ),
-    SensorEntityDescription(key="Serial", entity_category=EntityCategory.DIAGNOSTIC),
-    SensorEntityDescription(key="Version", entity_category=EntityCategory.DIAGNOSTIC),
     SensorEntityDescription(
         key="Boiler Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -147,8 +145,3 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
         return self.coordinator.data[self._name][0]
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._name in self.coordinator.data

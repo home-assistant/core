@@ -6,7 +6,6 @@ import logging
 
 from guntamatic.heater import Heater
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
@@ -29,6 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
