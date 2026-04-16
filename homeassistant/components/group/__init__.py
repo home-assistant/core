@@ -28,7 +28,6 @@ from homeassistant.helpers.group import (
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 #
 # Below we ensure the config_flow is imported so it does not need the import
@@ -103,7 +102,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if the group state is in its ON-state."""
     if REG_KEY not in hass.data:
@@ -117,11 +115,10 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 # expand_entity_ids and get_entity_ids are for backwards compatibility only
-expand_entity_ids = bind_hass(_expand_entity_ids)
-get_entity_ids = bind_hass(_get_entity_ids)
+expand_entity_ids = _expand_entity_ids
+get_entity_ids = _get_entity_ids
 
 
-@bind_hass
 def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Get all groups that contain this entity.
 

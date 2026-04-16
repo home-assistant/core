@@ -17,7 +17,6 @@ from homeassistant.loader import (
     async_get_integrations,
     async_get_loaded_integration,
     async_register_preload_platform,
-    bind_hass,
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
 from homeassistant.util.hass_dict import HassKey
@@ -153,7 +152,6 @@ def _format_err(name: str, platform_name: str, *args: Any) -> str:
     return f"Exception in {name} when processing platform '{platform_name}': {args}"
 
 
-@bind_hass
 async def async_process_integration_platforms(
     hass: HomeAssistant,
     platform_name: str,

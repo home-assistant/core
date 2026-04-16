@@ -29,7 +29,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.hass_dict import HassKey
 
@@ -41,7 +41,6 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES: HassKey[dict[str, EntityComponent]] = HassKey("entity_components")
 
 
-@bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
     domain = entity_id.partition(".")[0]

@@ -12,7 +12,6 @@ import yarl
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
 from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
 
 from . import http
@@ -27,7 +26,6 @@ class NoURLAvailableError(HomeAssistantError):
     """An URL to the Home Assistant instance is not available."""
 
 
-@bind_hass
 def is_internal_request(hass: HomeAssistant) -> bool:
     """Test if the current request is internal."""
     try:
@@ -39,7 +37,6 @@ def is_internal_request(hass: HomeAssistant) -> bool:
     return True
 
 
-@bind_hass
 def get_supervisor_network_url(
     hass: HomeAssistant, *, allow_ssl: bool = False
 ) -> str | None:
@@ -114,7 +111,6 @@ def is_hass_url(hass: HomeAssistant, url: str) -> bool:
     return False
 
 
-@bind_hass
 def get_url(
     hass: HomeAssistant,
     *,
@@ -229,7 +225,6 @@ def _get_request_host() -> str | None:
     return host
 
 
-@bind_hass
 def _get_internal_url(
     hass: HomeAssistant,
     *,
@@ -267,7 +262,6 @@ def _get_internal_url(
     raise NoURLAvailableError
 
 
-@bind_hass
 def _get_external_url(
     hass: HomeAssistant,
     *,
@@ -312,7 +306,6 @@ def _get_external_url(
     raise NoURLAvailableError
 
 
-@bind_hass
 def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -> str:
     """Get external Home Assistant Cloud URL of this instance."""
     if "cloud" in hass.config.components:

@@ -31,7 +31,6 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
 from .websocket import async_register_websocket_handlers
@@ -71,7 +70,6 @@ _BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the vacuum is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)

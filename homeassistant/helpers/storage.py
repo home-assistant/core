@@ -29,7 +29,6 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.hass_dict import HassKey
@@ -49,7 +48,6 @@ STORAGE_MANAGER: HassKey[_StoreManager] = HassKey("storage_manager")
 MANAGER_CLEANUP_DELAY = 60
 
 
-@bind_hass
 async def async_migrator[_T: Mapping[str, Any] | Sequence[Any]](
     hass: HomeAssistant,
     old_path: str,
@@ -226,7 +224,6 @@ class _StoreManager:
             self._files = set(os.listdir(self._storage_path))
 
 
-@bind_hass
 class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     """Class to help storing data."""
 

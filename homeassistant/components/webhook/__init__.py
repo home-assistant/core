@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url, is_cloud_connection
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util import network as network_util
 from homeassistant.util.aiohttp import MockRequest, MockStreamReader, serialize_response
 
@@ -36,7 +35,6 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @callback
-@bind_hass
 def async_register(
     hass: HomeAssistant,
     domain: str,
@@ -72,7 +70,6 @@ def async_register(
 
 
 @callback
-@bind_hass
 def async_unregister(hass: HomeAssistant, webhook_id: str) -> None:
     """Remove a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
@@ -86,7 +83,6 @@ def async_generate_id() -> str:
 
 
 @callback
-@bind_hass
 def async_generate_url(
     hass: HomeAssistant,
     webhook_id: str,
@@ -117,7 +113,6 @@ def async_generate_path(webhook_id: str) -> str:
     return URL_WEBHOOK_PATH.format(webhook_id=webhook_id)
 
 
-@bind_hass
 async def async_handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request | MockRequest
 ) -> Response:

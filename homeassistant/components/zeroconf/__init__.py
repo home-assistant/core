@@ -22,7 +22,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.loader import async_get_homekit, async_get_zeroconf
 from homeassistant.setup import async_when_setup_or_start
 
 from . import websocket_api
@@ -68,13 +68,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
     """Get or create the shared HaZeroconf instance."""
     return cast(HaZeroconf, (_async_get_instance(hass)).zeroconf)
 
 
-@bind_hass
 async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Get or create the shared HaAsyncZeroconf instance."""
     return _async_get_instance(hass)

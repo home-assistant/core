@@ -48,7 +48,7 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.loader import Integration, async_get_integrations, bind_hass
+from homeassistant.loader import Integration, async_get_integrations
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
@@ -252,7 +252,6 @@ class SelectedEntities(target_helpers.SelectedEntities):
         super().log_missing(missing_entities, logger or _LOGGER)
 
 
-@bind_hass
 def call_from_config(
     hass: HomeAssistant,
     config: ConfigType,
@@ -267,7 +266,6 @@ def call_from_config(
     ).result()
 
 
-@bind_hass
 async def async_call_from_config(
     hass: HomeAssistant,
     config: ConfigType,
@@ -290,7 +288,6 @@ async def async_call_from_config(
 
 
 @callback
-@bind_hass
 def async_prepare_call_from_config(
     hass: HomeAssistant,
     config: ConfigType,
@@ -452,7 +449,6 @@ async def async_extract_entity_ids(
     "homeassistant.helpers.target.async_extract_referenced_entity_ids",
     breaks_in_ha_version="2026.8",
 )
-@bind_hass
 def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
@@ -532,7 +528,6 @@ def async_get_cached_service_description(
     return hass.data.get(SERVICE_DESCRIPTION_CACHE, {}).get((domain, service))
 
 
-@bind_hass
 async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
@@ -647,7 +642,6 @@ def remove_entity_service_fields(call: ServiceCall) -> dict[Any, Any]:
 
 
 @callback
-@bind_hass
 def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
@@ -724,7 +718,6 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
-@bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
     registered_entities: dict[str, Entity] | Callable[[], dict[str, Entity]],
@@ -944,7 +937,6 @@ async def _async_admin_handler(
     return None
 
 
-@bind_hass
 @callback
 def async_register_admin_service(
     hass: HomeAssistant,

@@ -15,7 +15,6 @@ from homeassistant.core import (
     callback,
     get_hassjob_callable_job_type,
 )
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception, log_exception
 
@@ -36,21 +35,18 @@ type _DispatcherDataType[*_Ts] = dict[
 
 
 @overload
-@bind_hass
 def dispatcher_connect[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], None]
 ) -> Callable[[], None]: ...
 
 
 @overload
-@bind_hass
 def dispatcher_connect(
     hass: HomeAssistant, signal: str, target: Callable[..., None]
 ) -> Callable[[], None]: ...
 
 
-@bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
-def dispatcher_connect[*_Ts](
+def dispatcher_connect[*_Ts](  # type: ignore[misc]
     hass: HomeAssistant,
     signal: SignalType[*_Ts],
     target: Callable[[*_Ts], None],
@@ -89,7 +85,6 @@ def _async_remove_dispatcher[*_Ts](
 
 @overload
 @callback
-@bind_hass
 def async_dispatcher_connect[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], Any]
 ) -> Callable[[], None]: ...
@@ -97,14 +92,12 @@ def async_dispatcher_connect[*_Ts](
 
 @overload
 @callback
-@bind_hass
 def async_dispatcher_connect(
     hass: HomeAssistant, signal: str, target: Callable[..., Any]
 ) -> Callable[[], None]: ...
 
 
 @callback
-@bind_hass
 def async_dispatcher_connect[*_Ts](
     hass: HomeAssistant,
     signal: SignalType[*_Ts] | str,
@@ -126,19 +119,16 @@ def async_dispatcher_connect[*_Ts](
 
 
 @overload
-@bind_hass
 def dispatcher_send[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
 ) -> None: ...
 
 
 @overload
-@bind_hass
 def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 
 
-@bind_hass  # type: ignore[misc]  # workaround; exclude typing of 2 overload in func def
-def dispatcher_send[*_Ts](
+def dispatcher_send[*_Ts](  # type: ignore[misc]
     hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
 ) -> None:
     """Send signal and data."""
@@ -181,7 +171,6 @@ def _generate_job[*_Ts](
 
 @overload
 @callback
-@bind_hass
 def async_dispatcher_send[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
 ) -> None: ...
@@ -189,12 +178,10 @@ def async_dispatcher_send[*_Ts](
 
 @overload
 @callback
-@bind_hass
 def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None: ...
 
 
 @callback
-@bind_hass
 def async_dispatcher_send[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts] | str, *args: *_Ts
 ) -> None:
@@ -216,7 +203,6 @@ def async_dispatcher_send[*_Ts](
 
 
 @callback
-@bind_hass
 def async_dispatcher_send_internal[*_Ts](
     hass: HomeAssistant, signal: SignalType[*_Ts] | str, *args: *_Ts
 ) -> None:

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
@@ -26,7 +25,6 @@ type _AstralSunEventCallable = Callable[..., datetime.datetime]
 
 
 @callback
-@bind_hass
 def get_astral_location(
     hass: HomeAssistant,
 ) -> tuple[astral.location.Location, astral.Elevation]:
@@ -51,7 +49,6 @@ def get_astral_location(
 
 
 @callback
-@bind_hass
 def get_astral_event_next(
     hass: HomeAssistant,
     event: str,
@@ -109,7 +106,6 @@ def get_location_astral_event_next(
 
 
 @callback
-@bind_hass
 def get_astral_event_date(
     hass: HomeAssistant,
     event: str,
@@ -136,7 +132,6 @@ def get_astral_event_date(
 
 
 @callback
-@bind_hass
 def is_up(
     hass: HomeAssistant, utc_point_in_time: datetime.datetime | None = None
 ) -> bool:

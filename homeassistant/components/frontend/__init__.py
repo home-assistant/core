@@ -34,7 +34,7 @@ from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
 from .pr_download import download_pr_artifact
@@ -354,7 +354,6 @@ class Panel:
         return response
 
 
-@bind_hass
 @callback
 def async_register_built_in_panel(
     hass: HomeAssistant,
@@ -393,7 +392,6 @@ def async_register_built_in_panel(
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
-@bind_hass
 @callback
 def async_remove_panel(
     hass: HomeAssistant, frontend_url_path: str, *, warn_if_unknown: bool = True
