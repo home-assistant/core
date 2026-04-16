@@ -5,7 +5,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
-from soco.exceptions import SoCoUPnPException
+from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
@@ -642,6 +642,28 @@ async def test_tv_ungroup_autoplay_not_created_for_non_ht(
     """
     entity_id = f"switch.zone_a_{ATTR_TV_UNGROUP_AUTOPLAY}"
     assert entity_id not in entity_registry.entities
+
+
+async def test_alarm_update_exception_logs_warning(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    entity_registry: er.EntityRegistry,
+    soco: MockSoCo,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test household mismatch logs warning and alarm update/setup is skipped."""
+    with patch(
+        "homeassistant.components.sonos.alarms.Alarms.update",
+        side_effect=SoCoException(
+            "Alarm list UID RINCON_0001234567890:31 does not match RINCON_000E987654321:0"
+        ),
+    ):
+        await async_setup_sonos()
+        await hass.async_block_till_done()
+
+    # Alarm should not be set up due to household mismatch
+    assert "switch.sonos_alarm_14" not in entity_registry.entities
+    assert "cannot be updated due to a household mismatch" in caplog.text
 
 
 async def test_alarm_setup_for_undiscovered_speaker(

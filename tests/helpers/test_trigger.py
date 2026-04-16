@@ -2,11 +2,13 @@
 
 from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
+import datetime
 import io
 import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
@@ -20,6 +22,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
@@ -72,7 +75,13 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
 
-from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+from tests.common import (
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -3110,6 +3119,7 @@ async def _arm_off_to_on_trigger(
     entity_ids: list[str],
     behavior: str,
     calls: list[dict[str, Any]],
+    duration: dict[str, int] | None,
 ) -> CALLBACK_TYPE:
     """Set up _OffToOnTrigger via async_initialize_triggers."""
 
@@ -3121,10 +3131,14 @@ async def _arm_off_to_on_trigger(
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
 
+    options: dict[str, Any] = {ATTR_BEHAVIOR: behavior}
+    if duration is not None:
+        options[CONF_FOR] = duration
+
     trigger_config = {
         CONF_PLATFORM: "test.off_to_on",
         CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
-        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+        CONF_OPTIONS: options,
     }
 
     log = logging.getLogger(__name__)
@@ -3158,18 +3172,23 @@ def _set_or_remove_state(
 async def test_entity_trigger_fires_on_valid_transition(
     hass: HomeAssistant, behavior: str
 ) -> None:
-    """Test EntityTriggerBase fires on a valid off→on transition."""
+    """Test EntityTriggerBase fires immediately on a valid off→on transition without duration."""
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
-    unsub = await _arm_off_to_on_trigger(hass, [entity_id], behavior, calls)
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration=None
+    )
 
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == entity_id
+    assert calls[0]["from_state"].state == STATE_OFF
+    assert calls[0]["to_state"].state == STATE_ON
+    assert calls[0]["for"] is None
 
     # Transition back and trigger again
     calls.clear()
@@ -3197,7 +3216,9 @@ async def test_entity_trigger_from_invalid_initial_state(
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
-    unsub = await _arm_off_to_on_trigger(hass, [entity_id], behavior, calls)
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration=None
+    )
 
     # Transition to "on" from the invalid initial state
     _set_or_remove_state(hass, entity_id, STATE_ON)
@@ -3228,7 +3249,7 @@ async def test_entity_trigger_last_requires_all(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration=None
     )
 
     # Turn only A on — not all match, should not fire
@@ -3256,7 +3277,7 @@ async def test_entity_trigger_first_requires_exactly_one(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
     )
 
     # Turn A on — exactly one matches, should fire
@@ -3277,7 +3298,7 @@ async def test_entity_trigger_first_requires_exactly_one(
     [STATE_UNAVAILABLE, STATE_UNKNOWN],
     ids=["unavailable", "unknown"],
 )
-async def test_entity_trigger_last_ignores_unavailable_and_unknownentity(
+async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
     """Test behavior last: unavailable/unknown entities are excluded from check_all_match.
@@ -3297,7 +3318,7 @@ async def test_entity_trigger_last_ignores_unavailable_and_unknownentity(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b, entity_c], BEHAVIOR_LAST, calls
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_LAST, calls, duration=None
     )
 
     # Turn A on — B is unavailable and skipped, only A is on → all doesn't match
@@ -3349,7 +3370,7 @@ async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b, entity_c], BEHAVIOR_FIRST, calls
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_FIRST, calls, duration=None
     )
 
     # Turn A on — B is unavailable and skipped, only A matches → exactly one
@@ -3362,5 +3383,500 @@ async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
     hass.states.async_set(entity_c, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+async def test_entity_trigger_with_duration(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
+) -> None:
+    """Test EntityTriggerBase waits for duration before firing."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration={"seconds": 5}
+    )
+
+    # Turn on — should NOT fire immediately
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Advance time past duration — should fire
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_id
+    assert calls[0]["from_state"].state == STATE_OFF
+    assert calls[0]["to_state"].state == STATE_ON
+    assert calls[0]["for"] == datetime.timedelta(seconds=5)
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+async def test_entity_trigger_duration_cancelled_on_state_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
+) -> None:
+    """Test that the duration timer is cancelled if state changes back."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration={"seconds": 5}
+    )
+
+    # Turn on, then back off before duration expires
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_duration_any_independent(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior any tracks per-entity durations independently."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+    )
+
+    # Turn A on
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn B on 2 seconds later
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # After 5s from A's turn-on, A should fire
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
+
+    # After 5s from B's turn-on (2 more seconds), B should fire
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1]["entity_id"] == entity_b
+
+    unsub()
+
+
+async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior any: turning off one entity doesn't cancel the other's timer."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn A off after 2 seconds — cancels A's timer but not B's
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # After 5s total, B should fire but A should not
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_b
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_requires_all(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last: trigger fires only when ALL entities are on for duration."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn only A on — should not start timer (not all match)
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Turn B on — now all match, timer starts
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last: timer is cancelled when one entity turns off."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn A off after 2 seconds
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_duration_last_timer_reset(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior last: timer resets when combined state goes off and back on."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on — combined state "all on", timer starts
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # After 2 seconds, B turns off — combined state breaks, timer cancelled
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # B turns back on — combined state restored, timer restarts
+    freezer.tick(datetime.timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # 4 seconds after restart (not enough) — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 1 more second (5 total from restart) — should fire
+    freezer.tick(datetime.timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_fires_when_any_on(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: trigger fires when first entity turns on for duration."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn A on — combined state goes to "at least one on", timer starts
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Advance past duration — should fire
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_not_cancelled_by_second(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: second entity turning on doesn't restart timer."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn A on
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn B on 3 seconds later — combined state was already "any on",
+    # so this should NOT restart the timer
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 2 more seconds (5 total from A) — should fire
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_not_cancelled_by_partial_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: one entity off doesn't cancel if another is still on."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn A off after 2 seconds — combined state still "any on" (B is on)
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past duration — should still fire (combined state never went to "none on")
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_cancelled_when_all_off(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior first: timer cancelled when ALL entities turn off."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    # Turn both on
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Turn both off after 2 seconds — combined state goes to "none on"
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_duration_any_retrigger_resets_timer(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior any: turning an entity off and on resets its timer."""
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+    )
+
+    # Turn on
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # After 3 seconds, turn off and on again — resets the timer
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # 3 more seconds (6 from start, but only 3 from retrigger) — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 2 more seconds (5 from retrigger) — should fire
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected_calls"),
+    [(BEHAVIOR_ANY, 0), (BEHAVIOR_FIRST, 0), (BEHAVIOR_LAST, 1)],
+)
+@pytest.mark.parametrize(
+    "invalid_state",
+    [STATE_UNAVAILABLE, STATE_UNKNOWN, None],
+    ids=["unavailable", "unknown", "removed"],
+)
+async def test_entity_trigger_duration_cancelled_on_invalid_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    behavior: str,
+    expected_calls: int,
+    invalid_state: str | None,
+) -> None:
+    """Test if the duration timer is cancelled if entity becomes unavailable, unknown, or is removed.
+
+    This is expected to happen in first and any modes, but not in last mode.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    _set_or_remove_state(hass, entity_a, STATE_OFF)
+    _set_or_remove_state(hass, entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], behavior, calls, duration={"seconds": 5}
+    )
+
+    # Turn on the entities needed to start the timer
+    _set_or_remove_state(hass, entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    if behavior == BEHAVIOR_LAST:
+        _set_or_remove_state(hass, entity_b, STATE_ON)
+        await hass.async_block_till_done()
+
+    # Entity A becomes invalid during the wait
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    _set_or_remove_state(hass, entity_a, invalid_state)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == expected_calls
 
     unsub()

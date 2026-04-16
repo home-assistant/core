@@ -22,8 +22,16 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 
-from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, DOMAIN, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
+    DOMAIN,
+    RESET_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
+from .helpers import async_create_deprecation_issue_once
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
@@ -157,6 +165,13 @@ def setup_service_functions(
         # No additional validation for RESET_SYSTEM here, as the library method invoked
         # via that service call may be able to emulate the reset even if the system
         # doesn't support AutoWithReset natively
+
+        if call.service == EvoService.RESET_SYSTEM:
+            async_create_deprecation_issue_once(
+                hass,
+                "deprecated_reset_system_service",
+                RESET_BREAKS_IN_HA_VERSION,
+            )
 
         if call.service == EvoService.SET_SYSTEM_MODE:
             _validate_set_system_mode_params(coordinator.tcs, call.data)
