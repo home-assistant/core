@@ -161,8 +161,6 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
 
     assert result["type"] == "form"
     assert result["errors"]["base"] == "unknown"
-    assert result["title"] == "STIPS (demo)"
-    assert "password" not in result["data"]
 
 
 async def test_auth_error(hass: HomeAssistant) -> None:

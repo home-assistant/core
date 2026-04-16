@@ -105,7 +105,7 @@ def test_register_catalog_devices_creates_device_entries(hass: HomeAssistant) ->
     assert device.name == "Living Room IR"
     assert device.sw_version == "1.2.3"
     assert device.suggested_area == "Living Room"
-    assert (dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF") in device.connections
+    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff") in device.connections
 
 
 async def test_async_unload_entry_unloads_platforms(hass: HomeAssistant) -> None:
