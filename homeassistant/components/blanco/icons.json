@@ -8,13 +8,7 @@
       "filter_rest": { "default": "mdi:air-filter" },
       "filter_remaining_volume": { "default": "mdi:cup-water" },
       "filter_remaining_days": { "default": "mdi:calendar-clock" },
-      "error_count": { "default": "mdi:alert-outline" },
-      "last_dispensing": { "default": "mdi:water" },
-      "water_total": { "default": "mdi:water" },
-      "water_still": { "default": "mdi:water" },
-      "water_medium": { "default": "mdi:water" },
-      "water_classic": { "default": "mdi:water" },
-      "water_hot": { "default": "mdi:water" }
+      "error_count": { "default": "mdi:alert-outline" }
     }
   }
 }

@@ -18,7 +18,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -120,19 +119,3 @@ class BlancoConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class AccessNotGranted(HomeAssistantError):
-    """Error to indicate access has not been granted via the BLANCO UNIT App."""
-
-
-class DeviceTypeNotSupported(HomeAssistantError):
-    """Error to indicate the device type is not supported for smart home use."""

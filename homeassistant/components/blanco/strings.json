@@ -24,36 +24,6 @@
       },
       "error_count": {
         "name": "Active errors"
-      },
-      "last_dispensing": {
-        "name": "Consumption: Last"
-      },
-      "water_total": {
-        "name": "Consumption: Total"
-      },
-      "water_still": {
-        "name": "Consumption: Total - Still"
-      },
-      "water_medium": {
-        "name": "Consumption: Total - Medium"
-      },
-      "water_classic": {
-        "name": "Consumption: Total - Classic"
-      },
-      "water_hot": {
-        "name": "Consumption: Total - Hot"
-      },
-      "water_today": {
-        "name": "Consumption: Today"
-      },
-      "water_week": {
-        "name": "Consumption: This week"
-      },
-      "water_month": {
-        "name": "Consumption: This month"
-      },
-      "water_year": {
-        "name": "Consumption: This year"
       }
     }
   },
