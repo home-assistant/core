@@ -197,7 +197,7 @@ class CollectionExtension(BaseTemplateExtension):
 
         if isinstance(alg, Undefined):
             raise TypeError(
-                f"alg expected a string or integer, got an undefined variable: {type(alg).__name__}"
+                f"alg expected a string, got an undefined variable: {type(alg).__name__}"
             )
 
         def _get_key(v: Any) -> Any:
@@ -216,13 +216,22 @@ class CollectionExtension(BaseTemplateExtension):
             """Get the alg via an alg mask."""
             if expr is None or not isinstance(expr, str):
                 raise TypeError(f"alg expected a string, got {type(expr).__name__}")
+
+            expr = expr.strip()
+
+            if expr.lower().startswith("alg="):
+                expr = expr[4:].strip()
+
             parts = [p.strip().replace("ns.", "").upper() for p in expr.split("|")]
 
             alg = DEFAULT_ALG
 
             for p in parts:
-                if p in ALG_MAP:
-                    alg |= ALG_MAP[p]
+                if not p:
+                    raise ValueError("alg expected non-empty tokens separated by '|")
+                if p not in ALG_MAP:
+                    raise ValueError(f"alg contained an unknown token: {p}")
+                alg |= ALG_MAP[p]
 
             return alg
 

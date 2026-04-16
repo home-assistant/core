@@ -355,7 +355,7 @@ def test_collection_error_handling(hass: HomeAssistant) -> None:
             ["a50", "a+50.300", "a5.034e1", "a+50.4", "a51."],
         ),
         (
-            "{{ ['Apple', 'apple15', 'Banana', 'apple14,689', 'banana'] | natural_sort(alg='alg=ns.REAL | ns.LOCALE | ns.IGNORECASE') }}",
+            "{{ ['Apple', 'apple15', 'Banana', 'apple14,689', 'banana'] | natural_sort(alg='ns.REAL | ns.LOCALE | ns.IGNORECASE') }}",
             ["Apple", "apple14,689", "apple15", "Banana", "banana"],
         ),
     ],
@@ -376,7 +376,7 @@ def test_natural_sort(
         ),
         (
             "{{ ['Apple', 'apple15', 'Banana', 'apple14,689', 'banana'] | natural_sort(alg=foo) }}",
-            "alg expected a string or integer, got an undefined variable: LoggingUndefined",
+            "alg expected a string, got an undefined variable: LoggingUndefined",
         ),
         (
             "{{ none | natural_sort(alg='ns.LOCALE') }}",
