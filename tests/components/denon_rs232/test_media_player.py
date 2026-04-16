@@ -33,9 +33,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
 
 from .conftest import MockReceiver, MockState, _default_state
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 ZoneName = Literal["main", "zone_2", "zone_3"]
 
@@ -52,12 +55,14 @@ async def auto_init_components(init_components) -> None:
 
 
 async def test_entities_created(
-    hass: HomeAssistant, mock_receiver: MockReceiver, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    mock_receiver: MockReceiver,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test media player entities are created through config entry setup."""
-    assert hass.states.get(MAIN_ENTITY_ID) == snapshot
-    assert hass.states.get(ZONE_2_ENTITY_ID) == snapshot
-    assert hass.states.get(ZONE_3_ENTITY_ID) == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
     mock_receiver.query_state.assert_awaited_once()
 
 

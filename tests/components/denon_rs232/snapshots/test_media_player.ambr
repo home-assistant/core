@@ -1,11 +1,61 @@
 # serializer version: 1
-# name: test_entities_created
+# name: test_entities_created[media_player.avr_3805-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'cd',
+        'cdr_tape1',
+        'dbs_sat',
+        'dvd',
+        'phono',
+        'tuner',
+        'tv',
+        'v_aux',
+        'vcr_1',
+        'vcr_2',
+        'vdp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.avr_3805',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'denon_rs232',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3468>,
+    'translation_key': 'receiver',
+    'unique_id': '01KPBBPM6WCQ8148EFR0TCG1WW_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities_created[media_player.avr_3805-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'receiver',
       'friendly_name': 'AVR-3805',
       'is_volume_muted': False,
-      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'source': 'cd',
       'source_list': list([
         'cd',
@@ -31,12 +81,62 @@
     'state': 'on',
   })
 # ---
-# name: test_entities_created.1
+# name: test_entities_created[media_player.avr_3805_zone_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'cd',
+        'cdr_tape1',
+        'dbs_sat',
+        'dvd',
+        'phono',
+        'tuner',
+        'tv',
+        'v_aux',
+        'vcr_1',
+        'vcr_2',
+        'vdp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.avr_3805_zone_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 2',
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': 'Zone 2',
+    'platform': 'denon_rs232',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3460>,
+    'translation_key': 'receiver',
+    'unique_id': '01KPBBPM6WCQ8148EFR0TCG1WW_zone_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities_created[media_player.avr_3805_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'receiver',
       'friendly_name': 'AVR-3805 Zone 2',
-      'last_non_buffering_state': <MediaPlayerState.ON: 'on'>,
       'source': 'tuner',
       'source_list': list([
         'cd',
@@ -62,12 +162,62 @@
     'state': 'on',
   })
 # ---
-# name: test_entities_created.2
+# name: test_entities_created[media_player.avr_3805_zone_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'cd',
+        'cdr_tape1',
+        'dbs_sat',
+        'dvd',
+        'phono',
+        'tuner',
+        'tv',
+        'v_aux',
+        'vcr_1',
+        'vcr_2',
+        'vdp',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.avr_3805_zone_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone 3',
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': 'Zone 3',
+    'platform': 'denon_rs232',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 3460>,
+    'translation_key': 'receiver',
+    'unique_id': '01KPBBPM6WCQ8148EFR0TCG1WW_zone_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities_created[media_player.avr_3805_zone_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'receiver',
       'friendly_name': 'AVR-3805 Zone 3',
-      'last_non_buffering_state': <MediaPlayerState.OFF: 'off'>,
       'source_list': list([
         'cd',
         'cdr_tape1',

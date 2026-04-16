@@ -18,6 +18,7 @@ from denon_rs232 import (
 from denon_rs232.models import MODELS
 import pytest
 
+from homeassistant.components.denon_rs232.config_flow import CONF_MODEL_NAME
 from homeassistant.components.denon_rs232.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -140,9 +141,10 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         data={
             CONF_DEVICE: MOCK_DEVICE,
             CONF_MODEL: MOCK_MODEL,
-            "model_name": "AVR-3805",
+            CONF_MODEL_NAME: "AVR-3805",
         },
         title="AVR-3805",
+        entry_id="01KPBBPM6WCQ8148EFR0TCG1WW",
     )
     entry.add_to_hass(hass)
     return entry
