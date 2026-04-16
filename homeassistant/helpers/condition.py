@@ -401,7 +401,8 @@ class EntityConditionBase(Condition):
 
         def check_any_match_state(states: list[State]) -> bool:
             """Test if any entity matches the state."""
-            if self._duration is None:
+            if not self._duration:
+                # Skip duration check if duration is not specified or 0
                 return any(self.is_valid_state(state) for state in states)
             duration = dt_util.utcnow() - self._duration
             return any(
@@ -411,7 +412,8 @@ class EntityConditionBase(Condition):
 
         def check_all_match_state(states: list[State]) -> bool:
             """Test if all entities match the state."""
-            if self._duration is None:
+            if not self._duration:
+                # Skip duration check if duration is not specified or 0
                 return all(self.is_valid_state(state) for state in states)
             duration = dt_util.utcnow() - self._duration
             return all(
