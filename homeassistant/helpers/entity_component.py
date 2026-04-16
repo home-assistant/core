@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 from datetime import timedelta
 import logging
 from types import ModuleType
@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    EntityServiceResponse,
     Event,
     HassJobType,
     HomeAssistant,
@@ -95,7 +96,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         ] = {domain: domain_platform}
         self.async_add_entities = domain_platform.async_add_entities
         self.add_entities = domain_platform.add_entities
-        self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
+        self._entities: dict[str, _EntityT] = domain_platform.domain_entities  # type: ignore[assignment]
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self  # type: ignore[assignment]
 
     @property
@@ -106,11 +107,11 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         callers that iterate over this asynchronously should make a copy
         using list() before iterating.
         """
-        return self._entities.values()  # type: ignore[return-value]
+        return self._entities.values()
 
     def get_entity(self, entity_id: str) -> _EntityT | None:
         """Get an entity."""
-        return self._entities.get(entity_id)  # type: ignore[return-value]
+        return self._entities.get(entity_id)
 
     def register_shutdown(self) -> None:
         """Register shutdown on Home Assistant STOP event.
@@ -235,6 +236,37 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             entities=self._entities,
             func=func,
             job_type=HassJobType.Coroutinefunction,
+            required_features=required_features,
+            schema=schema,
+            supports_response=supports_response,
+            description_placeholders=description_placeholders,
+        )
+
+    @callback
+    def async_register_batched_entity_service(
+        self,
+        name: str,
+        schema: VolDictType | VolSchemaType | None,
+        func: Callable[
+            [list[_EntityT], ServiceCall],
+            Coroutine[Any, Any, EntityServiceResponse | None],
+        ],
+        required_features: Iterable[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        """Register a batched entity service.
+
+        A batched entity service calls the service function once with all
+        matching entities as a list, instead of once per entity.
+        """
+        service.async_register_batched_entity_service(
+            self.hass,
+            self.domain,
+            name,
+            entities=self._entities,
+            func=func,
             required_features=required_features,
             schema=schema,
             supports_response=supports_response,

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -16,6 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -575,36 +577,6 @@ async def test_register_entity_service(
     assert len(calls) == 2
 
 
-async def test_register_entity_service_non_entity_service_schema(
-    hass: HomeAssistant,
-) -> None:
-    """Test attempting to register a service with a non entity service schema."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
-
-    for idx, schema in enumerate(
-        (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
-        )
-    ):
-        expected_message = (
-            f"The test_domain.hello_{idx} service registers "
-            "an entity service with a non entity service schema"
-        )
-        with pytest.raises(HomeAssistantError, match=expected_message):
-            component.async_register_entity_service(f"hello_{idx}", schema, Mock())
-
-    for idx, schema in enumerate(
-        (
-            cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
-        )
-    ):
-        component.async_register_entity_service(f"test_service_{idx}", schema, Mock())
-
-
 async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:
     """Test an entity service that does support response data."""
     entity = MockEntity(entity_id=f"{DOMAIN}.entity")
@@ -707,6 +679,150 @@ async def test_register_entity_service_response_data_multiple_matches_raises(
             target={"entity_id": [entity1.entity_id, entity2.entity_id]},
             blocking=True,
             return_response=True,
+        )
+
+
+async def test_register_batched_entity_service(hass: HomeAssistant) -> None:
+    """Test registering a batched entity service and calling it."""
+    entity1 = MockEntity(entity_id=f"{DOMAIN}.entity1")
+    entity2 = MockEntity(entity_id=f"{DOMAIN}.entity2")
+
+    calls: list[tuple[list[MockEntity], ServiceCall]] = []
+
+    async def handle_service(entities: list[MockEntity], call: ServiceCall) -> None:
+        calls.append((entities, call))
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    await component.async_add_entities([entity1, entity2])
+
+    component.async_register_batched_entity_service(
+        "hello",
+        {"some": str},
+        handle_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await async_get_all_descriptions(hass)
+    assert descriptions[DOMAIN]["hello"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "hello",
+            {"entity_id": entity1.entity_id, "invalid": "data"},
+            blocking=True,
+        )
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        DOMAIN,
+        "hello",
+        {"entity_id": entity1.entity_id, "some": "data"},
+        blocking=True,
+    )
+    assert len(calls) == 1
+    assert calls[0][0] == [entity1]
+    # Verify entity service fields are stripped from the ServiceCall
+    assert calls[0][1].data == {"some": "data"}
+
+    await hass.services.async_call(
+        DOMAIN,
+        "hello",
+        {"entity_id": ENTITY_MATCH_ALL, "some": "data"},
+        blocking=True,
+    )
+    assert len(calls) == 2
+    assert calls[1][0] == unordered([entity1, entity2])
+
+    await hass.services.async_call(
+        DOMAIN,
+        "hello",
+        {"entity_id": ENTITY_MATCH_NONE, "some": "data"},
+        blocking=True,
+    )
+    assert len(calls) == 2
+
+
+async def test_register_batched_entity_service_response_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test a batched entity service that supports response data."""
+    entity1 = MockEntity(entity_id=f"{DOMAIN}.entity1")
+    entity2 = MockEntity(entity_id=f"{DOMAIN}.entity2")
+
+    async def handle_service(
+        entities: list[MockEntity], call: ServiceCall
+    ) -> EntityServiceResponse:
+        assert call.return_response
+        return {
+            e.entity_id: {"response-key": f"response-value-{e.entity_id}"}
+            for e in entities
+        }
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    await component.async_setup({})
+    await component.async_add_entities([entity1, entity2])
+
+    component.async_register_batched_entity_service(
+        "hello",
+        {"some": str},
+        handle_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    response_data = await hass.services.async_call(
+        DOMAIN,
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        f"{DOMAIN}.entity1": {"response-key": f"response-value-{DOMAIN}.entity1"},
+        f"{DOMAIN}.entity2": {"response-key": f"response-value-{DOMAIN}.entity2"},
+    }
+
+
+async def test_register_entity_service_non_entity_service_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test attempting to register a service with a non entity service schema.
+
+    Also tests the batched variant.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    for idx, schema in enumerate(
+        (
+            vol.Schema({"some": str}),
+            vol.All(vol.Schema({"some": str})),
+            vol.Any(vol.Schema({"some": str})),
+        )
+    ):
+        expected_message = (
+            f"The test_domain.hello_{idx} service registers "
+            "an entity service with a non entity service schema"
+        )
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            component.async_register_entity_service(f"hello_{idx}", schema, Mock())
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            component.async_register_batched_entity_service(
+                f"hello_{idx}", schema, AsyncMock()
+            )
+
+    for idx, schema in enumerate(
+        (
+            cv.make_entity_service_schema({"some": str}),
+            vol.Schema(cv.make_entity_service_schema({"some": str})),
+            vol.All(cv.make_entity_service_schema({"some": str})),
+        )
+    ):
+        component.async_register_entity_service(f"test_service_{idx}", schema, Mock())
+        component.async_register_batched_entity_service(
+            f"test_service_batched_{idx}", schema, AsyncMock()
         )
 
 
