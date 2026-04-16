@@ -3,33 +3,17 @@
 from __future__ import annotations
 
 DOMAIN = "blanco"
-"""Integration domain — used as the unique identifier in Home Assistant."""
 
-# Config entry keys
 CONF_DEV_ID = "devId"
-"""Config entry key for the device ID (SHA-256 hash of serial + service code, or explicit value)."""
 CONF_SERIAL = "serial"
-"""Config entry key for the device serial number entered during setup."""
 CONF_SERVICE_CODE = "service_code"
-"""Config entry key for the service code entered during setup."""
 CONF_TOKEN = "token"
-"""Config entry key for the current Bearer token issued by the BLANCO API."""
 CONF_TOKEN_TYPE = "token_type"
-"""Config entry key for the token type (typically "Bearer")."""
 CONF_DEV_TYPE = "dev_type"
-"""Config entry key for the numeric device type returned by the auth endpoint."""
 CONF_APP_ID = "app_id"
-"""Config entry key for the app registration ID issued by the BLANCO API."""
 CONF_APP_LOCALE = "app_locale"
-"""Config entry key for the two-letter locale sent to the API during app registration."""
 CONF_LAST_ACTION_TS = "last_action_ts"
-"""Config entry key for the highest evt_ts (ms) seen so far; used to resume polling after restart."""
 CONF_WATER_TOTALS_ML = "water_totals_ml"
-"""Config entry key for the per-tap-state running water totals in mL; persisted to survive restarts."""
 CONF_LAST_DISPENSING_ML = "last_dispensing_ml"
-"""Config entry key for the dispensed amount (mL) of the most recent action event."""
 CONF_BACKFILL_DONE = "backfill_done"
-"""Config entry key indicating whether the one-time full historical actions backfill has completed."""
-
 CONF_STATS_MIGRATED = "stats_migrated"
-"""Config entry key set to True once statistic IDs have been migrated from the dev_id hash slug to the serial slug."""

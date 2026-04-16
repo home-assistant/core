@@ -474,9 +474,7 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
     @property
     def native_value(self) -> Any:
         """Return the current sensor value."""
-        section: Any = self.coordinator.data.get(
-            self.entity_description.data_key, {}
-        )
+        section: Any = self.coordinator.data.get(self.entity_description.data_key, {})
         data: Any = (
             section.get(self.entity_description.source, {})
             if isinstance(section, dict)

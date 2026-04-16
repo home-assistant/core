@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from blanco_smart_home_api_client import BlancoLogLevel, blanco_log
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
@@ -66,9 +64,7 @@ def migrate_sensor_units(hass: HomeAssistant, entry_id: str) -> None:
         registry.async_update_entity_options(
             entity_entry.entity_id, "sensor.private", None
         )
-        blanco_log(
-            _LOGGER,
-            BlancoLogLevel.INFO,
+        _LOGGER.debug(
             "Cleared stale mL unit override for entity %s",
             entity_entry.entity_id,
         )
@@ -108,17 +104,13 @@ def migrate_entity_ids(
             continue
         # Skip if the target entity_id is already occupied by a different entity.
         if registry.async_get(expected_entity_id) is not None:
-            blanco_log(
-                _LOGGER,
-                BlancoLogLevel.WARNING,
+            _LOGGER.warning(
                 "Cannot migrate %s → %s: target entity_id already exists",
                 entity_entry.entity_id,
                 expected_entity_id,
             )
             continue
-        blanco_log(
-            _LOGGER,
-            BlancoLogLevel.INFO,
+        _LOGGER.debug(
             "Migrating entity ID: %s → %s",
             entity_entry.entity_id,
             expected_entity_id,
@@ -158,9 +150,7 @@ def migrate_statistic_ids(hass: HomeAssistant, entry_id: str) -> None:
             CONF_STATS_MIGRATED: True,
         },
     )
-    blanco_log(
-        _LOGGER,
-        BlancoLogLevel.INFO,
+    _LOGGER.debug(
         "Statistic ID migration: backfill state reset; "
         "coordinator will re-backfill under serial-based statistic IDs",
     )
