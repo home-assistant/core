@@ -6,20 +6,11 @@ from typing import Any
 
 import aiohttp
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
-from homeassistant.components.stips_iru1.catalog import (
-    model_has_ir_signals,
-    normalize_device_ip,
-    normalize_device_mac,
-    normalize_device_online,
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.components.stips_iru1.const import (
-    DOMAIN,
-    is_learned_ac,
-    is_protocol_ac,
-)
-from homeassistant.components.stips_iru1.local_http import async_build_control_hosts
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -27,6 +18,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .catalog import (
+    model_has_ir_signals,
+    normalize_device_ip,
+    normalize_device_mac,
+    normalize_device_online,
+)
+from .const import (
+    DOMAIN,
+    is_learned_ac,
+    is_protocol_ac,
+)
+from .local_http import async_build_control_hosts
 
 _MODE_TO_HVAC: dict[int, HVACMode] = {
     0: HVACMode.AUTO,
