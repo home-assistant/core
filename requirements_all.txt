@@ -643,6 +643,9 @@ beautifulsoup4==4.13.3
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
+# homeassistant.components.blanco
+blanco-smart-home-api-client==1.0.0
+
 # homeassistant.components.esphome
 bleak-esphome==3.7.3
 

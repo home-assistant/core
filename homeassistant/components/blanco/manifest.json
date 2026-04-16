@@ -1,7 +1,6 @@
 {
   "domain": "blanco",
   "name": "BLANCO",
-  "after_dependencies": ["recorder"],
   "codeowners": [
     "@blancoGDPD"
   ],

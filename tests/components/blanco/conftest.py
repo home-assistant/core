@@ -10,10 +10,8 @@ import pytest
 from homeassistant.components.blanco.const import (
     CONF_APP_ID,
     CONF_APP_LOCALE,
-    CONF_BACKFILL_DONE,
     CONF_DEV_ID,
     CONF_DEV_TYPE,
-    CONF_LAST_ACTION_TS,
     CONF_SERIAL,
     CONF_TOKEN,
     CONF_TOKEN_TYPE,
@@ -49,7 +47,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_hass() -> MagicMock:
     """Return a minimal HomeAssistant-like mock sufficient for coordinator tests."""
     hass = MagicMock()
-    # Ensure the recorder block inside _async_update_data is skipped.
     hass.config.components = set()
     hass.config_entries.async_update_entry = MagicMock()
     hass.config.time_zone = "UTC"
@@ -62,8 +59,7 @@ def mock_hass() -> MagicMock:
 def make_mock_entry(data: dict | None = None) -> MagicMock:
     """Return a MagicMock configured to behave like a ConfigEntry.
 
-    The default data dict contains all keys needed by BlancoDataUpdateCoordinator
-    and sets CONF_BACKFILL_DONE to True so tests skip the historical backfill loop.
+    The default data dict contains all keys needed by BlancoDataUpdateCoordinator.
     """
     default_data: dict = {
         CONF_TOKEN: TEST_TOKEN,
@@ -73,8 +69,6 @@ def make_mock_entry(data: dict | None = None) -> MagicMock:
         CONF_SERIAL: TEST_SERIAL,
         CONF_APP_LOCALE: "en",
         CONF_DEV_TYPE: BlancoDeviceType.AIO,
-        CONF_LAST_ACTION_TS: 0,
-        CONF_BACKFILL_DONE: True,
     }
     entry = MagicMock()
     entry.data = {**default_data, **(data or {})}
@@ -101,14 +95,6 @@ def make_coordinator(
         entry = make_mock_entry(data={CONF_DEV_TYPE: int(dev_type)})
     if session is None:
         mock_session = MagicMock()
-        # Configure a default stats POST response (404) so stats remain None.
-        _default_stats_resp = AsyncMock()
-        _default_stats_resp.status = 404
-        _default_stats_resp.json = AsyncMock(return_value={})
-        _default_stats_cm = MagicMock()
-        _default_stats_cm.__aenter__ = AsyncMock(return_value=_default_stats_resp)
-        _default_stats_cm.__aexit__ = AsyncMock(return_value=False)
-        mock_session.post.return_value = _default_stats_cm
     else:
         mock_session = session
     with (

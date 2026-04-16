@@ -1,60 +1,68 @@
 rules:
   # Bronze
-  action-setup: done          # No custom HA actions defined — rule is not applicable
-  appropriate-polling: done   # DataUpdateCoordinator with UPDATE_INTERVAL used
-  brands: todo                # Brand assets submitted via home-assistant/brands#10139
-  common-modules: done        # coordinator.py used for polling; const.py holds config entry keys
+  action-setup: done
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: Brand assets submitted via home-assistant/brands#10139
+  common-modules: done
   config-flow-test-coverage: done
-  config-flow: done           # Full ConfigFlow with error handling implemented
-  dependency-transparency: done  # blanco-smart-home-api-client published on PyPI (source distribution)
-  docs-actions: done          # No custom actions defined — nothing to document
-  docs-high-level-description: done  # README has high-level description
-  docs-installation-instructions: done  # README has installation section
-  docs-removal-instructions: done   # README has dedicated removal section with UI steps
-  entity-event-setup: done    # CoordinatorEntity used — no direct event subscriptions
-  entity-unique-id: done      # _attr_unique_id set on all entities
-  has-entity-name: done       # _attr_has_entity_name = True in both platforms
-  runtime-data: done          # entry.runtime_data = coordinator
-  test-before-configure: done # validate_input() tests API before creating config entry
-  test-before-setup: done     # async_config_entry_first_refresh() raises ConfigEntryNotReady
-  unique-config-entry: done   # async_set_unique_id + _abort_if_unique_id_configured
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
-  action-exceptions: done     # No custom actions defined — rule is not applicable
-  config-entry-unloading: done  # async_unload_entry implemented
-  docs-configuration-parameters: done  # README documents serial number and service code
-  docs-installation-parameters: done   # README documents installation parameters
-  entity-unavailable: done    # CoordinatorEntity marks entities unavailable on coordinator failure
-  integration-owner: done     # codeowners set in manifest.json
-  log-when-unavailable: done  # Warnings logged per endpoint when requests fail
-  parallel-updates: done      # PARALLEL_UPDATES = 0 defined in sensor.py
-  reauthentication-flow: todo  # Deferred to a follow-up PR per reviewer request
-  test-coverage: done  # test_coordinator.py, test_sensor.py, test_config_flow.py added
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: todo
+    comment: Deferred to a follow-up PR per reviewer request
+  test-coverage: done
 
   # Gold
-  devices: done               # DeviceInfo with identifiers, manufacturer, model, serial, versions
-  diagnostics: done           # diagnostics.py implemented with token/app_id/dev_id redaction
-  discovery-update-info: todo  # Cloud polling only — local discovery not applicable
-  discovery: todo             # Cloud polling only — local discovery not applicable
-  docs-data-update: done      # README documents polling interval and all API endpoints
-  docs-examples: done         # samples/dashboard.yaml provided
-  docs-known-limitations: done  # README has Known Limitations section
-  docs-supported-devices: done  # README has Supported Devices table
-  docs-supported-functions: done  # README has Available Entities section
-  docs-troubleshooting: done  # README has Troubleshooting section
-  docs-use-cases: done        # README has Use Cases section
-  dynamic-devices: done       # One device per config entry by design — not applicable
-  entity-category: done       # Diagnostic entities (online, error_count) set EntityCategory.DIAGNOSTIC
-  entity-device-class: done   # Device classes set on all relevant sensor entities
-  entity-disabled-by-default: done  # Diagnostic entities (online, error_count) are enabled by default as they are relevant to most users
-  entity-translations: done   # translation_key set on all entities
-  exception-translations: done  # All error keys mapped in strings.json and translations/
+  devices: done
+  diagnostics:
+    status: todo
+    comment: Deferred to a follow-up PR per reviewer request
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo  # Deferred to a follow-up PR per reviewer request
-  repair-issues: done         # Repair issue created/deleted per poll cycle in coordinator.py
-  stale-devices: done         # One device per config entry — stale device cleanup not applicable
+  reconfiguration-flow:
+    status: todo
+    comment: Deferred to a follow-up PR per reviewer request
+  repair-issues: done
+  stale-devices: done
 
   # Platinum
-  async-dependency: done      # All HTTP I/O uses aiohttp (async)
-  inject-websession: done     # async_get_clientsession(hass) used throughout
-  strict-typing: done         # mypy.ini with strict=true added; all functions fully annotated
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

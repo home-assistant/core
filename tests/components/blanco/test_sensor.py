@@ -13,18 +13,12 @@ from homeassistant.components.blanco.sensor import (
     _DESC_CO2_REST,
     _DESC_ERROR_COUNT,
     _DESC_ONLINE,
-    _DESC_WATER_MONTH,
-    _DESC_WATER_TODAY,
-    _DESC_WATER_WEEK,
-    _DESC_WATER_YEAR,
     SENSOR_DESCRIPTIONS_BY_TYPE,
-    SENSOR_DESCRIPTIONS_STATS_WATER,
     BlancoSensorEntity,
     _aqua_filter_remaining_days,
     _aqua_filter_remaining_volume,
     _aqua_filter_rest,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.helpers.entity import EntityCategory
 
 # ── Shared test data ───────────────────────────────────────────────────────────
@@ -59,18 +53,6 @@ SAMPLE_DATA: dict = {
             }
         ],
         "info": {},
-    },
-    "actions": {
-        "actions": [],
-        "info": {},
-        "totals": {
-            "all": 10.5,
-            "still": 5.0,
-            "medium": 3.0,
-            "classic": 2.5,
-            "hot": 0.0,
-            "last": 250,
-        },
     },
 }
 
@@ -184,7 +166,6 @@ class TestNativeValue:
             "status": SAMPLE_DATA["status"],
             "settings": SAMPLE_DATA["settings"],
             "errors": SAMPLE_DATA["errors"],
-            "actions": SAMPLE_DATA["actions"],
         }
         entity = _make_entity(_DESC_ONLINE, data=data)
         assert entity.native_value is None
@@ -253,9 +234,11 @@ class TestSensorDescriptionsByType:
         """Return the set of entity description keys for a given device type."""
         return {d.key for d in SENSOR_DESCRIPTIONS_BY_TYPE[dev_type]}
 
-    def test_aio_includes_water_hot(self) -> None:
-        """AIO descriptions include the water_hot sensor."""
-        assert "water_hot" in self._keys(BlancoDeviceType.AIO)
+    def test_aio_excludes_actions_and_stats_sensors(self) -> None:
+        """AIO descriptions no longer include actions or stats sensors."""
+        keys = self._keys(BlancoDeviceType.AIO)
+        assert "water_total" not in keys
+        assert "water_today" not in keys
 
     def test_soda_excludes_water_hot(self) -> None:
         """SODA descriptions do not include the water_hot sensor."""
@@ -281,38 +264,14 @@ class TestSensorDescriptionsByType:
                 f"Missing 'error_count' for {dev_type}"
             )
 
-    def test_aio_includes_stats_water_sensors(self) -> None:
-        """AIO descriptions include all four time-range stats sensors."""
-        keys = self._keys(BlancoDeviceType.AIO)
-        assert "water_today" in keys
-        assert "water_week" in keys
-        assert "water_month" in keys
-        assert "water_year" in keys
-
-    def test_soda_includes_stats_water_sensors(self) -> None:
-        """SODA descriptions include all four time-range stats sensors."""
-        keys = self._keys(BlancoDeviceType.SODA)
-        assert "water_today" in keys
-        assert "water_week" in keys
-        assert "water_month" in keys
-        assert "water_year" in keys
-
-    def test_aqua_includes_stats_water_sensors(self) -> None:
-        """AQUA descriptions include all four time-range stats sensors."""
-        keys = self._keys(BlancoDeviceType.AQUA)
-        assert "water_today" in keys
-        assert "water_week" in keys
-        assert "water_month" in keys
-        assert "water_year" in keys
-
-    def test_soda2_excludes_stats_water_sensors(self) -> None:
-        """SODA2 descriptions do not include stats water sensors."""
+    def test_soda2_has_only_common_sensors(self) -> None:
+        """SODA2 descriptions contain only the common sensors."""
         keys = self._keys(BlancoDeviceType.SODA2)
         assert "water_today" not in keys
-        assert "water_week" not in keys
+        assert "water_total" not in keys
 
-    def test_filter_excludes_stats_water_sensors(self) -> None:
-        """FILTER descriptions do not include stats water sensors."""
+    def test_filter_has_only_common_sensors(self) -> None:
+        """FILTER descriptions contain only the common sensors."""
         keys = self._keys(BlancoDeviceType.FILTER)
         assert "water_today" not in keys
 
@@ -330,51 +289,3 @@ class TestEntityCategory:
     def test_error_count_is_diagnostic(self) -> None:
         """_DESC_ERROR_COUNT must be categorised as DIAGNOSTIC."""
         assert _DESC_ERROR_COUNT.entity_category == EntityCategory.DIAGNOSTIC
-
-
-# ── TestStatsWaterSensorDescriptions ─────────────────────────────────────────
-
-
-class TestStatsWaterSensorDescriptions:
-    """Tests for the four time-range stats water sensor descriptions."""
-
-    def test_all_four_descriptions_in_sensor_descriptions_stats_water(self) -> None:
-        """SENSOR_DESCRIPTIONS_STATS_WATER contains exactly the four expected keys."""
-        keys = {d.key for d in SENSOR_DESCRIPTIONS_STATS_WATER}
-        assert keys == {"water_today", "water_week", "water_month", "water_year"}
-
-    def test_water_today_data_key_is_stats(self) -> None:
-        """water_today reads from the 'stats' data key."""
-        assert _DESC_WATER_TODAY.data_key == "stats"
-        assert _DESC_WATER_TODAY.source == "totals"
-        assert _DESC_WATER_TODAY.param_key == "today"
-
-    def test_water_week_param_key_is_week(self) -> None:
-        """water_week param_key is 'week'."""
-        assert _DESC_WATER_WEEK.param_key == "week"
-
-    def test_water_month_param_key_is_month(self) -> None:
-        """water_month param_key is 'month'."""
-        assert _DESC_WATER_MONTH.param_key == "month"
-
-    def test_water_year_param_key_is_year(self) -> None:
-        """water_year param_key is 'year'."""
-        assert _DESC_WATER_YEAR.param_key == "year"
-
-    def test_all_stats_sensors_use_total_state_class(self) -> None:
-        """All stats sensors use TOTAL state class (not TOTAL_INCREASING or MEASUREMENT).
-
-        TOTAL is correct because values reset at each period boundary (e.g. midnight
-        for water_today) and can therefore decrease — which TOTAL_INCREASING forbids.
-        """
-        for desc in SENSOR_DESCRIPTIONS_STATS_WATER:
-            assert desc.state_class == SensorStateClass.TOTAL, (
-                f"{desc.key} should use TOTAL state class"
-            )
-
-    def test_all_stats_sensors_have_water_device_class(self) -> None:
-        """All stats sensors declare SensorDeviceClass.WATER."""
-        for desc in SENSOR_DESCRIPTIONS_STATS_WATER:
-            assert desc.device_class == SensorDeviceClass.WATER, (
-                f"{desc.key} should have device_class WATER"
-            )
