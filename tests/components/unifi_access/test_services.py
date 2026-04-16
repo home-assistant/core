@@ -52,7 +52,7 @@ async def test_set_lock_rule_service_calls_api(
         {
             ATTR_DEVICE_ID: _device_id(device_registry, "door-001"),
             ATTR_RULE: "keep_lock",
-            ATTR_INTERVAL: 30,
+            ATTR_INTERVAL: {"minutes": 30},
         },
         blocking=True,
     )

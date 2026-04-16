@@ -149,6 +149,17 @@
       "message": "Failed to unlock the door."
     }
   },
+  "selector": {
+    "rule": {
+      "options": {
+        "custom": "Custom",
+        "keep_lock": "Keep locked",
+        "keep_unlock": "Keep unlocked",
+        "lock_early": "Lock early",
+        "reset": "Reset"
+      }
+    }
+  },
   "services": {
     "set_lock_rule": {
       "description": "Apply a temporary lock rule to a UniFi Access door.",
@@ -158,7 +169,7 @@
           "name": "Door"
         },
         "interval": {
-          "description": "Rule duration in minutes. Defaults to 10.",
+          "description": "How long the rule stays active. Defaults to 10 minutes.",
           "name": "Interval"
         },
         "rule": {

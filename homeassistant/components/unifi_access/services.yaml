@@ -5,29 +5,19 @@ set_lock_rule:
       selector:
         device:
           integration: unifi_access
-          entity:
-            domain: button
     rule:
       required: true
       selector:
         select:
           options:
-            - label: Keep locked
-              value: keep_lock
-            - label: Keep unlocked
-              value: keep_unlock
-            - label: Custom
-              value: custom
-            - label: Reset
-              value: reset
-            - label: Lock early
-              value: lock_early
+            - keep_lock
+            - keep_unlock
+            - custom
+            - reset
+            - lock_early
+          translation_key: rule
     interval:
-      default: 10
       selector:
-        number:
-          min: 1
-          max: 480
-          mode: box
-          step: 1
-          unit_of_measurement: minutes
+        duration:
+          enable_day: false
+          enable_millisecond: false
