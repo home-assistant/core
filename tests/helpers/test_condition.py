@@ -4176,6 +4176,30 @@ async def test_state_condition_duration_met(
     assert test(hass) is True
 
 
+async def test_state_condition_duration_zero_behaves_like_no_duration(
+    hass: HomeAssistant,
+) -> None:
+    """Test that for: 0 behaves the same as omitting for.
+
+    The UI defaults to 00:00:00, so a zero duration must not require the
+    entity to have been in the state for any time — it should pass
+    immediately, just like when for is not specified.
+    """
+    test = await _setup_state_condition(
+        hass,
+        entity_ids="test.entity_1",
+        states=STATE_ON,
+        condition_options={CONF_FOR: {"seconds": 0}},
+        support_duration=True,
+    )
+
+    hass.states.async_set("test.entity_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Should pass immediately — zero duration is the same as no duration
+    assert test(hass) is True
+
+
 async def test_state_condition_duration_wrong_state(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
