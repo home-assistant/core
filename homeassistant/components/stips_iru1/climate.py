@@ -379,17 +379,26 @@ class StipsIruClimate(ClimateEntity):
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device registry metadata for this climate entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_unique_name)},
-            name=self._device_name,
-            manufacturer="STIPS",
-            model="IRU1",
-            connections={(dr.CONNECTION_NETWORK_MAC, self._device_mac)}
+        device_info: dict[str, Any] = {
+            "identifiers": {(DOMAIN, self._device_unique_name)},
+            "name": self._device_name,
+            "manufacturer": "STIPS",
+            "model": "IRU1",
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_mac)}
             if self._device_mac
             else set(),
-            configuration_url=f"http://{self._device_unique_name}/device_info",
-        )
+        }
 
+        device_host = str(getattr(self, "_device_ip", "") or "").strip()
+        if device_host:
+            try:
+                device_info["configuration_url"] = str(
+                    URL.build(scheme="http", host=device_host, path="/device_info")
+                )
+            except ValueError:
+                pass
+
+        return DeviceInfo(**device_info)
     @property
     def available(self) -> bool:
         """Return latest known availability state for this remote."""
