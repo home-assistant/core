@@ -1,0 +1,22 @@
+{
+  "services": {
+    "add_label_to_entity": {
+      "service": "mdi:tag-plus"
+    },
+    "clean_motion_files": {
+      "service": "mdi:delete-sweep"
+    },
+    "create_alert": {
+      "service": "mdi:alert-plus"
+    },
+    "create_event": {
+      "service": "mdi:calendar-plus"
+    },
+    "deploy_latest_config": {
+      "service": "mdi:cloud-upload"
+    },
+    "update_entity": {
+      "service": "mdi:pencil"
+    }
+  }
+}
