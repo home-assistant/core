@@ -804,6 +804,6 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
         return None
 
     try:
-        return jwt.decode(encoded, secret, algorithms=["HS256"])  # type: ignore[no-any-return]
+        return jwt.decode(encoded, secret, algorithms=["HS256"])
     except jwt.InvalidTokenError:
         return None
