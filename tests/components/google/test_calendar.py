@@ -136,6 +136,8 @@ async def test_all_day_event(
     mock_events_list_items([event])
 
     assert await component_setup()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
@@ -167,6 +169,8 @@ async def test_future_event(
     mock_events_list_items([event])
 
     assert await component_setup()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
@@ -198,6 +202,8 @@ async def test_in_progress_event(
     mock_events_list_items([event])
 
     assert await component_setup()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
@@ -1294,6 +1300,8 @@ async def test_all_day_event_without_duration(
     mock_events_list_items([event])
 
     assert await component_setup()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     expected_end_event = week_from_today + datetime.timedelta(days=1)
 
