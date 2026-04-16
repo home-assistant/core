@@ -14,7 +14,11 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
+<<<<<<< evo_domain_ctl_svcs
     SERVICE_BREAKS_IN_HA_VERSION,
+=======
+    RESET_BREAKS_IN_HA_VERSION,
+>>>>>>> dev
     EvoService,
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
@@ -67,7 +71,11 @@ async def test_reset_system(
     issue = issue_registry.async_get_issue(
         DOMAIN, "deprecated_reset_system_service_call"
     )
-    assert issue is None
+    assert issue is not None
+    assert issue.translation_key == "deprecated_reset_system_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -193,6 +201,7 @@ async def test_set_system_mode(
 async def test_clear_zone_override(
     hass: HomeAssistant,
     zone_id: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's clear_zone_override service (for a heating zone)."""
 
@@ -208,11 +217,21 @@ async def test_clear_zone_override(
 
         mock_fcn.assert_awaited_once_with()
 
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_clear_zone_override_service"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_clear_zone_override_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
+
 
 @pytest.mark.parametrize("install", ["default"])
 async def test_clear_zone_override_legacy(
     hass: HomeAssistant,
     zone_id: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's clear_zone_override service with the legacy entity_id."""
 
@@ -228,6 +247,15 @@ async def test_clear_zone_override_legacy(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_clear_zone_override_service"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_clear_zone_override_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
