@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
     )
 
     entry.runtime_data = {}
-    for subentry_id, repository_subentry in entry.subentries.items():
+    for repository_subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_REPOSITORY):
         repository = repository_subentry.data[CONF_REPOSITORY]
         coordinator = GitHubDataUpdateCoordinator(
             hass=hass,
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
         if not entry.pref_disable_polling:
             await coordinator.subscribe()
 
-        entry.runtime_data[subentry_id] = coordinator
+        entry.runtime_data[repository_subentry.subentry_id] = coordinator
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
