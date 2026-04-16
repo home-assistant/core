@@ -58,7 +58,7 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
         except ClientConnectionError as exc:
             _LOGGER.debug("Gaposa connection failed: %s", exc)
             return None, "cannot_connect"
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Unexpected exception during Gaposa login")
             return None, "unknown"
         finally:

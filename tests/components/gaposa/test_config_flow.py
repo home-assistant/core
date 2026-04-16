@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
+from aiohttp import ClientConnectionError
 from pygaposa import FirebaseAuthException, GaposaAuthException
 import pytest
 
@@ -89,8 +90,6 @@ async def test_form_validation_errors(
     expected_error: str,
 ) -> None:
     """Each login failure mode surfaces as the right form error."""
-    from aiohttp import ClientConnectionError
-
     # validate_input catches ClientConnectionError; use it for the
     # "cannot connect" case so the right except arm fires.
     if isinstance(exc, ConnectionError):

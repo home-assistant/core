@@ -9,18 +9,16 @@ from pygaposa import FirebaseAuthException, GaposaAuthException
 import pytest
 
 from homeassistant.components.gaposa.const import UPDATE_INTERVAL, UPDATE_INTERVAL_FAST
+from homeassistant.components.gaposa.coordinator import DataUpdateCoordinatorGaposa
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
 
-def _get_coordinator(
-    entry: MockConfigEntry,
-) -> "DataUpdateCoordinatorGaposa":
+def _get_coordinator(entry: MockConfigEntry) -> DataUpdateCoordinatorGaposa:
     """Return the coordinator stored on ``entry.runtime_data``."""
-    from homeassistant.components.gaposa.coordinator import DataUpdateCoordinatorGaposa
-
     assert isinstance(entry.runtime_data, DataUpdateCoordinatorGaposa)
     return entry.runtime_data
 
@@ -91,8 +89,6 @@ async def test_auth_errors_raise_config_entry_auth_failed(
     exc: type[Exception],
 ) -> None:
     """A Gaposa/Firebase auth error on refresh surfaces as ConfigEntryAuthFailed."""
-    from homeassistant.exceptions import ConfigEntryAuthFailed
-
     coordinator = _get_coordinator(init_integration)
     mock_gaposa_instance.update.side_effect = exc("credentials rejected")
 

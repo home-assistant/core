@@ -112,9 +112,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.gaposa.async_setup_entry", return_value=True
         ) as mock_setup,
-        patch(
-            "homeassistant.components.gaposa.async_unload_entry", return_value=True
-        ),
+        patch("homeassistant.components.gaposa.async_unload_entry", return_value=True),
     ):
         yield mock_setup
 
