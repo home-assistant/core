@@ -206,189 +206,21 @@ SENSOR_DESCRIPTIONS_AQUA: tuple[BlancoSensorEntityDescription, ...] = (
 )
 """Sensor descriptions specific to the AQUA device type (computed filter sensors)."""
 
-# ── Actions — water consumption sensors ───────────────────────────────────────
-
-_DESC_LAST_DISPENSING = BlancoSensorEntityDescription(
-    key="last_dispensing",
-    translation_key="last_dispensing",
-    data_key="actions",
-    source="totals",
-    param_key="last",
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfVolume.MILLILITERS,
-    suggested_display_precision=0,
-)
-_DESC_WATER_TOTAL = BlancoSensorEntityDescription(
-    key="water_total",
-    translation_key="water_total",
-    data_key="actions",
-    source="totals",
-    param_key="all",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_WATER_STILL = BlancoSensorEntityDescription(
-    key="water_still",
-    translation_key="water_still",
-    data_key="actions",
-    source="totals",
-    param_key="still",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_WATER_MEDIUM = BlancoSensorEntityDescription(
-    key="water_medium",
-    translation_key="water_medium",
-    data_key="actions",
-    source="totals",
-    param_key="medium",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_WATER_CLASSIC = BlancoSensorEntityDescription(
-    key="water_classic",
-    translation_key="water_classic",
-    data_key="actions",
-    source="totals",
-    param_key="classic",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_WATER_HOT = BlancoSensorEntityDescription(
-    key="water_hot",
-    translation_key="water_hot",
-    data_key="actions",
-    source="totals",
-    param_key="hot",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-
-SENSOR_DESCRIPTIONS_ACTIONS_BASE: tuple[BlancoSensorEntityDescription, ...] = ()
-"""Water consumption sensor descriptions for device types without specific action support."""
-
-SENSOR_DESCRIPTIONS_ACTIONS_SODA: tuple[BlancoSensorEntityDescription, ...] = (
-    _DESC_LAST_DISPENSING,
-    _DESC_WATER_TOTAL,
-    _DESC_WATER_STILL,
-    _DESC_WATER_MEDIUM,
-    _DESC_WATER_CLASSIC,
-)
-"""Water consumption sensor descriptions for SODA devices (STILL, MEDIUM, CLASSIC)."""
-
-SENSOR_DESCRIPTIONS_ACTIONS_AQUA: tuple[BlancoSensorEntityDescription, ...] = (
-    _DESC_LAST_DISPENSING,
-    _DESC_WATER_TOTAL,
-)
-"""Water consumption sensor descriptions for AQUA devices (last dispensing and total only)."""
-
-SENSOR_DESCRIPTIONS_ACTIONS_AIO: tuple[BlancoSensorEntityDescription, ...] = (
-    _DESC_LAST_DISPENSING,
-    _DESC_WATER_TOTAL,
-    _DESC_WATER_STILL,
-    _DESC_WATER_MEDIUM,
-    _DESC_WATER_CLASSIC,
-    _DESC_WATER_HOT,
-)
-"""Water consumption sensor descriptions for the AIO device type (adds HOT water)."""
-
-# ── Stats — time-range water consumption sensors ──────────────────────────────
-
-_DESC_WATER_TODAY = BlancoSensorEntityDescription(
-    key="water_today",
-    translation_key="water_today",
-    data_key="stats",
-    source="totals",
-    param_key="today",
-    device_class=SensorDeviceClass.WATER,
-    # TOTAL (not TOTAL_INCREASING) because the value resets at each period
-    # boundary (e.g. midnight for "today") and can therefore decrease.
-    state_class=SensorStateClass.TOTAL,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_WATER_WEEK = BlancoSensorEntityDescription(
-    key="water_week",
-    translation_key="water_week",
-    data_key="stats",
-    source="totals",
-    param_key="week",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_WATER_MONTH = BlancoSensorEntityDescription(
-    key="water_month",
-    translation_key="water_month",
-    data_key="stats",
-    source="totals",
-    param_key="month",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-_DESC_WATER_YEAR = BlancoSensorEntityDescription(
-    key="water_year",
-    translation_key="water_year",
-    data_key="stats",
-    source="totals",
-    param_key="year",
-    device_class=SensorDeviceClass.WATER,
-    state_class=SensorStateClass.TOTAL,
-    native_unit_of_measurement=UnitOfVolume.LITERS,
-    suggested_display_precision=1,
-)
-
-SENSOR_DESCRIPTIONS_STATS_WATER: tuple[BlancoSensorEntityDescription, ...] = (
-    _DESC_WATER_TODAY,
-    _DESC_WATER_WEEK,
-    _DESC_WATER_MONTH,
-    _DESC_WATER_YEAR,
-)
-"""Time-range water consumption sensors sourced from the /stats endpoint (AIO, SODA, AQUA)."""
-
 # ── Lookup: device type → descriptions (common + device-specific) ─────────────
 
 SENSOR_DESCRIPTIONS_BY_TYPE: dict[
     BlancoDeviceType, tuple[BlancoSensorEntityDescription, ...]
 ] = {  # Maps each device type to its full set of sensor descriptions.
-    BlancoDeviceType.AIO: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_AIO
-    + SENSOR_DESCRIPTIONS_ACTIONS_AIO
-    + SENSOR_DESCRIPTIONS_STATS_WATER,
-    BlancoDeviceType.SODA: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_SODA
-    + SENSOR_DESCRIPTIONS_ACTIONS_SODA
-    + SENSOR_DESCRIPTIONS_STATS_WATER,
-    BlancoDeviceType.SODA2: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_ACTIONS_BASE,
-    BlancoDeviceType.FILTER: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_ACTIONS_BASE,
-    BlancoDeviceType.HOT: SENSOR_DESCRIPTIONS_COMMON + SENSOR_DESCRIPTIONS_ACTIONS_BASE,
-    BlancoDeviceType.SELECT: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_ACTIONS_BASE,
-    BlancoDeviceType.FLEXON: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_ACTIONS_BASE,
-    BlancoDeviceType.SEPURA: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_ACTIONS_BASE,
-    BlancoDeviceType.AQUA: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_AQUA
-    + SENSOR_DESCRIPTIONS_ACTIONS_AQUA
-    + SENSOR_DESCRIPTIONS_STATS_WATER,
-    BlancoDeviceType.BIOSORT: SENSOR_DESCRIPTIONS_COMMON
-    + SENSOR_DESCRIPTIONS_ACTIONS_BASE,
+    BlancoDeviceType.AIO: SENSOR_DESCRIPTIONS_COMMON + SENSOR_DESCRIPTIONS_AIO,
+    BlancoDeviceType.SODA: SENSOR_DESCRIPTIONS_COMMON + SENSOR_DESCRIPTIONS_SODA,
+    BlancoDeviceType.SODA2: SENSOR_DESCRIPTIONS_COMMON,
+    BlancoDeviceType.FILTER: SENSOR_DESCRIPTIONS_COMMON,
+    BlancoDeviceType.HOT: SENSOR_DESCRIPTIONS_COMMON,
+    BlancoDeviceType.SELECT: SENSOR_DESCRIPTIONS_COMMON,
+    BlancoDeviceType.FLEXON: SENSOR_DESCRIPTIONS_COMMON,
+    BlancoDeviceType.SEPURA: SENSOR_DESCRIPTIONS_COMMON,
+    BlancoDeviceType.AQUA: SENSOR_DESCRIPTIONS_COMMON + SENSOR_DESCRIPTIONS_AQUA,
+    BlancoDeviceType.BIOSORT: SENSOR_DESCRIPTIONS_COMMON,
 }
 
 

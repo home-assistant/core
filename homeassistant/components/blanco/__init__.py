@@ -29,7 +29,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import BlancoDataUpdateCoordinator
-from .migration import migrate_entity_ids, migrate_sensor_units, migrate_statistic_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,14 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlancoConfigEntry) -> bo
     build = integration.manifest.get("build")
     _LOGGER.debug("Setting up %s", DOMAIN)
 
-    migrate_sensor_units(hass, entry.entry_id)
-    migrate_entity_ids(
-        hass,
-        entry.entry_id,
-        dev_id=entry.data.get(CONF_DEV_ID, ""),
-        serial=entry.data.get(CONF_SERIAL, ""),
-    )
-    migrate_statistic_ids(hass, entry.entry_id)
     app_id = await _async_ensure_app_registered(hass, entry)
     await _async_setup_language_listener(hass, entry)
     coordinator = BlancoDataUpdateCoordinator(
