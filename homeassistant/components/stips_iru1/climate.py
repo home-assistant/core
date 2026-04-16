@@ -269,7 +269,7 @@ async def async_setup_entry(
             friendly = remote.get("friendlyName") or remote.get("type") or "AC"
             rid = (
                 str(remote_id)
-                if remote_id
+                if remote_id is not None
                 else f"{idx}_{str(friendly).strip().lower().replace(' ', '_')}"
             )
 
