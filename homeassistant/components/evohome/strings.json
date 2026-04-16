@@ -51,12 +51,6 @@
     },
     "reset_system": {
       "description": "Sets a system's mode to `Auto` mode and resets all its zones to follow their schedules (deprecated). Some older systems may not support this feature.",
-      "fields": {
-        "entity_id": {
-          "description": "The Evohome controller climate entity.",
-          "name": "Entity"
-        }
-      },
       "name": "Reset system"
     },
     "set_dhw_override": {
