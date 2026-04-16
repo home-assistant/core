@@ -95,5 +95,5 @@ async def test_learned_ac_rejects_unsupported_fan_mode(
         },
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Unsupported fan mode"):
         await entity.async_set_fan_mode("unsupported")

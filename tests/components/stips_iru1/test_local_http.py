@@ -1,6 +1,6 @@
 """Tests for STIPS local HTTP host resolution helpers."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 
@@ -69,15 +69,14 @@ async def test_async_fetch_device_info_live_ip_success(hass: HomeAssistant) -> N
     mock_response = AsyncMock()
     mock_response.status = 200
     mock_response.json = AsyncMock(return_value={"ip_address": "10.0.0.123"})
+    context = AsyncMock()
+    context.__aenter__.return_value = mock_response
+    context.__aexit__.return_value = None
 
     with patch(
         "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
     ) as mock_session:
-        mock_session.return_value.get = AsyncMock(
-            return_value=mock_response.__aenter__.return_value
-        )
-        mock_response.__aenter__.return_value = mock_response
-        mock_response.__aexit__.return_value = None
+        mock_session.return_value.get = MagicMock(return_value=context)
 
         timeout = aiohttp.ClientTimeout(total=2)
         ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
@@ -91,7 +90,7 @@ async def test_async_fetch_device_info_live_ip_timeout(
     with patch(
         "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
     ) as mock_session:
-        mock_session.return_value.get = AsyncMock(side_effect=TimeoutError())
+        mock_session.return_value.get = MagicMock(side_effect=TimeoutError())
 
         timeout = aiohttp.ClientTimeout(total=2)
         ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
@@ -104,15 +103,14 @@ async def test_async_fetch_device_info_live_ip_http_error(
     """Test fetch handles HTTP errors."""
     mock_response = AsyncMock()
     mock_response.status = 500
+    context = AsyncMock()
+    context.__aenter__.return_value = mock_response
+    context.__aexit__.return_value = None
 
     with patch(
         "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
     ) as mock_session:
-        mock_session.return_value.get = AsyncMock(
-            return_value=mock_response.__aenter__.return_value
-        )
-        mock_response.__aenter__.return_value = mock_response
-        mock_response.__aexit__.return_value = None
+        mock_session.return_value.get = MagicMock(return_value=context)
 
         timeout = aiohttp.ClientTimeout(total=2)
         ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)

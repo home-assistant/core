@@ -6,7 +6,7 @@ from homeassistant.components.stips_iru1 import const
 class TestRemoteType:
     """Tests for remote type helpers."""
 
-    def test_is_protocol_ac() -> None:
+    def test_is_protocol_ac(self) -> None:
         """Test protocol AC detection."""
         assert const.is_protocol_ac("AC") is True
         assert const.is_protocol_ac("ac") is True
@@ -16,7 +16,7 @@ class TestRemoteType:
         assert const.is_protocol_ac("") is False
         assert const.is_protocol_ac(None) is False
 
-    def test_is_learned_ac() -> None:
+    def test_is_learned_ac(self) -> None:
         """Test learned AC detection."""
         assert const.is_learned_ac("LearnedAc") is True
         assert const.is_learned_ac("learnedac") is True
@@ -26,7 +26,7 @@ class TestRemoteType:
         assert const.is_learned_ac("") is False
         assert const.is_learned_ac(None) is False
 
-    def test_remote_uses_signal_buttons() -> None:
+    def test_remote_uses_signal_buttons(self) -> None:
         """Test signal button remote detection."""
         # LearnedAc should NOT have signal buttons (uses climate only)
         assert const.remote_uses_signal_buttons("LearnedAc") is False
@@ -43,7 +43,7 @@ class TestRemoteType:
         assert const.remote_uses_signal_buttons("") is True
         assert const.remote_uses_signal_buttons(None) is True
 
-    def test_normalize_remote_type() -> None:
+    def test_normalize_remote_type(self) -> None:
         """Test remote type normalization."""
         assert const.normalize_remote_type("AC") == "ac"
         assert const.normalize_remote_type("LearnedAc") == "learnedac"

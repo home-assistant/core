@@ -83,8 +83,8 @@ class TestProtocolAcClimate:
         """Validate device registry metadata."""
         info = protocol_ac_entity.device_info
         assert info is not None
-        assert (DOMAIN, "stips-iru1-12345") in info.identifiers
-        assert (CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF") in info.connections
+        assert (DOMAIN, "stips-iru1-12345") in info["identifiers"]
+        assert (CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF") in info["connections"]
 
     async def test_basic_controls(
         self, protocol_ac_entity: stips_climate.StipsIruClimate
@@ -165,7 +165,7 @@ class TestProtocolAcClimate:
             ) as get_session:
                 session = MagicMock()
                 get_session.return_value = session
-                session.post = AsyncMock(side_effect=TimeoutError())
+                session.post = MagicMock(side_effect=TimeoutError())
 
                 with pytest.raises(HomeAssistantError, match="Cannot reach IR device"):
                     await protocol_ac_entity._send_update(power=1)
@@ -207,7 +207,10 @@ class TestLearnedAcClimate:
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
     ) -> None:
         """Validate matching signal, fallback signal, and no-match errors."""
-        with patch.object(learned_ac_entity, "_post_signal", new=AsyncMock()) as post:
+        with (
+            patch.object(learned_ac_entity, "_post_signal", new=AsyncMock()) as post,
+            patch.object(learned_ac_entity, "async_write_ha_state"),
+        ):
             await learned_ac_entity._send_state(
                 power=1,
                 hvac_mode=HVACMode.COOL,
@@ -217,7 +220,10 @@ class TestLearnedAcClimate:
             post.assert_called_once_with("COOL_22_MED")
 
         learned_ac_entity._power_on_signal = "POWER_ON"
-        with patch.object(learned_ac_entity, "_post_signal", new=AsyncMock()) as post:
+        with (
+            patch.object(learned_ac_entity, "_post_signal", new=AsyncMock()) as post,
+            patch.object(learned_ac_entity, "async_write_ha_state"),
+        ):
             await learned_ac_entity._send_state(power=1, hvac_mode=HVACMode.FAN_ONLY)
             post.assert_called_once_with("POWER_ON")
 
@@ -249,7 +255,7 @@ class TestLearnedAcClimate:
         ):
             session = MagicMock()
             get_session.return_value = session
-            session.post = AsyncMock(side_effect=TimeoutError())
+            session.post = MagicMock(side_effect=TimeoutError())
 
             with (
                 patch.object(learned_ac_entity, "async_write_ha_state"),
