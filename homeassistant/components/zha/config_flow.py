@@ -315,7 +315,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
             return await self.async_step_verify_radio()
 
-        # Pre-select the currently configured port
+        # Preselect the currently configured port
         default_port: vol.Undefined | str = vol.UNDEFINED
 
         if self._radio_mgr.device_path is not None:
@@ -345,7 +345,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             )
             return await self.async_step_manual_port_config()
 
-        # Pre-select the current radio type
+        # Preselect the current radio type
         default: vol.Undefined | str = vol.UNDEFINED
 
         if self._radio_mgr.radio_type is not None:
