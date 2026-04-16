@@ -186,7 +186,7 @@ async def test_set_system_mode(
             "Away", until=datetime(2024, 7, 16, 23, 0, tzinfo=UTC)
         )
 
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_controller_service")
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_set_system_mode_service")
     assert issue is None
 
 
