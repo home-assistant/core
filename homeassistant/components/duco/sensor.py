@@ -98,7 +98,7 @@ BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator: coordinator.rssi_wifi,
+        value_fn=lambda coordinator: coordinator.data.rssi_wifi,
     ),
 )
 
@@ -115,13 +115,13 @@ async def async_setup_entry(
         [
             *[
                 DucoSensorEntity(coordinator, node, description)
-                for node in coordinator.data.values()
+                for node in coordinator.data.nodes.values()
                 for description in SENSOR_DESCRIPTIONS
                 if node.general.node_type in description.node_types
             ],
             *[
                 DucoBoxSensorEntity(coordinator, node, description)
-                for node in coordinator.data.values()
+                for node in coordinator.data.nodes.values()
                 for description in BOX_SENSOR_DESCRIPTIONS
                 if node.general.node_type == NodeType.BOX
             ],

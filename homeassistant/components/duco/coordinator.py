@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+from dataclasses import dataclass
 import logging
 
 from duco import DucoClient
@@ -19,7 +19,14 @@ from .const import DOMAIN, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
-type DucoData = dict[int, Node]
+
+
+@dataclass
+class DucoData:
+    """Data returned by the Duco coordinator."""
+
+    nodes: dict[int, Node]
+    rssi_wifi: int | None
 
 
 class DucoCoordinator(DataUpdateCoordinator[DucoData]):
@@ -27,7 +34,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
-    rssi_wifi: int | None
 
     def __init__(
         self,
@@ -44,7 +50,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-        self.rssi_wifi = None
 
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
@@ -61,26 +66,37 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
-        nodes_result, lan_result = await asyncio.gather(
-            self.client.async_get_nodes(),
-            self.client.async_get_lan_info(),
-            return_exceptions=True,
-        )
-
-        if isinstance(nodes_result, DucoConnectionError):
+        try:
+            nodes = await self.client.async_get_nodes()
+        except DucoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(nodes_result)},
-            ) from nodes_result
-        if isinstance(nodes_result, BaseException):
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except DucoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": repr(nodes_result)},
-            ) from nodes_result
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
-        if not isinstance(lan_result, BaseException):
-            self.rssi_wifi = lan_result.rssi_wifi
+        try:
+            lan_info = await self.client.async_get_lan_info()
+        except DucoConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except DucoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
-        return {node.node_id: node for node in nodes_result}
+        return DucoData(
+            nodes={node.node_id: node for node in nodes},
+            rssi_wifi=lan_info.rssi_wifi,
+        )

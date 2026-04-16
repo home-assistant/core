@@ -62,7 +62,7 @@ async def async_setup_entry(
 
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
-        for node in coordinator.data.values()
+        for node in coordinator.data.nodes.values()
         if node.general.node_type == "BOX"
     )
 
