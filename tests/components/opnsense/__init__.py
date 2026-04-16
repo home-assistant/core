@@ -1,6 +1,6 @@
 """Tests for the opnsense component."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
 from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
@@ -44,12 +44,11 @@ ARP = [
 INTERFACES = {"igb0": "WAN", "igb1": "LAN"}
 
 
-def setup_mock_diagnostics(mock_diagnostics):
-    """Prepare mock diagnostics results."""
-    interface_client = MagicMock()
-    mock_diagnostics.InterfaceClient.return_value = interface_client
-    interface_client.get_arp.return_value = ARP
-
-    network_insight_client = MagicMock()
-    mock_diagnostics.NetworkInsightClient.return_value = network_insight_client
-    network_insight_client.get_interfaces.return_value = INTERFACES
+def setup_mock_opnsense_client(mock_opnsense_client: AsyncMock) -> None:
+    """Prepare mock OPNsense client results."""
+    mock_instance = mock_opnsense_client.return_value
+    mock_instance.get_host_firmware_version.return_value = "25.7.8"
+    mock_instance.validate.return_value = None
+    mock_instance.get_interfaces.return_value = INTERFACES
+    mock_opnsense_client.get_interfaces.return_value = INTERFACES
+    mock_opnsense_client.get_arp_table.return_value = ARP

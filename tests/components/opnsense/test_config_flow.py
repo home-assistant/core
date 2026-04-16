@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from unittest.mock import AsyncMock, patch
 
-from pyopnsense.exceptions import APIException
+from aiopnsense import OPNsenseConnectionError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_import(
-    hass: HomeAssistant, mock_diagnostics: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
@@ -37,7 +37,7 @@ async def test_import(
 
 
 async def test_user(
-    hass: HomeAssistant, mock_diagnostics: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_opnsense_client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
@@ -112,9 +112,19 @@ async def test_abort_import_if_already_setup(
 
 async def test_on_api_error(hass: HomeAssistant) -> None:
     """Test when we have errors connecting the router."""
-    with patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp",
-        side_effect=APIException,
+    with (
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
+            side_effect=OPNsenseConnectionError,
+        ),
+        # patch(
+        #     "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_host_firmware_version",
+        #     return_value="25.7.8",
+        # ),
+        # patch(
+        #     "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
+        #     return_value=INTERFACES,
+        # ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -126,9 +136,7 @@ async def test_on_api_error(hass: HomeAssistant) -> None:
         assert result.get("errors") == {"base": "cannot_connect"}
 
     # No error this time
-    with patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp"
-    ):
+    with patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"):
         # Use async_configure instead of async_init for form submission
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -145,7 +153,7 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
     )
     with patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp",
+        "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
         side_effect=TypeError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -156,9 +164,7 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
     assert result.get("errors") == {"base": "unknown"}
 
     # No error this time
-    with patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp"
-    ):
+    with patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"):
         # Use async_configure instead of async_init for form submission
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -168,7 +174,9 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
 
 
 async def test_reconfigure_successful(
-    hass: HomeAssistant, mock_diagnostics: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_opnsense_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfiguration of an existing entry."""
 

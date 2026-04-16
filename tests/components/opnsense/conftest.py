@@ -3,17 +3,17 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyopnsense import diagnostics
+from aiopnsense import OPNsenseClient
 import pytest
 
 from homeassistant.components.opnsense.const import (
-    CONF_INTERFACE_CLIENT,
+    CONF_OPNSENSE_CLIENT,
     CONF_TRACKER_INTERFACES,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 
-from . import CONFIG_DATA, setup_mock_diagnostics
+from . import CONFIG_DATA, setup_mock_opnsense_client
 
 from tests.common import MockConfigEntry
 
@@ -25,14 +25,15 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data=CONFIG_DATA,
     )
-    interfaces_client = diagnostics.InterfaceClient(
-        api_key="key",
-        api_secret="secret",
-        base_url="http://router.lan/api",
-        verify_cert=False,
+    opnsense_client = OPNsenseClient(
+        "http://router.lan/api",
+        "key",
+        "secret",
+        None,
+        opts={"verify_ssl": False},
     )
     mock_config_entry.runtime_data = {
-        CONF_INTERFACE_CLIENT: interfaces_client,
+        CONF_OPNSENSE_CLIENT: opnsense_client,
         CONF_TRACKER_INTERFACES: [],
     }
     mock_config_entry.add_to_hass(hass)
@@ -40,13 +41,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_diagnostics() -> Generator[AsyncMock]:
+def mock_opnsense_client() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics"
-    ) as mock_diagnostics:
-        setup_mock_diagnostics(mock_diagnostics)
-        yield mock_diagnostics
+        "homeassistant.components.opnsense.config_flow.OPNsenseClient", autospec=True
+    ) as mock_opnsense_client:
+        setup_mock_opnsense_client(mock_opnsense_client)
+        yield mock_opnsense_client
 
 
 @pytest.fixture
