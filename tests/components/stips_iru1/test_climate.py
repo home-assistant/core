@@ -250,9 +250,11 @@ class TestLearnedAcClimate:
             get_session.return_value = session
             session.post = AsyncMock(side_effect=TimeoutError())
 
-            with patch.object(learned_ac_entity, "async_write_ha_state"):
-                with pytest.raises(HomeAssistantError, match="Cannot reach IR device"):
-                    await learned_ac_entity._post_signal("SIG")
+            with (
+                patch.object(learned_ac_entity, "async_write_ha_state"),
+                pytest.raises(HomeAssistantError, match="Cannot reach IR device"),
+            ):
+                await learned_ac_entity._post_signal("SIG")
 
         with (
             patch(
