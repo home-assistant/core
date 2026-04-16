@@ -272,7 +272,9 @@ class MatterMultiPressEventEntity(MatterEventEntity):
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return
-        event_type = EVENT_TYPES_MAP[data.event_id]
+        event_type = EVENT_TYPES_MAP.get(data.event_id)
+        if event_type is None:
+            return
 
         if event_type == "initial_press":
             self._previous_press_count = 0
