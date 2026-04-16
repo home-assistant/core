@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "half_lock_calibration": {
+        "default": "mdi:lock-check"
+      }
+    },
     "button": {
       "light_sensor": {
         "default": "mdi:brightness-auto"
@@ -182,6 +187,9 @@
   "services": {
     "add_password": {
       "service": "mdi:key-plus"
+    },
+    "half_lock": {
+      "service": "mdi:lock-open-variant"
     }
   }
 }

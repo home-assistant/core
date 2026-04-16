@@ -1,8 +1,10 @@
 """Support for SwitchBot lock platform."""
 
+from collections.abc import Mapping
 from typing import Any
 
 import switchbot
+from switchbot import SwitchbotModel
 from switchbot.const import LockStatus
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
@@ -46,13 +48,23 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         status = self._device.get_lock_status()
-        self._attr_is_locked = status is LockStatus.LOCKED
+        self._attr_is_locked = status in {LockStatus.LOCKED, LockStatus.HALF_LOCKED}
         self._attr_is_locking = status is LockStatus.LOCKING
         self._attr_is_unlocking = status is LockStatus.UNLOCKING
         self._attr_is_jammed = status in {
             LockStatus.LOCKING_STOP,
             LockStatus.UNLOCKING_STOP,
         }
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return extra state attributes."""
+        attrs: dict[str, Any] = {**super().extra_state_attributes}
+        if self.coordinator.model is SwitchbotModel.LOCK_ULTRA:
+            attrs["half_locked"] = (
+                self._device.get_lock_status() is LockStatus.HALF_LOCKED
+            )
+        return attrs
 
     @exception_handler
     async def async_lock(self, **kwargs: Any) -> None:

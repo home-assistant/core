@@ -21,6 +21,8 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
+LOCK_ULTRA_BINARY_SENSORS = {"half_lock_calibration"}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SwitchbotBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -33,6 +35,11 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
     "calibration": SwitchbotBinarySensorEntityDescription(
         key="calibration",
         translation_key="calibration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "half_lock_calibration": SwitchbotBinarySensorEntityDescription(
+        key="half_lock_calibration",
+        translation_key="half_lock_calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "motion_detected": SwitchbotBinarySensorEntityDescription(
@@ -102,10 +109,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator = entry.runtime_data
+    binary_sensors: set[str] = {
+        bs for bs in coordinator.device.parsed_data if bs in BINARY_SENSOR_TYPES
+    }
+    if coordinator.model is SwitchbotModel.LOCK_ULTRA:
+        binary_sensors.update(LOCK_ULTRA_BINARY_SENSORS)
     async_add_entities(
         SwitchBotBinarySensor(coordinator, binary_sensor)
-        for binary_sensor in coordinator.device.parsed_data
-        if binary_sensor in BINARY_SENSOR_TYPES
+        for binary_sensor in binary_sensors
     )
 
 
@@ -130,6 +141,6 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
             )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return self.parsed_data[self._sensor]
+        return self.parsed_data.get(self._sensor)
