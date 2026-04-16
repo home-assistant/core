@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -222,8 +223,6 @@ async def test_cover_device_registry_entry(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Each motor ends up as a distinct device in the registry."""
-    from homeassistant.helpers import device_registry as dr
-
     device_registry = dr.async_get(hass)
     # Two motors → two devices.
     gaposa_devices = [

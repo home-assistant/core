@@ -63,13 +63,9 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
             async with timeout(10):
                 await self.gaposa.login(self._username, self._password)
         except (GaposaAuthException, FirebaseAuthException) as exc:
-            raise ConfigEntryAuthFailed(
-                "Gaposa authentication failed"
-            ) from exc
+            raise ConfigEntryAuthFailed("Gaposa authentication failed") from exc
         except (ClientError, TimeoutError, OSError) as exc:
-            raise ConfigEntryNotReady(
-                f"Error connecting to Gaposa: {exc}"
-            ) from exc
+            raise ConfigEntryNotReady(f"Error connecting to Gaposa: {exc}") from exc
 
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
@@ -79,9 +75,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
             async with timeout(10):
                 await self.gaposa.update()
         except (GaposaAuthException, FirebaseAuthException) as exc:
-            raise ConfigEntryAuthFailed(
-                "Gaposa authentication failed"
-            ) from exc
+            raise ConfigEntryAuthFailed("Gaposa authentication failed") from exc
         except (ClientError, TimeoutError, OSError) as exc:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise UpdateFailed(f"Error talking to Gaposa: {exc}") from exc
