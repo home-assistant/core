@@ -124,23 +124,25 @@ async def test_setup_does_discovery(
 async def test_set_scan_interval_via_config(hass: HomeAssistant) -> None:
     """Test the setting of the scan interval via configuration."""
 
-    def platform_setup(
+    async def async_platform_setup(
         hass: HomeAssistant,
         config: ConfigType,
-        add_entities: AddEntitiesCallback,
+        async_add_entities: AddEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Test the platform setup."""
-        add_entities([MockEntity(should_poll=True)])
+        async_add_entities([MockEntity(should_poll=True)])
 
     mock_platform(
-        hass, "platform.test_domain", MockPlatform(setup_platform=platform_setup)
+        hass,
+        "platform.test_domain",
+        MockPlatform(async_setup_platform=async_platform_setup),
     )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     with patch.object(hass.loop, "call_later") as mock_track:
-        component.setup(
+        await component.async_setup(
             {DOMAIN: {"platform": "platform", "scan_interval": timedelta(seconds=30)}}
         )
 
@@ -152,22 +154,24 @@ async def test_set_scan_interval_via_config(hass: HomeAssistant) -> None:
 async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
     """Test setting an entity namespace."""
 
-    def platform_setup(
+    async def async_platform_setup(
         hass: HomeAssistant,
         config: ConfigType,
-        add_entities: AddEntitiesCallback,
+        async_add_entities: AddEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Test the platform setup."""
-        add_entities([MockEntity(name="beer"), MockEntity(name=None)])
+        async_add_entities([MockEntity(name="beer"), MockEntity(name=None)])
 
-    platform = MockPlatform(setup_platform=platform_setup)
+    platform = MockPlatform(async_setup_platform=async_platform_setup)
 
     mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    component.setup({DOMAIN: {"platform": "platform", "entity_namespace": "yummy"}})
+    await component.async_setup(
+        {DOMAIN: {"platform": "platform", "entity_namespace": "yummy"}}
+    )
 
     await hass.async_block_till_done()
 
