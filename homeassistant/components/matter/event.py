@@ -58,7 +58,6 @@ async def async_setup_entry(
     """Set up Matter event entities from Config Entry."""
     matter = get_matter(hass)
 
-    @callback
     def async_add_entities_filtered(
         entities: Iterable[Entity],
         update_before_add: bool = False,
@@ -77,7 +76,10 @@ async def async_setup_entry(
             update_before_add,
         )
 
-    matter.register_platform_handler(Platform.EVENT, async_add_entities_filtered)
+    matter.register_platform_handler(
+        Platform.EVENT,
+        async_add_entities_filtered,  # type: ignore[arg-type]
+    )
 
 
 @dataclass(slots=True)
