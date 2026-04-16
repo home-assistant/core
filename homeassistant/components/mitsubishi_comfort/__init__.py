@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from mitsubishi_comfort import (
@@ -67,8 +68,9 @@ async def async_setup_entry(
         device = _make_device(info, serial, session)
         coordinators[serial] = MitsubishiComfortCoordinator(hass, entry, device)
 
-    for coordinator in coordinators.values():
-        await coordinator.async_config_entry_first_refresh()
+    await asyncio.gather(
+        *(c.async_config_entry_first_refresh() for c in coordinators.values())
+    )
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

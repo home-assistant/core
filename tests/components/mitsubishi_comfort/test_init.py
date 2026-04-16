@@ -35,7 +35,7 @@ async def test_setup_entry_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup starts re-auth flow when credentials are rejected."""
+    """Test setup returns a setup error when credentials are rejected."""
     mock_config_entry.add_to_hass(hass)
 
     mock_account = AsyncMock()
