@@ -525,7 +525,7 @@ async def async_setup_entry(
                 feature_check = description.netatmo_name
             if feature_check in netatmo_device.device.features:
                 _LOGGER.debug(
-                    'Adding "%s" (native: "%s") sensor for device %s',
+                    'Adding key = "%s" / netatmo_name = "%s" sensor for device %s',
                     description.key,
                     description.netatmo_name,
                     netatmo_device.device.name,
@@ -824,7 +824,7 @@ class NetatmoOpeningSensor(NetatmoSensor):
         self.async_write_ha_state()
 
 
-class NetatmoClimateSensor(NetatmoWeatherSensor):
+class NetatmoClimateSensor(NetatmoSensor):
     """Implementation of a Netatmo Climate sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -849,7 +849,7 @@ class NetatmoClimateSensor(NetatmoWeatherSensor):
         )
 
 
-class NetatmoMeterSensor(NetatmoWeatherSensor):
+class NetatmoMeterSensor(NetatmoSensor):
     """Implementation of a Netatmo Meter sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -874,7 +874,7 @@ class NetatmoMeterSensor(NetatmoWeatherSensor):
         )
 
 
-class NetatmoSwitchSensor(NetatmoWeatherSensor):
+class NetatmoSwitchSensor(NetatmoSensor):
     """Implementation of a Netatmo Switch sensor."""
 
     entity_description: NetatmoSensorEntityDescription
