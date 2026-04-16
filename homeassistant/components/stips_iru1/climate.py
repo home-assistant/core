@@ -28,7 +28,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-
 _MODE_TO_HVAC: dict[int, HVACMode] = {
     0: HVACMode.AUTO,
     1: HVACMode.COOL,
