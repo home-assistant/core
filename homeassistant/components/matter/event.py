@@ -53,7 +53,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Matter switches from Config Entry."""
+    """Set up Matter event entities from Config Entry."""
     matter = get_matter(hass)
 
     @callback
