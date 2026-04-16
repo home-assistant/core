@@ -6,10 +6,11 @@ import logging
 import time
 from typing import Any, cast
 
+from connectlife_cloud import CLIENT_ID, CLIENT_SECRET
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from connectlife_cloud import CLIENT_ID, CLIENT_SECRET
 
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
