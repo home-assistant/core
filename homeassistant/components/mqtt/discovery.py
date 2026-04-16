@@ -572,13 +572,13 @@ async def async_start(  # noqa: C901
         elif payload:
             _async_add_component(payload)
         else:
+            entity_registry = er.async_get(hass)
             if (
                 (
                     entity_hash := mqtt_data.discovery_discovered_and_disabled.pop(
                         discovery_hash, None
                     )
                 )
-                and (entity_registry := er.async_get(hass))
                 and (entity_id := entity_registry.entities.get_entity_id(entity_hash))
                 and (entity_entry := entity_registry.async_get(entity_id))
             ):
