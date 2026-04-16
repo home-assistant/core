@@ -12,7 +12,7 @@ from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException,
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -60,10 +60,15 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         websession = async_get_clientsession(self.hass)
         self.gaposa = Gaposa(self._api_key, websession=websession)
         try:
-            await self.gaposa.login(self._username, self._password)
+            async with timeout(10):
+                await self.gaposa.login(self._username, self._password)
         except (GaposaAuthException, FirebaseAuthException) as exc:
             raise ConfigEntryAuthFailed(
                 "Gaposa authentication failed"
+            ) from exc
+        except (ClientError, TimeoutError, OSError) as exc:
+            raise ConfigEntryNotReady(
+                f"Error connecting to Gaposa: {exc}"
             ) from exc
 
     async def _async_update_data(self) -> dict[str, Motor]:
@@ -108,7 +113,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         """Flatten all motors across all devices into a single dict.
 
         The dictionary key is a unique id for the motor of the form
-        ``<device serial number>.motors.<channel number>``.
+        ``<device serial number>.motors.<motor.id>``.
         """
         data: dict[str, Motor] = {}
         if self.gaposa is None:
@@ -123,3 +128,22 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         """Push fresh data to subscribers when pygaposa notifies us."""
         _LOGGER.debug("Gaposa document updated, pushing new data")
         self.async_set_updated_data(self._get_data_from_devices())
+
+    async def async_shutdown(self) -> None:
+        """Detach push listeners and close the Gaposa session on unload.
+
+        ``DataUpdateCoordinator.async_shutdown`` stops the refresh timer;
+        we override it to also detach every ``on_document_updated`` listener
+        we attached to pygaposa ``Device`` objects and close the aiohttp
+        session pygaposa owns. Without this, push callbacks can fire after
+        the config entry has been unloaded.
+        """
+        await super().async_shutdown()
+        if self._listener is not None:
+            for device in self.devices:
+                device.removeListener(self._listener)
+            self._listener = None
+        self.devices = []
+        if self.gaposa is not None:
+            await self.gaposa.close()
+            self.gaposa = None

@@ -53,6 +53,27 @@ async def test_network_failure_during_setup_retries(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_network_failure_during_login_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
+) -> None:
+    """A network error during the initial Gaposa.login should surface as SETUP_RETRY.
+
+    The coordinator catches ClientError / TimeoutError / OSError on login and
+    raises ConfigEntryNotReady, which Home Assistant translates into the
+    SETUP_RETRY state so the entry is retried on the normal backoff.
+    """
+    mock_gaposa_instance.login.side_effect = OSError("cloud unreachable")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.parametrize(
     "exc",
     [GaposaAuthException, FirebaseAuthException],
