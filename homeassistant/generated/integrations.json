@@ -1081,6 +1081,12 @@
           "iot_class": "cloud_push",
           "name": "Cloudflare"
         },
+        "cloudflare_ai": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Cloudflare Workers AI"
+        },
         "cloudflare_r2": {
           "integration_type": "service",
           "config_flow": true,

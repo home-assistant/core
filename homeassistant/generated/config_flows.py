@@ -125,6 +125,7 @@ FLOWS = {
         "chacon_dio",
         "chess_com",
         "cloudflare",
+        "cloudflare_ai",
         "cloudflare_r2",
         "co2signal",
         "coinbase",

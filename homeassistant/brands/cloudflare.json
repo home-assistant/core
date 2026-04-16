@@ -1,5 +1,5 @@
 {
   "domain": "cloudflare",
   "name": "Cloudflare",
-  "integrations": ["cloudflare", "cloudflare_r2"]
+  "integrations": ["cloudflare", "cloudflare_ai", "cloudflare_r2"]
 }

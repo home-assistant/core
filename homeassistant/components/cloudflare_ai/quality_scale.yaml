@@ -1,0 +1,108 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom service actions are registered.
+  appropriate-polling:
+    status: exempt
+    comment: Cloud service integration, not a polling integration.
+  brands:
+    status: done
+    comment: Brand assets are provided via the home-assistant/brands repository.
+  common-modules:
+    status: done
+    comment: Shared patterns in entity.py, client.py, const.py.
+  config-flow:
+    status: done
+    comment: Config flow with credentials, AI Gateway toggle, and conversation subentry.
+  config-flow-test-coverage:
+    status: done
+    comment: Tests cover user step, gateway, auth error, connect error, duplicate, reauth, reconfigure.
+  dependency-transparency:
+    status: done
+    comment: Single dependency on the official cloudflare Python SDK.
+  docs-actions:
+    status: exempt
+    comment: No custom service actions. Uses standard conversation platform.
+  docs-high-level-description:
+    status: done
+    comment: Documentation PR submitted.
+  docs-installation-instructions:
+    status: done
+    comment: Documentation PR submitted.
+  docs-removal-instructions:
+    status: done
+    comment: Standard removal via UI, documented.
+  entity-event-setup:
+    status: done
+    comment: Conversation agent registered in async_added_to_hass.
+  entity-unique-id:
+    status: done
+    comment: Entities use subentry.subentry_id as unique_id.
+  has-entity-name:
+    status: exempt
+    comment: Setting _attr_name explicitly on the base entity.
+  runtime-data:
+    status: done
+    comment: CloudflareAIClient stored as entry.runtime_data with typed alias.
+  test-before-configure:
+    status: done
+    comment: Config flow validates credentials via CloudflareAIClient.validate_credentials().
+  test-before-setup:
+    status: done
+    comment: async_setup_entry validates credentials, raises ConfigEntryAuthFailed or ConfigEntryNotReady.
+  unique-config-entry:
+    status: done
+    comment: _async_abort_entries_match on account_id prevents duplicates.
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: Conversation raises HomeAssistantError with translation keys.
+  config-entry-unloading:
+    status: done
+    comment: Full platform unload in async_unload_entry.
+  docs-configuration-parameters:
+    status: done
+    comment: Documentation PR submitted.
+  docs-installation-parameters:
+    status: done
+    comment: Documentation PR submitted.
+  entity-unavailable:
+    status: todo
+    comment: "To be implemented in a follow-up."
+  integration-owner:
+    status: done
+    comment: Codeowners set to @bjesus in manifest.json.
+  log-when-unavailable:
+    status: todo
+    comment: "To be implemented in a follow-up."
+  parallel-updates:
+    status: todo
+    comment: "To be implemented in a follow-up."
+  reauthentication-flow:
+    status: done
+    comment: Full reauth flow with async_step_reauth.
+  test-coverage:
+    status: done
+    comment: Tests cover client, config flow, conversation, diagnostics, and init.
+
+  # Gold
+  devices:
+    status: done
+    comment: Each subentry creates a device with manufacturer=Cloudflare.
+  diagnostics:
+    status: done
+    comment: diagnostics.py provides redacted config dump.
+  discovery:
+    status: exempt
+    comment: Cloud service, not discoverable on the network.
+  discovery-update-info:
+    status: exempt
+    comment: Cloud service, no network discovery.
+  reconfiguration-flow:
+    status: done
+    comment: Main entry reconfigure flow + subentry reconfigure flow.
+  repair-issues:
+    status: todo
+    comment: "To be considered for a follow-up."
