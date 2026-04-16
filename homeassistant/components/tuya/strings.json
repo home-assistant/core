@@ -1099,6 +1099,80 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    },
+    "device_not_found": {
+      "message": "Feeder with ID {device_id} could not be found."
+    },
+    "device_not_support_meal_plan_function": {
+      "message": "Feeder with ID {device_id} does not support meal plan functionality."
+    },
+    "device_not_support_meal_plan_status": {
+      "message": "Feeder with ID {device_id} does not support meal plan status."
+    },
+    "device_not_tuya_device": {
+      "message": "Device with ID {device_id} is not a Tuya feeder."
+    },
+    "invalid_meal_plan_data": {
+      "message": "Unable to parse meal plan data."
+    }
+  },
+  "selector": {
+    "days_of_week": {
+      "options": {
+        "friday": "[%key:common::time::friday%]",
+        "monday": "[%key:common::time::monday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]"
+      }
+    },
+    "set_feeder_meal_plan": {
+      "fields": {
+        "days": {
+          "description": "Days of the week for the meal plan.",
+          "name": "Days"
+        },
+        "enabled": {
+          "description": "Whether the meal plan is enabled.",
+          "name": "Enabled"
+        },
+        "portion": {
+          "description": "Amount in grams",
+          "name": "Portion"
+        },
+        "time": {
+          "description": "Time of the meal.",
+          "name": "Time"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_feeder_meal_plan": {
+      "description": "Retrieves a meal plan from a Tuya feeder.",
+      "fields": {
+        "device_id": {
+          "description": "The Tuya feeder.",
+          "name": "[%key:common::config_flow::data::device%]"
+        }
+      },
+      "name": "Get feeder meal plan data"
+    },
+    "set_feeder_meal_plan": {
+      "description": "Sets a meal plan on a Tuya feeder.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::tuya::services::get_feeder_meal_plan::fields::device_id::description%]",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "meal_plan": {
+          "description": "The meal plan data to set.",
+          "name": "Meal plan"
+        }
+      },
+      "name": "Set feeder meal plan data"
     }
   }
 }
