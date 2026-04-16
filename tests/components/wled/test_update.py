@@ -64,7 +64,7 @@ async def test_update_information_available(
     mock_wled_releases.releases.return_value = Releases(
         beta=None,
         nightly=None,
-        repo="https://github.com/Aircoookie/WLED",
+        repo="https://github.com/wled/WLED",
         stable=None,
     )
 
