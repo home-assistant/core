@@ -536,7 +536,6 @@ async def test_loading_subentries(
 async def test_loading_subentry_with_bad_component_schema(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    mqtt_config_subentries_data: tuple[dict[str, Any]],
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -565,10 +564,9 @@ async def test_loading_subentry_with_bad_component_schema(
         )
     ],
 )
-async def test_qos_on_mqt_device_from_subentry(
+async def test_qos_on_mqtt_device_from_subentry(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    mqtt_config_subentries_data: tuple[dict[str, Any]],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test QoS is set correctly on entities from MQTT device."""

@@ -22,10 +22,12 @@ CONF_LOCATION_IDX: Final = "location_idx"
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
-ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
-
+ATTR_PERIOD: Final = "period"  # number of days
 ATTR_SETPOINT: Final = "setpoint"
+
+# Support for the reset service calls/presets is being deprecated
+RESET_BREAKS_IN_HA_VERSION: Final = "2026.11.0"
 
 
 @unique
@@ -37,3 +39,4 @@ class EvoService(StrEnum):
     RESET_SYSTEM = "reset_system"
     SET_ZONE_OVERRIDE = "set_zone_override"
     CLEAR_ZONE_OVERRIDE = "clear_zone_override"
+    SET_DHW_OVERRIDE = "set_dhw_override"
