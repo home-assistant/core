@@ -36,7 +36,7 @@ dependencies = [
   "annotatedyaml==1.0.2",
   "astral==2.2",
   "async-interrupt==1.2.2",
-  "attrs==25.4.0",
+  "attrs==26.1.0",
   "atomicwrites-homeassistant==1.4.1",
   "audioop-lts==0.2.1",
   "awesomeversion==25.8.0",
@@ -44,7 +44,7 @@ dependencies = [
   "certifi>=2021.5.30",
   "ciso8601==2.3.3",
   "cronsim==2.7",
-  "fnv-hash-fast==2.0.0",
+  "fnv-hash-fast==2.0.2",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
   "hass-nabucasa==2.2.0",
