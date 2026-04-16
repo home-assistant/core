@@ -1,13 +1,11 @@
 """Tests for the MyNeomitis climate component."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, call
 
-from pyaxencoapi import Preset
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.myneomitis.climate import MyNeoClimate
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -436,93 +434,242 @@ async def test_skip_device_without_id(
     assert not any(e.domain == "climate" for e in entries)
 
 
-async def test_default_presets_fallback() -> None:
-    """Unknown model should fall back to canonical Preset order."""
-    api = AsyncMock()
-    dev = {"_id": "x", "model": "UNKNOWN", "name": "x", "state": {}, "connected": True}
-    ent = MyNeoClimate(api, dev)
-    assert ent._attr_preset_modes == [p.key for p in Preset]
+async def test_skip_unknown_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Unknown models are skipped during setup."""
+    mock_pyaxenco_client.get_devices.return_value = [
+        {
+            "_id": "x",
+            "name": "Unknown",
+            "model": "UNKNOWN",
+            "state": {},
+            "connected": True,
+        }
+    ]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert not any(e.domain == "climate" for e in entries)
 
 
-async def test_handle_ws_update_empty_returns() -> None:
-    """handle_ws_update should return early on empty state."""
-    api = AsyncMock()
-    ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = Mock()
-    before = ent._attr_current_temperature
-    ent.handle_ws_update({})
-    assert ent._attr_current_temperature == before
+async def test_handle_ws_update_empty_returns(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Empty websocket payload should not change climate values."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "climate.climate_device"
+    before = hass.states.get(entity_id)
+    assert before is not None
+
+    callback = mock_pyaxenco_client.register_listener.call_args[0][1]
+    callback({})
+    await hass.async_block_till_done()
+
+    after = hass.states.get(entity_id)
+    assert after is not None
+    assert after.state == before.state
+    assert (
+        after.attributes["current_temperature"]
+        == before.attributes["current_temperature"]
+    )
 
 
-async def test_override_and_target_temp_update() -> None:
-    """OverrideTemp and targetTemp update target temperature correctly."""
-    api = AsyncMock()
-    ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = Mock()
-    ent.handle_ws_update({"overrideTemp": 25})
-    assert ent._attr_target_temperature == 25
+async def test_override_temp_update_from_websocket(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """OverrideTemp websocket update should update target temperature."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    ent2 = MyNeoClimate(api, CLIMATE_SUB_DEVICE)
-    ent2.async_write_ha_state = Mock()
-    ent2.handle_ws_update({"targetTemp": 22})
-    assert ent2._attr_target_temperature == 22
+    callback = mock_pyaxenco_client.register_listener.call_args[0][1]
+    callback({"overrideTemp": 25})
+    await hass.async_block_till_done()
 
-
-async def test_targetmode_standby_sets_off() -> None:
-    """TargetMode of 4 (standby) sets HVAC mode to OFF."""
-    api = AsyncMock()
-    ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = Mock()
-    ent.handle_ws_update({"targetMode": 4})
-    assert ent._attr_hvac_mode == HVACMode.OFF
+    state = hass.states.get("climate.climate_device")
+    assert state is not None
+    assert state.attributes["temperature"] == 25
 
 
-async def test_changeover_updates_hvac_when_not_off() -> None:
-    """ChangeOverUser should change HVAC mode when entity not OFF."""
-    api = AsyncMock()
-    ent = MyNeoClimate(api, CLIMATE_NTD_COOL)
-    ent.async_write_ha_state = Mock()
-    ent._attr_hvac_mode = HVACMode.HEAT
-    ent.handle_ws_update({"changeOverUser": 1})
-    assert ent._attr_hvac_mode == HVACMode.COOL
+async def test_target_temp_update_from_websocket_sub_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """TargetTemp websocket update should update sub-device target temperature."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_SUB_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    callback = mock_pyaxenco_client.register_listener.call_args[0][1]
+    callback({"targetTemp": 22})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.climate_sub_device")
+    assert state is not None
+    assert state.attributes["temperature"] == 22
 
 
-async def test_async_set_preset_mode_standby_direct() -> None:
-    """Setting preset mode to standby sets HVAC to OFF."""
-    api = AsyncMock()
-    ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = Mock()
-    await ent.async_set_preset_mode("standby")
-    assert ent._attr_hvac_mode == HVACMode.OFF
+async def test_targetmode_standby_sets_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """TargetMode of 4 (standby) via websocket should set HVAC mode to OFF."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    callback = mock_pyaxenco_client.register_listener.call_args[0][1]
+    callback({"targetMode": 4})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.climate_device")
+    assert state is not None
+    assert state.state == "off"
 
 
-async def test_async_set_preset_mode_when_hvac_off_ntd_sets_cool() -> None:
-    """When hvac mode is OFF for an NTD with changeOverUser==1, setting preset selects COOL."""
-    api = AsyncMock()
-    device = dict(CLIMATE_NTD_COOL)
-    ent = MyNeoClimate(api, device)
-    ent.async_write_ha_state = Mock()
+async def test_changeover_updates_hvac_when_not_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """ChangeOverUser websocket update should switch active NTD mode to cool."""
+    ntd_heat = {
+        **CLIMATE_NTD_COOL,
+        "_id": "climate_ntd_heat",
+        "name": "Climate NTD Heat",
+        "state": {**CLIMATE_NTD_COOL["state"], "changeOverUser": 0},
+    }
+    mock_pyaxenco_client.get_devices.return_value = [ntd_heat]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    ent._attr_hvac_mode = HVACMode.OFF
-    ent._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
+    state = hass.states.get("climate.climate_ntd_heat")
+    assert state is not None
+    assert state.state == "heat"
 
-    await ent.async_set_preset_mode("eco")
-    api.set_sub_device_mode.assert_awaited_with("gw-ntd", "rfid-ntd", 2)
-    assert ent._attr_hvac_mode == HVACMode.COOL
+    callback = mock_pyaxenco_client.register_listener.call_args[0][1]
+    callback({"changeOverUser": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.climate_ntd_heat")
+    assert state is not None
+    assert state.state == "cool"
 
 
-async def test_async_set_hvac_mode_restore_fallback_uses_first_non_standby() -> None:
-    """When last preset is unknown, the first non-standby preset is used."""
-    api = AsyncMock()
-    ent = MyNeoClimate(api, CLIMATE_DEVICE)
-    ent.async_write_ha_state = Mock()
+async def test_set_preset_mode_standby_sets_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Setting preset mode to standby sets HVAC mode to off."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    ent._last_preset_mode = None
-    ent._attr_preset_modes = ["standby", "eco", "comfort"]
+    entity_id = "climate.climate_device"
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: entity_id, "preset_mode": "standby"},
+        blocking=True,
+    )
 
-    await ent.async_set_hvac_mode(HVACMode.HEAT)
-    assert ent._attr_preset_mode == "eco"
-    assert ent._attr_hvac_mode == HVACMode.HEAT
+    mock_pyaxenco_client.set_device_mode.assert_awaited_with("climate1", 4)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+
+async def test_set_preset_mode_when_hvac_off_ntd_sets_cool(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Setting a preset on an OFF NTD entity should bring it back to cool."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_NTD_COOL]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "climate.climate_ntd"
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: entity_id, "preset_mode": "eco"},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_sub_device_mode.assert_has_awaits(
+        [call("gw-ntd", "rfid-ntd", 4), call("gw-ntd", "rfid-ntd", 2)]
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "cool"
+
+
+async def test_set_hvac_mode_restore_fallback_uses_first_non_standby(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Restoring from standby should use the first non-standby preset."""
+    standby_device = {
+        **CLIMATE_DEVICE,
+        "_id": "climate_standby",
+        "name": "Climate Standby",
+        "state": {**CLIMATE_DEVICE["state"], "targetMode": 4},
+    }
+    mock_pyaxenco_client.get_devices.return_value = [standby_device]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "climate.climate_standby"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: entity_id, "hvac_mode": HVACMode.HEAT},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_device_mode.assert_awaited_with("climate_standby", 8)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["preset_mode"] == "setpoint"
+    assert state.state == "heat"
 
 
 async def test_set_hvac_mode_off_api_error(
