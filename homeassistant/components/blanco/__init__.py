@@ -82,7 +82,7 @@ async def _async_setup_language_listener(
         try:
             success = await client.update_app_locale(new_locale)
         except BlancoConnectionError:
-            return  # failure already logged in api.py
+            return  # failure already logged by the API client
         if success:
             hass.config_entries.async_update_entry(
                 entry, data={**entry.data, CONF_APP_LOCALE: new_locale}
