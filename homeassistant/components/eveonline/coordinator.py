@@ -69,13 +69,23 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
 
         location: CharacterLocation | None = None
         ship: CharacterShip | None = None
-        try:
-            location, ship = await asyncio.gather(
-                self.client.async_get_character_location(self.character_id),
-                self.client.async_get_character_ship(self.character_id),
-            )
-        except (EveOnlineError, aiohttp.ClientError) as err:
-            _LOGGER.debug("Failed to fetch location or ship: %s", err)
+        location_result, ship_result = await asyncio.gather(
+            self.client.async_get_character_location(self.character_id),
+            self.client.async_get_character_ship(self.character_id),
+            return_exceptions=True,
+        )
+        if isinstance(location_result, EveOnlineError | aiohttp.ClientError):
+            _LOGGER.debug("Failed to fetch location: %s", location_result)
+        elif isinstance(location_result, Exception):
+            raise location_result
+        else:
+            location = location_result
+        if isinstance(ship_result, EveOnlineError | aiohttp.ClientError):
+            _LOGGER.debug("Failed to fetch ship: %s", ship_result)
+        elif isinstance(ship_result, Exception):
+            raise ship_result
+        else:
+            ship = ship_result
 
         solar_system_name: str | None = None
         ship_type_name: str | None = None

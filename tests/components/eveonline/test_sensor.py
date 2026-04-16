@@ -79,6 +79,10 @@ async def test_sensor_location_shows_unknown_when_endpoint_fails(
     assert state is not None
     assert state.state == "unknown"
 
+    ship_state = hass.states.get("sensor.test_capsuleer_ship")
+    assert ship_state is not None
+    assert ship_state.state == "Rifter"
+
 
 async def test_sensor_ship_shows_unknown_when_endpoint_fails(
     hass: HomeAssistant,
@@ -97,3 +101,7 @@ async def test_sensor_ship_shows_unknown_when_endpoint_fails(
     state = hass.states.get("sensor.test_capsuleer_ship")
     assert state is not None
     assert state.state == "unknown"
+
+    location_state = hass.states.get("sensor.test_capsuleer_location")
+    assert location_state is not None
+    assert location_state.state == "Jita"
