@@ -1,0 +1,43 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "Your Dreo account password",
+          "username": "The email address for your Dreo account"
+        },
+        "description": "Please enter your Dreo credentials",
+        "title": "Connect to Dreo"
+      }
+    }
+  },
+  "exceptions": {
+    "set_oscillate_failed": {
+      "message": "Failed to set oscillation"
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode"
+    },
+    "set_speed_failed": {
+      "message": "Failed to set fan speed"
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off the device"
+    },
+    "turn_on_failed": {
+      "message": "Failed to turn on the device"
+    }
+  }
+}

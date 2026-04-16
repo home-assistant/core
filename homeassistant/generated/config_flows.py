@@ -160,6 +160,7 @@ FLOWS = {
         "dormakaba_dkey",
         "downloader",
         "dremel_3d_printer",
+        "dreo",
         "drop_connect",
         "dropbox",
         "droplet",

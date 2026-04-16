@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.8.3
+PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
 PyViCare==2.59.0
@@ -2072,6 +2072,9 @@ pydoods==1.0.2
 
 # homeassistant.components.hydrawise
 pydrawise==2026.4.0
+
+# homeassistant.components.dreo
+pydreo-client==2.0.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
