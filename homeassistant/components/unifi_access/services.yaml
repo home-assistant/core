@@ -20,4 +20,4 @@ set_lock_rule:
       selector:
         duration:
           enable_day: false
-          enable_millisecond: false
+          enable_second: false
