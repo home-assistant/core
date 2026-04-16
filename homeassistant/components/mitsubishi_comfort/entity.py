@@ -19,19 +19,17 @@ class MitsubishiComfortEntity(CoordinatorEntity[MitsubishiComfortCoordinator]):
     def __init__(self, coordinator: MitsubishiComfortCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        device = coordinator.device
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.serial)},
+            name=device.name,
+            manufacturer="Mitsubishi",
+            serial_number=device.serial,
+            sw_version=device.status.firmware_version,
+            hw_version=device.status.hardware_version,
+        )
 
     @property
     def _device(self) -> IndoorUnit | KumoStation:
         """Return the underlying device from coordinator data."""
         return self.coordinator.data
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.serial)},
-            name=self._device.name,
-            manufacturer="Mitsubishi",
-            sw_version=self._device.status.firmware_version,
-            hw_version=self._device.status.hardware_version,
-        )

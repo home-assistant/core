@@ -1534,7 +1534,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.2.0
+mitsubishi-comfort==0.3.0
 
 # homeassistant.components.moat
 moat-ble==0.1.1

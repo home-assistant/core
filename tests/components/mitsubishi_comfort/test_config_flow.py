@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -63,30 +64,27 @@ async def test_user_step_success(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "login_return", "discover_return", "expected_error"),
+    ("side_effect", "discover_return", "expected_error"),
     [
-        (None, False, None, "invalid_auth"),
-        (None, True, {}, "cannot_connect"),
-        (OSError("Connection refused"), None, None, "cannot_connect"),
-        (RuntimeError("Unexpected"), None, None, "unknown"),
+        (AuthenticationError("bad creds"), None, "invalid_auth"),
+        (DeviceConnectionError("nope"), None, "cannot_connect"),
+        (RuntimeError("Unexpected"), None, "unknown"),
+        (None, {}, "no_devices"),
     ],
-    ids=["invalid_auth", "no_devices", "os_error", "unknown_error"],
+    ids=["invalid_auth", "cannot_connect", "unknown_error", "no_devices"],
 )
 async def test_user_step_errors(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
     side_effect: Exception | None,
-    login_return: bool | None,
     discover_return: dict | None,
     expected_error: str,
 ) -> None:
     """Test config flow error handling."""
     if side_effect:
         mock_cloud_account.login.side_effect = side_effect
-    else:
-        mock_cloud_account.login.return_value = login_return
-        if discover_return is not None:
-            mock_cloud_account.discover_devices.return_value = discover_return
+    elif discover_return is not None:
+        mock_cloud_account.discover_devices.return_value = discover_return
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

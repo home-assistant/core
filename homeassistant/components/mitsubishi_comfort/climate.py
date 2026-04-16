@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection
@@ -21,22 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
 from .entity import MitsubishiComfortEntity
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: MitsubishiComfortConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up Mitsubishi Comfort climate entities."""
-    coordinators = entry.runtime_data
-    entities = [
-        MitsubishiComfortClimate(coordinator)
-        for coordinator in coordinators.values()
-        if isinstance(coordinator.device, IndoorUnit)
-    ]
-    async_add_entities(entities)
-
 
 _MODE_TO_HVAC: dict[str, HVACMode] = {
     "off": HVACMode.OFF,
@@ -74,46 +57,48 @@ _MODE_TO_ACTION: dict[str, HVACAction] = {
 _FAN_SPEED_MAP: dict[str, FanSpeed] = {s.value: s for s in FanSpeed}
 _VANE_DIR_MAP: dict[str, VaneDirection] = {d.value: d for d in VaneDirection}
 
+_OPT_MODE = "mode"
+_OPT_COOL_SETPOINT = "cool_setpoint"
+_OPT_HEAT_SETPOINT = "heat_setpoint"
+_OPT_FAN_SPEED = "fan_speed"
+_OPT_VANE_DIRECTION = "vane_direction"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MitsubishiComfortConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Mitsubishi Comfort climate entities."""
+    coordinators = entry.runtime_data
+    async_add_entities(
+        MitsubishiComfortClimate(coordinator)
+        for coordinator in coordinators.values()
+        if isinstance(coordinator.device, IndoorUnit)
+    )
+
 
 class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     """Climate entity for a Mitsubishi indoor unit."""
 
+    _attr_name = None
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: MitsubishiComfortCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_name = None
         self._attr_unique_id = self._device.serial
-
-        # Optimistic state — set on successful command, cleared on next poll
-        self._optimistic_mode: str | None = None
-        self._optimistic_cool_setpoint: float | None = None
-        self._optimistic_heat_setpoint: float | None = None
-        self._optimistic_fan_speed: str | None = None
-        self._optimistic_vane_direction: str | None = None
+        self._optimistic: dict[str, Any] = {}
 
     def _handle_coordinator_update(self) -> None:
         """Clear optimistic state when real data arrives from device."""
-        self._optimistic_mode = None
-        self._optimistic_cool_setpoint = None
-        self._optimistic_heat_setpoint = None
-        self._optimistic_fan_speed = None
-        self._optimistic_vane_direction = None
+        self._optimistic.clear()
         super()._handle_coordinator_update()
-
-    # -- Properties --
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return UnitOfTemperature.CELSIUS
 
     @property
     def _effective_mode(self) -> str | None:
-        if self._optimistic_mode is not None:
-            return self._optimistic_mode
-        return self._device.status.mode
+        return self._optimistic.get(_OPT_MODE, self._device.status.mode)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -153,41 +138,37 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         """Return the target temperature."""
         mode = self._effective_mode
         if mode in ("cool", "autoCool"):
-            if self._optimistic_cool_setpoint is not None:
-                return self._optimistic_cool_setpoint
-            return self._device.status.cool_setpoint
+            return self._optimistic.get(
+                _OPT_COOL_SETPOINT, self._device.status.cool_setpoint
+            )
         if mode in ("heat", "autoHeat"):
-            if self._optimistic_heat_setpoint is not None:
-                return self._optimistic_heat_setpoint
-            return self._device.status.heat_setpoint
+            return self._optimistic.get(
+                _OPT_HEAT_SETPOINT, self._device.status.heat_setpoint
+            )
         return None
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
-        mode = self._effective_mode
-        if mode in ("auto", "autoCool", "autoHeat"):
-            if self._optimistic_cool_setpoint is not None:
-                return self._optimistic_cool_setpoint
-            return self._device.status.cool_setpoint
+        if self._effective_mode in ("auto", "autoCool", "autoHeat"):
+            return self._optimistic.get(
+                _OPT_COOL_SETPOINT, self._device.status.cool_setpoint
+            )
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
-        mode = self._effective_mode
-        if mode in ("auto", "autoCool", "autoHeat"):
-            if self._optimistic_heat_setpoint is not None:
-                return self._optimistic_heat_setpoint
-            return self._device.status.heat_setpoint
+        if self._effective_mode in ("auto", "autoCool", "autoHeat"):
+            return self._optimistic.get(
+                _OPT_HEAT_SETPOINT, self._device.status.heat_setpoint
+            )
         return None
 
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        if self._optimistic_fan_speed is not None:
-            return self._optimistic_fan_speed
-        return self._device.status.fan_speed
+        return self._optimistic.get(_OPT_FAN_SPEED, self._device.status.fan_speed)
 
     @property
     def fan_modes(self) -> list[str]:
@@ -197,9 +178,9 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     @property
     def swing_mode(self) -> str | None:
         """Return the current swing mode."""
-        if self._optimistic_vane_direction is not None:
-            return self._optimistic_vane_direction
-        return self._device.status.vane_direction
+        return self._optimistic.get(
+            _OPT_VANE_DIRECTION, self._device.status.vane_direction
+        )
 
     @property
     def swing_modes(self) -> list[str]:
@@ -209,8 +190,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        mode = self._effective_mode
-        if mode in ("heat", "autoHeat"):
+        if self._effective_mode in ("heat", "autoHeat"):
             if self._device.status.min_heat_setpoint is not None:
                 return self._device.status.min_heat_setpoint
         if self._device.status.min_cool_setpoint is not None:
@@ -220,8 +200,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        mode = self._effective_mode
-        if mode in ("heat", "autoHeat"):
+        if self._effective_mode in ("heat", "autoHeat"):
             if self._device.status.max_heat_setpoint is not None:
                 return self._device.status.max_heat_setpoint
         if self._device.status.max_cool_setpoint is not None:
@@ -242,16 +221,6 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             features |= ClimateEntityFeature.SWING_MODE
         return features
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra state attributes."""
-        attrs: dict[str, Any] = {}
-        if self._device.status.vane_left_right is not None:
-            attrs["vane_left_right"] = self._device.status.vane_left_right
-        return attrs or None
-
-    # -- Commands --
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         lib_mode = _HVAC_TO_MODE.get(hvac_mode)
@@ -259,7 +228,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             return
         result = await self._device.set_mode(lib_mode)
         if result.success:
-            self._optimistic_mode = result.value
+            self._optimistic[_OPT_MODE] = result.value
             self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -270,13 +239,13 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             result = await self._device.set_cool_setpoint(kwargs[ATTR_TARGET_TEMP_HIGH])
             if result.success:
-                self._optimistic_cool_setpoint = result.value
+                self._optimistic[_OPT_COOL_SETPOINT] = result.value
                 wrote = True
 
         if ATTR_TARGET_TEMP_LOW in kwargs:
             result = await self._device.set_heat_setpoint(kwargs[ATTR_TARGET_TEMP_LOW])
             if result.success:
-                self._optimistic_heat_setpoint = result.value
+                self._optimistic[_OPT_HEAT_SETPOINT] = result.value
                 wrote = True
 
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -284,12 +253,12 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             if mode in ("cool", "autoCool"):
                 result = await self._device.set_cool_setpoint(temp)
                 if result.success:
-                    self._optimistic_cool_setpoint = result.value
+                    self._optimistic[_OPT_COOL_SETPOINT] = result.value
                     wrote = True
             elif mode in ("heat", "autoHeat"):
                 result = await self._device.set_heat_setpoint(temp)
                 if result.success:
-                    self._optimistic_heat_setpoint = result.value
+                    self._optimistic[_OPT_HEAT_SETPOINT] = result.value
                     wrote = True
 
         if wrote:
@@ -302,7 +271,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             return
         result = await self._device.set_fan_speed(speed)
         if result.success:
-            self._optimistic_fan_speed = result.value
+            self._optimistic[_OPT_FAN_SPEED] = result.value
             self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -312,7 +281,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             return
         result = await self._device.set_vane_direction(direction)
         if result.success:
-            self._optimistic_vane_direction = result.value
+            self._optimistic[_OPT_VANE_DIRECTION] = result.value
             self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:

@@ -10,10 +10,12 @@ from mitsubishi_comfort import (
     KumoStation,
     MitsubishiCloudAccount,
 )
+from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_CONNECT_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT, PLATFORMS
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
@@ -21,7 +23,11 @@ from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordina
 _LOGGER = logging.getLogger(__name__)
 
 
-def _make_device(info: DeviceInfo, serial: str) -> IndoorUnit | KumoStation:
+def _make_device(
+    info: DeviceInfo,
+    serial: str,
+    session,
+) -> IndoorUnit | KumoStation:
     """Create the appropriate device instance from DeviceInfo."""
     cls = IndoorUnit if info.is_indoor_unit else KumoStation
     return cls(
@@ -32,6 +38,7 @@ def _make_device(info: DeviceInfo, serial: str) -> IndoorUnit | KumoStation:
         serial=serial,
         connect_timeout=DEFAULT_CONNECT_TIMEOUT,
         response_timeout=DEFAULT_RESPONSE_TIMEOUT,
+        session=session,
     )
 
 
@@ -39,44 +46,26 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
 ) -> bool:
     """Set up Mitsubishi Comfort from a config entry."""
+    session = async_get_clientsession(hass)
     account = MitsubishiCloudAccount(
-        entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+        entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD], session=session
     )
 
     try:
-        login_ok = await account.login()
-    except Exception as err:
-        await account.close()
-        raise ConfigEntryNotReady("Failed to connect to Mitsubishi cloud") from err
-
-    if not login_ok:
-        await account.close()
-        raise ConfigEntryNotReady("Failed to authenticate with Mitsubishi cloud")
-
-    try:
+        await account.login()
         devices = await account.discover_devices()
-    except Exception as err:
-        await account.close()
-        raise ConfigEntryNotReady("Failed to discover devices") from err
-    finally:
-        await account.close()
-
-    if not devices:
-        raise ConfigEntryNotReady("No devices discovered")
+    except AuthenticationError as err:
+        raise ConfigEntryError("Mitsubishi cloud authentication failed") from err
+    except DeviceConnectionError as err:
+        raise ConfigEntryNotReady("Cannot reach Mitsubishi cloud") from err
 
     coordinators: dict[str, MitsubishiComfortCoordinator] = {}
     for serial, info in devices.items():
         if not info.address or not info.password or not info.crypto_serial:
-            _LOGGER.warning(
-                "Device %s missing credentials, skipping",
-                info.label,
-            )
+            _LOGGER.warning("Device %s missing credentials, skipping", info.label)
             continue
-        device = _make_device(info, serial)
-        coordinators[serial] = MitsubishiComfortCoordinator(hass, device)
-
-    if not coordinators:
-        raise ConfigEntryNotReady("No devices have complete credentials yet")
+        device = _make_device(info, serial, session)
+        coordinators[serial] = MitsubishiComfortCoordinator(hass, entry, device)
 
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
@@ -90,8 +79,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        for coordinator in entry.runtime_data.values():
-            await coordinator.device.close()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

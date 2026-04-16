@@ -72,7 +72,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
         },
-        unique_id=MOCK_USERNAME,
+        unique_id="user-12345",
     )
 
 
@@ -147,12 +147,12 @@ def mock_cloud_account(mock_device_info: DeviceInfo) -> Generator[AsyncMock]:
         "homeassistant.components.mitsubishi_comfort.config_flow.MitsubishiCloudAccount"
     ) as mock_cls:
         account = AsyncMock()
-        account.login = AsyncMock(return_value=True)
+        account.login = AsyncMock(return_value=None)
         account.discover_devices = AsyncMock(
             return_value={"SERIAL001": mock_device_info}
         )
         account.get_passwords_via_websocket = AsyncMock(return_value={})
-        account.close = AsyncMock()
+        account.user_id = "user-12345"
         mock_cls.return_value = account
         yield account
 
@@ -168,12 +168,12 @@ def mock_setup_integration(
     the coordinator, climate platform, and entity code all run for real.
     """
     mock_account = AsyncMock()
-    mock_account.login = AsyncMock(return_value=True)
+    mock_account.login = AsyncMock(return_value=None)
     mock_account.discover_devices = AsyncMock(
         return_value={"SERIAL001": mock_device_info}
     )
     mock_account.get_passwords_via_websocket = AsyncMock(return_value={})
-    mock_account.close = AsyncMock()
+    mock_account.user_id = "user-12345"
 
     with (
         patch(

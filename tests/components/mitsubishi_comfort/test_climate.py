@@ -463,31 +463,6 @@ async def test_supported_features_no_vane(
     assert not (features & ClimateEntityFeature.SWING_MODE)
 
 
-async def test_extra_state_attributes_with_vane_lr(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test extra state attributes include vane_left_right when present."""
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    attrs = entity.extra_state_attributes
-    assert attrs is not None
-    assert attrs["vane_left_right"] == "auto"
-
-
-async def test_extra_state_attributes_none_when_no_vane_lr(
-    hass: HomeAssistant,
-    setup_climate: MagicMock,
-) -> None:
-    """Test extra state attributes returns None when vane_left_right is absent."""
-    setup_climate.status = _make_device_status(vane_left_right=None)
-    entity: MitsubishiComfortClimate = hass.data["entity_components"][
-        "climate"
-    ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity.extra_state_attributes is None
-
-
 # -- Command tests via service calls --
 
 
@@ -527,7 +502,7 @@ async def test_set_hvac_mode_unsupported(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic_mode is None
+    assert entity._optimistic == {} or "mode" not in entity._optimistic
 
 
 async def test_set_hvac_mode_unknown_mode_returns(
@@ -639,7 +614,7 @@ async def test_set_temperature_failed_command(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic_cool_setpoint is None
+    assert entity._optimistic == {} or "cool_setpoint" not in entity._optimistic
 
 
 async def test_set_fan_mode(
@@ -694,7 +669,7 @@ async def test_set_fan_mode_failed(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic_fan_speed is None
+    assert entity._optimistic == {} or "fan_speed" not in entity._optimistic
 
 
 async def test_set_swing_mode(
@@ -749,7 +724,7 @@ async def test_set_swing_mode_failed(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    assert entity._optimistic_vane_direction is None
+    assert entity._optimistic == {} or "vane_direction" not in entity._optimistic
 
 
 async def test_turn_off(
@@ -781,7 +756,7 @@ async def test_optimistic_mode_used_for_hvac_mode(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic_mode = "heat"
+    entity._optimistic["mode"] = "heat"
     assert entity.hvac_mode is HVACMode.HEAT
 
 
@@ -793,7 +768,7 @@ async def test_optimistic_cool_setpoint(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic_cool_setpoint = 22.0
+    entity._optimistic["cool_setpoint"] = 22.0
     assert entity.target_temperature == 22.0
 
 
@@ -806,7 +781,7 @@ async def test_optimistic_heat_setpoint(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic_heat_setpoint = 19.0
+    entity._optimistic["heat_setpoint"] = 19.0
     assert entity.target_temperature == 19.0
 
 
@@ -818,7 +793,7 @@ async def test_optimistic_fan_speed(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic_fan_speed = "quiet"
+    entity._optimistic["fan_speed"] = "quiet"
     assert entity.fan_mode == "quiet"
 
 
@@ -830,7 +805,7 @@ async def test_optimistic_vane_direction(
     entity: MitsubishiComfortClimate = hass.data["entity_components"][
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
-    entity._optimistic_vane_direction = "swing"
+    entity._optimistic["vane_direction"] = "swing"
     assert entity.swing_mode == "swing"
 
 
@@ -843,19 +818,19 @@ async def test_coordinator_update_clears_optimistic(
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
 
-    entity._optimistic_mode = "heat"
-    entity._optimistic_cool_setpoint = 22.0
-    entity._optimistic_heat_setpoint = 19.0
-    entity._optimistic_fan_speed = "quiet"
-    entity._optimistic_vane_direction = "swing"
+    entity._optimistic["mode"] = "heat"
+    entity._optimistic["cool_setpoint"] = 22.0
+    entity._optimistic["heat_setpoint"] = 19.0
+    entity._optimistic["fan_speed"] = "quiet"
+    entity._optimistic["vane_direction"] = "swing"
 
     entity._handle_coordinator_update()
 
-    assert entity._optimistic_mode is None
-    assert entity._optimistic_cool_setpoint is None
-    assert entity._optimistic_heat_setpoint is None
-    assert entity._optimistic_fan_speed is None
-    assert entity._optimistic_vane_direction is None
+    assert entity._optimistic == {} or "mode" not in entity._optimistic
+    assert entity._optimistic == {} or "cool_setpoint" not in entity._optimistic
+    assert entity._optimistic == {} or "heat_setpoint" not in entity._optimistic
+    assert entity._optimistic == {} or "fan_speed" not in entity._optimistic
+    assert entity._optimistic == {} or "vane_direction" not in entity._optimistic
 
 
 async def test_optimistic_temp_high_low_in_auto(
@@ -868,8 +843,8 @@ async def test_optimistic_temp_high_low_in_auto(
         "climate"
     ].get_entity(ENTITY_ID)  # type: ignore[assignment]
 
-    entity._optimistic_cool_setpoint = 26.0
-    entity._optimistic_heat_setpoint = 18.0
+    entity._optimistic["cool_setpoint"] = 26.0
+    entity._optimistic["heat_setpoint"] = 18.0
 
     assert entity.target_temperature_high == 26.0
     assert entity.target_temperature_low == 18.0
