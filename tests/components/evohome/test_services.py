@@ -14,11 +14,8 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
-<<<<<<< evo_domain_ctl_svcs
-    SERVICE_BREAKS_IN_HA_VERSION,
-=======
     RESET_BREAKS_IN_HA_VERSION,
->>>>>>> dev
+    SERVICE_BREAKS_IN_HA_VERSION,
     EvoService,
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
