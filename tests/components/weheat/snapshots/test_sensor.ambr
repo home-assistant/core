@@ -932,7 +932,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='HeatPump().energy_in_standby' id='4605216480'>",
+    'state': '684',
   })
 # ---
 # name: test_all_entities[sensor.test_model_energy_output_cooling-entry]
