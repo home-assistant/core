@@ -400,6 +400,9 @@ class MqttData:
     )
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    discovery_discovered_and_disabled: dict[tuple[str, str], tuple[str, str, str]] = (
+        field(default_factory=dict)
+    )
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict
