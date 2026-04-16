@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 import types
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -278,25 +278,31 @@ async def test_platform_slow_setup_cancel_warning(hass: HomeAssistant) -> None:
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_at") as mock_call:
+    call_at_handles: list[tuple[tuple, MagicMock]] = []
+
+    def mock_call_at(*args: Any, **kwargs: Any) -> MagicMock:
+        handle = MagicMock()
+        call_at_handles.append((args, handle))
+        return handle
+
+    with patch.object(hass.loop, "call_at", side_effect=mock_call_at):
         await component.async_setup({DOMAIN: {"platform": "platform"}})
         await hass.async_block_till_done()
-        assert mock_call.called
+        assert call_at_handles
 
         # Find the platform setup warning by matching the exact format string
-        platform_warn_call = next(
-            call
-            for call in mock_call.call_args_list
-            if len(call[0]) >= 3
-            and call[0][1] == _LOGGER.warning
-            and call[0][2] == "Setup of %s platform %s is taking over %s seconds."
+        warn_args, warn_handle = next(
+            (args, handle)
+            for args, handle in call_at_handles
+            if len(args) >= 3
+            and args[1] == _LOGGER.warning
+            and args[2] == "Setup of %s platform %s is taking over %s seconds."
         )
-        scheduled_time = platform_warn_call[0][0]
 
-        assert scheduled_time - hass.loop.time() == pytest.approx(
+        assert warn_args[0] - hass.loop.time() == pytest.approx(
             entity_platform.SLOW_SETUP_WARNING, 0.5
         )
-        assert mock_call.return_value.cancel.called
+        assert warn_handle.cancel.call_count == 1
 
 
 async def test_platform_slow_setup_timeout(
