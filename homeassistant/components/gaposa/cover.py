@@ -166,6 +166,10 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         """Stop the cover and collapse the motion window immediately."""
         self._last_command = COMMAND_STOP
         self._last_command_time = None
+        # Cancel any pending motion-window refresh from an earlier open/close
+        # so it doesn't fire a pointless refresh 60 seconds after the stop.
+        if self._motion_task is not None and not self._motion_task.done():
+            self._motion_task.cancel()
         await self.motor.stop(True)
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
