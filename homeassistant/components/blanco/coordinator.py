@@ -52,9 +52,6 @@ from .definitions import BlancoDeviceType, BlancoTimeRange
 
 _LOGGER = logging.getLogger(__name__)
 
-# StatisticMeanType.NONE signals a sum-only statistic (no mean is computed).
-# Available since HA 2025.4; the integration requires HA 2026.1+.
-_METADATA_MEAN: dict[str, Any] = {"mean_type": _StatisticMeanType.NONE}
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 """Poll interval for the BLANCO device data endpoints."""
@@ -494,15 +491,15 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 safe_serial = _stat_id_part(self.serial)
                 for stat_key, data_points in stat_points.items():
                     statistic_id = f"{DOMAIN}:{safe_serial}_water_{stat_key}"
-                    metadata: StatisticMetaData = {  # type: ignore[typeddict-unknown-key]
-                        **_METADATA_MEAN,
-                        "has_sum": True,
-                        "name": f"BLANCO Water {stat_key.capitalize()}",
-                        "source": DOMAIN,
-                        "statistic_id": statistic_id,
-                        "unit_class": "volume",
-                        "unit_of_measurement": UnitOfVolume.LITERS,
-                    }
+                    metadata = StatisticMetaData(
+                        has_sum=True,
+                        mean_type=_StatisticMeanType.NONE,
+                        name=f"BLANCO Water {stat_key.capitalize()}",
+                        source=DOMAIN,
+                        statistic_id=statistic_id,
+                        unit_class="volume",
+                        unit_of_measurement=UnitOfVolume.LITERS,
+                    )
                     async_add_external_statistics(self.hass, metadata, data_points)
 
         except BlancoConnectionError as err:
