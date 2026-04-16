@@ -38,7 +38,7 @@ dependencies = [
   "async-interrupt==1.2.2",
   "attrs==26.1.0",
   "atomicwrites-homeassistant==1.4.1",
-  "audioop-lts==0.2.1",
+  "audioop-lts==0.2.2",
   "awesomeversion==25.8.0",
   "bcrypt==5.0.0",
   "certifi>=2021.5.30",
