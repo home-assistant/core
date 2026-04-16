@@ -22,11 +22,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OPNsense entry."""
-    # scanner = OPNsenseDeviceScanner(
-    #     config_entry.runtime_data[CONF_OPNSENSE_CLIENT],
-    #     config_entry.runtime_data.get(CONF_TRACKER_INTERFACES, []),
-    # )
-    # async_add_entities([scanner], True)
 
 
 async def async_get_scanner(

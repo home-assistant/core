@@ -49,6 +49,5 @@ def setup_mock_opnsense_client(mock_opnsense_client: AsyncMock) -> None:
     mock_instance = mock_opnsense_client.return_value
     mock_instance.get_host_firmware_version.return_value = "25.7.8"
     mock_instance.validate.return_value = None
+    mock_instance.get_arp_table.return_value = ARP
     mock_instance.get_interfaces.return_value = INTERFACES
-    mock_opnsense_client.get_interfaces.return_value = INTERFACES
-    mock_opnsense_client.get_arp_table.return_value = ARP
