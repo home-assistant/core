@@ -300,6 +300,45 @@
     },
     "set_lock_usercode_failed": {
       "message": "Unable to set lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
+    },
+    "access_control_not_supported": {
+      "message": "Access control is not supported on this device"
+    },
+    "no_available_user_slots": {
+      "message": "No available user slots on this device"
+    },
+    "no_available_credential_slots": {
+      "message": "No available {credential_type} credential slots on this device"
+    },
+    "credential_type_not_supported": {
+      "message": "Credential type {credential_type} is not supported on this device"
+    },
+    "set_user_failed": {
+      "message": "Failed to set user on {entity_id}: {error}"
+    },
+    "clear_user_failed": {
+      "message": "Failed to clear user {user_index} on {entity_id}: {error}"
+    },
+    "clear_all_users_failed": {
+      "message": "Failed to clear all users on {entity_id}: {error}"
+    },
+    "get_credential_capabilities_failed": {
+      "message": "Failed to get credential capabilities for {entity_id}: {error}"
+    },
+    "get_users_failed": {
+      "message": "Failed to get users for {entity_id}: {error}"
+    },
+    "set_credential_failed": {
+      "message": "Failed to set credential on {entity_id}: {error}"
+    },
+    "clear_credential_failed": {
+      "message": "Failed to clear credential on {entity_id}: {error}"
+    },
+    "clear_all_credentials_failed": {
+      "message": "Failed to clear all credentials for user {user_index} on {entity_id}: {error}"
+    },
+    "get_credential_status_failed": {
+      "message": "Failed to get credential status for {entity_id}: {error}"
     }
   },
   "issues": {
@@ -640,6 +679,130 @@
         }
       },
       "name": "Set lock configuration"
+    },
+    "set_user": {
+      "description": "Creates or updates an access-control user on a lock.",
+      "fields": {
+        "user_index": {
+          "description": "User slot index. If not specified, the first available slot is used.",
+          "name": "User index"
+        },
+        "user_name": {
+          "description": "Display name for the user.",
+          "name": "User name"
+        },
+        "user_type": {
+          "description": "The type of user (e.g. general, programming, remote_only).",
+          "name": "User type"
+        },
+        "credential_rule": {
+          "description": "Credential rule for the user (single, dual, or triple).",
+          "name": "Credential rule"
+        },
+        "active": {
+          "description": "Whether the user is active.",
+          "name": "Active"
+        }
+      },
+      "name": "Set user"
+    },
+    "clear_user": {
+      "description": "Deletes a single access-control user from a lock.",
+      "fields": {
+        "user_index": {
+          "description": "User slot index to delete.",
+          "name": "User index"
+        }
+      },
+      "name": "Clear user"
+    },
+    "clear_all_users": {
+      "description": "Deletes all access-control users from a lock.",
+      "name": "Clear all users"
+    },
+    "get_credential_capabilities": {
+      "description": "Queries the credential management capabilities of a lock.",
+      "name": "Get credential capabilities"
+    },
+    "get_users": {
+      "description": "Lists all access-control users and their credential references on a lock.",
+      "name": "Get users"
+    },
+    "set_credential": {
+      "description": "Adds or updates a credential (PIN code or password) on a lock.",
+      "fields": {
+        "credential_type": {
+          "description": "The type of credential (pin_code or password).",
+          "name": "Credential type"
+        },
+        "credential_data": {
+          "description": "The credential data (e.g. PIN digits or password string).",
+          "name": "Credential data"
+        },
+        "credential_slot": {
+          "description": "Credential slot index. If not specified, the first available slot is used.",
+          "name": "Credential slot"
+        },
+        "user_index": {
+          "description": "User slot index to assign the credential to. If not specified, a new user is created.",
+          "name": "User index"
+        },
+        "user_type": {
+          "description": "The type of user to set when creating or updating the user.",
+          "name": "User type"
+        },
+        "active": {
+          "description": "Whether the user should be active when creating or updating the user.",
+          "name": "Active"
+        }
+      },
+      "name": "Set credential"
+    },
+    "clear_credential": {
+      "description": "Deletes a single credential from a lock.",
+      "fields": {
+        "user_index": {
+          "description": "User slot index that owns the credential.",
+          "name": "User index"
+        },
+        "credential_type": {
+          "description": "The type of credential to delete (pin_code or password).",
+          "name": "Credential type"
+        },
+        "credential_slot": {
+          "description": "Credential slot index to delete.",
+          "name": "Credential slot"
+        }
+      },
+      "name": "Clear credential"
+    },
+    "clear_all_credentials": {
+      "description": "Deletes all credentials for a user on a lock.",
+      "fields": {
+        "user_index": {
+          "description": "User slot index to clear all credentials for.",
+          "name": "User index"
+        }
+      },
+      "name": "Clear all credentials"
+    },
+    "get_credential_status": {
+      "description": "Queries the status of a credential slot on a lock.",
+      "fields": {
+        "user_index": {
+          "description": "User slot index that owns the credential.",
+          "name": "User index"
+        },
+        "credential_type": {
+          "description": "The type of credential to query.",
+          "name": "Credential type"
+        },
+        "credential_slot": {
+          "description": "Credential slot index to query.",
+          "name": "Credential slot"
+        }
+      },
+      "name": "Get credential status"
     },
     "set_lock_usercode": {
       "description": "Sets a user code on a lock.",

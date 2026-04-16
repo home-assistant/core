@@ -43,6 +43,11 @@ from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.service import async_register_platform_entity_service
 
 from . import const
+from .access_control_helpers import (
+    CREDENTIAL_RULE_REVERSE_MAP,
+    CREDENTIAL_TYPE_REVERSE_MAP,
+    USER_TYPE_REVERSE_MAP,
+)
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import (
     async_get_node_from_device_id,
@@ -540,6 +545,148 @@ class ZWaveServices:
                 vol.Optional(const.ATTR_BLOCK_TO_BLOCK): vol.Coerce(bool),
             },
             func="async_set_lock_configuration",
+        )
+
+        # Credential management services
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_SET_USER,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Optional(const.ATTR_USER_INDEX): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Optional(const.ATTR_USER_NAME): cv.string,
+                vol.Optional(const.ATTR_USER_TYPE): vol.In(
+                    USER_TYPE_REVERSE_MAP.keys()
+                ),
+                vol.Optional(const.ATTR_CREDENTIAL_RULE): vol.In(
+                    CREDENTIAL_RULE_REVERSE_MAP.keys()
+                ),
+                vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
+            },
+            func="async_set_user",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_CLEAR_USER,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(const.ATTR_USER_INDEX): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            },
+            func="async_clear_user",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_CLEAR_ALL_USERS,
+            entity_domain=LOCK_DOMAIN,
+            schema={},
+            func="async_clear_all_users",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_GET_CREDENTIAL_CAPABILITIES,
+            entity_domain=LOCK_DOMAIN,
+            schema={},
+            func="async_get_credential_capabilities",
+            supports_response=SupportsResponse.ONLY,
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_GET_USERS,
+            entity_domain=LOCK_DOMAIN,
+            schema={},
+            func="async_get_users",
+            supports_response=SupportsResponse.ONLY,
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_SET_CREDENTIAL,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                    const.WRITABLE_CREDENTIAL_TYPES
+                ),
+                vol.Required(const.ATTR_CREDENTIAL_DATA): cv.string,
+                vol.Optional(const.ATTR_CREDENTIAL_SLOT): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Optional(const.ATTR_USER_INDEX): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Optional(const.ATTR_USER_TYPE): vol.In(
+                    USER_TYPE_REVERSE_MAP.keys()
+                ),
+                vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
+            },
+            func="async_set_credential",
+            supports_response=SupportsResponse.ONLY,
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_CLEAR_CREDENTIAL,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(const.ATTR_USER_INDEX): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                    const.WRITABLE_CREDENTIAL_TYPES
+                ),
+                vol.Required(const.ATTR_CREDENTIAL_SLOT): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            },
+            func="async_clear_credential",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_CLEAR_ALL_CREDENTIALS,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(const.ATTR_USER_INDEX): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            },
+            func="async_clear_all_credentials",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_GET_CREDENTIAL_STATUS,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(const.ATTR_USER_INDEX): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                    CREDENTIAL_TYPE_REVERSE_MAP.keys()
+                ),
+                vol.Required(const.ATTR_CREDENTIAL_SLOT): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            },
+            func="async_get_credential_status",
+            supports_response=SupportsResponse.ONLY,
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:

@@ -90,6 +90,210 @@ set_lock_configuration:
       selector:
         boolean:
 
+# --- Credential management services ---
+
+set_user:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    user_name:
+      selector:
+        text:
+    user_type:
+      selector:
+        select:
+          options:
+            - general
+            - programming
+            - non_access
+            - duress
+            - disposable
+            - expiring
+            - remote_only
+    credential_rule:
+      selector:
+        select:
+          options:
+            - single
+            - dual
+            - triple
+    active:
+      selector:
+        boolean:
+
+clear_user:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
+clear_all_users:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+
+get_credential_capabilities:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+
+get_users:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+
+set_credential:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    credential_type:
+      required: true
+      selector:
+        select:
+          options:
+            - pin_code
+            - password
+    credential_data:
+      required: true
+      selector:
+        text:
+    credential_slot:
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    user_type:
+      selector:
+        select:
+          options:
+            - general
+            - programming
+            - non_access
+            - duress
+            - disposable
+            - expiring
+            - remote_only
+    active:
+      selector:
+        boolean:
+
+clear_credential:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    credential_type:
+      required: true
+      selector:
+        select:
+          options:
+            - pin_code
+            - password
+    credential_slot:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
+clear_all_credentials:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
+get_credential_status:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    user_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    credential_type:
+      required: true
+      selector:
+        select:
+          options:
+            - pin_code
+            - password
+            - rfid_code
+            - ble
+            - nfc
+            - uwb
+            - eye_biometric
+            - face_biometric
+            - finger_biometric
+            - hand_biometric
+            - unspecified_biometric
+            - desfire
+    credential_slot:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+
 set_config_parameter:
   fields:
     area_id:

@@ -113,6 +113,58 @@ SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
 SERVICE_SET_LOCK_CONFIGURATION = "set_lock_configuration"
 SERVICE_SET_VALUE = "set_value"
 
+# credential management service constants
+SERVICE_CLEAR_ALL_CREDENTIALS = "clear_all_credentials"
+SERVICE_CLEAR_ALL_USERS = "clear_all_users"
+SERVICE_CLEAR_CREDENTIAL = "clear_credential"
+SERVICE_CLEAR_USER = "clear_user"
+SERVICE_GET_CREDENTIAL_CAPABILITIES = "get_credential_capabilities"
+SERVICE_GET_CREDENTIAL_STATUS = "get_credential_status"
+SERVICE_GET_USERS = "get_users"
+SERVICE_SET_CREDENTIAL = "set_credential"
+SERVICE_SET_USER = "set_user"
+
+# credential management attribute constants
+ATTR_USER_ACTIVE = "active"
+ATTR_CREDENTIAL_DATA = "credential_data"
+ATTR_CREDENTIAL_SLOT = "credential_slot"
+ATTR_CREDENTIAL_TYPE = "credential_type"
+ATTR_CREDENTIAL_RULE = "credential_rule"
+ATTR_USER_INDEX = "user_index"
+ATTR_USER_NAME = "user_name"
+ATTR_USER_TYPE = "user_type"
+
+# credential type string values
+CREDENTIAL_TYPE_BLE = "ble"
+CREDENTIAL_TYPE_DESFIRE = "desfire"
+CREDENTIAL_TYPE_EYE_BIOMETRIC = "eye_biometric"
+CREDENTIAL_TYPE_FACE_BIOMETRIC = "face_biometric"
+CREDENTIAL_TYPE_FINGER_BIOMETRIC = "finger_biometric"
+CREDENTIAL_TYPE_HAND_BIOMETRIC = "hand_biometric"
+CREDENTIAL_TYPE_NFC = "nfc"
+CREDENTIAL_TYPE_PASSWORD = "password"
+CREDENTIAL_TYPE_PIN_CODE = "pin_code"
+CREDENTIAL_TYPE_RFID_CODE = "rfid_code"
+CREDENTIAL_TYPE_UNSPECIFIED_BIOMETRIC = "unspecified_biometric"
+CREDENTIAL_TYPE_UWB = "uwb"
+
+# writable credential types (for set/clear services)
+WRITABLE_CREDENTIAL_TYPES = {CREDENTIAL_TYPE_PIN_CODE, CREDENTIAL_TYPE_PASSWORD}
+
+# user type string values
+USER_TYPE_GENERAL = "general"
+USER_TYPE_PROGRAMMING = "programming"
+USER_TYPE_NON_ACCESS = "non_access"
+USER_TYPE_DURESS = "duress"
+USER_TYPE_DISPOSABLE = "disposable"
+USER_TYPE_EXPIRING = "expiring"
+USER_TYPE_REMOTE_ONLY = "remote_only"
+
+# credential rule string values
+CREDENTIAL_RULE_SINGLE = "single"
+CREDENTIAL_RULE_DUAL = "dual"
+CREDENTIAL_RULE_TRIPLE = "triple"
+
 ATTR_NODES = "nodes"
 # config parameter
 ATTR_CONFIG_PARAMETER = "parameter"

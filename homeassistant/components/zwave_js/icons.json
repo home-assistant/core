@@ -63,6 +63,24 @@
     "clear_lock_usercode": {
       "service": "mdi:eraser"
     },
+    "clear_all_credentials": {
+      "service": "mdi:eraser-variant"
+    },
+    "clear_all_users": {
+      "service": "mdi:account-remove"
+    },
+    "clear_credential": {
+      "service": "mdi:eraser"
+    },
+    "clear_user": {
+      "service": "mdi:account-remove"
+    },
+    "get_credential_capabilities": {
+      "service": "mdi:information"
+    },
+    "get_credential_status": {
+      "service": "mdi:lock-smart"
+    },
     "get_lock_usercode": {
       "service": "mdi:lock-smart"
     },
@@ -92,6 +110,15 @@
     },
     "set_lock_usercode": {
       "service": "mdi:lock-smart"
+    },
+    "get_users": {
+      "service": "mdi:account-group"
+    },
+    "set_credential": {
+      "service": "mdi:lock-smart"
+    },
+    "set_user": {
+      "service": "mdi:account-plus"
     },
     "set_value": {
       "service": "mdi:form-textbox"
