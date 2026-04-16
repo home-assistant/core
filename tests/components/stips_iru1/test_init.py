@@ -10,6 +10,7 @@ from homeassistant.components.stips_iru1 import (
     async_setup_entry,
 )
 from homeassistant.components.stips_iru1.const import PLATFORMS
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
@@ -42,7 +43,7 @@ async def test_async_setup_entry_forwards_only_climate(
         assert await hass.config_entries.async_setup(entry.entry_id)
 
     mock_forward.assert_called_once_with(entry, PLATFORMS)
-    assert PLATFORMS == ["climate"]
+    assert PLATFORMS == [Platform.CLIMATE]
     assert isinstance(entry.runtime_data, StipsIru1RuntimeData)
     assert entry.runtime_data.devices == entry.data["devices"]
 
