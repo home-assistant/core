@@ -19,30 +19,21 @@ Documentation: https://github.com/fquinto/pywibeee
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from pywibeee import WibeeeDeviceInfo
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WibeeeConfigEntry
-from .const import DOMAIN, KNOWN_MODELS, SENSOR_TYPES
+from .const import DOMAIN, KNOWN_MODELS, SENSOR_TYPES, WibeeeSensorEntityDescription
 from .coordinator import WibeeeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True, kw_only=True)
-class WibeeeSensorEntityDescription(SensorEntityDescription):
-    """Describe a Wibeee sensor entity.
-
-    Extends SensorEntityDescription with the XML key used by the device.
-    """
 
 
 PARALLEL_UPDATES = 0
@@ -193,7 +184,7 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
             return None
         try:
             return float(value)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             return None
 
     @property
