@@ -82,28 +82,36 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         self._supports_sound_mode: bool = True
 
+    # Fallback used when the device doesn't support get_play_caps; reproduces the
+    # old hard-coded feature set.
+    _FALLBACK_PLAY_CAPS = (
+        PlayCaps.PAUSE
+        | PlayCaps.STOP
+        | PlayCaps.SKIP_PREVIOUS
+        | PlayCaps.SKIP_NEXT
+        | PlayCaps.SEEK
+    )
+
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the currently supported features for this device."""
         features = self._BASE_SUPPORTED_FEATURES
-
-        if self.__play_caps is not None:
-            if self.__play_caps & (PlayCaps.PAUSE | PlayCaps.STOP):
-                features |= MediaPlayerEntityFeature.PLAY
-            if self.__play_caps & PlayCaps.PAUSE:
-                features |= MediaPlayerEntityFeature.PAUSE
-            if self.__play_caps & PlayCaps.STOP:
-                features |= MediaPlayerEntityFeature.STOP
-            if self.__play_caps & (
-                PlayCaps.SKIP_PREVIOUS | PlayCaps.REWIND | PlayCaps.SKIP_BACKWARD
-            ):
-                features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
-            if self.__play_caps & (
-                PlayCaps.SKIP_NEXT | PlayCaps.FAST_FORWARD | PlayCaps.SKIP_FORWARD
-            ):
-                features |= MediaPlayerEntityFeature.NEXT_TRACK
-            if self.__play_caps & PlayCaps.SEEK:
-                features |= MediaPlayerEntityFeature.SEEK
+        if self.__play_caps & (PlayCaps.PAUSE | PlayCaps.STOP):
+            features |= MediaPlayerEntityFeature.PLAY
+        if self.__play_caps & PlayCaps.PAUSE:
+            features |= MediaPlayerEntityFeature.PAUSE
+        if self.__play_caps & PlayCaps.STOP:
+            features |= MediaPlayerEntityFeature.STOP
+        if self.__play_caps & (
+            PlayCaps.SKIP_PREVIOUS | PlayCaps.REWIND | PlayCaps.SKIP_BACKWARD
+        ):
+            features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+        if self.__play_caps & (
+            PlayCaps.SKIP_NEXT | PlayCaps.FAST_FORWARD | PlayCaps.SKIP_FORWARD
+        ):
+            features |= MediaPlayerEntityFeature.NEXT_TRACK
+        if self.__play_caps & PlayCaps.SEEK:
+            features |= MediaPlayerEntityFeature.SEEK
 
         if self._supports_sound_mode:
             features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -154,7 +162,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         try:
             self.__play_caps = await afsapi.get_play_caps()
         except FSNotImplementedError:
-            self.__play_caps = None
+            self.__play_caps = self._FALLBACK_PLAY_CAPS
 
         if not self._attr_sound_mode_list and self._supports_sound_mode:
             try:
