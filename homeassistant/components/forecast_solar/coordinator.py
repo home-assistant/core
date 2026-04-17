@@ -15,6 +15,7 @@ from forecast_solar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -103,4 +104,4 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
         except ForecastSolarConnectionError as error:
             raise UpdateFailed(error) from error
         except ForecastSolarConfigError as error:
-            raise UpdateFailed(f"Invalid configuration: {error}") from error
+            raise ConfigEntryError(f"Invalid configuration: {error}") from error
