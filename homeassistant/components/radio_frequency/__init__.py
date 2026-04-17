@@ -71,6 +71,9 @@ def async_get_transmitters(
 ) -> list[str]:
     """Get entity IDs of all RF transmitters supporting the given frequency.
 
+    The ``frequency`` argument is used to filter transmitters by their
+    supported frequency ranges. The ``modulation`` argument is currently
+    accepted for forward compatibility and does not affect filtering yet.
     An empty list means no compatible transmitters.
 
     Raises:
