@@ -9,9 +9,6 @@ from homeassistant.components.wibeee.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_HOST, MOCK_MAC
-
-
 async def test_flow_init(hass: HomeAssistant) -> None:
     """Test that the flow is initialized."""
     result = await hass.config_entries.flow.async_init(
