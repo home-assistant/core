@@ -191,11 +191,7 @@ async def async_setup_entry(
             sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
     else:
         # Sensors from BLE broadcast data.
-        sensors: set[str] = {
-            sensor
-            for sensor in coordinator.device.parsed_data
-            if sensor in SENSOR_TYPES
-        }
+        sensors: set[str] = {sensor for sensor in parsed_data if sensor in SENSOR_TYPES}
         # PM2.5 is absent from BLE broadcast frames and only arrives after an
         # active BLE query (get_basic_info).  Register the entity based on device
         # capability so it is always present; SwitchBotAirPurifierEntity.
