@@ -110,7 +110,7 @@
   "selector": {
     "connection_type": {
       "options": {
-        "serial": "USB",
+        "serial": "Serial/USB",
         "tcp": "TCP/IP"
       }
     }
