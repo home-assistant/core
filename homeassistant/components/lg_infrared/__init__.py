@@ -14,7 +14,7 @@ PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SELECT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LG IR from a config entry."""
-    data = LGIRRemoteData()
+    data = LGIRRemoteData(hass, entry.entry_id)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
