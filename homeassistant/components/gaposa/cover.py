@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -14,10 +13,11 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -115,7 +115,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
             name=motor.name,
             manufacturer="Gaposa",
         )
-        self._motion_task: asyncio.Task[None] | None = None
+        self._cancel_motion_refresh: CALLBACK_TYPE | None = None
 
     @property
     def motor(self) -> Motor | None:
@@ -128,10 +128,11 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         return super().available and self.motor is not None
 
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel any pending motion-window refresh task on removal."""
+        """Cancel any pending motion-window refresh on removal."""
         await super().async_will_remove_from_hass()
-        if self._motion_task is not None and not self._motion_task.done():
-            self._motion_task.cancel()
+        if self._cancel_motion_refresh is not None:
+            self._cancel_motion_refresh()
+            self._cancel_motion_refresh = None
 
     @property
     def is_open(self) -> bool | None:
@@ -203,10 +204,9 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         """Stop the cover and collapse the motion window immediately."""
         self._last_command = COMMAND_STOP
         self._last_command_time = None
-        # Cancel any pending motion-window refresh from an earlier open/close
-        # so it doesn't fire a pointless refresh 60 seconds after the stop.
-        if self._motion_task is not None and not self._motion_task.done():
-            self._motion_task.cancel()
+        if self._cancel_motion_refresh is not None:
+            self._cancel_motion_refresh()
+            self._cancel_motion_refresh = None
         motor = self.motor
         if motor is None:
             return
@@ -214,17 +214,17 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 
+    @callback
     def _schedule_refresh_after_motion(self) -> None:
-        """Start (or replace) a background task that refreshes once motion ends."""
-        if self._motion_task is not None and not self._motion_task.done():
-            self._motion_task.cancel()
-        self._motion_task = self.hass.async_create_task(self._refresh_after_motion())
+        """Schedule a coordinator refresh once the motion window expires."""
+        if self._cancel_motion_refresh is not None:
+            self._cancel_motion_refresh()
+        self._cancel_motion_refresh = async_call_later(
+            self.hass, MOTION_DELAY, self._on_motion_complete
+        )
 
-    async def _refresh_after_motion(self) -> None:
-        """Wait for the motion window to close, then ask the coordinator to refresh."""
-        try:
-            await asyncio.sleep(MOTION_DELAY)
-        except asyncio.CancelledError:
-            return
+    async def _on_motion_complete(self, _now: datetime) -> None:
+        """Coordinator refresh after the cover has finished moving."""
+        self._cancel_motion_refresh = None
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
