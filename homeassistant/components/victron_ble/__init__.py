@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import logging
+from struct import error as struct_error
 
 from sensor_state_data import SensorUpdate
 from victron_ble_ha_parser import VictronBluetoothDeviceData
+from victron_ble_ha_parser.parser import detect_device_type
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -38,25 +40,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nonlocal consecutive_failures
         update = data.update(service_info)
 
-        # Only consider a reauth when the device type is recognised (devices
-        # populated) but the advertisement key fails the quick-check built into
-        # validate_advertisement_key.  Using the key check instead of counting
-        # entity values avoids false positives: some devices legitimately return
-        # few (or zero) sensor values when in certain error or alarm states.
+        # Only assess key validity for instant-readout advertisements
+        # (0x10 prefix) whose device type the parser actually recognizes.
+        # Unrecognized mode bytes or non-instant-readout packets are neutral:
+        # they say nothing about whether the encryption key is correct, so
+        # they must not increment or reset the failure counter.
         raw_data = service_info.manufacturer_data.get(VICTRON_IDENTIFIER)
         if update.devices and raw_data is not None:
-            if not data.validate_advertisement_key(raw_data):
-                consecutive_failures += 1
-                if consecutive_failures >= REAUTH_AFTER_FAILURES:
-                    _LOGGER.debug(
-                        "Triggering reauth for %s after %d consecutive failures",
-                        address,
-                        consecutive_failures,
-                    )
-                    entry.async_start_reauth(hass)
+            try:
+                is_recognizable = (
+                    raw_data[:1] == b"\x10" and detect_device_type(raw_data) is not None
+                )
+            except struct_error, IndexError:
+                is_recognizable = False
+
+            if is_recognizable:
+                if not data.validate_advertisement_key(raw_data):
+                    consecutive_failures += 1
+                    if consecutive_failures >= REAUTH_AFTER_FAILURES:
+                        _LOGGER.debug(
+                            "Triggering reauth for %s after %d consecutive failures",
+                            address,
+                            consecutive_failures,
+                        )
+                        entry.async_start_reauth(hass)
+                        consecutive_failures = 0
+                else:
                     consecutive_failures = 0
-            else:
-                consecutive_failures = 0
         else:
             consecutive_failures = 0
 
