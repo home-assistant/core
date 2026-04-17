@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Any, Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
@@ -16,8 +18,10 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -25,6 +29,8 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import get_device_entry_gen
+
+CONTENT_TYPE_RADIO_FAVOURITE = "radio_favourite"
 
 PARALLEL_UPDATES = 0
 
@@ -81,6 +87,8 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.PLAY_MEDIA
     )
     _attr_media_content_type = MediaType.MUSIC
     entity_description: RpcMediaPlayerDescription
@@ -170,3 +178,62 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.call_rpc("Media.SetVolume", {"volume": volume * 10})
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        if media_content_type == CONTENT_TYPE_RADIO_FAVOURITE:
+            return await self._async_browse_radio_favorites()
+
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_media_content_type",
+            translation_placeholders={"media_content_type": str(media_content_type)},
+        )
+
+    async def _async_browse_radio_favorites(self) -> BrowseMedia:
+        """Return BrowseMedia tree for radio favourites."""
+        result: dict[str, Any] = await self.coordinator.device.call_rpc(
+            "Media.Radio.ListFavourites", {}
+        )
+        children = [
+            BrowseMedia(
+                title=station["name"],
+                media_class=MediaClass.MUSIC,
+                media_content_type=CONTENT_TYPE_RADIO_FAVOURITE,
+                media_content_id=str(station["id"]),
+                thumbnail=station.get("icon"),
+                can_play=True,
+                can_expand=False,
+            )
+            for station in result["list"]
+        ]
+        return BrowseMedia(
+            title="Favourite Radios",
+            media_class=MediaClass.DIRECTORY,
+            media_content_type=CONTENT_TYPE_RADIO_FAVOURITE,
+            media_content_id="",
+            children=children,
+            can_play=False,
+            can_expand=True,
+        )
+
+    async def async_play_media(
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        **kwargs: Any,
+    ) -> None:
+        """Play a radio favourite by id."""
+        if media_type == CONTENT_TYPE_RADIO_FAVOURITE:
+            await self.call_rpc("Media.Radio.PlayFavourite", {"id": int(media_id)})
+            return
+
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_media_type",
+            translation_placeholders={"media_type": media_type},
+        )

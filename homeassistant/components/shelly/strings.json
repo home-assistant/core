@@ -651,6 +651,12 @@
     "rpc_call_error": {
       "message": "RPC call error occurred for {device}"
     },
+    "unsupported_media_content_type": {
+      "message": "Unsupported media content type for Shelly device: {media_content_type}"
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type for Shelly device: {media_type}"
+    },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
     },
