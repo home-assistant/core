@@ -112,19 +112,9 @@ async def test_abort_import_if_already_setup(
 
 async def test_on_api_error(hass: HomeAssistant) -> None:
     """Test when we have errors connecting the router."""
-    with (
-        patch(
-            "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
-            side_effect=OPNsenseConnectionError,
-        ),
-        # patch(
-        #     "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_host_firmware_version",
-        #     return_value="25.7.8",
-        # ),
-        # patch(
-        #     "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
-        #     return_value=INTERFACES,
-        # ),
+    with patch(
+        "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
+        side_effect=OPNsenseConnectionError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
