@@ -21,7 +21,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 # Duco boxes advertise themselves as "DUCO [<12 hex MAC chars>]" over mDNS.
-# Reject anything that doesn't match this pattern to avoid false positives
+# Reject anything that doesn't match this pattern to avoid false positives.
 # (e.g. a laptop named "ducotje").
 _DUCO_MDNS_NAME_RE = re.compile(r"^DUCO \[[0-9a-f]{12}\]", re.IGNORECASE)
 
