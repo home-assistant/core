@@ -27,11 +27,11 @@
   },
   "issues": {
     "deprecated_clear_zone_override_service": {
-      "description": "Using the `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
+      "description": "The `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
       "title": "Evohome clear zone override action is deprecated"
     },
     "deprecated_controller_service": {
-      "description": "Calling the `{service}` service without `entity_id` is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Update any automation or script to include the Evohome controller climate `entity_id`.",
+      "description": "The `{service}` action without `entity_id` is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Update any automation or script to include the Evohome controller climate entity `entity_id`.",
       "title": "Untargeted Evohome controller service call deprecated"
     },
     "deprecated_preset_reset": {
@@ -39,7 +39,7 @@
       "title": "Evohome Reset preset is deprecated"
     },
     "deprecated_reset_system_service": {
-      "description": "Using the `reset_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
+      "description": "The `reset_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
       "title": "Evohome reset system action is deprecated"
     }
   },
