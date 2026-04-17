@@ -18,9 +18,8 @@ import voluptuous as vol
 from homeassistant.components.version import async_get_clientsession
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
+from .const import CONF_API_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,11 +74,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
-        tracker_interfaces = user_input.get(CONF_TRACKER_INTERFACES, None)
-        if isinstance(tracker_interfaces, str):
-            tracker_interfaces = tracker_interfaces.replace(" ", "").split(",")
-            user_input[CONF_TRACKER_INTERFACES] = tracker_interfaces
-
         verify_ssl = user_input[CONF_VERIFY_SSL]
         session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
         client = OPNsenseClient(
@@ -92,13 +86,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._async_check_connection(client)
-            await self._async_get_available_interfaces(client)
-            if tracker_interfaces and self.available_interfaces:
-                # Verify that specified tracker interfaces are valid
-                for interface in tracker_interfaces:
-                    if interface not in self.available_interfaces:
-                        errors["base"] = "invalid_interface"
-                        return await self._show_setup_form(user_input, errors)
 
             return self.async_create_entry(title=user_input[CONF_URL], data=user_input)
 
@@ -117,56 +104,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return await self._show_setup_form(user_input, errors)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        if user_input is not None:
-            data = {
-                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL, False),
-                CONF_TRACKER_INTERFACES: user_input.get(CONF_TRACKER_INTERFACES, None),
-            }
-            return self.async_update_reload_and_abort(
-                reconfigure_entry,
-                data_updates=data,
-            )
-        session = async_get_clientsession(
-            self.hass, verify_ssl=reconfigure_entry.data[CONF_VERIFY_SSL]
-        )
-        client = OPNsenseClient(
-            reconfigure_entry.data[CONF_URL],
-            reconfigure_entry.data[CONF_API_KEY],
-            reconfigure_entry.data[CONF_API_SECRET],
-            session,
-            opts={"verify_ssl": reconfigure_entry.data[CONF_VERIFY_SSL]},
-        )
-        await self._async_get_available_interfaces(client)
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_VERIFY_SSL,
-                        default=reconfigure_entry.data.get(CONF_VERIFY_SSL, False),
-                    ): bool,
-                    vol.Optional(
-                        CONF_TRACKER_INTERFACES,
-                        default=reconfigure_entry.data.get(
-                            CONF_TRACKER_INTERFACES, None
-                        ),
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=list(self.available_interfaces or []),
-                            multiple=True,
-                            sort=True,
-                        )
-                    ),
-                }
-            ),
-        )
 
     async def async_step_import(
         self, import_data: (dict[str, Any])
@@ -206,12 +143,3 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_check_connection(self, client: OPNsenseClient) -> None:
         """Check connection to OPNsense."""
         await client.validate()
-
-    async def _async_get_available_interfaces(self, client: OPNsenseClient) -> None:
-        """Fetch available interfaces from OPNsense."""
-        try:
-            interfaces_resp = await client.get_interfaces()
-            self.available_interfaces = list(interfaces_resp.values())
-        except Exception:
-            _LOGGER.exception("Failed to fetch available interfaces")
-            self.available_interfaces = []

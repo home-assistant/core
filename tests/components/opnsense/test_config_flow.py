@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiopnsense import OPNsenseConnectionError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
+from homeassistant.components.opnsense.const import DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USER,
@@ -161,24 +161,3 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
             user_input=CONFIG_DATA,
         )
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-
-
-async def test_reconfigure_successful(
-    hass: HomeAssistant,
-    mock_opnsense_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguration of an existing entry."""
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_TRACKER_INTERFACES: ["LAN"]},
-    )
-
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_TRACKER_INTERFACES] == ["LAN"]
