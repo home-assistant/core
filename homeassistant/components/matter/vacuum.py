@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING, Any
@@ -11,6 +11,7 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
 from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
     Segment,
     StateVacuumEntity,
     StateVacuumEntityDescription,
@@ -21,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -263,12 +265,61 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         ):
             last_seen_by_id = {s.id: s for s in last_seen_segments}
             if current_segments != last_seen_by_id:
-                _LOGGER.debug(
-                    "Vacuum segments changed: last_seen=%s, current=%s",
-                    last_seen_by_id,
-                    current_segments,
-                )
-                self.async_create_segments_issue()
+                # Some devices (e.g., Matter vacuums commissioned into
+                # multiple fabrics) re-emit SupportedAreas with shifted
+                # areaIDs on operational-state transitions, while the
+                # set of named rooms stays the same. Treat such a
+                # re-indexing as a silent update of last_seen_segments
+                # instead of raising a spurious repair that would show
+                # the user the same room list.
+                if self._names_match(current_segments, last_seen_by_id):
+                    _LOGGER.info(
+                        "Vacuum segments: areaID re-indexing detected"
+                        " (names unchanged); silently updating"
+                        " last_seen_segments. named_count=%d",
+                        len(current_segments),
+                    )
+                    self._async_persist_last_seen_segments(
+                        list(current_segments.values())
+                    )
+                else:
+                    _LOGGER.info(
+                        "Vacuum segments changed: last_seen=%s, current=%s",
+                        last_seen_by_id,
+                        current_segments,
+                    )
+                    self.async_create_segments_issue()
+
+    @staticmethod
+    def _names_match(
+        current: dict[str, Segment], last_seen_by_id: dict[str, Segment]
+    ) -> bool:
+        """Return True if two segment collections share the same name multiset.
+
+        Uses a sorted list of (name, group) tuples so that duplicate names
+        (e.g., two "Bedroom" rooms) are correctly distinguished from a
+        deletion/addition pair.
+        """
+        current_names = sorted((s.name, s.group) for s in current.values())
+        last_seen_names = sorted((s.name, s.group) for s in last_seen_by_id.values())
+        return current_names == last_seen_names
+
+    @callback
+    def _async_persist_last_seen_segments(self, segments: list[Segment]) -> None:
+        """Silently persist new last_seen_segments after re-indexing.
+
+        Updates the entity registry options in place. Any previously-open
+        segments_changed repair issue is auto-cleared through the existing
+        _async_check_segments_issues path on the registry update callback.
+        """
+        if self.registry_entry is None:
+            return
+        entity_registry = er.async_get(self.hass)
+        options = dict(self.registry_entry.options.get(VACUUM_DOMAIN, {}))
+        options["last_seen_segments"] = [asdict(s) for s in segments]
+        entity_registry.async_update_entity_options(
+            self.entity_id, VACUUM_DOMAIN, options
+        )
 
     @callback
     def _calculate_features(self) -> None:

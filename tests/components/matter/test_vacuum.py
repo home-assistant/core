@@ -545,3 +545,156 @@ async def test_vacuum_raise_segments_changed_issue(
         VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
     )
     assert issue is not None
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_silent_reindex_same_names(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test re-indexing detection: same room names, shifted areaIDs.
+
+    Some Matter vacuums (e.g. commissioned into multiple fabrics) re-emit
+    SupportedAreas with different areaIDs on operational-state transitions.
+    The named room multiset is invariant, so no repair should be raised and
+    last_seen_segments should be silently updated to the new IDs.
+    """
+    entity_id = "vacuum.mock_vacuum"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+
+    # Fixture reports ids {7, 1234567, 2290649224} with names
+    # "My Location A"/"B"/"C". Seed last_seen with the same three names
+    # but DIFFERENT ids to simulate a past state before the device
+    # re-indexed.
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "100", "name": "My Location A", "group": None},
+                {"id": "200", "name": "My Location B", "group": None},
+                {"id": "300", "name": "My Location C", "group": None},
+            ]
+        },
+    )
+
+    set_node_attribute(matter_node, 1, 97, 4, 0x02)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # No repair should have been created.
+    issue_reg = ir.async_get(hass)
+    issue = issue_reg.async_get_issue(
+        VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
+    )
+    assert issue is None
+
+    # last_seen_segments should now reflect the current (fixture) ids.
+    updated = entity_registry.async_get(entity_id)
+    assert updated is not None
+    last_seen = updated.options[VACUUM_DOMAIN]["last_seen_segments"]
+    assert sorted(s["id"] for s in last_seen) == sorted(["7", "1234567", "2290649224"])
+    assert sorted(s["name"] for s in last_seen) == sorted(
+        ["My Location A", "My Location B", "My Location C"]
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_silent_reindex_preserves_duplicate_names(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Name-multiset comparison must treat duplicate names correctly.
+
+    If current has two "Bedroom" rooms with ids 6 and 7, and last_seen has
+    two "Bedroom" rooms with ids 60 and 70, this is a pure re-indexing and
+    must NOT fire a repair. (A name-SET comparison would wrongly collapse
+    both "Bedroom" entries and miss cases where one was deleted and another
+    added.)
+    """
+    entity_id = "vacuum.mock_vacuum"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+
+    # Build a last_seen that mirrors the fixture's name multiset with
+    # completely different IDs.
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "a", "name": "My Location A", "group": None},
+                {"id": "b", "name": "My Location B", "group": None},
+                {"id": "c", "name": "My Location C", "group": None},
+            ]
+        },
+    )
+
+    set_node_attribute(matter_node, 1, 97, 4, 0x02)
+    await trigger_subscription_callback(hass, matter_client)
+
+    issue_reg = ir.async_get(hass)
+    issue = issue_reg.async_get_issue(
+        VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
+    )
+    assert issue is None
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_reindex_clears_stale_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A re-index that restores name equivalence must clear a stale issue.
+
+    Scenario: last_seen has a DIFFERENT name set than current (real
+    mismatch) -> repair fires. Then last_seen is updated by the user to
+    match the current name set; on the next update cycle the re-index
+    detection branch runs, silently persists the new IDs, and the stale
+    repair is cleared through the existing _async_check_segments_issues
+    callback on the registry update.
+    """
+    entity_id = "vacuum.mock_vacuum"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+
+    # Seed last_seen with a DIFFERENT name -> first update must raise issue.
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {"last_seen_segments": [{"id": "7", "name": "Old location A", "group": None}]},
+    )
+    set_node_attribute(matter_node, 1, 97, 4, 0x02)
+    await trigger_subscription_callback(hass, matter_client)
+
+    issue_reg = ir.async_get(hass)
+    issue_id = f"segments_changed_{entity_entry.id}"
+    assert issue_reg.async_get_issue(VACUUM_DOMAIN, issue_id) is not None
+
+    # User "accepts" new mapping: last_seen now has current names with
+    # DIFFERENT ids. The next device update must:
+    # - detect re-indexing (name-multiset equal),
+    # - silently persist current ids,
+    # - NOT raise a new issue,
+    # - AND clear the stale issue via _async_check_segments_issues.
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "x1", "name": "My Location A", "group": None},
+                {"id": "x2", "name": "My Location B", "group": None},
+                {"id": "x3", "name": "My Location C", "group": None},
+            ]
+        },
+    )
+    set_node_attribute(matter_node, 1, 97, 4, 0x00)
+    await trigger_subscription_callback(hass, matter_client)
+
+    assert issue_reg.async_get_issue(VACUUM_DOMAIN, issue_id) is None
