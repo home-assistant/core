@@ -13,6 +13,11 @@
             - last
             - any
           translation_key: trigger_behavior
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 docked: *trigger_common
 errored: *trigger_common

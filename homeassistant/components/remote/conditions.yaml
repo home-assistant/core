@@ -1,7 +1,7 @@
 .condition_common: &condition_common
   target:
     entity:
-      domain: person
+      domain: remote
   fields:
     behavior:
       required: true
@@ -13,5 +13,5 @@
             - all
             - any
 
-is_home: *condition_common
-is_not_home: *condition_common
+is_off: *condition_common
+is_on: *condition_common

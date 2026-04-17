@@ -1,7 +1,7 @@
 .condition_common: &condition_common
   target:
     entity:
-      domain: device_tracker
+      domain: update
   fields:
     behavior:
       required: true
@@ -13,5 +13,5 @@
             - all
             - any
 
-is_home: *condition_common
-is_not_home: *condition_common
+is_available: *condition_common
+is_not_available: *condition_common
