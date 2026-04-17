@@ -5,23 +5,13 @@ from typing import Any, NewType
 from aiopnsense import OPNsenseClient
 
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_OPNSENSE_CLIENT, CONF_TRACKER_INTERFACES, DOMAIN
 
 DeviceDetails = NewType("DeviceDetails", dict[str, Any])
 DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up OPNsense entry."""
 
 
 async def async_get_scanner(

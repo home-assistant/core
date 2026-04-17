@@ -139,8 +139,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         CONF_TRACKER_INTERFACES: tracker_interfaces,
     }
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     return True
 
 
