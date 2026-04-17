@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 
 
+# pylint: disable=hass-enforce-class-module
 @dataclass(frozen=True, kw_only=True)
 class WibeeeSensorEntityDescription(SensorEntityDescription):
     """Describe a Wibeee sensor entity.
