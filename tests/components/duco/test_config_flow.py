@@ -9,7 +9,7 @@ from duco.exceptions import DucoConnectionError, DucoError
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -117,7 +117,7 @@ async def test_zeroconf_discovery_new_device(
     """Test zeroconf discovery of a new device shows confirmation form and creates entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
 
@@ -155,7 +155,7 @@ async def test_zeroconf_discovery_updates_host(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
         data=discovery,
     )
 
@@ -174,7 +174,7 @@ async def test_zeroconf_discovery_already_configured_same_ip(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
 
@@ -200,7 +200,7 @@ async def test_zeroconf_discovery_connection_error(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
 
@@ -237,7 +237,7 @@ async def test_zeroconf_discovery_rejects_invalid_names(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
         data=invalid_discovery,
     )
 
@@ -272,7 +272,7 @@ async def test_zeroconf_discovery_accepts_valid_names(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": SOURCE_ZEROCONF},
         data=valid_discovery,
     )
 
