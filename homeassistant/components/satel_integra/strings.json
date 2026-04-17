@@ -189,8 +189,17 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "connection_initialization_failed": {
+      "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
+    },
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
+    },
+    "panel_busy": {
+      "message": "[%key:component::satel_integra::config::error::panel_busy%]"
     }
   },
   "options": {
