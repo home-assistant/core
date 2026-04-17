@@ -175,6 +175,134 @@
         "name": "Grid lost alarm setting"
       }
     },
+    "number": {
+      "alternator_charge_current_limit": {
+        "name": "Charge current limit"
+      },
+      "evcharger_set_current": {
+        "name": "Charge current setpoint"
+      },
+      "generator_gen_id_cool_down_timer": {
+        "name": "Generator cooldown timer"
+      },
+      "generator_gen_id_qh_start_on_soc": {
+        "name": "Generator QH start on SoC"
+      },
+      "generator_gen_id_qh_start_on_voltage": {
+        "name": "Generator QH start on voltage"
+      },
+      "generator_gen_id_qh_stop_on_soc": {
+        "name": "Generator QH stop on SoC"
+      },
+      "generator_gen_id_qh_stop_on_voltage": {
+        "name": "Generator QH stop on voltage"
+      },
+      "generator_gen_id_service_interval": {
+        "name": "Generator service interval"
+      },
+      "generator_gen_id_shut_down_timer": {
+        "name": "Generator shutdown timer"
+      },
+      "generator_gen_id_start_on_soc": {
+        "name": "Generator start on SoC"
+      },
+      "generator_gen_id_start_on_soc_timer": {
+        "name": "Generator start on SoC timer"
+      },
+      "generator_gen_id_start_on_temp_timer": {
+        "name": "Generator start on temp timer"
+      },
+      "generator_gen_id_start_on_voltage": {
+        "name": "Generator start on voltage"
+      },
+      "generator_gen_id_start_on_voltage_timer": {
+        "name": "Generator start on voltage timer"
+      },
+      "generator_gen_id_stop_on_soc": {
+        "name": "Generator stop on SoC"
+      },
+      "generator_gen_id_stop_on_soc_timer": {
+        "name": "Generator stop on SoC timer"
+      },
+      "generator_gen_id_stop_on_temp_timer": {
+        "name": "Generator stop on temp timer"
+      },
+      "generator_gen_id_stop_on_voltage": {
+        "name": "Generator stop on voltage"
+      },
+      "generator_gen_id_stop_on_voltage_timer": {
+        "name": "Generator stop on voltage timer"
+      },
+      "generator_gen_id_warm_up_timer": {
+        "name": "Generator warm-up timer"
+      },
+      "hub4_ac_grid_setpoint": {
+        "name": "AC grid setpoint"
+      },
+      "multi_ess_ac_power_setpoint": {
+        "name": "ESS AC power setpoint"
+      },
+      "multi_ess_min_soc_limit": {
+        "name": "ESS minimum SoC limit"
+      },
+      "multi_shore_current_limit": {
+        "name": "Shore current limit"
+      },
+      "multiplus_assist_current_boost_factor": {
+        "name": "Assist current boost factor"
+      },
+      "switch_output_dimming": {
+        "name": "{output} dimming"
+      },
+      "system_ac_export_limit": {
+        "name": "AC export limit"
+      },
+      "system_ac_input_limit": {
+        "name": "AC input limit"
+      },
+      "system_ac_power_set_point": {
+        "name": "AC power setpoint"
+      },
+      "system_ess_max_charge_current": {
+        "name": "ESS max charge current"
+      },
+      "system_ess_max_charge_power": {
+        "name": "ESS max charge power limit"
+      },
+      "system_ess_max_charge_voltage": {
+        "name": "ESS max charge voltage"
+      },
+      "system_ess_max_feed_in_power": {
+        "name": "ESS max feed-in power"
+      },
+      "system_ess_max_inverter_power_limit": {
+        "name": "ESS max inverter power limit"
+      },
+      "system_ess_min_soc_limit": {
+        "name": "ESS min SoC limit"
+      },
+      "system_ess_schedule_charge_slot_duration": {
+        "name": "ESS BatteryLife schedule charge {slot} duration"
+      },
+      "system_ess_schedule_charge_slot_soc": {
+        "name": "ESS BatteryLife schedule charge {slot} SoC"
+      },
+      "temperature_offset": {
+        "name": "Offset"
+      },
+      "temperature_scale": {
+        "name": "Scale factor"
+      },
+      "transfer_switch_generator_current_limit": {
+        "name": "Generator AC current limit"
+      },
+      "vebus_ac_power_setpoint_phase": {
+        "name": "AC power setpoint {phase}"
+      },
+      "vebus_inverter_current_limit": {
+        "name": "Current limit"
+      }
+    },
     "select": {
       "acsystem_mode": {
         "state": {
@@ -473,8 +601,7 @@
         "name": "DC bus mid voltage"
       },
       "battery_mid_voltage_deviation": {
-        "name": "DC bus mid voltage deviation",
-        "unit_of_measurement": "%"
+        "name": "DC bus mid voltage deviation"
       },
       "battery_min_cell_temperature": {
         "name": "Minimum cell temperature"
@@ -514,8 +641,7 @@
         "name": "Charge"
       },
       "battery_soh": {
-        "name": "State of health",
-        "unit_of_measurement": "%"
+        "name": "State of health"
       },
       "battery_temperature": {
         "name": "Temperature"
@@ -1506,8 +1632,7 @@
         }
       },
       "tank_level": {
-        "name": "Level",
-        "unit_of_measurement": "%"
+        "name": "Level"
       },
       "tank_remaining": {
         "name": "Remaining"
@@ -1519,8 +1644,7 @@
         "name": "Sensor battery voltage"
       },
       "temperature_humidity": {
-        "name": "Humidity",
-        "unit_of_measurement": "%"
+        "name": "Humidity"
       },
       "temperature_pressure": {
         "name": "Pressure",
