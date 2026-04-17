@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -65,18 +65,21 @@ async def async_setup_entry(
             async_add_entities(new_entities)
 
         entity_registry = er.async_get(hass)
+        device_registry = dr.async_get(hass)
         for motor_id in list(known_entities):
             if motor_id not in latest_ids:
                 stale = known_entities.pop(motor_id)
-                # stale.async_remove() only drops the runtime state but
-                # leaves the entity_registry entry (and the associated
-                # device) behind. For a motor that has been removed from
-                # the Gaposa account, fully remove the registry entry so
-                # it doesn't linger as an orphan.
                 if stale.entity_id:
                     entity_registry.async_remove(stale.entity_id)
                 else:
                     hass.async_create_task(stale.async_remove())
+                # Each motor has its own device keyed on (DOMAIN, motor_id).
+                # Remove it explicitly so the device registry doesn't
+                # retain an orphaned entry until the next periodic purge.
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, motor_id)}
+                ):
+                    device_registry.async_remove_device(device.id)
 
     _async_add_remove_entities()
     config_entry.async_on_unload(

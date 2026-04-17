@@ -267,22 +267,28 @@ async def test_entity_reads_state_from_current_coordinator_data(
     assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_CLOSED
 
 
-async def test_stale_motor_removes_entity_registry_entry(
+async def test_stale_motor_cleans_up_entity_and_device(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_gaposa_instance: MagicMock,
 ) -> None:
-    """Removing a motor also drops the entity registry entry.
+    """Removing a motor drops both the entity and device registry entries.
 
-    entity.async_remove() alone would leave a stale registry entry
-    behind. After this fix the registry entry is fully cleaned up via
-    entity_registry.async_remove(entity_id).
+    The integration explicitly removes the entity via
+    entity_registry.async_remove and the device via
+    device_registry.async_remove_device so neither lingers as an
+    orphan after a motor disappears from the Gaposa account.
     """
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
-    # Sanity: both covers start with a registry entry.
+    # Sanity: both covers start with entity + device entries.
     assert entity_registry.async_get(LIVING_ROOM_ENTITY) is not None
     assert entity_registry.async_get(BEDROOM_ENTITY) is not None
+    bedroom_device = device_registry.async_get_device(
+        identifiers={("gaposa", "DEVICE123.motors.motor-2")}
+    )
+    assert bedroom_device is not None
 
     # Simulate the Bedroom motor having been removed from the user's
     # Gaposa account: drop it from the mocked pygaposa device.
@@ -294,9 +300,15 @@ async def test_stale_motor_removes_entity_registry_entry(
     await init_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
-    # Living Room still present; Bedroom registry entry is fully gone.
+    # Living Room still present; Bedroom entity + device are both gone.
     assert entity_registry.async_get(LIVING_ROOM_ENTITY) is not None
     assert entity_registry.async_get(BEDROOM_ENTITY) is None
+    assert (
+        device_registry.async_get_device(
+            identifiers={("gaposa", "DEVICE123.motors.motor-2")}
+        )
+        is None
+    )
 
 
 async def test_motion_window_collapses_after_delay(
