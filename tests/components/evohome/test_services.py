@@ -9,6 +9,8 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.evohome.climate import EvoZone
 from homeassistant.components.evohome.const import (
     ATTR_DURATION,
     ATTR_PERIOD,
@@ -229,6 +231,47 @@ async def test_set_zone_override(
         mock_fcn.assert_awaited_once_with(
             19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
         )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_advance(
+    hass: HomeAssistant,
+    zone_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_zone_override service with duration=0.
+
+    The override is temporary until the next schedule change.
+    """
+
+    freezer.move_to("2024-05-10T12:15:00+00:00")
+    expected_until = datetime(2024, 5, 10, 21, 10, tzinfo=UTC)
+
+    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
+        (CLIMATE_DOMAIN, DOMAIN), {}
+    )
+
+    zone_entity: EvoZone = entities[zone_id]  # type: ignore[assignment]
+    zone_entity._schedule = None
+    zone_entity._setpoints = {}
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                ATTR_SETPOINT: 19.5,
+                ATTR_DURATION: {"minutes": 0},
+            },
+            target={ATTR_ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(19.5, until=expected_until)
+
+    assert zone_entity.setpoints["next_sp_from"] == expected_until
 
 
 @pytest.mark.parametrize("install", ["default"])
