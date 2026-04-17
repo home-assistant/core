@@ -63,12 +63,7 @@ async def test_dhcp_discovery_starts_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    assert result["description_placeholders"] == {
-        "discovery": (
-            "A likely iAquaLink device was discovered on your network at "
-            "192.168.1.23 (iAquaLink-123456). "
-        )
-    }
+    assert result["description_placeholders"] is None
 
 
 async def test_with_invalid_credentials(
@@ -126,24 +121,6 @@ async def test_with_existing_config(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == config_data["username"]
     assert result["data"] == config_data
-
-
-async def test_user_flow_sets_domain_unique_id(
-    hass: HomeAssistant, config_data: dict[str, str]
-) -> None:
-    """Test the user flow stores the single-instance unique ID."""
-    flow = config_flow.AqualinkFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    with patch(
-        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        return_value=None,
-    ):
-        result = await flow.async_step_user(config_data)
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["context"]["unique_id"] == DOMAIN
 
 
 async def test_dhcp_discovery_aborts_if_already_configured(

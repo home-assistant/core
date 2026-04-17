@@ -29,7 +29,7 @@
           "password": "The password associated with your account.",
           "username": "The email address used to sign in to your account using the iAquaLink app or website."
         },
-        "description": "{discovery}Please enter the username and password for your iAqualink account.",
+        "description": "Please enter the username and password for your iAqualink account.",
         "title": "Connect to iAqualink"
       }
     }
