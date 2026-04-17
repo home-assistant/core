@@ -758,6 +758,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
 /tests/components/honeywell/ @rdfurman @mkmer
+/homeassistant/components/honeywell_string_lights/ @balloob
+/tests/components/honeywell_string_lights/ @balloob
 /homeassistant/components/hr_energy_qube/ @MattieGit
 /tests/components/hr_energy_qube/ @MattieGit
 /homeassistant/components/html5/ @alexyao2015 @tr4nt0r
