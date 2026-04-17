@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -115,17 +115,41 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         if volume is None:
             return None
 
-        return volume / 10
+        return cast(float, volume) / 10
 
     @property
     def media_title(self) -> str | None:
         """Return the title of current playing media."""
-        return self.status["playback"].get("media_meta", {}).get("title")
+        if title := self.status["playback"]["media_meta"].get("title"):
+            return cast(str, title)
+
+        return None
+
+    @property
+    def media_artist(self) -> str | None:
+        """Return the artist of current playing media."""
+        if artist := self.status["playback"]["media_meta"].get("artist"):
+            return cast(str, artist)
+
+        return None
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Return the album name of current playing media."""
+        if album := self.status["playback"]["media_meta"].get("album"):
+            return cast(str, album)
+
+        return None
 
     @property
     def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
-        return self.status["playback"].get("media_meta", {}).get("thumb")
+        if (
+            thumb := self.status["playback"]["media_meta"].get("thumb")
+        ) and thumb.startswith("http"):
+            return cast(str, thumb)
+
+        return None
 
     async def async_media_play(self) -> None:
         """Send play command."""
