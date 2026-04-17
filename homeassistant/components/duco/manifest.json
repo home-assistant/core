@@ -9,5 +9,10 @@
   "loggers": ["duco"],
   "quality_scale": "bronze",
   "requirements": ["python-duco-client==0.3.2"],
-  "zeroconf": [{ "name": "duco*", "type": "_http._tcp.local." }]
+  "zeroconf": [
+    {
+      "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+      "type": "_http._tcp.local."
+    }
+  ]
 }
