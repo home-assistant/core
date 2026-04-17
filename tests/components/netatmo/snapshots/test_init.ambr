@@ -779,7 +779,7 @@
     'area_id': None,
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
-    'configuration_url': 'https://my.netatmo.com/app/energy',
+    'configuration_url': 'https://home.netatmo.com/control',
     'connections': set({
     }),
     'disabled_by': None,
