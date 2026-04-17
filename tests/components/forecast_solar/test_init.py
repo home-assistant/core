@@ -60,7 +60,7 @@ async def test_config_entry_not_ready(
 
 @patch(
     "homeassistant.components.forecast_solar.coordinator.ForecastSolar.estimate",
-    side_effect=ForecastSolarConfigError,
+    side_effect=ForecastSolarConfigError("Invalid configuration", {}),
 )
 async def test_config_entry_setup_error_on_config_error(
     mock_request: MagicMock,
