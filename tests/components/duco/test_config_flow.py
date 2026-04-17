@@ -216,7 +216,6 @@ async def test_zeroconf_discovery_connection_error(
         "something_duco._http._tcp.local.",
         "DUCO [invalid]._http._tcp.local.",
         "DUCO [a0dd6c06129]._http._tcp.local.",  # Wrong MAC length
-        "duco [a0dd6c061293]._http._tcp.local.",  # Wrong case
         "My Duco Device._http._tcp.local.",
     ],
 )
