@@ -188,12 +188,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         # If this is the one and only segment, calculate brightness based
         # on the main and segment brightness
+        segment_brightness = int(state.segments[self._segment].brightness)
         if not self.coordinator.has_main_light:
-            return int(
-                (state.segments[self._segment].brightness * state.brightness) / 255
-            )
+            return int((segment_brightness * state.brightness) / 255)
 
-        return state.segments[self._segment].brightness
+        return segment_brightness
 
     @property
     def effect_list(self) -> list[str]:

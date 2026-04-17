@@ -2806,7 +2806,7 @@ wiffi==1.1.2
 wiim==0.1.0
 
 # homeassistant.components.wled
-wled==0.21.0
+wled==0.22.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.48
