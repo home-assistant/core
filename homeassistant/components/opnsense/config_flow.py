@@ -15,9 +15,9 @@ from aiopnsense import (
 from requests.exceptions import ConnectionError as requestsConnectionError
 import voluptuous as vol
 
-from homeassistant.components.version import async_get_clientsession
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_API_SECRET, DOMAIN
 
