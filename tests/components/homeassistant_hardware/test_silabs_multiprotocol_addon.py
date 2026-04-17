@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions
 import pytest
+from universal_silabs_flasher.flasher import Flasher
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
@@ -97,6 +98,19 @@ class FakeOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandler):
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return "Test"
+
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+        return "https://example.com/firmware"
+
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier."""
+        return "test_zigbee_ncp"
+
+    @property
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
+        return Flasher
 
 
 @pytest.fixture(autouse=True)

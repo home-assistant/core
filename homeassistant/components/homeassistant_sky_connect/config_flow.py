@@ -254,6 +254,19 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
         """Return the name of the hardware."""
         return self._hw_variant.full_name
 
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+        return NABU_CASA_FIRMWARE_RELEASES_URL
+
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier."""
+        return "skyconnect_zigbee_ncp"
+
+    @property
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
+        return Zbt1Flasher  # type: ignore[no-any-return]
+
     async def async_step_flashing_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

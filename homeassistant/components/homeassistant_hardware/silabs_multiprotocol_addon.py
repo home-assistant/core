@@ -8,6 +8,7 @@ import dataclasses
 import logging
 from typing import Any, Protocol
 
+from ha_silabs_firmware_client import FirmwareUpdateClient
 import voluptuous as vol
 import yarl
 
@@ -27,6 +28,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -39,15 +41,13 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 
-from .const import LOGGER, SILABS_FLASHER_ADDON_SLUG, SILABS_MULTIPROTOCOL_ADDON_SLUG
+from .const import LOGGER, SILABS_MULTIPROTOCOL_ADDON_SLUG
+from .util import ApplicationType, WaitingAddonManager, async_flash_silabs_firmware
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_MULTIPROTOCOL_ADDON_MANAGER = "silabs_multiprotocol_addon_manager"
-DATA_FLASHER_ADDON_MANAGER = "silabs_flasher"
 
-ADDON_STATE_POLL_INTERVAL = 3
-ADDON_INFO_POLL_TIMEOUT = 15 * 60
 
 CONF_ADDON_AUTOFLASH_FW = "autoflash_firmware"
 CONF_ADDON_DEVICE = "device"
@@ -71,53 +71,6 @@ async def get_multiprotocol_addon_manager(
     manager = MultiprotocolAddonManager(hass)
     await manager.async_setup()
     return manager
-
-
-class WaitingAddonManager(AddonManager):
-    """Addon manager which supports waiting operations for managing an addon."""
-
-    async def async_wait_until_addon_state(self, *states: AddonState) -> None:
-        """Poll an addon's info until it is in a specific state."""
-        async with asyncio.timeout(ADDON_INFO_POLL_TIMEOUT):
-            while True:
-                try:
-                    info = await self.async_get_addon_info()
-                except AddonError:
-                    info = None
-
-                _LOGGER.debug("Waiting for addon to be in state %s: %s", states, info)
-
-                if info is not None and info.state in states:
-                    break
-
-                await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
-
-    async def async_start_addon_waiting(self) -> None:
-        """Start an add-on."""
-        await self.async_schedule_start_addon()
-        await self.async_wait_until_addon_state(AddonState.RUNNING)
-
-    async def async_install_addon_waiting(self) -> None:
-        """Install an add-on."""
-        await self.async_schedule_install_addon()
-        await self.async_wait_until_addon_state(
-            AddonState.RUNNING,
-            AddonState.NOT_RUNNING,
-        )
-
-    async def async_uninstall_addon_waiting(self) -> None:
-        """Uninstall an add-on."""
-        try:
-            info = await self.async_get_addon_info()
-        except AddonError:
-            info = None
-
-        # Do not try to uninstall an addon if it is already uninstalled
-        if info is not None and info.state == AddonState.NOT_INSTALLED:
-            return
-
-        await self.async_uninstall_addon()
-        await self.async_wait_until_addon_state(AddonState.NOT_INSTALLED)
 
 
 class MultiprotocolAddonManager(WaitingAddonManager):
@@ -267,18 +220,6 @@ class MultipanProtocol(Protocol):
         """
 
 
-@singleton(DATA_FLASHER_ADDON_MANAGER)
-@callback
-def get_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
-    """Get the flasher add-on manager."""
-    return WaitingAddonManager(
-        hass,
-        LOGGER,
-        "Silicon Labs Flasher",
-        SILABS_FLASHER_ADDON_SLUG,
-    )
-
-
 @dataclasses.dataclass
 class SerialPortSettings:
     """Serial port settings."""
@@ -340,6 +281,19 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     @abstractmethod
     def _zha_name(self) -> str:
         """Return the ZHA name."""
+
+    @abstractmethod
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+
+    @abstractmethod
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier (e.g. 'yellow_zigbee_ncp')."""
+
+    @property
+    @abstractmethod
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
 
     @property
     def flow_manager(self) -> OptionsFlowManager:
@@ -688,61 +642,7 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     async def async_step_firmware_revert(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Install the flasher addon, if necessary."""
-
-        flasher_manager = get_flasher_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(flasher_manager)
-
-        if addon_info.state == AddonState.NOT_INSTALLED:
-            return await self.async_step_install_flasher_addon()
-
-        if addon_info.state == AddonState.NOT_RUNNING:
-            return await self.async_step_configure_flasher_addon()
-
-        # If the addon is already installed and running, fail
-        return self.async_abort(
-            reason="addon_already_running",
-            description_placeholders={"addon_name": flasher_manager.addon_name},
-        )
-
-    async def async_step_install_flasher_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show progress dialog for installing flasher addon."""
-        flasher_manager = get_flasher_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(flasher_manager)
-
-        _LOGGER.debug("Flasher addon state: %s", addon_info)
-
-        if not self.install_task:
-            self.install_task = self.hass.async_create_task(
-                flasher_manager.async_install_addon_waiting(),
-                "SiLabs Flasher addon install",
-                eager_start=False,
-            )
-
-        if not self.install_task.done():
-            return self.async_show_progress(
-                step_id="install_flasher_addon",
-                progress_action="install_addon",
-                description_placeholders={"addon_name": flasher_manager.addon_name},
-                progress_task=self.install_task,
-            )
-
-        try:
-            await self.install_task
-        except AddonError as err:
-            _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="install_failed")
-        finally:
-            self.install_task = None
-
-        return self.async_show_progress_done(next_step_id="configure_flasher_addon")
-
-    async def async_step_configure_flasher_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Perform initial backup and reconfigure ZHA."""
+        """Initiate ZHA backup and start multiprotocol addon uninstall."""
         # pylint: disable=hass-component-root-import
         from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
         from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
@@ -784,17 +684,6 @@ class OptionsFlowHandler(OptionsFlow, ABC):
                 _LOGGER.exception("Unexpected exception during ZHA migration")
                 raise AbortFlow("zha_migration_failed") from err
 
-        flasher_manager = get_flasher_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(flasher_manager)
-        new_addon_config = {
-            **addon_info.options,
-            "device": new_settings.device,
-            "flow_control": new_settings.flow_control,
-        }
-
-        _LOGGER.debug("Reconfiguring flasher addon with %s", new_addon_config)
-        await self._async_set_addon_config(new_addon_config, flasher_manager)
-
         return await self.async_step_uninstall_multiprotocol_addon()
 
     async def async_step_uninstall_multiprotocol_addon(
@@ -823,62 +712,77 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         finally:
             self.stop_task = None
 
-        return self.async_show_progress_done(next_step_id="start_flasher_addon")
+        return self.async_show_progress_done(next_step_id="install_zigbee_firmware")
 
-    async def async_step_start_flasher_addon(
+    async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Start Silicon Labs Flasher add-on."""
-        flasher_manager = get_flasher_addon_manager(self.hass)
+        """Flash Zigbee firmware directly onto the radio."""
+        if not self.install_task:
 
-        if not self.start_task:
+            async def _flash_firmware() -> None:
+                serial_port_settings = await self._async_serial_port_settings()
+                device = serial_port_settings.device
 
-            async def start_and_wait_until_done() -> None:
-                await flasher_manager.async_start_addon_waiting()
-                # Now that the addon is running, wait for it to finish
-                await flasher_manager.async_wait_until_addon_state(
-                    AddonState.NOT_RUNNING
+                session = async_get_clientsession(self.hass)
+                client = FirmwareUpdateClient(self._firmware_update_url(), session)
+
+                manifest = await client.async_update_data()
+                fw_manifest = next(
+                    fw
+                    for fw in manifest.firmwares
+                    if fw.filename.startswith(self._zigbee_firmware_type())
                 )
 
-            self.start_task = self.hass.async_create_task(
-                start_and_wait_until_done(), eager_start=False
+                fw_data = await client.async_fetch_firmware(fw_manifest)
+
+                await async_flash_silabs_firmware(
+                    hass=self.hass,
+                    device=device,
+                    fw_data=fw_data,
+                    flasher_cls=self._flasher_cls,
+                    expected_installed_firmware_type=ApplicationType.EZSP,
+                )
+
+            self.install_task = self.hass.async_create_task(
+                _flash_firmware(),
+                "Flash Zigbee firmware",
+                eager_start=False,
             )
 
-        if not self.start_task.done():
+        if not self.install_task.done():
             return self.async_show_progress(
-                step_id="start_flasher_addon",
-                progress_action="start_flasher_addon",
-                description_placeholders={"addon_name": flasher_manager.addon_name},
-                progress_task=self.start_task,
+                step_id="install_zigbee_firmware",
+                progress_action="install_zigbee_firmware",
+                description_placeholders={
+                    "hardware_name": self._hardware_name(),
+                },
+                progress_task=self.install_task,
             )
 
         try:
-            await self.start_task
-        except (AddonError, AbortFlow) as err:
-            _LOGGER.error(err)
-            return self.async_show_progress_done(next_step_id="flasher_failed")
+            await self.install_task
+        except Exception:
+            _LOGGER.exception("Failed to flash Zigbee firmware")
+            return self.async_show_progress_done(next_step_id="firmware_flash_failed")
         finally:
-            self.start_task = None
+            self.install_task = None
 
         return self.async_show_progress_done(next_step_id="flashing_complete")
 
-    async def async_step_flasher_failed(
+    async def async_step_firmware_flash_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Flasher add-on start failed."""
-        flasher_manager = get_flasher_addon_manager(self.hass)
+        """Firmware flashing failed."""
         return self.async_abort(
-            reason="addon_start_failed",
-            description_placeholders={"addon_name": flasher_manager.addon_name},
+            reason="fw_install_failed",
+            description_placeholders={"hardware_name": self._hardware_name()},
         )
 
     async def async_step_flashing_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Finish flashing and update the config entry."""
-        flasher_manager = get_flasher_addon_manager(self.hass)
-        await flasher_manager.async_uninstall_addon_waiting()
-
         # Finish ZHA migration if needed
         if self._zha_migration_mgr:
             try:
