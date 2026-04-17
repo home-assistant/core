@@ -166,9 +166,6 @@
       "gps_connected": {
         "name": "[%key:common::state::connected%]"
       },
-      "gps_fix": {
-        "name": "Fix"
-      },
       "inverter_alarm_high_temperature": {
         "name": "[%key:component::victron_gx::common::high_temperature_alarm%]"
       },
@@ -207,16 +204,6 @@
       },
       "vebus_inverter_connected": {
         "name": "[%key:common::state::connected%]"
-      }
-    },
-    "button": {
-      "platform_device_reboot": {
-        "name": "Device reboot"
-      }
-    },
-    "device_tracker": {
-      "gps_location": {
-        "name": "[%key:common::config_flow::data::location%]"
       }
     },
     "number": {
@@ -296,7 +283,7 @@
         "name": "Assist current boost factor"
       },
       "switch_output_dimming": {
-        "name": "{output} dimming"
+        "name": "Dimming"
       },
       "system_ac_export_limit": {
         "name": "AC export limit"
@@ -345,134 +332,6 @@
       },
       "vebus_inverter_current_limit": {
         "name": "[%key:component::victron_gx::common::current_limit%]"
-      }
-    },
-    "number": {
-      "alternator_charge_current_limit": {
-        "name": "Charge current limit"
-      },
-      "evcharger_set_current": {
-        "name": "Charge current setpoint"
-      },
-      "generator_gen_id_cool_down_timer": {
-        "name": "Generator cooldown timer"
-      },
-      "generator_gen_id_qh_start_on_soc": {
-        "name": "Generator QH start on SoC"
-      },
-      "generator_gen_id_qh_start_on_voltage": {
-        "name": "Generator QH start on voltage"
-      },
-      "generator_gen_id_qh_stop_on_soc": {
-        "name": "Generator QH stop on SoC"
-      },
-      "generator_gen_id_qh_stop_on_voltage": {
-        "name": "Generator QH stop on voltage"
-      },
-      "generator_gen_id_service_interval": {
-        "name": "Generator service interval"
-      },
-      "generator_gen_id_shut_down_timer": {
-        "name": "Generator shutdown timer"
-      },
-      "generator_gen_id_start_on_soc": {
-        "name": "Generator start on SoC"
-      },
-      "generator_gen_id_start_on_soc_timer": {
-        "name": "Generator start on SoC timer"
-      },
-      "generator_gen_id_start_on_temp_timer": {
-        "name": "Generator start on temp timer"
-      },
-      "generator_gen_id_start_on_voltage": {
-        "name": "Generator start on voltage"
-      },
-      "generator_gen_id_start_on_voltage_timer": {
-        "name": "Generator start on voltage timer"
-      },
-      "generator_gen_id_stop_on_soc": {
-        "name": "Generator stop on SoC"
-      },
-      "generator_gen_id_stop_on_soc_timer": {
-        "name": "Generator stop on SoC timer"
-      },
-      "generator_gen_id_stop_on_temp_timer": {
-        "name": "Generator stop on temp timer"
-      },
-      "generator_gen_id_stop_on_voltage": {
-        "name": "Generator stop on voltage"
-      },
-      "generator_gen_id_stop_on_voltage_timer": {
-        "name": "Generator stop on voltage timer"
-      },
-      "generator_gen_id_warm_up_timer": {
-        "name": "Generator warm-up timer"
-      },
-      "hub4_ac_grid_setpoint": {
-        "name": "AC grid setpoint"
-      },
-      "multi_ess_ac_power_setpoint": {
-        "name": "ESS AC power setpoint"
-      },
-      "multi_ess_min_soc_limit": {
-        "name": "ESS minimum SoC limit"
-      },
-      "multi_shore_current_limit": {
-        "name": "Shore current limit"
-      },
-      "multiplus_assist_current_boost_factor": {
-        "name": "Assist current boost factor"
-      },
-      "switch_output_dimming": {
-        "name": "{output} dimming"
-      },
-      "system_ac_export_limit": {
-        "name": "AC export limit"
-      },
-      "system_ac_input_limit": {
-        "name": "AC input limit"
-      },
-      "system_ac_power_set_point": {
-        "name": "AC power setpoint"
-      },
-      "system_ess_max_charge_current": {
-        "name": "ESS max charge current"
-      },
-      "system_ess_max_charge_power": {
-        "name": "ESS max charge power limit"
-      },
-      "system_ess_max_charge_voltage": {
-        "name": "ESS max charge voltage"
-      },
-      "system_ess_max_feed_in_power": {
-        "name": "ESS max feed-in power"
-      },
-      "system_ess_max_inverter_power_limit": {
-        "name": "ESS max inverter power limit"
-      },
-      "system_ess_min_soc_limit": {
-        "name": "ESS min SoC limit"
-      },
-      "system_ess_schedule_charge_slot_duration": {
-        "name": "ESS BatteryLife schedule charge {slot} duration"
-      },
-      "system_ess_schedule_charge_slot_soc": {
-        "name": "ESS BatteryLife schedule charge {slot} SoC"
-      },
-      "temperature_offset": {
-        "name": "Offset"
-      },
-      "temperature_scale": {
-        "name": "Scale factor"
-      },
-      "transfer_switch_generator_current_limit": {
-        "name": "Generator AC current limit"
-      },
-      "vebus_ac_power_setpoint_phase": {
-        "name": "AC power setpoint {phase}"
-      },
-      "vebus_inverter_current_limit": {
-        "name": "Current limit"
       }
     },
     "select": {
@@ -1103,20 +962,9 @@
       "generator_total_runtime": {
         "name": "Total runtime"
       },
-      "gps_altitude": {
-        "name": "Altitude",
-        "unit_of_measurement": "m"
-      },
-      "gps_course": {
-        "name": "Course",
-        "unit_of_measurement": "°"
-      },
       "gps_nrofsatellites": {
         "name": "Number of satellites",
         "unit_of_measurement": "satellites"
-      },
-      "gps_speed": {
-        "name": "Speed"
       },
       "grid_current": {
         "name": "[%key:component::victron_gx::common::current%]"
@@ -1330,7 +1178,8 @@
         "name": "MPPT {mpptnumber} PV voltage"
       },
       "multi_phases": {
-        "name": "Phases"
+        "name": "Phases",
+        "unit_of_measurement": "phases"
       },
       "multi_pv_power_total": {
         "name": "[%key:component::victron_gx::common::pv_power_total%]"
@@ -1559,12 +1408,6 @@
       "solarcharger_yield_yesterday": {
         "name": "[%key:component::victron_gx::common::yield_yesterday%]"
       },
-      "switch_output_custom_name": {
-        "name": "{output} custom name"
-      },
-      "switchable_output_output_custom_name": {
-        "name": "Switchable output {output} custom name"
-      },
       "system_ac_active_input_source": {
         "name": "AC active input source",
         "state": {
@@ -1582,10 +1425,12 @@
         "name": "Consumption current {phase}"
       },
       "system_consumption_on_output_phases": {
-        "name": "Consumption on output phases"
+        "name": "Consumption on output phases",
+        "unit_of_measurement": "phases"
       },
       "system_consumption_phases": {
-        "name": "Consumption phases"
+        "name": "Consumption phases",
+        "unit_of_measurement": "phases"
       },
       "system_consumption_power_phase": {
         "name": "Consumption power {phase}"
@@ -1727,7 +1572,8 @@
         "name": "Grid current {phase}"
       },
       "system_grid_phases": {
-        "name": "Grid phases"
+        "name": "Grid phases",
+        "unit_of_measurement": "phases"
       },
       "system_grid_power_phase": {
         "name": "Grid power {phase}"
@@ -1739,7 +1585,8 @@
         "name": "PV on output current {phase}"
       },
       "system_pv_on_output_phases": {
-        "name": "PV on output phases"
+        "name": "PV on output phases",
+        "unit_of_measurement": "phases"
       },
       "system_pv_on_output_power_phase": {
         "name": "PV on output power {phase}"
@@ -1810,8 +1657,7 @@
         "name": "Humidity"
       },
       "temperature_pressure": {
-        "name": "Pressure",
-        "unit_of_measurement": "hPa"
+        "name": "Pressure"
       },
       "temperature_status": {
         "name": "Sensor status",
@@ -2057,6 +1903,9 @@
       "digitalinput_settings_invert_translation": {
         "name": "Invert digital input"
       },
+      "evcharger_auto_start": {
+        "name": "Auto start"
+      },
       "evcharger_charge": {
         "name": "EV charging"
       },
@@ -2091,10 +1940,10 @@
         "name": "Relay state"
       },
       "switch_output_state": {
-        "name": "Switch {output} state"
+        "name": "[%key:component::victron_gx::common::state%]"
       },
       "switchable_output_output_state": {
-        "name": "Switchable output {output} state"
+        "name": "[%key:component::victron_gx::common::state%]"
       },
       "system_ess_battery_use": {
         "name": "ESS only critical loads from battery"
@@ -2116,11 +1965,6 @@
       },
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Grid lost alarm setting"
-      }
-    },
-    "time": {
-      "system_ess_schedule_charge_slot_start": {
-        "name": "ESS BatteryLife schedule charge {slot} start"
       }
     }
   }
