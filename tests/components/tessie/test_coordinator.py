@@ -18,7 +18,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .common import (
     ENERGY_HISTORY,
@@ -229,7 +228,7 @@ async def test_coordinator_energy_history_cold_start_invalid_data(
     # All energy history fields should use the coordinator's numeric fallback output
     for key in ENERGY_HISTORY_FIELDS:
         assert coordinator.data[key] == 0
-    assert coordinator.data["_period_start"] == dt_util.utcnow()
+    assert coordinator.data["_period_start"] is None
 
     # Sensor should reflect the numeric fallback value, not become unavailable
     assert hass.states.get("sensor.energy_site_grid_imported").state == "0.0"

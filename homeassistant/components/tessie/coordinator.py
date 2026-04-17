@@ -232,7 +232,7 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self.data:
                 return self.data.copy()
             fallback: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
-            fallback["_period_start"] = dt_util.utcnow()
+            fallback["_period_start"] = None
             return fallback
 
         time_series = data["time_series"]
