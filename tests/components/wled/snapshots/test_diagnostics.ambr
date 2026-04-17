@@ -399,7 +399,7 @@
               0,
             ]),
           ]),
-          'frz': False,
+          'frz': True,
           'fx': 3,
           'grp': 1,
           'id': 1,
