@@ -44,7 +44,8 @@ async def async_get_config_entry_diagnostics(
             "board_info": board,
             "lan_info": asdict(lan_info),
             "nodes": {
-                str(node_id): asdict(node) for node_id, node in coordinator.data.items()
+                str(node_id): asdict(node)
+                for node_id, node in coordinator.data.nodes.items()
             },
             "duco_diagnostics": [asdict(d) for d in duco_diags],
             "write_requests_remaining": write_remaining,

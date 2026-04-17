@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -673,7 +673,7 @@ def async_set_service_schema(
 
 def _get_permissible_entity_candidates(
     call: ServiceCall,
-    entities: dict[str, Entity],
+    entities: Mapping[str, Entity],
     entity_perms: Callable[[str, str], bool] | None,
     target_all_entities: bool,
     all_referenced: set[str] | None,
@@ -718,21 +718,15 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
-async def entity_service_call(
+async def _resolve_entity_service_call_entities(
     hass: HomeAssistant,
-    registered_entities: dict[str, Entity] | Callable[[], dict[str, Entity]],
-    func: str | HassJob,
+    registered_entities: Mapping[str, Entity] | Callable[[], Mapping[str, Entity]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-    *,
     entity_device_classes: Iterable[str | None] | None = None,
-) -> EntityServiceResponse | None:
-    """Handle an entity service call.
-
-    Calls all platforms simultaneously.
-    """
+) -> list[Entity] | None:
+    """Resolve and filter entities for an entity service call."""
     entity_perms: Callable[[str, str], bool] | None = None
-    return_response = call.return_response
 
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
@@ -753,13 +747,6 @@ async def entity_service_call(
             hass, target_selection, True
         )
         all_referenced = referenced.referenced | referenced.indirectly_referenced
-
-    # If the service function is a string, we'll pass it the service call data
-    if isinstance(func, str):
-        data: dict | ServiceCall = remove_entity_service_fields(call)
-    # If the service function is not a string, we pass the service call
-    else:
-        data = call
 
     if callable(registered_entities):
         _registered_entities = registered_entities()
@@ -815,73 +802,96 @@ async def entity_service_call(
         entities.append(entity)
 
     if not entities:
-        if return_response:
+        if call.return_response:
             raise HomeAssistantError(
                 "Service call requested response data but did not match any entities"
             )
         return None
 
-    if len(entities) == 1:
-        # Single entity case avoids creating task
-        entity = entities[0]
-        single_response = await entity.async_request_call(
-            _handle_entity_call(hass, entity, func, data, call.context)
-        )
-        if entity.should_poll:
-            # Context expires if the turn on commands took a long time.
-            # Set context again so it's there when we update
-            entity.async_set_context(call.context)
-            await entity.async_update_ha_state(True)
-        return {entity.entity_id: single_response} if return_response else None
+    return entities
 
-    # Use asyncio.gather here to ensure the returned results
-    # are in the same order as the entities list
+
+async def _async_handle_entity_calls(
+    entity_calls: list[tuple[Entity, Coroutine[Any, Any, ServiceResponse]]],
+    *,
+    context: Context,
+) -> EntityServiceResponse:
+    """Handle calls for entities."""
+
+    async def _with_context(
+        entity: Entity, coro: Coroutine[Any, Any, ServiceResponse]
+    ) -> ServiceResponse:
+        entity.async_set_context(context)
+        return await coro
+
+    if len(entity_calls) == 1:
+        # Single entity case avoids creating task
+        entity, coro = entity_calls[0]
+        single_result = await entity.async_request_call(_with_context(entity, coro))
+        if entity.should_poll:
+            # Context can expire, so set it again before we update
+            entity.async_set_context(context)
+            await entity.async_update_ha_state(True)
+        return {entity.entity_id: single_result}
+
+    entities = [entity for entity, _ in entity_calls]
     results: list[ServiceResponse | BaseException] = await asyncio.gather(
         *[
-            entity.async_request_call(
-                _handle_entity_call(hass, entity, func, data, call.context)
-            )
-            for entity in entities
+            entity.async_request_call(_with_context(entity, coro))
+            for entity, coro in entity_calls
         ],
         return_exceptions=True,
     )
 
     response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results, strict=False):
+    for entity, result in zip(entities, results, strict=True):
         if isinstance(result, BaseException):
             raise result from None
         response_data[entity.entity_id] = result
 
     tasks: list[asyncio.Task[None]] = []
-
     for entity in entities:
         if not entity.should_poll:
             continue
-
-        # Context expires if the turn on commands took a long time.
-        # Set context again so it's there when we update
-        entity.async_set_context(call.context)
+        # Context can expire, so set it again before we update
+        entity.async_set_context(context)
         tasks.append(create_eager_task(entity.async_update_ha_state(True)))
 
     if tasks:
         done, pending = await asyncio.wait(tasks)
         assert not pending
         for future in done:
-            future.result()  # pop exception if have
+            future.result()
 
-    return response_data if return_response and response_data else None
+    return response_data
 
 
-async def _handle_entity_call(
+async def async_handle_entity_calls(
+    func: str,
+    entity_data: Sequence[tuple[Entity, dict[str, Any]]],
+    *,
+    context: Context,
+) -> EntityServiceResponse:
+    """Handle calls for multiple entities."""
+    return await _async_handle_entity_calls(
+        [
+            (
+                entity,
+                getattr(entity, func)(**data),
+            )
+            for entity, data in entity_data
+        ],
+        context=context,
+    )
+
+
+async def _handle_single_entity_call(
     hass: HomeAssistant,
     entity: Entity,
     func: str | HassJob,
     data: dict | ServiceCall,
-    context: Context,
 ) -> ServiceResponse:
     """Handle calling service method."""
-    entity.async_set_context(context)
-
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
         job = HassJob(
@@ -910,6 +920,80 @@ async def _handle_entity_call(
         result = await result
 
     return result
+
+
+async def entity_service_call(
+    hass: HomeAssistant,
+    registered_entities: Mapping[str, Entity] | Callable[[], Mapping[str, Entity]],
+    func: str | HassJob,
+    call: ServiceCall,
+    required_features: Iterable[int] | None = None,
+    *,
+    entity_device_classes: Iterable[str | None] | None = None,
+) -> EntityServiceResponse | None:
+    """Handle an entity service call.
+
+    Calls all platforms simultaneously.
+    """
+    entities = await _resolve_entity_service_call_entities(
+        hass, registered_entities, call, required_features, entity_device_classes
+    )
+    if entities is None:
+        return None
+
+    # If the service function is a string, we'll pass it the service call data
+    if isinstance(func, str):
+        data: dict | ServiceCall = remove_entity_service_fields(call)
+    # If the service function is not a string, we pass the service call
+    else:
+        data = call
+
+    response_data = await _async_handle_entity_calls(
+        [
+            (entity, _handle_single_entity_call(hass, entity, func, data))
+            for entity in entities
+        ],
+        context=call.context,
+    )
+
+    return response_data if call.return_response else None
+
+
+async def batched_entity_service_call(
+    hass: HomeAssistant,
+    registered_entities: Mapping[str, Entity] | Callable[[], Mapping[str, Entity]],
+    func: Callable[
+        [list[Entity], ServiceCall],
+        Coroutine[Any, Any, EntityServiceResponse | None],
+    ],
+    call: ServiceCall,
+    required_features: Iterable[int] | None = None,
+) -> EntityServiceResponse | None:
+    """Handle a batched entity service call.
+
+    Calls the service function once with all matching entities as a list,
+    instead of once per entity.
+    """
+    entities = await _resolve_entity_service_call_entities(
+        hass, registered_entities, call, required_features
+    )
+    if entities is None:
+        return None
+
+    return_response = call.return_response
+
+    # Create a new ServiceCall without entity service fields.
+    call = ServiceCall(
+        hass,
+        call.domain,
+        call.service,
+        remove_entity_service_fields(call),
+        context=call.context,
+        return_response=return_response,
+    )
+    result = await func(entities, call)
+
+    return result if return_response else None
 
 
 async def _async_admin_handler(
@@ -1115,7 +1199,7 @@ def async_register_entity_service(
     *,
     description_placeholders: Mapping[str, str] | None = None,
     entity_device_classes: Iterable[str | None] | None = None,
-    entities: dict[str, Entity],
+    entities: Mapping[str, Entity],
     func: str | Callable[..., Any],
     job_type: HassJobType | None,
     required_features: Iterable[int] | None = None,
@@ -1152,6 +1236,65 @@ def async_register_entity_service(
 
 
 @callback
+def async_register_batched_entity_service[_EntityT: Entity](
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    *,
+    description_placeholders: Mapping[str, str] | None = None,
+    entities: dict[str, _EntityT],
+    func: Callable[
+        [list[_EntityT], ServiceCall],
+        Coroutine[Any, Any, EntityServiceResponse | None],
+    ],
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering a batched entity service.
+
+    This is called by EntityComponent.async_register_batched_entity_service
+    and should not be called directly by integrations.
+
+    A batched entity service calls the service function once with all
+    matching entities as a list, instead of once per entity.
+    """
+    schema = _validate_entity_service_schema(schema, f"{domain}.{name}")
+
+    hass.services.async_register(
+        domain,
+        name,
+        partial(
+            batched_entity_service_call,
+            hass,
+            entities,
+            func,  # type: ignore[arg-type]
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=HassJobType.Coroutinefunction,
+        description_placeholders=description_placeholders,
+    )
+
+
+def _get_platform_entities(
+    hass: HomeAssistant,
+    entity_domain: str,
+    service_domain: str,
+) -> dict[str, Entity]:
+    """Get platform entities for a service domain."""
+    from .entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES  # noqa: PLC0415
+
+    entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
+        (entity_domain, service_domain)
+    )
+    if entities is None:
+        return {}
+    return entities
+
+
+@callback
 def async_register_platform_entity_service(
     hass: HomeAssistant,
     service_domain: str,
@@ -1166,20 +1309,10 @@ def async_register_platform_entity_service(
     supports_response: SupportsResponse = SupportsResponse.NONE,
 ) -> None:
     """Help registering a platform entity service."""
-    from .entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES  # noqa: PLC0415
-
     schema = _validate_entity_service_schema(schema, f"{service_domain}.{service_name}")
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
-
-    def get_entities() -> dict[str, Entity]:
-        entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(
-            (entity_domain, service_domain)
-        )
-        if entities is None:
-            return {}
-        return entities
 
     hass.services.async_register(
         service_domain,
@@ -1187,9 +1320,49 @@ def async_register_platform_entity_service(
         partial(
             entity_service_call,
             hass,
-            get_entities,
+            partial(_get_platform_entities, hass, entity_domain, service_domain),
             service_func,
             entity_device_classes=entity_device_classes,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=HassJobType.Coroutinefunction,
+        description_placeholders=description_placeholders,
+    )
+
+
+@callback
+def async_register_batched_platform_entity_service[_EntityT: Entity](
+    hass: HomeAssistant,
+    service_domain: str,
+    service_name: str,
+    *,
+    description_placeholders: Mapping[str, str] | None = None,
+    entity_domain: str,
+    func: Callable[
+        [list[_EntityT], ServiceCall],
+        Coroutine[Any, Any, EntityServiceResponse | None],
+    ],
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering a batched platform entity service.
+
+    A batched entity service calls the service function once with all
+    matching entities as a list, instead of once per entity.
+    """
+    schema = _validate_entity_service_schema(schema, f"{service_domain}.{service_name}")
+
+    hass.services.async_register(
+        service_domain,
+        service_name,
+        partial(
+            batched_entity_service_call,
+            hass,
+            partial(_get_platform_entities, hass, entity_domain, service_domain),
+            func,  # type: ignore[arg-type]
             required_features=required_features,
         ),
         schema,
