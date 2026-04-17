@@ -4,25 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aioaquarite import AquariteAuth, AquariteClient, AuthenticationError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-if TYPE_CHECKING:
-    from . import AquariteConfigEntry
-
-from .const import (
-    CONF_HEALTH_CHECK_INTERVAL,
-    CONF_POOL_ID,
-    DEFAULT_HEALTH_CHECK_INTERVAL,
-    DOMAIN,
-)
+from .const import CONF_POOL_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,38 +26,8 @@ AUTH_SCHEMA = vol.Schema(
 )
 
 
-class AquariteOptionsFlow(OptionsFlow):
-    """Options flow for Aquarite."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the options form."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        current = self.config_entry.options.get(
-            CONF_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_INTERVAL
-        )
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_HEALTH_CHECK_INTERVAL, default=current): vol.All(
-                    int, vol.Range(min=60, max=3600)
-                ),
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=schema)
-
-
 class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
     """Aquarite config flow."""
-
-    @staticmethod
-    def async_get_options_flow(
-        config_entry: AquariteConfigEntry,
-    ) -> AquariteOptionsFlow:
-        """Return the options flow handler."""
-        return AquariteOptionsFlow()
 
     def __init__(self) -> None:
         """Initialize the config flow."""

@@ -12,7 +12,7 @@ from aioaquarite import AquariteAuth, AquariteClient
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_INTERVAL
+from .const import HEALTH_CHECK_INTERVAL
 
 if TYPE_CHECKING:
     from . import AquariteConfigEntry
@@ -95,10 +95,7 @@ class AquariteDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def periodic_health_check(self) -> None:
         """Monitor connection and resubscribe if needed."""
         while not self.hass.is_stopping:
-            interval = self.config_entry.options.get(
-                CONF_HEALTH_CHECK_INTERVAL, DEFAULT_HEALTH_CHECK_INTERVAL
-            )
-            await asyncio.sleep(interval)
+            await asyncio.sleep(HEALTH_CHECK_INTERVAL)
             try:
                 await self.auth.get_client()
             except Exception as err:  # noqa: BLE001

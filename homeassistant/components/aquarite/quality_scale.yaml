@@ -15,7 +15,7 @@ rules:
   config-flow: done
   config-flow-test-coverage:
     status: done
-    comment: Tests cover user, pool, reauth, reconfigure, options, errors, duplicate
+    comment: Tests cover user, pool, reauth, reconfigure, errors, duplicate
   dependency-transparency:
     status: done
     comment: aioaquarite published on PyPI
@@ -60,7 +60,9 @@ rules:
   config-entry-unloading:
     status: done
     comment: async_unload_entry properly unloads platforms and shuts down coordinator
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options flow, credentials and pool selection are entered in the config flow
   docs-troubleshooting: todo
   entity-category:
     status: done

@@ -12,7 +12,6 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.aquarite.const import CONF_HEALTH_CHECK_INTERVAL
 from homeassistant.components.aquarite.coordinator import AquariteDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 
@@ -191,24 +190,6 @@ async def test_periodic_health_check_success(
     mock_sleep.assert_awaited()
     coordinator.auth.get_client.assert_awaited_once()
     coordinator.refresh_subscription.assert_not_called()
-
-
-async def test_periodic_health_check_uses_options_interval(
-    coordinator: AquariteDataUpdateCoordinator,
-) -> None:
-    """Test the health check uses the configured interval from options."""
-    coordinator.config_entry.options = {CONF_HEALTH_CHECK_INTERVAL: 600}
-
-    with (
-        patch.object(
-            type(coordinator.hass), "is_stopping", new_callable=PropertyMock
-        ) as mock_stop,
-        patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep,
-    ):
-        mock_stop.side_effect = [False, True]
-        await coordinator.periodic_health_check()
-
-    mock_sleep.assert_awaited_with(600)
 
 
 async def test_periodic_health_check_resubscribes_on_error(

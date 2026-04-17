@@ -1,7 +1,7 @@
 """Tests for the Aquarite config flow.
 
 These tests run in the Home Assistant Core test environment.
-They validate the config flow, reauth, reconfigure, and options flow steps.
+They validate the config flow, reauth, and reconfigure steps.
 Run with: pytest tests/components/aquarite/test_config_flow.py
 """
 
@@ -15,12 +15,7 @@ from aioaquarite import AuthenticationError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aquarite.const import (
-    CONF_HEALTH_CHECK_INTERVAL,
-    CONF_POOL_ID,
-    DEFAULT_HEALTH_CHECK_INTERVAL,
-    DOMAIN,
-)
+from homeassistant.components.aquarite.const import CONF_POOL_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -532,64 +527,3 @@ async def test_reconfigure_flow_unknown_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown_error"}
-
-
-# ── Options Flow ──────────────────────────────────────────────────
-
-
-async def test_options_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test the options flow allows changing health check interval."""
-    patch_auth, patch_client, _ = _mock_auth_and_client()
-
-    with patch_auth, patch_client:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_POOL_ID: MOCK_POOL_ID},
-        )
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {CONF_HEALTH_CHECK_INTERVAL: 600},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_HEALTH_CHECK_INTERVAL] == 600
-
-
-async def test_options_flow_default(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test options flow uses default health check interval."""
-    patch_auth, patch_client, _ = _mock_auth_and_client()
-
-    with patch_auth, patch_client:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_POOL_ID: MOCK_POOL_ID},
-        )
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    schema = result["data_schema"]
-    schema_dict = schema({})
-    assert schema_dict[CONF_HEALTH_CHECK_INTERVAL] == DEFAULT_HEALTH_CHECK_INTERVAL

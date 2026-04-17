@@ -113,19 +113,5 @@
         "name": "Zipcode"
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "health_check_interval": "Health check interval (seconds)"
-        },
-        "data_description": {
-          "health_check_interval": "How often to verify the cloud connection is alive"
-        },
-        "description": "Configure the Aquarite integration.",
-        "title": "Options"
-      }
-    }
   }
 }

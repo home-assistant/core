@@ -13,10 +13,7 @@ PATH_HASUV = f"{PATH_PREFIX}hasUV"
 PATH_HASHIDRO = f"{PATH_PREFIX}hasHidro"
 
 # Time intervals (seconds)
-DEFAULT_HEALTH_CHECK_INTERVAL = 300  # 5 minutes
-
-# Options flow keys
-CONF_HEALTH_CHECK_INTERVAL = "health_check_interval"
+HEALTH_CHECK_INTERVAL = 300  # 5 minutes
 
 # Config entry data keys
 CONF_POOL_ID = "pool_id"
