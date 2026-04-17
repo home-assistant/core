@@ -895,6 +895,19 @@ async def test_get_live_context_tool_filter(
     assert "Office Light" not in result["result"]
     assert "Kitchen Light" not in result["result"]
 
+    # Domain filter is case insensitive
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": "Light"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" in result["result"]
+    assert "Office Switch" not in result["result"]
+    assert "Front Door" not in result["result"]
+
     # No filters returns all exposed entities
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="GetLiveContext", tool_args={})

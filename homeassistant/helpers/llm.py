@@ -1220,6 +1220,8 @@ class GetLiveContextTool(Tool):
 
         if isinstance(domain_filter, str):
             domain_filter = [domain_filter]
+        if domain_filter is not None:
+            domain_filter = [domain.casefold() for domain in domain_filter]
 
         if name_filter is not None:
             name_filter_norm = name_filter.casefold()
@@ -1245,7 +1247,9 @@ class GetLiveContextTool(Tool):
             ]
 
         if domain_filter is not None:
-            entities = [info for info in entities if info["domain"] in domain_filter]
+            entities = [
+                info for info in entities if info["domain"].casefold() in domain_filter
+            ]
 
         if not entities:
             return {
