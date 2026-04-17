@@ -29,7 +29,7 @@ RUN \
     # Verify go2rtc can be executed
     go2rtc --version \
     # Install uv
-    && pip3 install uv==0.11.1
+    && pip3 install uv==0.11.6
 
 WORKDIR /usr/src
 
