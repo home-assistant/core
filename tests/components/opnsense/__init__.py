@@ -41,7 +41,7 @@ ARP = [
         "manufacturer": "OEM",
     },
 ]
-INTERFACES = {"igb0": "WAN", "igb1": "LAN"}
+INTERFACES = {"igb0": {"name": "WAN"}, "igb1": {"name": "LAN"}}
 
 
 def setup_mock_opnsense_client(mock_opnsense_client: AsyncMock) -> None:
