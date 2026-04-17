@@ -232,13 +232,6 @@ class AFSAPIDevice(MediaPlayerEntity):
         """Send pause command."""
         await self.fs_device.pause()
 
-    async def async_media_play_pause(self) -> None:
-        """Send play/pause command."""
-        if self._attr_state == MediaPlayerState.PLAYING:
-            await self.fs_device.pause()
-        else:
-            await self.fs_device.play()
-
     async def async_media_stop(self) -> None:
         """Send play/pause command."""
         await self.fs_device.pause()
