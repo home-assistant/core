@@ -111,9 +111,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Return the volume level of the media player (0..1)."""
-        volume = self.status["playback"].get("volume")
-        if volume is None:
-            return None
+        volume = self.status["playback"]["volume"]
 
         return cast(float, volume) / 10
 
