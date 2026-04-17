@@ -43,7 +43,12 @@ async def test_network_failure_during_setup_retries(
     mock_gaposa_instance: MagicMock,
     mock_gaposa: MagicMock,
 ) -> None:
-    """If the first refresh fails with a network error the entry enters SETUP_RETRY."""
+    """If the first refresh fails with a network error the entry enters SETUP_RETRY.
+
+    Because runtime_data is assigned before the first refresh, the
+    unload path can still call async_shutdown → gaposa.close() even
+    when setup never reached LOADED.
+    """
     mock_gaposa_instance.update.side_effect = OSError("boom")
 
     mock_config_entry.add_to_hass(hass)
@@ -51,6 +56,7 @@ async def test_network_failure_during_setup_retries(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_gaposa_instance.close.assert_called_once()
 
 
 async def test_network_failure_during_login_retries(
