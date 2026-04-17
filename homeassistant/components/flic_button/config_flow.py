@@ -285,10 +285,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             try:
-                # Connect to button
                 await self._client.connect()
-
-                # Perform full pairing
                 (
                     pairing_id,
                     pairing_key,
@@ -301,49 +298,11 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._client.full_verify_pairing(),
                     timeout=PAIRING_TIMEOUT,
                 )
-
-                # Disconnect after pairing and clear reference so the
-                # finally block does not disconnect a second time.
-                await self._client.disconnect()
-                self._client = None
-
-                # Use device type detected from service UUID (set in async_step_bluetooth)
-                # Twist has a unique service UUID, so trust that detection.
-                # For Flic 2 vs Duo (same service UUID), check serial prefix.
-                final_device_type = (
-                    DeviceType.TWIST
-                    if self._device_type == DeviceType.TWIST
-                    else DeviceType.from_serial_number(serial_number)
-                )
-
-                model_name = DEVICE_TYPE_MODEL_NAMES[final_device_type]
-
-                title = f"{model_name} ({serial_number})"
-
-                # Build config entry data
-                entry_data: dict[str, Any] = {
-                    CONF_ADDRESS: self._discovery_info.address,
-                    CONF_PAIRING_ID: pairing_id,
-                    CONF_PAIRING_KEY: pairing_key.hex(),
-                    CONF_SERIAL_NUMBER: serial_number,
-                    CONF_BATTERY_LEVEL: battery_level,
-                    CONF_DEVICE_TYPE: final_device_type.value,
-                    CONF_SIG_BITS: sig_bits,
-                }
-
-                return self.async_create_entry(
-                    title=title,
-                    data=entry_data,
-                )
-
             except TimeoutError, BleakError, FlicProtocolError:
-                _LOGGER.debug("Cannot connect to button", exc_info=True)
                 errors["base"] = "cannot_connect"
             except FlicPairingError:
-                _LOGGER.debug("Pairing failed", exc_info=True)
                 errors["base"] = "pairing_failed"
             except FlicAuthenticationError:
-                _LOGGER.debug("Authentication failed", exc_info=True)
                 errors["base"] = "invalid_signature"
             except Exception:
                 _LOGGER.exception("Unexpected exception during pairing")
@@ -352,6 +311,28 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 if self._client:
                     with contextlib.suppress(Exception):
                         await self._client.disconnect()
+                    self._client = None
+
+            if not errors:
+                final_device_type = (
+                    DeviceType.TWIST
+                    if self._device_type == DeviceType.TWIST
+                    else DeviceType.from_serial_number(serial_number)
+                )
+                model_name = DEVICE_TYPE_MODEL_NAMES[final_device_type]
+
+                return self.async_create_entry(
+                    title=f"{model_name} ({serial_number})",
+                    data={
+                        CONF_ADDRESS: self._discovery_info.address,
+                        CONF_PAIRING_ID: pairing_id,
+                        CONF_PAIRING_KEY: pairing_key.hex(),
+                        CONF_SERIAL_NUMBER: serial_number,
+                        CONF_BATTERY_LEVEL: battery_level,
+                        CONF_DEVICE_TYPE: final_device_type.value,
+                        CONF_SIG_BITS: sig_bits,
+                    },
+                )
 
         # Allow the user to retry after an error
         self._pairing_started = False

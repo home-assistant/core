@@ -131,20 +131,24 @@ async def async_setup_entry(
         entry.options.get(CONF_PUSH_TWIST_MODE, PushTwistMode.DEFAULT)
     )
 
-    if capabilities.button_count == 1:
-        # Single button device (Flic 2 or Twist)
+    if capabilities.has_selector and push_twist_mode == PushTwistMode.SELECTOR:
         entities.append(
             FlicButtonEventEntity(
-                data,
-                is_twist=capabilities.has_selector,  # Twist has selector
-                push_twist_mode=push_twist_mode,
+                data, TWIST_SELECTOR_BUTTON_DESCRIPTION, is_twist=True
             )
         )
+    elif capabilities.has_selector:
+        entities.append(
+            FlicButtonEventEntity(data, TWIST_DEFAULT_BUTTON_DESCRIPTION, is_twist=True)
+        )
+    elif capabilities.button_count == 1:
+        entities.append(FlicButtonEventEntity(data, EVENT_DESCRIPTION))
     else:
-        # Multi-button device (Duo)
-        entities.extend(
-            FlicButtonEventEntity(data, button_index=i)
-            for i in range(capabilities.button_count)
+        entities.append(
+            FlicButtonEventEntity(data, DUO_BIG_BUTTON_DESCRIPTION, button_index=0)
+        )
+        entities.append(
+            FlicButtonEventEntity(data, DUO_SMALL_BUTTON_DESCRIPTION, button_index=1)
         )
 
     async_add_entities(entities)
@@ -156,43 +160,16 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
     def __init__(
         self,
         data: FlicButtonData,
+        description: EventEntityDescription,
         button_index: int | None = None,
         is_twist: bool = False,
-        push_twist_mode: PushTwistMode = PushTwistMode.DEFAULT,
     ) -> None:
         """Initialize the event entity."""
         super().__init__(data)
+        self.entity_description = description
         self._button_index = button_index
         self._is_twist = is_twist
-
-        # Select entity description based on button type
-        if is_twist and push_twist_mode == PushTwistMode.SELECTOR:
-            # Flic Twist SELECTOR mode with rotation and selector events
-            self.entity_description = TWIST_SELECTOR_BUTTON_DESCRIPTION
-            self._attr_translation_key = "button_twist"
-            unique_suffix = f"{EVENT_CLASS_BUTTON}_twist"
-        elif is_twist:
-            # Flic Twist DEFAULT/CONTINUOUS mode with increment/decrement events
-            self.entity_description = TWIST_DEFAULT_BUTTON_DESCRIPTION
-            self._attr_translation_key = "button_twist_default"
-            unique_suffix = f"{EVENT_CLASS_BUTTON}_twist"
-        elif button_index is None:
-            # Flic 2 single button
-            self.entity_description = EVENT_DESCRIPTION
-            self._attr_translation_key = EVENT_CLASS_BUTTON
-            unique_suffix = EVENT_CLASS_BUTTON
-        elif button_index == 0:
-            # Duo big button (button index 0)
-            self.entity_description = DUO_BIG_BUTTON_DESCRIPTION
-            self._attr_translation_key = "button_big"
-            unique_suffix = f"{EVENT_CLASS_BUTTON}_big"
-        else:
-            # Duo small button (button index 1)
-            self.entity_description = DUO_SMALL_BUTTON_DESCRIPTION
-            self._attr_translation_key = "button_small"
-            unique_suffix = f"{EVENT_CLASS_BUTTON}_small"
-
-        self._attr_unique_id = f"{self._client.address}-{unique_suffix}"
+        self._attr_unique_id = f"{self._client.address}-{description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Register event callbacks when entity is added."""
