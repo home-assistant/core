@@ -24,7 +24,7 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WibeeeConfigEntry
@@ -107,7 +107,7 @@ class WibeeeButton(ButtonEntity):
 
         self._attr_unique_id = f"{device_info.mac_addr_formatted}_{description.key}"
         self._attr_translation_key = description.translation_key
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, device_info.mac_addr_formatted)},
             name=f"Wibeee {device_info.mac_addr_short}",
             model=model_name,

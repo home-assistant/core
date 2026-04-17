@@ -25,7 +25,7 @@ from pywibeee import WibeeeDeviceInfo
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -109,21 +109,21 @@ async def async_setup_entry(
 # ---------------------------------------------------------------------------
 
 
-def _build_device_info(device_info: WibeeeDeviceInfo, phase_key: str) -> DeviceInfo:
+def _build_device_info(device_info: WibeeeDeviceInfo, phase_key: str) -> dr.DeviceInfo:
     """Build HA DeviceInfo for a sensor entity."""
     model_name = KNOWN_MODELS.get(device_info.model, f"Wibeee {device_info.model}")
     is_phase = phase_key in ("fase1", "fase2", "fase3")
     phase_label = PHASE_NAMES.get(phase_key, phase_key)
 
     if is_phase:
-        return DeviceInfo(
+        return dr.DeviceInfo(
             identifiers={(DOMAIN, f"{device_info.mac_addr_formatted}_{phase_key}")},
             via_device=(DOMAIN, device_info.mac_addr_formatted),
             name=f"Wibeee {device_info.mac_addr_short} {phase_label}",
             model=f"{model_name} Clamp",
             manufacturer="Smilics",
         )
-    return DeviceInfo(
+    return dr.DeviceInfo(
         identifiers={(DOMAIN, device_info.mac_addr_formatted)},
         name=f"Wibeee {device_info.mac_addr_short}",
         model=model_name,

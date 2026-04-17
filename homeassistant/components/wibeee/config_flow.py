@@ -31,6 +31,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import WibeeeConfigEntry
 from .const import (
     CONF_AUTO_CONFIGURE,
     CONF_MAC_ADDRESS,
@@ -338,7 +339,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: WibeeeConfigEntry,
     ) -> WibeeeOptionsFlowHandler:
         """Get the options flow handler."""
         return WibeeeOptionsFlowHandler()
@@ -433,7 +434,7 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data=new_options)
 
         # Build schema dynamically based on current mode
-        schema_dict = {
+        schema_dict: dict[vol.Marker, object] = {
             vol.Required(CONF_UPDATE_MODE, default=current_mode): SelectSelector(
                 SelectSelectorConfig(
                     options=[

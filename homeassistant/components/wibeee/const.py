@@ -82,7 +82,7 @@ PUSH_PHASE_MAP: dict[str, str] = {
 }
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True)  # noqa: C7461
 class WibeeeSensorEntityDescription(SensorEntityDescription):
     """Describe a Wibeee sensor entity.
 
