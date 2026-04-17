@@ -70,11 +70,11 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
         ship: CharacterShip | None = None
         try:
             location = await self.client.async_get_character_location(self.character_id)
-        except (EveOnlineError, aiohttp.ClientError) as err:
+        except (EveOnlineError, aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.debug("Failed to fetch location: %s", err)
         try:
             ship = await self.client.async_get_character_ship(self.character_id)
-        except (EveOnlineError, aiohttp.ClientError) as err:
+        except (EveOnlineError, aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.debug("Failed to fetch ship: %s", err)
 
         solar_system_name: str | None = None
@@ -94,7 +94,7 @@ class EveOnlineCoordinator(DataUpdateCoordinator[EveOnlineData]):
                     solar_system_name = resolved_by_id.get(location.solar_system_id)
                 if ship:
                     ship_type_name = resolved_by_id.get(ship.ship_type_id)
-            except (EveOnlineError, aiohttp.ClientError) as err:
+            except (EveOnlineError, aiohttp.ClientError, TimeoutError) as err:
                 _LOGGER.debug("Failed to resolve names: %s", err)
 
         return EveOnlineData(
