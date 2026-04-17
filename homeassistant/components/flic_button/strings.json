@@ -50,17 +50,17 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single push",
-              "double_click": "Double push",
-              "down": "Down",
-              "hold": "Hold",
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
               "rotate_clockwise": "Rotated clockwise",
               "rotate_counter_clockwise": "Rotated counter-clockwise",
               "swipe_down": "Swipe down",
               "swipe_left": "Swipe left",
               "swipe_right": "Swipe right",
               "swipe_up": "Swipe up",
-              "up": "Up"
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
             }
           }
         }
@@ -70,52 +70,52 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single push",
-              "double_click": "Double push",
-              "down": "Down",
-              "hold": "Hold",
-              "rotate_clockwise": "Rotated clockwise",
-              "rotate_counter_clockwise": "Rotated counter-clockwise",
-              "swipe_down": "Swipe down",
-              "swipe_left": "Swipe left",
-              "swipe_right": "Swipe right",
-              "swipe_up": "Swipe up",
-              "up": "Up"
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
+              "rotate_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_clockwise%]",
+              "rotate_counter_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_counter_clockwise%]",
+              "swipe_down": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_down%]",
+              "swipe_left": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_left%]",
+              "swipe_right": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_right%]",
+              "swipe_up": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::swipe_up%]",
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
             }
           }
         }
       },
       "button_twist": {
-        "name": "Button",
+        "name": "[%key:component::flic_button::entity::event::button::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single push",
-              "double_click": "Double push",
-              "down": "Down",
-              "hold": "Hold",
-              "rotate_clockwise": "Rotated clockwise",
-              "rotate_counter_clockwise": "Rotated counter-clockwise",
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
+              "rotate_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_clockwise%]",
+              "rotate_counter_clockwise": "[%key:component::flic_button::entity::event::button_big::state_attributes::event_type::state::rotate_counter_clockwise%]",
               "selector_changed": "Selector changed",
-              "up": "Up"
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
             }
           }
         }
       },
       "button_twist_default": {
-        "name": "Button",
+        "name": "[%key:component::flic_button::entity::event::button::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single push",
-              "double_click": "Double push",
-              "down": "Down",
-              "hold": "Hold",
+              "click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::click%]",
+              "double_click": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::double_click%]",
+              "down": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::down%]",
+              "hold": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::hold%]",
               "push_twist_decrement": "Push-twist decremented",
               "push_twist_increment": "Push-twist incremented",
               "twist_decrement": "Twist decremented",
               "twist_increment": "Twist incremented",
-              "up": "Up"
+              "up": "[%key:component::flic_button::entity::event::button::state_attributes::event_type::state::up%]"
             }
           }
         }
