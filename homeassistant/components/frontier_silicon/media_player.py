@@ -5,12 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from afsapi import (
-    AFSAPI,
-    ConnectionError as FSConnectionError,
-    NotImplementedException as FSNotImplementedException,
-    PlayState,
-)
+from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, PlayState
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -100,12 +95,13 @@ class AFSAPIDevice(MediaPlayerEntity):
             if await afsapi.get_power():
                 status = await afsapi.get_play_status()
                 self._attr_state = {
+                    PlayState.IDLE: MediaPlayerState.IDLE,
+                    PlayState.BUFFERING: MediaPlayerState.BUFFERING,
                     PlayState.PLAYING: MediaPlayerState.PLAYING,
                     PlayState.PAUSED: MediaPlayerState.PAUSED,
+                    PlayState.REBUFFERING: MediaPlayerState.BUFFERING,
                     PlayState.STOPPED: MediaPlayerState.IDLE,
-                    PlayState.LOADING: MediaPlayerState.BUFFERING,
-                    None: MediaPlayerState.IDLE,
-                }.get(status)
+                }.get(status, MediaPlayerState.IDLE)
             else:
                 self._attr_state = MediaPlayerState.OFF
         except FSConnectionError:
@@ -115,7 +111,9 @@ class AFSAPIDevice(MediaPlayerEntity):
                     self.name or afsapi.webfsapi_endpoint,
                 )
                 self._attr_available = False
-                return
+
+            # Device is not available, stop the update
+            return
 
         if not self._attr_available:
             _LOGGER.warning(
@@ -134,7 +132,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         if not self._attr_sound_mode_list and self._supports_sound_mode:
             try:
                 equalisers = await afsapi.get_equalisers()
-            except FSNotImplementedException:
+            except FSNotImplementedError:
                 self._supports_sound_mode = False
                 # Remove SELECT_SOUND_MODE from the advertised supported features
                 self._attr_supported_features ^= (
@@ -169,7 +167,7 @@ class AFSAPIDevice(MediaPlayerEntity):
             if self._supports_sound_mode:
                 try:
                     eq_preset = await afsapi.get_eq_preset()
-                except FSNotImplementedException:
+                except FSNotImplementedError:
                     self._supports_sound_mode = False
                     # Remove SELECT_SOUND_MODE from the advertised supported features
                     self._attr_supported_features ^= (
