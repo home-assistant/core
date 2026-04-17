@@ -24,7 +24,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WibeeeConfigEntry
 from .api import WibeeeAPI, WibeeeDeviceInfo
@@ -66,7 +66,7 @@ BUTTON_TYPES: tuple[WibeeeButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WibeeeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wibeee button entities from a config entry."""
     runtime = entry.runtime_data
