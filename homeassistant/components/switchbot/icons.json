@@ -121,6 +121,15 @@
       }
     },
     "sensor": {
+      "battery_range": {
+        "default": "mdi:battery",
+        "state": {
+          "critical": "mdi:battery-alert-variant-outline",
+          "high": "mdi:battery-80",
+          "low": "mdi:battery-20",
+          "medium": "mdi:battery-50"
+        }
+      },
       "light_level": {
         "default": "mdi:brightness-7",
         "state": {

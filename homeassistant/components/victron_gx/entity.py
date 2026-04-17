@@ -44,6 +44,10 @@ class VictronBaseEntity(Entity):
         if metric.main_topic:
             self._attr_name = None
 
+        # Special case for "%" as it should not be coming from the localization file
+        self._attr_native_unit_of_measurement = (
+            "%" if metric.unit_of_measurement == "%" else None
+        )
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC
             if metric.generic_short_id in ENTITIES_CATEGORY_DIAGNOSTIC

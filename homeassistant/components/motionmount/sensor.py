@@ -54,7 +54,7 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
     def __init__(
         self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
     ) -> None:
-        """Initialize sensor entiry."""
+        """Initialize sensor entity."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-error-status"
 
