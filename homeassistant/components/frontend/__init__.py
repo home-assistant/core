@@ -597,6 +597,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         sidebar_title="home",
         show_in_sidebar=False,
     )
+    async_register_built_in_panel(
+        hass,
+        "maintenance",
+        sidebar_icon="mdi:wrench",
+        sidebar_title="maintenance",
+        show_in_sidebar=False,
+    )
 
     async_register_built_in_panel(hass, "profile")
     async_register_built_in_panel(hass, "notfound")
