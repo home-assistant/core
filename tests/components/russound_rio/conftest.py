@@ -1,7 +1,6 @@
 """Test fixtures for Russound RIO integration."""
 
 from collections.abc import Generator
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiorussound.rio import Source
@@ -133,31 +132,6 @@ def mock_russound_client() -> Generator[AsyncMock]:
         client.rio_version = API_VERSION
 
         yield client
-
-
-@pytest.fixture
-def mock_usb_serial_ports() -> Generator[AsyncMock]:
-    """Mock scanned USB serial ports."""
-    with patch(
-        "homeassistant.components.russound_rio.config_flow.usb.async_scan_serial_ports",
-        new_callable=AsyncMock,
-    ) as mock_scan_serial_ports:
-        mock_scan_serial_ports.return_value = [
-            SimpleNamespace(device="/dev/ttyUSB0"),
-            SimpleNamespace(device="/dev/ttyUSB1"),
-        ]
-        yield mock_scan_serial_ports
-
-
-@pytest.fixture
-def mock_no_usb_serial_ports() -> Generator[AsyncMock]:
-    """Mock no USB serial ports found."""
-    with patch(
-        "homeassistant.components.russound_rio.config_flow.usb.async_scan_serial_ports",
-        new_callable=AsyncMock,
-    ) as mock_scan_serial_ports:
-        mock_scan_serial_ports.return_value = []
-        yield mock_scan_serial_ports
 
 
 @pytest.fixture

@@ -8,10 +8,9 @@ from aiorussound.rio.models import CallbackType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.russound_rio import async_migrate_entry
 from homeassistant.components.russound_rio.const import CONF_BAUDRATE, DOMAIN, TYPE_TCP
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -71,8 +70,11 @@ async def test_disconnect_reconnect_log(
     assert "Reconnected to device at 192.168.20.75" in caplog.text
 
 
-async def test_migrate_entry_from_v1_to_v2(hass: HomeAssistant) -> None:
-    """Test migrating a version 1 config entry to version 2."""
+async def test_migrate_entry_from_v1_to_v2_on_setup(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test a version 1 entry is migrated during setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
@@ -83,9 +85,7 @@ async def test_migrate_entry_from_v1_to_v2(hass: HomeAssistant) -> None:
         unique_id="00:11:22:33:44:55",
         title=MODEL,
     )
-    entry.add_to_hass(hass)
-
-    assert await async_migrate_entry(hass, entry) is True
+    await setup_integration(hass, entry)
 
     assert entry.version == 2
     assert entry.data == {
@@ -93,12 +93,13 @@ async def test_migrate_entry_from_v1_to_v2(hass: HomeAssistant) -> None:
         CONF_HOST: "192.168.20.75",
         CONF_PORT: 9621,
     }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_migrate_entry_from_future_version_fails(
+async def test_migrate_entry_from_future_version_fails_on_setup(
     hass: HomeAssistant,
 ) -> None:
-    """Test migration fails for a future config entry version."""
+    """Test setup fails for a future config entry version."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         version=3,
@@ -110,9 +111,8 @@ async def test_migrate_entry_from_future_version_fails(
         unique_id="00:11:22:33:44:55",
         title=MODEL,
     )
-    entry.add_to_hass(hass)
+    await setup_integration(hass, entry)
 
-    assert await async_migrate_entry(hass, entry) is False
     assert entry.version == 3
 
 
@@ -140,5 +140,5 @@ async def test_setup_entry_uses_serial_handler(
 
     handler = mock_russound_client.connection_handler
     assert isinstance(handler, RussoundSerialConnectionHandler)
-    assert handler.port == MOCK_SERIAL_CONFIG[CONF_PATH]
+    assert handler.port == MOCK_SERIAL_CONFIG[CONF_DEVICE]
     assert handler.baudrate == MOCK_SERIAL_CONFIG[CONF_BAUDRATE]

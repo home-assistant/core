@@ -11,7 +11,7 @@ from aiorussound.rio import RussoundRIOClient
 from aiorussound.rio.models import CallbackType
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_TYPE, Platform
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -34,9 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
         port = entry.data[CONF_PORT]
         handler = RussoundTcpConnectionHandler(host, port)
     else:
-        path = entry.data[CONF_PATH]
+        device = entry.data[CONF_DEVICE]
         baudrate = entry.data[CONF_BAUDRATE]
-        handler = RussoundSerialConnectionHandler(path, baudrate)
+        handler = RussoundSerialConnectionHandler(device, baudrate)
     client = RussoundRIOClient(handler)
 
     async def _connection_update_callback(
@@ -59,8 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="entry_cannot_connect",
             translation_placeholders={
-                "host": host,
-                "port": port,
+                "host": host or device,
+                "port": port or baudrate,
             },
         ) from err
     entry.runtime_data = client

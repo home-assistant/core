@@ -14,15 +14,18 @@ from aiorussound.connection import (
 from aiorussound.rio import Controller, RussoundRIOClient
 import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PATH, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SerialSelector,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
@@ -53,12 +56,16 @@ TCP_SCHEMA = vol.Schema(
     }
 )
 
-SERIAL_SCHEMA_BASE: dict[Any, Any] = {
-    vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
-        vol.Coerce(int),
-        vol.Range(min=1),
-    ),
-}
+SERIAL_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE): SerialSelector(),
+        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
+            vol.Coerce(int),
+            vol.Range(min=1),
+        ),
+    }
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,8 +94,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
-        self._usb_paths: list[str] | None = None
-        self._default_usb_path: str | None = None
 
     async def _async_finish_manual_setup(
         self, controller: Controller, data: dict[str, Any]
@@ -204,11 +209,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            path = user_input[CONF_PATH]
+            device = user_input[CONF_DEVICE]
             baudrate = user_input[CONF_BAUDRATE]
 
             controller = await _async_validate_connection(
-                RussoundSerialConnectionHandler(path, baudrate)
+                RussoundSerialConnectionHandler(device, baudrate)
             )
             if controller is None:
                 _LOGGER.exception("Could not connect to Russound RIO over serial")
@@ -216,24 +221,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 data = {
                     CONF_TYPE: TYPE_SERIAL,
-                    CONF_PATH: path,
+                    CONF_DEVICE: device,
                     CONF_BAUDRATE: baudrate,
                 }
                 return await self._async_finish_manual_setup(controller, data)
 
-        ports = await usb.async_scan_serial_ports(self.hass)
-        usb_paths = [port.device for port in ports]
-
-        if not usb_paths:
-            return self.async_abort(reason="no_serial_ports")
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_PATH, default=usb_paths[0]): vol.In(usb_paths),
-                **SERIAL_SCHEMA_BASE,
-            }
+        return self.async_show_form(
+            step_id="serial", data_schema=SERIAL_SCHEMA, errors=errors
         )
-        return self.async_show_form(step_id="serial", data_schema=schema, errors=errors)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

@@ -3,7 +3,7 @@
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.russound_rio import TYPE_TCP
 from homeassistant.components.russound_rio.const import CONF_BAUDRATE, TYPE_SERIAL
-from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 MODEL = "MCA-C5"
 HARDWARE_MAC = "00:11:22:33:44:55"
@@ -32,24 +32,24 @@ MOCK_RECONFIGURATION_TCP_ENTRY_DATA = {
 }
 
 MOCK_SERIAL_STEP_INPUT = {
-    CONF_PATH: "/dev/ttyUSB0",
+    CONF_DEVICE: "/dev/ttyUSB0",
     CONF_BAUDRATE: 115200,
 }
 
 MOCK_SERIAL_CONFIG = {
     CONF_TYPE: TYPE_SERIAL,
-    CONF_PATH: "/dev/ttyUSB0",
+    CONF_DEVICE: "/dev/ttyUSB0",
     CONF_BAUDRATE: 115200,
 }
 
 MOCK_RECONFIGURATION_SERIAL_STEP_INPUT = {
-    CONF_PATH: "/dev/ttyUSB1",
+    CONF_DEVICE: "/dev/ttyUSB1",
     CONF_BAUDRATE: 115200,
 }
 
 MOCK_RECONFIGURATION_SERIAL_ENTRY_DATA = {
     CONF_TYPE: TYPE_SERIAL,
-    CONF_PATH: "/dev/ttyUSB1",
+    CONF_DEVICE: "/dev/ttyUSB1",
     CONF_BAUDRATE: 115200,
 }
 

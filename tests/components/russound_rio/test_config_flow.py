@@ -374,7 +374,6 @@ async def test_user_flow_serial_creates_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_russound_client: AsyncMock,
-    mock_usb_serial_ports: AsyncMock,
 ) -> None:
     """Test serial user flow creates an entry."""
     result = await hass.config_entries.flow.async_init(
@@ -406,7 +405,6 @@ async def test_serial_flow_cannot_connect_then_recovers(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_russound_client: AsyncMock,
-    mock_usb_serial_ports: AsyncMock,
 ) -> None:
     """Test serial flow handles cannot connect and recovers."""
     result = await hass.config_entries.flow.async_init(
@@ -444,32 +442,11 @@ async def test_serial_flow_cannot_connect_then_recovers(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_serial_flow_no_serial_ports_aborts(
-    hass: HomeAssistant,
-    mock_no_usb_serial_ports: AsyncMock,
-) -> None:
-    """Test serial flow aborts when no serial ports are found."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_TYPE: TYPE_SERIAL},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_serial_ports"
-
-
 async def test_serial_flow_duplicate_aborts(
     hass: HomeAssistant,
     mock_russound_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_usb_serial_ports: AsyncMock,
 ) -> None:
     """Test duplicate serial flow aborts."""
     mock_config_entry.add_to_hass(hass)
@@ -502,7 +479,6 @@ async def test_reconfigure_serial_flow(
     mock_russound_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_usb_serial_ports: AsyncMock,
 ) -> None:
     """Test serial reconfigure flow."""
     result = await _start_reconfigure_flow(hass, mock_config_entry)
@@ -532,7 +508,6 @@ async def test_reconfigure_serial_unique_id_mismatch(
     mock_russound_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_usb_serial_ports: AsyncMock,
 ) -> None:
     """Ensure serial reconfigure aborts when device changes."""
     mock_russound_client.controllers[1].mac_address = "different_mac"
