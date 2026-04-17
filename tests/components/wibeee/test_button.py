@@ -6,9 +6,6 @@ from unittest.mock import AsyncMock
 
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_MAC
-
-
 async def test_buttons_created(hass: HomeAssistant, loaded_entry) -> None:
     """Test that button entities are created."""
     states = hass.states.async_all("button")
