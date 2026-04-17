@@ -322,7 +322,7 @@ def _multi_pan_sky_connect_entry(firmware: str) -> MockConfigEntry:
 async def test_multi_pan_migration_issue_created_for_cpc(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the multi-PAN migration repair issue is created when running CPC."""
+    """Test the multi-PAN migration repair issue is created when firmware is CPC."""
     config_entry = _multi_pan_sky_connect_entry(ApplicationType.CPC.value)
     config_entry.add_to_hass(hass)
 
@@ -332,8 +332,8 @@ async def test_multi_pan_migration_issue_created_for_cpc(
             return_value=True,
         ),
         patch(
-            "homeassistant.components.homeassistant_sky_connect.is_hassio",
-            return_value=True,
+            "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
+            return_value=False,
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -352,10 +352,38 @@ async def test_multi_pan_migration_issue_created_for_cpc(
     assert issue.is_fixable
 
 
+async def test_multi_pan_migration_issue_created_for_addon(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the repair issue is created when the multi-PAN addon is running."""
+    config_entry = _multi_pan_sky_connect_entry(ApplicationType.SPINEL.value)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    )
+    assert issue is not None
+    assert issue.is_fixable
+
+
 async def test_multi_pan_migration_issue_deleted_for_ezsp(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the multi-PAN migration repair issue is removed when running EZSP."""
+    """Test the multi-PAN migration repair issue is removed when not using multi-PAN."""
     config_entry = _multi_pan_sky_connect_entry(ApplicationType.EZSP.value)
     config_entry.add_to_hass(hass)
 
@@ -376,36 +404,7 @@ async def test_multi_pan_migration_issue_deleted_for_ezsp(
             return_value=True,
         ),
         patch(
-            "homeassistant.components.homeassistant_sky_connect.is_hassio",
-            return_value=True,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert (
-        issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
-        )
-        is None
-    )
-
-
-async def test_multi_pan_migration_issue_not_created_off_hassio(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test the migration issue is not created when not running on Hass.io."""
-    config_entry = _multi_pan_sky_connect_entry(ApplicationType.CPC.value)
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_sky_connect.is_hassio",
+            "homeassistant.components.homeassistant_sky_connect.multi_pan_addon_using_device",
             return_value=False,
         ),
     ):

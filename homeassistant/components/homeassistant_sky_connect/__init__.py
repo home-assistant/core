@@ -13,6 +13,9 @@ from homeassistant.components.homeassistant_hardware.repairs import (
     async_create_multi_pan_migration_issue,
     async_delete_multi_pan_migration_issue,
 )
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    multi_pan_addon_using_device,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     guess_firmware_info,
@@ -27,7 +30,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -102,7 +104,9 @@ async def async_setup_entry(
             translation_key="device_disconnected",
         )
 
-    if is_hassio(hass) and ApplicationType(entry.data[FIRMWARE]) is ApplicationType.CPC:
+    if ApplicationType(
+        entry.data[FIRMWARE]
+    ) is ApplicationType.CPC or await multi_pan_addon_using_device(hass, device_path):
         async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
     else:
         async_delete_multi_pan_migration_issue(hass, DOMAIN, entry)

@@ -274,7 +274,7 @@ async def test_multi_pan_migration_issue_created_for_cpc(
     addon_store_info,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the multi-PAN migration repair issue is created when running CPC."""
+    """Test the multi-PAN migration repair issue is created when firmware is CPC."""
     mock_integration(hass, MockModule("hassio"))
     await async_setup_component(hass, HASSIO_DOMAIN, {})
 
@@ -300,6 +300,10 @@ async def test_multi_pan_migration_issue_created_for_cpc(
             "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
             return_value=None,
         ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=False,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -315,12 +319,55 @@ async def test_multi_pan_migration_issue_created_for_cpc(
     assert issue.is_fixable
 
 
+async def test_multi_pan_migration_issue_created_for_addon(
+    hass: HomeAssistant,
+    addon_store_info,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair issue is created when the multi-PAN addon is running."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.SPINEL},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    )
+    assert issue is not None
+    assert issue.is_fixable
+
+
 async def test_multi_pan_migration_issue_deleted_for_ezsp(
     hass: HomeAssistant,
     addon_store_info,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the multi-PAN migration repair issue is removed when running EZSP."""
+    """Test the multi-PAN migration repair issue is removed when not using multi-PAN."""
     mock_integration(hass, MockModule("hassio"))
     await async_setup_component(hass, HASSIO_DOMAIN, {})
 
@@ -353,6 +400,10 @@ async def test_multi_pan_migration_issue_deleted_for_ezsp(
         ),
         patch(
             "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
             return_value=False,
         ),
     ):
@@ -425,6 +476,10 @@ async def test_migrate_entry(
                 source="unknown",
                 owners=[],
             ),
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=False,
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
