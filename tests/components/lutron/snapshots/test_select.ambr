@@ -47,15 +47,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Keypad Test Button LED',
-      'keypad': 'Test Keypad',
-      'led': 'Test LED',
       'options': list([
         'off',
         'on',
         'slow_flash',
         'fast_flash',
       ]),
-      'scene': 'Test Button LED',
     }),
     'context': <ANY>,
     'entity_id': 'select.test_keypad_test_button_led',
