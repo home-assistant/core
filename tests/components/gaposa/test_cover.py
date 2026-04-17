@@ -123,13 +123,12 @@ async def test_stop_cancels_pending_motion_refresh(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
 ) -> None:
-    """A stop command mid-motion cancels the pending 60-second motion refresh.
+    """A stop command mid-motion cancels the pending motion refresh.
 
-    Without this the open/close command's motion task sits in the background
+    Without this the open/close command's scheduled callback sits waiting
     until MOTION_DELAY elapses and then fires a pointless coordinator
     refresh long after the user has already stopped the cover.
     """
-    # Open first, then check that the motion task exists and is pending.
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -137,13 +136,10 @@ async def test_stop_cancels_pending_motion_refresh(
         blocking=True,
     )
 
-    # Reach into the cover entity to inspect the motion task.
-    entity_registry = hass.data["entity_components"]["cover"].get_entity(BEDROOM_ENTITY)
-    motion_task = entity_registry._motion_task  # pylint: disable=protected-access
-    assert motion_task is not None
-    assert not motion_task.done()
-
-    # Now stop — the motion task should be cancelled.
+    # The entity should have an active cancel handle for the motion refresh.
+    entity = hass.data["entity_components"]["cover"].get_entity(BEDROOM_ENTITY)
+    assert entity._cancel_motion_refresh is not None
+    # Stop cancels it.
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
@@ -151,7 +147,7 @@ async def test_stop_cancels_pending_motion_refresh(
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert motion_task.done()
+    assert entity._cancel_motion_refresh is None
 
 
 async def test_cover_reports_opening_during_motion_window(
