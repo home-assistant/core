@@ -111,7 +111,7 @@ async def test_victron_main_topic_sensor(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor whose metric has main_topic=True uses name instead of translation key."""
+    """Test sensor whose metric has main_topic=True keeps translation key and uses device name."""
     victron_hub, mock_config_entry = init_integration
 
     # Multi RS MPPT MppOperationMode is a main_topic metric
@@ -130,8 +130,7 @@ async def test_victron_main_topic_sensor(
     assert len(entities) == 1
     entity = entities[0]
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_multi_0_multi_mppt_1_state"
-    # main_topic entities get their name from the device, not a translation key
-    assert entity.translation_key is None
+    assert entity.translation_key == "multi_mppt_mpptnumber_state"
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
