@@ -38,7 +38,7 @@ ha-ffmpeg==3.2.2
 habluetooth==6.0.0
 hass-nabucasa==2.2.0
 hassil==3.5.0
-home-assistant-bluetooth==1.13.1
+home-assistant-bluetooth==2.0.0
 home-assistant-frontend==20260325.7
 home-assistant-intents==2026.3.24
 httpx==0.28.1
@@ -70,7 +70,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==2.2.0
 urllib3>=2.0
-uv==0.11.1
+uv==0.11.6
 voluptuous-openapi==0.3.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
@@ -134,7 +134,7 @@ backoff>=2.0
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.0
+pydantic==2.13.1
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0

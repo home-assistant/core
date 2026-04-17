@@ -11,7 +11,10 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "connection_initialization_failed": "Successfully connected, but failed to read data from the panel. Please check the integration encryption key is correct if your panel requires encryption.",
+      "panel_busy": "Successfully connected, but alarm panel reports it's busy. Please check no other connections are active.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "code": {
@@ -186,8 +189,17 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "connection_initialization_failed": {
+      "message": "[%key:component::satel_integra::config::error::connection_initialization_failed%]"
+    },
     "missing_output_access_code": {
       "message": "Cannot control switchable outputs because no user code is configured for this Satel Integra entry. Configure a code in the integration options to enable output control."
+    },
+    "panel_busy": {
+      "message": "[%key:component::satel_integra::config::error::panel_busy%]"
     }
   },
   "options": {

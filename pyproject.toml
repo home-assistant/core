@@ -51,7 +51,7 @@ dependencies = [
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
-  "home-assistant-bluetooth==1.13.1",
+  "home-assistant-bluetooth==2.0.0",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
   "lru-dict==1.4.1",
@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.0",
   "urllib3>=2.0",
-  "uv==0.11.1",
+  "uv==0.11.6",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.3.0",

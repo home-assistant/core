@@ -151,7 +151,7 @@ adguardhome==0.8.1
 advantage-air==0.4.4
 
 # homeassistant.components.frontier_silicon
-afsapi==0.3.1
+afsapi==1.0.0
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.24
@@ -806,6 +806,9 @@ deluge-client==1.10.2
 # homeassistant.components.lametric
 demetriek==1.3.0
 
+# homeassistant.components.denon_rs232
+denon-rs232==4.1.0
+
 # homeassistant.components.denonavr
 denonavr==1.3.2
 
@@ -1081,7 +1084,7 @@ gios==7.0.0
 gitterpy==0.1.7
 
 # homeassistant.components.glances
-glances-api==0.8.0
+glances-api==0.10.0
 
 # homeassistant.components.go2rtc
 go2rtc-client==0.4.0
@@ -1328,7 +1331,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==1.2.0
+infrared-protocols==1.3.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -1980,7 +1983,7 @@ pyatv==0.17.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.myneomitis
-pyaxencoapi==1.0.6
+pyaxencoapi==1.0.7
 
 # homeassistant.components.balboa
 pybalboa==1.1.3
@@ -2534,6 +2537,9 @@ pyswitchbee==1.8.3
 # homeassistant.components.tautulli
 pytautulli==23.1.1
 
+# homeassistant.components.teleinfo
+pyteleinfo==0.4.0
+
 # homeassistant.components.thinkingcleaner
 pythinkingcleaner==0.0.3
 
@@ -2879,7 +2885,7 @@ samsungtvws[async,encrypted]==2.7.2
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==1.1.1
+satel-integra==1.2.1
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -3309,7 +3315,7 @@ wiim==0.1.0
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.21.0
+wled==0.22.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.48
