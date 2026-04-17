@@ -78,7 +78,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         self.__modes_by_label: dict[str, str] | None = None
         self.__sound_modes_by_label: dict[str, str] | None = None
-        self.__play_caps: PlayCaps | None = None
+        self.__play_caps: PlayCaps = 0
 
         self._supports_sound_mode: bool = True
 
