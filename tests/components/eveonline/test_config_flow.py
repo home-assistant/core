@@ -171,18 +171,18 @@ async def test_flow_rejects_duplicate_character(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     # Second flow — same character, should abort.
-    result2 = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state2 = config_entry_oauth2_flow._encode_jwt(
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": result2["flow_id"],
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
 
-    await client.get(f"/auth/external/callback?code=abcd&state={state2}")
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
@@ -195,10 +195,10 @@ async def test_flow_rejects_duplicate_character(
         },
     )
 
-    result2 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -290,13 +290,13 @@ async def test_flow_succeeds_after_oauth_error(
     assert result["reason"] == "oauth_error"
 
     # Second flow — valid JWT, should succeed.
-    result2 = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state2 = config_entry_oauth2_flow._encode_jwt(
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": result2["flow_id"],
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
@@ -313,13 +313,13 @@ async def test_flow_succeeds_after_oauth_error(
         },
     )
 
-    await client.get(f"/auth/external/callback?code=abcd&state={state2}")
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
 
     with patch(
         "homeassistant.components.eveonline.async_setup_entry",
         return_value=True,
     ):
-        result2 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
