@@ -18,7 +18,6 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SLEEP_PERIOD
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
@@ -50,9 +49,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up media player for Shelly devices."""
     if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
-        return None
-
-    if config_entry.data[CONF_SLEEP_PERIOD]:
         return None
 
     return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
