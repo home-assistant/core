@@ -78,68 +78,6 @@ async def async_setup_entry(
     update_segments()
 
 
-class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
-    """Defines a WLED segment switch."""
-
-    entity_description: WLEDSegmentSwitchEntityDescription
-    _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(
-        self,
-        coordinator: WLEDDataUpdateCoordinator,
-        segment: int,
-        description: WLEDSegmentSwitchEntityDescription,
-    ) -> None:
-        """Initialize WLED segment switch."""
-        super().__init__(coordinator=coordinator)
-
-        self.entity_description = description
-        self._segment = segment
-
-        # Segment 0 uses a simpler name, which is more natural for when using
-        # a single segment / using WLED with one big LED strip.
-        if segment != 0:
-            self._attr_translation_key = description.segment_translation_key
-            self._attr_translation_placeholders = {"segment": str(segment)}
-        else:
-            self._attr_translation_key = description.translation_key
-
-        self._attr_unique_id = (
-            f"{coordinator.data.info.mac_address}_{description.key}_{segment}"
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available and self._segment in self.coordinator.data.state.segments
-        )
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the switch."""
-        segment = self.coordinator.data.state.segments[self._segment]
-        return bool(getattr(segment, self.entity_description.key))
-
-    async def _async_set_state(self, value: bool) -> None:
-        """Set segment state."""
-        await self.entity_description.set_segment(
-            self.coordinator.wled,
-            self._segment,
-            value,
-        )
-
-    @wled_exception_handler
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the WLED segment switch."""
-        await self._async_set_state(True)
-
-    @wled_exception_handler
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the WLED segment switch."""
-        await self._async_set_state(False)
-
-
 class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED nightlight switch."""
 
@@ -238,6 +176,68 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED sync receive switch."""
         await self.coordinator.wled.sync(receive=True)
+
+
+class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
+    """Defines a WLED segment switch."""
+
+    entity_description: WLEDSegmentSwitchEntityDescription
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        coordinator: WLEDDataUpdateCoordinator,
+        segment: int,
+        description: WLEDSegmentSwitchEntityDescription,
+    ) -> None:
+        """Initialize WLED segment switch."""
+        super().__init__(coordinator=coordinator)
+
+        self.entity_description = description
+        self._segment = segment
+
+        # Segment 0 uses a simpler name, which is more natural for when using
+        # a single segment / using WLED with one big LED strip.
+        if segment != 0:
+            self._attr_translation_key = description.segment_translation_key
+            self._attr_translation_placeholders = {"segment": str(segment)}
+        else:
+            self._attr_translation_key = description.translation_key
+
+        self._attr_unique_id = (
+            f"{coordinator.data.info.mac_address}_{description.key}_{segment}"
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available and self._segment in self.coordinator.data.state.segments
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        segment = self.coordinator.data.state.segments[self._segment]
+        return bool(getattr(segment, self.entity_description.key))
+
+    async def _async_set_state(self, value: bool) -> None:
+        """Set segment state."""
+        await self.entity_description.set_segment(
+            self.coordinator.wled,
+            self._segment,
+            value,
+        )
+
+    @wled_exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the WLED segment switch."""
+        await self._async_set_state(True)
+
+    @wled_exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the WLED segment switch."""
+        await self._async_set_state(False)
 
 
 @callback
