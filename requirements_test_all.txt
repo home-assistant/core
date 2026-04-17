@@ -763,6 +763,9 @@ dynalite-panel==0.0.4
 # homeassistant.components.rainforest_eagle
 eagle100==0.1.1
 
+# homeassistant.components.earn_e_p1
+earn-e-p1==0.1.0
+
 # homeassistant.components.easyenergy
 easyenergy==2.2.0
 
