@@ -74,7 +74,8 @@ def async_get_transmitters(
     An empty list means no compatible transmitters.
 
     Raises:
-        HomeAssistantError: If no transmitters exist.
+        HomeAssistantError: If the component is not loaded or if no
+            transmitters exist.
     """
     component = hass.data.get(DATA_COMPONENT)
     if component is None:
@@ -149,9 +150,9 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
     __last_command_sent: str | None = None
 
     @property
+    @abstractmethod
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return list of (min_hz, max_hz) tuples."""
-        raise NotImplementedError
 
     @property
     @final
