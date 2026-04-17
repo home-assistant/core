@@ -30,7 +30,8 @@ from .entity import (
 )
 from .utils import get_device_entry_gen
 
-CONTENT_TYPE_RADIO_FAVOURITE = "radio_favourite"
+CONTENT_TYPE_LOCAL_AUDIO = "local_audio"
+CONTENT_TYPE_LOCAL_RADIO = "local_radio"
 
 PARALLEL_UPDATES = 0
 
@@ -184,9 +185,14 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
-        """Implement the websocket media browsing helper."""
-        if media_content_type == CONTENT_TYPE_RADIO_FAVOURITE:
-            return await self._async_browse_radio_favorites()
+        """Browse radio stations and audio files."""
+        if not media_content_id:
+            return await self._async_browse_media_root()
+
+        if media_content_id == CONTENT_TYPE_LOCAL_RADIO:
+            return await self._async_browse_radio_stations(expanded=True)
+        if media_content_id == CONTENT_TYPE_LOCAL_AUDIO:
+            return await self._async_browse_local_audio(expanded=True)
 
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -194,28 +200,81 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             translation_placeholders={"media_content_type": str(media_content_type)},
         )
 
-    async def _async_browse_radio_favorites(self) -> BrowseMedia:
-        """Return BrowseMedia tree for radio favourites."""
-        result: dict[str, Any] = await self.coordinator.device.call_rpc(
-            "Media.Radio.ListFavourites", {}
-        )
-        children = [
-            BrowseMedia(
-                title=station["name"],
-                media_class=MediaClass.MUSIC,
-                media_content_type=CONTENT_TYPE_RADIO_FAVOURITE,
-                media_content_id=str(station["id"]),
-                thumbnail=station.get("icon"),
-                can_play=True,
-                can_expand=False,
-            )
-            for station in result["list"]
-        ]
+    async def _async_browse_media_root(self) -> BrowseMedia:
+        """Return root BrowseMedia tree."""
         return BrowseMedia(
-            title="Favourite Radios",
+            title="Local media",
             media_class=MediaClass.DIRECTORY,
-            media_content_type=CONTENT_TYPE_RADIO_FAVOURITE,
+            media_content_type="",
             media_content_id="",
+            children=[
+                await self._async_browse_radio_stations(),
+                await self._async_browse_local_audio(),
+            ],
+            can_play=False,
+            can_expand=True,
+        )
+
+    async def _async_browse_local_audio(self, expanded: bool = False) -> BrowseMedia:
+        """Return BrowseMedia tree for local audio files."""
+        if expanded:
+            result: dict[str, Any] = await self.coordinator.device.call_rpc(
+                "Media.List", {}
+            )
+            children: list[BrowseMedia] | None = [
+                BrowseMedia(
+                    title=item["title"],
+                    media_class=MediaClass.MUSIC,
+                    media_content_type=CONTENT_TYPE_LOCAL_AUDIO,
+                    media_content_id=str(item["id"]),
+                    thumbnail=item["preview"],
+                    can_play=True,
+                    can_expand=False,
+                )
+                for item in result["list"]
+                if item.get("type") == "AUDIO"
+            ]
+        else:
+            children = None
+
+        return BrowseMedia(
+            title="Audio files",
+            media_class=MediaClass.DIRECTORY,
+            media_content_type=CONTENT_TYPE_LOCAL_AUDIO,
+            media_content_id=CONTENT_TYPE_LOCAL_AUDIO,
+            children_media_class=MediaClass.MUSIC,
+            children=children,
+            can_play=False,
+            can_expand=True,
+        )
+
+    async def _async_browse_radio_stations(self, expanded: bool = False) -> BrowseMedia:
+        """Return BrowseMedia tree for radio stations."""
+        if expanded:
+            result: dict[str, Any] = await self.coordinator.device.call_rpc(
+                "Media.Radio.ListFavourites", {}
+            )
+            children: list[BrowseMedia] | None = [
+                BrowseMedia(
+                    title=station["name"],
+                    media_class=MediaClass.MUSIC,
+                    media_content_type=CONTENT_TYPE_LOCAL_RADIO,
+                    media_content_id=str(station["id"]),
+                    thumbnail=station["icon"],
+                    can_play=True,
+                    can_expand=False,
+                )
+                for station in result["list"]
+            ]
+        else:
+            children = None
+
+        return BrowseMedia(
+            title="Radio stations",
+            media_class=MediaClass.DIRECTORY,
+            media_content_type=CONTENT_TYPE_LOCAL_RADIO,
+            media_content_id=CONTENT_TYPE_LOCAL_RADIO,
+            children_media_class=MediaClass.MUSIC,
             children=children,
             can_play=False,
             can_expand=True,
@@ -227,9 +286,13 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         media_id: str,
         **kwargs: Any,
     ) -> None:
-        """Play a radio favourite by id."""
-        if media_type == CONTENT_TYPE_RADIO_FAVOURITE:
+        """Play media by type and id."""
+        if media_type == CONTENT_TYPE_LOCAL_RADIO:
             await self.call_rpc("Media.Radio.PlayFavourite", {"id": int(media_id)})
+            return
+
+        if media_type == CONTENT_TYPE_LOCAL_AUDIO:
+            await self.call_rpc("Media.MediaPlayer.Play", {"id": int(media_id)})
             return
 
         raise HomeAssistantError(
