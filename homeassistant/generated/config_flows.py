@@ -370,6 +370,7 @@ FLOWS = {
         "keenetic_ndms2",
         "kegtron",
         "keymitt_ble",
+        "kiosker",
         "kmtronic",
         "knocki",
         "knx",
