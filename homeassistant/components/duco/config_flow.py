@@ -50,10 +50,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         if not _DUCO_MDNS_NAME_RE.match(discovery_info.name):
             return self.async_abort(reason="not_duco_device")
 
-        host = discovery_info.host
-
         try:
-            box_name, mac = await self._validate_input(host)
+            box_name, mac = await self._validate_input(discovery_info.host)
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
         except DucoError:
@@ -61,9 +59,9 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(format_mac(mac))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
-        self._host = host
+        self._host = discovery_info.host
         self._box_name = box_name
         self.context["title_placeholders"] = {"name": box_name}
 
