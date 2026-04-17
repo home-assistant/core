@@ -15,11 +15,10 @@ from homeassistant.components.radio_frequency import async_send_command
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_TRANSMITTER, DOMAIN
+from .entity import HoneywellStringLightsEntity
 
 PARALLEL_UPDATES = 1
 
@@ -33,26 +32,18 @@ async def async_setup_entry(
     async_add_entities([HoneywellStringLight(config_entry)])
 
 
-class HoneywellStringLight(LightEntity, RestoreEntity):
+class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEntity):
     """Representation of a Honeywell String Lights set controlled via RF."""
 
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the light."""
-        self._transmitter = config_entry.data[CONF_TRANSMITTER]
-        self._attr_unique_id = config_entry.entry_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-            manufacturer="Honeywell",
-            model="String Lights",
-            name=config_entry.title,
-        )
+        super().__init__(config_entry)
         self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
