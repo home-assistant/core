@@ -40,7 +40,7 @@ def mock_config_entry():
 def mock_application_credentials():
     """Mock Application Credentials."""
     with patch(
-        "custom_components.hisense_connectlife.auth.config_entry_oauth2_flow"
+        "homeassistant.components.hisense_connectlife.auth.config_entry_oauth2_flow"
     ) as mock_oauth2:
         mock_session = AsyncMock()
         mock_session.async_ensure_token_valid = AsyncMock(

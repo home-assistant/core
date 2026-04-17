@@ -53,7 +53,7 @@ async def test_async_setup_entry(
         result = await async_setup_entry(hass, mock_config_entry)
 
         assert result is True
-        mock_coordinator.async_config_entry_first_refresh.assert_called_once()  # Changed to this assertion
+        mock_coordinator.async_setup.assert_called_once()
 
 
 @pytest.mark.asyncio

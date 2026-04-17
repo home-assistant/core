@@ -75,7 +75,7 @@ class DeviceInfo:
 
     @property
     def is_onOff(self) -> bool:
-        """Return if device is online."""
+        """Return if device is offline."""
         return self._is_onOff
 
     def get_device_type(self) -> DeviceType | None:

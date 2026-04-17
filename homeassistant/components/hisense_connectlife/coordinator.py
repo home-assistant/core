@@ -36,6 +36,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name="hisense_connectlife",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            config_entry=config_entry,
         )
         self.api_client = api_client
         self.config_entry = config_entry
