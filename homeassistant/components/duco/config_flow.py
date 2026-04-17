@@ -72,6 +72,42 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": self._box_name},
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                box_name, mac = await self._validate_input(user_input[CONF_HOST])
+            except DucoConnectionError:
+                errors["base"] = "cannot_connect"
+            except DucoError:
+                _LOGGER.exception("Unexpected error connecting to Duco box")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(format_mac(mac))
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    title=box_name,
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
+                    ): str,
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
