@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
-
 from homeassistant import config_entries
 from homeassistant.components.wibeee.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
 
 async def test_flow_init(hass: HomeAssistant) -> None:
     """Test that the flow is initialized."""

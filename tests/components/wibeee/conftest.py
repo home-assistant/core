@@ -16,12 +16,10 @@ from homeassistant.components.wibeee.const import (
     MODE_LOCAL_PUSH,
     MODE_POLLING,
 )
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
 
 # ---------------------------------------------------------------------------
 # Mock data constants
