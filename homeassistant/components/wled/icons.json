@@ -54,7 +54,6 @@
       "freeze": {
         "default": "mdi:timer",
         "state": {
-          "off": "mdi:timer",
           "on": "mdi:eye"
         }
       },
@@ -67,7 +66,6 @@
       "segment_freeze": {
         "default": "mdi:timer",
         "state": {
-          "off": "mdi:timer",
           "on": "mdi:eye"
         }
       },

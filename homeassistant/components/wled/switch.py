@@ -52,6 +52,32 @@ SEGMENT_SWITCHES: tuple[WLEDSegmentSwitchEntityDescription, ...] = (
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: WLEDConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up WLED switch based on a config entry."""
+    coordinator = entry.runtime_data
+
+    async_add_entities(
+        [
+            WLEDNightlightSwitch(coordinator),
+            WLEDSyncSendSwitch(coordinator),
+            WLEDSyncReceiveSwitch(coordinator),
+        ]
+    )
+
+    update_segments = partial(
+        async_update_segments,
+        coordinator,
+        set(),
+        async_add_entities,
+    )
+    coordinator.async_add_listener(update_segments)
+    update_segments()
+
+
 class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED segment switch."""
 
@@ -112,32 +138,6 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED segment switch."""
         await self._async_set_state(False)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: WLEDConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up WLED switch based on a config entry."""
-    coordinator = entry.runtime_data
-
-    async_add_entities(
-        [
-            WLEDNightlightSwitch(coordinator),
-            WLEDSyncSendSwitch(coordinator),
-            WLEDSyncReceiveSwitch(coordinator),
-        ]
-    )
-
-    update_segments = partial(
-        async_update_segments,
-        coordinator,
-        set(),
-        async_add_entities,
-    )
-    coordinator.async_add_listener(update_segments)
-    update_segments()
 
 
 class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
@@ -259,14 +259,12 @@ def async_update_segments(
     for segment_id in segment_ids - current_ids:
         current_ids.add(segment_id)
         new_entities.extend(
-            [
-                WLEDSegmentSwitch(
-                    coordinator=coordinator,
-                    segment=segment_id,
-                    description=description,
-                )
-                for description in SEGMENT_SWITCHES
-            ]
+            WLEDSegmentSwitch(
+                coordinator=coordinator,
+                segment=segment_id,
+                description=description,
+            )
+            for description in SEGMENT_SWITCHES
         )
 
     async_add_entities(new_entities)
