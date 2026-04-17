@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import WibeeeConfigEntry
-from .api import WibeeeDeviceInfo
+from pywibeee import WibeeeDeviceInfo
 from .const import (
     DOMAIN,
     KNOWN_MODELS,

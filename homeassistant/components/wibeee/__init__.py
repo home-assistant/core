@@ -27,8 +27,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from .api import WibeeeAPI, WibeeeDeviceInfo
+from pywibeee import WibeeeAPI, WibeeeDeviceInfo
 from .const import (
     CONF_MAC_ADDRESS,
     CONF_SCAN_INTERVAL,
