@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import serial
 from teleinfo import decode, read_frame
@@ -119,9 +119,9 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle USB discovery confirmation."""
+        if TYPE_CHECKING:
+            assert self._discovered_device is not None
         if user_input is not None:
-            if self._discovered_device is None:
-                raise RuntimeError("Discovered device unexpectedly None")
             return self.async_create_entry(
                 title=f"Teleinfo ({self._discovered_device})",
                 data={CONF_SERIAL_PORT: self._discovered_device},
