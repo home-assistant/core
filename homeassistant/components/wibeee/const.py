@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
 )
 
@@ -159,14 +160,14 @@ SENSOR_TYPES: dict[str, WibeeeSensorEntityDescription] = {
     "energia_reactiva_ind": WibeeeSensorEntityDescription(
         key="energia_reactiva_ind",
         translation_key="inductive_reactive_energy",
-        native_unit_of_measurement="varh",
+        native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         device_class=None,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "energia_reactiva_cap": WibeeeSensorEntityDescription(
         key="energia_reactiva_cap",
         translation_key="capacitive_reactive_energy",
-        native_unit_of_measurement="varh",
+        native_unit_of_measurement=UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         device_class=None,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
