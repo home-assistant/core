@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.homeassistant_hardware.repairs import (
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
 )
 from homeassistant.components.homeassistant_hardware.util import (

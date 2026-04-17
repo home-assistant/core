@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from homeassistant.components.homeassistant_hardware.repairs import (
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
     async_create_multi_pan_migration_issue,
     async_delete_multi_pan_migration_issue,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from homeassistant.components.homeassistant_hardware.repairs import (
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
     MultiPanMigrationRepairFlow,
 )

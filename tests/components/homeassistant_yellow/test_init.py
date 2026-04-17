@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import zha
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
-from homeassistant.components.homeassistant_hardware.repairs import (
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
 )
 from homeassistant.components.homeassistant_hardware.util import (
