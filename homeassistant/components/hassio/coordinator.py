@@ -34,6 +34,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
     ATTR_REPOSITORIES,
     ATTR_REPOSITORY,
@@ -123,7 +124,7 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     if (store := hass.data.get(DATA_STORE)) is not None:
         result[ATTR_REPOSITORIES] = [repo.to_dict() for repo in store.repositories]
     if (addons_list := hass.data.get(DATA_ADDONS_LIST)) is not None:
-        result["addons"] = [addon.to_dict() for addon in addons_list]
+        result[ATTR_ADDONS] = [addon.to_dict() for addon in addons_list]
     return result
 
 
@@ -495,8 +496,9 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.hass.data[DATA_ADDONS_LIST] = installed_addons
 
         # Update addon info cache in hass.data
-        data = self.hass.data
-        addon_info_cache: dict[str, Any] = data.setdefault(DATA_ADDONS_INFO, {})
+        addon_info_cache: dict[str, Any] = self.hass.data.setdefault(
+            DATA_ADDONS_INFO, {}
+        )
         for slug in addon_info_cache.keys() - all_addons:
             del addon_info_cache[slug]
         addon_info_cache.update(addon_info_results)
