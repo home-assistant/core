@@ -10,168 +10,58 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    ATTR_DOMAIN,
-    ATTR_ENTITY_ID,
-    ATTR_SERVICE_DATA,
-    EVENT_CALL_SERVICE,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.typing import ConfigType
 
-from .conftest import ConfigurationStyle, async_get_flow_preview_state
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_action,
+    async_get_flow_preview_state,
+    async_trigger,
+    make_test_action,
+    make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
+)
 
-from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
 from tests.conftest import WebSocketGenerator
 
-TEST_OBJECT_ID = "test_template_panel"
-TEST_ENTITY_ID = f"alarm_control_panel.{TEST_OBJECT_ID}"
-TEST_STATE_ENTITY_ID = "alarm_control_panel.test"
-TEST_SWITCH = "switch.test_state"
+TEST_STATE_ENTITY_ID = "sensor.test_state"
+TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
+
+TEST_PANEL = TemplatePlatformSetup(
+    ALARM_DOMAIN,
+    "panels",
+    "test_template_panel",
+    make_test_trigger(TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY),
+)
 
 
-@pytest.fixture
-def call_service_events(hass: HomeAssistant) -> list[Event]:
-    """Track service call events for alarm_control_panel.test."""
-    events: list[Event] = []
-    entity_id = "alarm_control_panel.test"
+DATA_CODE = {"code": "{{ code }}"}
+ARM_AWAY_ACTION = make_test_action("arm_away", DATA_CODE)
+ARM_HOME_ACTION = make_test_action("arm_home", DATA_CODE)
+ARM_NIGHT_ACTION = make_test_action("arm_night", DATA_CODE)
+ARM_VACATION_ACTION = make_test_action("arm_vacation", DATA_CODE)
+ARM_CUSTOM_BYPASS_ACTION = make_test_action("arm_custom_bypass", DATA_CODE)
+DISARM_ACTION = make_test_action("disarm", DATA_CODE)
+TRIGGER_ACTION = make_test_action("trigger", DATA_CODE)
 
-    @callback
-    def capture_events(event: Event) -> None:
-        if event.data[ATTR_DOMAIN] != ALARM_DOMAIN:
-            return
-        if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
-            return
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CALL_SERVICE, capture_events)
-
-    return events
-
-
-OPTIMISTIC_TEMPLATE_ALARM_CONFIG = {
-    "arm_away": {
-        "service": "alarm_control_panel.alarm_arm_away",
-        "entity_id": "alarm_control_panel.test",
-        "data": {"code": "{{ this.entity_id }}"},
-    },
-    "arm_home": {
-        "service": "alarm_control_panel.alarm_arm_home",
-        "entity_id": "alarm_control_panel.test",
-        "data": {"code": "{{ this.entity_id }}"},
-    },
-    "arm_night": {
-        "service": "alarm_control_panel.alarm_arm_night",
-        "entity_id": "alarm_control_panel.test",
-        "data": {"code": "{{ this.entity_id }}"},
-    },
-    "arm_vacation": {
-        "service": "alarm_control_panel.alarm_arm_vacation",
-        "entity_id": "alarm_control_panel.test",
-        "data": {"code": "{{ this.entity_id }}"},
-    },
-    "arm_custom_bypass": {
-        "service": "alarm_control_panel.alarm_arm_custom_bypass",
-        "entity_id": "alarm_control_panel.test",
-        "data": {"code": "{{ this.entity_id }}"},
-    },
-    "disarm": {
-        "service": "alarm_control_panel.alarm_disarm",
-        "entity_id": "alarm_control_panel.test",
-        "data": {"code": "{{ this.entity_id }}"},
-    },
-    "trigger": {
-        "service": "alarm_control_panel.alarm_trigger",
-        "entity_id": "alarm_control_panel.test",
-        "data": {"code": "{{ this.entity_id }}"},
-    },
-}
-EMPTY_ACTIONS = {
-    "arm_away": [],
-    "arm_home": [],
-    "arm_night": [],
-    "arm_vacation": [],
-    "arm_custom_bypass": [],
-    "disarm": [],
-    "trigger": [],
+OPTIMISTIC_ACTIONS = {
+    **ARM_AWAY_ACTION,
+    **ARM_HOME_ACTION,
+    **ARM_NIGHT_ACTION,
+    **ARM_VACATION_ACTION,
+    **ARM_CUSTOM_BYPASS_ACTION,
+    **DISARM_ACTION,
+    **TRIGGER_ACTION,
 }
 
-
-UNIQUE_ID_CONFIG = {
-    **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-    "unique_id": "not-so-unique-anymore",
-}
-
-
-TEMPLATE_ALARM_CONFIG = {
-    "value_template": "{{ states('alarm_control_panel.test') }}",
-    **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-}
-
-TEST_STATE_TRIGGER = {
-    "triggers": {"trigger": "state", "entity_id": [TEST_STATE_ENTITY_ID, TEST_SWITCH]},
-    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
-    "actions": [
-        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
-    ],
-}
-
-
-async def async_setup_legacy_format(
-    hass: HomeAssistant, count: int, panel_config: dict[str, Any]
-) -> None:
-    """Do setup of alarm control panel integration via legacy format."""
-    config = {"alarm_control_panel": {"platform": "template", "panels": panel_config}}
-
-    with assert_setup_component(count, ALARM_DOMAIN):
-        assert await async_setup_component(
-            hass,
-            ALARM_DOMAIN,
-            config,
-        )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_modern_format(
-    hass: HomeAssistant, count: int, panel_config: dict[str, Any]
-) -> None:
-    """Do setup of alarm control panel integration via modern format."""
-    config = {"template": {"alarm_control_panel": panel_config}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_trigger_format(
-    hass: HomeAssistant, count: int, panel_config: dict[str, Any]
-) -> None:
-    """Do setup of alarm control panel integration via trigger format."""
-    config = {"template": {"alarm_control_panel": panel_config, **TEST_STATE_TRIGGER}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
+EMPTY_ACTIONS = {action: [] for action in OPTIMISTIC_ACTIONS}
 
 
 @pytest.fixture
@@ -182,12 +72,7 @@ async def setup_panel(
     panel_config: dict[str, Any],
 ) -> None:
     """Do setup of alarm control panel integration."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(hass, count, panel_config)
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(hass, count, panel_config)
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(hass, count, panel_config)
+    await setup_entity(hass, TEST_PANEL, style, count, panel_config)
 
 
 async def async_setup_state_panel(
@@ -197,37 +82,9 @@ async def async_setup_state_panel(
     state_template: str,
 ):
     """Do setup of alarm control panel integration using a state template."""
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                TEST_OBJECT_ID: {
-                    "value_template": state_template,
-                    **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-                }
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                "state": state_template,
-                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                "state": state_template,
-                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-            },
-        )
+    await setup_entity(
+        hass, TEST_PANEL, style, count, OPTIMISTIC_ACTIONS, state_template
+    )
 
 
 @pytest.fixture
@@ -238,7 +95,9 @@ async def setup_state_panel(
     state_template: str,
 ):
     """Do setup of alarm control panel integration using a state template."""
-    await async_setup_state_panel(hass, count, style, state_template)
+    await setup_entity(
+        hass, TEST_PANEL, style, count, OPTIMISTIC_ACTIONS, state_template
+    )
 
 
 @pytest.fixture
@@ -250,35 +109,7 @@ async def setup_base_panel(
     panel_config: str,
 ):
     """Do setup of alarm control panel integration using a state template."""
-    if style == ConfigurationStyle.LEGACY:
-        extra = {"value_template": state_template} if state_template else {}
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {TEST_OBJECT_ID: {**extra, **panel_config}},
-        )
-    elif style == ConfigurationStyle.MODERN:
-        extra = {"state": state_template} if state_template else {}
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **extra,
-                **panel_config,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        extra = {"state": state_template} if state_template else {}
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **extra,
-                **panel_config,
-            },
-        )
+    await setup_entity(hass, TEST_PANEL, style, count, panel_config, state_template)
 
 
 @pytest.fixture
@@ -291,45 +122,19 @@ async def setup_single_attribute_state_panel(
     attribute_template: str,
 ) -> None:
     """Do setup of alarm control panel integration testing a single attribute."""
-    extra = {attribute: attribute_template} if attribute and attribute_template else {}
-    if style == ConfigurationStyle.LEGACY:
-        await async_setup_legacy_format(
-            hass,
-            count,
-            {
-                TEST_OBJECT_ID: {
-                    **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-                    "value_template": state_template,
-                    **extra,
-                }
-            },
-        )
-    elif style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-                "state": state_template,
-                **extra,
-            },
-        )
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass,
-            count,
-            {
-                "name": TEST_OBJECT_ID,
-                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-                "state": state_template,
-                **extra,
-            },
-        )
+    await setup_entity(
+        hass,
+        TEST_PANEL,
+        style,
+        count,
+        OPTIMISTIC_ACTIONS,
+        state_template,
+        {attribute: attribute_template} if attribute and attribute_template else {},
+    )
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states('alarm_control_panel.test') }}")]
+    ("count", "state_template"), [(1, "{{ states('sensor.test_state') }}")]
 )
 @pytest.mark.parametrize(
     "style",
@@ -351,14 +156,12 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
         AlarmControlPanelState.PENDING,
         AlarmControlPanelState.TRIGGERED,
     ):
-        hass.states.async_set(TEST_STATE_ENTITY_ID, set_state)
-        await hass.async_block_till_done()
-        state = hass.states.get(TEST_ENTITY_ID)
+        await async_trigger(hass, TEST_STATE_ENTITY_ID, set_state)
+        state = hass.states.get(TEST_PANEL.entity_id)
         assert state.state == set_state
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, "invalid_state")
-    await hass.async_block_till_done()
-    state = hass.states.get(TEST_ENTITY_ID)
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "invalid_state")
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.state == "unknown"
 
 
@@ -386,13 +189,8 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_panel")
 async def test_state_template_states(hass: HomeAssistant, expected: str) -> None:
     """Test the state template."""
-
-    # Force a trigger
-    hass.states.async_set(TEST_STATE_ENTITY_ID, None)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_ENTITY_ID)
-
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.state == expected
 
 
@@ -402,7 +200,7 @@ async def test_state_template_states(hass: HomeAssistant, expected: str) -> None
         (
             1,
             "{{ 'disarmed' }}",
-            "{% if states.switch.test_state.state %}mdi:check{% endif %}",
+            "{% if states.sensor.test_state.state %}mdi:check{% endif %}",
             "icon",
         )
     ],
@@ -417,13 +215,12 @@ async def test_state_template_states(hass: HomeAssistant, expected: str) -> None
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
 async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test icon template."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.attributes.get("icon") == initial_state
 
-    hass.states.async_set(TEST_SWITCH, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.attributes["icon"] == "mdi:check"
 
 
@@ -433,7 +230,7 @@ async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
         (
             1,
             "{{ 'disarmed' }}",
-            "{% if states.switch.test_state.state %}local/panel.png{% endif %}",
+            "{% if states.sensor.test_state.state %}local/panel.png{% endif %}",
             "picture",
         )
     ],
@@ -448,13 +245,12 @@ async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
 async def test_picture_template(hass: HomeAssistant, initial_state: str) -> None:
     """Test icon template."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.attributes.get("entity_picture") == initial_state
 
-    hass.states.async_set(TEST_SWITCH, STATE_ON)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.attributes["entity_picture"] == "local/panel.png"
 
 
@@ -464,7 +260,7 @@ async def test_setup_config_entry(
     """Test the config flow."""
     value_template = "{{ states('alarm_control_panel.one') }}"
 
-    hass.states.async_set("alarm_control_panel.one", "armed_away", {})
+    await async_trigger(hass, "alarm_control_panel.one", "armed_away", {})
 
     template_config_entry = MockConfigEntry(
         data={},
@@ -487,8 +283,7 @@ async def test_setup_config_entry(
     assert state is not None
     assert state == snapshot
 
-    hass.states.async_set("alarm_control_panel.one", "disarmed", {})
-    await hass.async_block_till_done()
+    await async_trigger(hass, "alarm_control_panel.one", "disarmed", {})
     state = hass.states.get("alarm_control_panel.my_template")
     assert state.state == AlarmControlPanelState.DISARMED
 
@@ -498,14 +293,12 @@ async def test_setup_config_entry(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.parametrize(
-    "panel_config", [OPTIMISTIC_TEMPLATE_ALARM_CONFIG, EMPTY_ACTIONS]
-)
+@pytest.mark.parametrize("panel_config", [OPTIMISTIC_ACTIONS, EMPTY_ACTIONS])
 @pytest.mark.usefixtures("setup_base_panel")
-async def test_optimistic_states(hass: HomeAssistant) -> None:
+async def test_optimistic_states(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the optimistic state."""
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     await hass.async_block_till_done()
     assert state.state == "unknown"
 
@@ -521,11 +314,11 @@ async def test_optimistic_states(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             ALARM_DOMAIN,
             service,
-            {"entity_id": TEST_ENTITY_ID, "code": "1234"},
+            {"entity_id": TEST_PANEL.entity_id, "code": "1234"},
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert hass.states.get(TEST_ENTITY_ID).state == set_state
+        assert hass.states.get(TEST_PANEL.entity_id).state == set_state
 
 
 @pytest.mark.parametrize("count", [0])
@@ -537,12 +330,12 @@ async def test_optimistic_states(hass: HomeAssistant) -> None:
     ("panel_config", "state_template", "msg"),
     [
         (
-            OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+            OPTIMISTIC_ACTIONS,
             "{% if blah %}",
             "invalid template",
         ),
         (
-            {"code_format": "bad_format", **OPTIMISTIC_TEMPLATE_ALARM_CONFIG},
+            {"code_format": "bad_format", **OPTIMISTIC_ACTIONS},
             "disarmed",
             "value must be one of ['no_code', 'number', 'text']",
         ),
@@ -568,7 +361,7 @@ async def test_template_syntax_error(
                     "panels": {
                         "bad name here": {
                             "value_template": "disarmed",
-                            **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+                            **OPTIMISTIC_ACTIONS,
                         }
                     },
                 }
@@ -608,7 +401,7 @@ async def test_legacy_template_syntax_error(
 @pytest.mark.parametrize(
     ("style", "test_entity_id"),
     [
-        (ConfigurationStyle.LEGACY, TEST_ENTITY_ID),
+        (ConfigurationStyle.LEGACY, TEST_PANEL.entity_id),
         (ConfigurationStyle.MODERN, "alarm_control_panel.template_alarm_panel"),
         (ConfigurationStyle.TRIGGER, "alarm_control_panel.unnamed_device"),
     ],
@@ -616,8 +409,7 @@ async def test_legacy_template_syntax_error(
 @pytest.mark.usefixtures("setup_single_attribute_state_panel")
 async def test_name(hass: HomeAssistant, test_entity_id: str) -> None:
     """Test the accessibility of the name attribute."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, "disarmed")
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "disarmed")
 
     state = hass.states.get(test_entity_id)
     assert state is not None
@@ -625,138 +417,66 @@ async def test_name(hass: HomeAssistant, test_entity_id: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states('alarm_control_panel.test') }}")]
+    ("count", "state_template"), [(1, "{{ states('sensor.test_state') }}")]
 )
 @pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
-    "service",
+    ("service", "expected_service"),
     [
-        "alarm_arm_home",
-        "alarm_arm_away",
-        "alarm_arm_night",
-        "alarm_arm_vacation",
-        "alarm_arm_custom_bypass",
-        "alarm_disarm",
-        "alarm_trigger",
+        ("alarm_arm_home", "arm_home"),
+        ("alarm_arm_away", "arm_away"),
+        ("alarm_arm_night", "arm_night"),
+        ("alarm_arm_vacation", "arm_vacation"),
+        ("alarm_arm_custom_bypass", "arm_custom_bypass"),
+        ("alarm_disarm", "disarm"),
+        ("alarm_trigger", "trigger"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_panel")
 async def test_actions(
-    hass: HomeAssistant, service, call_service_events: list[Event]
+    hass: HomeAssistant, service: str, expected_service: str, calls: list[ServiceCall]
 ) -> None:
     """Test alarm actions."""
     await hass.services.async_call(
         ALARM_DOMAIN,
         service,
-        {"entity_id": TEST_ENTITY_ID, "code": "1234"},
+        {"entity_id": TEST_PANEL.entity_id, "code": "1234"},
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert len(call_service_events) == 1
-    assert call_service_events[0].data["service"] == service
-    assert call_service_events[0].data["service_data"]["code"] == TEST_ENTITY_ID
+
+    assert_action(TEST_PANEL, calls, 1, expected_service, code=1234)
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize("config", [OPTIMISTIC_ACTIONS])
 @pytest.mark.parametrize(
-    ("panel_config", "style"),
-    [
-        (
-            {
-                "test_template_alarm_control_panel_01": {
-                    "value_template": "{{ true }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-                "test_template_alarm_control_panel_02": {
-                    "value_template": "{{ false }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-            },
-            ConfigurationStyle.LEGACY,
-        ),
-        (
-            [
-                {
-                    "name": "test_template_alarm_control_panel_01",
-                    "state": "{{ true }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_alarm_control_panel_02",
-                    "state": "{{ false }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-            ],
-            ConfigurationStyle.MODERN,
-        ),
-        (
-            [
-                {
-                    "name": "test_template_alarm_control_panel_01",
-                    "state": "{{ true }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_alarm_control_panel_02",
-                    "state": "{{ false }}",
-                    **UNIQUE_ID_CONFIG,
-                },
-            ],
-            ConfigurationStyle.TRIGGER,
-        ),
-    ],
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-@pytest.mark.usefixtures("setup_panel")
-async def test_unique_id(hass: HomeAssistant) -> None:
-    """Test unique_id option only creates one alarm control panel per id."""
-    assert len(hass.states.async_all()) == 1
-
-
-async def test_nested_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+async def test_unique_id(
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
 ) -> None:
-    """Test a template unique_id propagates to alarm_control_panel unique_ids."""
-    with assert_setup_component(1, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {
-                "template": {
-                    "unique_id": "x",
-                    "alarm_control_panel": [
-                        {
-                            **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-                            "name": "test_a",
-                            "unique_id": "a",
-                            "state": "{{ true }}",
-                        },
-                        {
-                            **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
-                            "name": "test_b",
-                            "unique_id": "b",
-                            "state": "{{ true }}",
-                        },
-                    ],
-                },
-            },
-        )
+    """Test unique_id option only creates one alarm control panel per id."""
+    await setup_and_test_unique_id(hass, TEST_PANEL, style, config)
 
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("alarm_control_panel")) == 2
-
-    entry = entity_registry.async_get("alarm_control_panel.test_a")
-    assert entry
-    assert entry.unique_id == "x-a"
-
-    entry = entity_registry.async_get("alarm_control_panel.test_b")
-    assert entry
-    assert entry.unique_id == "x-b"
+@pytest.mark.parametrize("config", [OPTIMISTIC_ACTIONS])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_nested_unique_id(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a template unique_id propagates to alarm control panel unique_ids."""
+    await setup_and_test_nested_unique_id(
+        hass, TEST_PANEL, style, entity_registry, config
+    )
 
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "disarmed")])
@@ -798,13 +518,13 @@ async def test_nested_unique_id(
 @pytest.mark.usefixtures("setup_base_panel")
 async def test_code_config(hass: HomeAssistant, code_format, code_arm_required) -> None:
     """Test configuration options related to alarm code."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.attributes.get("code_format") == code_format
     assert state.attributes.get("code_arm_required") == code_arm_required
 
 
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states('alarm_control_panel.test') }}")]
+    ("count", "state_template"), [(1, "{{ states('sensor.test_state') }}")]
 )
 @pytest.mark.parametrize(
     "style",
@@ -931,9 +651,9 @@ async def test_flow_preview(
         (
             1,
             {
-                "name": TEST_OBJECT_ID,
-                "state": "{{ states('alarm_control_panel.test') }}",
-                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+                "name": TEST_PANEL.object_id,
+                "state": "{{ states('sensor.test_state') }}",
+                **OPTIMISTIC_ACTIONS,
                 "optimistic": True,
             },
         )
@@ -944,25 +664,23 @@ async def test_flow_preview(
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_panel")
-async def test_optimistic(hass: HomeAssistant) -> None:
+async def test_optimistic(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test configuration with empty script."""
-    hass.states.async_set(TEST_STATE_ENTITY_ID, AlarmControlPanelState.DISARMED)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, AlarmControlPanelState.DISARMED)
 
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_arm_away",
-        {"entity_id": TEST_ENTITY_ID, "code": "1234"},
+        {"entity_id": TEST_PANEL.entity_id, "code": "1234"},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.state == AlarmControlPanelState.ARMED_AWAY
 
-    hass.states.async_set(TEST_STATE_ENTITY_ID, AlarmControlPanelState.ARMED_HOME)
-    await hass.async_block_till_done()
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, AlarmControlPanelState.ARMED_HOME)
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.state == AlarmControlPanelState.ARMED_HOME
 
 
@@ -972,9 +690,9 @@ async def test_optimistic(hass: HomeAssistant) -> None:
         (
             1,
             {
-                "name": TEST_OBJECT_ID,
-                "state": "{{ states('alarm_control_panel.test') }}",
-                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+                "name": TEST_PANEL.object_id,
+                "state": "{{ states('sensor.test_state') }}",
+                **OPTIMISTIC_ACTIONS,
                 "optimistic": False,
             },
         )
@@ -985,14 +703,75 @@ async def test_optimistic(hass: HomeAssistant) -> None:
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_panel")
-async def test_not_optimistic(hass: HomeAssistant) -> None:
+async def test_not_optimistic(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test optimistic yaml option set to false."""
     await hass.services.async_call(
         ALARM_DOMAIN,
         "alarm_arm_away",
-        {"entity_id": TEST_ENTITY_ID, "code": "1234"},
+        {"entity_id": TEST_PANEL.entity_id, "code": "1234"},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_PANEL.entity_id)
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "attribute_template"),
+    [
+        (
+            1,
+            "{{ 'disarmed' }}",
+            "availability",
+            "{{ is_state('binary_sensor.availability', 'on') }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_panel")
+async def test_available_template_with_entities(hass: HomeAssistant) -> None:
+    """Test availability templates with values from other entities."""
+    # When template returns true..
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_ON)
+    await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+
+    # Device State should not be unavailable
+    assert hass.states.get(TEST_PANEL.entity_id).state != STATE_UNAVAILABLE
+
+    # When Availability template returns false
+    hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
+    await hass.async_block_till_done()
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+
+    # device state should be unavailable
+    assert hass.states.get(TEST_PANEL.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "attribute", "attribute_template"),
+    [
+        (
+            1,
+            "{{ 'disarmed' }}",
+            "availability",
+            "{{ x - 12 }}",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_panel")
+async def test_invalid_availability_template_keeps_component_available(
+    hass: HomeAssistant, caplog_setup_text, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that an invalid availability keeps the device available."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+    assert hass.states.get(TEST_PANEL.entity_id).state != STATE_UNAVAILABLE
+    error = "UndefinedError: 'x' is undefined"
+    assert error in caplog_setup_text or error in caplog.text

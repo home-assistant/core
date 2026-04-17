@@ -83,7 +83,6 @@ from homeassistant.helpers.trace import (
     trace_path,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 from homeassistant.util.hass_dict import HassKey
 
@@ -124,6 +123,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "battery",
     "calendar",
     "climate",
+    "counter",
     "cover",
     "device_tracker",
     "door",
@@ -142,6 +142,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "occupancy",
     "person",
     "power",
+    "remote",
     "schedule",
     "select",
     "siren",
@@ -149,6 +150,8 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "temperature",
     "text",
     "timer",
+    "todo",
+    "update",
     "vacuum",
     "valve",
     "water_heater",
@@ -193,6 +196,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "todo",
     "update",
     "vacuum",
+    "valve",
     "water_heater",
     "window",
 }
@@ -233,7 +237,6 @@ class IfAction(Protocol):
         """AND all conditions."""
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return true if specified automation entity_id is on.
 

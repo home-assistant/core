@@ -96,6 +96,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_advs: dict[str, SwitchBotAdvertisement] = {}
         self._cloud_username: str | None = None
         self._cloud_password: str | None = None
+        self._encryption_method_selected = False
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -197,6 +198,13 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_adv is not None
         description_placeholders: dict[str, str] = {}
 
+        if user_input is None:
+            if not self._encryption_method_selected and not (
+                self._cloud_username and self._cloud_password
+            ):
+                return await self.async_step_encrypted_choose_method()
+            self._encryption_method_selected = False
+
         # If we have saved credentials from cloud login, try them first
         if user_input is None and self._cloud_username and self._cloud_password:
             user_input = {
@@ -258,6 +266,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the SwitchBot API chose method step."""
         assert self._discovered_adv is not None
 
+        self._encryption_method_selected = True
         return self.async_show_menu(
             step_id="encrypted_choose_method",
             menu_options=["encrypted_auth", "encrypted_key"],
@@ -272,6 +281,12 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the encryption key step."""
         errors: dict[str, str] = {}
         assert self._discovered_adv is not None
+
+        if user_input is None:
+            if not self._encryption_method_selected:
+                return await self.async_step_encrypted_choose_method()
+            self._encryption_method_selected = False
+
         if user_input is not None:
             model: SwitchbotModel = self._discovered_adv.data["modelName"]
             cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
