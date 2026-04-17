@@ -1,0 +1,57 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_health": {
+        "default": "mdi:battery-heart-variant"
+      },
+      "battery_charge_cycles": {
+        "default": "mdi:battery-sync"
+      },
+      "rider_power": {
+        "default": "mdi:bike"
+      },
+      "motor_power": {
+        "default": "mdi:engine"
+      },
+      "cadence": {
+        "default": "mdi:rotate-right"
+      },
+      "odometer": {
+        "default": "mdi:counter"
+      },
+      "assist_level": {
+        "default": "mdi:lightning-bolt"
+      },
+      "assist_eco_pct": {
+        "default": "mdi:leaf"
+      },
+      "assist_trail_pct": {
+        "default": "mdi:pine-tree"
+      },
+      "assist_turbo_pct": {
+        "default": "mdi:rocket-launch"
+      },
+      "range_long": {
+        "default": "mdi:map-marker-distance"
+      },
+      "range_short": {
+        "default": "mdi:map-marker-distance"
+      },
+      "altitude": {
+        "default": "mdi:altimeter"
+      },
+      "altitude_gain": {
+        "default": "mdi:slope-uphill"
+      },
+      "gradient": {
+        "default": "mdi:slope-uphill"
+      },
+      "consumption": {
+        "default": "mdi:lightning-bolt-circle"
+      },
+      "kcal": {
+        "default": "mdi:fire"
+      }
+    }
+  }
+}
