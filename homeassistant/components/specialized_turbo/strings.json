@@ -1,9 +1,35 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "This bike is already configured.",
+      "no_devices_found": "No Specialized Turbo bikes found. Make sure the bike is powered on and Bluetooth is enabled.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the bike. Make sure it is powered on and in Bluetooth range."
+    },
     "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "pin": "Pairing PIN"
+        },
+        "data_description": {
+          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+        },
+        "description": "A Specialized Turbo bike was found at {address} ({name}). Enter the pairing PIN shown on the bike's TCU display to connect.",
+        "title": "Discovered Specialized Turbo Bike"
+      },
+      "reconfigure": {
+        "data": {
+          "pin": "Pairing PIN"
+        },
+        "data_description": {
+          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+        },
+        "description": "Update the pairing PIN for your Specialized Turbo bike.",
+        "title": "Reconfigure Specialized Turbo"
+      },
       "user": {
-        "title": "Add Specialized Turbo Bike",
-        "description": "Select your Specialized Turbo bike from the discovered devices.",
         "data": {
           "address": "Bike",
           "pin": "Pairing PIN"
@@ -11,93 +37,31 @@
         "data_description": {
           "address": "Select the Specialized Turbo bike you want to add.",
           "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
-        }
-      },
-      "bluetooth_confirm": {
-        "title": "Discovered Specialized Turbo Bike",
-        "description": "A Specialized Turbo bike was found at {address} ({name}). Enter the pairing PIN shown on the bike's TCU display to connect.",
-        "data": {
-          "pin": "Pairing PIN"
         },
-        "data_description": {
-          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure Specialized Turbo",
-        "description": "Update the pairing PIN for your Specialized Turbo bike.",
-        "data": {
-          "pin": "Pairing PIN"
-        },
-        "data_description": {
-          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
-        }
+        "description": "Select your Specialized Turbo bike from the discovered devices.",
+        "title": "Add Specialized Turbo Bike"
       }
-    },
-    "error": {
-      "cannot_connect": "Could not connect to the bike. Make sure it is powered on and in Bluetooth range."
-    },
-    "abort": {
-      "already_configured": "This bike is already configured.",
-      "no_devices_found": "No Specialized Turbo bikes found. Make sure the bike is powered on and Bluetooth is enabled.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
     "sensor": {
-      "battery_charge_percent": {
-        "name": "Battery"
+      "altitude": {
+        "name": "Altitude"
       },
-      "battery_capacity_wh": {
-        "name": "Battery capacity"
+      "altitude_gain": {
+        "name": "Altitude gain"
       },
-      "battery_remaining_wh": {
-        "name": "Battery remaining"
-      },
-      "battery_health": {
-        "name": "Battery health"
-      },
-      "battery_temp": {
-        "name": "Battery temperature"
-      },
-      "battery_charge_cycles": {
-        "name": "Charge cycles"
-      },
-      "battery_voltage": {
-        "name": "Battery voltage"
-      },
-      "battery_current": {
-        "name": "Battery current"
-      },
-      "speed": {
-        "name": "Speed"
-      },
-      "rider_power": {
-        "name": "Rider power"
-      },
-      "motor_power": {
-        "name": "Motor power"
-      },
-      "cadence": {
-        "name": "Cadence"
-      },
-      "odometer": {
-        "name": "Odometer"
-      },
-      "motor_temp": {
-        "name": "Motor temperature"
+      "assist_eco_pct": {
+        "name": "ECO assist"
       },
       "assist_level": {
         "name": "Assist level",
         "state": {
-          "off": "Off",
           "eco": "Eco",
+          "off": "Off",
           "trail": "Trail",
           "turbo": "Turbo"
         }
-      },
-      "assist_eco_pct": {
-        "name": "ECO assist"
       },
       "assist_trail_pct": {
         "name": "Trail assist"
@@ -105,29 +69,65 @@
       "assist_turbo_pct": {
         "name": "Turbo assist"
       },
+      "battery_capacity_wh": {
+        "name": "Battery capacity"
+      },
+      "battery_charge_cycles": {
+        "name": "Charge cycles"
+      },
+      "battery_charge_percent": {
+        "name": "Battery"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_health": {
+        "name": "Battery health"
+      },
+      "battery_remaining_wh": {
+        "name": "Battery remaining"
+      },
+      "battery_temp": {
+        "name": "Battery temperature"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "cadence": {
+        "name": "Cadence"
+      },
+      "consumption": {
+        "name": "Consumption"
+      },
+      "gradient": {
+        "name": "Gradient"
+      },
+      "kcal": {
+        "name": "Calories"
+      },
+      "motor_power": {
+        "name": "Motor power"
+      },
+      "motor_temp": {
+        "name": "Motor temperature"
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
       "range_long": {
         "name": "Range (long)"
       },
       "range_short": {
         "name": "Range (short)"
       },
-      "altitude": {
-        "name": "Altitude"
+      "rider_power": {
+        "name": "Rider power"
       },
-      "altitude_gain": {
-        "name": "Altitude gain"
-      },
-      "gradient": {
-        "name": "Gradient"
+      "speed": {
+        "name": "Speed"
       },
       "system_temp": {
         "name": "System temperature"
-      },
-      "consumption": {
-        "name": "Consumption"
-      },
-      "kcal": {
-        "name": "Calories"
       }
     }
   }

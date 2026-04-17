@@ -244,7 +244,11 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
 
     async def _poll_tcu1_fields(self) -> None:
         """Query all TCU1 fields via the request-read GATT pattern."""
-        if self._client is None or self._char_request_write is None:
+        if (
+            self._client is None
+            or self._char_request_write is None
+            or self._char_request_read is None
+        ):
             return
 
         updated = False
@@ -273,7 +277,11 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
 
     async def _poll_tcx_fields(self) -> None:
         """Query TCX system fields via the request-read pattern."""
-        if self._client is None or self._char_request_write is None:
+        if (
+            self._client is None
+            or self._char_request_write is None
+            or self._char_request_read is None
+        ):
             return
 
         updated = False
@@ -302,7 +310,11 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         encryption key material.  On success, replaces self._session with
         an encrypted TCXSession.  On failure, keeps the unencrypted session.
         """
-        if self._client is None or self._char_request_write is None:
+        if (
+            self._client is None
+            or self._char_request_write is None
+            or self._char_request_read is None
+        ):
             return
 
         steps = [

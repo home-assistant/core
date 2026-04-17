@@ -4,18 +4,18 @@
   "bluetooth": [
     {
       "connectable": true,
-      "manufacturer_id": 89,
-      "manufacturer_data_start": [84, 85, 82, 66, 79, 72, 77, 73]
+      "manufacturer_data_start": [84, 85, 82, 66, 79, 72, 77, 73],
+      "manufacturer_id": 89
     },
     {
       "connectable": true,
-      "manufacturer_id": 76,
-      "manufacturer_data_start": [2, 21, 84, 85, 82, 66, 79, 72, 77, 73]
+      "manufacturer_data_start": [2, 21, 84, 85, 82, 66, 79, 72, 77, 73],
+      "manufacturer_id": 76
     },
     {
       "connectable": true,
-      "manufacturer_id": 525,
-      "local_name": "SPECIALIZED"
+      "local_name": "SPECIALIZED",
+      "manufacturer_id": 525
     }
   ],
   "codeowners": ["@JamieMagee"],
