@@ -7,7 +7,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp import ClientConnectionError
+from aiohttp import ClientError
 from pygaposa import FirebaseAuthException, Gaposa, GaposaAuthException
 import voluptuous as vol
 
@@ -55,7 +55,7 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
         except (GaposaAuthException, FirebaseAuthException) as exc:
             _LOGGER.debug("Gaposa authentication failed: %s", exc)
             return None, "invalid_auth"
-        except (ClientConnectionError, TimeoutError, OSError) as exc:
+        except (ClientError, TimeoutError, OSError) as exc:
             _LOGGER.debug("Gaposa connection failed: %s", exc)
             return None, "cannot_connect"
         except Exception:
