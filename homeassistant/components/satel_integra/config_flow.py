@@ -6,6 +6,11 @@ import logging
 from typing import Any
 
 from satel_integra import AsyncSatel
+from satel_integra.exceptions import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -127,19 +132,19 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            if await self.test_connection(
+            errors = await self.test_connection(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
                 user_input.get(CONF_ENCRYPTION_KEY),
-            ):
+            )
+
+            if not errors:
                 self.connection_data = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
                 }
                 return await self.async_step_code()
-
-            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -180,12 +185,11 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                 reconfigure_entry.state is not ConfigEntryState.LOADED
                 or reconfigure_entry.data != normalized_input
             ):
-                if not await self.test_connection(
+                errors = await self.test_connection(
                     normalized_input[CONF_HOST],
                     normalized_input[CONF_PORT],
                     normalized_input.get(CONF_ENCRYPTION_KEY),
-                ):
-                    errors["base"] = "cannot_connect"
+                )
 
             if not errors:
                 return self.async_update_reload_and_abort(
@@ -213,21 +217,30 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def test_connection(
         self, host: str, port: int, integration_key: str | None = None
-    ) -> bool:
+    ) -> dict[str, str]:
         """Test a connection to the Satel alarm."""
+        errors: dict[str, str] = {}
         controller = AsyncSatel(host, port, integration_key=integration_key)
 
         try:
-            return await controller.connect()
+            await controller.connect(raise_exceptions=True)
+        except SatelPanelBusyError:
+            errors["base"] = "panel_busy"
+        except SatelConnectionInitializationError:
+            errors["base"] = "connection_initialization_failed"
+        except SatelConnectFailedError:
+            errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception(
                 "Unexpected error during connection test to %s:%s",
                 host,
                 port,
             )
-            return False
+            errors["base"] = "unknown"
         finally:
             await controller.close()
+
+        return errors
 
 
 class SatelOptionsFlow(OptionsFlow):
