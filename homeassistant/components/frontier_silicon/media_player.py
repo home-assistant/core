@@ -5,7 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, PlayCaps, PlayState
+from afsapi import (
+    AFSAPI,
+    FSConnectionError,
+    FSNotImplementedError,
+    PlayCaps,
+    PlayRepeatMode,
+    PlayState,
+)
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -14,6 +21,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -106,6 +114,10 @@ class AFSAPIDevice(MediaPlayerEntity):
             PlayCaps.SKIP_NEXT | PlayCaps.FAST_FORWARD | PlayCaps.SKIP_FORWARD
         ):
             features |= MediaPlayerEntityFeature.NEXT_TRACK
+        if self.__play_caps & (PlayCaps.REPEAT | PlayCaps.REPEAT_ONE):
+            features |= MediaPlayerEntityFeature.REPEAT_SET
+        if self.__play_caps & PlayCaps.SHUFFLE:
+            features |= MediaPlayerEntityFeature.SHUFFLE_SET
 
         if self._supports_sound_mode:
             features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -157,6 +169,28 @@ class AFSAPIDevice(MediaPlayerEntity):
             self.__play_caps = await afsapi.get_play_caps()
         except FSNotImplementedError:
             self.__play_caps = self._FALLBACK_PLAY_CAPS
+
+        if self.__play_caps & (PlayCaps.REPEAT | PlayCaps.REPEAT_ONE):
+            try:
+                repeat_mode = await afsapi.get_play_repeat()
+            except FSNotImplementedError:
+                self._attr_repeat = RepeatMode.OFF
+            else:
+                self._attr_repeat = {
+                    PlayRepeatMode.OFF: RepeatMode.OFF,
+                    PlayRepeatMode.REPEAT_ALL: RepeatMode.ALL,
+                    PlayRepeatMode.REPEAT_ONE: RepeatMode.ONE,
+                }.get(repeat_mode, RepeatMode.OFF)
+        else:
+            self._attr_repeat = RepeatMode.OFF
+
+        if self.__play_caps & PlayCaps.SHUFFLE:
+            try:
+                self._attr_shuffle = bool(await afsapi.get_play_shuffle())
+            except FSNotImplementedError:
+                self._attr_shuffle = False
+        else:
+            self._attr_shuffle = False
 
         if not self._attr_sound_mode_list and self._supports_sound_mode:
             try:
@@ -285,6 +319,20 @@ class AFSAPIDevice(MediaPlayerEntity):
             and (mode := self.__sound_modes_by_label.get(sound_mode)) is not None
         ):
             await self.fs_device.set_eq_preset(mode)
+
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        await self.fs_device.play_repeat(
+            {
+                RepeatMode.OFF: PlayRepeatMode.OFF,
+                RepeatMode.ALL: PlayRepeatMode.REPEAT_ALL,
+                RepeatMode.ONE: PlayRepeatMode.REPEAT_ONE,
+            }.get(repeat, PlayRepeatMode.OFF)
+        )
+
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Set shuffle mode."""
+        await self.fs_device.set_play_shuffle(shuffle)
 
     async def async_browse_media(
         self,
