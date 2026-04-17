@@ -869,13 +869,13 @@ async def test_delete_pending_dataset(
     mock_delete.assert_called_once()
 
 
-async def test_delete_pending_dataset_api_error(
+async def test_delete_pending_dataset_fallback(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     otbr_config_entry_thread,
     websocket_client: MockHAClientWebSocket,
 ) -> None:
-    """Test delete pending dataset error handling."""
+    """Test delete pending dataset falls back when DELETE is not supported."""
     with (
         patch(
             "python_otbr_api.OTBR.get_extended_address",
@@ -883,7 +883,87 @@ async def test_delete_pending_dataset_api_error(
         ),
         patch(
             "python_otbr_api.OTBR.delete_pending_dataset",
+            side_effect=python_otbr_api.OTBRError("unexpected http status 405"),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(
+                channel=15,
+                active_timestamp=python_otbr_api.Timestamp(False, 1, 0),
+            ),
+        ),
+        patch(
+            "python_otbr_api.OTBR.create_pending_dataset",
+        ) as mock_create_pending,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/delete_pending_dataset",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] is None
+    mock_create_pending.assert_called_once()
+    pending_dataset = mock_create_pending.call_args[0][0]
+    assert pending_dataset.delay == 0
+    assert pending_dataset.active_dataset.active_timestamp.seconds == 2
+
+
+async def test_delete_pending_dataset_fallback_fails(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_thread,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test delete pending dataset when both DELETE and fallback fail."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.delete_pending_dataset",
+            side_effect=python_otbr_api.OTBRError("unexpected http status 405"),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
             side_effect=python_otbr_api.OTBRError,
+        ),
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/delete_pending_dataset",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "delete_pending_dataset_failed"
+
+
+async def test_delete_pending_dataset_fallback_no_dataset(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_thread,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test delete pending dataset fallback when no active dataset exists."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.delete_pending_dataset",
+            side_effect=python_otbr_api.OTBRError("unexpected http status 405"),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=None,
         ),
     ):
         await websocket_client.send_json_auto_id(
