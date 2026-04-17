@@ -9,6 +9,12 @@
   "services": {
     "dismiss": {
       "service": "mdi:bell-off"
+    },
+    "dismiss_message": {
+      "service": "mdi:comment-remove"
+    },
+    "send_message": {
+      "service": "mdi:comment-arrow-right"
     }
   }
 }

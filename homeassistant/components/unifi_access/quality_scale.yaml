@@ -42,25 +42,31 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
-  entity-translations: todo
+  discovery-update-info: done
+  discovery:
+    status: exempt
+    comment: Discovery is handled via unifi_discovery dependency using SOURCE_INTEGRATION_DISCOVERY.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All entities provide essential data and should be enabled by default.
+  entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues:
+    status: exempt
+    comment: Integration raises ConfigEntryAuthFailed and relies on Home Assistant core to surface reauth/repair issues, no custom repairs are defined.
+  stale-devices: done
 
   # Platinum
   async-dependency: done
