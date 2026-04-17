@@ -5,6 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.homeassistant_hardware.repairs import (
+    ISSUE_MULTI_PAN_MIGRATION,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -22,6 +25,7 @@ from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -291,3 +295,127 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
 
     untouched_bad_entry = hass.config_entries.async_get_entry(bad_entry.entry_id)
     assert untouched_bad_entry.minor_version == 3
+
+
+def _multi_pan_sky_connect_entry(firmware: str) -> MockConfigEntry:
+    """Return a SkyConnect config entry with the given firmware type."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="some_unique_id",
+        data={
+            "description": "SkyConnect v1.0",
+            "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "vid": "10C4",
+            "pid": "EA60",
+            "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+            "manufacturer": "Nabu Casa",
+            "product": "SkyConnect v1.0",
+            "firmware": firmware,
+            "firmware_version": None,
+        },
+        title="Home Assistant SkyConnect",
+        version=1,
+        minor_version=4,
+    )
+
+
+async def test_multi_pan_migration_issue_created_for_cpc(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the multi-PAN migration repair issue is created when running CPC."""
+    config_entry = _multi_pan_sky_connect_entry(ApplicationType.CPC.value)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.is_hassio",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    )
+    assert issue is not None
+    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
+    assert issue.translation_placeholders == {
+        "hardware_name": "Home Assistant SkyConnect"
+    }
+    assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.is_fixable
+
+
+async def test_multi_pan_migration_issue_deleted_for_ezsp(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the multi-PAN migration repair issue is removed when running EZSP."""
+    config_entry = _multi_pan_sky_connect_entry(ApplicationType.EZSP.value)
+    config_entry.add_to_hass(hass)
+
+    ir.async_create_issue(
+        hass,
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_MULTI_PAN_MIGRATION,
+        translation_placeholders={"hardware_name": "Home Assistant SkyConnect"},
+        data={"entry_id": config_entry.entry_id},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.is_hassio",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
+
+
+async def test_multi_pan_migration_issue_not_created_off_hassio(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the migration issue is not created when not running on Hass.io."""
+    config_entry = _multi_pan_sky_connect_entry(ApplicationType.CPC.value)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_sky_connect.is_hassio",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )

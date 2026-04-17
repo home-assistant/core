@@ -9,6 +9,10 @@ from homeassistant.components.hassio import get_os_info
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
+from homeassistant.components.homeassistant_hardware.repairs import (
+    async_create_multi_pan_migration_issue,
+    async_delete_multi_pan_migration_issue,
+)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
 )
@@ -24,6 +28,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import (
+    DOMAIN,
     FIRMWARE,
     FIRMWARE_VERSION,
     NABU_CASA_FIRMWARE_RELEASES_URL,
@@ -71,6 +76,9 @@ async def async_setup_entry(
             await check_multi_pan_addon(hass)
         except HomeAssistantError as err:
             raise ConfigEntryNotReady from err
+        async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
+    else:
+        async_delete_multi_pan_migration_issue(hass, DOMAIN, entry)
 
     if firmware is ApplicationType.EZSP:
         discovery_flow.async_create_flow(

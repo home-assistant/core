@@ -6,6 +6,9 @@ import pytest
 
 from homeassistant.components import zha
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
+from homeassistant.components.homeassistant_hardware.repairs import (
+    ISSUE_MULTI_PAN_MIGRATION,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -17,6 +20,7 @@ from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
@@ -263,6 +267,105 @@ async def test_setup_entry_addon_info_fails(
 
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_multi_pan_migration_issue_created_for_cpc(
+    hass: HomeAssistant,
+    addon_store_info,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the multi-PAN migration repair issue is created when running CPC."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.CPC},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
+            return_value=None,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    )
+    assert issue is not None
+    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
+    assert issue.translation_placeholders == {"hardware_name": "Home Assistant Yellow"}
+    assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.is_fixable
+
+
+async def test_multi_pan_migration_issue_deleted_for_ezsp(
+    hass: HomeAssistant,
+    addon_store_info,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the multi-PAN migration repair issue is removed when running EZSP."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.EZSP},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    # Pre-existing issue from a previous CPC run
+    ir.async_create_issue(
+        hass,
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_MULTI_PAN_MIGRATION,
+        translation_placeholders={"hardware_name": "Home Assistant Yellow"},
+        data={"entry_id": config_entry.entry_id},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
