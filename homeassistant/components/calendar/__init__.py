@@ -739,7 +739,7 @@ class CalendarEntity(Entity):
             return
 
         event_list: list[JsonValueType] = [
-            dataclasses.asdict(event, dict_factory=_list_events_dict_factory)
+            dataclasses.asdict(event, dict_factory=_event_dict_factory)
             for event in events
         ]
         listener(event_list)

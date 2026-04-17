@@ -435,9 +435,6 @@ async def test_create_event_service_invalid_params(
                             "summary": "Future Event",
                             "description": "Future Description",
                             "location": "Future Location",
-                            "uid": "calendar-event-uid-1",
-                            "rrule": "FREQ=WEEKLY;COUNT=3",
-                            "recurrence_id": "20260415",
                         }
                     ]
                 }
