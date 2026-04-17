@@ -1100,7 +1100,11 @@ async def test_air_purifier_sensor(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 3
+    assert {state.entity_id for state in hass.states.async_all("sensor")} == {
+        "sensor.test_name_pm2_5",
+        "sensor.test_name_air_quality_level",
+        "sensor.test_name_bluetooth_signal",
+    }
 
     pm25_sensor = hass.states.get("sensor.test_name_pm2_5")
     pm25_sensor_attrs = pm25_sensor.attributes

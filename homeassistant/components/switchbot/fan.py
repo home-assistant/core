@@ -139,11 +139,6 @@ class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
     _attr_translation_key = "air_purifier"
     _attr_name = None
 
-    async def async_added_to_hass(self) -> None:
-        """Run initial device query to populate PM2.5 and other active-only data."""
-        await super().async_added_to_hass()
-        await self._device.update()
-
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
