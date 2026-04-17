@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
-import logging
 from datetime import timedelta
+import ipaddress
+import logging
+import socket
 from typing import Any
+from urllib.parse import urlparse
 
 import aiohttp
+from pywibeee import WibeeeAPI
 import voluptuous as vol
+
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
@@ -26,7 +30,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from pywibeee import WibeeeAPI
+
 from .const import (
     CONF_AUTO_CONFIGURE,
     CONF_MAC_ADDRESS,
@@ -55,19 +59,20 @@ async def validate_input(
     api = WibeeeAPI(session, user_input[CONF_HOST], timeout=timedelta(seconds=5))
 
     # First check if it's a Wibeee device
-    try:
-        is_wibeee = await api.async_check_connection()
-        if not is_wibeee:
-            raise NoDeviceInfo("Device did not respond as a Wibeee")
-    except NoDeviceInfo:
-        raise
-    except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
-        raise NoDeviceInfo(f"Cannot connect: {exc}") from exc
+    async def _check_connection() -> bool:
+        try:
+            return await api.async_check_connection()
+        except (TimeoutError, aiohttp.ClientError) as exc:
+            raise NoDeviceInfo(f"Cannot connect: {exc}") from exc
+
+    is_wibeee = await _check_connection()
+    if not is_wibeee:
+        raise NoDeviceInfo("Device did not respond as a Wibeee")
 
     # Fetch device info
     try:
         device = await api.async_fetch_device_info(retries=3)
-    except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
+    except (TimeoutError, aiohttp.ClientError) as exc:
         raise NoDeviceInfo(f"Cannot get device info: {exc}") from exc
 
     if device is None:
@@ -89,8 +94,6 @@ async def validate_input(
 
 def _get_local_ip_sync() -> str:
     """Determine local IP via socket (blocking, run in executor)."""
-    import socket
-
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("8.8.8.8", 80))
@@ -111,20 +114,19 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
     """
     # 1. Preferred: network component (may not be loaded)
     try:
-        from homeassistant.components.network import async_get_source_ip
+        from homeassistant.components.network import (  # noqa: PLC0415
+            async_get_source_ip,
+        )
 
         ip = await async_get_source_ip(hass)
         if ip is not None:
             return ip
-    except (ImportError, HomeAssistantError, OSError):
+    except ImportError, HomeAssistantError, OSError:
         pass
 
     # 2. URL helper (lightweight, does not require network component)
     try:
-        import ipaddress
-        from urllib.parse import urlparse
-
-        from homeassistant.helpers.network import get_url
+        from homeassistant.helpers.network import get_url  # noqa: PLC0415
 
         url = get_url(hass, prefer_external=False)
         host = urlparse(url).hostname
@@ -136,7 +138,7 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
             except ValueError:
                 # Not an IP literal (e.g. hostname) -- usable as-is
                 return host
-    except (ImportError, HomeAssistantError, OSError):
+    except ImportError, HomeAssistantError, OSError:
         pass
 
     # 3. Fallback: raw socket probe (blocking, run in executor)
@@ -150,15 +152,13 @@ def _get_ha_port(hass: HomeAssistant) -> int:
     Falls back to DEFAULT_HA_PORT (8123).
     """
     try:
-        from urllib.parse import urlparse
-
-        from homeassistant.helpers.network import get_url
+        from homeassistant.helpers.network import get_url  # noqa: PLC0415
 
         url = get_url(hass, prefer_external=False)
         port = urlparse(url).port
         if port is not None:
             return port
-    except (ImportError, HomeAssistantError, OSError):
+    except ImportError, HomeAssistantError, OSError:
         pass
 
     return DEFAULT_HA_PORT
@@ -206,7 +206,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             is_wibeee = await api.async_check_connection()
             if not is_wibeee:
                 return self.async_abort(reason="not_wibeee_device")
-        except (aiohttp.ClientError, asyncio.TimeoutError):
+        except TimeoutError, aiohttp.ClientError:
             return self.async_abort(reason="no_device_info")
 
         self._discovered_host = host
@@ -287,7 +287,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             local_ip,
                             ha_port,
                         )
-                except (aiohttp.ClientError, asyncio.TimeoutError, OSError):
+                except TimeoutError, aiohttp.ClientError, OSError:
                     _LOGGER.debug(
                         "Failed to auto-configure WiBeee at %s",
                         self._user_data[CONF_HOST],
@@ -352,7 +352,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                title, unique_id, data = await validate_input(self.hass, user_input)
+                _, unique_id, data = await validate_input(self.hass, user_input)
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
 
@@ -415,7 +415,7 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
                     success = await api.async_configure_push_server(local_ip, ha_port)
                     if not success:
                         errors["base"] = "auto_configure_failed"
-                except (aiohttp.ClientError, asyncio.TimeoutError, OSError):
+                except TimeoutError, aiohttp.ClientError, OSError:
                     _LOGGER.debug(
                         "Failed to auto-configure WiBeee at %s",
                         self.config_entry.data[CONF_HOST],
@@ -460,7 +460,7 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SCAN_INTERVAL,
                         int(DEFAULT_SCAN_INTERVAL.total_seconds()),
                     )
-                )
+                ),
             )
         ] = NumberSelector(
             NumberSelectorConfig(
@@ -472,9 +472,9 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         # Show auto-configure option for local push
-        schema_dict[
-            vol.Optional(CONF_AUTO_CONFIGURE, default=False)
-        ] = BooleanSelector()
+        schema_dict[vol.Optional(CONF_AUTO_CONFIGURE, default=False)] = (
+            BooleanSelector()
+        )
 
         return self.async_show_form(
             step_id="init",

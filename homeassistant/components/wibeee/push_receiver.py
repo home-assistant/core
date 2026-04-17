@@ -1,5 +1,4 @@
-"""
-Local Push receiver for Wibeee energy monitors.
+"""Local Push receiver for Wibeee energy monitors.
 
 Registers HTTP views within Home Assistant's built-in web server to receive
 push data from WiBeee devices. The device sends periodic GET requests to
@@ -24,18 +23,15 @@ Documentation: https://github.com/fquinto/pywibeee
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
+import logging
 
 from aiohttp.web import Request, Response
+
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    DOMAIN,
-    PUSH_PARAM_TO_SENSOR,
-    PUSH_PHASE_MAP,
-)
+from .const import DOMAIN, PUSH_PARAM_TO_SENSOR, PUSH_PHASE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,9 +53,7 @@ class PushReceiver:
         """Initialize the push receiver."""
         self._listeners: dict[str, PushDataCallback] = {}
 
-    def register_device(
-        self, mac_address: str, callback_fn: PushDataCallback
-    ) -> None:
+    def register_device(self, mac_address: str, callback_fn: PushDataCallback) -> None:
         """Register a device to receive push updates."""
         mac_clean = mac_address.replace(":", "").lower()
         self._listeners[mac_clean] = callback_fn
