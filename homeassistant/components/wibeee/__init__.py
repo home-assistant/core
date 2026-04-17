@@ -144,6 +144,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> b
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
+    if unload_ok:
+        del entry.runtime_data
     return unload_ok
 
 
