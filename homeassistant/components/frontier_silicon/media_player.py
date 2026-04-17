@@ -85,11 +85,7 @@ class AFSAPIDevice(MediaPlayerEntity):
     # Fallback used when the device doesn't support get_play_caps; reproduces the
     # old hard-coded feature set.
     _FALLBACK_PLAY_CAPS = (
-        PlayCaps.PAUSE
-        | PlayCaps.STOP
-        | PlayCaps.SKIP_PREVIOUS
-        | PlayCaps.SKIP_NEXT
-        | PlayCaps.SEEK
+        PlayCaps.PAUSE | PlayCaps.STOP | PlayCaps.SKIP_PREVIOUS | PlayCaps.SKIP_NEXT
     )
 
     @property
@@ -110,8 +106,6 @@ class AFSAPIDevice(MediaPlayerEntity):
             PlayCaps.SKIP_NEXT | PlayCaps.FAST_FORWARD | PlayCaps.SKIP_FORWARD
         ):
             features |= MediaPlayerEntityFeature.NEXT_TRACK
-        if self.__play_caps & PlayCaps.SEEK:
-            features |= MediaPlayerEntityFeature.SEEK
 
         if self._supports_sound_mode:
             features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
