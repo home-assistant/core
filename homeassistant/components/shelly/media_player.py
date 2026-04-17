@@ -2,23 +2,45 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Final
+
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityDescription,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_SLEEP_PERIOD
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyRpcEntity
+from .entity import (
+    RpcEntityDescription,
+    ShellyRpcAttributeEntity,
+    async_setup_entry_rpc,
+)
 from .utils import get_device_entry_gen
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcMediaPlayerDescription(RpcEntityDescription, MediaPlayerEntityDescription):
+    """Class to describe a Shelly RPC media player entity."""
+
+
+RPC_MEDIA_PLAYER_ENTITIES: Final = {
+    "media_player": RpcMediaPlayerDescription(
+        key="media",
+        device_class=MediaPlayerDeviceClass.SPEAKER,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -28,21 +50,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up media player for Shelly devices."""
     if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
-        return
-
-    coordinator = config_entry.runtime_data.rpc
-    assert coordinator
-
-    if "media" not in coordinator.device.status:
-        return
+        return None
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        return
+        return None
 
-    async_add_entities([ShellyRpcMediaPlayer(coordinator)])
+    return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
 
-class ShellyRpcMediaPlayer(ShellyRpcEntity, MediaPlayerEntity):
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    async_setup_entry_rpc(
+        hass,
+        config_entry,
+        async_add_entities,
+        RPC_MEDIA_PLAYER_ENTITIES,
+        ShellyRpcMediaPlayer,
+    )
+
+
+class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     """Representation of a Shelly RPC media player entity."""
 
     _attr_name = None
@@ -55,10 +87,18 @@ class ShellyRpcMediaPlayer(ShellyRpcEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
     )
     _attr_media_content_type = MediaType.MUSIC
+    entity_description: RpcMediaPlayerDescription
 
-    def __init__(self, coordinator: ShellyRpcCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcMediaPlayerDescription,
+    ) -> None:
         """Initialize Shelly RPC media player."""
-        super().__init__(coordinator, "media")
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
     def state(self) -> MediaPlayerState:
