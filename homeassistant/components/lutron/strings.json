@@ -32,6 +32,16 @@
           }
         }
       }
+    },
+    "select": {
+      "led_state": {
+        "state": {
+          "fast_flash": "Fast flash",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "slow_flash": "Slow flash"
+        }
+      }
     }
   },
   "options": {
