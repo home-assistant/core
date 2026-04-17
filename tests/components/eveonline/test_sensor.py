@@ -8,6 +8,7 @@ from eveonline.models import WalletBalance
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,7 +41,7 @@ async def test_sensor_unavailable(
 
     state = hass.states.get("sensor.test_capsuleer_wallet_balance")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_sensor_wallet_updated(
