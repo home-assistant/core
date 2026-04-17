@@ -1954,6 +1954,11 @@
       "vebus_inverter_setting_alarm_grid_lost": {
         "name": "Grid lost alarm setting"
       }
+    },
+    "time": {
+      "system_ess_schedule_charge_slot_start": {
+        "name": "ESS BatteryLife schedule charge {slot} start"
+      }
     }
   }
 }
