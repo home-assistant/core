@@ -16,8 +16,18 @@ MOCK_REFERENCE_DATE: datetime = datetime.fromisoformat("2024-02-13T14:13:12")
 
 HA_SENSOR_DATA: dict[str, Any] = {
     "fs": {
-        "/ssl": {"disk_use": 30.7, "disk_use_percent": 6.7, "disk_free": 426.5},
-        "/media": {"disk_use": 30.7, "disk_use_percent": 6.7, "disk_free": 426.5},
+        "/ssl": {
+            "disk_use": 30.7,
+            "disk_use_percent": 6.7,
+            "disk_free": 426.5,
+            "disk_size": 476.2,
+        },
+        "/media": {
+            "disk_use": 30.7,
+            "disk_use_percent": 6.7,
+            "disk_free": 426.5,
+            "disk_size": 476.2,
+        },
     },
     "diskio": {
         "nvme0n1": {"read": 184320, "write": 23863296},
