@@ -235,8 +235,8 @@ class AFSAPIDevice(MediaPlayerEntity):
         await self.fs_device.pause()
 
     async def async_media_stop(self) -> None:
-        """Send play/pause command."""
-        await self.fs_device.pause()
+        """Send stop command."""
+        await self.fs_device.stop()
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
