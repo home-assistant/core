@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
-    UPTIME_DEFAULT_DRIFT_TOLERANCE,
+    UPTIME_DEFAULT_TOLERANCE_SECONDS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -284,7 +284,7 @@ async def test_datetime_conversion(
     assert state.state == test_timestamp.isoformat()
 
 
-@pytest.mark.parametrize("drift_tolerance", [UPTIME_DEFAULT_DRIFT_TOLERANCE, 10])
+@pytest.mark.parametrize("drift_tolerance", [UPTIME_DEFAULT_TOLERANCE_SECONDS, 10])
 async def test_uptime_device_class_auto_normalizes_drift(
     hass: HomeAssistant, drift_tolerance
 ) -> None:
