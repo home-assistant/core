@@ -3059,6 +3059,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
             # Existing config entry present, and the
             # entry data just changed
             should_reload = True
+            if entry.update_listeners:
+                # If listeners are present, those should be used to reload instead
+                raise ValueError("Cannot update and reload entry with update listeners")
         elif (
             self.source in DISCOVERY_SOURCES
             and entry.state is ConfigEntryState.SETUP_RETRY
@@ -3070,8 +3073,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
             return
         if should_reload:
-            if entry.update_listeners:
-                raise ValueError("Cannot update entry with update listeners")
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         raise data_entry_flow.AbortFlow(error, description_placeholders)
 
@@ -3449,7 +3450,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
         if reload_even_if_entry_is_unchanged or result:
             if entry.update_listeners:
-                raise ValueError("Cannot update entry with update listeners")
+                raise ValueError("Cannot update and reload entry with update listeners")
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         if reason is UNDEFINED:
             reason = "reauth_successful"
