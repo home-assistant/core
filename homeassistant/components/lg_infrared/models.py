@@ -1,29 +1,29 @@
 """Models for the LG Infrared integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-if TYPE_CHECKING:
-    from homeassistant.components.select import SelectEntity
+from .const import tuner_signal
 
-@dataclass
 class LGIRRemoteData:
-    """
-    Shared state container for the LG IR Remote.
-    
-    This object is stored in hass.data and allows buttons and select 
-    entities to stay in sync regarding the current tuner state.
-    """
-    # The source of truth for the tuner (DTV, BS, CS)
-    current_tuner: str = "DTV"
-    
-    # Optional: store a reference to the select entity so buttons 
-    # can trigger a UI refresh if the state changes via a button press.
-    select_entity: SelectEntity | None = None
+    """Handle shared state for LG IR Remote."""
+
+    def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+        """Initialize the data object."""
+        self.hass = hass
+        self.entry_id = entry_id
+        self.current_tuner: str = "DTV"
 
     def update_tuner(self, tuner: str) -> None:
-        """Update the tuner state and refresh the UI entity if it exists."""
-        self.current_tuner = tuner.upper()
-        if self.select_entity:
-            self.select_entity.async_write_ha_state()
+        """Update tuner state and notify listeners."""
+        normalized_tuner = tuner.upper()
+        
+        if self.current_tuner == normalized_tuner:
+            return
+            
+        self.current_tuner = normalized_tuner
+        
+        # Fire the signal using our helper
+        async_dispatcher_send(self.hass, tuner_signal(self.entry_id))
+        
