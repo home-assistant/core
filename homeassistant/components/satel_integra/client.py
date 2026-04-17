@@ -20,6 +20,7 @@ from .const import (
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_ZONE_NUMBER,
+    DOMAIN,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
@@ -86,15 +87,29 @@ class SatelClient:
         try:
             await self.controller.connect(raise_exceptions=True)
         except SatelConnectFailedError as ex:
-            raise ConfigEntryNotReady("Failed to connect to the panel") from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(ex)},
+            ) from ex
         except SatelPanelBusyError as ex:
-            raise ConfigEntryNotReady("Panel is busy, please try again later") from ex
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="panel_busy",
+                translation_placeholders={"error": repr(ex)},
+            ) from ex
         except SatelConnectionInitializationError as ex:
             raise ConfigEntryError(
-                "Failed to initialize connection with the panel"
+                translation_domain=DOMAIN,
+                translation_key="connection_initialization_failed",
+                translation_placeholders={"error": repr(ex)},
             ) from ex
         except Exception as ex:
-            raise ConfigEntryError("Controller failed to connect") from ex
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unknown",
+                translation_placeholders={"error": repr(ex)},
+            ) from ex
 
         self.controller.register_callbacks(
             alarm_status_callback=partitions_update_callback,
