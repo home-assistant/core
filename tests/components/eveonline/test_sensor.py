@@ -8,7 +8,7 @@ from eveonline.models import WalletBalance
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -78,7 +78,7 @@ async def test_sensor_location_shows_unknown_when_endpoint_fails(
 
     state = hass.states.get("sensor.test_capsuleer_location")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     ship_state = hass.states.get("sensor.test_capsuleer_ship")
     assert ship_state is not None
@@ -101,7 +101,7 @@ async def test_sensor_ship_shows_unknown_when_endpoint_fails(
 
     state = hass.states.get("sensor.test_capsuleer_ship")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     location_state = hass.states.get("sensor.test_capsuleer_location")
     assert location_state is not None
