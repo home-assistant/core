@@ -3,11 +3,16 @@
 from collections.abc import Callable
 
 from satel_integra import AsyncSatel
+from satel_integra.exceptions import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import (
     CONF_ENCRYPTION_KEY,
@@ -78,9 +83,18 @@ class SatelClient:
         partitions_update_callback: Callable[[], None],
     ) -> None:
         """Start controller connection."""
-        result = await self.controller.connect()
-        if not result:
-            raise ConfigEntryNotReady("Controller failed to connect")
+        try:
+            await self.controller.connect(raise_exceptions=True)
+        except SatelConnectFailedError as ex:
+            raise ConfigEntryNotReady("Failed to connect to the panel") from ex
+        except SatelPanelBusyError as ex:
+            raise ConfigEntryNotReady("Panel is busy, please try again later") from ex
+        except SatelConnectionInitializationError as ex:
+            raise ConfigEntryError(
+                "Failed to initialize connection with the panel"
+            ) from ex
+        except Exception as ex:
+            raise ConfigEntryError("Controller failed to connect") from ex
 
         self.controller.register_callbacks(
             alarm_status_callback=partitions_update_callback,
