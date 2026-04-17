@@ -31,7 +31,6 @@ rules:
       Device is expected to be disconnected most of the time
       but will connect quickly when reachable.
   unique-config-entry: done
-
   # Silver
   action-exceptions:
     status: exempt
@@ -51,7 +50,6 @@ rules:
       BLE pairing PIN does not expire.
       PIN can be updated via the reconfigure flow.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: done

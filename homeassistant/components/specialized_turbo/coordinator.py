@@ -251,7 +251,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         ):
             return
 
-        updated = False
         for sender, channel in TCU1_POLL_FIELDS:
             try:
                 await self._client.write_gatt_char(
@@ -262,7 +261,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
                 msg = parse_message(response)
                 if msg.sender == sender and msg.channel == channel:
                     self.snapshot.update_from_message(msg)
-                    updated = True
             except Exception:  # noqa: BLE001
                 _LOGGER.debug(
                     "Failed to poll field (%02x, %02x)",
@@ -272,8 +270,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
                 )
 
         self._last_poll_time = time.monotonic()
-        if updated:
-            self.async_update_listeners()
 
     async def _poll_tcx_fields(self) -> None:
         """Query TCX system fields via the request-read pattern."""
@@ -284,7 +280,6 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         ):
             return
 
-        updated = False
         for param in _TCX_POLL_PARAMS:
             try:
                 request = build_tcx_request(int(param))
@@ -295,13 +290,10 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
                 unpacked = self._session.unpack(response)
                 msg = parse_tcx_message(unpacked)
                 self.snapshot.update_from_message(msg)
-                updated = True
             except Exception:  # noqa: BLE001
                 _LOGGER.debug("Failed to poll TCX param %d", int(param), exc_info=True)
 
         self._last_poll_time = time.monotonic()
-        if updated:
-            self.async_update_listeners()
 
     async def _identify_tcx(self) -> None:
         """Run the TCX identification handshake to exchange encryption keys.

@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfLength,
     UnitOfPower,
     UnitOfSpeed,
@@ -274,7 +275,8 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
     SpecializedSensorEntityDescription(
         key="consumption",
         translation_key="consumption",
-        native_unit_of_measurement="Wh/km",
+        native_unit_of_measurement=UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+        device_class=SensorDeviceClass.ENERGY_DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda s: s.system.consumption_wh_km,
@@ -283,7 +285,8 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
     SpecializedSensorEntityDescription(
         key="kcal",
         translation_key="kcal",
-        native_unit_of_measurement="kcal",
+        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
         value_fn=lambda s: s.system.kcal,
