@@ -27,7 +27,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WibeeeConfigEntry
-from .api import WibeeeAPI, WibeeeDeviceInfo
+from pywibeee import WibeeeAPI, WibeeeDeviceInfo
 from .const import (
     DOMAIN,
     KNOWN_MODELS,

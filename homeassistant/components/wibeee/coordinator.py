@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import WibeeeAPI
+from pywibeee import WibeeeAPI
 
 _LOGGER = logging.getLogger(__name__)
 

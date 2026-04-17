@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/wibeee",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["pywibeee==0.1.1"]
+  "requirements": ["pywibeee>=0.1.2"]
 }

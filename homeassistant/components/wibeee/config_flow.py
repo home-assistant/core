@@ -26,8 +26,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from .api import WibeeeAPI
+from pywibeee import WibeeeAPI
 from .const import (
     CONF_AUTO_CONFIGURE,
     CONF_MAC_ADDRESS,
