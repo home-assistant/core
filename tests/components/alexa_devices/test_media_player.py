@@ -706,3 +706,64 @@ async def test_standard_features_always_present(
         MediaPlayerEntityFeature.PLAY_MEDIA,
     ):
         assert raw & feature, f"Expected standard feature {feature!r} to always be set"
+
+
+async def test_mute_volume_no_volume_state_returns_early(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Mute returns early when there is no volume state."""
+
+    with patch(
+        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    # Remove volume state entirely
+    _patch_coordinator_states(
+        hass,
+        mock_config_entry.entry_id,
+        volume_state=None,
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        blocking=True,
+    )
+
+    mock_amazon_devices_client.set_device_volume.assert_not_awaited()
+
+
+async def test_unmute_volume_without_prev_volume_returns_early(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unmute returns early when there is no previous volume stored."""
+
+    with patch(
+        "homeassistant.components.alexa_devices.PLATFORMS", [Platform.MEDIA_PLAYER]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    # Ensure entity exists with a valid volume state
+    _patch_coordinator_states(
+        hass,
+        mock_config_entry.entry_id,
+        volume_state=_make_volume_state(50),
+    )
+    await hass.async_block_till_done()
+
+    # Directly unmute without ever muting first -> _prev_volume is None
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
+        blocking=True,
+    )
+
+    mock_amazon_devices_client.set_device_volume.assert_not_awaited()

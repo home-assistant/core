@@ -1,7 +1,9 @@
 """Tests for the Alexa Devices coordinator."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
+from aioamazondevices.structures import AmazonMediaState, AmazonVolumeState
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.alexa_devices.const import DOMAIN
@@ -82,3 +84,63 @@ async def test_coordinator_load_previous_devices_from_registry(
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     assert coordinator.previous_devices == {TEST_DEVICE_1_SN}
+
+
+async def test_media_state_event_updates_coordinator(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test media state event updates coordinator and notifies listeners."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    listener = AsyncMock()
+    coordinator.async_add_listener(listener)
+
+    media_state = {
+        TEST_DEVICE_1_SN: AmazonMediaState(
+            player_state="PLAYING",
+            pause_enabled=True,
+            next_enabled=True,
+            previous_enabled=True,
+            now_playing_title="Test",
+            now_playing_line1="Artist",
+            now_playing_line2="Album",
+            now_playing_url=None,
+            media_length=100,
+            media_position=10,
+            media_position_updated_at=datetime.now(UTC),
+            seek_back_enabled=False,
+            seek_forward_enabled=False,
+            shuffle_enabled=False,
+            repeat_enabled=False,
+            media_provider="Test",
+            media_provider_url=None,
+        )
+    }
+
+    await mock_amazon_devices_client.on_media_state_event.send(media_state)
+    assert coordinator.media_states == media_state
+    listener.assert_called_once()
+
+
+async def test_volume_state_event_updates_coordinator(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test volume state event updates coordinator and notifies listeners."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    listener = AsyncMock()
+    coordinator.async_add_listener(listener)
+
+    volume_state = {TEST_DEVICE_1_SN: AmazonVolumeState(volume=30, is_muted=False)}
+
+    await mock_amazon_devices_client.on_volume_state_event.send(volume_state)
+    assert coordinator.volume_states == volume_state
+    listener.assert_called_once()
