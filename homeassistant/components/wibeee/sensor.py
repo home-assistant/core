@@ -67,7 +67,7 @@ PHASE_NAMES: dict[str, str] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WibeeeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wibeee sensor entities from a config entry."""
     runtime = entry.runtime_data
