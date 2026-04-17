@@ -36,7 +36,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entity_domain=LOCK_DOMAIN,
         schema={
             vol.Required("name"): cv.string,
-            vol.Required("code"): vol.All(vol.Coerce(str), cv.matches_regex(r"^\d{4,8}$")),
+            vol.Required("code"): vol.All(
+                vol.Coerce(str), cv.matches_regex(r"^\d{4,8}$")),
             vol.Optional("notify_on_use", default=True): cv.boolean,
         },
         func=SERVICE_ADD_CODE,
