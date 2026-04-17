@@ -10,7 +10,7 @@ Supports two update modes:
   Can auto-configure the device to point to the HA instance.
 - **Polling**: Periodically fetches status.xml from the device.
 
-No HACS required - works as a native custom_component.
+No HACS required - included as a built-in Home Assistant integration.
 
 Documentation: https://github.com/fquinto/pywibeee
 Device info: http://wibeee.circutor.com/
