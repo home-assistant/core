@@ -1,13 +1,13 @@
 {
-  "exceptions": {
-    "component_not_loaded": {
-      "message": "Radio Frequency component not loaded"
-    },
-    "entity_not_found": {
-      "message": "Radio Frequency entity `{entity_id}` not found"
-    },
-    "no_transmitters": {
-      "message": "No Radio Frequency transmitters available"
+    "exceptions": {
+        "component_not_loaded": {
+            "message": "Radio Frequency component not loaded"
+        },
+        "entity_not_found": {
+            "message": "Radio Frequency entity `{entity_id}` not found"
+        },
+        "no_transmitters": {
+            "message": "No Radio Frequency transmitters available"
+        }
     }
-  }
 }
