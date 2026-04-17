@@ -6,14 +6,14 @@ from dataclasses import dataclass
 import logging
 
 from grandstream_home_api import (
+    DEFAULT_PORT,
     GDSPhoneAPI,
     attempt_login,
     create_api_instance,
-    generate_unique_id,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
@@ -21,12 +21,8 @@ from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from .const import (
     CONF_DEVICE_MODEL,
     CONF_FIRMWARE_VERSION,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRODUCT_MODEL,
-    CONF_USERNAME,
     CONF_VERIFY_SSL,
-    DEFAULT_PORT,
     DOMAIN,
 )
 from .coordinator import GrandstreamCoordinator
@@ -151,11 +147,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
     # 1. Set up API
     api = await _setup_api(hass, entry)
 
-    # 2. Generate unique ID
-    name = entry.data.get("name", "")
-    unique_id = entry.unique_id or generate_unique_id(
-        name, device_model, entry.data.get("host", ""), entry.data.get("port", "80")
-    )
+    # 2. Use entry unique_id or fallback to host-based ID
+    unique_id = entry.unique_id or f"{device_model}_{entry.data.get('host', '')}"
 
     # 3. Create device info
     ip_address = api.host if api and api.host else entry.data.get("host")
@@ -191,7 +184,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) 
     # 7. Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    _LOGGER.debug("Integration setup completed for %s", name)
+    _LOGGER.debug("Integration setup completed for %s", entry.title)
     return True
 
 

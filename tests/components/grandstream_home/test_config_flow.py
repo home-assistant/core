@@ -12,11 +12,10 @@ from homeassistant import config_entries
 from homeassistant.components.grandstream_home.config_flow import GrandstreamConfigFlow
 from homeassistant.components.grandstream_home.const import (
     CONF_DEVICE_MODEL,
-    CONF_PASSWORD,
     CONF_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -509,3 +508,58 @@ async def test_duplicate_detection(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.enable_socket
+async def test_duplicate_detection_no_mac(hass: HomeAssistant) -> None:
+    """Test that duplicate devices are detected when MAC is not available."""
+    # Create existing entry without MAC (manual configuration)
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_NAME: "Test Device",
+            CONF_PORT: 443,
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    # Try to add same device via manual flow (no MAC extracted)
+    with (
+        patch(
+            "homeassistant.components.grandstream_home.config_flow.attempt_login",
+            return_value=(True, None),
+        ),
+        patch(
+            "homeassistant.components.grandstream_home.config_flow.create_api_instance",
+            return_value=MagicMock(
+                host="192.168.1.100",
+                device_mac=None,  # No MAC available
+            ),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        # First step - enter host
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.1.100"},
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+
+        # Second step - enter credentials (should abort due to _async_abort_entries_match)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "testpass",
+                CONF_PORT: "443",
+                CONF_VERIFY_SSL: False,
+            },
+        )
+
+        # Should abort due to _async_abort_entries_match
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"

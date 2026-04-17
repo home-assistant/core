@@ -11,6 +11,7 @@ from homeassistant.components.grandstream_home.const import DOMAIN
 from homeassistant.components.grandstream_home.coordinator import GrandstreamCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -75,8 +76,7 @@ async def test_coordinator_update_data_success(
     ):
         data = await coordinator._async_update_data()
 
-    assert data["phone_status"] == "idle"
-    assert coordinator._error_count == 0
+    assert data == "idle"
 
 
 async def test_coordinator_update_data_failure(
@@ -90,14 +90,14 @@ async def test_coordinator_update_data_failure(
         unique_id="ec:74:d7:97:53:c5",
     )
 
-    with patch(
-        "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
+            return_value=None,
+        ),
+        pytest.raises(UpdateFailed, match="Failed to fetch device status"),
     ):
-        data = await coordinator._async_update_data()
-
-    assert data == {"phone_status": "unknown"}
-    assert coordinator._error_count == 1
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_update_data_exception(
@@ -111,20 +111,20 @@ async def test_coordinator_update_data_exception(
         unique_id="ec:74:d7:97:53:c5",
     )
 
-    with patch(
-        "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
-        side_effect=RuntimeError("Connection failed"),
+    with (
+        patch(
+            "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
+            side_effect=RuntimeError("Connection failed"),
+        ),
+        pytest.raises(UpdateFailed, match="Error communicating with device"),
     ):
-        data = await coordinator._async_update_data()
-
-    assert "phone_status" in data
-    assert data["phone_status"] == "unknown"
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_error_threshold(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Test coordinator error threshold handling."""
+    """Test coordinator error threshold handling - now raises UpdateFailed."""
     coordinator = GrandstreamCoordinator(
         hass=hass,
         entry=mock_config_entry,
@@ -132,16 +132,15 @@ async def test_coordinator_error_threshold(
         unique_id="ec:74:d7:97:53:c5",
     )
 
-    # Simulate multiple failures to reach threshold
-    with patch(
-        "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
-        return_value=None,
+    # Any failure now raises UpdateFailed
+    with (
+        patch(
+            "homeassistant.components.grandstream_home.coordinator.fetch_gds_status",
+            return_value=None,
+        ),
+        pytest.raises(UpdateFailed),
     ):
-        for _ in range(3):
-            data = await coordinator._async_update_data()
-
-    # After threshold reached, should return unavailable
-    assert data["phone_status"] == "unavailable"
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_firmware_version_update(
@@ -179,44 +178,6 @@ async def test_coordinator_firmware_version_update(
     assert updated_device.sw_version == "1.0.1.7"
 
 
-async def test_coordinator_firmware_version_none(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
-) -> None:
-    """Test coordinator handles None firmware version."""
-    coordinator = GrandstreamCoordinator(
-        hass=hass,
-        entry=mock_config_entry,
-        api=mock_api,
-        unique_id="ec:74:d7:97:53:c5",
-    )
-
-    # Call with None version - should not raise and not update
-    coordinator._update_firmware_version(None)
-    coordinator._update_firmware_version("")  # Empty string should also return
-
-
-async def test_coordinator_handle_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
-) -> None:
-    """Test coordinator error handling method."""
-    coordinator = GrandstreamCoordinator(
-        hass=hass,
-        entry=mock_config_entry,
-        api=mock_api,
-        unique_id="ec:74:d7:97:53:c5",
-    )
-
-    # First error should return unknown
-    result = coordinator._handle_error("phone_status")
-    assert result == {"phone_status": "unknown"}
-    assert coordinator._error_count == 1
-
-    # After threshold, should return unavailable
-    coordinator._error_count = 3
-    result = coordinator._handle_error("phone_status")
-    assert result == {"phone_status": "unavailable"}
-
-
 async def test_coordinator_discovery_version_fallback(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
@@ -241,3 +202,20 @@ async def test_coordinator_discovery_version_fallback(
 
     # The _update_firmware_version should be called with discovery_version
     # when result has no version
+
+
+async def test_coordinator_firmware_version_none(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
+) -> None:
+    """Test coordinator handles None firmware version."""
+    coordinator = GrandstreamCoordinator(
+        hass=hass,
+        entry=mock_config_entry,
+        api=mock_api,
+        unique_id="ec:74:d7:97:53:c5",
+    )
+
+    # Call with None version - should not raise and return early
+    coordinator._update_firmware_version(None)
+    coordinator._update_firmware_version("")  # Empty string should also return early
+    # Test passes if no exception raised

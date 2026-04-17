@@ -6,18 +6,25 @@ import logging
 from typing import Any
 
 from grandstream_home_api import (
+    DEFAULT_PORT,
+    DEFAULT_USERNAME,
     DEVICE_TYPE_GDS,
     DEVICE_TYPE_GSC,
     attempt_login,
     create_api_instance,
     extract_mac_from_name,
-    generate_unique_id,
     validate_port,
 )
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -25,12 +32,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     CONF_DEVICE_MODEL,
     CONF_FIRMWARE_VERSION,
-    CONF_PASSWORD,
     CONF_PRODUCT_MODEL,
-    CONF_USERNAME,
     CONF_VERIFY_SSL,
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
     DOMAIN,
 )
 
@@ -120,17 +123,14 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Use MAC address as unique_id if available
         self._mac = extract_mac_from_name(self._name)
-        if self._mac:
-            unique_id = format_mac(self._mac)
-        else:
-            unique_id = generate_unique_id(
-                self._name, self._device_model, self._host or "", self._port
-            )
-
-        _LOGGER.debug("Zeroconf unique_id=%s, mac=%s", unique_id, self._mac)
-
         # Set unique_id and check if already configured
-        await self.async_set_unique_id(unique_id)
+        if self._mac:
+            await self.async_set_unique_id(format_mac(self._mac))
+        else:
+            # For devices without MAC, use host+port to check for duplicates
+            self._async_abort_entries_match(
+                {CONF_HOST: self._host, CONF_PORT: self._port}
+            )
 
         # Prepare updates
         updates = {CONF_HOST: self._host, CONF_PORT: self._port}
@@ -219,14 +219,14 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Set unique_id before creating entry (prefer MAC if available)
         if not self.unique_id:
-            unique_id = (
-                format_mac(self._mac)
-                if self._mac
-                else generate_unique_id(
-                    self._name or "", self._device_model, self._host or "", port
+            if self._mac:
+                await self.async_set_unique_id(format_mac(self._mac))
+            else:
+                # Use _async_abort_entries_match to prevent duplicates
+                # when MAC is not available (manual configuration)
+                self._async_abort_entries_match(
+                    {CONF_HOST: self._host, CONF_PORT: port}
                 )
-            )
-            await self.async_set_unique_id(unique_id)
 
         # Create config entry (username is fixed, store password directly)
         return self.async_create_entry(
@@ -261,7 +261,7 @@ class GrandstreamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "host": self._host or "Unknown",
+                "host": self._host or "",
                 "model": self._product_model or self._device_model.upper(),
             },
         )
