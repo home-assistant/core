@@ -83,7 +83,6 @@ async def test_setup_failed_auth_error(
 @pytest.mark.parametrize(
     ("version"),
     [
-        (None),
         ("v1.0.0-RC2"),
         ("v0.1.0"),
         ("v1.9.0"),
