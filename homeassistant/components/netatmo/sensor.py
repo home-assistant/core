@@ -139,7 +139,7 @@ class NetatmoSensorEntityDescription(SensorEntityDescription):
     # to avoid disappearing entities and losing historical data in Home Assistant. This should be used for sensors
     # where the value is still relevant even if the device is not currently reachable, such as battery level or
     # last known state.
-    is_sticky: bool | None = True
+    is_sticky: bool | None = None
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
