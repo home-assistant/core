@@ -9,11 +9,14 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.evohome.climate import EvoZone
 from homeassistant.components.evohome.const import (
     ATTR_DURATION,
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
+    RESET_BREAKS_IN_HA_VERSION,
     EvoService,
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
@@ -21,6 +24,7 @@ from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, ATTR_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
 
 from .const import TEST_INSTALLS
@@ -43,10 +47,11 @@ async def test_refresh_system(hass: HomeAssistant) -> None:
         mock_fcn.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)  # some don't support AutoWithReset
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 @pytest.mark.usefixtures("evohome")
 async def test_reset_system(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's reset_system service (for a temperature control system)."""
 
@@ -60,6 +65,13 @@ async def test_reset_system(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_reset_system_service")
+    assert issue is not None
+    assert issue.translation_key == "deprecated_reset_system_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -122,6 +134,7 @@ async def test_set_system_mode(
 async def test_clear_zone_override(
     hass: HomeAssistant,
     zone_id: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's clear_zone_override service (for a heating zone)."""
 
@@ -137,11 +150,21 @@ async def test_clear_zone_override(
 
         mock_fcn.assert_awaited_once_with()
 
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_clear_zone_override_service"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_clear_zone_override_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
+
 
 @pytest.mark.parametrize("install", ["default"])
 async def test_clear_zone_override_legacy(
     hass: HomeAssistant,
     zone_id: str,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test Evohome's clear_zone_override service with the legacy entity_id."""
 
@@ -157,6 +180,15 @@ async def test_clear_zone_override_legacy(
         )
 
         mock_fcn.assert_awaited_once_with()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_clear_zone_override_service"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_clear_zone_override_service"
+    assert issue.translation_placeholders == {
+        "breaks_in_ha_version": RESET_BREAKS_IN_HA_VERSION,
+    }
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -199,6 +231,47 @@ async def test_set_zone_override(
         mock_fcn.assert_awaited_once_with(
             19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
         )
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_set_zone_override_advance(
+    hass: HomeAssistant,
+    zone_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Evohome's set_zone_override service with duration=0.
+
+    The override is temporary until the next schedule change.
+    """
+
+    freezer.move_to("2024-05-10T12:15:00+00:00")
+    expected_until = datetime(2024, 5, 10, 21, 10, tzinfo=UTC)
+
+    # Simulate the schedule not yet having been fetched (e.g. HOMEASSISTANT_START)
+    entities = hass.data[DATA_DOMAIN_PLATFORM_ENTITIES].get(
+        (CLIMATE_DOMAIN, DOMAIN), {}
+    )
+
+    zone_entity: EvoZone = entities[zone_id]  # type: ignore[assignment]
+    zone_entity._schedule = None
+    zone_entity._setpoints = {}
+
+    # EvoZoneMode.TEMPORARY_OVERRIDE with duration 0 (i.e. until next schedule change)
+    with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+        await hass.services.async_call(
+            DOMAIN,
+            EvoService.SET_ZONE_OVERRIDE,
+            {
+                ATTR_SETPOINT: 19.5,
+                ATTR_DURATION: {"minutes": 0},
+            },
+            target={ATTR_ENTITY_ID: zone_id},
+            blocking=True,
+        )
+
+        mock_fcn.assert_awaited_once_with(19.5, until=expected_until)
+
+    assert zone_entity.setpoints["next_sp_from"] == expected_until
 
 
 @pytest.mark.parametrize("install", ["default"])
