@@ -174,7 +174,7 @@ async def test_flow_version_error(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
     mock_setup_entry: AsyncMock,
-    version,
+    version: str,
 ) -> None:
     """Test flow version error."""
     mock_transmission_client.return_value.server_version = version
@@ -294,7 +294,7 @@ async def test_reauth_version_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_transmission_client: AsyncMock,
-    version: str | None,
+    version: str,
 ) -> None:
     """Test reauth version error."""
     mock_transmission_client.return_value.server_version = version

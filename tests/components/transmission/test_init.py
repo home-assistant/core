@@ -95,7 +95,7 @@ async def test_setup_failed_too_old(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    version,
+    version: str,
 ) -> None:
     """Test setup of Transmission entry with too old version of Transmission."""
     mock_config_entry.add_to_hass(hass)
