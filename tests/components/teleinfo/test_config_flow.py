@@ -68,11 +68,11 @@ async def test_user_flow_error_recovery(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    mock_serial_port.side_effect = side_effect
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
     )
-
-    mock_serial_port.side_effect = side_effect
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
