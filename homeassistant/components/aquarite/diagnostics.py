@@ -18,14 +18,18 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: AquariteConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
-
     return {
         "entry": {
             "title": entry.title,
             "data": async_redact_data(dict(entry.data), TO_REDACT_CONFIG),
         },
-        "coordinator_data": async_redact_data(
-            coordinator.data or {}, TO_REDACT_COORDINATOR
-        ),
+        "pools": {
+            pool_id: {
+                "name": coordinator.pool_name,
+                "data": async_redact_data(
+                    coordinator.data or {}, TO_REDACT_COORDINATOR
+                ),
+            }
+            for pool_id, coordinator in entry.runtime_data.coordinators.items()
+        },
     }

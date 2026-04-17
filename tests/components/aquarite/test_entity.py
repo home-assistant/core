@@ -12,8 +12,10 @@ from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
 
 
 def _make_coordinator(version: Any = 825) -> MagicMock:
-    """Build a mock coordinator returning the given version from main.version."""
+    """Build a mock coordinator with pool_id, pool_name, and version."""
     coord = MagicMock()
+    coord.pool_id = MOCK_POOL_ID
+    coord.pool_name = MOCK_POOL_NAME
     coord.get_value = MagicMock(return_value=version)
     return coord
 
@@ -32,7 +34,7 @@ def test_entity_device_info_with_version() -> None:
     """Test device_info includes sw_version when available."""
     coord = _make_coordinator(version=825)
     with _patch_init():
-        entity = AquariteEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+        entity = AquariteEntity(coord)
 
     info = entity._attr_device_info
     assert info["identifiers"] == {(DOMAIN, MOCK_POOL_ID)}
@@ -46,7 +48,7 @@ def test_entity_device_info_without_version() -> None:
     """Test device_info handles missing sw_version (None)."""
     coord = _make_coordinator(version=None)
     with _patch_init():
-        entity = AquariteEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+        entity = AquariteEntity(coord)
 
     assert entity._attr_device_info["sw_version"] is None
 
@@ -55,24 +57,24 @@ def test_entity_device_info_with_zero_version() -> None:
     """Test device_info preserves a falsy but valid version (e.g., 0)."""
     coord = _make_coordinator(version=0)
     with _patch_init():
-        entity = AquariteEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+        entity = AquariteEntity(coord)
 
     assert entity._attr_device_info["sw_version"] == "0"
 
 
 def test_entity_pool_id_property() -> None:
-    """Test the pool_id property returns the value passed to __init__."""
+    """Test the pool_id property derives from coordinator."""
     coord = _make_coordinator()
     with _patch_init():
-        entity = AquariteEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+        entity = AquariteEntity(coord)
     assert entity.pool_id == MOCK_POOL_ID
 
 
 def test_entity_pool_name_property() -> None:
-    """Test the pool_name property returns the value passed to __init__."""
+    """Test the pool_name property derives from coordinator."""
     coord = _make_coordinator()
     with _patch_init():
-        entity = AquariteEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+        entity = AquariteEntity(coord)
     assert entity.pool_name == MOCK_POOL_NAME
 
 
@@ -80,5 +82,5 @@ def test_entity_build_unique_id() -> None:
     """Test build_unique_id concatenates pool_id and suffix."""
     coord = _make_coordinator()
     with _patch_init():
-        entity = AquariteEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+        entity = AquariteEntity(coord)
     assert entity.build_unique_id("temperature") == f"{MOCK_POOL_ID}-temperature"

@@ -1,4 +1,4 @@
-"""Tests for Aquarite sensor value conversions and entity native_value."""
+"""Tests for Aquarite sensor entity native_value and platform setup."""
 
 from __future__ import annotations
 
@@ -22,10 +22,12 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
 
-# ── Entity-level tests with mocked coordinator ──────────────────
+# ── Helpers ─────────────────────────────────────────────────────
 
 
-def _make_coordinator(data: dict[str, Any]) -> MagicMock:
+def _make_coordinator(
+    data: dict[str, Any], pool_id: str = MOCK_POOL_ID, pool_name: str = MOCK_POOL_NAME
+) -> MagicMock:
     """Build a mock coordinator that resolves dot-notation paths."""
 
     def _get_value(path: str, default: Any = None) -> Any:
@@ -40,7 +42,8 @@ def _make_coordinator(data: dict[str, Any]) -> MagicMock:
 
     coord = MagicMock()
     coord.data = data
-    coord.pool_id = MOCK_POOL_ID
+    coord.pool_id = pool_id
+    coord.pool_name = pool_name
     coord.get_value = MagicMock(side_effect=_get_value)
     return coord
 
@@ -70,11 +73,7 @@ def test_temperature_native_value(
     """Test native_value returns raw float from coordinator."""
     with _patch_entity_init():
         entity = AquariteTemperatureSensorEntity(
-            mock_coordinator,
-            MOCK_POOL_ID,
-            MOCK_POOL_NAME,
-            "temperature",
-            "main.temperature",
+            mock_coordinator, "temperature", "main.temperature"
         )
     assert entity.native_value == 25.5
 
@@ -84,7 +83,7 @@ def test_temperature_native_value_missing() -> None:
     coord = _make_coordinator({"main": {}})
     with _patch_entity_init():
         entity = AquariteTemperatureSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "temperature", "main.temperature"
+            coord, "temperature", "main.temperature"
         )
     assert entity.native_value is None
 
@@ -94,7 +93,7 @@ def test_temperature_native_value_non_numeric() -> None:
     coord = _make_coordinator({"main": {"temperature": "not_a_number"}})
     with _patch_entity_init():
         entity = AquariteTemperatureSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "temperature", "main.temperature"
+            coord, "temperature", "main.temperature"
         )
     assert entity.native_value is None
 
@@ -107,13 +106,7 @@ def test_value_sensor_native_value_ph(
 ) -> None:
     """Test pH value is divided by 100."""
     with _patch_entity_init():
-        entity = AquariteValueSensorEntity(
-            mock_coordinator,
-            MOCK_POOL_ID,
-            MOCK_POOL_NAME,
-            "ph",
-            "modules.ph.current",
-        )
+        entity = AquariteValueSensorEntity(mock_coordinator, "ph", "modules.ph.current")
     assert entity.native_value == 7.42
 
 
@@ -121,9 +114,15 @@ def test_value_sensor_native_value_missing() -> None:
     """Test returns None when path is absent."""
     coord = _make_coordinator({"modules": {}})
     with _patch_entity_init():
-        entity = AquariteValueSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "ph", "modules.ph.current"
-        )
+        entity = AquariteValueSensorEntity(coord, "ph", "modules.ph.current")
+    assert entity.native_value is None
+
+
+def test_value_sensor_native_value_non_numeric() -> None:
+    """Test value sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"modules": {"ph": {"current": "bad"}}})
+    with _patch_entity_init():
+        entity = AquariteValueSensorEntity(coord, "ph", "modules.ph.current")
     assert entity.native_value is None
 
 
@@ -136,11 +135,7 @@ def test_hydrolyser_native_value(
     """Test hydrolyser value is divided by 10."""
     with _patch_entity_init():
         entity = AquariteHydrolyserSensorEntity(
-            mock_coordinator,
-            MOCK_POOL_ID,
-            MOCK_POOL_NAME,
-            "electrolysis",
-            "hidro.current",
+            mock_coordinator, "electrolysis", "hidro.current"
         )
     assert entity.native_value == 5.0
 
@@ -149,9 +144,7 @@ def test_hydrolyser_native_value_non_numeric() -> None:
     """Test returns None for non-numeric data."""
     coord = _make_coordinator({"hidro": {"current": "bad"}})
     with _patch_entity_init():
-        entity = AquariteHydrolyserSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "electrolysis", "hidro.current"
-        )
+        entity = AquariteHydrolyserSensorEntity(coord, "electrolysis", "hidro.current")
     assert entity.native_value is None
 
 
@@ -164,11 +157,7 @@ def test_rx_native_value(
     """Test Rx value is returned as integer."""
     with _patch_entity_init():
         entity = AquariteRxValueSensorEntity(
-            mock_coordinator,
-            MOCK_POOL_ID,
-            MOCK_POOL_NAME,
-            "rx",
-            "modules.rx.current",
+            mock_coordinator, "rx", "modules.rx.current"
         )
     assert entity.native_value == 707
 
@@ -177,9 +166,15 @@ def test_rx_native_value_missing() -> None:
     """Test returns None when path is absent."""
     coord = _make_coordinator({"modules": {}})
     with _patch_entity_init():
-        entity = AquariteRxValueSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "rx", "modules.rx.current"
-        )
+        entity = AquariteRxValueSensorEntity(coord, "rx", "modules.rx.current")
+    assert entity.native_value is None
+
+
+def test_rx_native_value_non_numeric() -> None:
+    """Test Rx sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"modules": {"rx": {"current": "bad"}}})
+    with _patch_entity_init():
+        entity = AquariteRxValueSensorEntity(coord, "rx", "modules.rx.current")
     assert entity.native_value is None
 
 
@@ -192,11 +187,7 @@ def test_time_sensor_native_value(
     """Test time value is divided by 60 to return hours."""
     with _patch_entity_init():
         entity = AquariteTimeSensorEntity(
-            mock_coordinator,
-            MOCK_POOL_ID,
-            MOCK_POOL_NAME,
-            "filtration_intel_time",
-            "filtration.intel.time",
+            mock_coordinator, "filtration_intel_time", "filtration.intel.time"
         )
     assert entity.native_value == 10.0
 
@@ -206,11 +197,17 @@ def test_time_sensor_native_value_missing() -> None:
     coord = _make_coordinator({"filtration": {}})
     with _patch_entity_init():
         entity = AquariteTimeSensorEntity(
-            coord,
-            MOCK_POOL_ID,
-            MOCK_POOL_NAME,
-            "filtration_intel_time",
-            "filtration.intel.time",
+            coord, "filtration_intel_time", "filtration.intel.time"
+        )
+    assert entity.native_value is None
+
+
+def test_time_sensor_native_value_non_numeric() -> None:
+    """Test time sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"filtration": {"intel": {"time": "bad"}}})
+    with _patch_entity_init():
+        entity = AquariteTimeSensorEntity(
+            coord, "filtration_intel_time", "filtration.intel.time"
         )
     assert entity.native_value is None
 
@@ -223,9 +220,7 @@ def test_location_native_value_city(
 ) -> None:
     """Test location sensor returns the correct form field."""
     with _patch_entity_init():
-        entity = AquariteLocationSensorEntity(
-            mock_coordinator, MOCK_POOL_ID, MOCK_POOL_NAME, "city", "city"
-        )
+        entity = AquariteLocationSensorEntity(mock_coordinator, "city", "city")
     assert entity.native_value == "Waterloo"
 
 
@@ -233,9 +228,7 @@ def test_location_native_value_missing() -> None:
     """Test returns None when form data is missing."""
     coord = _make_coordinator({})
     with _patch_entity_init():
-        entity = AquariteLocationSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "city", "city"
-        )
+        entity = AquariteLocationSensorEntity(coord, "city", "city")
     assert entity.native_value is None
 
 
@@ -247,9 +240,7 @@ def test_rssi_native_value(
 ) -> None:
     """Test RSSI value is returned as integer."""
     with _patch_entity_init():
-        entity = AquariteRssiSensorEntity(
-            mock_coordinator, MOCK_POOL_ID, MOCK_POOL_NAME
-        )
+        entity = AquariteRssiSensorEntity(mock_coordinator)
     assert entity.native_value == -65
 
 
@@ -257,7 +248,15 @@ def test_rssi_native_value_missing() -> None:
     """Test returns None when RSSI is missing."""
     coord = _make_coordinator({"main": {}})
     with _patch_entity_init():
-        entity = AquariteRssiSensorEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
+        entity = AquariteRssiSensorEntity(coord)
+    assert entity.native_value is None
+
+
+def test_rssi_native_value_non_numeric() -> None:
+    """Test RSSI sensor returns None for non-numeric data."""
+    coord = _make_coordinator({"main": {"RSSI": "bad"}})
+    with _patch_entity_init():
+        entity = AquariteRssiSensorEntity(coord)
     assert entity.native_value is None
 
 
@@ -269,68 +268,20 @@ def test_pool_name_native_value(
 ) -> None:
     """Test pool name sensor returns the pool name."""
     with _patch_entity_init():
-        entity = AquaritePoolNameSensorEntity(
-            mock_coordinator, MOCK_POOL_ID, MOCK_POOL_NAME
-        )
+        entity = AquaritePoolNameSensorEntity(mock_coordinator)
     assert entity.native_value == MOCK_POOL_NAME
-
-
-# ── Additional edge cases ───────────────────────────────────────
-
-
-def test_value_sensor_native_value_non_numeric() -> None:
-    """Test value sensor returns None for non-numeric data."""
-    coord = _make_coordinator({"modules": {"ph": {"current": "bad"}}})
-    with _patch_entity_init():
-        entity = AquariteValueSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "ph", "modules.ph.current"
-        )
-    assert entity.native_value is None
-
-
-def test_rx_native_value_non_numeric() -> None:
-    """Test Rx sensor returns None for non-numeric data."""
-    coord = _make_coordinator({"modules": {"rx": {"current": "bad"}}})
-    with _patch_entity_init():
-        entity = AquariteRxValueSensorEntity(
-            coord, MOCK_POOL_ID, MOCK_POOL_NAME, "rx", "modules.rx.current"
-        )
-    assert entity.native_value is None
-
-
-def test_time_sensor_native_value_non_numeric() -> None:
-    """Test time sensor returns None for non-numeric data."""
-    coord = _make_coordinator({"filtration": {"intel": {"time": "bad"}}})
-    with _patch_entity_init():
-        entity = AquariteTimeSensorEntity(
-            coord,
-            MOCK_POOL_ID,
-            MOCK_POOL_NAME,
-            "filtration_intel_time",
-            "filtration.intel.time",
-        )
-    assert entity.native_value is None
-
-
-def test_rssi_native_value_non_numeric() -> None:
-    """Test RSSI sensor returns None for non-numeric data."""
-    coord = _make_coordinator({"main": {"RSSI": "bad"}})
-    with _patch_entity_init():
-        entity = AquariteRssiSensorEntity(coord, MOCK_POOL_ID, MOCK_POOL_NAME)
-    assert entity.native_value is None
 
 
 # ── Platform setup ──────────────────────────────────────────────
 
 
 async def _setup_sensor_platform(
-    hass: HomeAssistant, mock_pool_data: dict[str, Any]
+    hass: HomeAssistant, coordinators: list[MagicMock]
 ) -> list:
-    """Set up the sensor platform with a mock coordinator and capture entities."""
-    coord = _make_coordinator(mock_pool_data)
+    """Set up the sensor platform with pre-built coordinators; capture entities."""
     entry = MagicMock()
-    entry.runtime_data = coord
-    entry.title = MOCK_POOL_NAME
+    entry.runtime_data = MagicMock()
+    entry.runtime_data.coordinators = {c.pool_id: c for c in coordinators}
 
     captured: list = []
 
@@ -346,7 +297,8 @@ async def test_async_setup_entry_full_modules(
     hass: HomeAssistant, mock_pool_data: dict[str, Any]
 ) -> None:
     """Test setup creates entities for every module flagged as present."""
-    entities = await _setup_sensor_platform(hass, mock_pool_data)
+    coord = _make_coordinator(mock_pool_data)
+    entities = await _setup_sensor_platform(hass, [coord])
 
     translation_keys = {e._attr_translation_key for e in entities}
     # Always-on entities
@@ -354,16 +306,15 @@ async def test_async_setup_entry_full_modules(
     assert "rssi" in translation_keys
     assert "filtration_intel_time" in translation_keys
     assert "pool_name" in translation_keys
-    # Module-gated (mock_pool_data has hasPH=1, hasRX=1, hasHidro=1)
+    # Module-gated (fixture has hasPH=1, hasRX=1, hasHidro=1 with is_electrolysis=True)
     assert "ph" in translation_keys
     assert "rx" in translation_keys
-    # Electrolysis branch (is_electrolysis=True in fixture)
     assert "electrolysis" in translation_keys
-    # Disabled modules in the fixture
+    # Disabled modules in fixture
     assert "cd" not in translation_keys
     assert "cl" not in translation_keys
     assert "uv" not in translation_keys
-    # Location sensors (always added)
+    # Location sensors
     assert {"city", "street", "zipcode", "country", "latitude", "longitude"} <= (
         translation_keys
     )
@@ -376,7 +327,8 @@ async def test_async_setup_entry_hydrolysis_branch(hass: HomeAssistant) -> None:
         "hidro": {"is_electrolysis": False, "current": 50},
         "form": {},
     }
-    entities = await _setup_sensor_platform(hass, data)
+    coord = _make_coordinator(data)
+    entities = await _setup_sensor_platform(hass, [coord])
     translation_keys = {e._attr_translation_key for e in entities}
     assert "hydrolysis" in translation_keys
     assert "electrolysis" not in translation_keys
@@ -397,6 +349,24 @@ async def test_async_setup_entry_all_modules_enabled(hass: HomeAssistant) -> Non
         "hidro": {"is_electrolysis": True, "current": 50},
         "form": {},
     }
-    entities = await _setup_sensor_platform(hass, data)
+    coord = _make_coordinator(data)
+    entities = await _setup_sensor_platform(hass, [coord])
     translation_keys = {e._attr_translation_key for e in entities}
     assert {"cd", "cl", "ph", "rx", "uv", "electrolysis"} <= translation_keys
+
+
+async def test_async_setup_entry_multi_pool(
+    hass: HomeAssistant, mock_pool_data: dict[str, Any]
+) -> None:
+    """Test setup creates entities for every pool on the account."""
+    coord_a = _make_coordinator(mock_pool_data, pool_id="pool_a", pool_name="Pool A")
+    coord_b = _make_coordinator(mock_pool_data, pool_id="pool_b", pool_name="Pool B")
+    entities = await _setup_sensor_platform(hass, [coord_a, coord_b])
+
+    # Every entity should have a unique_id prefixed with its pool_id
+    pool_a_ids = {e._attr_unique_id for e in entities if "pool_a-" in e._attr_unique_id}
+    pool_b_ids = {e._attr_unique_id for e in entities if "pool_b-" in e._attr_unique_id}
+    assert pool_a_ids
+    assert pool_b_ids
+    # Same count of entities per pool
+    assert len(pool_a_ids) == len(pool_b_ids)

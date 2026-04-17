@@ -1,26 +1,15 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "auth_error": "Authorization failed, check username and password.",
-      "no_pools_found": "No pools found for your account.",
       "unknown_error": "Unexpected error. Please try again."
     },
     "step": {
-      "pool": {
-        "data": {
-          "pool_id": "Pool"
-        },
-        "data_description": {
-          "pool_id": "The pool to integrate with Home Assistant"
-        },
-        "description": "Please choose the pool for this integration.",
-        "title": "Select Pool"
-      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -54,7 +43,7 @@
           "password": "The password for your Hayward account",
           "username": "The email used for your Hayward account"
         },
-        "description": "Enter your Hayward credentials.",
+        "description": "Enter your Hayward credentials. All pools on the account will be added automatically.",
         "title": "Authentication"
       }
     }

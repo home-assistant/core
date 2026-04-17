@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aioaquarite import AquariteAuth, AquariteClient, AuthenticationError
+from aioaquarite import AquariteAuth, AuthenticationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,7 +14,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_POOL_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,80 +27,42 @@ AUTH_SCHEMA = vol.Schema(
 
 
 class AquariteConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Aquarite config flow."""
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._user_data: dict[str, Any] = {}
-        self._available_pools: dict[str, str] = {}
+    """Aquarite config flow (one entry per Hayward account)."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            self._user_data = {
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-            }
-            return await self.async_step_pool()
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
 
-        return self.async_show_form(step_id="user", data_schema=AUTH_SCHEMA)
-
-    async def async_step_pool(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the pool selection step."""
-        if user_input is not None:
-            pool_id: str = user_input[CONF_POOL_ID]
-
-            await self.async_set_unique_id(pool_id)
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title=self._available_pools.get(pool_id, pool_id),
-                data={
-                    CONF_USERNAME: self._user_data[CONF_USERNAME],
-                    CONF_PASSWORD: self._user_data[CONF_PASSWORD],
-                    CONF_POOL_ID: pool_id,
-                },
-            )
-
-        try:
             session = async_get_clientsession(self.hass)
-            auth = AquariteAuth(
-                session,
-                self._user_data[CONF_USERNAME],
-                self._user_data[CONF_PASSWORD],
-            )
-            await auth.authenticate()
-            api = AquariteClient(auth)
-            self._available_pools = await api.get_pools()
-        except AuthenticationError:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=AUTH_SCHEMA,
-                errors={"base": "auth_error"},
-            )
-        except Exception:
-            _LOGGER.exception("Unexpected error during authentication")
-            return self.async_show_form(
-                step_id="user",
-                data_schema=AUTH_SCHEMA,
-                errors={"base": "unknown_error"},
-            )
+            try:
+                auth = AquariteAuth(session, username, password)
+                await auth.authenticate()
+            except AuthenticationError:
+                errors["base"] = "auth_error"
+            except Exception:
+                _LOGGER.exception("Unexpected error during authentication")
+                errors["base"] = "unknown_error"
+            else:
+                await self.async_set_unique_id(username.lower())
+                self._abort_if_unique_id_configured()
 
-        if not self._available_pools:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=AUTH_SCHEMA,
-                errors={"base": "no_pools_found"},
-            )
+                return self.async_create_entry(
+                    title=username,
+                    data={
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                    },
+                )
 
-        pool_schema = vol.Schema(
-            {vol.Required(CONF_POOL_ID): vol.In(self._available_pools)}
+        return self.async_show_form(
+            step_id="user", data_schema=AUTH_SCHEMA, errors=errors
         )
-        return self.async_show_form(step_id="pool", data_schema=pool_schema)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

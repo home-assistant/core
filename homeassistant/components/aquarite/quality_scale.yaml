@@ -15,7 +15,7 @@ rules:
   config-flow: done
   config-flow-test-coverage:
     status: done
-    comment: Tests cover user, pool, reauth, reconfigure, errors, duplicate
+    comment: Tests cover user, reauth, reconfigure, errors, and duplicate entries
   dependency-transparency:
     status: done
     comment: aioaquarite published on PyPI
@@ -42,16 +42,16 @@ rules:
     comment: _attr_has_entity_name = True on base entity
   runtime-data:
     status: done
-    comment: Uses entry.runtime_data typed as AquariteDataUpdateCoordinator
+    comment: Uses entry.runtime_data typed as AquariteData (auth + per-pool coordinators)
   test-before-configure:
     status: done
-    comment: Auth tested before creating entry in async_step_pool
+    comment: Auth tested before creating entry in async_step_user
   test-before-setup:
     status: done
     comment: Auth tested in async_setup_entry, raises ConfigEntryAuthFailed
   unique-config-entry:
     status: done
-    comment: unique_id set to pool_id, _abort_if_unique_id_configured used
+    comment: unique_id = lowercased username, _abort_if_unique_id_configured used
 
   # Silver
   action-exceptions:

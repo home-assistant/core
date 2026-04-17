@@ -14,6 +14,3 @@ PATH_HASHIDRO = f"{PATH_PREFIX}hasHidro"
 
 # Time intervals (seconds)
 HEALTH_CHECK_INTERVAL = 300  # 5 minutes
-
-# Config entry data keys
-CONF_POOL_ID = "pool_id"
