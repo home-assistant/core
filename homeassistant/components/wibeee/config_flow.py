@@ -456,10 +456,12 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
         schema_dict[
             vol.Optional(
                 CONF_SCAN_INTERVAL,
-                default=options.get(
-                    CONF_SCAN_INTERVAL,
-                    int(DEFAULT_SCAN_INTERVAL.total_seconds()),
-                ),
+                default=int(
+                    options.get(
+                        CONF_SCAN_INTERVAL,
+                        int(DEFAULT_SCAN_INTERVAL.total_seconds()),
+                    )
+                )
             )
         ] = NumberSelector(
             NumberSelectorConfig(
@@ -471,9 +473,9 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         # Show auto-configure option for local push
-        schema_dict[vol.Optional(CONF_AUTO_CONFIGURE, default=False)] = (
-            BooleanSelector()
-        )
+        schema_dict[
+            vol.Optional(CONF_AUTO_CONFIGURE, default=False)
+        ] = BooleanSelector()
 
         return self.async_show_form(
             step_id="init",

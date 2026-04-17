@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(github.com)",
+      "WebFetch(raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(pypi.org)"
+    ]
+  },
+  "$version": 3
+}
