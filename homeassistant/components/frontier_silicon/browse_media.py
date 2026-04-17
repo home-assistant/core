@@ -2,7 +2,7 @@
 
 import logging
 
-from afsapi import AFSAPI, FSApiException, OutOfRangeException, Preset
+from afsapi import AFSAPI, FSApiError, OutOfRangeError, Preset
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -136,11 +136,11 @@ async def browse_node(
             # Return items in this folder
             children = [
                 _item_payload(key, item, player_mode, parent_keys=parent_keys)
-                async for key, item in await afsapi.nav_list()
+                async for key, item in afsapi.nav_list()
             ]
-    except OutOfRangeException as err:
+    except OutOfRangeError as err:
         raise BrowseError("The requested item is out of range") from err
-    except FSApiException as err:
+    except FSApiError as err:
         raise BrowseError(str(err)) from err
 
     return BrowseMedia(
