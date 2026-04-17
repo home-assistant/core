@@ -7,7 +7,8 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.matter.vacuum import MatterVacuum
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, Segment
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -602,26 +603,25 @@ async def test_vacuum_silent_reindex_same_names(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
-async def test_vacuum_silent_reindex_preserves_duplicate_names(
+async def test_vacuum_silent_reindex_preserves_names(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Name-multiset comparison must treat duplicate names correctly.
+    """A pure segment ID re-index with unchanged names must not fire a repair.
 
-    If current has two "Bedroom" rooms with ids 6 and 7, and last_seen has
-    two "Bedroom" rooms with ids 60 and 70, this is a pure re-indexing and
-    must NOT fire a repair. (A name-SET comparison would wrongly collapse
-    both "Bedroom" entries and miss cases where one was deleted and another
-    added.)
+    This test covers the fixture's current setup, where the segment names are
+    unique and only the stored IDs differ from the device's current IDs.
+    Duplicate-name correctness of the underlying multiset comparison is
+    covered separately in ``test_names_match_duplicate_names``.
     """
     entity_id = "vacuum.mock_vacuum"
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
 
-    # Build a last_seen that mirrors the fixture's name multiset with
-    # completely different IDs.
+    # Build a last_seen list that mirrors the fixture's current segment names
+    # while using completely different IDs.
     entity_registry.async_update_entity_options(
         entity_id,
         VACUUM_DOMAIN,
@@ -698,3 +698,48 @@ async def test_vacuum_reindex_clears_stale_issue(
     await trigger_subscription_callback(hass, matter_client)
 
     assert issue_reg.async_get_issue(VACUUM_DOMAIN, issue_id) is None
+
+
+def test_names_match_duplicate_names() -> None:
+    """``MatterVacuum._names_match`` must treat names as a multiset.
+
+    - Two rooms with the same name and different IDs on both sides are equal.
+    - Dropping one of two duplicate-name rooms breaks equality.
+    - Mixed None/str group values must not raise (Counter-based comparison).
+    """
+    current = {
+        "1": Segment(id="1", name="Bedroom"),
+        "2": Segment(id="2", name="Bedroom"),
+        "3": Segment(id="3", name="Kitchen"),
+    }
+    last_seen = {
+        "10": Segment(id="10", name="Bedroom"),
+        "20": Segment(id="20", name="Bedroom"),
+        "30": Segment(id="30", name="Kitchen"),
+    }
+    assert MatterVacuum._names_match(current, last_seen)
+
+    # Drop one Bedroom -> multiset differs -> not equal.
+    current_missing_bedroom = {
+        "1": Segment(id="1", name="Bedroom"),
+        "3": Segment(id="3", name="Kitchen"),
+    }
+    assert not MatterVacuum._names_match(current_missing_bedroom, last_seen)
+
+    # Mixed None/str group values on same name must compare without TypeError.
+    current_mixed = {
+        "1": Segment(id="1", name="Bedroom", group=None),
+        "2": Segment(id="2", name="Bedroom", group="guest"),
+    }
+    last_seen_mixed = {
+        "a": Segment(id="a", name="Bedroom", group="guest"),
+        "b": Segment(id="b", name="Bedroom", group=None),
+    }
+    assert MatterVacuum._names_match(current_mixed, last_seen_mixed)
+
+    # Same names but group values differ -> not equal.
+    current_group_differs = {
+        "1": Segment(id="1", name="Bedroom", group=None),
+        "2": Segment(id="2", name="Bedroom", group=None),
+    }
+    assert not MatterVacuum._names_match(current_group_differs, last_seen_mixed)

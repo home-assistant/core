@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import asdict, dataclass
 from enum import IntEnum
 import logging
@@ -284,7 +285,12 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                     )
                 else:
                     _LOGGER.info(
-                        "Vacuum segments changed: last_seen=%s, current=%s",
+                        "Vacuum segments changed: last_seen_ids=%s, current_ids=%s",
+                        sorted(last_seen_by_id),
+                        sorted(current_segments),
+                    )
+                    _LOGGER.debug(
+                        "Vacuum segments changed (details): last_seen=%s, current=%s",
                         last_seen_by_id,
                         current_segments,
                     )
@@ -296,13 +302,14 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     ) -> bool:
         """Return True if two segment collections share the same name multiset.
 
-        Uses a sorted list of (name, group) tuples so that duplicate names
-        (e.g., two "Bedroom" rooms) are correctly distinguished from a
-        deletion/addition pair.
+        Uses a Counter-based multiset comparison over (name, group) tuples so
+        that duplicate names (e.g., two "Bedroom" rooms) are correctly
+        distinguished from a deletion/addition pair and so that the comparison
+        never raises TypeError for mixed None/str group values.
         """
-        current_names = sorted((s.name, s.group) for s in current.values())
-        last_seen_names = sorted((s.name, s.group) for s in last_seen_by_id.values())
-        return current_names == last_seen_names
+        return Counter((s.name, s.group) for s in current.values()) == Counter(
+            (s.name, s.group) for s in last_seen_by_id.values()
+        )
 
     @callback
     def _async_persist_last_seen_segments(self, segments: list[Segment]) -> None:
