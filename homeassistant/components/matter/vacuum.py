@@ -280,7 +280,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 if self._try_silent_reconcile(last_seen_segments, current_segments):
                     return
                 _LOGGER.info(
-                    "Vacuum segments changed: named_count=%d",
+                    "Vacuum segments changed for %s: named_count=%d",
+                    self.entity_id,
                     len(current_segments),
                 )
                 _LOGGER.debug(
@@ -397,9 +398,10 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             clusters.OperationalCredentials.Attributes.CommissionedFabrics
         )
         _LOGGER.info(
-            "Vacuum segments: areaID re-indexing detected; silently"
+            "Vacuum segments: areaID re-indexing detected for %s; silently"
             " updating last_seen_segments. named_count=%d,"
-            " remapped_mapping_entries=%d, commissioned_fabrics=%s",
+            " remapped_mapping_entries=%d, commissioned_fabrics_count=%s",
+            self.entity_id,
             len(current),
             len(remapped_mapping) if remapped_mapping else 0,
             fabrics,
