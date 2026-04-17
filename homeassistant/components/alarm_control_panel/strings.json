@@ -1,7 +1,8 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_armed": {
@@ -234,6 +235,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::trigger_for_name%]"
         }
       },
       "name": "Alarm armed"
@@ -243,6 +247,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::trigger_for_name%]"
         }
       },
       "name": "Alarm armed away"
@@ -252,6 +259,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::trigger_for_name%]"
         }
       },
       "name": "Alarm armed home"
@@ -261,6 +271,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::trigger_for_name%]"
         }
       },
       "name": "Alarm armed night"
@@ -270,6 +283,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::trigger_for_name%]"
         }
       },
       "name": "Alarm armed vacation"
@@ -279,6 +295,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::trigger_for_name%]"
         }
       },
       "name": "Alarm disarmed"
@@ -288,6 +307,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::trigger_for_name%]"
         }
       },
       "name": "Alarm triggered"

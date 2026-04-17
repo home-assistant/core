@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "light_sensor": {
+        "default": "mdi:brightness-auto"
+      }
+    },
     "climate": {
       "climate": {
         "state_attributes": {
@@ -125,6 +130,15 @@
           "unhealthy": "mdi:emoticon-sad-outline"
         }
       },
+      "battery_range": {
+        "default": "mdi:battery",
+        "state": {
+          "critical": "mdi:battery-alert-variant-outline",
+          "high": "mdi:battery-80",
+          "low": "mdi:battery-20",
+          "medium": "mdi:battery-50"
+        }
+      },
       "light_level": {
         "default": "mdi:brightness-7",
         "state": {
@@ -147,6 +161,20 @@
           "high": "mdi:water-check",
           "low": "mdi:water-outline",
           "medium": "mdi:water"
+        }
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "state": {
+          "off": "mdi:lock-open",
+          "on": "mdi:lock"
+        }
+      },
+      "wireless_charging": {
+        "state": {
+          "off": "mdi:battery-charging-wireless-outline",
+          "on": "mdi:battery-charging-wireless"
         }
       }
     }

@@ -15,7 +15,14 @@
       "name": "Button"
     },
     "doorbell": {
-      "name": "Doorbell"
+      "name": "Doorbell",
+      "state_attributes": {
+        "event_type": {
+          "state": {
+            "ring": "Ring"
+          }
+        }
+      }
     },
     "motion": {
       "name": "Motion"
