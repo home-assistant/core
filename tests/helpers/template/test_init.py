@@ -2056,6 +2056,42 @@ async def test_template_timeout(hass: HomeAssistant) -> None:
     assert await tmp5.async_render_will_timeout(0.000001) is True
 
 
+async def test_template_timeout_raise_exc_race(hass: HomeAssistant) -> None:
+    """Test template timeout tolerates a thread finishing during raise_exc."""
+
+    class FakeThreadWithException:
+        """Fake timeout thread that reproduces the raise_exc race."""
+
+        joined = False
+
+        def __init__(self, target) -> None:
+            """Initialize the fake thread."""
+            self.target = target
+
+        def start(self) -> None:
+            """Do not run the target so finish_event never fires."""
+
+        def is_alive(self) -> bool:
+            """Pretend the thread is still alive until interruption."""
+            return True
+
+        def raise_exc(self, exctype) -> None:
+            """Simulate the CPython async_raise race."""
+            raise SystemError("PyThreadState_SetAsyncExc failed")
+
+        def join(self) -> None:
+            """Track that cleanup still joins the fake thread."""
+            type(self).joined = True
+
+    with patch(
+        "homeassistant.helpers.template.ThreadWithException", FakeThreadWithException
+    ):
+        tmp = template.Template("{{ states | count }}", hass)
+        assert await tmp.async_render_will_timeout(0.000001) is True
+
+    assert FakeThreadWithException.joined is True
+
+
 async def test_template_timeout_raise(hass: HomeAssistant) -> None:
     """Test we can raise from."""
     tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
