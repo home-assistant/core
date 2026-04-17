@@ -90,12 +90,11 @@ set_lock_configuration:
       selector:
         boolean:
 
-# --- Credential management services ---
+# --- Credential management services (device-scoped, single node) ---
 
 set_user:
   target:
     entity:
-      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -133,7 +132,6 @@ set_user:
 clear_user:
   target:
     entity:
-      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -148,27 +146,31 @@ clear_user:
 clear_all_users:
   target:
     entity:
-      domain: lock
       integration: zwave_js
 
 get_credential_capabilities:
   target:
     entity:
-      domain: lock
       integration: zwave_js
 
 get_users:
   target:
     entity:
-      domain: lock
       integration: zwave_js
 
 set_credential:
   target:
     entity:
-      domain: lock
       integration: zwave_js
   fields:
+    user_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
     credential_type:
       required: true
       selector:
@@ -187,32 +189,10 @@ set_credential:
           max: 65535
           step: 1
           mode: box
-    user_index:
-      selector:
-        number:
-          min: 1
-          max: 65535
-          step: 1
-          mode: box
-    user_type:
-      selector:
-        select:
-          options:
-            - general
-            - programming
-            - non_access
-            - duress
-            - disposable
-            - expiring
-            - remote_only
-    active:
-      selector:
-        boolean:
 
 clear_credential:
   target:
     entity:
-      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -242,7 +222,6 @@ clear_credential:
 clear_all_credentials:
   target:
     entity:
-      domain: lock
       integration: zwave_js
   fields:
     user_index:
@@ -257,7 +236,6 @@ clear_all_credentials:
 get_credential_status:
   target:
     entity:
-      domain: lock
       integration: zwave_js
   fields:
     user_index:

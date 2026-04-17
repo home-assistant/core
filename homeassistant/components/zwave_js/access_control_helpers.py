@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
+from zwave_js_server.const import SupervisionStatus
 from zwave_js_server.const.command_class.access_control import (
     UserCredentialRule,
     UserCredentialType,
@@ -15,6 +16,7 @@ from zwave_js_server.const.command_class.access_control import (
 )
 from zwave_js_server.model.access_control import SetUserOptions
 from zwave_js_server.model.node import Node
+from zwave_js_server.model.value import SupervisionResult
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -87,6 +89,26 @@ CREDENTIAL_RULE_REVERSE_MAP: dict[str, UserCredentialRule] = {
 }
 
 
+def _raise_on_supervision_fail(
+    result: SupervisionResult | None, translation_key: str
+) -> None:
+    """Raise HomeAssistantError if the supervision result indicates failure.
+
+    A ``None`` result means the device did not report supervision (treated as
+    success-by-omission). ``WORKING`` is reported while a long-running command
+    is still in progress — it is never a final state once awaited, so it is
+    treated as success here. ``NO_SUPPORT`` and ``FAIL`` both indicate the
+    device rejected or cannot handle the command.
+    """
+    if result is None:
+        return
+    if result.status in (SupervisionStatus.FAIL, SupervisionStatus.NO_SUPPORT):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+        )
+
+
 # --- TypedDicts for structured return values ---
 
 
@@ -133,6 +155,12 @@ class UsersResult(TypedDict):
 
     max_users: int
     users: list[UserEntry]
+
+
+class SetUserResult(TypedDict):
+    """Return type for set_user."""
+
+    user_index: int
 
 
 class SetCredentialResult(TypedDict):
@@ -250,8 +278,8 @@ async def async_set_user(
     user_type: UserCredentialUserType | None = None,
     credential_rule: UserCredentialRule | None = None,
     active: bool | None = None,
-) -> None:
-    """Create or update an access-control user."""
+) -> SetUserResult:
+    """Create or update an access-control user. Returns the allocated user_index."""
     supported = await node.access_control.async_is_supported()
     if not supported:
         raise HomeAssistantError(
@@ -281,29 +309,36 @@ async def async_set_user(
         credential_rule=credential_rule,
     )
 
-    await node.access_control.async_set_user(user_index, options)
+    result = await node.access_control.async_set_user(user_index, options)
+    _raise_on_supervision_fail(result, "set_user_rejected")
+    return SetUserResult(user_index=user_index)
 
 
 async def async_clear_user(node: Node, user_index: int) -> None:
     """Delete a single access-control user."""
-    await node.access_control.async_delete_user(user_index)
+    result = await node.access_control.async_delete_user(user_index)
+    _raise_on_supervision_fail(result, "clear_user_rejected")
 
 
 async def async_clear_all_users(node: Node) -> None:
     """Delete all access-control users."""
-    await node.access_control.async_delete_all_users()
+    result = await node.access_control.async_delete_all_users()
+    _raise_on_supervision_fail(result, "clear_all_users_rejected")
 
 
 async def async_set_credential(
     node: Node,
+    user_index: int,
     credential_type: UserCredentialType,
     credential_data: str,
     credential_slot: int | None = None,
-    user_index: int | None = None,
-    user_type: UserCredentialUserType | None = None,
-    active: bool | None = None,
 ) -> SetCredentialResult:
-    """Add or update a credential (PIN/password only)."""
+    """Add or update a credential (PIN/password only).
+
+    user_index must refer to an existing user. To create a new user, call
+    async_set_user first, then pass the returned user_index here. This service
+    does not create or modify users.
+    """
     supported = await node.access_control.async_is_supported()
     if not supported:
         raise HomeAssistantError(
@@ -311,35 +346,7 @@ async def async_set_credential(
             translation_key="access_control_not_supported",
         )
 
-    # If no user_index provided, create a new user
-    if user_index is None:
-        user_caps = await node.access_control.async_get_user_capabilities_cached()
-        users = await node.access_control.async_get_users_cached()
-        used_ids = {u.user_id for u in users}
-        user_index = next(
-            (i for i in range(1, user_caps.max_users + 1) if i not in used_ids),
-            None,
-        )
-        if user_index is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_available_user_slots",
-            )
-        # Create the new user
-        options = SetUserOptions(
-            active=active if active is not None else True,
-            user_type=user_type,
-        )
-        await node.access_control.async_set_user(user_index, options)
-    elif user_type is not None or active is not None:
-        # Update existing user's user_type/active if provided
-        options = SetUserOptions(
-            active=active,
-            user_type=user_type,
-        )
-        await node.access_control.async_set_user(user_index, options)
-
-    # Auto-find first available credential slot
+    # Auto-find first available credential slot if not provided
     if credential_slot is None:
         cred_caps = await node.access_control.async_get_credential_capabilities_cached()
         type_cap = cred_caps.supported_credential_types.get(credential_type)
@@ -372,9 +379,10 @@ async def async_set_credential(
                 translation_placeholders={"credential_type": cred_type_str},
             )
 
-    await node.access_control.async_set_credential(
+    result = await node.access_control.async_set_credential(
         user_index, credential_type, credential_slot, credential_data
     )
+    _raise_on_supervision_fail(result, "set_credential_rejected")
 
     return SetCredentialResult(
         credential_slot=credential_slot,
@@ -389,18 +397,20 @@ async def async_clear_credential(
     credential_slot: int,
 ) -> None:
     """Delete a single credential."""
-    await node.access_control.async_delete_credential(
+    result = await node.access_control.async_delete_credential(
         user_index, credential_type, credential_slot
     )
+    _raise_on_supervision_fail(result, "clear_credential_rejected")
 
 
 async def async_clear_all_credentials(node: Node, user_index: int) -> None:
     """Delete all credentials for a user."""
     credentials = await node.access_control.async_get_credentials_cached(user_index)
     for cred in credentials:
-        await node.access_control.async_delete_credential(
+        result = await node.access_control.async_delete_credential(
             user_index, cred.type, cred.slot
         )
+        _raise_on_supervision_fail(result, "clear_credential_rejected")
 
 
 async def async_get_credential_status(
