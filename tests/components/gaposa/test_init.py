@@ -105,6 +105,23 @@ async def test_login_failure_closes_gaposa_client(
     mock_gaposa_instance.close.assert_called_once()
 
 
+async def test_auth_failure_during_login_closes_client(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
+) -> None:
+    """An auth failure during login closes the Gaposa client."""
+    mock_gaposa_instance.login.side_effect = GaposaAuthException("bad creds")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_gaposa_instance.close.assert_called_once()
+
+
 @pytest.mark.parametrize(
     "exc",
     [GaposaAuthException, FirebaseAuthException],

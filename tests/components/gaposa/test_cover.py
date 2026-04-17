@@ -311,6 +311,49 @@ async def test_stale_motor_cleans_up_entity_and_device(
     )
 
 
+async def test_entity_removed_when_motor_gone(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_gaposa_instance: MagicMock,
+) -> None:
+    """Cover entity is fully removed when its motor disappears."""
+    assert hass.states.get(BEDROOM_ENTITY) is not None
+
+    client, _user = mock_gaposa_instance.clients[0]
+    device = client.devices[0]
+    device.motors = [m for m in device.motors if m.id != "motor-2"]
+
+    await init_integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BEDROOM_ENTITY) is None
+
+
+async def test_rapid_open_close_replaces_motion_refresh(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """A second open/close cancels the first motion refresh callback."""
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+        blocking=True,
+    )
+    entity = hass.data["entity_components"]["cover"].get_entity(BEDROOM_ENTITY)
+    first_cancel = entity._cancel_motion_refresh
+    assert first_cancel is not None
+
+    # Issue a second open — should replace the pending refresh.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+        blocking=True,
+    )
+    assert entity._cancel_motion_refresh is not first_cancel
+
+
 async def test_motion_window_collapses_after_delay(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

@@ -108,6 +108,25 @@ async def test_form_validation_errors(
     assert result2["errors"] == {"base": expected_error}
 
 
+async def test_form_no_clients_returns_unknown(
+    hass: HomeAssistant,
+    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
+) -> None:
+    """Login succeeds but account has no clients — treated as unknown error."""
+    mock_gaposa_instance.clients = []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_gaposa: MagicMock,
