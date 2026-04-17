@@ -8,20 +8,16 @@ Handles both update modes:
 
 from __future__ import annotations
 
-import asyncio
-import logging
 from collections.abc import Mapping
 from datetime import timedelta
+import logging
 from xml.etree.ElementTree import ParseError as XMLParseError
 
 import aiohttp
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-
 from pywibeee import WibeeeAPI
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +55,7 @@ class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
         """Fetch data from the Wibeee device (polling mode only)."""
         try:
             data = await self.api.async_fetch_sensors_data(retries=2)
-        except (aiohttp.ClientError, asyncio.TimeoutError, XMLParseError) as exc:
+        except (TimeoutError, aiohttp.ClientError, XMLParseError) as exc:
             _LOGGER.debug("Error fetching data from %s: %s", self.api.host, exc)
             raise UpdateFailed(
                 f"Error fetching data from {self.api.host}: {exc}"

@@ -1,5 +1,4 @@
-"""
-Wibeee button platform for Home Assistant.
+"""Wibeee button platform for Home Assistant.
 
 Provides device-level action buttons:
 - **Reboot Device**: Reboots the WiBeee via its web interface.
@@ -12,8 +11,10 @@ Documentation: https://github.com/fquinto/pywibeee
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
+import logging
+
+from pywibeee import WibeeeAPI, WibeeeDeviceInfo
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -23,15 +24,11 @@ from homeassistant.components.button import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WibeeeConfigEntry
-from pywibeee import WibeeeAPI, WibeeeDeviceInfo
-from .const import (
-    DOMAIN,
-    KNOWN_MODELS,
-)
+from .const import DOMAIN, KNOWN_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
