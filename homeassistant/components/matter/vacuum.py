@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from enum import IntEnum
 import logging
@@ -272,29 +273,23 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 # set of named rooms stays the same. Treat such a
                 # re-indexing as a silent update of last_seen_segments
                 # instead of raising a spurious repair that would show
-                # the user the same room list.
-                if self._names_match(current_segments, last_seen_by_id):
-                    _LOGGER.info(
-                        "Vacuum segments: areaID re-indexing detected"
-                        " (names unchanged); silently updating"
-                        " last_seen_segments. named_count=%d",
-                        len(current_segments),
-                    )
-                    self._async_persist_last_seen_segments(
-                        list(current_segments.values())
-                    )
-                else:
-                    _LOGGER.info(
-                        "Vacuum segments changed: last_seen_ids=%s, current_ids=%s",
-                        sorted(last_seen_by_id),
-                        sorted(current_segments),
-                    )
-                    _LOGGER.debug(
-                        "Vacuum segments changed (details): last_seen=%s, current=%s",
-                        last_seen_by_id,
-                        current_segments,
-                    )
-                    self.async_create_segments_issue()
+                # the user the same room list. If the user has also
+                # configured area_mapping, translate the stored segment
+                # IDs in one atomic registry update so subsequent
+                # clean_area calls resolve to the new IDs.
+                if self._try_silent_reconcile(last_seen_segments, current_segments):
+                    return
+                _LOGGER.info(
+                    "Vacuum segments changed: last_seen_ids=%s, current_ids=%s",
+                    sorted(last_seen_by_id),
+                    sorted(current_segments),
+                )
+                _LOGGER.debug(
+                    "Vacuum segments changed (details): last_seen=%s, current=%s",
+                    last_seen_by_id,
+                    current_segments,
+                )
+                self.async_create_segments_issue()
 
     @staticmethod
     def _names_match(
@@ -311,19 +306,128 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             (s.name, s.group) for s in last_seen_by_id.values()
         )
 
-    @callback
-    def _async_persist_last_seen_segments(self, segments: list[Segment]) -> None:
-        """Silently persist new last_seen_segments after re-indexing.
+    @staticmethod
+    def _build_id_translation(
+        last_seen: list[Segment], current: dict[str, Segment]
+    ) -> dict[str, str]:
+        """Build an old_id -> new_id mapping by pairing segments by (name, group).
 
-        Updates the entity registry options in place. Any previously-open
-        segments_changed repair issue is auto-cleared through the existing
-        _async_check_segments_issues path on the registry update callback.
+        Precondition: caller has verified name-multisets match (see
+        ``_names_match``), so the per-name count in ``last_seen`` equals that
+        in ``current``. Duplicate-name entries are paired in list order, which
+        is deterministic but not user-semantically meaningful; callers MUST
+        guard against duplicate-name ambiguity before persisting a remapped
+        area_mapping (see ``_try_remap_area_mapping``).
+        """
+        old_by_name: dict[tuple[str, str | None], list[str]] = defaultdict(list)
+        for s in last_seen:
+            old_by_name[(s.name, s.group)].append(s.id)
+        new_by_name: dict[tuple[str, str | None], list[str]] = defaultdict(list)
+        for s in current.values():
+            new_by_name[(s.name, s.group)].append(s.id)
+        return {
+            old_id: new_id
+            for key, old_ids in old_by_name.items()
+            for old_id, new_id in zip(old_ids, new_by_name[key], strict=True)
+        }
+
+    @staticmethod
+    def _try_remap_area_mapping(
+        area_mapping: dict[str, list[str]],
+        translation: dict[str, str],
+        last_seen: list[Segment],
+    ) -> dict[str, list[str]] | None:
+        """Return a remapped area_mapping, or None if remapping is ambiguous.
+
+        Returns None when:
+        - A referenced segment_id is not in ``translation`` (stale reference
+          to a segment that no longer exists; user must re-map explicitly).
+        - A user-mapped segment shares its name with another segment
+          (duplicate name inside area_mapping's resolved set). In that case
+          the old_id -> new_id pairing relies on arbitrary list order and
+          could silently swap rooms, so we refuse to guess and let the
+          repair flow prompt the user.
+        """
+        name_by_old_id = {s.id: (s.name, s.group) for s in last_seen}
+        duplicate_keys = {
+            key
+            for key, count in Counter((s.name, s.group) for s in last_seen).items()
+            if count > 1
+        }
+        remapped: dict[str, list[str]] = {}
+        for area_id, segment_ids in area_mapping.items():
+            translated: list[str] = []
+            for old_id in segment_ids:
+                if old_id not in translation:
+                    return None
+                key = name_by_old_id.get(old_id)
+                if key in duplicate_keys:
+                    return None
+                translated.append(translation[old_id])
+            remapped[area_id] = translated
+        return remapped
+
+    def _try_silent_reconcile(
+        self,
+        last_seen: list[Segment],
+        current: dict[str, Segment],
+    ) -> bool:
+        """Attempt a silent reconcile of last_seen_segments and area_mapping.
+
+        Returns True when the device change is pure areaID re-indexing
+        (name-multisets equal) and the stored options were updated atomically
+        without raising a repair. Returns False when the caller must fall
+        through to the regular mismatch path (create a repair issue).
+        """
+        if not self._names_match(current, {s.id: s for s in last_seen}):
+            return False
+        if self.registry_entry is None:
+            return False
+        translation = self._build_id_translation(last_seen, current)
+        options: Mapping[str, Any] = self.registry_entry.options.get(VACUUM_DOMAIN, {})
+        area_mapping: dict[str, list[str]] = options.get("area_mapping") or {}
+        remapped_mapping: dict[str, list[str]] | None = None
+        if area_mapping:
+            remapped_mapping = self._try_remap_area_mapping(
+                area_mapping, translation, last_seen
+            )
+            if remapped_mapping is None:
+                # Ambiguous: fall back to the repair path.
+                return False
+        fabrics = self.get_matter_attribute_value(
+            clusters.OperationalCredentials.Attributes.CommissionedFabrics
+        )
+        _LOGGER.info(
+            "Vacuum segments: areaID re-indexing detected; silently"
+            " updating last_seen_segments. named_count=%d,"
+            " remapped_mapping_entries=%d, commissioned_fabrics=%s",
+            len(current),
+            len(remapped_mapping) if remapped_mapping else 0,
+            fabrics,
+        )
+        self._async_persist_reconciled(list(current.values()), remapped_mapping)
+        return True
+
+    @callback
+    def _async_persist_reconciled(
+        self,
+        segments: list[Segment],
+        new_area_mapping: dict[str, list[str]] | None,
+    ) -> None:
+        """Silently persist reconciled last_seen_segments and area_mapping.
+
+        Updates the entity registry options atomically in a single call. Any
+        previously-open segments_changed repair issue is auto-cleared through
+        the existing _async_check_segments_issues path on the registry update
+        callback.
         """
         if self.registry_entry is None:
             return
         entity_registry = er.async_get(self.hass)
         options = dict(self.registry_entry.options.get(VACUUM_DOMAIN, {}))
         options["last_seen_segments"] = [asdict(s) for s in segments]
+        if new_area_mapping is not None:
+            options["area_mapping"] = new_area_mapping
         entity_registry.async_update_entity_options(
             self.entity_id, VACUUM_DOMAIN, options
         )

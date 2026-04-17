@@ -743,3 +743,136 @@ def test_names_match_duplicate_names() -> None:
         "2": Segment(id="2", name="Bedroom", group=None),
     }
     assert not MatterVacuum._names_match(current_group_differs, last_seen_mixed)
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
+async def test_vacuum_silent_reindex_remaps_area_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Re-indexing with area_mapping configured must atomically remap IDs.
+
+    The fixture reports segments named ``My Location A/B/C`` with unique IDs.
+    Seeding ``last_seen_segments`` with the same names but different IDs and
+    an ``area_mapping`` that references those seeded IDs simulates a stored
+    state from before the device re-indexed its areas. On the next
+    subscription callback the detection logic must rewrite both
+    ``last_seen_segments`` and ``area_mapping`` to use the current device IDs
+    in a single atomic update, so a later ``vacuum.clean_area`` call resolves
+    to IDs the device still accepts.
+    """
+    entity_id = "vacuum.mock_vacuum"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+
+    entity_registry.async_update_entity_options(
+        entity_id,
+        VACUUM_DOMAIN,
+        {
+            "last_seen_segments": [
+                {"id": "100", "name": "My Location A", "group": None},
+                {"id": "200", "name": "My Location B", "group": None},
+                {"id": "300", "name": "My Location C", "group": None},
+            ],
+            "area_mapping": {
+                "area_kitchen": ["100"],
+                "area_living": ["200", "300"],
+            },
+        },
+    )
+
+    set_node_attribute(matter_node, 1, 97, 4, 0x02)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # No repair created.
+    issue_reg = ir.async_get(hass)
+    assert (
+        issue_reg.async_get_issue(VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}")
+        is None
+    )
+
+    updated = entity_registry.async_get(entity_id)
+    assert updated is not None
+    options = updated.options[VACUUM_DOMAIN]
+
+    # last_seen_segments now use fixture IDs.
+    assert {s["id"] for s in options["last_seen_segments"]} == {
+        "7",
+        "1234567",
+        "2290649224",
+    }
+    # area_mapping has been translated to fixture IDs.
+    assert options["area_mapping"] == {
+        "area_kitchen": ["7"],
+        "area_living": ["1234567", "2290649224"],
+    }
+
+
+def test_build_id_translation_pairs_by_name_multiset() -> None:
+    """``_build_id_translation`` pairs old and new IDs by (name, group)."""
+    last_seen = [
+        Segment(id="10", name="Kitchen"),
+        Segment(id="20", name="Bedroom"),
+        Segment(id="30", name="Bedroom"),
+    ]
+    current = {
+        "1": Segment(id="1", name="Kitchen"),
+        "2": Segment(id="2", name="Bedroom"),
+        "3": Segment(id="3", name="Bedroom"),
+    }
+
+    translation = MatterVacuum._build_id_translation(last_seen, current)
+
+    assert translation["10"] == "1"
+    # Duplicate-name pairs follow list order - deterministic but arbitrary.
+    assert {translation["20"], translation["30"]} == {"2", "3"}
+
+
+def test_try_remap_area_mapping_happy_path() -> None:
+    """Straightforward remap with unique names returns translated mapping."""
+    last_seen = [
+        Segment(id="10", name="Kitchen"),
+        Segment(id="20", name="Living"),
+    ]
+    translation = {"10": "1", "20": "2"}
+    area_mapping = {"area_kitchen": ["10"], "area_living": ["20"]}
+
+    remapped = MatterVacuum._try_remap_area_mapping(
+        area_mapping, translation, last_seen
+    )
+
+    assert remapped == {"area_kitchen": ["1"], "area_living": ["2"]}
+
+
+def test_try_remap_area_mapping_duplicate_name_returns_none() -> None:
+    """Remap refuses to guess when a user-mapped ID has a duplicate name."""
+    last_seen = [
+        Segment(id="60", name="Bedroom"),
+        Segment(id="70", name="Bedroom"),
+        Segment(id="80", name="Kitchen"),
+    ]
+    translation = {"60": "6", "70": "7", "80": "8"}
+    # area_mapping references one of the two "Bedroom" IDs - ambiguous since
+    # pairing 60 -> 6 vs 60 -> 7 is arbitrary.
+    area_mapping = {"area_kids": ["60"]}
+
+    remapped = MatterVacuum._try_remap_area_mapping(
+        area_mapping, translation, last_seen
+    )
+
+    assert remapped is None
+
+
+def test_try_remap_area_mapping_stale_reference_returns_none() -> None:
+    """Remap returns None when area_mapping references an unknown old ID."""
+    last_seen = [Segment(id="10", name="Kitchen")]
+    translation = {"10": "1"}
+    area_mapping = {"area_x": ["999"]}  # never existed in last_seen
+
+    remapped = MatterVacuum._try_remap_area_mapping(
+        area_mapping, translation, last_seen
+    )
+
+    assert remapped is None
