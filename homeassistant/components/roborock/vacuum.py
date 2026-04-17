@@ -490,9 +490,18 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            await self.coordinator.api.set_fan_speed(
-                SCWindMapping.from_value(fan_speed)
-            )
+            wind_mode = SCWindMapping.from_value(fan_speed)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            ) from err
+
+        try:
+            await self.coordinator.api.set_fan_speed(wind_mode)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -548,9 +557,10 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
+        normalized_command = command.casefold()
         try:
             if (
-                command == "app_segment_clean"
+                normalized_command == "app_segment_clean"
                 and isinstance(params, list)
                 and len(params) == 1
             ):

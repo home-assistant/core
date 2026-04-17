@@ -685,6 +685,23 @@ async def test_q7_set_fan_speed_command(
     assert len(q7_vacuum_api.set_fan_speed.call_args[0]) == 1
 
 
+async def test_q7_set_fan_speed_invalid(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test invalid Q7 fan speed raises ServiceValidationError."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "ludicrous"},
+            blocking=True,
+        )
+
+    assert q7_vacuum_api.set_fan_speed.call_count == 0
+
+
 async def test_q7_send_command(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -839,6 +856,26 @@ async def test_q7_get_segments_returns_rooms_from_map_content(
     ]
 
 
+async def test_q7_get_segments_refresh_failure_returns_empty(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test Q7 get_segments returns an empty list on refresh failure."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties.map_content.refresh.side_effect = RoborockException()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q7_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["segments"] == []
+
+
 async def test_q7_app_segment_clean_alias_routes_to_clean_segments(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -884,6 +921,28 @@ async def test_q7_app_segment_clean_with_extra_payload_passthrough(
         "app_segment_clean",
         [{"segments": [10], "repeat": 2}],
     )
+
+
+async def test_q7_app_segment_clean_uppercase_alias_routes_to_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test uppercase APP_SEGMENT_CLEAN alias is normalized for Q7."""
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: Q7_ENTITY_ID,
+            "command": "APP_SEGMENT_CLEAN",
+            "params": [{"segments": [10, "11"]}],
+        },
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 1
+    assert q7_vacuum_api.clean_segments.call_args[0] == ([10, 11],)
+    assert q7_vacuum_api.send.call_count == 0
 
 
 @pytest.mark.parametrize(
