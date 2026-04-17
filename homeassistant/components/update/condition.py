@@ -1,17 +1,17 @@
-"""Provides conditions for device trackers."""
+"""Provides conditions for updates."""
 
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import Condition, make_entity_state_condition
 
 from .const import DOMAIN
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_home": make_entity_state_condition(DOMAIN, STATE_HOME),
-    "is_not_home": make_entity_state_condition(DOMAIN, STATE_NOT_HOME),
+    "is_available": make_entity_state_condition(DOMAIN, STATE_ON),
+    "is_not_available": make_entity_state_condition(DOMAIN, STATE_OFF),
 }
 
 
 async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
-    """Return the conditions for device trackers."""
+    """Return the update conditions."""
     return CONDITIONS

@@ -1,10 +1,10 @@
-"""Test device tracker conditions."""
+"""Test remote conditions."""
 
 from typing import Any
 
 import pytest
 
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
@@ -20,48 +20,50 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_device_trackers(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple device tracker entities associated with different targets."""
-    return await target_entities(hass, "device_tracker")
+async def target_remotes(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple remote entities associated with different targets."""
+    return await target_entities(hass, "remote", domain_excluded="switch")
 
 
 @pytest.mark.parametrize(
     "condition",
     [
-        "device_tracker.is_home",
-        "device_tracker.is_not_home",
+        "remote.is_off",
+        "remote.is_on",
     ],
 )
-async def test_device_tracker_conditions_gated_by_labs_flag(
+async def test_remote_conditions_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Test the device tracker conditions are gated by the labs flag."""
+    """Test the remote conditions are gated by the labs flag."""
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("device_tracker"),
+    parametrize_target_entities("remote"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_any(
-            condition="device_tracker.is_home",
-            target_states=[STATE_HOME],
-            other_states=[STATE_NOT_HOME],
+            condition="remote.is_on",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_any(
-            condition="device_tracker.is_not_home",
-            target_states=[STATE_NOT_HOME],
-            other_states=[STATE_HOME],
+            condition="remote.is_off",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
-async def test_device_tracker_state_condition_behavior_any(
+async def test_remote_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_device_trackers: dict[str, list[str]],
+    target_remotes: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -69,10 +71,10 @@ async def test_device_tracker_state_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the device tracker state condition with the 'any' behavior."""
+    """Test the remote state condition with the 'any' behavior."""
     await assert_condition_behavior_any(
         hass,
-        target_entities=target_device_trackers,
+        target_entities=target_remotes,
         condition_target_config=condition_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,
@@ -85,26 +87,28 @@ async def test_device_tracker_state_condition_behavior_any(
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("device_tracker"),
+    parametrize_target_entities("remote"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_all(
-            condition="device_tracker.is_home",
-            target_states=[STATE_HOME],
-            other_states=[STATE_NOT_HOME],
+            condition="remote.is_on",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_all(
-            condition="device_tracker.is_not_home",
-            target_states=[STATE_NOT_HOME],
-            other_states=[STATE_HOME],
+            condition="remote.is_off",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
-async def test_device_tracker_state_condition_behavior_all(
+async def test_remote_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_device_trackers: dict[str, list[str]],
+    target_remotes: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -112,10 +116,10 @@ async def test_device_tracker_state_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the device tracker state condition with the 'all' behavior."""
+    """Test the remote state condition with the 'all' behavior."""
     await assert_condition_behavior_all(
         hass,
-        target_entities=target_device_trackers,
+        target_entities=target_remotes,
         condition_target_config=condition_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,

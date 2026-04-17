@@ -1,10 +1,10 @@
-"""Test person conditions."""
+"""Test update conditions."""
 
 from typing import Any
 
 import pytest
 
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
@@ -20,48 +20,50 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_persons(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple person entities associated with different targets."""
-    return await target_entities(hass, "person")
+async def target_updates(hass: HomeAssistant) -> dict[str, list[str]]:
+    """Create multiple update entities associated with different targets."""
+    return await target_entities(hass, "update", domain_excluded="switch")
 
 
 @pytest.mark.parametrize(
     "condition",
     [
-        "person.is_home",
-        "person.is_not_home",
+        "update.is_available",
+        "update.is_not_available",
     ],
 )
-async def test_person_conditions_gated_by_labs_flag(
+async def test_update_conditions_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Test the person conditions are gated by the labs flag."""
+    """Test the update conditions are gated by the labs flag."""
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("person"),
+    parametrize_target_entities("update"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_any(
-            condition="person.is_home",
-            target_states=[STATE_HOME],
-            other_states=[STATE_NOT_HOME],
+            condition="update.is_available",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_any(
-            condition="person.is_not_home",
-            target_states=[STATE_NOT_HOME],
-            other_states=[STATE_HOME],
+            condition="update.is_not_available",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
-async def test_person_state_condition_behavior_any(
+async def test_update_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_persons: dict[str, list[str]],
+    target_updates: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -69,10 +71,10 @@ async def test_person_state_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the person state condition with the 'any' behavior."""
+    """Test the update state condition with the 'any' behavior."""
     await assert_condition_behavior_any(
         hass,
-        target_entities=target_persons,
+        target_entities=target_updates,
         condition_target_config=condition_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,
@@ -85,26 +87,28 @@ async def test_person_state_condition_behavior_any(
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("person"),
+    parametrize_target_entities("update"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_all(
-            condition="person.is_home",
-            target_states=[STATE_HOME],
-            other_states=[STATE_NOT_HOME],
+            condition="update.is_available",
+            target_states=[STATE_ON],
+            other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_all(
-            condition="person.is_not_home",
-            target_states=[STATE_NOT_HOME],
-            other_states=[STATE_HOME],
+            condition="update.is_not_available",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
-async def test_person_state_condition_behavior_all(
+async def test_update_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_persons: dict[str, list[str]],
+    target_updates: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -112,10 +116,10 @@ async def test_person_state_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the person state condition with the 'all' behavior."""
+    """Test the update state condition with the 'all' behavior."""
     await assert_condition_behavior_all(
         hass,
-        target_entities=target_persons,
+        target_entities=target_updates,
         condition_target_config=condition_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,
