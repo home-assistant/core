@@ -1173,7 +1173,24 @@ class GetLiveContextTool(Tool):
         "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
         "Use this tool for: "
         "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
-        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
+        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first). "
+        "Optionally filter the response by entity name, domain, and/or area to reduce the amount of context returned."
+    )
+    parameters = vol.Schema(
+        {
+            vol.Optional(
+                "name",
+                description="Filter entities by name or alias (case-insensitive).",
+            ): cv.string,
+            vol.Optional(
+                "domain",
+                description="Filter entities by domain (e.g. 'light', 'sensor'). Accepts a single domain or a list.",
+            ): vol.Any(cv.string, [cv.string]),
+            vol.Optional(
+                "area",
+                description="Filter entities by area name or alias (case-insensitive).",
+            ): cv.string,
+        }
     )
 
     async def async_call(
@@ -1188,12 +1205,55 @@ class GetLiveContextTool(Tool):
             # exposed if no assistant is configured.
             return {"success": False, "error": "No assistant configured"}
 
+        args = self.parameters(tool_input.tool_args)
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
+
         if not exposed_entities["entities"]:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
+
+        entities = list(exposed_entities["entities"].values())
+
+        name_filter = args.get("name")
+        area_filter = args.get("area")
+        domain_filter = args.get("domain")
+
+        if isinstance(domain_filter, str):
+            domain_filter = [domain_filter]
+
+        if name_filter is not None:
+            name_filter_norm = name_filter.casefold()
+            entities = [
+                info
+                for info in entities
+                if any(
+                    name_filter_norm == alias.casefold()
+                    for alias in info["names"].split(", ")
+                )
+            ]
+
+        if area_filter is not None:
+            area_filter_norm = area_filter.casefold()
+            entities = [
+                info
+                for info in entities
+                if "areas" in info
+                and any(
+                    area_filter_norm == area.casefold()
+                    for area in info["areas"].split(", ")
+                )
+            ]
+
+        if domain_filter is not None:
+            entities = [info for info in entities if info["domain"] in domain_filter]
+
+        if not entities:
+            return {
+                "success": False,
+                "error": "No entities matched the provided filter",
+            }
         prompt = [
             "Live Context: An overview of the areas and the devices in this smart home:",
-            yaml_util.dump(list(exposed_entities["entities"].values())),
+            yaml_util.dump(entities),
         ]
         return {
             "success": True,
