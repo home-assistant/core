@@ -27,9 +27,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bo
         name=entry.title,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
-    await coordinator.async_config_entry_first_refresh()
-
+    # Assign runtime_data before the first refresh so that
+    # async_unload_entry can call async_shutdown even if setup
+    # fails with ConfigEntryNotReady (the coordinator may hold a
+    # live Gaposa client that needs closing).
     entry.runtime_data = coordinator
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -185,8 +185,8 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         motor = self.motor
         if motor is None:
             return
-        self._begin_motion(COMMAND_UP)
         await motor.up(False)
+        self._begin_motion(COMMAND_UP)
         self.async_write_ha_state()
         self._schedule_refresh_after_motion()
 
@@ -195,8 +195,8 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         motor = self.motor
         if motor is None:
             return
-        self._begin_motion(COMMAND_DOWN)
         await motor.down(False)
+        self._begin_motion(COMMAND_DOWN)
         self.async_write_ha_state()
         self._schedule_refresh_after_motion()
 
