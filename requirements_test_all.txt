@@ -2184,6 +2184,9 @@ python-awair==0.2.5
 # homeassistant.components.bsblan
 python-bsblan==5.1.4
 
+# homeassistant.components.cyclus_nv
+python-cyclus==0.1.0
+
 # homeassistant.components.dropbox
 python-dropbox-api==0.1.3
 

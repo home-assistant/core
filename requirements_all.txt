@@ -2558,6 +2558,9 @@ python-citybikes==0.3.3
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
 
+# homeassistant.components.cyclus_nv
+python-cyclus==0.1.0
+
 # homeassistant.components.digital_ocean
 python-digitalocean==1.13.2
 

@@ -1226,6 +1226,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "cyclus_nv": {
+      "name": "Cyclus NV",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cync": {
       "name": "Cync",
       "integration_type": "hub",
