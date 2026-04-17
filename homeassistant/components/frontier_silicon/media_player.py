@@ -82,8 +82,8 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         self._supports_sound_mode: bool = True
 
-    # Fallback used when the device doesn't support get_play_caps; reproduces the
-    # old hard-coded feature set.
+    # Fallback used when the device doesn't support get_play_caps; covers the
+    # basic transport controls exposed by this integration by default.
     _FALLBACK_PLAY_CAPS = (
         PlayCaps.PAUSE | PlayCaps.STOP | PlayCaps.SKIP_PREVIOUS | PlayCaps.SKIP_NEXT
     )
