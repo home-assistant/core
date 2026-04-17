@@ -292,6 +292,7 @@
       },
       "number": {
         "data": {
+          "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "max": "Maximum value",
           "min": "Minimum value",
@@ -836,6 +837,7 @@
       },
       "number": {
         "data": {
+          "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "max": "[%key:component::template::config::step::number::data::max%]",
           "min": "[%key:component::template::config::step::number::data::min%]",
