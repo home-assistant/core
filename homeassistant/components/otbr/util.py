@@ -153,6 +153,11 @@ class OTBRData:
         await self.api.set_channel(channel, delay=int(delay * 1000))
 
     @_handle_otbr_error
+    async def delete_pending_dataset(self) -> None:
+        """Delete the pending operational dataset."""
+        await self.api.delete_pending_dataset()
+
+    @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
         """Get extended address (EUI-64)."""
         return await self.api.get_extended_address()

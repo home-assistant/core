@@ -35,6 +35,8 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the OTBR Websocket API."""
     websocket_api.async_register_command(hass, websocket_info)
     websocket_api.async_register_command(hass, websocket_create_network)
+    websocket_api.async_register_command(hass, websocket_get_pending_dataset)
+    websocket_api.async_register_command(hass, websocket_delete_pending_dataset)
     websocket_api.async_register_command(hass, websocket_set_channel)
     websocket_api.async_register_command(hass, websocket_set_network)
 
@@ -295,3 +297,75 @@ async def websocket_set_channel(
         return
 
     connection.send_result(msg["id"], {"delay": delay})
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/get_pending_dataset",
+        vol.Required("extended_address"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+@async_get_otbr_data
+async def websocket_get_pending_dataset(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
+) -> None:
+    """Get pending dataset info."""
+    try:
+        pending_tlvs = await data.get_pending_dataset_tlvs()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "get_pending_dataset_failed", str(exc))
+        return
+
+    if pending_tlvs is None:
+        connection.send_result(msg["id"], None)
+        return
+
+    dataset = tlv_parser.parse_tlv(pending_tlvs.hex())
+
+    channel_tlv = dataset.get(MeshcopTLVType.CHANNEL)
+    delay_tlv = dataset.get(MeshcopTLVType.DELAYTIMER)
+
+    if channel_tlv is None or delay_tlv is None:
+        connection.send_result(msg["id"], None)
+        return
+
+    pending_channel = cast(tlv_parser.Channel, channel_tlv).channel
+    delay_ms = int.from_bytes(delay_tlv.data, "big")
+
+    connection.send_result(
+        msg["id"],
+        {
+            "pending_channel": pending_channel,
+            "pending_dataset_delay": delay_ms / 1000,
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/delete_pending_dataset",
+        vol.Required("extended_address"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+@async_get_otbr_data
+async def websocket_delete_pending_dataset(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
+) -> None:
+    """Delete pending dataset."""
+    try:
+        await data.delete_pending_dataset()
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "delete_pending_dataset_failed", str(exc))
+        return
+
+    connection.send_result(msg["id"])
