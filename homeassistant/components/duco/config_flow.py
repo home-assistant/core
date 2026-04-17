@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from duco import DucoClient
@@ -18,6 +19,11 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# Duco boxes advertise themselves as "DUCO [<12 hex MAC chars>]" over mDNS.
+# Reject anything that doesn't match this pattern to avoid false positives
+# (e.g. a laptop named "ducotje").
+_DUCO_MDNS_NAME_RE = re.compile(r"^DUCO \[[0-9a-f]{12}\]", re.IGNORECASE)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -41,6 +47,9 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+        if not _DUCO_MDNS_NAME_RE.match(discovery_info.name):
+            return self.async_abort(reason="not_duco_device")
+
         host = discovery_info.host
 
         try:
