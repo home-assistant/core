@@ -38,10 +38,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._host: str | None = None
-        self._box_name: str | None = None
+    _host: str
+    _box_name: str
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -71,8 +69,6 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        assert self._host is not None
-        assert self._box_name is not None
         if user_input is not None:
             return self.async_create_entry(
                 title=self._box_name,
