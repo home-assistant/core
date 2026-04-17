@@ -133,7 +133,9 @@ def _get_q7_room_names(map_content: Any) -> dict[int, str]:
 
     return {
         int(room_id): room_name
-        for room_id, room_name in sorted(room_names.items(), key=lambda item: int(item[0]))
+        for room_id, room_name in sorted(
+            room_names.items(), key=lambda item: int(item[0])
+        )
     }
 
 
@@ -607,7 +609,12 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 {
                     "flag": map_flag,
                     "name": Q7_CURRENT_MAP_NAME,
-                    "rooms": dict(_get_q7_room_names(map_content_trait)),
+                    "rooms": {
+                        str(room_id): room_name
+                        for room_id, room_name in _get_q7_room_names(
+                            map_content_trait
+                        ).items()
+                    },
                 }
             ]
         }
