@@ -141,6 +141,28 @@ async def test_catalog_fetch_error(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "cannot_connect"
 
 
+async def test_login_connection_error(hass: HomeAssistant) -> None:
+    """Connection errors during login should map to cannot_connect."""
+    user_input = {
+        "api_host": "stips.api.staging.visionalization.net",
+        "username": "demo",
+        "password": "secret",
+    }
+
+    with patch(
+        "homeassistant.components.stips_iru1.config_flow.StipsApiClient.login",
+        new=AsyncMock(side_effect=StipsApiError()),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=user_input,
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "cannot_connect"
+
+
 async def test_unknown_error(hass: HomeAssistant) -> None:
     """Test unexpected type/value errors are handled."""
     user_input = {

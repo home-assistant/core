@@ -92,6 +92,7 @@ class TestProtocolAcClimate:
         self, protocol_ac_entity: stips_climate.StipsIruClimate
     ) -> None:
         """Validate protocol AC property mapping."""
+        assert protocol_ac_entity.available is True
         protocol_ac_entity._state.update(
             {
                 "power": 1,
@@ -108,6 +109,14 @@ class TestProtocolAcClimate:
         assert protocol_ac_entity.fan_mode == "high"
         assert protocol_ac_entity.swing_mode == "vertical"
         assert protocol_ac_entity.extra_state_attributes["protocol"] == 42
+
+    def test_properties_when_powered_off(
+        self, protocol_ac_entity: stips_climate.StipsIruClimate
+    ) -> None:
+        """HVAC mode should report OFF when cached power is off."""
+        protocol_ac_entity._state["power"] = 0
+
+        assert protocol_ac_entity.hvac_mode is HVACMode.OFF
 
     def test_device_info_without_mac(self, hass: HomeAssistant) -> None:
         """Device info should omit network connections when MAC is missing."""
@@ -136,6 +145,9 @@ class TestProtocolAcClimate:
             send.assert_called_with(power=1)
 
             await protocol_ac_entity.async_turn_off()
+            send.assert_called_with(power=0)
+
+            await protocol_ac_entity.async_set_hvac_mode(HVACMode.OFF)
             send.assert_called_with(power=0)
 
             await protocol_ac_entity.async_set_hvac_mode(HVACMode.HEAT)
@@ -297,7 +309,21 @@ async def test_async_setup_entry_creates_expected_entities(
                             },
                         },
                     ],
-                }
+                },
+                {
+                    "name": "Ignored Device",
+                    "deviceIP": "192.168.1.11",
+                    "deviceMac": "00:11:22:33:44:55",
+                    "online": True,
+                    "remotes": [
+                        {
+                            "id": "ignored",
+                            "type": "AC",
+                            "friendlyName": "Ignored AC",
+                            "model": {"protocol": 8},
+                        }
+                    ],
+                },
             ]
         },
     )
@@ -318,10 +344,39 @@ class TestLearnedAcClimate:
     ) -> None:
         """Validate baseline properties and derived modes."""
         assert learned_ac_entity.available is True
+        info = learned_ac_entity.device_info
+        assert info is not None
+        assert (DOMAIN, "stips-iru1-67890") in info["identifiers"]
+        assert (CONNECTION_NETWORK_MAC, "11:22:33:44:55:66") in info["connections"]
         assert HVACMode.OFF in learned_ac_entity._attr_hvac_modes
         assert HVACMode.COOL in learned_ac_entity._attr_hvac_modes
         assert "medium" in learned_ac_entity._attr_fan_modes
+        assert learned_ac_entity.target_temperature == 21.0
+        assert learned_ac_entity.fan_mode == "low"
         assert learned_ac_entity.extra_state_attributes["learned_signal_count"] == 2
+
+    def test_default_modes_without_learned_rows(self, hass: HomeAssistant) -> None:
+        """Empty learned signal sets should fall back to safe default modes."""
+        entity = stips_climate.StipsIruLearnedAcClimate(
+            hass=hass,
+            device_unique_name="stips-iru1-empty",
+            device_name="Empty Learned Device",
+            device_ip="192.168.1.102",
+            device_mac="",
+            device_online=True,
+            remote_id="3",
+            friendly_name="Empty Learned",
+            remote_snapshot={
+                "type": "LearnedAc",
+                "model": {
+                    "frequency": 38000,
+                    "signals": [],
+                },
+            },
+        )
+
+        assert entity._attr_hvac_modes == [HVACMode.OFF, HVACMode.COOL]
+        assert entity._attr_fan_modes == ["medium"]
 
     async def test_basic_controls(
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
@@ -355,12 +410,20 @@ class TestLearnedAcClimate:
             await learned_ac_entity.async_turn_off()
             send.assert_called_once_with(power=0)
 
+        with patch.object(
+            learned_ac_entity, "async_turn_off", new=AsyncMock()
+        ) as turn_off:
+            await learned_ac_entity.async_set_hvac_mode(HVACMode.OFF)
+            turn_off.assert_awaited_once()
+
     async def test_fan_mode_validation(
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
     ) -> None:
         """Unsupported fan mode should raise immediately."""
         with pytest.raises(HomeAssistantError, match="Unsupported fan mode"):
             await learned_ac_entity.async_set_fan_mode("unsupported")
+        with pytest.raises(HomeAssistantError, match="Temperature is required"):
+            await learned_ac_entity.async_set_temperature()
 
     async def test_send_state_paths(
         self, learned_ac_entity: stips_climate.StipsIruLearnedAcClimate
@@ -377,6 +440,14 @@ class TestLearnedAcClimate:
                 fan="medium",
             )
             post.assert_called_once_with("COOL_22_MED")
+
+        with (
+            patch.object(learned_ac_entity, "_post_signal", new=AsyncMock()) as post,
+            patch.object(learned_ac_entity, "async_write_ha_state"),
+        ):
+            await learned_ac_entity._send_state(power=0)
+            post.assert_called_once_with("POWER_OFF")
+            assert learned_ac_entity._state["power"] == 0
 
         learned_ac_entity._power_on_signal = "POWER_ON"
         with (

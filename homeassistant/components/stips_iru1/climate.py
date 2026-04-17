@@ -530,15 +530,11 @@ class StipsIruClimate(ClimateEntity):
                 continue
         if not sent_ok and isinstance(last_error, HomeAssistantError):
             raise HomeAssistantError(f"{last_error} | hosts={', '.join(hosts)}")
-        if not sent_ok and last_error is not None:
+        if not sent_ok:
             detail = str(last_error).strip() or type(last_error).__name__
             raise HomeAssistantError(
                 f"Cannot reach IR device locally (hosts: {', '.join(hosts)}): {detail}"
             ) from last_error
-        if not sent_ok:
-            raise HomeAssistantError(
-                f"Cannot reach IR device locally (hosts: {', '.join(hosts)})"
-            )
 
         self._state = payload_state
         self.async_write_ha_state()
@@ -809,11 +805,7 @@ class StipsIruLearnedAcClimate(ClimateEntity):
                 continue
         if isinstance(last_error, HomeAssistantError):
             raise HomeAssistantError(f"{last_error} | hosts={', '.join(hosts)}")
-        if last_error is not None:
-            detail = str(last_error).strip() or type(last_error).__name__
-            raise HomeAssistantError(
-                f"Cannot reach IR device locally (hosts: {', '.join(hosts)}): {detail}"
-            ) from last_error
+        detail = str(last_error).strip() or type(last_error).__name__
         raise HomeAssistantError(
-            f"Cannot reach IR device locally (hosts: {', '.join(hosts)})"
-        )
+            f"Cannot reach IR device locally (hosts: {', '.join(hosts)}): {detail}"
+        ) from last_error

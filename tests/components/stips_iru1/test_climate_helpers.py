@@ -81,6 +81,20 @@ def test_learned_ac_signal_extraction_and_pick() -> None:
     assert picked == "B"
 
 
+def test_learned_ac_signal_picker_skips_mismatches_and_blank_signals() -> None:
+    """Picker should skip bad fan matches and blank learned signal strings."""
+    entries = [
+        {"mode": "cool", "temp": 22, "fan": "low", "signal": "LOW_SIG"},
+        {"mode": "cool", "temp": 22, "fan": "medium", "signal": "   "},
+        {"mode": "cool", "temp": 22, "fan": "medium", "signal": "GOOD_SIG"},
+    ]
+
+    assert (
+        stips_climate._pick_best_learned_signal(entries, HVACMode.COOL, 22, "medium")
+        == "GOOD_SIG"
+    )
+
+
 def test_learned_ac_helpers_cover_uppercase_and_fallback_paths() -> None:
     """Learned AC helpers should cover uppercase keys and invalid rows."""
     remote_snapshot = {
@@ -152,6 +166,36 @@ def test_extract_initial_ac_state_fallback_paths() -> None:
         "mode": 1,
         "fan": 3,
         "temp": 22,
+        "swingV": 0,
+        "swingH": 0,
+        "light": 1,
+        "beep": 1,
+        "econo": 0,
+        "filter": 0,
+        "turbo": 0,
+        "quiet": 0,
+        "clean": 0,
+        "sleep": 0,
+    }
+
+
+def test_extract_initial_ac_state_prefers_last_mode_match() -> None:
+    """Initial AC state should prefer the exact last-mode match when present."""
+    remote = {
+        "acStatus": {
+            "lastModeName": "heat",
+            "modeStates": {
+                "cool": {"power": "1", "mode": "1", "fan": "3", "temperature": "23"},
+                "heat": {"power": "1", "mode": "2", "fan": "1", "temperature": "26"},
+            },
+        }
+    }
+
+    assert stips_climate._extract_initial_ac_state(remote) == {
+        "power": 1,
+        "mode": 2,
+        "fan": 1,
+        "temp": 26,
         "swingV": 0,
         "swingH": 0,
         "light": 1,
