@@ -372,9 +372,11 @@ class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     energy_save = 3084
     pre_heating = 3099
 
-    steam_reduction = 3863
+    steam_reduction = 3863, 7959
     waiting_for_start = 7939
     heating_up_phase = 7940
+    drying = 7961
+    rinse = 7962
 
 
 class ProgramPhaseSteamOvenMicro(MieleEnum, missing_to_none=True):
@@ -629,7 +631,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     rinse = 333
     shabbat_program = 335
     yom_tov = 336
-    hydroclean = 341
+    hydroclean = 341, 2434
     drying = 357, 2028
     heat_crockery = 358
     prove_dough = 359, 2023
