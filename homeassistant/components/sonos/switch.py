@@ -125,8 +125,8 @@ async def async_setup_entry(
                 features.append(feature_type)
         return features
 
-    def _get_tv_autoplay_state(speaker: SonosSpeaker) -> bool | None:
-        """Return initial TV autoplay state, or None if not supported."""
+    def _get_tv_autoplay_state(speaker: SonosSpeaker) -> str | None:
+        """Return initial TV autoplay RoomUUID, or None if not supported."""
         try:
             result = speaker.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
         except (SoCoUPnPException, SoCoSlaveException, OSError) as err:
@@ -137,7 +137,7 @@ async def async_setup_entry(
                 err,
             )
             return None
-        return result.get("RoomUUID") not in (None, "")
+        return result.get("RoomUUID")
 
     def _get_tv_ungroup_autoplay_state(speaker: SonosSpeaker) -> bool | None:
         """Return initial TV ungroup-on-autoplay state, or None if not supported."""
@@ -156,7 +156,7 @@ async def async_setup_entry(
 
     def _get_switch_state(
         speaker: SonosSpeaker,
-    ) -> tuple[list[str], bool | None, bool | None]:
+    ) -> tuple[list[str], str | None, bool | None]:
         """Return all switch state needed for entity creation in a single executor call."""
         return (
             available_soco_attributes(speaker),
@@ -301,7 +301,7 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
     def poll_state(self) -> None:
         """Poll the current TV autoplay state from the device."""
         result = self.soco.deviceProperties.GetAutoplayRoomUUID(_TV_SOURCE)
-        self.speaker.tv_autoplay = result.get("RoomUUID") not in (None, "")
+        self.speaker.tv_autoplay = result.get("RoomUUID")
 
     @property
     def available(self) -> bool:
@@ -311,7 +311,9 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if TV autoplay is enabled."""
-        return self.speaker.tv_autoplay
+        if self.speaker.tv_autoplay is None:
+            return None
+        return bool(self.speaker.tv_autoplay)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Enable TV autoplay."""
