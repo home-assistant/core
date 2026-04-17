@@ -145,8 +145,8 @@ async def test_zeroconf_discovery_updates_host(
 
     new_ip = "192.168.1.200"
     discovery = ZeroconfServiceInfo(
-        ip_address=new_ip,
-        ip_addresses=[new_ip],
+        ip_address=IPv4Address(new_ip),
+        ip_addresses=[IPv4Address(new_ip)],
         port=80,
         hostname="duco_061293.local.",
         type="_http._tcp.local.",
@@ -227,8 +227,8 @@ async def test_zeroconf_discovery_rejects_invalid_names(
 ) -> None:
     """Test zeroconf discovery rejects devices that don't match Duco naming pattern."""
     invalid_discovery = ZeroconfServiceInfo(
-        ip_address=TEST_HOST,
-        ip_addresses=[TEST_HOST],
+        ip_address=IPv4Address(TEST_HOST),
+        ip_addresses=[IPv4Address(TEST_HOST)],
         port=80,
         hostname="device.local.",
         type="_http._tcp.local.",
@@ -262,8 +262,8 @@ async def test_zeroconf_discovery_accepts_valid_names(
 ) -> None:
     """Test zeroconf discovery accepts valid Duco device names."""
     valid_discovery = ZeroconfServiceInfo(
-        ip_address=TEST_HOST,
-        ip_addresses=[TEST_HOST],
+        ip_address=IPv4Address(TEST_HOST),
+        ip_addresses=[IPv4Address(TEST_HOST)],
         port=80,
         hostname="duco.local.",
         type="_http._tcp.local.",
