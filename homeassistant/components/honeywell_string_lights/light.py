@@ -41,11 +41,6 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
     _attr_name = None
     _attr_should_poll = False
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the light."""
-        super().__init__(config_entry)
-        self._attr_is_on = False
-
     async def async_added_to_hass(self) -> None:
         """Restore last known state."""
         await super().async_added_to_hass()
