@@ -1,0 +1,86 @@
+{
+  "entity": {
+    "button": {
+      "reboot": {
+        "default": "mdi:restart"
+      },
+      "reset_energy": {
+        "default": "mdi:counter"
+      }
+    },
+    "sensor": {
+      "phase_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "current": {
+        "default": "mdi:flash-auto"
+      },
+      "apparent_power": {
+        "default": "mdi:flash-circle"
+      },
+      "active_power": {
+        "default": "mdi:flash"
+      },
+      "inductive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "capacitive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "frequency": {
+        "default": "mdi:current-ac"
+      },
+      "power_factor": {
+        "default": "mdi:math-cos"
+      },
+      "active_energy": {
+        "default": "mdi:pulse"
+      },
+      "inductive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "capacitive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "angle": {
+        "default": "mdi:angle-acute"
+      },
+      "thd_current": {
+        "default": "mdi:chart-bubble"
+      },
+      "thd_current_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "thd_current_harmonic_3": {
+        "default": "mdi:numeric-3"
+      },
+      "thd_current_harmonic_5": {
+        "default": "mdi:numeric-5"
+      },
+      "thd_current_harmonic_7": {
+        "default": "mdi:numeric-7"
+      },
+      "thd_current_harmonic_9": {
+        "default": "mdi:numeric-9"
+      },
+      "thd_voltage": {
+        "default": "mdi:chart-bubble"
+      },
+      "thd_voltage_fundamental": {
+        "default": "mdi:vector-point"
+      },
+      "thd_voltage_harmonic_3": {
+        "default": "mdi:numeric-3"
+      },
+      "thd_voltage_harmonic_5": {
+        "default": "mdi:numeric-5"
+      },
+      "thd_voltage_harmonic_7": {
+        "default": "mdi:numeric-7"
+      },
+      "thd_voltage_harmonic_9": {
+        "default": "mdi:numeric-9"
+      }
+    }
+  }
+}

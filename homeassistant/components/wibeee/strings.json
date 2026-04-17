@@ -1,0 +1,100 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Wibeee device",
+        "description": "Enter the IP address of your Wibeee energy monitor. Make sure the device has a static IP or DHCP reservation.",
+        "data": {
+          "host": "Hostname or IP address"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Wibeee device",
+        "description": "Update the IP address of your Wibeee energy monitor.",
+        "data": {
+          "host": "Hostname or IP address"
+        }
+      },
+      "mode": {
+        "title": "Update mode",
+        "description": "Choose how the integration receives data from the device.",
+        "data": {
+          "update_mode": "Update mode",
+          "auto_configure": "Auto-configure device for Local Push"
+        },
+        "data_description": {
+          "update_mode": "**Local Push** (recommended): The device sends data to Home Assistant in real time (faster, lower latency). **Polling**: Home Assistant periodically asks the device for data (simple, no device changes needed).",
+          "auto_configure": "If enabled, the integration will automatically configure your WiBeee to send data to this Home Assistant instance (IP and HTTP port). The device will restart to apply changes."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "not_wibeee_device": "Discovered device is not a Wibeee energy monitor",
+      "wrong_device": "The device at this address has a different MAC address than the one being reconfigured"
+    },
+    "error": {
+      "no_device_info": "Could not connect to the Wibeee device. Verify the IP address and that the device is powered on.",
+      "auto_configure_failed": "Failed to auto-configure the device for Local Push. You can configure it manually via the device web interface.",
+      "unknown": "Unknown error occurred."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Wibeee integration options",
+        "description": "Configure update settings",
+        "data": {
+          "update_mode": "Update mode",
+          "scan_interval": "Polling interval (seconds)",
+          "auto_configure": "Auto-configure device for Local Push"
+        },
+        "data_description": {
+          "update_mode": "**Local Push** (recommended): Device sends data to HA in real time. **Polling**: Periodically fetch data.",
+          "scan_interval": "How often to poll the device for new data. Lower values give faster updates but may overwhelm the device. Default is 30 seconds.",
+          "auto_configure": "Automatically configure the WiBeee to send data to this Home Assistant instance."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "reboot_failed": {
+      "message": "Failed to reboot the Wibeee device. Check that the device is reachable."
+    },
+    "reset_energy_failed": {
+      "message": "Failed to reset energy counters on the Wibeee device. Check that the device is reachable."
+    }
+  },
+  "entity": {
+    "button": {
+      "reboot": { "name": "Reboot Device" },
+      "reset_energy": { "name": "Reset Energy Counters" }
+    },
+    "sensor": {
+      "phase_voltage": { "name": "Phase Voltage" },
+      "current": { "name": "Current" },
+      "apparent_power": { "name": "Apparent Power" },
+      "active_power": { "name": "Active Power" },
+      "inductive_reactive_power": { "name": "Inductive Reactive Power" },
+      "capacitive_reactive_power": { "name": "Capacitive Reactive Power" },
+      "frequency": { "name": "Frequency" },
+      "power_factor": { "name": "Power Factor" },
+      "active_energy": { "name": "Active Energy" },
+      "inductive_reactive_energy": { "name": "Inductive Reactive Energy" },
+      "capacitive_reactive_energy": { "name": "Capacitive Reactive Energy" },
+      "angle": { "name": "Angle" },
+      "thd_current": { "name": "THD Current" },
+      "thd_current_fundamental": { "name": "THD Current Fundamental" },
+      "thd_current_harmonic_3": { "name": "THD Current Harmonic 3" },
+      "thd_current_harmonic_5": { "name": "THD Current Harmonic 5" },
+      "thd_current_harmonic_7": { "name": "THD Current Harmonic 7" },
+      "thd_current_harmonic_9": { "name": "THD Current Harmonic 9" },
+      "thd_voltage": { "name": "THD Voltage" },
+      "thd_voltage_fundamental": { "name": "THD Voltage Fundamental" },
+      "thd_voltage_harmonic_3": { "name": "THD Voltage Harmonic 3" },
+      "thd_voltage_harmonic_5": { "name": "THD Voltage Harmonic 5" },
+      "thd_voltage_harmonic_7": { "name": "THD Voltage Harmonic 7" },
+      "thd_voltage_harmonic_9": { "name": "THD Voltage Harmonic 9" }
+    }
+  }
+}
