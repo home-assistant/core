@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
@@ -291,3 +292,36 @@ async def test_options_resource_flow(
     # Check the state of the entity has changed as expected
     state = hass.states.get("sensor.current_version")
     assert state.state == "Hidden Version: 2021.12.10"
+
+
+async def test_reconfigure_sensor_subentry(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry, get_data: MockRestData
+) -> None:
+    """Test reconfiguring a sensor subentry."""
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Current Version: 2021.12.10"
+
+    subentry_id = list(loaded_entry.subentries)[0]
+
+    result = await loaded_entry.start_subentry_reconfigure_flow(
+        hass, subentry_id=subentry_id
+    )
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ):
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ADVANCED: {
+                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                },
+                CONF_INDEX: 0,
+                CONF_SELECT: ".current-version h1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "2021.12.10"
