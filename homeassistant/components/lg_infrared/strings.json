@@ -9,12 +9,12 @@
         "data": {
           "device_type": "Device type",
           "infrared_entity_id": "Infrared transmitter",
-          "region": "Region"
+          "codeset": "Codeset"
         },
         "data_description": {
           "device_type": "The type of LG device to control.",
           "infrared_entity_id": "The infrared transmitter entity to use for sending commands.",
-          "region": "The regional model of the LG device."
+          "codeset": "The codeset of the LG device."
         },
         "description": "Select the device type and the infrared transmitter entity to use for controlling your LG device.",
         "title": "Set up LG IR Remote"
@@ -75,6 +75,9 @@
       },
       "bs_num_12": {
         "name": "BS 12"
+      },
+      "bs4k": {
+        "name": "4K"
       },
       "channel_down": {
         "name": "Channel down"
@@ -165,9 +168,6 @@
       },
       "exit": {
         "name": "Exit"
-      },
-      "fourk": {
-        "name": "4K"
       },
       "green": {
         "name": "Green"
@@ -309,7 +309,7 @@
         "tv": "TV"
       }
     },
-    "region": {
+    "codeset": {
       "options": {
         "global": "Global",
         "japan": "Japan"
