@@ -70,7 +70,7 @@ rules:
     comment: >-
       Users can pair new modules (CO2 sensors, humidity sensors, zone valves)
       to their Duco box. Dynamic device support to be added in a follow-up PR.
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
