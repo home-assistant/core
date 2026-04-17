@@ -280,9 +280,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 if self._try_silent_reconcile(last_seen_segments, current_segments):
                     return
                 _LOGGER.info(
-                    "Vacuum segments changed: last_seen_ids=%s, current_ids=%s",
-                    sorted(last_seen_by_id),
-                    sorted(current_segments),
+                    "Vacuum segments changed: named_count=%d",
+                    len(current_segments),
                 )
                 _LOGGER.debug(
                     "Vacuum segments changed (details): last_seen=%s, current=%s",
@@ -342,11 +341,11 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         Returns None when:
         - A referenced segment_id is not in ``translation`` (stale reference
           to a segment that no longer exists; user must re-map explicitly).
-        - A user-mapped segment shares its name with another segment
-          (duplicate name inside area_mapping's resolved set). In that case
-          the old_id -> new_id pairing relies on arbitrary list order and
-          could silently swap rooms, so we refuse to guess and let the
-          repair flow prompt the user.
+        - A referenced old_id has a ``(name, group)`` pair that is duplicated
+          anywhere in ``last_seen``. In that case the old_id -> new_id
+          pairing relies on arbitrary list order and could silently swap
+          rooms, so we refuse to guess and let the repair flow prompt the
+          user.
         """
         name_by_old_id = {s.id: (s.name, s.group) for s in last_seen}
         duplicate_keys = {
