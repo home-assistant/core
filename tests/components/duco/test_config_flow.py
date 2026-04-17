@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock
 
 from duco.exceptions import DucoConnectionError, DucoError
@@ -20,8 +21,8 @@ from .conftest import TEST_HOST, TEST_MAC, USER_INPUT
 from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
-    ip_address=TEST_HOST,
-    ip_addresses=[TEST_HOST],
+    ip_address=IPv4Address(TEST_HOST),
+    ip_addresses=[IPv4Address(TEST_HOST)],
     port=80,
     hostname="duco_061293.local.",
     type="_http._tcp.local.",

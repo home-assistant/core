@@ -57,6 +57,7 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
         except DucoError:
+            _LOGGER.exception("Unexpected error discovering Duco box via zeroconf")
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(format_mac(mac))
