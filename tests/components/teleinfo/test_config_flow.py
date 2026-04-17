@@ -1,6 +1,6 @@
 """Test the Teleinfo config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 import serial
@@ -9,6 +9,7 @@ from homeassistant.components.teleinfo.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .conftest import USB_DISCOVERY_INFO
 
@@ -51,37 +52,6 @@ async def test_user_flow_success(
     ("side_effect", "expected_error"),
     [
         (serial.SerialException("Port not found"), "cannot_connect"),
-        (TimeoutError("No data received"), "timeout_connect"),
-        (RuntimeError("unexpected"), "unknown"),
-    ],
-)
-@pytest.mark.usefixtures("mock_teleinfo")
-async def test_user_flow_errors(
-    hass: HomeAssistant,
-    mock_serial_port: MagicMock,
-    side_effect: Exception,
-    expected_error: str,
-) -> None:
-    """Test we surface the right error for each serial failure mode."""
-    mock_serial_port.side_effect = side_effect
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": expected_error}
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        (serial.SerialException("Port not found"), "cannot_connect"),
         (TimeoutError("No data"), "timeout_connect"),
         (RuntimeError("unexpected"), "unknown"),
     ],
@@ -94,15 +64,15 @@ async def test_user_flow_error_recovery(
     expected_error: str,
 ) -> None:
     """Test the flow recovers after each failure mode when the port starts working."""
-    mock_serial_port.side_effect = side_effect
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-        },
+        DOMAIN, context={"source": SOURCE_USER}
     )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
+    )
+
+    mock_serial_port.side_effect = side_effect
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
@@ -110,10 +80,7 @@ async def test_user_flow_error_recovery(
     # Recover: the port now works.
     mock_serial_port.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-        },
+        result["flow_id"], {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -130,11 +97,11 @@ async def test_user_flow_duplicate(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-        },
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -145,26 +112,27 @@ async def test_user_flow_decode_error(
     hass: HomeAssistant, mock_teleinfo: MagicMock, mock_serial_port: MagicMock
 ) -> None:
     """Test we handle decode errors from pyteleinfo."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
     mock_teleinfo.decode.side_effect = mock_teleinfo.TeleinfoError("bad frame")
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-        },
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
+    mock_teleinfo.decode.side_effect = None
 
-# --- USB Discovery tests ---
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
+    )
 
-PATCH_GET_SERIAL_BY_ID = (
-    "homeassistant.components.teleinfo.config_flow.usb.get_serial_by_id"
-)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_teleinfo")
@@ -172,30 +140,21 @@ async def test_usb_discovery_success(
     hass: HomeAssistant, mock_serial_port: MagicMock
 ) -> None:
     """Test USB discovery happy path: detect → validate → confirm → create entry."""
-
-    with patch(PATCH_GET_SERIAL_BY_ID, side_effect=lambda x: x):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USB},
-            data=USB_DISCOVERY_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "usb_confirm"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Teleinfo (/dev/ttyUSB0)"
-
-    config_entry = result["result"]
-    assert config_entry.unique_id == "021861348497"
-    assert config_entry.data == {
-        CONF_SERIAL_PORT: "/dev/ttyUSB0",
-    }
+    assert result["data"] == {CONF_SERIAL_PORT: "/dev/ttyUSB0"}
+    assert result["result"].unique_id == "021861348497"
 
 
 @pytest.mark.usefixtures("mock_teleinfo")
@@ -205,12 +164,11 @@ async def test_usb_discovery_not_teleinfo(
     """Test USB discovery aborts when frame read times out (not a Teleinfo device)."""
     mock_serial_port.side_effect = TimeoutError("No data received")
 
-    with patch(PATCH_GET_SERIAL_BY_ID, side_effect=lambda x: x):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USB},
-            data=USB_DISCOVERY_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_teleinfo_device"
@@ -231,12 +189,18 @@ async def test_usb_discovery_already_configured_updates_path(
     )
     existing_entry.add_to_hass(hass)
 
-    with patch(PATCH_GET_SERIAL_BY_ID, return_value="/dev/ttyUSB-new"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USB},
-            data=USB_DISCOVERY_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=UsbServiceInfo(
+            device="/dev/ttyUSB-new",
+            pid="6015",
+            vid="0403",
+            serial_number="AB1234",
+            manufacturer="FTDI",
+            description="FT230X Basic UART",
+        ),
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -255,12 +219,11 @@ async def test_usb_discovery_manual_entry_duplicate(
     # mock_config_entry has ADCO unique_id — same as what USB discovery will find
     mock_config_entry.add_to_hass(hass)
 
-    with patch(PATCH_GET_SERIAL_BY_ID, side_effect=lambda x: x):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USB},
-            data=USB_DISCOVERY_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -275,12 +238,11 @@ async def test_usb_discovery_decode_error_aborts(
 
     mock_teleinfo.decode.side_effect = mock_teleinfo.TeleinfoError("bad frame")
 
-    with patch(PATCH_GET_SERIAL_BY_ID, side_effect=lambda x: x):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USB},
-            data=USB_DISCOVERY_INFO,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_teleinfo_device"

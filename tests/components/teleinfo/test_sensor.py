@@ -62,9 +62,8 @@ async def test_all_entities(
     [
         ("mock_serial_port", serial.SerialException("device disconnected")),
         ("mock_serial_port", TimeoutError("no data")),
-        ("mock_teleinfo_decode", RuntimeError("bad frame")),
     ],
-    ids=["serial_error", "timeout", "decode_error"],
+    ids=["serial_error", "timeout"],
 )
 async def test_sensor_unavailable_on_error(
     hass: HomeAssistant,
@@ -86,10 +85,33 @@ async def test_sensor_unavailable_on_error(
     assert hass.states.get(entity_id).state == "2830"
 
     # Trigger the configured failure on the next scheduled poll.
-    if side_effect_attr == "mock_serial_port":
-        mock_serial_port.side_effect = side_effect
-    else:
-        mock_teleinfo.decode.side_effect = side_effect
+    mock_serial_port.side_effect = side_effect
+
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_sensor_unavailable_on_decode_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_teleinfo: MagicMock,
+    mock_serial_port: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors become unavailable on each failure mode at the next poll."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{ADCO}_PAPP")
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "2830"
+
+    mock_teleinfo.decode.side_effect = RuntimeError("bad frame")
 
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
