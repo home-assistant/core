@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
-
-from .conftest import MOCK_HOST, MOCK_MAC
 
 
 async def test_sensors_created(hass: HomeAssistant, loaded_entry) -> None:

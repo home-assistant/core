@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-
 from homeassistant.core import HomeAssistant
+
 
 async def test_buttons_created(hass: HomeAssistant, loaded_entry) -> None:
     """Test that button entities are created."""
