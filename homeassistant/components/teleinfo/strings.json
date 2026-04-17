@@ -1,0 +1,108 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_teleinfo_device": "The device does not appear to be a Teleinfo module"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "usb_confirm": {
+        "description": "A Teleinfo device was detected. Do you want to set it up?"
+      },
+      "user": {
+        "data": {
+          "serial_port": "Serial port"
+        },
+        "data_description": {
+          "serial_port": "The path to the serial port connected to the Teleinfo module, e.g. /dev/ttyUSB0."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "apparent_power": {
+        "name": "Apparent power"
+      },
+      "base_index": {
+        "name": "Index"
+      },
+      "blue_day_off_peak_index": {
+        "name": "Blue day off-peak index"
+      },
+      "blue_day_peak_index": {
+        "name": "Blue day peak index"
+      },
+      "current_tariff_period": {
+        "name": "Current tariff period",
+        "state": {
+          "all_hours": "All hours",
+          "mobile_peak": "Mobile peak",
+          "normal_hours": "Normal hours",
+          "off_peak": "Off-peak",
+          "off_peak_blue_day": "Off-peak blue day",
+          "off_peak_red_day": "Off-peak red day",
+          "off_peak_white_day": "Off-peak white day",
+          "peak": "Peak",
+          "peak_blue_day": "Peak blue day",
+          "peak_red_day": "Peak red day",
+          "peak_white_day": "Peak white day"
+        }
+      },
+      "ejp_warning": {
+        "name": "EJP warning"
+      },
+      "instantaneous_current": {
+        "name": "Instantaneous current"
+      },
+      "normal_hours_index": {
+        "name": "Normal hours index"
+      },
+      "off_peak_index": {
+        "name": "Off-peak index"
+      },
+      "peak_index": {
+        "name": "Peak index"
+      },
+      "peak_mobile_hours_index": {
+        "name": "Peak mobile hours index"
+      },
+      "red_day_off_peak_index": {
+        "name": "Red day off-peak index"
+      },
+      "red_day_peak_index": {
+        "name": "Red day peak index"
+      },
+      "tomorrow_color": {
+        "name": "Tomorrow color",
+        "state": {
+          "blue": "Blue",
+          "red": "Red",
+          "white": "White"
+        }
+      },
+      "white_day_off_peak_index": {
+        "name": "White day off-peak index"
+      },
+      "white_day_peak_index": {
+        "name": "White day peak index"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Failed to communicate with Teleinfo dongle"
+    },
+    "decode_error": {
+      "message": "Failed to decode Teleinfo frame"
+    },
+    "timeout_error": {
+      "message": "Timeout waiting for Teleinfo data"
+    }
+  }
+}

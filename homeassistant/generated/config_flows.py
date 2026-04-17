@@ -721,6 +721,7 @@ FLOWS = {
         "technove",
         "tedee",
         "telegram_bot",
+        "teleinfo",
         "tellduslive",
         "teltonika",
         "tesla_fleet",
