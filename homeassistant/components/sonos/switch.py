@@ -333,7 +333,9 @@ class SonosTVAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
             )
         except SoCoUPnPException as exc:
             raise HomeAssistantError(
-                f"Could not toggle {self.entity_id}: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="toggle_failed",
+                translation_placeholders={"entity_id": self.entity_id},
             ) from exc
         self.poll_state()
         # Refresh ungroup state: the device may change it as a side effect
@@ -404,7 +406,9 @@ class SonosTVUngroupAutoplaySwitchEntity(SonosPollingEntity, SwitchEntity):
             )
         except SoCoUPnPException as exc:
             raise HomeAssistantError(
-                f"Could not toggle {self.entity_id}: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="toggle_failed",
+                translation_placeholders={"entity_id": self.entity_id},
             ) from exc
         self.poll_state()
         self.speaker.write_entity_states()

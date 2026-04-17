@@ -135,6 +135,9 @@
     },
     "timeout_unjoin": {
       "message": "Timeout while waiting for Sonos player to unjoin the group {group_description}"
+    },
+    "toggle_failed": {
+      "message": "Could not toggle {entity_id}."
     }
   },
   "issues": {
