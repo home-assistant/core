@@ -98,10 +98,15 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         motor_id: str,
         motor: Motor,
     ) -> None:
-        """Initialize the cover."""
+        """Initialize the cover.
+
+        Only ``motor_id`` is stored as persistent state on the entity; the
+        current ``Motor`` object is resolved from ``coordinator.data`` on
+        each access so entity state can't desync from the library if
+        pygaposa ever starts returning fresh instances on refresh.
+        """
         super().__init__(coordinator, context=motor_id)
         self._motor_id = motor_id
-        self.motor = motor
         self._last_command: str | None = None
         self._last_command_time: datetime | None = None
         self._attr_unique_id = motor_id
@@ -112,6 +117,16 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         )
         self._motion_task: asyncio.Task[None] | None = None
 
+    @property
+    def motor(self) -> Motor | None:
+        """Return the current Motor object, or ``None`` if it has been removed."""
+        return self.coordinator.data.get(self._motor_id)
+
+    @property
+    def available(self) -> bool:
+        """Entity is available while the motor is still known to the coordinator."""
+        return super().available and self.motor is not None
+
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending motion-window refresh task on removal."""
         await super().async_will_remove_from_hass()
@@ -121,18 +136,24 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
     @property
     def is_open(self) -> bool | None:
         """Return whether the cover is fully open."""
-        if self.motor.state == STATE_UP:
+        motor = self.motor
+        if motor is None:
+            return None
+        if motor.state == STATE_UP:
             return True
-        if self.motor.state == STATE_DOWN:
+        if motor.state == STATE_DOWN:
             return False
         return None
 
     @property
     def is_closed(self) -> bool | None:
         """Return whether the cover is fully closed."""
-        if self.motor.state == STATE_DOWN:
+        motor = self.motor
+        if motor is None:
+            return None
+        if motor.state == STATE_DOWN:
             return True
-        if self.motor.state == STATE_UP:
+        if motor.state == STATE_UP:
             return False
         return None
 
@@ -160,15 +181,21 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
+        motor = self.motor
+        if motor is None:
+            return
         self._begin_motion(COMMAND_UP)
-        await self.motor.up(False)
+        await motor.up(False)
         self.async_write_ha_state()
         self._schedule_refresh_after_motion()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
+        motor = self.motor
+        if motor is None:
+            return
         self._begin_motion(COMMAND_DOWN)
-        await self.motor.down(False)
+        await motor.down(False)
         self.async_write_ha_state()
         self._schedule_refresh_after_motion()
 
@@ -180,7 +207,10 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         # so it doesn't fire a pointless refresh 60 seconds after the stop.
         if self._motion_task is not None and not self._motion_task.done():
             self._motion_task.cancel()
-        await self.motor.stop(True)
+        motor = self.motor
+        if motor is None:
+            return
+        await motor.stop(True)
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 

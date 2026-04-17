@@ -235,6 +235,42 @@ async def test_cover_device_registry_entry(
     assert names == {"Living Room", "Bedroom"}
 
 
+async def test_entity_reads_state_from_current_coordinator_data(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_motors: list[MagicMock],
+) -> None:
+    """Entity state should come from coordinator.data, not a cached Motor.
+
+    pygaposa 0.2.4 happens to mutate Motor instances in place on refresh,
+    but we don't want to rely on that — if the library ever starts
+    returning fresh instances each refresh, cached references would go
+    stale. This test proves the entity re-reads through coordinator.data
+    by replacing the Motor object entirely and confirming the new state
+    shows up.
+    """
+    # Living Room starts with state UP → HA state `open`.
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
+
+    coordinator = init_integration.runtime_data
+    original_key = "DEVICE123.motors.motor-1"
+    assert original_key in coordinator.data
+
+    # Build a brand-new Motor-shaped mock with state DOWN and swap it in.
+    replacement = MagicMock()
+    replacement.id = "motor-1"
+    replacement.name = "Living Room"
+    replacement.state = "DOWN"
+    coordinator.data[original_key] = replacement
+    # Notify listeners so the entity writes its state.
+    coordinator.async_set_updated_data(coordinator.data)
+    await hass.async_block_till_done()
+
+    # The entity should report the replacement's state, not the
+    # original mock_motors[0]'s state.
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_CLOSED
+
+
 async def test_stale_motor_removes_entity_registry_entry(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
