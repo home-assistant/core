@@ -607,12 +607,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 {
                     "flag": map_flag,
                     "name": Q7_CURRENT_MAP_NAME,
-                    "rooms": {
-                        room_id: room_name  # type: ignore[misc]
-                        for room_id, room_name in _get_q7_room_names(
-                            map_content_trait
-                        ).items()
-                    },
+                    "rooms": dict(_get_q7_room_names(map_content_trait)),
                 }
             ]
         }

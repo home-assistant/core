@@ -152,7 +152,9 @@ def create_b01_q7_trait() -> Mock:
         return None
 
     b01_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
-    b01_trait.map_content.refresh = AsyncMock(side_effect=refresh_map_content_side_effect)
+    b01_trait.map_content.refresh = AsyncMock(
+        side_effect=refresh_map_content_side_effect
+    )
 
     # Add API methods that update the state when called
     async def start_clean_side_effect():

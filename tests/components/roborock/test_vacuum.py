@@ -778,7 +778,9 @@ async def test_q7_get_current_position_no_map_data(
     assert fake_q7_vacuum.b01_q7_properties is not None
     fake_q7_vacuum.b01_q7_properties.map_content.map_data = None
 
-    with pytest.raises(HomeAssistantError, match="Something went wrong creating the map"):
+    with pytest.raises(
+        HomeAssistantError, match="Something went wrong creating the map"
+    ):
         await hass.services.async_call(
             DOMAIN,
             GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
@@ -864,7 +866,9 @@ async def test_q7_get_segments_refresh_failure_returns_empty(
 ) -> None:
     """Test Q7 get_segments returns an empty list on refresh failure."""
     assert fake_q7_vacuum.b01_q7_properties is not None
-    fake_q7_vacuum.b01_q7_properties.map_content.refresh.side_effect = RoborockException()
+    fake_q7_vacuum.b01_q7_properties.map_content.refresh.side_effect = (
+        RoborockException()
+    )
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -991,9 +995,7 @@ async def test_q7_failed_commands(
         service_params.get("command", api_method) if service_params else api_method
     )
 
-    with pytest.raises(
-        HomeAssistantError, match=f"Error while calling {command_name}"
-    ):
+    with pytest.raises(HomeAssistantError, match=f"Error while calling {command_name}"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
             service,
