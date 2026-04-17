@@ -98,6 +98,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState:
         """Return the state of the media player."""
+        if self.status["playback"]["buffering"]:
+            return MediaPlayerState.BUFFERING
+
         if self.status["playback"]["enable"]:
             return MediaPlayerState.PLAYING
 
