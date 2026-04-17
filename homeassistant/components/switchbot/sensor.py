@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 import switchbot
-from switchbot import HumidifierWaterLevel
+from switchbot import HumidifierWaterLevel, SwitchbotModel
 from switchbot.const.air_purifier import AirQualityLevel
 
 from homeassistant.components.bluetooth import async_last_service_info
@@ -35,8 +38,16 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
-SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    "rssi": SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchBotSensorEntityDescription(SensorEntityDescription):
+    """Describes SwitchBot sensor entities with optional value transformation."""
+
+    value_fn: Callable[[str | int | None], str | int | None] = lambda v: v
+
+
+SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
+    "rssi": SwitchBotSensorEntityDescription(
         key="rssi",
         translation_key="bluetooth_signal",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -45,7 +56,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "wifi_rssi": SensorEntityDescription(
+    "wifi_rssi": SwitchBotSensorEntityDescription(
         key="wifi_rssi",
         translation_key="wifi_signal",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -54,77 +65,90 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "battery": SensorEntityDescription(
+    "battery": SwitchBotSensorEntityDescription(
         key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "co2": SensorEntityDescription(
+    "co2": SwitchBotSensorEntityDescription(
         key="co2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
     ),
-    "lightLevel": SensorEntityDescription(
+    "lightLevel": SwitchBotSensorEntityDescription(
         key="lightLevel",
         translation_key="light_level",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "humidity": SensorEntityDescription(
+    "humidity": SwitchBotSensorEntityDescription(
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-    "illuminance": SensorEntityDescription(
+    "illuminance": SwitchBotSensorEntityDescription(
         key="illuminance",
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ILLUMINANCE,
     ),
-    "temperature": SensorEntityDescription(
+    "temperature": SwitchBotSensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    "power": SensorEntityDescription(
+    "power": SwitchBotSensorEntityDescription(
         key="power",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
     ),
-    "current": SensorEntityDescription(
+    "current": SwitchBotSensorEntityDescription(
         key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
     ),
-    "voltage": SensorEntityDescription(
+    "voltage": SwitchBotSensorEntityDescription(
         key="voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
-    "aqi_level": SensorEntityDescription(
+    "aqi_level": SwitchBotSensorEntityDescription(
         key="aqi_level",
         translation_key="aqi_quality_level",
         device_class=SensorDeviceClass.ENUM,
         options=[member.name.lower() for member in AirQualityLevel],
     ),
-    "energy": SensorEntityDescription(
+    "energy": SwitchBotSensorEntityDescription(
         key="energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
-    "water_level": SensorEntityDescription(
+    "water_level": SwitchBotSensorEntityDescription(
         key="water_level",
         translation_key="water_level",
         device_class=SensorDeviceClass.ENUM,
         options=HumidifierWaterLevel.get_levels(),
+    ),
+    "battery_range": SwitchBotSensorEntityDescription(
+        key="battery_range",
+        translation_key="battery_range",
+        device_class=SensorDeviceClass.ENUM,
+        options=["critical", "low", "medium", "high"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda v: {
+            "<10%": "critical",
+            "10-19%": "low",
+            "20-59%": "medium",
+            ">=60%": "high",
+        }.get(str(v)),
     ),
 }
 
@@ -136,6 +160,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
     coordinator = entry.runtime_data
+    parsed_data = coordinator.device.parsed_data
     sensor_entities: list[SensorEntity] = []
     if isinstance(coordinator.device, switchbot.SwitchbotRelaySwitch2PM):
         sensor_entities.extend(
@@ -144,10 +169,24 @@ async def async_setup_entry(
             for sensor in coordinator.device.get_parsed_data(channel)
             if sensor in SENSOR_TYPES
         )
+    elif coordinator.model == SwitchbotModel.PRESENCE_SENSOR:
+        sensor_entities.extend(
+            SwitchBotSensor(coordinator, sensor)
+            for sensor in (
+                *(
+                    s
+                    for s in parsed_data
+                    if s in SENSOR_TYPES and s not in ("battery", "battery_range")
+                ),
+                "battery_range",
+            )
+        )
+        if "battery" in parsed_data:
+            sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
     else:
         sensor_entities.extend(
             SwitchBotSensor(coordinator, sensor)
-            for sensor in coordinator.device.parsed_data
+            for sensor in parsed_data
             if sensor in SENSOR_TYPES
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
@@ -156,6 +195,8 @@ async def async_setup_entry(
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     """Representation of a Switchbot sensor."""
+
+    entity_description: SwitchBotSensorEntityDescription
 
     def __init__(
         self,
@@ -185,7 +226,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.parsed_data[self._sensor]
+        return self.entity_description.value_fn(self.parsed_data.get(self._sensor))
 
 
 class SwitchbotRSSISensor(SwitchBotSensor):
