@@ -582,6 +582,7 @@ def fake_q7_vacuum_api_fixture(
         api.return_to_dock.side_effect = send_message_exception
         api.find_me.side_effect = send_message_exception
         api.set_fan_speed.side_effect = send_message_exception
+        api.clean_segments.side_effect = send_message_exception
         api.send.side_effect = send_message_exception
     return api
 
@@ -741,7 +742,7 @@ async def test_q7_get_maps(
                 {
                     "flag": 0,
                     "name": "Current map",
-                    "rooms": {10: "room1", 11: "room2"},
+                    "rooms": {"10": "room1", "11": "room2"},
                 }
             ]
         }
