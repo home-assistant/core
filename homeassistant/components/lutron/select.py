@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
 from pylutron import Button, Keypad, Led, Lutron
 
 from homeassistant.components.select import SelectEntity
@@ -60,7 +57,6 @@ class LutronLedSelect(LutronKeypad, SelectEntity):
     ) -> None:
         """Initialize the select entity."""
         super().__init__(area_name, led_device, controller, keypad)
-        self._keypad_name = keypad.name
         self._attr_name = f"{scene_device.name} LED"
 
     @property
@@ -68,20 +64,9 @@ class LutronLedSelect(LutronKeypad, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return _LED_STATE_TO_OPTION.get(self._lutron_device.last_state)
 
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.hass.async_add_executor_job(
-            setattr, self._lutron_device, "state", _LED_OPTION_TO_STATE[option]
-        )
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        return {
-            "keypad": self._keypad_name,
-            "scene": self._attr_name,
-            "led": self._lutron_device.name,
-        }
+        self._lutron_device.state = _LED_OPTION_TO_STATE[option]
 
     def _request_state(self) -> None:
         """Request the state from the device."""

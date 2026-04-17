@@ -13,7 +13,6 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -51,8 +50,6 @@ async def test_led_select_option(
     mock_config_entry.add_to_hass(hass)
 
     led = mock_lutron.areas[0].keypads[0].leds[0]
-    led.state = Led.LED_OFF
-    led.last_state = Led.LED_OFF
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -67,13 +64,6 @@ async def test_led_select_option(
         blocking=True,
     )
     assert led.state == Led.LED_ON
-    # Update last_state to simulate optimistic update from library
-    led.last_state = Led.LED_ON
-    # Trigger update to refresh HA state
-    await async_update_entity(hass, entity_id)
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "on"
 
     # Select "slow_flash"
     await hass.services.async_call(
@@ -83,11 +73,6 @@ async def test_led_select_option(
         blocking=True,
     )
     assert led.state == Led.LED_SLOW_FLASH
-    led.last_state = Led.LED_SLOW_FLASH
-    await async_update_entity(hass, entity_id)
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "slow_flash"
 
     # Select "fast_flash"
     await hass.services.async_call(
@@ -97,11 +82,6 @@ async def test_led_select_option(
         blocking=True,
     )
     assert led.state == Led.LED_FAST_FLASH
-    led.last_state = Led.LED_FAST_FLASH
-    await async_update_entity(hass, entity_id)
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "fast_flash"
 
     # Select "off"
     await hass.services.async_call(
@@ -111,11 +91,30 @@ async def test_led_select_option(
         blocking=True,
     )
     assert led.state == Led.LED_OFF
+
+
+async def test_led_select_update(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test LED state update from library."""
+    mock_config_entry.add_to_hass(hass)
+
+    led = mock_lutron.areas[0].keypads[0].leds[0]
     led.last_state = Led.LED_OFF
-    await async_update_entity(hass, entity_id)
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "off"
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "select.test_keypad_test_button_led"
+    assert hass.states.get(entity_id).state == "off"
+
+    # Simulate update from library
+    led.last_state = Led.LED_SLOW_FLASH
+    callback = led.subscribe.call_args[0][0]
+    callback(led, None, None, {})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "slow_flash"
 
 
 async def test_led_select_unknown_state(
