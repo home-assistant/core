@@ -50,7 +50,7 @@ from homeassistant.core import (
 )
 from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.loader import async_suggest_report_issue, bind_hass
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
@@ -91,7 +91,6 @@ def async_setup(hass: HomeAssistant) -> None:
 
 
 @callback
-@bind_hass
 @singleton(DATA_ENTITY_SOURCE)
 def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     """Get the entity sources.
@@ -1040,9 +1039,14 @@ class Entity(
             self._async_verify_state_writable()
         self._async_write_ha_state()
 
+    @final
     @callback
     def async_write_ha_state(self) -> None:
-        """Write the state to the state machine."""
+        """Write the state to the state machine.
+
+        Note: Integrations which need to customize state write should
+        override _async_write_ha_state, not this method.
+        """
         if not self.hass or not self._verified_state_writable:
             self._async_verify_state_writable()
         if self.hass.loop_thread_id != threading.get_ident():

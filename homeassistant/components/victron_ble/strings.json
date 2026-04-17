@@ -18,7 +18,7 @@
       "invalid_access_token": "Invalid encryption key for instant readout",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
-    "flow_title": "{title}",
+    "flow_title": "{name}",
     "step": {
       "access_token": {
         "data": {
@@ -145,7 +145,7 @@
           "input_current": "Input overcurrent",
           "input_power": "Input overpower",
           "input_shutdown_current": "Input shutdown (current flow during off mode)",
-          "input_shutdown_failure": "PV input failed to shutdown",
+          "input_shutdown_failure": "PV input shutdown failed",
           "input_shutdown_voltage": "Input shutdown (battery overvoltage)",
           "input_voltage": "Input overvoltage",
           "internal_dc_voltage": "Internal DC voltage error",

@@ -41,12 +41,17 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "port_forwarding": {
-        "name": "Port forwarding",
-        "state": {
-          "off": "Closed",
-          "on": "Open"
+    "event": {
+      "torrent": {
+        "name": "Torrent",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "downloaded": "Downloaded",
+              "removed": "Removed",
+              "started": "Started"
+            }
+          }
         }
       }
     },
