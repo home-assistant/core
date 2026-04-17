@@ -2769,6 +2769,9 @@ vsure==2.6.7
 # homeassistant.components.wake_on_lan
 wakeonlan==3.1.0
 
+# homeassistant.components.wibeee
+pywibeee==0.1.2
+
 # homeassistant.components.wallbox
 wallbox==0.9.0
 
