@@ -55,7 +55,7 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
         except (GaposaAuthException, FirebaseAuthException) as exc:
             _LOGGER.debug("Gaposa authentication failed: %s", exc)
             return None, "invalid_auth"
-        except ClientConnectionError as exc:
+        except (ClientConnectionError, TimeoutError, OSError) as exc:
             _LOGGER.debug("Gaposa connection failed: %s", exc)
             return None, "cannot_connect"
         except Exception:
