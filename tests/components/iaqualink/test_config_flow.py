@@ -91,7 +91,6 @@ async def test_service_exception(
     """Test config flow encountering service exception."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
-    flow.context = {}
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
@@ -110,7 +109,6 @@ async def test_with_existing_config(
     """Test config flow with existing configuration."""
     flow = config_flow.AqualinkFlowHandler()
     flow.hass = hass
-    flow.context = {}
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
