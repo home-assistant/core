@@ -98,7 +98,6 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     ) -> None:
         """Initialize Shelly RPC media player."""
         super().__init__(coordinator, key, attribute, description)
-        self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
     def state(self) -> MediaPlayerState:
