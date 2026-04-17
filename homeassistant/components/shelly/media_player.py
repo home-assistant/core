@@ -36,7 +36,7 @@ class RpcMediaPlayerDescription(RpcEntityDescription, MediaPlayerEntityDescripti
 
 
 RPC_MEDIA_PLAYER_ENTITIES: Final = {
-    "media_player": RpcMediaPlayerDescription(
+    "media": RpcMediaPlayerDescription(
         key="media",
         device_class=MediaPlayerDeviceClass.SPEAKER,
     ),
