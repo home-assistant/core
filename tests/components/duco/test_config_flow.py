@@ -189,7 +189,7 @@ async def test_zeroconf_discovery_already_configured_same_ip(
         (DucoError("Unexpected error"), "unknown"),
     ],
 )
-async def test_zeroconf_discovery_connection_error(
+async def test_zeroconf_discovery_exceptions(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     exception: Exception,
