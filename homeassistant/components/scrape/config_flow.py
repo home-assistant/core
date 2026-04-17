@@ -23,11 +23,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    FlowType,
     OptionsFlow,
+    SubentryFlowContext,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -246,6 +249,18 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Start subentry flow after creating main entry."""
+        subentry_result = await self.hass.config_entries.subentries.async_init(
+            (result["result"].entry_id, "entity"),
+            context=SubentryFlowContext(source=SOURCE_USER),
+        )
+        result["next_flow"] = (
+            FlowType.CONFIG_SUBENTRIES_FLOW,
+            subentry_result["flow_id"],
+        )
+        return result
 
 
 class ScrapeOptionFlow(OptionsFlow):
