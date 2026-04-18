@@ -76,7 +76,7 @@ class MobileAppNotifyEntity(NotifyEntity):
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the notify entity."""
 
-        self._attr_unique_id = entry.data[ATTR_DEVICE_ID]
+        self._attr_unique_id = f"{entry.data[ATTR_DEVICE_ID]}_notify"
         self._attr_device_info = device_info(entry.data)
         self.entry = entry
 

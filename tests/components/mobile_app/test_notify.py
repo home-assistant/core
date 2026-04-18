@@ -1,17 +1,22 @@
 """Notify platform tests for mobile_app."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mobile_app.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockUser
+from tests.common import MockConfigEntry, MockUser, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -142,6 +147,16 @@ async def setup_websocket_channel_only_push(
     await hass.async_block_till_done()
 
     assert hass.services.has_service("notify", "mobile_app_websocket_push_name")
+
+
+@pytest.fixture
+async def notify_only() -> AsyncGenerator[None]:
+    """Enable only the notify platform."""
+    with patch(
+        "homeassistant.components.mobile_app.PLATFORMS",
+        [Platform.NOTIFY],
+    ):
+        yield
 
 
 async def test_notify_works(
@@ -594,3 +609,46 @@ async def test_notify_multiple_targets_if_any_disconnected(
     # Check that there are no more messages to receive (timeout expected)
     with pytest.raises(asyncio.TimeoutError):
         await asyncio.wait_for(client.receive_json(), timeout=0.1)
+
+
+@pytest.mark.usefixtures("notify_only")
+async def test_notify_platform(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setup of the Mobile app notify platform."""
+    config_entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "PUSH_TOKEN",
+                "push_url": "https://mobile-push.home-assistant.dev/push",
+            },
+            "app_id": "io.homeassistant.mobile_app",
+            "app_name": "mobile_app tests",
+            "app_version": "1.0",
+            "device_id": "4d5e6f",
+            "device_name": "Test",
+            "manufacturer": "Home Assistant",
+            "model": "mobile_app",
+            "os_name": "Linux",
+            "os_version": "5.0.6",
+            "secret": "123abc",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "mock-webhook_id",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="mobile_app test entry",
+        version=1,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
