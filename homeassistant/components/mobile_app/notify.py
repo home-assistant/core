@@ -173,8 +173,6 @@ class MobileAppNotifyEntity(NotifyEntity):
             data[ATTR_MESSAGE] = message
         if title is not None:
             data[ATTR_TITLE] = title
-        if kwargs:
-            data[ATTR_DATA] = kwargs
 
         if (
             self.entry.data[ATTR_WEBHOOK_ID]
