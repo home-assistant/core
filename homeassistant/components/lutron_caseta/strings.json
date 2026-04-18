@@ -78,12 +78,5 @@
       "press": "\"{subtype}\" pressed",
       "release": "\"{subtype}\" released"
     }
-  },
-  "entity": {
-    "binary_sensor": {
-      "battery": {
-        "name": "[%key:component::binary_sensor::entity_component::battery::name%]"
-      }
-    }
   }
 }
