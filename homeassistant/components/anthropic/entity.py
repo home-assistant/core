@@ -762,7 +762,9 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
             )
             if thinking_effort != "none":
-                model_args["thinking"] = ThinkingConfigAdaptiveParam(type="adaptive")
+                model_args["thinking"] = ThinkingConfigAdaptiveParam(
+                    type="adaptive", display="summarized"
+                )
                 model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
             else:
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
@@ -779,7 +781,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 and thinking_budget >= MIN_THINKING_BUDGET
             ):
                 model_args["thinking"] = ThinkingConfigEnabledParam(
-                    type="enabled", budget_tokens=thinking_budget
+                    type="enabled", display="summarized", budget_tokens=thinking_budget
                 )
             else:
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")

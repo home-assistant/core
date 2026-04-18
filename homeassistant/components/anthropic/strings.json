@@ -241,7 +241,8 @@
         "low": "[%key:common::state::low%]",
         "max": "Max",
         "medium": "[%key:common::state::medium%]",
-        "none": "None"
+        "none": "None",
+        "xhigh": "X-High"
       }
     }
   }

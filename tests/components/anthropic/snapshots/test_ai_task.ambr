@@ -49,6 +49,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1024,
+      'display': 'summarized',
       'type': 'enabled',
     }),
   })
@@ -155,6 +156,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
@@ -230,6 +232,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
