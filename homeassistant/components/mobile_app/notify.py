@@ -91,6 +91,7 @@ class MobileAppNotifyEntity(NotifyEntity):
         **kwargs: Any,
     ) -> None:
         """Send the push notification."""
+        placeholders = {"device_name": self.entry.title}
 
         async def _send_message(data: dict[str, Any]):
             reg_info = {
@@ -101,7 +102,6 @@ class MobileAppNotifyEntity(NotifyEntity):
             if ATTR_OS_VERSION in self.entry.data:
                 reg_info[ATTR_OS_VERSION] = self.entry.data[ATTR_OS_VERSION]
 
-            placeholders = {"device_name": self.entry.title}
             try:
                 async with asyncio.timeout(10):
                     response = await async_get_clientsession(self.hass).post(
@@ -188,12 +188,9 @@ class MobileAppNotifyEntity(NotifyEntity):
             await _send_message(data)
         else:
             raise HomeAssistantError(
-                f"Device {self.entry.title} not connected to local push notifications",
                 translation_domain=DOMAIN,
                 translation_key="device_not_connected_for_local_push_notifications",
-                translation_placeholders={
-                    "device_name": self.entry.data[ATTR_DEVICE_NAME]
-                },
+                translation_placeholders=placeholders,
             )
 
 
