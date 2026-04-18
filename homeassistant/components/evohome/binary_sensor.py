@@ -100,6 +100,7 @@ class EvoFaultSensorBase(
         """Return diagnostic details for all current faults."""
         faults = tuple(_normalize_fault(f) for f in self._evo_device.active_faults)  # type: ignore[arg-type]
         return {
+            self._evo_id_attr: self._evo_device.id,
             "fault_count": len(faults),
             "faults": faults,
         }

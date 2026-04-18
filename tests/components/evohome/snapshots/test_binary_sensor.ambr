@@ -7,6 +7,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Bathroom Dn faults',
+      'zone_id': '3432579',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bathroom_dn_faults',
@@ -24,6 +25,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '3432522',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -41,6 +43,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Dead Zone faults',
+      'zone_id': '3432521',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dead_zone_faults',
@@ -54,6 +57,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
+      'dhw_id': '3933910',
       'fault_count': 0,
       'faults': tuple(
       ),
@@ -79,6 +83,7 @@
         }),
       ),
       'friendly_name': 'Front Room faults',
+      'zone_id': '3432577',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.front_room_faults',
@@ -96,6 +101,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '2499896',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -113,6 +119,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Kids Room faults',
+      'zone_id': '3449703',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kids_room_faults',
@@ -130,6 +137,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Kitchen faults',
+      'zone_id': '3432578',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kitchen_faults',
@@ -147,6 +155,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Main Bedroom faults',
+      'zone_id': '3432580',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.main_bedroom_faults',
@@ -168,6 +177,7 @@
         }),
       ),
       'friendly_name': 'Main Room faults',
+      'zone_id': '3432576',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.main_room_faults',
@@ -185,6 +195,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Spare Room faults',
+      'zone_id': '3450733',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.spare_room_faults',
@@ -202,6 +213,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Bathroom Dn faults',
+      'zone_id': '3432579',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bathroom_dn_faults',
@@ -219,6 +231,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '3432522',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -236,6 +249,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Dead Zone faults',
+      'zone_id': '3432521',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dead_zone_faults',
@@ -249,6 +263,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
+      'dhw_id': '3933910',
       'fault_count': 0,
       'faults': tuple(
       ),
@@ -270,6 +285,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Front Room faults',
+      'zone_id': '3432577',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.front_room_faults',
@@ -287,6 +303,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '2499896',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -304,6 +321,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Kids Room faults',
+      'zone_id': '3449703',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kids_room_faults',
@@ -321,6 +339,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Kitchen faults',
+      'zone_id': '3432578',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kitchen_faults',
@@ -338,6 +357,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Main Bedroom faults',
+      'zone_id': '3432580',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.main_bedroom_faults',
@@ -355,6 +375,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Main Room faults',
+      'zone_id': '3432576',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.main_room_faults',
@@ -372,6 +393,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Spare Room faults',
+      'zone_id': '3450733',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.spare_room_faults',
@@ -389,6 +411,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '416856',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -406,6 +429,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '222222',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -423,6 +447,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'THERMOSTAT faults',
+      'zone_id': '416856',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.thermostat_faults',
@@ -440,6 +465,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '8557535',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -457,6 +483,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '222222',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -474,6 +501,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'THERMOSTAT faults',
+      'zone_id': '8557539',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.thermostat_faults',
@@ -491,6 +519,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'THERMOSTAT faults',
+      'zone_id': '8557541',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.thermostat_faults_2',
@@ -508,6 +537,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '3454856',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -525,6 +555,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '2513794',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -542,6 +573,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Thermostat 2 faults',
+      'zone_id': '3454855',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.thermostat_2_faults',
@@ -563,6 +595,7 @@
         }),
       ),
       'friendly_name': 'Thermostat faults',
+      'zone_id': '3454854',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.thermostat_faults',
@@ -580,6 +613,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Ba****** faults',
+      'zone_id': '10090505',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ba_faults',
@@ -597,6 +631,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '10090510',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -614,6 +649,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '7539089',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -631,6 +667,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Ka********* faults',
+      'zone_id': '10090507',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ka_faults',
@@ -648,6 +685,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Ka***** faults',
+      'zone_id': '10090508',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ka_faults_2',
@@ -665,6 +703,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Sl******** faults',
+      'zone_id': '10090506',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.sl_faults',
@@ -682,6 +721,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Wo******* faults',
+      'zone_id': '10090509',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.wo_faults',
@@ -699,6 +739,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '3432522',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -716,6 +757,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '2499896',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -733,6 +775,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Main Room faults',
+      'zone_id': '3432576',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.main_room_faults',
@@ -750,6 +793,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Controller faults',
+      'system_id': '4187769',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.controller_faults',
@@ -771,6 +815,7 @@
         }),
       ),
       'friendly_name': 'Gateway faults',
+      'gateway_id': '2938388',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gateway_faults',
@@ -788,6 +833,7 @@
       'faults': tuple(
       ),
       'friendly_name': 'Thermostat faults',
+      'zone_id': '4187768',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.thermostat_faults',
