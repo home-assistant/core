@@ -17,12 +17,18 @@
         "data": {
           "2fa": "Two-factor code"
         },
+        "data_description": {
+          "2fa": "The authentication code sent to your registered mobile number."
+        },
         "description": "Enter your Hive authentication code.\n\nPlease enter code 0000 to request another code.",
         "title": "Hive two-factor authentication"
       },
       "configuration": {
         "data": {
           "device_name": "Device name"
+        },
+        "data_description": {
+          "device_name": "A name to identify this Home Assistant instance in your Hive account."
         },
         "description": "Enter your Hive configuration.",
         "title": "Hive configuration"
@@ -32,6 +38,10 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "The password for your Hive account.",
+          "username": "The email address associated with your Hive account."
+        },
         "description": "Re-enter your Hive login information.",
         "title": "[%key:component::hive::config::step::user::title%]"
       },
@@ -40,6 +50,11 @@
           "password": "[%key:common::config_flow::data::password%]",
           "scan_interval": "Scan interval (seconds)",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password for your Hive account.",
+          "scan_interval": "How often (in seconds) Home Assistant reads from the local Hive data cache. The Hive library refreshes cloud data at most every 2 minutes.",
+          "username": "The email address associated with your Hive account."
         },
         "description": "Enter your Hive login information.",
         "title": "Hive login"
@@ -69,6 +84,9 @@
       "user": {
         "data": {
           "scan_interval": "Scan interval (seconds)"
+        },
+        "data_description": {
+          "scan_interval": "How often (in seconds) Home Assistant reads from the local Hive data cache. The Hive library refreshes cloud data at most every 2 minutes."
         },
         "description": "Update the scan interval to poll for data more often.",
         "title": "Options for Hive"

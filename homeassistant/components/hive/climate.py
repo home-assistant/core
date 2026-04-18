@@ -48,7 +48,7 @@ TEMP_UNIT = {
 }
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
-_LOGGER = logging.getLogger()
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
