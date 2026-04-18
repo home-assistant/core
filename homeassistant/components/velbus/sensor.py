@@ -41,7 +41,7 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda channel: float(channel.get_counter_state()),
+        value_fn=lambda channel: float(channel.get_counter_state()) if isinstance(channel, ButtonCounter) else 0.0,
         unit_fn=lambda channel: channel.get_unit(),
     ),
     "temperature": VelbusSensorEntityDescription(

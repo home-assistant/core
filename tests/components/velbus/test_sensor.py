@@ -32,9 +32,8 @@ async def test_vmb8in_counter_energy_value(
     mock_buttoncounter: AsyncMock,
 ) -> None:
     """Test VMB8IN-20 counter sensor shows energy in kWh when energy is set."""
-    type(mock_buttoncounter).energy = PropertyMock(return_value=100.0)
-    with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]):
-        await init_integration(hass, config_entry)
+    mock_buttoncounter.energy = 100.0
+    await init_integration(hass, config_entry)
 
     state = hass.states.get("sensor.input_buttoncounter_counter")
     assert state is not None
@@ -47,9 +46,8 @@ async def test_vmb8in_counter_energy_unavailable_when_no_energy(
     mock_buttoncounter: AsyncMock,
 ) -> None:
     """Test VMB8IN-20 counter sensor is unknown when energy has not been received."""
-    type(mock_buttoncounter).energy = PropertyMock(return_value=None)
-    with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]):
-        await init_integration(hass, config_entry)
+    mock_buttoncounter.energy = None
+    await init_integration(hass, config_entry)
 
     state = hass.states.get("sensor.input_buttoncounter_counter")
     assert state is not None
