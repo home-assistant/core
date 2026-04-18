@@ -210,6 +210,50 @@ async def test_set_tilt_position_not_supported(
 
 @pytest.mark.parametrize(
     "mock_device_code",
+    ["cl_b9oa3zocv4qq47iy"],
+)
+@pytest.mark.parametrize(
+    ("raw_percent_control", "expected_state", "expected_position"),
+    [
+        # DPCodeInvertedPercentageWrapper maps raw -> 100 - raw
+        (0, STATE_OPEN, 100),
+        (25, STATE_OPEN, 75),
+        (50, STATE_OPEN, 50),
+        (75, STATE_OPEN, 25),
+        (100, STATE_CLOSED, 0),
+    ],
+)
+async def test_cl_b9oa3zocv4qq47iy_ignores_stale_percent_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    raw_percent_control: int,
+    expected_state: str,
+    expected_position: int,
+) -> None:
+    """Test AM45 Plus cover position is driven by percent_control.
+
+    See https://github.com/home-assistant/core/issues/168493.
+    This product advertises percent_state in status_range but never pushes
+    updates for it over MQTT, so HA must read position from percent_control
+    to track the blind as it moves.
+    """
+    entity_id = "cover.am45_plus_wi_fi_curtain"
+    mock_device.status["percent_control"] = raw_percent_control
+    # percent_state intentionally kept stale to confirm percent_control wins
+    mock_device.status["percent_state"] = 0
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected_position
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
     ["clkg_wltqkykhni0papzj"],
 )
 @pytest.mark.parametrize(

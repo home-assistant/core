@@ -154,6 +154,27 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
     ),
 }
 
+# Per-product_id overrides for devices whose published DP set is misleading.
+# When a product_id appears here, these descriptions take precedence over the
+# category-level defaults in COVERS.
+COVER_PRODUCT_OVERRIDES: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
+    # A-OK AM45 Plus Wi-Fi tubular motor advertises percent_state in
+    # status_range but never emits it over MQTT, so the default CL mapping
+    # (which prefers percent_state) leaves the entity stuck at its startup
+    # value. Bind position to percent_control, which this device does push.
+    # See https://github.com/home-assistant/core/issues/168493.
+    "b9oa3zocv4qq47iy": (
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL,
+            translation_key="curtain",
+            current_state=(DPCode.SITUATION_SET, DPCode.CONTROL),
+            current_position=DPCode.PERCENT_CONTROL,
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -169,7 +190,10 @@ async def async_setup_entry(
         entities: list[TuyaCoverEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := COVERS.get(device.category):
+            descriptions = COVER_PRODUCT_OVERRIDES.get(device.product_id) or COVERS.get(
+                device.category
+            )
+            if descriptions:
                 entities.extend(
                     TuyaCoverEntity(device, manager, description, definition)
                     for description in descriptions
