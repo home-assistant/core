@@ -87,7 +87,7 @@ async def test_repair_flow_iterates_subentries(
                 "unique_id": None,
             },
             {
-                "data": {CONF_CHAT_MODEL: "claude-3-5-sonnet-20241022"},
+                "data": {CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219"},
                 "subentry_type": "ai_task_data",
                 "title": "AI task One",
                 "unique_id": None,
