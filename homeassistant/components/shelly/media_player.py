@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import datetime
 from typing import Any, Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
@@ -20,6 +21,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
@@ -141,8 +143,42 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_album_name(self) -> str | None:
         """Return the album name of current playing media."""
+        if self.status["playback"]["media_type"] == "RADIO":
+            return None
+
         if album := self.status["playback"]["media_meta"].get("album"):
             return cast(str, album)
+
+        return None
+
+    @property
+    def media_duration(self) -> int | None:
+        """Return the duration of current playing media in seconds."""
+        if self.status["playback"]["media_type"] == "RADIO":
+            return None
+
+        if (
+            duration := self.status["playback"]["media_meta"].get("duration")
+        ) is not None:
+            return cast(int, duration) // 1000
+
+        return None
+
+    @property
+    def media_position(self) -> int | None:
+        """Return the current playback position in seconds."""
+        if (
+            position := self.status["playback"]["media_meta"].get("position")
+        ) is not None:
+            return cast(int, position) // 1000
+
+        return None
+
+    @property
+    def media_position_updated_at(self) -> datetime.datetime | None:
+        """Return when the position was last updated."""
+        if self.media_position is not None:
+            return dt_util.utcnow()
 
         return None
 
