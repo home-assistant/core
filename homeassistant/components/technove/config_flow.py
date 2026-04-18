@@ -31,8 +31,9 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
+            host = user_input[CONF_HOST]
             try:
-                station = await self._async_get_station(user_input[CONF_HOST])
+                station = await self._async_get_station(host)
             except TechnoVEConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -40,18 +41,25 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
                     station.info.mac_address, raise_on_progress=False
                 )
                 if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch()
+                    entry = self._get_reconfigure_entry()
+                    self._abort_if_unique_id_mismatch(
+                        reason="unique_id_mismatch",
+                        description_placeholders={
+                            "expected_mac": entry.unique_id.upper()
+                            if entry.unique_id
+                            else "",
+                            "actual_mac": station.info.mac_address.upper(),
+                        },
+                    )
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
-                        data_updates={CONF_HOST: user_input[CONF_HOST]},
+                        data_updates={CONF_HOST: host},
                     )
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=station.info.name,
                     data={
-                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_HOST: host,
                     },
                 )
 
@@ -122,4 +130,3 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get information from a TechnoVE station."""
         api = TechnoVE(host, session=async_get_clientsession(self.hass))
         return await api.update()
-
