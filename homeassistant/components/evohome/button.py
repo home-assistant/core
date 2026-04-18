@@ -53,6 +53,15 @@ class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEnti
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
 
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
+    ) -> None:
+        """Initialize an Evohome reset button entity."""
+        super().__init__(coordinator, context=evo_device.id)
+        self._evo_device = evo_device
+
     async def async_press(self) -> None:
         """Reset the Evohome entity to its base operating mode."""
         await self.coordinator.call_client_api(self._evo_device.reset())
