@@ -95,3 +95,20 @@ async def test_victron_device_tracker(
     assert state.attributes["altitude"] == 11.0
     assert state.attributes["course"] == 180.0
     assert state.attributes["speed"] == 3.5
+
+    # Send GPS fix lost to exercise the non-GpsLocation reset branch.
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/gps/0/Fix",
+        '{"value": 0}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert "latitude" not in state.attributes
+    assert "longitude" not in state.attributes
+    assert "altitude" not in state.attributes
+    assert "course" not in state.attributes
+    assert "speed" not in state.attributes

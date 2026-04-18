@@ -73,8 +73,16 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
         self._update_from_location(value)
         self.async_write_ha_state()
 
-    def _update_from_location(self, value: GpsLocation) -> None:
+    def _update_from_location(self, value: GpsLocation | None) -> None:
         """Update entity attributes from a GpsLocation value."""
+        if not isinstance(value, GpsLocation):
+            self._attr_latitude = None
+            self._attr_longitude = None
+            self._altitude = None
+            self._course = None
+            self._speed = None
+            return
+
         self._attr_latitude = value.latitude
         self._attr_longitude = value.longitude
         self._altitude = value.altitude
