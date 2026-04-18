@@ -89,13 +89,14 @@ ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
     }
 )
 
-ZONE_SCHEMA = vol.Schema(
+ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
     {
         vol.Optional(CONF_ENABLE_TEMPERATURE_SENSOR, default=False): (
             selector.BooleanSelector()
         ),
     }
-).extend(ZONE_AND_OUTPUT_SCHEMA.schema)
+)
+
 
 SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
