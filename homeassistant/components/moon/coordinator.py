@@ -69,7 +69,7 @@ class MoonUpdateCoordinator(DataUpdateCoordinator[MoonData]):
     async def _async_update_data(self) -> MoonData:
         """Fetch updated moon data."""
         now = dt_util.utcnow()
-        local_date = dt_util.now().date()
+        local_date = dt_util.as_local(now).date()
         location, elevation = get_astral_location(self.hass)
 
         return await self.hass.async_add_executor_job(
@@ -112,7 +112,7 @@ def _get_next_event(
     """Safely fetch the next moon event."""
     try:
         return ephem_date_to_datetime(event(ephem.Moon()))
-    except (ephem.AlwaysUpError, ephem.NeverUpError):
+    except ephem.AlwaysUpError, ephem.NeverUpError:
         return None
 
 
