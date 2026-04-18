@@ -51,7 +51,11 @@ async def async_setup_platform(
 
 
 def _normalize_fault(fault: dict[str, Any]) -> dict[str, Any]:
-    """Until library is updated to return snake_case, convert from PascalCase."""
+    """Until library is updated to return snake_case, convert from PascalCase.
+
+    Doing this conversion here allows adding this feature without needing to wait for
+    a new client library release, whilst avoiding a breaking change in the future.
+    """
 
     def _pascal_to_snake(val: str) -> str:
         s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", val)
