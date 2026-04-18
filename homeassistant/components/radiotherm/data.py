@@ -1,4 +1,4 @@
-"""The radiotherm component data."""
+"""The Radio Thermostat integration data."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from .const import TIMEOUT
 
 @dataclass
 class RadioThermUpdate:
-    """An update from a radiotherm device."""
+    """An update from a Radio Thermostat device."""
 
     tstat: dict[str, Any]
     humidity: int | None

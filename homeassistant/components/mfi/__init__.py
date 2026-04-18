@@ -1,1 +1,1 @@
-"""The mfi component."""
+"""The Ubiquiti mFI mPort integration."""

@@ -50,7 +50,7 @@
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "description": "The {name} integration needs to re-authenticate your account",
+        "description": "The {name} integration needs to re-authenticate your account. Reauthentication refreshes the Tesla API permissions granted to Home Assistant, including any newly enabled scopes.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "registration_complete": {
@@ -60,7 +60,7 @@
         "data_description": {
           "qr_code": "Scan this QR code with your phone to set up the virtual key."
         },
-        "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}",
+        "description": "To enable command signing, you must open the Tesla app, select your vehicle, and then visit the following URL to set up a virtual key. You must repeat this process for each vehicle.\n\n{virtual_key_url}\n\nIf you later enable additional Tesla API permissions, reauthenticate the integration to refresh the granted scopes.",
         "title": "Command signing"
       }
     }

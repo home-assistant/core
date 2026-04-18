@@ -4,8 +4,7 @@
       "description": "Tests if one or more dropdowns have a specific option selected.",
       "fields": {
         "behavior": {
-          "description": "Whether the condition should pass when any or all targeted entities match.",
-          "name": "Behavior"
+          "name": "Condition passes if"
         },
         "option": {
           "description": "The options to check for.",
