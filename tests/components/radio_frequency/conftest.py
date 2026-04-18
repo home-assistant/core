@@ -52,7 +52,11 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
     ) -> None:
         """Initialize mock entity."""
         self._attr_unique_id = unique_id
-        self._frequency_ranges = frequency_ranges or [(433_000_000, 434_000_000)]
+        self._frequency_ranges = (
+            [(433_000_000, 434_000_000)]
+            if frequency_ranges is None
+            else frequency_ranges
+        )
         self.send_command_calls: list[RadioFrequencyCommand] = []
 
     @property
