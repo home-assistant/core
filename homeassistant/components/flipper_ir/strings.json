@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Upload a Flipper Zero IR signals file (.ir). A button entity will be created for each command in the file.",
+        "data": {
+          "name": "Name",
+          "ir_file": "IR file"
+        },
+        "data_description": {
+          "name": "Name for this remote (used for the device).",
+          "ir_file": "A Flipper Zero IR signals file exported from the Flipper ecosystem."
+        }
+      }
+    },
+    "error": {
+      "invalid_ir_file": "The uploaded file is not a valid Flipper IR signals file. See the error log for additional details."
+    }
+  }
+}

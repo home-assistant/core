@@ -1,0 +1,10 @@
+{
+  "domain": "flipper_ir",
+  "name": "Flipper IR",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["file_upload"],
+  "documentation": "https://www.home-assistant.io/integrations/flipper_ir",
+  "integration_type": "device",
+  "iot_class": "local_push"
+}
