@@ -53,7 +53,7 @@
         },
         "data_description": {
           "password": "The password for your Hive account.",
-          "scan_interval": "How often (in seconds) Home Assistant reads from the local Hive data cache. The Hive library refreshes cloud data at most every 2 minutes.",
+          "scan_interval": "How often (in seconds) the Hive library refreshes data from the cloud. Home Assistant still polls entities every 15 seconds using the local Hive data cache.",
           "username": "The email address associated with your Hive account."
         },
         "description": "Enter your Hive login information.",
@@ -86,7 +86,7 @@
           "scan_interval": "Scan interval (seconds)"
         },
         "data_description": {
-          "scan_interval": "How often (in seconds) Home Assistant reads from the local Hive data cache. The Hive library refreshes cloud data at most every 2 minutes."
+          "scan_interval": "How often (in seconds) the Hive library refreshes data from the cloud. Home Assistant entities still poll on a fixed interval."
         },
         "description": "Update the scan interval to poll for data more often.",
         "title": "Options for Hive"
