@@ -29,7 +29,7 @@ from tests.common import MockConfigEntry
 
 TEST_FILENAME = "doorbell_snapshot.jpg"
 TEST_DESTINATION_PATH = "photos/snapshots/image.jpg"
-DESINATION_FOLDER = "TestFolder"
+DESTINATION_FOLDER = "TestFolder"
 
 
 @dataclass
@@ -87,7 +87,7 @@ async def test_upload_service(
         {
             CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             CONF_FILENAME: TEST_FILENAME,
-            CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+            CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
         },
         blocking=True,
         return_response=True,
@@ -113,7 +113,7 @@ async def test_upload_service_no_response(
         {
             CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             CONF_FILENAME: TEST_FILENAME,
-            CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+            CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
         },
         blocking=True,
     )
@@ -134,7 +134,7 @@ async def test_upload_service_config_entry_not_found(
             {
                 CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -160,7 +160,7 @@ async def test_config_entry_not_loaded(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -184,7 +184,7 @@ async def test_path_is_not_allowed(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -205,7 +205,7 @@ async def test_filename_does_not_exist(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -228,7 +228,7 @@ async def test_upload_service_fails_upload(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -252,7 +252,7 @@ async def test_upload_size_limit(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -277,7 +277,7 @@ async def test_create_album_failed(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
