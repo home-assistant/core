@@ -4,21 +4,8 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Several config flow test improvements needed:
-      - test_flow_works does not assert that the unique_id is set on the config entry.
-      - test_flow_fails_user_credentials_faulty (and test_flow_fails_hub_unavailable)
-        should also verify recovery by completing with CREATE_ENTRY; the two tests
-        can be parametrized together.
-      - aiounifi.Controller.login is patched at library level; it should be patched
-        where it is actually used (homeassistant.components.unifi…).
-  config-flow:
-    status: todo
-    comment: |
-      The user step is missing data_description for port, site, username, password
-      and verify_ssl fields, and the site step has no data_description at all.
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
