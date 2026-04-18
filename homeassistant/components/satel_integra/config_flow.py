@@ -109,7 +109,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         self.connection_data: dict[str, Any] = {}
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
