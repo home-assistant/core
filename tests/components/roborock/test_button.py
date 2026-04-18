@@ -4,14 +4,16 @@ from unittest.mock import Mock
 
 import pytest
 from roborock import RoborockException
+from roborock.data import RoborockDockTypeCode
 from roborock.exceptions import RoborockTimeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FakeDevice
 
@@ -39,6 +41,45 @@ async def test_buttons(
 ) -> None:
     """Test buttons and check test values are correctly set."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_entry.entry_id)
+
+
+@pytest.fixture
+def non_wash_n_fill_dock(fake_vacuum: FakeDevice) -> None:
+    """Override dock_type to a non-wash-n-fill value so dock buttons are gated out."""
+    status = fake_vacuum.v1_properties.status
+    original_refresh = status.refresh.side_effect
+
+    async def patched_refresh() -> None:
+        await original_refresh()
+        status.dock_type = RoborockDockTypeCode.auto_empty_dock
+
+    status.refresh.side_effect = patched_refresh
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "non_wash_n_fill_dock")
+async def test_dock_buttons_absent_for_non_wash_n_fill_dock(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Dock consumable buttons must not be created when dock type is not wash-n-fill."""
+    for entity_id in (
+        "button.roborock_s7_maxv_dock_reset_dock_strainer_consumable",
+        "button.roborock_s7_maxv_dock_reset_dock_cleaning_brush_consumable",
+    ):
+        assert hass.states.get(entity_id) is None
+    # Non-dock consumable buttons must still exist.
+    for entity_id in (
+        "button.roborock_s7_maxv_reset_sensor_consumable",
+        "button.roborock_s7_maxv_reset_air_filter_consumable",
+        "button.roborock_s7_maxv_reset_side_brush_consumable",
+        "button.roborock_s7_maxv_reset_main_brush_consumable",
+    ):
+        assert hass.states.get(entity_id) is not None
+    # No phantom dock device should be registered for the non-wash-n-fill vacuum.
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "abc123_dock")}) is None
+    )
 
 
 @pytest.fixture(name="consumeables_trait", autouse=True)

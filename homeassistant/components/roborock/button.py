@@ -8,6 +8,7 @@ import itertools
 import logging
 from typing import Any
 
+from roborock.device_features import is_wash_n_fill_dock
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
@@ -128,6 +129,11 @@ Q10_BUTTON_DESCRIPTIONS = [
 ]
 
 
+def _supports_dock_consumables(coordinator: RoborockDataUpdateCoordinator) -> bool:
+    dock_type = coordinator.properties_api.status.dock_type
+    return dock_type is not None and is_wash_n_fill_dock(dock_type)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -145,8 +151,10 @@ async def async_setup_entry(
                     description,
                 )
                 for coordinator in config_entry.runtime_data.v1
-                for description in CONSUMABLE_BUTTON_DESCRIPTIONS
                 if isinstance(coordinator, RoborockDataUpdateCoordinator)
+                for description in CONSUMABLE_BUTTON_DESCRIPTIONS
+                if not description.is_dock_entity
+                or _supports_dock_consumables(coordinator)
             ),
             (
                 RoborockRoutineButtonEntity(
