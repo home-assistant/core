@@ -59,7 +59,12 @@ def _scan_input_devices_sync() -> list[selector.SelectOptionDict]:
     if not os.path.isdir(DEVINPUT_BY_ID):
         return options
 
-    for entry in sorted(os.scandir(DEVINPUT_BY_ID), key=lambda e: e.name):
+    try:
+        entries = sorted(os.scandir(DEVINPUT_BY_ID), key=lambda e: e.name)
+    except OSError:
+        return options
+
+    for entry in entries:
         if not entry.is_symlink():
             continue
         real_path = os.path.realpath(entry.path)
