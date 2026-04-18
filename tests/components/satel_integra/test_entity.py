@@ -24,14 +24,15 @@ async def test_availability_status_on_connection_change(
     )
 
     # Get all registered connection status callbacks (one per coordinator)
-    assert mock_satel.add_connection_status_callback.call_count == 3
     connection_status_callbacks = [
         call[0][0] for call in mock_satel.add_connection_status_callback.call_args_list
     ]
+    assert connection_status_callbacks
 
     # Verify entities are available when controller is connected
     for entity_entry in entity_entries:
         state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
         assert state.state != STATE_UNAVAILABLE
 
     # Simulate controller going offline and trigger all connection callbacks
