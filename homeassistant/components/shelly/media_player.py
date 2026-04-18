@@ -193,11 +193,11 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.call_rpc("Media.MediaPlayer.Play", {})
+        await self.call_rpc("Media.MediaPlayer.PlayOrPause", {})
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self.call_rpc("Media.MediaPlayer.Pause", {})
+        await self.call_rpc("Media.MediaPlayer.PlayOrPause", {})
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
