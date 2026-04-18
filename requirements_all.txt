@@ -2838,7 +2838,7 @@ reolink-aio==0.19.1
 
 # homeassistant.components.honeywell_string_lights
 # homeassistant.components.radio_frequency
-rf-protocols==1.0.1
+rf-protocols==2.0.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

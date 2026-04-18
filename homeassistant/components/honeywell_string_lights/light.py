@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from rf_protocols import load_codes
+from rf_protocols import get_codes
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
@@ -18,7 +18,7 @@ from .entity import HoneywellStringLightsEntity
 
 PARALLEL_UPDATES = 1
 
-COMMANDS = load_codes("honeywell/string_lights")
+COMMANDS = get_codes("honeywell/string_lights")
 
 
 async def async_setup_entry(
