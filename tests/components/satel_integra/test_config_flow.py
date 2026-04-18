@@ -13,6 +13,7 @@ from satel_integra import (
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
@@ -39,6 +40,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    MOCK_ZONE_TEMPERATURE_SUBENTRY,
     setup_integration,
 )
 
@@ -194,6 +196,7 @@ async def test_options_flow(
     [
         (MOCK_PARTITION_SUBENTRY.data, MOCK_PARTITION_SUBENTRY),
         (MOCK_ZONE_SUBENTRY.data, MOCK_ZONE_SUBENTRY),
+        (MOCK_ZONE_TEMPERATURE_SUBENTRY.data, MOCK_ZONE_TEMPERATURE_SUBENTRY),
         (MOCK_OUTPUT_SUBENTRY.data, MOCK_OUTPUT_SUBENTRY),
         (MOCK_SWITCHABLE_OUTPUT_SUBENTRY.data, MOCK_SWITCHABLE_OUTPUT_SUBENTRY),
     ],
@@ -252,8 +255,21 @@ async def test_subentry_creation(
             CONF_PARTITION_NUMBER,
         ),
         (
-            {CONF_NAME: "Backdoor", CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR},
+            {
+                CONF_NAME: "Backdoor",
+                CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                CONF_ENABLE_TEMPERATURE_SENSOR: False,
+            },
             MOCK_ZONE_SUBENTRY,
+            CONF_ZONE_NUMBER,
+        ),
+        (
+            {
+                CONF_NAME: "Backdoor",
+                CONF_ZONE_TYPE: BinarySensorDeviceClass.DOOR,
+                CONF_ENABLE_TEMPERATURE_SENSOR: True,
+            },
+            MOCK_ZONE_TEMPERATURE_SUBENTRY,
             CONF_ZONE_NUMBER,
         ),
         (

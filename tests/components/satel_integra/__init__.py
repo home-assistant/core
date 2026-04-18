@@ -55,6 +55,7 @@ MOCK_ZONE_SUBENTRY = ConfigSubentry(
     unique_id="zone_1",
     title="Zone (1)",
     data={
+        CONF_ENABLE_TEMPERATURE_SENSOR: False,
         CONF_NAME: "Zone",
         CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
         CONF_ZONE_NUMBER: 1,

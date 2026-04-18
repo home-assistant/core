@@ -101,7 +101,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_config_entry_with_subentries(
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
-    """Mock satel configuration entry."""
+    """Mock satel configuration entry with the default subentries."""
     mock_config_entry.subentries = deepcopy(
         {
             MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
@@ -117,7 +117,7 @@ def mock_config_entry_with_subentries(
 def mock_config_entry_with_temperature_zone(
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
-    """Mock satel configuration entry with a temperature-enabled zone."""
+    """Mock satel configuration entry with only a temperature-enabled zone."""
     mock_config_entry.subentries = deepcopy(
         {
             MOCK_ZONE_TEMPERATURE_SUBENTRY.subentry_id: MOCK_ZONE_TEMPERATURE_SUBENTRY,
