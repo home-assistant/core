@@ -723,7 +723,6 @@ async def test_q7_send_command(
     assert q7_vacuum_api.send.call_args[0] == ("test_command", None)
 
 
-
 async def test_q7_get_maps_refresh_failure(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -904,7 +903,6 @@ async def test_q7_get_segments_returns_rooms_from_map_content(
     ]
 
 
-
 async def test_q7_get_segments_no_map_trait_returns_empty(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -991,7 +989,6 @@ async def test_q7_app_segment_clean_with_extra_payload_passthrough(
         "app_segment_clean",
         [{"segments": [10], "repeat": 2}],
     )
-
 
 
 async def test_q7_clean_segments_invalid_segment_id(
