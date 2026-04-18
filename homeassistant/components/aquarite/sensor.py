@@ -37,23 +37,23 @@ from .entity import AquariteEntity
 PARALLEL_UPDATES = 1
 
 
-def _convert_float(value: Any) -> float | None:
+def _convert_float(value: Any) -> float:
     return float(value)
 
 
-def _convert_hundredths(value: Any) -> float | None:
+def _convert_hundredths(value: Any) -> float:
     return float(value) / 100
 
 
-def _convert_tenths(value: Any) -> float | None:
+def _convert_tenths(value: Any) -> float:
     return float(value) / 10
 
 
-def _convert_minutes_to_hours(value: Any) -> float | None:
+def _convert_minutes_to_hours(value: Any) -> float:
     return float(value) / 60
 
 
-def _convert_int(value: Any) -> int | None:
+def _convert_int(value: Any) -> int:
     return int(value)
 
 
@@ -62,7 +62,7 @@ class AquariteSensorEntityDescription(SensorEntityDescription):
     """Describes an Aquarite sensor entity."""
 
     value_path: str
-    value_fn: Callable[[Any], Any] = _convert_float
+    value_fn: Callable[[Any], float | int] = _convert_float
     exists_path: str | None = None
 
 
