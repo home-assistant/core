@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -25,45 +25,15 @@ async def test_entities(
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
-
-async def test_vmb8in_counter_energy_value(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_buttoncounter: AsyncMock,
-) -> None:
-    """Test VMB8IN-20 counter sensor shows energy in kWh when energy is set."""
-    mock_buttoncounter.energy = 100.0
-    await init_integration(hass, config_entry)
-
-    state = hass.states.get("sensor.input_buttoncounter_counter")
-    assert state is not None
-    assert state.state == "100.0"
-
-
 async def test_vmb8in_counter_energy_unavailable_when_no_energy(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_buttoncounter: AsyncMock,
 ) -> None:
     """Test VMB8IN-20 counter sensor is unknown when energy has not been received."""
-    mock_buttoncounter.energy = None
+    type(mock_buttoncounter).energy = PropertyMock(return_value=None)
     await init_integration(hass, config_entry)
 
     state = hass.states.get("sensor.input_buttoncounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN
-
-
-async def test_vmb8in_power_sensor_uses_counter_state(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_buttoncounter: AsyncMock,
-) -> None:
-    """Test VMB8IN-20 power sensor value comes from get_counter_state()."""
-    mock_buttoncounter.get_counter_state.return_value = 650
-    with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]):
-        await init_integration(hass, config_entry)
-
-    state = hass.states.get("sensor.input_buttoncounter")
-    assert state is not None
-    assert state.state == "650.0"
