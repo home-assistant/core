@@ -1,6 +1,6 @@
 """Velbus sensor platform tests."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,8 +31,8 @@ async def test_vmb8in_counter_energy_value(
     config_entry: MockConfigEntry,
     mock_buttoncounter: AsyncMock,
 ) -> None:
-    """Test VMB8IN-20 counter sensor shows energy in kWh when _energy is set."""
-    mock_buttoncounter._energy = 100000  # 100000 Wh = 100.0 kWh
+    """Test VMB8IN-20 counter sensor shows energy in kWh when energy is set."""
+    type(mock_buttoncounter).energy = PropertyMock(return_value=100.0)
     with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, config_entry)
 
@@ -46,8 +46,8 @@ async def test_vmb8in_counter_energy_unavailable_when_no_energy(
     config_entry: MockConfigEntry,
     mock_buttoncounter: AsyncMock,
 ) -> None:
-    """Test VMB8IN-20 counter sensor is unknown when _energy has not been received."""
-    mock_buttoncounter._energy = None
+    """Test VMB8IN-20 counter sensor is unknown when energy has not been received."""
+    type(mock_buttoncounter).energy = PropertyMock(return_value=None)
     with patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, config_entry)
 

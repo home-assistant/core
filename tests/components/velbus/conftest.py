@@ -1,7 +1,7 @@
 """Fixtures for the Velbus tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 from velbusaio.channels import (
@@ -209,8 +209,8 @@ def mock_buttoncounter() -> AsyncMock:
     channel.get_state.return_value = 100
     channel.get_unit.return_value = "W"
     channel.get_counter_state.return_value = 100
+    type(channel).energy = PropertyMock(return_value=100.0)
     channel.get_counter_unit.return_value = "kWh"
-    channel._energy = 100000  # 100000 Wh = 100.0 kWh
     return channel
 
 
