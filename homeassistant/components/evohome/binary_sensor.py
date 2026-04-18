@@ -70,14 +70,13 @@ def _normalize_fault(fault: dict[str, Any]) -> dict[str, Any]:
 class EvoFaultSensorBase(
     CoordinatorEntity[EvoDataUpdateCoordinator], BinarySensorEntity
 ):
-    """Base class for evohome fault sensors."""
+    """Base for Evohome's BinarySensor entities."""
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone | evo.Gateway
     _evo_id_attr: str
-    _evo_state_attr_names = ()
 
     def __init__(
         self,
