@@ -170,17 +170,24 @@ class OTBRData:
 
         try:
             dataset = await self.api.get_active_dataset()
-            if dataset is None:
-                raise HomeAssistantError(
-                    "Failed to cancel pending dataset: no active dataset"
-                )
-            if (
-                dataset.active_timestamp
-                and dataset.active_timestamp.seconds is not None
-            ):
-                dataset.active_timestamp.seconds += 1
-            else:
-                dataset.active_timestamp = python_otbr_api.Timestamp(False, 1, 0)
+        except (
+            python_otbr_api.OTBRError,
+            aiohttp.ClientError,
+            TimeoutError,
+        ) as exc:
+            raise HomeAssistantError("Failed to call OTBR API") from exc
+
+        if dataset is None:
+            raise HomeAssistantError(
+                "Failed to cancel pending dataset: no active dataset"
+            )
+
+        if dataset.active_timestamp and dataset.active_timestamp.seconds is not None:
+            dataset.active_timestamp.seconds += 1
+        else:
+            dataset.active_timestamp = python_otbr_api.Timestamp(False, 1, 0)
+
+        try:
             await self.api.create_pending_dataset(
                 python_otbr_api.PendingDataSet(active_dataset=dataset, delay=0)
             )
@@ -188,8 +195,8 @@ class OTBRData:
             python_otbr_api.OTBRError,
             aiohttp.ClientError,
             TimeoutError,
-        ) as fallback_exc:
-            raise HomeAssistantError("Failed to call OTBR API") from fallback_exc
+        ) as exc:
+            raise HomeAssistantError("Failed to call OTBR API") from exc
 
     @_handle_otbr_error
     async def get_extended_address(self) -> bytes:
