@@ -13,10 +13,8 @@ from evohomeasync2.schemas.const import (
 from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +26,17 @@ def is_valid_zone(zone: evo.Zone) -> bool:
         zone.model == EvoZoneModelType.HEATING_ZONE
         or zone.type == EvoZoneType.THERMOSTAT
     )
+
+
+def unique_zone_id(evo_device: evo.Zone) -> str:
+    """Return a unique identifier for a zone-based entity.
+
+    Some systems assign the zone the same ID as its parent TCS; in that case
+    we append 'z' so the zone entity doesn't collide with the controller entity.
+    """
+    if evo_device.id == evo_device.tcs.id:
+        return f"{evo_device.id}z"
+    return evo_device.id
 
 
 class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
@@ -52,29 +61,10 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
         self._device_state_attrs: dict[str, Any] = {}
 
-    async def process_signal(self, payload: dict | None = None) -> None:
-        """Process any signals."""
-
-        if payload is None:
-            raise NotImplementedError
-        if payload["unique_id"] != self._attr_unique_id:
-            return
-        await self.async_tcs_svc_request(payload["service"], payload["data"])
-
-    async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (system mode) for a controller."""
-        raise NotImplementedError
-
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the evohome-specific state attributes."""
         return {"status": self._device_state_attrs}
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-
-        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -107,6 +97,7 @@ class EvoChild(EvoEntity):
         """Initialize an evohome-compatible child entity (DHW, zone)."""
         super().__init__(coordinator, evo_device)
 
+        self._evo_id = evo_device.id
         self._evo_tcs = evo_device.tcs
 
         self._schedule: list[DayOfWeekDhwT] | None = None

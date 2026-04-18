@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
+import dataclasses
 from datetime import datetime, timedelta
 import logging
 import os
@@ -167,6 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await usb_discovery.async_setup()
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
+    websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
 
     return True
 
@@ -481,3 +483,23 @@ async def websocket_usb_scan(
     """Scan for new usb devices."""
     await async_request_scan(hass)
     connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "usb/list_serial_ports"})
+@websocket_api.async_response
+async def websocket_usb_list_serial_ports(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List available serial ports."""
+    try:
+        ports = await async_scan_serial_ports(hass)
+    except OSError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+        return
+    connection.send_result(
+        msg["id"],
+        [dataclasses.asdict(port) for port in ports],
+    )

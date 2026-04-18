@@ -32,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Context,
+    EntityServiceResponse,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -78,7 +79,7 @@ SUPPORT_C = 4
 def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
-        "homeassistant.helpers.service._handle_entity_call",
+        "homeassistant.helpers.service._handle_single_entity_call",
         new_callable=AsyncMock,
         return_value=None,
     ) as mock_call:
@@ -3104,10 +3105,114 @@ async def test_register_platform_entity_service_limited_to_matching_platforms(
     }
 
 
+async def test_register_batched_platform_entity_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering a batched platform entity service."""
+    calls: list[tuple[list[MockEntity], ServiceCall]] = []
+
+    async def handle_service(
+        batch_entities: list[MockEntity], call: ServiceCall
+    ) -> None:
+        calls.append((batch_entities, call))
+
+    service.async_register_batched_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={},
+        func=handle_service,
+        description_placeholders={"test_placeholder": "beer"},
+    )
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions["mock_platform"]["hello"]["description_placeholders"] == {
+        "test_placeholder": "beer"
+    }
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+    assert calls == []
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": entity1.entity_id}, blocking=True
+    )
+    assert len(calls) == 1
+    assert calls[0][0] == [entity1]
+    # Verify entity service fields are stripped from the ServiceCall
+    assert calls[0][1].data == {}
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+    assert len(calls) == 2
+    assert calls[1][0] == unordered([entity1, entity2])
+
+
+async def test_register_batched_platform_entity_service_response_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test a batched platform entity service that supports response data."""
+
+    async def handle_service(
+        entities: list[MockEntity], call: ServiceCall
+    ) -> EntityServiceResponse:
+        assert call.return_response
+        return {
+            e.entity_id: {"response-key": f"response-value-{e.entity_id}"}
+            for e in entities
+        }
+
+    service.async_register_batched_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello",
+        entity_domain="mock_integration",
+        schema={"some": str},
+        func=handle_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity1")
+    entity2 = MockEntity(entity_id="mock_integration.entity2")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"entity_id": [entity1.entity_id, entity2.entity_id]},
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {
+        "mock_integration.entity1": {
+            "response-key": "response-value-mock_integration.entity1"
+        },
+        "mock_integration.entity2": {
+            "response-key": "response-value-mock_integration.entity2"
+        },
+    }
+
+
 async def test_register_platform_entity_service_none_schema(
     hass: HomeAssistant,
 ) -> None:
-    """Test registering a service with schema set to None."""
+    """Test registering a service with schema set to None.
+
+    Also tests the batched variant.
+    """
     entities = []
 
     @callback
@@ -3121,6 +3226,22 @@ async def test_register_platform_entity_service_none_schema(
         entity_domain="mock_integration",
         schema=None,
         func=handle_service,
+    )
+
+    batched_entities: list[list[MockEntity]] = []
+
+    async def handle_batched_service(
+        batch: list[MockEntity], call: ServiceCall
+    ) -> None:
+        batched_entities.append(batch)
+
+    service.async_register_batched_platform_entity_service(
+        hass,
+        "mock_platform",
+        "hello_batched",
+        entity_domain="mock_integration",
+        schema=None,
+        func=handle_batched_service,
     )
 
     entity_platform = MockEntityPlatform(
@@ -3138,11 +3259,21 @@ async def test_register_platform_entity_service_none_schema(
     assert entity1 in entities
     assert entity2 in entities
 
+    await hass.services.async_call(
+        "mock_platform", "hello_batched", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(batched_entities) == 1
+    assert len(batched_entities[0]) == 2
+
 
 async def test_register_platform_entity_service_non_entity_service_schema(
     hass: HomeAssistant,
 ) -> None:
-    """Test attempting to register a service with a non entity service schema."""
+    """Test attempting to register a service with a non entity service schema.
+
+    Also tests the batched variant.
+    """
     expected_message = "registers an entity service with a non entity service schema"
 
     for idx, schema in enumerate(
@@ -3161,6 +3292,15 @@ async def test_register_platform_entity_service_non_entity_service_schema(
                 schema=schema,
                 func=Mock(),
             )
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            service.async_register_batched_platform_entity_service(
+                hass,
+                "mock_platform",
+                f"hello_batched_{idx}",
+                entity_domain="mock_integration",
+                schema=schema,
+                func=AsyncMock(),
+            )
 
     for idx, schema in enumerate(
         (
@@ -3177,6 +3317,49 @@ async def test_register_platform_entity_service_non_entity_service_schema(
             schema=schema,
             func=Mock(),
         )
+        service.async_register_batched_platform_entity_service(
+            hass,
+            "mock_platform",
+            f"test_service_batched_{idx}",
+            entity_domain="mock_integration",
+            schema=schema,
+            func=AsyncMock(),
+        )
+
+
+async def test_async_handle_entity_calls(hass: HomeAssistant) -> None:
+    """Test async_handle_entity_calls dispatches calls to individual entities."""
+    entity1 = MockEntity(entity_id="light.entity1", available=True, should_poll=False)
+    entity2 = MockEntity(entity_id="light.entity2", available=True, should_poll=False)
+    entity1.hass = hass
+    entity2.hass = hass
+
+    calls: list[tuple[str, dict[str, Any]]] = []
+
+    async def mock_method1(**kwargs: Any) -> None:
+        calls.append(("light.entity1", kwargs))
+
+    async def mock_method2(**kwargs: Any) -> None:
+        calls.append(("light.entity2", kwargs))
+
+    entity1.async_test_method = mock_method1
+    entity2.async_test_method = mock_method2
+
+    context = Context()
+    result = await service.async_handle_entity_calls(
+        "async_test_method",
+        [
+            (entity1, {"brightness": 100}),
+            (entity2, {"brightness": 200}),
+        ],
+        context=context,
+    )
+
+    assert len(calls) == 2
+    assert calls[0] == ("light.entity1", {"brightness": 100})
+    assert calls[1] == ("light.entity2", {"brightness": 200})
+    assert "light.entity1" in result
+    assert "light.entity2" in result
 
 
 async def test_get_service_config_entry(hass: HomeAssistant) -> None:
