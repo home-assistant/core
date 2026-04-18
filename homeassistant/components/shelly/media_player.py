@@ -107,6 +107,11 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         super().__init__(coordinator, key, attribute, description)
 
     @property
+    def _media_meta(self) -> dict[str, Any]:
+        """Return the media metadata."""
+        return cast(dict[str, Any], self.status["playback"]["media_meta"])
+
+    @property
     def state(self) -> MediaPlayerState:
         """Return the state of the media player."""
         if self.status["playback"]["buffering"]:
@@ -127,7 +132,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Return the title of current playing media."""
-        if title := self.status["playback"]["media_meta"].get("title"):
+        if title := self._media_meta.get("title"):
             return cast(str, title)
 
         return None
@@ -135,7 +140,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Return the artist of current playing media."""
-        if artist := self.status["playback"]["media_meta"].get("artist"):
+        if artist := self._media_meta.get("artist"):
             return cast(str, artist)
 
         return None
@@ -146,7 +151,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         if self.status["playback"]["media_type"] == "RADIO":
             return None
 
-        if album := self.status["playback"]["media_meta"].get("album"):
+        if album := self._media_meta.get("album"):
             return cast(str, album)
 
         return None
@@ -157,9 +162,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         if self.status["playback"]["media_type"] == "RADIO":
             return None
 
-        if (
-            duration := self.status["playback"]["media_meta"].get("duration")
-        ) is not None:
+        if (duration := self._media_meta.get("duration")) is not None:
             return cast(int, duration) // 1000
 
         return None
@@ -167,9 +170,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Return the current playback position in seconds."""
-        if (
-            position := self.status["playback"]["media_meta"].get("position")
-        ) is not None:
+        if (position := self._media_meta.get("position")) is not None:
             return cast(int, position) // 1000
 
         return None
@@ -185,9 +186,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
-        if (
-            thumb := self.status["playback"]["media_meta"].get("thumb")
-        ) and thumb.startswith("http"):
+        if (thumb := self._media_meta.get("thumb")) and thumb.startswith("http"):
             return cast(str, thumb)
 
         return None
