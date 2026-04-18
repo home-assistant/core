@@ -10,7 +10,7 @@ from onedrive_personal_sdk.exceptions import OneDriveException
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.onedrive.const import DOMAIN
+from homeassistant.components.onedrive.const import CONF_DELETE_PERMANENTLY, DOMAIN
 from homeassistant.components.onedrive.services import (
     CONF_CONFIG_ENTRY_ID,
     CONF_DESTINATION_FOLDER,
@@ -361,7 +361,7 @@ async def test_delete_service_delete_permanently(
     """Test delete service passes delete_permanently=True when option is set."""
     await setup_integration(hass, mock_config_entry)
     hass.config_entries.async_update_entry(
-        mock_config_entry, options={"delete_permanently": True}
+        mock_config_entry, options={CONF_DELETE_PERMANENTLY: True}
     )
 
     await hass.services.async_call(
