@@ -14,7 +14,7 @@ AUTOMOWER_SERVICE_INFO_SERIAL = BluetoothServiceInfo(
     address="00000000-0000-0000-0000-000000000003",
     rssi=-63,
     service_data={},
-    manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
+    manufacturer_data={1062: bytes.fromhex("02050104060a23010504bfcfbb0d")},
     service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )
@@ -29,12 +29,22 @@ AUTOMOWER_SERVICE_INFO_MOWER = BluetoothServiceInfo(
     source="local",
 )
 
+AUTOMOWER_NOT_PAIRABLE_SERVICE_INFO = BluetoothServiceInfo(
+    name="305",
+    address="00000000-0000-0000-0000-000000000005",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={1062: bytes.fromhex("02050004060a2301")},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
 AUTOMOWER_UNNAMED_SERVICE_INFO = BluetoothServiceInfo(
     name=None,
     address="00000000-0000-0000-0000-000000000004",
     rssi=-63,
     service_data={},
-    manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
+    manufacturer_data={1062: bytes.fromhex("02050104060a23010504bfcfbb0d")},
     service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )
