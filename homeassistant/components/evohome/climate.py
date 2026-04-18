@@ -16,8 +16,6 @@ from evohomeasync2.const import (
 from evohomeasync2.schemas.const import (
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
-    ZoneModelType as EvoZoneModelType,
-    ZoneType as EvoZoneType,
 )
 
 from homeassistant.components.climate import (
@@ -37,13 +35,22 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DURATION, ATTR_PERIOD, DOMAIN, EVOHOME_DATA, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    DOMAIN,
+    EVOHOME_DATA,
+    RESET_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoChild, EvoEntity
+from .entity import EvoChild, EvoEntity, is_valid_zone
+from .helpers import async_create_deprecation_issue_once
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,16 +77,16 @@ HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create the evohome Controller, and its Zones, if any."""
+    """Set up the climate platform for Evohome."""
+
     if discovery_info is None:
         return
 
     coordinator = hass.data[EVOHOME_DATA].coordinator
-    loc_idx = hass.data[EVOHOME_DATA].loc_idx
     tcs = hass.data[EVOHOME_DATA].tcs
 
     _LOGGER.debug(
@@ -87,16 +94,13 @@ async def async_setup_platform(
         tcs.model,
         tcs.id,
         tcs.location.name,
-        loc_idx,
+        coordinator.loc_idx,
     )
 
     entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]
 
     for zone in tcs.zones:
-        if (
-            zone.model == EvoZoneModelType.HEATING_ZONE
-            or zone.type == EvoZoneType.THERMOSTAT
-        ):
+        if is_valid_zone(zone):
             _LOGGER.debug(
                 "Adding: %s (%s), id=%s, name=%s",
                 zone.type,
@@ -189,33 +193,38 @@ class EvoZone(EvoChild, EvoClimateEntity):
         )
 
     async def async_clear_zone_override(self) -> None:
-        """Clear the zone's override, if any."""
+        """Clear the zone override (if any) and return to following its schedule."""
+        async_create_deprecation_issue_once(
+            self.hass,
+            "deprecated_clear_zone_override_service",
+            RESET_BREAKS_IN_HA_VERSION,
+        )
         await self.coordinator.call_client_api(self._evo_device.reset())
 
     async def async_set_zone_override(
         self, setpoint: float, duration: timedelta | None = None
     ) -> None:
-        """Set the zone's override (mode/setpoint)."""
+        """Override the zone's setpoint, either permanently or for a duration."""
         temperature = max(min(setpoint, self.max_temp), self.min_temp)
 
-        if duration is not None:
-            if duration.total_seconds() == 0:
-                await self._update_schedule()
-                until = self.setpoints.get("next_sp_from")
-            else:
-                until = dt_util.now() + duration
-        else:
+        if duration is None:
             until = None  # indefinitely
+        elif duration.total_seconds() == 0:
+            await self._update_schedule()
+            until = self.setpoints.get("next_sp_from")
+        else:
+            until = dt_util.now() + duration
 
         until = dt_util.as_utc(until) if until else None
+
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the evohome entity."""
-        return self._evo_device.name  # zones can be easily renamed
+        return self._evo_device.name  # zones can be renamed
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -330,7 +339,7 @@ class EvoController(EvoClimateEntity):
     It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
-    _attr_icon = "mdi:thermostat"
+    _attr_icon = "mdi:thermostat-box"
     _attr_precision = PRECISION_TENTHS
 
     _evo_device: evo.ControlSystem
@@ -358,11 +367,26 @@ class EvoController(EvoClimateEntity):
             ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
+
+    async def process_signal(self, payload: dict | None = None) -> None:
+        """Process any signals."""
+
+        if payload is None:
+            raise NotImplementedError
+        if payload["unique_id"] != self._attr_unique_id:
+            return
+        await self.async_tcs_svc_request(payload["service"], payload["data"])
+
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.
 
-        Data validation is not required here; it is performed upstream by the service
-        handler (service schema plus runtime checks).
+        Data validation must be performed upstream in the service handler, before the
+        dispatcher call, so a ServiceValidationError can be seen, if raised.
         """
 
         if service == EvoService.RESET_SYSTEM:
@@ -452,6 +476,13 @@ class EvoController(EvoClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
+        if preset_mode == PRESET_RESET:
+            async_create_deprecation_issue_once(
+                self.hass,
+                "deprecated_preset_reset",
+                RESET_BREAKS_IN_HA_VERSION,
+            )
+
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO))
 
     @callback

@@ -32,7 +32,6 @@ from homeassistant.helpers import (
 from homeassistant.util.dt import now
 
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_ADDON,
     ATTR_ADDONS,
     ATTR_APP,
@@ -46,9 +45,10 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_SLUG,
     DOMAIN,
+    MAIN_COORDINATOR,
     SupervisorEntityModel,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_addons_info
+from .coordinator import HassioMainDataUpdateCoordinator, get_addons_info
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
@@ -406,7 +406,7 @@ def async_register_network_storage_services(
 
     async def async_mount_reload(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        coordinator: HassioDataUpdateCoordinator | None = None
+        coordinator: HassioMainDataUpdateCoordinator | None = None
 
         if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
             raise ServiceValidationError(
@@ -417,7 +417,7 @@ def async_register_network_storage_services(
         if (
             device.name is None
             or device.model != SupervisorEntityModel.MOUNT
-            or (coordinator := hass.data.get(ADDONS_COORDINATOR)) is None
+            or (coordinator := hass.data.get(MAIN_COORDINATOR)) is None
             or coordinator.entry_id not in device.config_entries
         ):
             raise ServiceValidationError(

@@ -88,15 +88,6 @@ class RenaultSensor[T: KamereonVehicleDataAttributes](
         return self.entity_description.value_lambda(self)
 
 
-def _get_charging_power(
-    entity: RenaultSensor[KamereonVehicleBatteryStatusData],
-) -> StateType:
-    """Return the charging_power of this entity."""
-    if (data := entity.coordinator.data.chargingInstantaneousPower) is None:
-        return None
-    return data / 1000
-
-
 def _get_charge_state_formatted(
     entity: RenaultSensor[KamereonVehicleBatteryStatusData],
 ) -> str | None:
@@ -190,9 +181,10 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         condition_lambda=lambda a: a.details.reports_charging_power_in_watts(),
         coordinator="battery",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_lambda=_get_charging_power,
+        value_lambda=lambda e: e.coordinator.data.chargingInstantaneousPower,
         translation_key="charging_power",
     ),
     RenaultSensorEntityDescription[KamereonVehicleBatteryStatusData](

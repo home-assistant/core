@@ -9,7 +9,6 @@ from typing import Any
 from roombapy import Roomba, RoombaConnectionError, RoombaFactory
 
 from homeassistant import exceptions
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DELAY,
     CONF_HOST,
@@ -19,13 +18,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_BLID, CONF_CONTINUOUS, DOMAIN, PLATFORMS, ROOMBA_SESSION
-from .models import RoombaData
+from .const import CONF_BLID, CONF_CONTINUOUS, PLATFORMS, ROOMBA_SESSION
+from .models import RoombaConfigEntry, RoombaData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: RoombaConfigEntry
+) -> bool:
     """Set the config entry up."""
     # Set up roomba platforms with config entry
 
@@ -62,8 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_roomba)
     )
 
-    domain_data = RoombaData(roomba, config_entry.data[CONF_BLID])
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = domain_data
+    config_entry.runtime_data = RoombaData(roomba, config_entry.data[CONF_BLID])
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -108,20 +108,22 @@ async def async_disconnect_or_timeout(hass: HomeAssistant, roomba: Roomba) -> No
             await hass.async_add_executor_job(roomba.disconnect)
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_update_options(
+    hass: HomeAssistant, config_entry: RoombaConfigEntry
+) -> None:
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: RoombaConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
     if unload_ok:
-        domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
-        await async_disconnect_or_timeout(hass, roomba=domain_data.roomba)
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        await async_disconnect_or_timeout(hass, roomba=config_entry.runtime_data.roomba)
 
     return unload_ok
 

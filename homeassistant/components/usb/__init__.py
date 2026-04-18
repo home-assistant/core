@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
+import dataclasses
 from datetime import datetime, timedelta
 import logging
 import os
@@ -26,23 +27,20 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service_info.usb import UsbServiceInfo as _UsbServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .models import (
-    SerialDevice,  # noqa: F401
-    USBDevice,
-)
+from .models import SerialDevice, USBDevice
 from .utils import (
+    async_scan_serial_ports,
     scan_serial_ports,
-    usb_device_from_path,  # noqa: F401
-    usb_device_from_port,  # noqa: F401
+    usb_device_from_path,
     usb_device_matches_matcher,
     usb_service_info_from_device,
-    usb_unique_id_from_service_info,  # noqa: F401
+    usb_unique_id_from_service_info,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,9 +53,17 @@ REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to register
 
 __all__ = [
+    "SerialDevice",
     "USBCallbackMatcher",
+    "USBDevice",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
+    "async_scan_serial_ports",
+    "scan_serial_ports",
+    "usb_device_from_path",
+    "usb_device_matches_matcher",
+    "usb_service_info_from_device",
+    "usb_unique_id_from_service_info",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -162,6 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await usb_discovery.async_setup()
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
+    websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
 
     return True
 
@@ -357,7 +364,7 @@ class USBDiscovery:
 
         for matcher in matched:
             for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
-                _UsbServiceInfo,
+                UsbServiceInfo,
                 lambda flow_service_info: flow_service_info == service_info,
             ):
                 if matcher["domain"] != flow["handler"]:
@@ -433,7 +440,7 @@ class USBDiscovery:
             # Only consider USB-serial ports for discovery
             usb_ports = [
                 p
-                for p in await self.hass.async_add_executor_job(scan_serial_ports)
+                for p in await async_scan_serial_ports(self.hass)
                 if isinstance(p, USBDevice)
             ]
 
@@ -476,3 +483,23 @@ async def websocket_usb_scan(
     """Scan for new usb devices."""
     await async_request_scan(hass)
     connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "usb/list_serial_ports"})
+@websocket_api.async_response
+async def websocket_usb_list_serial_ports(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List available serial ports."""
+    try:
+        ports = await async_scan_serial_ports(hass)
+    except OSError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+        return
+    connection.send_result(
+        msg["id"],
+        [dataclasses.asdict(port) for port in ports],
+    )
