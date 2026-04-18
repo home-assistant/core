@@ -19,9 +19,6 @@
       "ph": {
         "default": "mdi:ph"
       },
-      "pool_name": {
-        "default": "mdi:pool"
-      },
       "rssi": {
         "default": "mdi:wifi"
       },

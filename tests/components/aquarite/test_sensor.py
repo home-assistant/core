@@ -209,15 +209,6 @@ def test_rssi_native_value_non_numeric() -> None:
     assert entity.native_value is None
 
 
-# ── Pool name sensor ────────────────────────────────────────────
-
-
-def test_pool_name_native_value(mock_coordinator: MagicMock) -> None:
-    """Test pool name sensor returns the pool name."""
-    entity = _make_entity(mock_coordinator, "pool_name")
-    assert entity.native_value == MOCK_POOL_NAME
-
-
 # ── Platform setup ──────────────────────────────────────────────
 
 
@@ -251,7 +242,6 @@ async def test_async_setup_entry_full_modules(
     assert "temperature" in keys
     assert "rssi" in keys
     assert "filtration_intel_time" in keys
-    assert "pool_name" in keys
     # Module-gated (fixture has hasPH=1, hasRX=1, hasHidro=1+is_electrolysis=True)
     assert "ph" in keys
     assert "rx" in keys

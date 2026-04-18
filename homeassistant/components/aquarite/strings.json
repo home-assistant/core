@@ -42,9 +42,6 @@
       "ph": {
         "name": "pH"
       },
-      "pool_name": {
-        "name": "Pool name"
-      },
       "rssi": {
         "name": "Wi-Fi signal strength"
       },

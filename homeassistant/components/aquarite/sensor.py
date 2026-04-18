@@ -137,12 +137,6 @@ SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
         value_path="main.RSSI",
         value_fn=_convert_int,
     ),
-    AquariteSensorEntityDescription(
-        key="pool_name",
-        translation_key="pool_name",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_path="",
-    ),
 )
 
 
@@ -200,12 +194,8 @@ class AquariteSensorEntity(AquariteEntity, SensorEntity):
         self._attr_unique_id = self.build_unique_id(description.key)
 
     @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> float | int | None:
         """Return the sensor value, transformed by the description's value_fn."""
-        # Pool name is a special case (not from coordinator data)
-        if not self.entity_description.value_path:
-            return self.coordinator.pool_name
-
         value = self.coordinator.get_value(self.entity_description.value_path)
         if value is None:
             return None
