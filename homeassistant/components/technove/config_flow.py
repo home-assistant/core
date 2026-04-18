@@ -6,7 +6,11 @@ from technove import Station as TechnoVEStation, TechnoVE, TechnoVEConnectionErr
 import voluptuous as vol
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -32,7 +36,15 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
             except TechnoVEConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(station.info.mac_address)
+                await self.async_set_unique_id(
+                    station.info.mac_address, raise_on_progress=False
+                )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates={CONF_HOST: user_input[CONF_HOST]},
+                    )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
@@ -43,11 +55,24 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+        if self.source == SOURCE_RECONFIGURE:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema,
+                self._get_reconfigure_entry().data,
+            )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the TechnoVE station."""
+        return await self.async_step_user(user_input)
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -97,3 +122,4 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get information from a TechnoVE station."""
         api = TechnoVE(host, session=async_get_clientsession(self.hass))
         return await api.update()
+
