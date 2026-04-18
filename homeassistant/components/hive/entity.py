@@ -37,9 +37,7 @@ class HiveEntity(Entity):
         self.attributes: dict[str, Any] = {}
 
     @staticmethod
-    def _derive_entity_name(
-        ha_name: str | None, device_name: str | None
-    ) -> str | None:
+    def _derive_entity_name(ha_name: str | None, device_name: str | None) -> str | None:
         """Derive the entity name from the Hive device data.
 
         Because ``_attr_has_entity_name`` is True, Home Assistant prefixes the
