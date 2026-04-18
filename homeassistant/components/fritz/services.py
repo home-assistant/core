@@ -76,11 +76,13 @@ async def _async_set_guest_wifi_password(service_call: ServiceCall) -> None:
 
 async def _async_dial(service_call: ServiceCall) -> None:
     """Call Fritz dial service."""
-
-        entry
-        for entry_id in await async_extract_config_entry_ids(call)
-        if (entry := call.hass.config_entries.async_get_entry(entry_id))
-        and entry.domain == DOMAIN
+    target_entry_ids = await async_extract_config_entry_ids(service_call)
+    target_entries: list[FritzConfigEntry] = [
+        loaded_entry
+        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
+        if loaded_entry.entry_id in target_entry_ids
     ]
 
     if not target_entries:
