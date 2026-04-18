@@ -1329,6 +1329,12 @@
           "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
         },
+        "denon_rs232": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Denon RS232"
+        },
         "heos": {
           "integration_type": "hub",
           "config_flow": true,
@@ -1562,6 +1568,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "earn_e_p1": {
+      "name": "EARN-E P1 Meter",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "eastron": {
       "name": "Eastron",
@@ -1930,6 +1942,12 @@
           "name": "EufyLife"
         }
       }
+    },
+    "eurotronic_cometblue": {
+      "name": "Eurotronic Comet Blue",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "eve": {
       "name": "Eve",
@@ -3466,6 +3484,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "assumed_state"
+    },
+    "kiosker": {
+      "name": "Kiosker",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "kira": {
       "name": "Kira",
@@ -6948,6 +6972,12 @@
           "name": "Telegram bot"
         }
       }
+    },
+    "teleinfo": {
+      "name": "Teleinfo",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "telldus": {
       "name": "Telldus",

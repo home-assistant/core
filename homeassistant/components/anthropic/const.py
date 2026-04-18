@@ -52,31 +52,6 @@ DEFAULT = {
     CONF_WEB_SEARCH_MAX_USES: 5,
 }
 
-NON_THINKING_MODELS = [
-    "claude-3-haiku",
-]
-
-NON_ADAPTIVE_THINKING_MODELS = [
-    "claude-opus-4-5",
-    "claude-sonnet-4-5",
-    "claude-haiku-4-5",
-    "claude-opus-4-1",
-    "claude-opus-4-0",
-    "claude-opus-4-20250514",
-    "claude-sonnet-4-0",
-    "claude-sonnet-4-20250514",
-    "claude-3-haiku",
-]
-
-UNSUPPORTED_STRUCTURED_OUTPUT_MODELS = [
-    "claude-opus-4-1",
-    "claude-opus-4-0",
-    "claude-opus-4-20250514",
-    "claude-sonnet-4-0",
-    "claude-sonnet-4-20250514",
-    "claude-3-haiku",
-]
-
 WEB_SEARCH_UNSUPPORTED_MODELS = [
     "claude-3-haiku",
 ]
@@ -85,21 +60,7 @@ CODE_EXECUTION_UNSUPPORTED_MODELS = [
     "claude-3-haiku",
 ]
 
-PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS = [
-    "claude-haiku-4-5",
-    "claude-opus-4-1",
-    "claude-opus-4-0",
-    "claude-opus-4-20250514",
-    "claude-sonnet-4-0",
-    "claude-sonnet-4-20250514",
-    "claude-3-haiku",
-]
-
 TOOL_SEARCH_UNSUPPORTED_MODELS = [
     "claude-3",
     "claude-haiku",
-]
-
-DEPRECATED_MODELS = [
-    "claude-3",
 ]

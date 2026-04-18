@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+import math
+import random
 from typing import TYPE_CHECKING
 
 from waterfurnace.waterfurnace import (
@@ -38,6 +41,13 @@ if TYPE_CHECKING:
     from . import WaterFurnaceConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+BACKFILL_BATCH_DAYS = 5
+BACKFILL_LOOKBACK_DAYS = 395  # 13 Months
+BACKFILL_GAP_THRESHOLD = timedelta(days=BACKFILL_BATCH_DAYS)
+BACKFILL_DELAY_MIN_SECONDS = 5
+BACKFILL_DELAY_MAX_SECONDS = 30
+BACKFILL_MAX_EMPTY_DAYS = 15
 
 
 @dataclass
@@ -115,6 +125,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
         self.client = client
         self.gwid = gwid
         self.statistic_id = f"{DOMAIN}:{gwid.lower()}_energy"
+        self._backfill_task: asyncio.Task | None = None
         self._statistic_metadata = StatisticMetaData(
             has_sum=True,
             mean_type=StatisticMeanType.NONE,
@@ -144,28 +155,43 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
         if not last_stat:
             return None
         entry = last_stat[self.statistic_id][0]
-        if entry["sum"] is None:
+        if "sum" not in entry or "start" not in entry or entry["sum"] is None:
             return None
+
         return (entry["start"], entry["sum"])
 
     def _fetch_energy_data(
         self, start_date: str, end_date: str
     ) -> list[tuple[datetime, float]]:
-        """Fetch energy data and return list of (timestamp, kWh) tuples."""
-        # Re-login to refresh the HTTP session token, which expires between
-        # the 2-hour polling intervals.
+        """Fetch energy data and return list of (timestamp, kWh) tuples.
+
+        On auth failure, re-login once and retry the request.
+        """
         try:
-            self.client.login()
-        except WFCredentialError as err:
-            raise UpdateFailed(
-                "Authentication failed during energy data fetch"
-            ) from err
-        data = self.client.get_energy_data(
-            start_date,
-            end_date,
-            frequency="1H",
-            timezone_str=self.hass.config.time_zone,
-        )
+            data = self.client.get_energy_data(
+                start_date,
+                end_date,
+                frequency="1H",
+                timezone_str=self.hass.config.time_zone,
+            )
+        except WFCredentialError:
+            try:
+                self.client.login()
+            except WFCredentialError as err:
+                raise UpdateFailed(
+                    "Authentication failed during energy data fetch"
+                ) from err
+            try:
+                data = self.client.get_energy_data(
+                    start_date,
+                    end_date,
+                    frequency="1H",
+                    timezone_str=self.hass.config.time_zone,
+                )
+            except WFCredentialError as err:
+                raise UpdateFailed(
+                    "Authentication failed during energy data fetch"
+                ) from err
         return [
             (reading.timestamp, reading.total_power)
             for reading in data
@@ -177,10 +203,14 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
         readings: list[tuple[datetime, float]],
         last_ts: float,
         last_sum: float,
-        now: datetime,
+        current_hour_ts: float | None = None,
     ) -> list[StatisticData]:
-        """Build hourly statistics from readings, skipping already-recorded ones."""
-        current_hour_ts = now.replace(minute=0, second=0, microsecond=0).timestamp()
+        """Build hourly statistics from readings, skipping already-recorded ones.
+
+        When provided, current_hour_ts acts as an exclusive cutoff so readings at
+        or after that timestamp are excluded, such as to skip the incomplete
+        current hour during normal polling and backfill.
+        """
         statistics: list[StatisticData] = []
         seen_hours: set[float] = set()
         running_sum = last_sum
@@ -188,7 +218,7 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
             ts = timestamp.timestamp()
             if ts <= last_ts:
                 continue
-            if ts >= current_hour_ts:
+            if current_hour_ts is not None and ts >= current_hour_ts:
                 continue
             hour_ts = timestamp.replace(minute=0, second=0, microsecond=0).timestamp()
             if hour_ts in seen_hours:
@@ -204,23 +234,140 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
             )
         return statistics
 
+    async def _async_backfill(
+        self,
+        start_dt: datetime,
+        end_dt: datetime,
+        initial_sum: float = 0.0,
+        last_ts: float = -math.inf,
+    ) -> None:
+        """Backfill energy statistics by walking backwards in batches.
+
+        Collects all readings into memory, then inserts them chronologically
+        in a single pass. Stops early if no data is found for
+        BACKFILL_MAX_EMPTY_DAYS consecutive days.
+        """
+        all_readings: list[tuple[datetime, float]] = []
+        batch_end = end_dt
+        local_tz = dt_util.DEFAULT_TIME_ZONE
+        consecutive_empty_days = 0
+
+        while batch_end > start_dt:
+            batch_start = max(batch_end - timedelta(days=BACKFILL_BATCH_DAYS), start_dt)
+            start_str = batch_start.astimezone(local_tz).strftime("%Y-%m-%d")
+            end_str = batch_end.astimezone(local_tz).strftime("%Y-%m-%d")
+
+            try:
+                parsed = await self.hass.async_add_executor_job(
+                    self._fetch_energy_data, start_str, end_str
+                )
+            except WFNoDataError:
+                _LOGGER.debug(
+                    "No energy data for %s to %s, skipping", start_str, end_str
+                )
+                consecutive_empty_days += BACKFILL_BATCH_DAYS
+                if consecutive_empty_days >= BACKFILL_MAX_EMPTY_DAYS:
+                    _LOGGER.debug(
+                        "No data for %d consecutive days, stopping backfill",
+                        consecutive_empty_days,
+                    )
+                    break
+                batch_end = batch_start
+                continue
+            except UpdateFailed, WFException:
+                _LOGGER.exception("Error fetching energy data during backfill")
+                break
+
+            _LOGGER.debug(
+                "Fetched %d readings for backfill batch %s to %s",
+                len(parsed),
+                start_str,
+                end_str,
+            )
+
+            all_readings.extend(parsed)
+            consecutive_empty_days = 0
+
+            batch_end = batch_start
+            if batch_end > start_dt:
+                await asyncio.sleep(
+                    random.uniform(
+                        BACKFILL_DELAY_MIN_SECONDS, BACKFILL_DELAY_MAX_SECONDS
+                    )
+                )
+
+        if all_readings:
+            # Exclude the incomplete current hour. Use local timezone so
+            # the hour boundary is correct for partial-offset timezones
+            # (e.g. UTC+5:30).
+            current_hour_ts = (
+                end_dt.astimezone(local_tz)
+                .replace(minute=0, second=0, microsecond=0)
+                .timestamp()
+            )
+            statistics = self._build_statistics(
+                all_readings, last_ts, initial_sum, current_hour_ts
+            )
+            if statistics:
+                async_add_external_statistics(
+                    self.hass, self._statistic_metadata, statistics
+                )
+
+    def _backfill_done_callback(self, task: asyncio.Task[None]) -> None:
+        """Log any exception from a completed backfill task."""
+        if task.cancelled():
+            return
+        if exc := task.exception():
+            _LOGGER.error("Backfill task failed", exc_info=exc)
+
+    async def async_wait_backfill(self) -> None:
+        """Wait for any in-progress backfill task to complete."""
+        if self._backfill_task:
+            await self._backfill_task
+
     async def _async_update_data(self) -> None:
-        """Fetch energy data and insert statistics."""
+        """Fetch energy data and insert statistics.
+
+        Handles three scenarios:
+        1. No statistics exist → first-load backfill (background task)
+        2. Last stat is older than gap threshold → gap backfill (background task)
+        3. Last stat is recent → normal poll for recent data
+        """
+        if self._backfill_task and not self._backfill_task.done():
+            _LOGGER.debug("Backfill already in progress, skipping update")
+            return
+
         last = await self._async_get_last_stat()
         now = dt_util.utcnow()
 
         if last is None:
-            _LOGGER.info("No prior statistics found, fetching recent energy data")
-            last_ts = 0.0
-            last_sum = 0.0
-            start_dt = now - timedelta(days=1)
-        else:
-            last_ts, last_sum = last
-            start_dt = dt_util.utc_from_timestamp(last_ts)
-            _LOGGER.debug("Last stat: ts=%s, sum=%s", start_dt.isoformat(), last_sum)
+            # First load: backfill walking backwards from today
+            start = now - timedelta(days=BACKFILL_LOOKBACK_DAYS)
+            self._backfill_task = self.config_entry.async_create_background_task(
+                self.hass,
+                self._async_backfill(start, now),
+                f"waterfurnace_backfill_{self.gwid}",
+            )
+            self._backfill_task.add_done_callback(self._backfill_done_callback)
+            return
 
+        last_ts, last_sum = last
+        last_dt = dt_util.utc_from_timestamp(last_ts)
+
+        if now - last_dt > BACKFILL_GAP_THRESHOLD:
+            # Large gap detected, backfill using batches
+            self._backfill_task = self.config_entry.async_create_background_task(
+                self.hass,
+                self._async_backfill(last_dt, now, last_sum, last_ts),
+                f"waterfurnace_backfill_{self.gwid}",
+            )
+            self._backfill_task.add_done_callback(self._backfill_done_callback)
+            return
+
+        # Normal poll: fetch recent data (up to BACKFILL_GAP_THRESHOLD) and insert any missing hours
+        _LOGGER.debug("Last stat: ts=%s, sum=%s", last_dt.isoformat(), last_sum)
         local_tz = dt_util.DEFAULT_TIME_ZONE
-        start_date = start_dt.astimezone(local_tz).strftime("%Y-%m-%d")
+        start_date = last_dt.astimezone(local_tz).strftime("%Y-%m-%d")
         end_date = (now.astimezone(local_tz) + timedelta(days=1)).strftime("%Y-%m-%d")
 
         try:
@@ -239,7 +386,16 @@ class WaterFurnaceEnergyCoordinator(DataUpdateCoordinator[None]):
 
         _LOGGER.debug("Fetched %s readings", len(readings))
 
-        statistics = self._build_statistics(readings, last_ts, last_sum, now)
+        # Use local timezone so the hour boundary is correct for
+        # partial-offset timezones (e.g. UTC+5:30).
+        current_hour_ts = (
+            now.astimezone(local_tz)
+            .replace(minute=0, second=0, microsecond=0)
+            .timestamp()
+        )
+        statistics = self._build_statistics(
+            readings, last_ts, last_sum, current_hour_ts
+        )
 
         _LOGGER.debug("Built %s statistics to insert", len(statistics))
 
