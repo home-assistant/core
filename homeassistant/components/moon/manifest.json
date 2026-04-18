@@ -6,6 +6,8 @@
   "documentation": "https://www.home-assistant.io/integrations/moon",
   "integration_type": "service",
   "iot_class": "calculated",
+  "loggers": ["ephem"],
   "quality_scale": "internal",
+  "requirements": ["ephem==4.1.6"],
   "single_config_entry": true
 }
