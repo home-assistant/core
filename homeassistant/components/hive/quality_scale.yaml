@@ -11,9 +11,10 @@ rules:
   appropriate-polling:
     status: done
     comment: >
-      The 15-second `SCAN_INTERVAL` only reads data from the local cache
-      maintained by the `pyhive-integration` library. Actual cloud API calls
-      are rate-limited to a minimum of 2 minutes by the library's built-in
+      Entity polling reads data from the local cache maintained by the
+      `pyhive-integration` library, regardless of the configured
+      `scan_interval` (15 seconds by default). Actual cloud API calls are
+      rate-limited to a minimum of 2 minutes by the library's built-in
       update interval, so no excessive API requests are made.
   brands: done
   common-modules: done
