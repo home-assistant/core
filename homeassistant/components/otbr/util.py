@@ -159,6 +159,9 @@ class OTBRData:
         dataset with the current active dataset and delay=0, which immediately
         applies the current state and clears the pending migration.
         """
+        # Try the spec-compliant DELETE first; if it succeeds, return early.
+        # If it fails (e.g. 405 on older firmware), fall through to the
+        # fallback which overwrites the pending dataset instead.
         try:
             await self.api.delete_pending_dataset()
         except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
@@ -168,6 +171,8 @@ class OTBRData:
         else:
             return
 
+        # Fallback: set a pending dataset matching the current active dataset
+        # with delay=0, which immediately applies and clears the pending state.
         try:
             dataset = await self.api.get_active_dataset()
         except (
