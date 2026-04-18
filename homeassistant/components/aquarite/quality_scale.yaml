@@ -3,91 +3,45 @@ rules:
   action-setup:
     status: exempt
     comment: No service actions in initial sensor-only platform
-  appropriate-polling:
-    status: done
-    comment: Cloud push via Firestore, no polling (update_interval=None)
-  brands:
-    status: done
-    comment: Accepted in home-assistant/brands
-  common-modules:
-    status: done
-    comment: Uses async_get_clientsession for HTTP sessions
+  appropriate-polling: done
+  brands: done
+  common-modules: done
   config-flow: done
-  config-flow-test-coverage:
-    status: done
-    comment: Tests cover user step, errors, and duplicate account abort
-  dependency-transparency:
-    status: done
-    comment: aioaquarite published on PyPI
+  config-flow-test-coverage: done
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: No service actions in initial sensor-only platform
-  docs-high-level-description:
-    status: done
-    comment: Documentation provided in home-assistant/home-assistant.io#44725
-  docs-installation-instructions:
-    status: done
-    comment: Documentation provided in home-assistant/home-assistant.io#44725
-  docs-removal-instructions:
-    status: done
-    comment: Documentation provided in home-assistant/home-assistant.io#44725
-  entity-event-setup:
-    status: done
-    comment: Uses async_add_entities in all platform setup functions
-  entity-unique-id:
-    status: done
-    comment: All entities have unique IDs via build_unique_id helper
-  has-entity-name:
-    status: done
-    comment: _attr_has_entity_name = True on base entity
-  runtime-data:
-    status: done
-    comment: Uses entry.runtime_data typed as AquariteData (auth + per-pool coordinators)
-  test-before-configure:
-    status: done
-    comment: Auth tested before creating entry in async_step_user
-  test-before-setup:
-    status: done
-    comment: Auth tested in async_setup_entry, raises ConfigEntryAuthFailed
-  unique-config-entry:
-    status: done
-    comment: unique_id = lowercased username, _abort_if_unique_id_configured used
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
     status: exempt
     comment: No user actions (sensor-only platform)
-  config-entry-unloading:
-    status: done
-    comment: async_unload_entry properly unloads platforms and shuts down coordinator
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: No options flow, credentials and pool selection are entered in the config flow
+    comment: No options flow
   docs-troubleshooting: todo
-  entity-category:
-    status: done
-    comment: Diagnostic entities properly categorized (location, RSSI, pool name)
-  entity-disabled-by-default:
-    status: done
-    comment: RSSI sensor disabled by default
-  integration-owner:
-    status: done
-    comment: "@fdebrus"
-  log-when-unavailable:
-    status: done
-    comment: Coordinator logs errors on health check and token refresh failures
-  parallel-updates:
-    status: done
-    comment: PARALLEL_UPDATES set on sensor platform
+  entity-category: done
+  entity-disabled-by-default: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
   reauthentication-flow: todo
-  test-coverage:
-    status: done
-    comment: Config flow, coordinator, data navigation, value conversions all tested
+  test-coverage: done
 
   # Gold
-  devices:
-    status: done
-    comment: DeviceInfo with identifiers, name, manufacturer, model, sw_version
+  devices: done
   diagnostics: todo
   discovery:
     status: exempt
@@ -103,31 +57,21 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
-    comment: Single pool device per config entry, statically configured
-  entity-translations:
-    status: done
-    comment: All sensor entities use translation_key
+    comment: Single pool device per config entry
+  entity-translations: done
   exception-translations:
     status: exempt
     comment: No user-facing exceptions in sensor-only platform
-  icon-translations:
-    status: done
-    comment: icons.json with per-entity icons
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No known repair scenarios
   stale-devices:
     status: exempt
-    comment: Single device per entry, no stale device scenario
+    comment: Single device per entry
 
   # Platinum
-  async-dependency:
-    status: done
-    comment: aioaquarite is fully async
-  inject-websession:
-    status: done
-    comment: Uses async_get_clientsession(hass) for HTTP sessions
-  strict-typing:
-    status: done
-    comment: aioaquarite 0.2.0 ships py.typed with full type annotations
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
