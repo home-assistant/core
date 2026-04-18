@@ -207,10 +207,12 @@ def test_parallel_updates_zero() -> None:
     assert PARALLEL_UPDATES == 0
 
 
-def test_all_descriptions_have_translation_key() -> None:
-    """Test that all descriptions have a translation key."""
+def test_all_descriptions_have_translation_key_or_device_class() -> None:
+    """Test that all descriptions have a translation key or device class for naming."""
     for desc in SENSOR_DESCRIPTIONS:
-        assert desc.translation_key is not None, f"{desc.key} missing translation_key"
+        assert desc.translation_key is not None or desc.device_class is not None, (
+            f"{desc.key} has neither translation_key nor device_class"
+        )
 
 
 def test_value_fn_returns_none_for_empty_snapshot() -> None:

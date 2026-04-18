@@ -1,42 +1,31 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This bike is already configured.",
-      "no_devices_found": "No Specialized Turbo bikes found. Make sure the bike is powered on and Bluetooth is enabled.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
-      "cannot_connect": "Could not connect to the bike. Make sure it is powered on and in Bluetooth range."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "pin": "Pairing PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
         },
-        "description": "A Specialized Turbo bike was found at {address} ({name}). Enter the pairing PIN shown on the bike's TCU display to connect.",
+        "description": "A Specialized Turbo bike was found at {address} ({name}).",
         "title": "Discovered Specialized Turbo Bike"
-      },
-      "reconfigure": {
-        "data": {
-          "pin": "Pairing PIN"
-        },
-        "data_description": {
-          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
-        },
-        "description": "Update the pairing PIN for your Specialized Turbo bike.",
-        "title": "Reconfigure Specialized Turbo"
       },
       "user": {
         "data": {
           "address": "Bike",
-          "pin": "Pairing PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "address": "Select the Specialized Turbo bike you want to add.",
-          "pin": "The PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+          "pin": "[%key:component::specialized_turbo::config::step::bluetooth_confirm::data_description::pin%]"
         },
         "description": "Select your Specialized Turbo bike from the discovered devices.",
         "title": "Add Specialized Turbo Bike"
@@ -58,7 +47,7 @@
         "name": "Assist level",
         "state": {
           "eco": "Eco",
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "trail": "Trail",
           "turbo": "Turbo"
         }
@@ -74,9 +63,6 @@
       },
       "battery_charge_cycles": {
         "name": "Charge cycles"
-      },
-      "battery_charge_percent": {
-        "name": "Battery"
       },
       "battery_current": {
         "name": "Battery current"

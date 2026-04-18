@@ -25,6 +25,6 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["specialized_turbo"],
-  "quality_scale": "gold",
-  "requirements": ["specialized-turbo==0.3.0"]
+  "quality_scale": "silver",
+  "requirements": ["specialized-turbo==0.4.0"]
 }

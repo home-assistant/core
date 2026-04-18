@@ -393,65 +393,6 @@ async def test_user_flow_non_specialized_device_filtered(
     assert result["reason"] == "no_devices_found"
 
 
-# --- Reconfigure Flow ---
-
-
-async def test_reconfigure_flow(hass: HomeAssistant) -> None:
-    """Test reconfigure flow updates the PIN."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"address": MOCK_ADDRESS, CONF_PIN: "1234"},
-        unique_id=MOCK_ADDRESS_FORMATTED,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_PIN: "9999"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_PIN] == "9999"
-
-
-async def test_reconfigure_flow_remove_pin(hass: HomeAssistant) -> None:
-    """Test reconfigure flow can remove the PIN."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"address": MOCK_ADDRESS, CONF_PIN: "1234"},
-        unique_id=MOCK_ADDRESS_FORMATTED,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_PIN] is None
-
-
 # --- TCU1 Flows ---
 
 

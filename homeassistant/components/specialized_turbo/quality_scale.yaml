@@ -48,11 +48,10 @@ rules:
     status: exempt
     comment: >-
       BLE pairing PIN does not expire.
-      PIN can be updated via the reconfigure flow.
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: Device is not connected to an IP network.
@@ -75,7 +74,7 @@ rules:
     status: exempt
     comment: Integration does not raise exceptions with translatable messages.
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No repair issues needed.

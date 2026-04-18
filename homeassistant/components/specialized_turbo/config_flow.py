@@ -140,25 +140,6 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration to update the pairing PIN."""
-        if user_input is not None:
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                data_updates={CONF_PIN: user_input.get(CONF_PIN)},
-            )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_PIN): str,
-                }
-            ),
-        )
-
 
 def _is_specialized_service_info(info: BluetoothServiceInfoBleak) -> bool:
     """Check if a BluetoothServiceInfoBleak is a Specialized bike."""

@@ -66,7 +66,6 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
     # --- Battery ---
     SpecializedSensorEntityDescription(
         key="battery_charge_percent",
-        translation_key="battery_charge_percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -331,7 +330,6 @@ class SpecializedTurboSensor(
         )
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
-            name=entry.title,
             manufacturer="Specialized",
             model="Turbo",
         )
