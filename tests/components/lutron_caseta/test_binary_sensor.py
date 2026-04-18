@@ -3,13 +3,13 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.lutron_caseta.binary_sensor import SCAN_INTERVAL
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.util import dt as dt_util
 
 from . import MockBridge, async_setup_integration
 
@@ -69,8 +69,10 @@ async def test_battery_sensor_does_not_replace_shade_subscriber(
     assert state.attributes["current_position"] == 50
 
 
-async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
-    """Test the battery sensor refreshes through Home Assistant's update path."""
+async def test_battery_sensor_updates_on_schedule(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the battery sensor refreshes naturally on its polling interval."""
     instance = MockBridge()
 
     def factory(*args: Any, **kwargs: Any) -> MockBridge:
@@ -93,7 +95,8 @@ async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
     )
 
     instance.battery_statuses["802"] = " Low "
-    await async_update_entity(hass, binary_sensor_entity_id)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     updated_state = hass.states.get(binary_sensor_entity_id)
@@ -103,34 +106,11 @@ async def test_battery_sensor_updates_on_demand(hass: HomeAssistant) -> None:
     instance.get_battery_status.assert_awaited_with("802")
 
     instance.battery_statuses["802"] = "Unknown"
-    await async_update_entity(hass, binary_sensor_entity_id)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     unknown_state = hass.states.get(binary_sensor_entity_id)
     assert unknown_state is not None
     assert unknown_state.state == STATE_UNKNOWN
-
-
-async def test_battery_sensor_refreshes_on_schedule(hass: HomeAssistant) -> None:
-    """Test the battery sensor refreshes on its long interval."""
-    instance = MockBridge()
-
-    def factory(*args: Any, **kwargs: Any) -> MockBridge:
-        """Return the mock bridge instance."""
-        return instance
-
-    original_get_battery_status = instance.get_battery_status
-    instance.get_battery_status = AsyncMock(side_effect=original_get_battery_status)
-
-    await async_setup_integration(hass, factory)
-    await hass.async_block_till_done()
-
-    binary_sensor_entity_id = "binary_sensor.basement_bedroom_left_shade_battery"
-    instance.battery_statuses["802"] = "Low"
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
-
-    updated_state = hass.states.get(binary_sensor_entity_id)
-    assert updated_state is not None
-    assert updated_state.state == STATE_ON
-    assert instance.get_battery_status.await_count == 2
+    assert instance.get_battery_status.await_count == 3
