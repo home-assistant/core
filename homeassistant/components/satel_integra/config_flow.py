@@ -29,6 +29,7 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
@@ -87,6 +88,14 @@ ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
         ),
     }
 )
+
+ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ENABLE_TEMPERATURE_SENSOR, default=False): (
+            selector.BooleanSelector()
+        ),
+    }
+).extend(ZONE_AND_OUTPUT_SCHEMA.schema)
 
 SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
@@ -354,7 +363,7 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                         vol.Coerce(int), vol.Range(min=1)
                     ),
                 }
-            ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
+            ).extend(ZONE_SCHEMA.schema),
         )
 
     async def async_step_reconfigure(
@@ -374,7 +383,7 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
+                ZONE_SCHEMA, subconfig_entry.data
             ),
             description_placeholders={
                 CONF_ZONE_NUMBER: subconfig_entry.data[CONF_ZONE_NUMBER]
