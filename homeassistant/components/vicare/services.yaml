@@ -16,3 +16,14 @@ set_vicare_mode:
             - "forcedReduced"
             - "heating"
             - "standby"
+
+set_domestic_hot_water_circulation_schedule:
+  target:
+    entity:
+      integration: vicare
+      domain: water_heater
+  fields:
+    schedule:
+      required: true
+      selector:
+        object:

@@ -677,6 +677,16 @@
         }
       },
       "name": "Set ViCare mode"
+    },
+    "set_domestic_hot_water_circulation_schedule": {
+      "description": "Sets the domestic hot water circulation pump schedule.",
+      "fields": {
+        "schedule": {
+          "description": "The schedule for the domestic hot water circulation pump.",
+          "name": "Schedule"
+        }
+      },
+      "name": "Set domestic hot water circulation schedule"
     }
   }
 }

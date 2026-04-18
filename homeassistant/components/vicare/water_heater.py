@@ -8,6 +8,7 @@ from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -15,6 +16,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
@@ -22,6 +24,9 @@ from .types import ViCareConfigEntry, ViCareDevice
 from .utils import get_circuits, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_SET_DHW_CIRCULATION_SCHEDULE = "set_domestic_hot_water_circulation_schedule"
+ATTR_SCHEDULE = "schedule"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_HEATING = "heating"
@@ -76,6 +81,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare water heater platform."""
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_DHW_CIRCULATION_SCHEDULE,
+        {vol.Required(ATTR_SCHEDULE): dict},
+        "set_domestic_hot_water_circulation_schedule",
+    )
+
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
@@ -128,6 +140,11 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._dhw_active = self._api.getDomesticHotWaterActive()
 
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attributes[ATTR_SCHEDULE] = (
+                    self._api.getDomesticHotWaterCirculationSchedule()
+                )
+
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -142,3 +159,14 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         if self._current_mode is None:
             return None
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        return self._attributes
+
+    def set_domestic_hot_water_circulation_schedule(
+        self, schedule: dict[str, Any]
+    ) -> None:
+        """Set the domestic hot water circulation schedule."""
+        self._api.setDomesticHotWaterCirculationSchedule(schedule)
