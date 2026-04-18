@@ -46,7 +46,6 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
@@ -183,7 +182,6 @@ def async_in_zones(
     return (closest, [itm[0] for itm in zones])
 
 
-@bind_hass
 def async_active_zone(
     hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
 ) -> State | None:

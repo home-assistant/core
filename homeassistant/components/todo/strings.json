@@ -1,4 +1,31 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_threshold_name": "Threshold type"
+  },
+  "conditions": {
+    "all_completed": {
+      "description": "Tests if all to-do items are completed in one or more to-do lists.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::todo::common::condition_behavior_name%]"
+        }
+      },
+      "name": "All to-do items completed"
+    },
+    "incomplete": {
+      "description": "Tests the number of incomplete to-do items in one or more to-do lists.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::todo::common::condition_behavior_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::todo::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Incomplete to-do items"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::todo::title%]"
@@ -13,6 +40,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "status": {
       "options": {
         "completed": "Completed",

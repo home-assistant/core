@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: Integration uses WebSocket push updates, no polling.
@@ -11,9 +9,7 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: Integration does not register custom actions.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -42,8 +38,10 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info: done
+  discovery:
+    status: exempt
+    comment: Discovery is handled via unifi_discovery dependency using SOURCE_INTEGRATION_DISCOVERY.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
