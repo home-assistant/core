@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+from typing import cast
 
 from aiohttp.web import Request, Response
 
@@ -222,7 +223,7 @@ def async_setup_push_receiver(hass: HomeAssistant) -> PushReceiver:
     """
     # Return existing receiver if already set up
     if DATA_PUSH_RECEIVER in hass.data:
-        return hass.data[DATA_PUSH_RECEIVER]
+        return cast(PushReceiver, hass.data[DATA_PUSH_RECEIVER])
 
     receiver = PushReceiver()
 
