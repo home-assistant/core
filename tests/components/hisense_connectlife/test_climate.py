@@ -1,89 +1,723 @@
-"""Test the Hisense ConnectLife climate platform."""
+"""Platform for Hisense AC climate integration."""
 
-from unittest.mock import AsyncMock, MagicMock
+from __future__ import annotations
 
-import pytest
+import logging
+import time
+from typing import Any
 
-from homeassistant.components.hisense_connectlife.climate import HisenseClimate
-from homeassistant.components.hisense_connectlife.models import DeviceInfo
-from homeassistant.const import UnitOfTemperature
+from connectlife_cloud.mode_converter import (
+    find_device_value_for_ha_fan_mode,
+    find_device_value_for_ha_mode,
+    get_ha_fan_mode_string,
+    get_ha_mode_string,
+)
+
+from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.components.hisense_connectlife.const import (
+    DOMAIN,
+    FAN_ULTRA_HIGH,
+    FAN_ULTRA_LOW,
+    MAX_TEMP,
+    MIN_TEMP,
+    SFAN_ULTRA_HIGH,
+    SFAN_ULTRA_LOW,
+    StatusKey,
+)
+from homeassistant.components.hisense_connectlife.coordinator import (
+    HisenseACPluginDataUpdateCoordinator,
+)
+from homeassistant.components.hisense_connectlife.models import (
+    DeviceInfo as HisenseDeviceInfo,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+_LOGGER = logging.getLogger(__name__)
+
+HA_FAN_STR_TO_CONST = {
+    "auto": FAN_AUTO,
+    "low": FAN_LOW,
+    "medium": FAN_MEDIUM,
+    "high": FAN_HIGH,
+    "ultra_low": SFAN_ULTRA_LOW,
+    "medium_low": SFAN_ULTRA_LOW,
+    "ultra_high": SFAN_ULTRA_HIGH,
+    "medium_high": SFAN_ULTRA_HIGH,
+}
+
+HA_FAN_CONST_TO_STR = {
+    FAN_AUTO: "auto",
+    FAN_LOW: "low",
+    FAN_MEDIUM: "medium",
+    FAN_HIGH: "high",
+    FAN_ULTRA_LOW: "ultra_low",
+    SFAN_ULTRA_LOW: "ultra_low",
+    FAN_ULTRA_HIGH: "ultra_high",
+    SFAN_ULTRA_HIGH: "ultra_high",
+}
 
 
-@pytest.mark.asyncio
-async def test_climate_entity_creation(mock_coordinator) -> None:
-    """Test climate entity creation."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Hisense AC climate platform."""
+    coordinator: HisenseACPluginDataUpdateCoordinator = config_entry.runtime_data
 
-    # Mock device data
-    device_data = {
-        "deviceId": "test_device_123",
-        "puid": "test_puid_123",
-        "deviceNickName": "Test AC",
-        "deviceTypeCode": "009",
-        "deviceFeatureCode": "199",
-        "deviceTypeName": "Air Conditioner",
-        "deviceFeatureName": "Split AC",
-        "statusList": {
-            "t_power": "1",
-            "t_work_mode": "cool",
-            "t_temp": "25",
-            "f_temp_in": "26",
-        },
-    }
+    devices = coordinator.data
 
-    # Create DeviceInfo object
-    device = DeviceInfo(device_data)
+    if not devices:
+        _LOGGER.debug("No devices found in coordinator data")
+        return
 
-    # Mock coordinator's api_client
-    mock_coordinator.api_client = MagicMock()
-    mock_coordinator.api_client.parsers = MagicMock()
-    mock_coordinator.api_client.parsers.get = MagicMock(return_value=None)
-    mock_coordinator.api_client.static_data = MagicMock()
-    mock_coordinator.api_client.static_data.get = MagicMock(return_value=None)
+    entities = [
+        HisenseClimate(coordinator, device)
+        for device in devices.values()
+        if isinstance(device, HisenseDeviceInfo) and device.is_supported()
+    ]
 
-    entity = HisenseClimate(
-        coordinator=mock_coordinator,
-        device=device,
+    if entities:
+        _LOGGER.debug("Setting up %d climate entities", len(entities))
+        async_add_entities(entities)
+    else:
+        _LOGGER.debug("No supported climate devices found")
+
+
+class HisenseClimate(CoordinatorEntity, ClimateEntity):
+    """Hisense AC Climate entity."""
+
+    _attr_has_entity_name = True
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
     )
 
-    assert entity._attr_name == "Test AC Device"
-    assert entity._attr_temperature_unit == UnitOfTemperature.CELSIUS
+    def __init__(
+        self,
+        coordinator: HisenseACPluginDataUpdateCoordinator,
+        device: HisenseDeviceInfo,
+    ) -> None:
+        """Initialize the climate entity."""
+        super().__init__(coordinator)
 
+        self._device_id: str | None = device.puid
+        self._attr_unique_id = f"{device.device_id}_climate"
+        self._attr_name = "Test AC Device"
+        self._attr_translation_key = "climate"
 
-@pytest.mark.asyncio
-async def test_climate_set_temperature(mock_coordinator) -> None:
-    """Test setting temperature."""
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_target_temperature_step = (
+            0.5 if device.feature_code == "19901" else 1.0
+        )
 
-    device_data = {
-        "deviceId": "test_device_123",
-        "puid": "test_puid_123",
-        "deviceNickName": "Test AC",
-        "deviceTypeCode": "009",
-        "deviceFeatureCode": "199",
-        "deviceTypeName": "Air Conditioner",
-        "deviceFeatureName": "Split AC",
-        "statusList": {
-            "t_power": "1",
-            "t_work_mode": "cool",
-        },
-    }
+        self._attr_min_temp = MIN_TEMP
+        self._attr_max_temp = MAX_TEMP
 
-    # Create DeviceInfo object
-    device = DeviceInfo(device_data)
+        self.hasAuto = False
+        self._last_command_time: float = 0.0
+        self.wait_time = 3
+        self._cached_target_temp: float | None = None
+        self._cached_hvac_mode = HVACMode.OFF
+        self._cached_fan_mode: str | None = None
+        self._cached_swing_mode = SWING_OFF
 
-    # Mock coordinator's api_client
-    mock_coordinator.api_client = MagicMock()
-    mock_coordinator.api_client.parsers = MagicMock()
-    mock_coordinator.api_client.parsers.get = MagicMock(return_value=None)
-    mock_coordinator.api_client.static_data = MagicMock()
-    mock_coordinator.api_client.static_data.get = MagicMock(return_value=None)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.device_id or "")},
+            name=device.name,
+            manufacturer="Hisense",
+            model=f"{device.type_name} ({device.feature_name})",
+        )
 
-    # Mock coordinator.async_control_device
-    mock_coordinator.async_control_device = AsyncMock()
+        self._parser = None
+        self.static_data = None
+        self._current_type_code = device.type_code
+        self._current_feature_code = device.feature_code
 
-    entity = HisenseClimate(
-        coordinator=mock_coordinator,
-        device=device,
-    )
+        device_type = device.get_device_type()
+        if device_type and device.device_id:
+            self._parser = coordinator.api_client.parsers.get(device.device_id)
+            self.static_data = coordinator.api_client.static_data.get(device.device_id)
+            self._current_type_code = device_type.type_code
+            self._current_feature_code = device_type.feature_code
 
-    await entity.async_set_temperature(temperature=24)
-    mock_coordinator.async_control_device.assert_called_once()
+            if self._parser:
+                _LOGGER.debug(
+                    "Using parser for device type %s-%s",
+                    device_type.type_code,
+                    device_type.feature_code,
+                )
+                self._setup_hvac_modes()
+                self._setup_fan_modes()
+                self._setup_swing_modes()
+
+        if not hasattr(self, "_attr_hvac_modes"):
+            self._attr_hvac_modes = [HVACMode.OFF]
+
+        if self._parser:
+            target_temp_attr = self._parser.attributes.get(StatusKey.TARGET_TEMP)
+            temp_type_attr = device.status.get(StatusKey.T_TEMP_TYPE)
+
+            temperature_ranges = []
+            if target_temp_attr and target_temp_attr.value_range:
+                for item in target_temp_attr.value_range.split(","):
+                    item = item.strip()
+                    if "~" in item:
+                        lower, upper = map(int, item.split("~"))
+                        temperature_ranges.append((lower, upper))
+
+            if temperature_ranges:
+                if temp_type_attr == "1" and len(temperature_ranges) > 1:
+                    self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+                    self._attr_min_temp, self._attr_max_temp = temperature_ranges[1]
+                else:
+                    self._attr_min_temp, self._attr_max_temp = temperature_ranges[0]
+
+            if device_type:
+                _LOGGER.debug(
+                    "Temperature config for %s-%s: unit=%s, range=%s-%s",
+                    device_type.type_code,
+                    device_type.feature_code,
+                    self._attr_temperature_unit,
+                    self._attr_min_temp,
+                    self._attr_max_temp,
+                )
+
+        if not hasattr(self, "_attr_fan_modes"):
+            self._attr_fan_modes = [
+                FAN_AUTO,
+                SFAN_ULTRA_LOW,
+                FAN_LOW,
+                FAN_MEDIUM,
+                FAN_HIGH,
+                SFAN_ULTRA_HIGH,
+            ]
+
+        if not hasattr(self, "_attr_swing_modes"):
+            self._attr_swing_modes = [SWING_OFF, SWING_VERTICAL]
+
+    def _setup_hvac_modes(self) -> None:
+        """Set up available HVAC modes based on device capabilities."""
+        if not self._parser:
+            self._attr_hvac_modes = [HVACMode.OFF]
+            return
+
+        modes = [HVACMode.OFF]
+        has_heat = "1"
+        if self.static_data:
+            has_heat = self.static_data.get("Mode_settings", "1")
+
+        work_mode_attr = self._parser.attributes.get(StatusKey.MODE)
+        if work_mode_attr and work_mode_attr.value_map:
+            available_ha_modes = set()
+            for key in work_mode_attr.value_map:
+                ha_mode_str = get_ha_mode_string(work_mode_attr.value_map, key)
+                if ha_mode_str:
+                    try:
+                        ha_mode = HVACMode(ha_mode_str)
+                        if ha_mode == HVACMode.HEAT and has_heat != "1":
+                            continue
+                        available_ha_modes.add(ha_mode)
+                    except ValueError:
+                        continue
+
+            desired_order = [
+                HVACMode.COOL,
+                HVACMode.HEAT,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+                HVACMode.AUTO,
+            ]
+            modes.extend(mode for mode in desired_order if mode in available_ha_modes)
+
+        self._attr_hvac_modes = modes
+
+    def _setup_fan_modes(self) -> None:
+        """Set up available fan modes based on device capabilities."""
+        if not self._parser:
+            return
+
+        position6_damper_control = "9"
+        if self.static_data:
+            position6_damper_control = self.static_data.get(
+                "Wind_speed_gear_selection", "9"
+            )
+
+        fan_modes = []
+        fan_speed_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
+        if fan_speed_attr and fan_speed_attr.value_map:
+            for key in fan_speed_attr.value_map:
+                ha_fan_mode_str = get_ha_fan_mode_string(fan_speed_attr.value_map, key)
+                if ha_fan_mode_str and ha_fan_mode_str in HA_FAN_STR_TO_CONST:
+                    ha_fan_const = HA_FAN_STR_TO_CONST[ha_fan_mode_str]
+                    if ha_fan_const not in fan_modes:
+                        fan_modes.append(ha_fan_const)
+                        if ha_fan_const == FAN_AUTO:
+                            self.hasAuto = True
+
+        if fan_modes:
+            if position6_damper_control != "9":
+                fan_modes = [
+                    mode
+                    for mode in fan_modes
+                    if mode not in (SFAN_ULTRA_LOW, SFAN_ULTRA_HIGH)
+                ]
+            self._attr_fan_modes = fan_modes
+
+    def _setup_swing_modes(self) -> None:
+        """Set up available swing modes based on device capabilities."""
+        if not self._parser:
+            return
+
+        left_and_right = "1"
+        upper_and_lower = "1"
+        if self.static_data:
+            left_and_right = self.static_data.get("Left_and_right_damper_control", "1")
+            upper_and_lower = self.static_data.get(
+                "Upper_and_lower_damper_control", "1"
+            )
+
+        swing_modes = [SWING_OFF]
+
+        vertical_swing_attr = self._parser.attributes.get(StatusKey.SWING)
+        if vertical_swing_attr and vertical_swing_attr.value_map:
+            if upper_and_lower == "1":
+                swing_modes.append(SWING_VERTICAL)
+
+        if self._current_feature_code == "199":
+            self._attr_swing_modes = swing_modes
+            _LOGGER.debug(
+                "Device %s only supports vertical swing (SWING_VERTICAL)",
+                self._device_id,
+            )
+            return
+
+        horizontal_swing_attr = self._parser.attributes.get("t_left_right")
+        if horizontal_swing_attr and horizontal_swing_attr.value_map:
+            if SWING_VERTICAL in swing_modes:
+                if left_and_right == "1":
+                    swing_modes.append(SWING_HORIZONTAL)
+            elif left_and_right == "1":
+                swing_modes.append(SWING_HORIZONTAL)
+
+        self._attr_swing_modes = swing_modes
+        _LOGGER.debug("Available swing modes: %s", swing_modes)
+
+    @property
+    def _device(self) -> HisenseDeviceInfo | None:
+        """Get current device data from coordinator."""
+        if not self._device_id:
+            return None
+        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+        return coordinator.get_device(self._device_id)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._device is not None and self._device.is_online
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        if not self._device:
+            return None
+        temp = self._device.get_status_value(StatusKey.TEMPERATURE)
+        return float(temp) if temp else None
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        if not self._device:
+            return None
+        temp = self._device.get_status_value(StatusKey.TARGET_TEMP)
+        return float(temp) if temp else None
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return hvac operation mode."""
+        if time.time() - self._last_command_time < self.wait_time:
+            return self._cached_hvac_mode
+        if not self._device:
+            return HVACMode.OFF
+
+        power = self._device.get_status_value(StatusKey.POWER)
+        if not power or power == "0":
+            return HVACMode.OFF
+
+        mode = self._device.get_status_value(StatusKey.MODE)
+        if not mode:
+            return HVACMode.OFF
+
+        _LOGGER.debug("Current device %s mode %s", self._current_feature_code, mode)
+
+        if self._parser:
+            work_mode_attr = self._parser.attributes.get(StatusKey.MODE)
+            if work_mode_attr and work_mode_attr.value_map:
+                ha_mode_str = get_ha_mode_string(work_mode_attr.value_map, mode)
+                if ha_mode_str:
+                    try:
+                        return HVACMode(ha_mode_str)
+                    except ValueError:
+                        _LOGGER.warning("Invalid mode string: %s", ha_mode_str)
+
+        try:
+            return HVACMode(mode)
+        except ValueError:
+            _LOGGER.warning(
+                "Could not convert mode %s to HVACMode, defaulting to OFF", mode
+            )
+            return HVACMode.OFF
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the fan setting."""
+        if (
+            time.time() - self._last_command_time < self.wait_time
+            and self._cached_fan_mode is not None
+        ):
+            return self._cached_fan_mode
+        if not self._device:
+            return None
+
+        fan_mode = self._device.get_status_value(StatusKey.FAN_SPEED)
+        if not fan_mode:
+            return FAN_AUTO
+
+        if self._parser:
+            fan_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
+            if fan_attr and fan_attr.value_map:
+                ha_fan_mode_str = get_ha_fan_mode_string(fan_attr.value_map, fan_mode)
+                if ha_fan_mode_str and ha_fan_mode_str in HA_FAN_STR_TO_CONST:
+                    return HA_FAN_STR_TO_CONST[ha_fan_mode_str]
+
+        return fan_mode
+
+    @property
+    def fan_modes(self) -> list[str]:
+        """Return the list of available fan modes."""
+        modes = list(self._attr_fan_modes or [])
+        if self.hvac_mode == HVACMode.FAN_ONLY:
+            if FAN_AUTO in modes:
+                modes.remove(FAN_AUTO)
+        elif FAN_AUTO not in modes and self.hasAuto:
+            modes.append(FAN_AUTO)
+        return modes
+
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the swing setting."""
+        if (
+            time.time() - self._last_command_time < self.wait_time
+            and self._cached_swing_mode is not None
+        ):
+            return self._cached_swing_mode
+        if not self._device:
+            return None
+
+        _LOGGER.debug(
+            "Swing mode change %s with status: %s",
+            self._current_feature_code,
+            self._device.status,
+        )
+
+        vertical_swing = self._device.get_status_value(StatusKey.SWING)
+        horizontal_swing = self._device.get_status_value("t_left_right")
+
+        if self._current_feature_code == "199":
+            horizontal_swing = None
+
+        if (not vertical_swing or vertical_swing == "0") and (
+            not horizontal_swing or horizontal_swing == "0"
+        ):
+            return SWING_OFF
+        if vertical_swing == "1" and (not horizontal_swing or horizontal_swing == "0"):
+            return SWING_VERTICAL
+        if (not vertical_swing or vertical_swing == "0") and horizontal_swing == "1":
+            return SWING_HORIZONTAL
+
+        return SWING_OFF
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
+
+        if self._current_type_code != "009":
+            features &= ~ClimateEntityFeature.SWING_MODE
+
+        if self._attr_swing_modes and len(self._attr_swing_modes) <= 1:
+            features &= ~ClimateEntityFeature.SWING_MODE
+
+        current_mode = self.hvac_mode
+        if current_mode not in (HVACMode.COOL, HVACMode.HEAT):
+            features &= ~ClimateEntityFeature.TARGET_TEMPERATURE
+
+        if current_mode == HVACMode.DRY:
+            features &= ~ClimateEntityFeature.FAN_MODE
+
+        return ClimateEntityFeature(features)
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        current_mode = self.hvac_mode
+        if current_mode in (HVACMode.FAN_ONLY, HVACMode.DRY, HVACMode.AUTO):
+            _LOGGER.debug(
+                "Temperature setting is not allowed in current mode: %s", current_mode
+            )
+            return
+
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        _LOGGER.debug("Setting temperature: %s: %s", kwargs, temperature)
+        if temperature is None:
+            return
+
+        device_id = self._device_id
+        if not device_id:
+            return
+
+        try:
+            coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+            await coordinator.async_control_device(
+                puid=device_id,
+                properties={StatusKey.TARGET_TEMP: str(temperature)},
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to set temperature: %s", err)
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        if not self._device_id:
+            return
+
+        self._cached_hvac_mode = hvac_mode
+        self._cached_fan_mode = self.fan_mode
+        self._cached_swing_mode = self.swing_mode or SWING_OFF
+        self._cached_target_temp = self.target_temperature
+        self._last_command_time = time.time()
+        self.async_write_ha_state()
+
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
+            return
+
+        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+
+        try:
+            power = (
+                self._device.get_status_value(StatusKey.POWER) if self._device else None
+            )
+            if not power or power == "0":
+                await self.async_turn_on()
+
+            hisense_mode: str | None = None
+            mode_str = str(hvac_mode).lower().replace("hvacmode.", "")
+
+            if self._parser:
+                work_mode_attr = self._parser.attributes.get(StatusKey.MODE)
+                if work_mode_attr and work_mode_attr.value_map:
+                    hisense_mode = find_device_value_for_ha_mode(
+                        work_mode_attr.value_map, mode_str
+                    )
+
+            power = (
+                self._device.get_status_value(StatusKey.POWER) if self._device else None
+            )
+            device_id = self._device_id
+
+            if power == "0" and device_id:
+                await coordinator.async_control_device(
+                    puid=device_id,
+                    properties={
+                        StatusKey.POWER: "1",
+                        StatusKey.MODE: hisense_mode or mode_str,
+                    },
+                )
+                return
+
+            if hisense_mode and device_id:
+                _LOGGER.debug(
+                    "Setting HVAC mode to %s (Hisense value: %s)",
+                    hvac_mode,
+                    hisense_mode,
+                )
+                await coordinator.async_control_device(
+                    puid=device_id,
+                    properties={StatusKey.MODE: hisense_mode},
+                )
+            else:
+                _LOGGER.error(
+                    "Could not find Hisense mode value for HA mode: %s", hvac_mode
+                )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to set hvac mode: %s", err)
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        if not self._device_id:
+            return
+
+        self._cached_fan_mode = fan_mode
+        self._cached_hvac_mode = self.hvac_mode
+        self._cached_swing_mode = self.swing_mode or SWING_OFF
+        self._cached_target_temp = self.target_temperature
+        self._last_command_time = time.time()
+        self.async_write_ha_state()
+
+        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+
+        try:
+            ha_fan_mode_str = HA_FAN_CONST_TO_STR.get(
+                fan_mode, fan_mode.lower().replace("_", "")
+            )
+
+            hisense_fan_mode: str | None = None
+            if self._parser:
+                fan_attr = self._parser.attributes.get(StatusKey.FAN_SPEED)
+                if fan_attr and fan_attr.value_map:
+                    hisense_fan_mode = find_device_value_for_ha_fan_mode(
+                        fan_attr.value_map, ha_fan_mode_str
+                    )
+
+            if not hisense_fan_mode:
+                hisense_fan_mode = fan_mode
+
+            _LOGGER.debug(
+                "Setting fan mode to %s (Hisense value: %s)", fan_mode, hisense_fan_mode
+            )
+            device_id = self._device_id
+            if device_id:
+                await coordinator.async_control_device(
+                    puid=device_id,
+                    properties={StatusKey.FAN_SPEED: hisense_fan_mode},
+                )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to set fan mode: %s", err)
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new target swing operation."""
+        if not self._device_id:
+            return
+
+        self._cached_swing_mode = swing_mode
+        self._cached_hvac_mode = self.hvac_mode
+        self._cached_fan_mode = self.fan_mode
+        self._cached_target_temp = self.target_temperature
+        self._last_command_time = time.time()
+        self.async_write_ha_state()
+
+        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+
+        try:
+            properties: dict[str, str] = {}
+
+            if swing_mode == SWING_OFF:
+                properties[StatusKey.SWING] = "0"
+                properties["t_left_right"] = "0"
+            elif swing_mode == SWING_VERTICAL:
+                properties[StatusKey.SWING] = "1"
+                properties["t_left_right"] = "0"
+            elif swing_mode == SWING_HORIZONTAL:
+                properties[StatusKey.SWING] = "0"
+                properties["t_left_right"] = "1"
+
+            if self._parser:
+                supported_properties: dict[str, str] = {}
+
+                if StatusKey.SWING in properties and self._parser.attributes.get(
+                    StatusKey.SWING
+                ):
+                    supported_properties[StatusKey.SWING] = properties[StatusKey.SWING]
+
+                if "t_left_right" in properties and self._parser.attributes.get(
+                    "t_left_right"
+                ):
+                    supported_properties["t_left_right"] = properties["t_left_right"]
+
+                device_id = self._device_id
+                if supported_properties and device_id:
+                    _LOGGER.debug(
+                        "Setting swing mode to %s with properties: %s",
+                        swing_mode,
+                        supported_properties,
+                    )
+                    await coordinator.async_control_device(
+                        puid=device_id,
+                        properties=supported_properties,
+                    )
+
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to set swing mode: %s", err)
+
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        device_id = self._device_id
+        if not device_id:
+            return
+
+        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+
+        try:
+            _LOGGER.debug("Turning on device %s", device_id)
+            await coordinator.async_control_device(
+                puid=device_id,
+                properties={StatusKey.POWER: "1"},
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to turn on: %s", err)
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        device_id = self._device_id
+        if not device_id:
+            return
+
+        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+
+        try:
+            _LOGGER.debug("Turning off device %s", device_id)
+            await coordinator.async_control_device(
+                puid=device_id,
+                properties={StatusKey.POWER: "0"},
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Failed to turn off: %s", err)
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self._device_id:
+            return
+
+        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator
+        device = coordinator.get_device(self._device_id)
+
+        if not device:
+            _LOGGER.warning("Device %s not found during sensor update", self._device_id)
+            return
+
+        if time.time() - self._last_command_time >= self.wait_time:
+            super()._handle_coordinator_update()
