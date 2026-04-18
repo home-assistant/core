@@ -73,7 +73,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._discovery_info.name or "Specialized Turbo",
                     data={
                         CONF_ADDRESS: self._discovery_info.address,
-                        CONF_PIN: user_input.get(CONF_PIN),
+                        CONF_PIN: user_input.get(CONF_PIN) or None,
                     },
                 )
 
@@ -109,7 +109,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._discovered_devices[address].name or "Specialized Turbo",
                     data={
                         CONF_ADDRESS: address,
-                        CONF_PIN: user_input.get(CONF_PIN),
+                        CONF_PIN: user_input.get(CONF_PIN) or None,
                     },
                 )
 
