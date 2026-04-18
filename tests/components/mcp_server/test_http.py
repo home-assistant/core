@@ -388,6 +388,72 @@ async def test_mcp_tools_list(
     properties = tool.inputSchema.get("properties")
     assert properties.get("name") == {"type": "string"}
 
+    # GetLiveContext exposes the optional filter arguments through the schema.
+    live_context_tool = next(
+        iter(tool for tool in result.tools if tool.name == "GetLiveContext")
+    )
+    live_properties = live_context_tool.inputSchema.get("properties")
+    assert live_properties is not None
+    assert live_properties.get("domains") == {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": (
+            "Optional. Only include entities whose domain is in this list"
+            " (case-insensitive, e.g. ['light', 'climate'])."
+        ),
+    }
+    assert live_properties.get("areas", {}).get("type") == "array"
+    assert live_properties.get("entity_ids", {}).get("type") == "array"
+    assert live_properties.get("name_contains", {}).get("type") == "string"
+    # All filter arguments must remain optional.
+    assert "required" not in live_context_tool.inputSchema or not (
+        live_context_tool.inputSchema.get("required")
+    )
+
+
+@pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
+async def test_mcp_get_live_context_filters(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_url: str,
+    mcp_client: Any,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test that GetLiveContext honors filter arguments over MCP."""
+
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
+        # Calling with no arguments returns the kitchen light snapshot.
+        result_no_args = await session.call_tool(
+            name="GetLiveContext",
+            arguments={},
+        )
+        # Calling with a domain that matches returns the same snapshot.
+        result_matching = await session.call_tool(
+            name="GetLiveContext",
+            arguments={"domains": ["light"]},
+        )
+        # Calling with a domain that matches nothing yields a filtered error.
+        result_filtered_out = await session.call_tool(
+            name="GetLiveContext",
+            arguments={"domains": ["climate"]},
+        )
+
+    assert not result_no_args.isError
+    payload_no_args = json.loads(result_no_args.content[0].text)
+    assert payload_no_args["success"] is True
+    assert "Kitchen Light" in payload_no_args["result"]
+
+    assert not result_matching.isError
+    payload_matching = json.loads(result_matching.content[0].text)
+    assert payload_matching == payload_no_args
+
+    assert not result_filtered_out.isError
+    payload_filtered = json.loads(result_filtered_out.content[0].text)
+    assert payload_filtered == {
+        "success": False,
+        "error": "No exposed entities matched the provided filters.",
+    }
+
 
 @pytest.mark.parametrize("llm_hass_api", [llm.LLM_API_ASSIST, STATELESS_LLM_API])
 async def test_mcp_tool_call(

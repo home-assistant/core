@@ -620,6 +620,41 @@ class AssistAPI(API):
         return tools
 
 
+def _entity_area_names(
+    entity_id: str,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> set[str]:
+    """Return lowercased area name + aliases associated with an entity.
+
+    Mirrors the lookup used in :func:`_get_exposed_entities` so that callers
+    can match against canonical area registry data instead of re-parsing the
+    comma-joined string stored under ``info["areas"]`` (which is lossy when an
+    area name or alias contains a comma).
+    """
+    entity_entry = entity_registry.async_get(entity_id)
+    if entity_entry is None:
+        return set()
+
+    area_id = entity_entry.area_id
+    if area_id is None and entity_entry.device_id is not None:
+        device_entry = device_registry.async_get(entity_entry.device_id)
+        if device_entry is not None:
+            area_id = device_entry.area_id
+
+    if area_id is None:
+        return set()
+
+    area_entry = area_registry.async_get_area(area_id)
+    if area_entry is None:
+        return set()
+
+    names = {area_entry.name.strip().casefold()}
+    names.update(alias.strip().casefold() for alias in area_entry.aliases)
+    return names
+
+
 def _get_exposed_entities(
     hass: HomeAssistant,
     assistant: str,
@@ -1175,6 +1210,38 @@ class GetLiveContextTool(Tool):
         "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
         "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
     )
+    parameters = vol.Schema(
+        {
+            vol.Optional(
+                "domains",
+                description=(
+                    "Optional. Only include entities whose domain is in this"
+                    " list (case-insensitive, e.g. ['light', 'climate'])."
+                ),
+            ): [str],
+            vol.Optional(
+                "areas",
+                description=(
+                    "Optional. Only include entities whose area name or alias"
+                    " matches one of these values (case-insensitive)."
+                ),
+            ): [str],
+            vol.Optional(
+                "entity_ids",
+                description=(
+                    "Optional. Only include these specific entity_ids"
+                    " (e.g. ['light.kitchen'])."
+                ),
+            ): [str],
+            vol.Optional(
+                "name_contains",
+                description=(
+                    "Optional. Only include entities whose name or alias"
+                    " contains this substring (case-insensitive)."
+                ),
+            ): str,
+        }
+    )
 
     async def async_call(
         self,
@@ -1188,12 +1255,79 @@ class GetLiveContextTool(Tool):
             # exposed if no assistant is configured.
             return {"success": False, "error": "No assistant configured"}
 
+        args = self.parameters(tool_input.tool_args)
+
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
-        if not exposed_entities["entities"]:
+        entities = exposed_entities["entities"]
+        if not entities:
             return {"success": False, "error": NO_ENTITIES_PROMPT}
+
+        domains = (
+            {d.strip().casefold() for d in args["domains"]}
+            if "domains" in args
+            else None
+        )
+        areas = (
+            {a.strip().casefold() for a in args["areas"]} if "areas" in args else None
+        )
+        entity_ids = set(args["entity_ids"]) if "entity_ids" in args else None
+        name_contains = (
+            args["name_contains"].strip().casefold()
+            if "name_contains" in args
+            else None
+        )
+
+        if (
+            domains is not None
+            or areas is not None
+            or entity_ids is not None
+            or (name_contains is not None)
+        ):
+            area_registry = ar.async_get(hass) if areas is not None else None
+            entity_registry = er.async_get(hass) if areas is not None else None
+            device_registry = dr.async_get(hass) if areas is not None else None
+
+            filtered: dict[str, dict[str, Any]] = {}
+            for entity_id, info in entities.items():
+                if entity_ids is not None and entity_id not in entity_ids:
+                    continue
+                if (
+                    domains is not None
+                    and info.get("domain", "").casefold() not in domains
+                ):
+                    continue
+                if areas is not None:
+                    # Re-derive area names from the registries instead of
+                    # parsing info["areas"], because area names/aliases may
+                    # legally contain commas which would break a string split.
+                    assert area_registry is not None
+                    assert entity_registry is not None
+                    assert device_registry is not None
+                    entity_areas = _entity_area_names(
+                        entity_id,
+                        area_registry,
+                        entity_registry,
+                        device_registry,
+                    )
+                    if not entity_areas & areas:
+                        continue
+                if (
+                    name_contains is not None
+                    and name_contains not in str(info.get("names", "")).casefold()
+                ):
+                    continue
+                filtered[entity_id] = info
+            entities = filtered
+
+        if not entities:
+            return {
+                "success": False,
+                "error": "No exposed entities matched the provided filters.",
+            }
+
         prompt = [
             "Live Context: An overview of the areas and the devices in this smart home:",
-            yaml_util.dump(list(exposed_entities["entities"].values())),
+            yaml_util.dump(list(entities.values())),
         ]
         return {
             "success": True,

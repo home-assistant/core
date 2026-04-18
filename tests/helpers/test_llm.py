@@ -706,6 +706,82 @@ For general knowledge questions not about the home: Answer truthfully from inter
         "result": exposed_entities_prompt,
     }
 
+    # GetLiveContext: filter by entity_ids returns only that entity.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"entity_ids": [entry1.entity_id]},
+        )
+    )
+    assert result["success"] is True
+    assert "Kitchen" in result["result"]
+    assert "Living Room" not in result["result"]
+
+    # GetLiveContext: filter by domains matches when domain is in list.
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetLiveContext", tool_args={"domains": ["light"]})
+    )
+    assert result == {"success": True, "result": exposed_entities_prompt}
+
+    # GetLiveContext: domain matching is case-insensitive.
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetLiveContext", tool_args={"domains": ["LiGhT"]})
+    )
+    assert result == {"success": True, "result": exposed_entities_prompt}
+
+    # GetLiveContext: filter by domain that matches nothing returns an error.
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetLiveContext", tool_args={"domains": ["climate"]})
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities matched the provided filters.",
+    }
+
+    # GetLiveContext: filter by area name (case-insensitive).
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetLiveContext", tool_args={"areas": ["test area 2"]})
+    )
+    assert result["success"] is True
+    assert "Test Device 2" in result["result"]
+    assert "Living Room" not in result["result"]
+
+    # GetLiveContext: area filter also matches against aliases.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext", tool_args={"areas": ["alternative name"]}
+        )
+    )
+    assert result["success"] is True
+    assert "Living Room" in result["result"]
+    assert "Test Device 2" not in result["result"]
+
+    # GetLiveContext: name_contains filter is a case-insensitive substring match.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext", tool_args={"name_contains": "kitchen"}
+        )
+    )
+    assert result["success"] is True
+    assert "Kitchen" in result["result"]
+    assert "Living Room" not in result["result"]
+
+    # GetLiveContext: combined filters are AND-ed together.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={
+                "domains": ["light"],
+                "areas": ["test area 2"],
+                "name_contains": "test device 2",
+            },
+        )
+    )
+    assert result["success"] is True
+    assert "Test Device 2" in result["result"]
+    assert "Test Device 3" not in result["result"]
+    assert "Living Room" not in result["result"]
+
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
     area_prompt = (
