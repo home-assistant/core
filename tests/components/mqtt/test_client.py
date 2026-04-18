@@ -738,6 +738,89 @@ async def test_subscribe_same_topic(
     mqtt_client_mock.subscribe.assert_called()
 
 
+async def test_subscribe_same_topic_non_retained_skips_subscribe(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+) -> None:
+    """Test no redundant SUBSCRIBE for a second same-QoS listener on a non-retained topic.
+
+    When a topic has never delivered a retained message, a second listener at
+    the same QoS must not trigger a broker SUBSCRIBE — HA fan-out handles
+    delivery. Both listeners must still receive non-retained messages.
+    """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    calls_a: list[ReceiveMessage] = []
+    calls_b: list[ReceiveMessage] = []
+
+    @callback
+    def _callback_a(msg: ReceiveMessage) -> None:
+        calls_a.append(msg)
+
+    @callback
+    def _callback_b(msg: ReceiveMessage) -> None:
+        calls_b.append(msg)
+
+    mqtt_client_mock.reset_mock()
+    mock_debouncer.clear()
+    await mqtt.async_subscribe(hass, "test/state", _callback_a, qos=0)
+    # Non-retained message only — _retained_seen is NOT populated for "test/state"
+    async_fire_mqtt_message(hass, "test/state", "online", qos=0, retain=False)
+    await mock_debouncer.wait()
+    assert len(calls_a) == 1
+    mqtt_client_mock.subscribe.assert_called_once()
+    calls_a = []
+    mqtt_client_mock.reset_mock()
+
+    # Second listener at the same QoS: no retained data seen → guard must suppress SUBSCRIBE
+    await mqtt.async_subscribe(hass, "test/state", _callback_b, qos=0)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    mqtt_client_mock.subscribe.assert_not_called()
+
+    # Both listeners receive subsequent non-retained messages via HA fan-out
+    async_fire_mqtt_message(hass, "test/state", "offline", qos=0, retain=False)
+    assert len(calls_a) == 1
+    assert len(calls_b) == 1
+
+
+async def test_no_qos_downgrade_on_partial_unsubscribe(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    record_calls: MessageCallbackType,
+) -> None:
+    """Test _max_qos is not downgraded when a high-QoS listener unsubscribes.
+
+    After the highest-QoS listener leaves, _max_qos must stay at the
+    high-water mark. A new listener whose QoS is still at or below the
+    high-water mark must not trigger an extra broker SUBSCRIBE.
+    """
+    mqtt_client_mock = setup_with_birth_msg_client_mock
+    mqtt_client_mock.reset_mock()
+    mock_debouncer.clear()
+
+    # Listener A at QoS 2 → broker subscribed at QoS 2, _max_qos["test/state"] = 2
+    unsub_a = await mqtt.async_subscribe(hass, "test/state", record_calls, qos=2)
+    # Listener B at QoS 0 → guard suppresses (0 ≤ 2, no retained seen)
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=0)
+    await mock_debouncer.wait()
+    assert help_all_subscribe_calls(mqtt_client_mock) == [("test/state", 2)]
+    mqtt_client_mock.reset_mock()
+
+    # Remove listener A — B still active, so no UNSUBSCRIBE; _max_qos stays at 2
+    unsub_a()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    mqtt_client_mock.unsubscribe.assert_not_called()
+
+    # Listener C at QoS 1 — still below _max_qos high-water mark of 2; must not trigger SUBSCRIBE
+    await mqtt.async_subscribe(hass, "test/state", record_calls, qos=1)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
+    mqtt_client_mock.subscribe.assert_not_called()
+
+
 async def test_replaying_payload_same_topic(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,

@@ -435,6 +435,11 @@ class MQTT:
         # already active subscribers when new subscribers subscribe to a topic
         # which has subscribed messages.
         self._retained_topics: defaultdict[Subscription, set[str]] = defaultdict(set)
+        # _retained_seen tracks subscription topic patterns for which a retained
+        # message has been observed. When a new listener subscribes to a pattern
+        # already covered at the same QoS, we still send a SUBSCRIBE so the broker
+        # replays retained messages to it.
+        self._retained_seen: set[str] = set()
         self.connected = False
         self._ha_started = asyncio.Event()
         self._cleanup_on_unload: list[Callable[[], None]] = []
@@ -918,7 +923,11 @@ class MQTT:
         self._matching_subscriptions.cache_clear()
 
         # Only subscribe if currently connected.
-        if self.connected:
+        if self.connected and (
+            not self.is_active_subscription(topic)
+            or qos > self._max_qos[topic]
+            or topic in self._retained_seen
+        ):
             self._async_queue_subscriptions(((topic, qos),))
 
         return partial(self._async_remove, subscription)
@@ -938,10 +947,6 @@ class MQTT:
     def _async_unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic."""
         if self.is_active_subscription(topic):
-            if self._max_qos[topic] == 0:
-                return
-            subs = self._matching_subscriptions(topic)
-            self._max_qos[topic] = max(sub.qos for sub in subs)
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
         if topic in self._max_qos:
@@ -1165,6 +1170,9 @@ class MQTT:
 
         for subscription in subscriptions:
             if msg.retain:
+                # Track which subscription patterns have seen retained messages so
+                # the subscribe guard knows to re-subscribe when a new listener joins.
+                self._retained_seen.add(subscription.topic)
                 retained_topics = self._retained_topics[subscription]
                 # Skip if the subscription already received a retained message
                 if topic in retained_topics:
