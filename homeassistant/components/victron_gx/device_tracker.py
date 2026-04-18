@@ -53,6 +53,9 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     """Implementation of a Victron GX device tracker."""
 
     _attr_source_type = SourceType.GPS
+    _altitude: float | None = None
+    _course: float | None = None
+    _speed: float | None = None
 
     def __init__(
         self,
@@ -70,14 +73,13 @@ class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
         self._update_from_location(value)
         self.async_write_ha_state()
 
-    def _update_from_location(self, value: Any) -> None:
+    def _update_from_location(self, value: GpsLocation) -> None:
         """Update entity attributes from a GpsLocation value."""
-        if isinstance(value, GpsLocation):
-            self._attr_latitude = value.latitude
-            self._attr_longitude = value.longitude
-            self._altitude = value.altitude
-            self._course = value.course
-            self._speed = value.speed
+        self._attr_latitude = value.latitude
+        self._attr_longitude = value.longitude
+        self._altitude = value.altitude
+        self._course = value.course
+        self._speed = value.speed
 
     @property
     def extra_state_attributes(self) -> dict[str, StateType]:

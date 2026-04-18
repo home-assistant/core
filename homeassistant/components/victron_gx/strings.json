@@ -175,6 +175,11 @@
         "name": "Grid lost alarm setting"
       }
     },
+    "device_tracker": {
+      "gps_location": {
+        "name": "[%key:common::config_flow::data::location%]"
+      }
+    },
     "select": {
       "acsystem_mode": {
         "state": {
