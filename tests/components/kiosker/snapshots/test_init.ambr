@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'iPad Pro (18.0)',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'kiosker',
+        'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Kiosker A98BE1CE',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC',
+    'sw_version': 'Kiosker 25.1.1',
+    'via_device_id': None,
+  })
+# ---

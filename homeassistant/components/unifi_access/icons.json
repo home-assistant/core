@@ -23,5 +23,10 @@
         "default": "mdi:lock-alert"
       }
     }
+  },
+  "services": {
+    "set_lock_rule": {
+      "service": "mdi:lock-clock"
+    }
   }
 }

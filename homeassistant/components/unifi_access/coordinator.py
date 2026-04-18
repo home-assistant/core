@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
+import math
 from typing import Any, cast
 
 from unifi_access_api import (
@@ -37,14 +38,18 @@ from unifi_access_api.models.websocket import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import (
+    DEFAULT_LOCK_RULE_INTERVAL,
+    DOMAIN,
+    MAX_LOCK_RULE_INTERVAL,
+    MIN_LOCK_RULE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_LOCK_RULE_INTERVAL = 10
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
 
@@ -108,12 +113,38 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         self._event_listeners.append(event_callback)
         return _unsubscribe
 
-    async def async_set_lock_rule(self, door_id: str, rule_type: str) -> None:
+    def _normalize_interval(self, value: float | None) -> int:
+        """Clamp and normalize an interval value to valid integer minutes."""
+        if value is None:
+            value = float(DEFAULT_LOCK_RULE_INTERVAL)
+
+        normalized = min(
+            max(float(value), float(MIN_LOCK_RULE_INTERVAL)),
+            float(MAX_LOCK_RULE_INTERVAL),
+        )
+        normalized = math.floor(normalized + 0.5)
+        normalized = min(
+            max(normalized, float(MIN_LOCK_RULE_INTERVAL)),
+            float(MAX_LOCK_RULE_INTERVAL),
+        )
+        return int(normalized)
+
+    async def async_set_lock_rule(
+        self, door_id: str, rule_type: str, interval: float | None = None
+    ) -> None:
         """Set a temporary lock rule for a door."""
         if not rule_type:
             return
-        lock_rule_type = DoorLockRuleType(rule_type)
-        rule = DoorLockRule(type=lock_rule_type, interval=DEFAULT_LOCK_RULE_INTERVAL)
+        try:
+            lock_rule_type = DoorLockRuleType(rule_type)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_lock_rule_type",
+            ) from err
+        rule = DoorLockRule(
+            type=lock_rule_type, interval=self._normalize_interval(interval)
+        )
         await self.client.set_door_lock_rule(door_id, rule)
         if self.data is None or door_id not in self.data.doors:
             return

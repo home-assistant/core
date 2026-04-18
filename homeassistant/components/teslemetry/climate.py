@@ -96,7 +96,6 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_preset_modes = list(PRESET_MODES.values())
     _attr_fan_modes = ["off", "bioweapon"]
-    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""

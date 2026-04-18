@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -366,11 +367,26 @@ class EvoController(EvoClimateEntity):
             ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
+
+    async def process_signal(self, payload: dict | None = None) -> None:
+        """Process any signals."""
+
+        if payload is None:
+            raise NotImplementedError
+        if payload["unique_id"] != self._attr_unique_id:
+            return
+        await self.async_tcs_svc_request(payload["service"], payload["data"])
+
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller.
 
-        Data validation is not required here; it is performed upstream by the service
-        handler (service schema plus runtime checks).
+        Data validation must be performed upstream in the service handler, before the
+        dispatcher call, so a ServiceValidationError can be seen, if raised.
         """
 
         if service == EvoService.RESET_SYSTEM:

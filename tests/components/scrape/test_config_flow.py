@@ -23,11 +23,13 @@ from homeassistant.components.scrape.const import (
 )
 from homeassistant.const import (
     CONF_METHOD,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
@@ -82,21 +84,23 @@ async def test_entry_and_subentry(
 
     assert len(mock_data.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    entry_id = result["result"].entry_id
-
-    result = await hass.config_entries.subentries.async_init(
-        (entry_id, "entity"), context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["step_id"] == "user"
-    assert result["type"] is FlowResultType.FORM
+    subentry_flows = hass.config_entries.subentries.async_progress()
+    assert len(subentry_flows) == 1
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_INDEX: 0, CONF_SELECT: ".current-version h1", CONF_ADVANCED: {}},
+        subentry_flows[0]["flow_id"],
+        {
+            CONF_NAME: "Current version",
+            CONF_INDEX: 0,
+            CONF_SELECT: ".current-version h1",
+            CONF_ADVANCED: {},
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Current version"
     assert result["data"] == {
         CONF_INDEX: 0,
         CONF_SELECT: ".current-version h1",
@@ -288,3 +292,36 @@ async def test_options_resource_flow(
     # Check the state of the entity has changed as expected
     state = hass.states.get("sensor.current_version")
     assert state.state == "Hidden Version: 2021.12.10"
+
+
+async def test_reconfigure_sensor_subentry(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry, get_data: MockRestData
+) -> None:
+    """Test reconfiguring a sensor subentry."""
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "Current Version: 2021.12.10"
+
+    subentry_id = list(loaded_entry.subentries)[0]
+
+    result = await loaded_entry.start_subentry_reconfigure_flow(
+        hass, subentry_id=subentry_id
+    )
+    with patch(
+        "homeassistant.components.rest.RestData",
+        return_value=get_data,
+    ):
+        await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ADVANCED: {
+                    CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
+                },
+                CONF_INDEX: 0,
+                CONF_SELECT: ".current-version h1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.current_version")
+    assert state.state == "2021.12.10"

@@ -23,11 +23,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    FlowType,
     OptionsFlow,
+    SubentryFlowContext,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -137,9 +140,8 @@ RESOURCE_SETUP = vol.Schema(
     }
 )
 
-SENSOR_SETUP = vol.Schema(
+SENSOR_SETTINGS = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Required(CONF_SELECT): TextSelector(),
         vol.Optional(CONF_INDEX, default=0): vol.All(
             NumberSelector(
@@ -188,6 +190,9 @@ SENSOR_SETUP = vol.Schema(
         ),
     }
 )
+SENSOR_SETUP = vol.Schema(
+    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
+).extend(SENSOR_SETTINGS.schema)
 
 
 async def validate_rest_setup(
@@ -247,6 +252,18 @@ class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Start subentry flow after creating main entry."""
+        subentry_result = await self.hass.config_entries.subentries.async_init(
+            (result["result"].entry_id, "entity"),
+            context=SubentryFlowContext(source=SOURCE_USER),
+        )
+        result["next_flow"] = (
+            FlowType.CONFIG_SUBENTRIES_FLOW,
+            subentry_result["flow_id"],
+        )
+        return result
+
 
 class ScrapeOptionFlow(OptionsFlow):
     """Scrape Options flow."""
@@ -286,5 +303,21 @@ class ScrapeSubentryFlowHandler(ConfigSubentryFlow):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 SENSOR_SETUP, user_input or {}
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to reconfigure a sensor subentry."""
+        if user_input is not None:
+            self.async_update_and_abort(
+                self._get_entry(), self._get_reconfigure_subentry(), data=user_input
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                SENSOR_SETTINGS, user_input or self._get_reconfigure_subentry().data
             ),
         )

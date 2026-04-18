@@ -693,8 +693,9 @@ async def test_extended_thinking(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-sonnet-4-5",
+            CONF_CHAT_MODEL: "claude-opus-4-5",
             CONF_THINKING_BUDGET: 1500,
+            CONF_THINKING_EFFORT: "medium",
         },
     )
 

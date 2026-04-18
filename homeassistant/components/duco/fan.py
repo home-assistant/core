@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from duco.exceptions import DucoError
-from duco.models import Node, VentilationState
+from duco.models import Node, NodeType, VentilationState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -62,8 +62,8 @@ async def async_setup_entry(
 
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
-        for node in coordinator.data.values()
-        if node.general.node_type == "BOX"
+        for node in coordinator.data.nodes.values()
+        if node.general.node_type == NodeType.BOX
     )
 
 

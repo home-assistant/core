@@ -121,6 +121,15 @@
       }
     },
     "sensor": {
+      "aqi_quality_level": {
+        "default": "mdi:air-filter",
+        "state": {
+          "excellent": "mdi:emoticon-excited-outline",
+          "good": "mdi:emoticon-happy-outline",
+          "moderate": "mdi:emoticon-neutral-outline",
+          "unhealthy": "mdi:emoticon-sad-outline"
+        }
+      },
       "battery_range": {
         "default": "mdi:battery",
         "state": {
