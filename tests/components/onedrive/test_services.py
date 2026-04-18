@@ -429,6 +429,33 @@ async def test_delete_service_fails(
         )
 
 
+async def test_delete_service_multiple_files_all_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service aggregates errors from multiple failed deletions."""
+    await setup_integration(hass, mock_config_entry)
+    second_path = "photos/snapshots/image2.jpg"
+    mock_onedrive_client.delete_drive_item.side_effect = [
+        OneDriveException("error one"),
+        OneDriveException("error two"),
+    ]
+
+    with pytest.raises(HomeAssistantError, match="error one.*error two"):
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+            },
+            blocking=True,
+        )
+
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
+
+
 async def test_delete_service_get_approot_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
