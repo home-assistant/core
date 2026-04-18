@@ -63,9 +63,9 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
         key=BringSensor.LIST_LANGUAGE,
         translation_key=BringSensor.LIST_LANGUAGE,
         value_fn=(
-            lambda lst, settings: x.lower()
-            if (x := list_language(lst.lst.listUuid, settings))
-            else None
+            lambda lst, settings: (
+                x.lower() if (x := list_language(lst.lst.listUuid, settings)) else None
+            )
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[x.lower() for x in BRING_SUPPORTED_LOCALES],
@@ -88,7 +88,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.data
     lists_added: set[str] = set()
 
     @callback
@@ -117,6 +117,7 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
     """A sensor entity."""
 
     entity_description: BringSensorEntityDescription
+    coordinator: BringDataUpdateCoordinator
 
     def __init__(
         self,

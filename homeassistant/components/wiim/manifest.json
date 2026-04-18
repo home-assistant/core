@@ -1,0 +1,13 @@
+{
+  "domain": "wiim",
+  "name": "WiiM",
+  "codeowners": ["@Linkplay2020"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/wiim",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "loggers": ["wiim.sdk", "async_upnp_client"],
+  "quality_scale": "bronze",
+  "requirements": ["wiim==0.1.0"],
+  "zeroconf": ["_linkplay._tcp.local."]
+}

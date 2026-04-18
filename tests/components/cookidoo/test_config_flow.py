@@ -47,7 +47,7 @@ async def test_flow_user_success(
         user_input=MOCK_DATA_USER_STEP,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(
@@ -97,7 +97,7 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_1(
         user_input=MOCK_DATA_USER_STEP,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(
@@ -137,7 +137,7 @@ async def test_flow_user_init_data_unknown_error_and_recover_on_step_2(
         user_input=MOCK_DATA_USER_STEP,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(
@@ -269,7 +269,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
         user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(
@@ -318,7 +318,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
         user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(

@@ -1,0 +1,40 @@
+{
+  "name": "Pro Breeze 30L Compressor Dehumidifier",
+  "category": "cs",
+  "product_id": "ipmyy4nigpqcnd8q",
+  "product_name": "30L Dehumidifier with Max Extraction",
+  "online": true,
+  "function": {
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["0", "1", "2", "3", "4", "5"]
+      }
+    },
+    "countdown_left": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 1440,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "anion": false,
+    "fault": 0,
+    "countdown_left": 0
+  }
+}

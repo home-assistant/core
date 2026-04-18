@@ -1,0 +1,39 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Failed to connect. Check the URL and if the device is connected to power",
+      "missing_device_info": "Failed to read device information. Check the network connection of the device"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to setup the Lunatone device with {url}?"
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::lunatone::config::step::user::data_description::url%]"
+        },
+        "description": "Update configuration for {name}."
+      },
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL of the Lunatone device to connect to."
+        },
+        "description": "Enter the URL of your Lunatone device.\nHome Assistant will use this address to connect to the device API."
+      }
+    }
+  }
+}

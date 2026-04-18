@@ -168,6 +168,26 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_dc_mppt_no",
+        translation_placeholders={"mppt_no": "2"},
+    ),
+    FroniusSensorEntityDescription(
+        key="current_dc_3",
+        default_value=0,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_dc_mppt_no",
+        translation_placeholders={"mppt_no": "3"},
+    ),
+    FroniusSensorEntityDescription(
+        key="current_dc_4",
+        default_value=0,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_dc_mppt_no",
+        translation_placeholders={"mppt_no": "4"},
     ),
     FroniusSensorEntityDescription(
         key="power_ac",
@@ -197,6 +217,26 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="voltage_dc_mppt_no",
+        translation_placeholders={"mppt_no": "2"},
+    ),
+    FroniusSensorEntityDescription(
+        key="voltage_dc_3",
+        default_value=0,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="voltage_dc_mppt_no",
+        translation_placeholders={"mppt_no": "3"},
+    ),
+    FroniusSensorEntityDescription(
+        key="voltage_dc_4",
+        default_value=0,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="voltage_dc_mppt_no",
+        translation_placeholders={"mppt_no": "4"},
     ),
     # device status entities
     FroniusSensorEntityDescription(
@@ -727,7 +767,7 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         self.response_key = description.response_key or description.key
         self.solar_net_id = solar_net_id
         self._attr_native_value = self._get_entity_value()
-        self._attr_translation_key = description.key
+        self._attr_translation_key = description.translation_key or description.key
 
     def _device_data(self) -> dict[str, Any]:
         """Extract information for SolarNet device from coordinator data."""

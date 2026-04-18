@@ -1,0 +1,139 @@
+{
+  "endpoint": "https://openapi.tuyaus.com",
+  "auth_type": 0,
+  "country_code": "1",
+  "app_type": "tuyaSmart",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "House Water Level",
+  "model": "EPT_Ultrasonic level sensor",
+  "category": "ywcgq",
+  "product_id": "wtzwyhkev3b4ubns",
+  "product_name": "Tank A Level",
+  "online": true,
+  "sub": false,
+  "time_zone": "-06:00",
+  "active_time": "2023-11-02T22:48:03+00:00",
+  "create_time": "2023-11-02T22:48:03+00:00",
+  "update_time": "2023-11-09T13:32:38+00:00",
+  "function": {
+    "max_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mini_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "installation_height": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 200,
+        "max": 2500,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "liquid_depth_max": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 100,
+        "max": 2400,
+        "scale": 3,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "liquid_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "lower_alarm", "upper_alarm"]
+      }
+    },
+    "liquid_depth": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 0,
+        "max": 10000,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "max_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mini_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "installation_height": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 200,
+        "max": 2500,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "liquid_depth_max": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 100,
+        "max": 2400,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "liquid_level_percent": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "liquid_state": "upper_alarm",
+    "liquid_depth": 42,
+    "max_set": 100,
+    "mini_set": 0,
+    "installation_height": 560,
+    "liquid_depth_max": 100,
+    "liquid_level_percent": 100
+  }
+}

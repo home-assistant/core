@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_gen24[sensor.inverter_name_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,13 +23,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '12345678-current_ac',
@@ -53,8 +59,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_ac_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -74,13 +81,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '12345678-power_ac',
@@ -105,8 +117,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -126,13 +139,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '12345678-voltage_ac',
@@ -157,8 +175,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -178,13 +197,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '12345678-current_dc',
@@ -209,8 +233,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_dc_current_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -230,15 +255,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'current_dc_2',
+    'translation_key': 'current_dc_mppt_no',
     'unique_id': '12345678-current_dc_2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -261,8 +291,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -282,13 +313,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '12345678-voltage_dc',
@@ -313,8 +349,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_dc_voltage_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -334,15 +371,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_dc_2',
+    'translation_key': 'voltage_dc_mppt_no',
     'unique_id': '12345678-voltage_dc_2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -365,8 +407,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_error_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -384,6 +427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,6 +435,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '12345678-error_code',
@@ -412,8 +457,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_error_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -530,6 +576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -537,6 +584,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '12345678-error_message',
@@ -657,8 +705,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -678,13 +727,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '12345678-frequency_ac',
@@ -709,8 +763,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_inverter_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -728,6 +783,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -735,6 +791,7 @@
     'original_name': 'Inverter state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_state',
     'unique_id': '12345678-inverter_state',
@@ -756,8 +813,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_status_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -775,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -782,6 +841,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '12345678-status_code',
@@ -803,8 +863,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_status_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -833,6 +894,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -840,6 +902,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '12345678-status_message',
@@ -872,8 +935,9 @@
 # ---
 # name: test_gen24[sensor.inverter_name_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -893,13 +957,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '12345678-energy_total',
@@ -924,8 +993,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -945,13 +1015,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent',
     'unique_id': '1234567890-power_apparent',
@@ -976,8 +1051,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -997,13 +1073,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_1',
     'unique_id': '1234567890-power_apparent_phase_1',
@@ -1028,8 +1109,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1049,13 +1131,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_2',
     'unique_id': '1234567890-power_apparent_phase_2',
@@ -1080,8 +1167,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1101,13 +1189,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_3',
     'unique_id': '1234567890-power_apparent_phase_3',
@@ -1132,8 +1225,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_current_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1153,13 +1247,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_1',
     'unique_id': '1234567890-current_ac_phase_1',
@@ -1184,8 +1283,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_current_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1205,13 +1305,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_2',
     'unique_id': '1234567890-current_ac_phase_2',
@@ -1236,8 +1341,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_current_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1257,13 +1363,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_3',
     'unique_id': '1234567890-current_ac_phase_3',
@@ -1288,8 +1399,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_frequency_phase_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1309,13 +1421,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency phase average',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency phase average',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_phase_average',
     'unique_id': '1234567890-frequency_phase_average',
@@ -1340,8 +1457,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_meter_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1359,6 +1477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1366,6 +1485,7 @@
     'original_name': 'Meter location',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location',
     'unique_id': '1234567890-meter_location',
@@ -1387,8 +1507,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_meter_location_description-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1414,6 +1535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location description',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1421,6 +1543,7 @@
     'original_name': 'Meter location description',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location_description',
     'unique_id': '1234567890-meter_location_description',
@@ -1450,8 +1573,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1471,6 +1595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1478,6 +1603,7 @@
     'original_name': 'Power factor',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor',
     'unique_id': '1234567890-power_factor',
@@ -1501,8 +1627,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1522,6 +1649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1529,6 +1657,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_1',
     'unique_id': '1234567890-power_factor_phase_1',
@@ -1552,8 +1681,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1573,6 +1703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1580,6 +1711,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_2',
     'unique_id': '1234567890-power_factor_phase_2',
@@ -1603,8 +1735,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1624,6 +1757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1631,6 +1765,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_3',
     'unique_id': '1234567890-power_factor_phase_3',
@@ -1654,8 +1789,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1675,6 +1811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy consumed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1682,6 +1819,7 @@
     'original_name': 'Reactive energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_consumed',
     'unique_id': '1234567890-energy_reactive_ac_consumed',
@@ -1705,8 +1843,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_energy_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1726,6 +1865,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy produced',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1733,6 +1873,7 @@
     'original_name': 'Reactive energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_produced',
     'unique_id': '1234567890-energy_reactive_ac_produced',
@@ -1756,8 +1897,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1777,13 +1919,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive',
     'unique_id': '1234567890-power_reactive',
@@ -1808,8 +1955,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1829,13 +1977,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_1',
     'unique_id': '1234567890-power_reactive_phase_1',
@@ -1860,8 +2013,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1881,13 +2035,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_2',
     'unique_id': '1234567890-power_reactive_phase_2',
@@ -1912,8 +2071,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1933,13 +2093,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_3',
     'unique_id': '1234567890-power_reactive_phase_3',
@@ -1964,8 +2129,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1985,13 +2151,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy consumed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_consumed',
     'unique_id': '1234567890-energy_real_consumed',
@@ -2016,8 +2187,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_minus-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2037,13 +2209,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy minus',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy minus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_minus',
     'unique_id': '1234567890-energy_real_ac_minus',
@@ -2068,8 +2245,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_plus-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2089,13 +2267,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy plus',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy plus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_plus',
     'unique_id': '1234567890-energy_real_ac_plus',
@@ -2120,8 +2303,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2141,13 +2325,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy produced',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_produced',
     'unique_id': '1234567890-energy_real_produced',
@@ -2172,8 +2361,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2193,13 +2383,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real',
     'unique_id': '1234567890-power_real',
@@ -2224,8 +2419,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2245,13 +2441,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_1',
     'unique_id': '1234567890-power_real_phase_1',
@@ -2276,8 +2477,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2297,13 +2499,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_2',
     'unique_id': '1234567890-power_real_phase_2',
@@ -2328,8 +2535,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2349,13 +2557,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_3',
     'unique_id': '1234567890-power_real_phase_3',
@@ -2380,8 +2593,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2401,13 +2615,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_1',
     'unique_id': '1234567890-voltage_ac_phase_1',
@@ -2432,8 +2651,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2453,13 +2673,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1-2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1-2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_12',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_12',
@@ -2484,8 +2709,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2505,13 +2731,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_2',
     'unique_id': '1234567890-voltage_ac_phase_2',
@@ -2536,8 +2767,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_2_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2557,13 +2789,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2-3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2-3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_23',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_23',
@@ -2588,8 +2825,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2609,13 +2847,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_3',
     'unique_id': '1234567890-voltage_ac_phase_3',
@@ -2640,8 +2883,9 @@
 # ---
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_3_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2661,13 +2905,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3-1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3-1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_31',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_31',
@@ -2692,8 +2941,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_meter_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2711,6 +2961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2718,6 +2969,7 @@
     'original_name': 'Meter mode',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_mode',
     'unique_id': 'solar_net_123.4567890-power_flow-meter_mode',
@@ -2739,8 +2991,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_power_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2760,13 +3013,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid',
@@ -2791,8 +3049,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_power_grid_export-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2812,13 +3071,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid export',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid export',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_export',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_export',
@@ -2843,8 +3107,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_power_grid_import-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2864,13 +3129,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid import',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid import',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_import',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_import',
@@ -2895,8 +3165,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_power_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2916,13 +3187,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load',
@@ -2947,8 +3223,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_power_load_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2968,13 +3245,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load consumed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_consumed',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_consumed',
@@ -2999,8 +3281,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_power_load_generated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3020,13 +3303,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load generated',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load generated',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_generated',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_generated',
@@ -3051,8 +3339,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_power_photovoltaics-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3072,13 +3361,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power photovoltaics',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power photovoltaics',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_photovoltaics',
     'unique_id': 'solar_net_123.4567890-power_flow-power_photovoltaics',
@@ -3103,8 +3397,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_relative_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3124,6 +3419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative autonomy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3131,6 +3427,7 @@
     'original_name': 'Relative autonomy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_autonomy',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_autonomy',
@@ -3154,8 +3451,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_relative_self_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3175,13 +3473,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative self-consumption',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relative self consumption',
+    'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_self_consumption',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_self_consumption',
@@ -3191,7 +3491,7 @@
 # name: test_gen24[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self consumption',
+      'friendly_name': 'SolarNet Relative self-consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -3205,8 +3505,9 @@
 # ---
 # name: test_gen24[sensor.solarnet_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -3226,13 +3527,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_total',
@@ -3257,8 +3563,9 @@
 # ---
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3278,13 +3585,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': 'P030T020Z2001234567     -current_dc',
@@ -3309,8 +3621,9 @@
 # ---
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3330,13 +3643,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': 'P030T020Z2001234567     -voltage_dc',
@@ -3361,8 +3679,9 @@
 # ---
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_designed_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3380,6 +3699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Designed capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3387,6 +3707,7 @@
     'original_name': 'Designed capacity',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'capacity_designed',
     'unique_id': 'P030T020Z2001234567     -capacity_designed',
@@ -3409,8 +3730,9 @@
 # ---
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_maximum_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3428,6 +3750,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3435,6 +3758,7 @@
     'original_name': 'Maximum capacity',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'capacity_maximum',
     'unique_id': 'P030T020Z2001234567     -capacity_maximum',
@@ -3457,8 +3781,9 @@
 # ---
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_state_of_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3478,6 +3803,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State of charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -3485,6 +3811,7 @@
     'original_name': 'State of charge',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_of_charge',
     'unique_id': 'P030T020Z2001234567     -state_of_charge',
@@ -3509,8 +3836,9 @@
 # ---
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3530,13 +3858,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_cell',
     'unique_id': 'P030T020Z2001234567     -temperature_cell',
@@ -3561,8 +3894,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3582,13 +3916,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '12345678-current_ac',
@@ -3613,8 +3952,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_ac_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3634,13 +3974,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '12345678-power_ac',
@@ -3665,8 +4010,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3686,13 +4032,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '12345678-voltage_ac',
@@ -3717,8 +4068,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3738,13 +4090,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '12345678-current_dc',
@@ -3769,8 +4126,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_dc_current_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3790,15 +4148,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'current_dc_2',
+    'translation_key': 'current_dc_mppt_no',
     'unique_id': '12345678-current_dc_2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -3821,8 +4184,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3842,13 +4206,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '12345678-voltage_dc',
@@ -3873,8 +4242,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_dc_voltage_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3894,15 +4264,20 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage_dc_2',
+    'translation_key': 'voltage_dc_mppt_no',
     'unique_id': '12345678-voltage_dc_2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -3925,8 +4300,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_error_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3944,6 +4320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3951,6 +4328,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '12345678-error_code',
@@ -3972,8 +4350,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_error_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4090,6 +4469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4097,6 +4477,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '12345678-error_message',
@@ -4217,8 +4598,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4238,13 +4620,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '12345678-frequency_ac',
@@ -4269,8 +4656,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_inverter_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4288,6 +4676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4295,6 +4684,7 @@
     'original_name': 'Inverter state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_state',
     'unique_id': '12345678-inverter_state',
@@ -4316,8 +4706,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_status_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4335,6 +4726,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4342,6 +4734,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '12345678-status_code',
@@ -4363,8 +4756,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_status_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4393,6 +4787,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4400,6 +4795,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '12345678-status_message',
@@ -4432,8 +4828,9 @@
 # ---
 # name: test_gen24_storage[sensor.gen24_storage_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4453,13 +4850,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '12345678-energy_total',
@@ -4484,8 +4886,9 @@
 # ---
 # name: test_gen24_storage[sensor.ohmpilot_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -4505,13 +4908,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_consumed',
     'unique_id': '23456789-energy_real_ac_consumed',
@@ -4536,8 +4944,9 @@
 # ---
 # name: test_gen24_storage[sensor.ohmpilot_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4557,13 +4966,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_ac',
     'unique_id': '23456789-power_real_ac',
@@ -4588,8 +5002,9 @@
 # ---
 # name: test_gen24_storage[sensor.ohmpilot_state_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4607,6 +5022,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4614,6 +5030,7 @@
     'original_name': 'State code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_code',
     'unique_id': '23456789-state_code',
@@ -4635,8 +5052,9 @@
 # ---
 # name: test_gen24_storage[sensor.ohmpilot_state_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4663,6 +5081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4670,6 +5089,7 @@
     'original_name': 'State message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_message',
     'unique_id': '23456789-state_message',
@@ -4700,8 +5120,9 @@
 # ---
 # name: test_gen24_storage[sensor.ohmpilot_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4721,13 +5142,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_channel_1',
     'unique_id': '23456789-temperature_channel_1',
@@ -4752,8 +5178,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4773,13 +5200,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent',
     'unique_id': '1234567890-power_apparent',
@@ -4804,8 +5236,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4825,13 +5258,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_1',
     'unique_id': '1234567890-power_apparent_phase_1',
@@ -4856,8 +5294,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4877,13 +5316,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_2',
     'unique_id': '1234567890-power_apparent_phase_2',
@@ -4908,8 +5352,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4929,13 +5374,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_apparent_phase_3',
     'unique_id': '1234567890-power_apparent_phase_3',
@@ -4960,8 +5410,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_current_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4981,13 +5432,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_1',
     'unique_id': '1234567890-current_ac_phase_1',
@@ -5012,8 +5468,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_current_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5033,13 +5490,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_2',
     'unique_id': '1234567890-current_ac_phase_2',
@@ -5064,8 +5526,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_current_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5085,13 +5548,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac_phase_3',
     'unique_id': '1234567890-current_ac_phase_3',
@@ -5116,8 +5584,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_frequency_phase_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5137,13 +5606,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency phase average',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency phase average',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_phase_average',
     'unique_id': '1234567890-frequency_phase_average',
@@ -5168,8 +5642,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_meter_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5187,6 +5662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5194,6 +5670,7 @@
     'original_name': 'Meter location',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location',
     'unique_id': '1234567890-meter_location',
@@ -5215,8 +5692,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_meter_location_description-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5242,6 +5720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location description',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5249,6 +5728,7 @@
     'original_name': 'Meter location description',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location_description',
     'unique_id': '1234567890-meter_location_description',
@@ -5278,8 +5758,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5299,6 +5780,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5306,6 +5788,7 @@
     'original_name': 'Power factor',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor',
     'unique_id': '1234567890-power_factor',
@@ -5329,8 +5812,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5350,6 +5834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5357,6 +5842,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_1',
     'unique_id': '1234567890-power_factor_phase_1',
@@ -5380,8 +5866,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5401,6 +5888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5408,6 +5896,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_2',
     'unique_id': '1234567890-power_factor_phase_2',
@@ -5431,8 +5920,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5452,6 +5942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5459,6 +5950,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_factor_phase_3',
     'unique_id': '1234567890-power_factor_phase_3',
@@ -5482,8 +5974,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5503,6 +5996,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy consumed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5510,6 +6004,7 @@
     'original_name': 'Reactive energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_consumed',
     'unique_id': '1234567890-energy_reactive_ac_consumed',
@@ -5533,8 +6028,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_energy_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5554,6 +6050,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy produced',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5561,6 +6058,7 @@
     'original_name': 'Reactive energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_ac_produced',
     'unique_id': '1234567890-energy_reactive_ac_produced',
@@ -5584,8 +6082,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5605,13 +6104,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive',
     'unique_id': '1234567890-power_reactive',
@@ -5636,8 +6140,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5657,13 +6162,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_1',
     'unique_id': '1234567890-power_reactive_phase_1',
@@ -5688,8 +6198,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5709,13 +6220,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_2',
     'unique_id': '1234567890-power_reactive_phase_2',
@@ -5740,8 +6256,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5761,13 +6278,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_phase_3',
     'unique_id': '1234567890-power_reactive_phase_3',
@@ -5792,8 +6314,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5813,13 +6336,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy consumed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_consumed',
     'unique_id': '1234567890-energy_real_consumed',
@@ -5844,8 +6372,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_minus-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5865,13 +6394,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy minus',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy minus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_minus',
     'unique_id': '1234567890-energy_real_ac_minus',
@@ -5896,8 +6430,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_plus-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5917,13 +6452,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy plus',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy plus',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_ac_plus',
     'unique_id': '1234567890-energy_real_ac_plus',
@@ -5948,8 +6488,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_produced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5969,13 +6510,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy produced',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Real energy produced',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_real_produced',
     'unique_id': '1234567890-energy_real_produced',
@@ -6000,8 +6546,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6021,13 +6568,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real',
     'unique_id': '1234567890-power_real',
@@ -6052,8 +6604,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6073,13 +6626,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_1',
     'unique_id': '1234567890-power_real_phase_1',
@@ -6104,8 +6662,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6125,13 +6684,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_2',
     'unique_id': '1234567890-power_real_phase_2',
@@ -6156,8 +6720,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6177,13 +6742,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real_phase_3',
     'unique_id': '1234567890-power_real_phase_3',
@@ -6208,8 +6778,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6229,13 +6800,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_1',
     'unique_id': '1234567890-voltage_ac_phase_1',
@@ -6260,8 +6836,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6281,13 +6858,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1-2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1-2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_12',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_12',
@@ -6312,8 +6894,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6333,13 +6916,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_2',
     'unique_id': '1234567890-voltage_ac_phase_2',
@@ -6364,8 +6952,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_2_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6385,13 +6974,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2-3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2-3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_23',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_23',
@@ -6416,8 +7010,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6437,13 +7032,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_3',
     'unique_id': '1234567890-voltage_ac_phase_3',
@@ -6468,8 +7068,9 @@
 # ---
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_3_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6489,13 +7090,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3-1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3-1',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac_phase_to_phase_31',
     'unique_id': '1234567890-voltage_ac_phase_to_phase_31',
@@ -6520,8 +7126,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_meter_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6539,6 +7146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6546,6 +7154,7 @@
     'original_name': 'Meter mode',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_mode',
     'unique_id': 'solar_net_12345678-power_flow-meter_mode',
@@ -6567,8 +7176,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6588,13 +7198,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power battery',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power battery',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_battery',
     'unique_id': 'solar_net_12345678-power_flow-power_battery',
@@ -6619,8 +7234,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_battery_charge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6640,13 +7256,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power battery charge',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power battery charge',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_battery_charge',
     'unique_id': 'solar_net_12345678-power_flow-power_battery_charge',
@@ -6671,8 +7292,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_battery_discharge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6692,13 +7314,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power battery discharge',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power battery discharge',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_battery_discharge',
     'unique_id': 'solar_net_12345678-power_flow-power_battery_discharge',
@@ -6723,8 +7350,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6744,13 +7372,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid',
     'unique_id': 'solar_net_12345678-power_flow-power_grid',
@@ -6775,8 +7408,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_grid_export-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6796,13 +7430,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid export',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid export',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_export',
     'unique_id': 'solar_net_12345678-power_flow-power_grid_export',
@@ -6827,8 +7466,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_grid_import-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6848,13 +7488,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid import',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid import',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_import',
     'unique_id': 'solar_net_12345678-power_flow-power_grid_import',
@@ -6879,8 +7524,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6900,13 +7546,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load',
     'unique_id': 'solar_net_12345678-power_flow-power_load',
@@ -6931,8 +7582,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_load_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6952,13 +7604,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load consumed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_consumed',
     'unique_id': 'solar_net_12345678-power_flow-power_load_consumed',
@@ -6983,8 +7640,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_load_generated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7004,13 +7662,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load generated',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load generated',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_generated',
     'unique_id': 'solar_net_12345678-power_flow-power_load_generated',
@@ -7035,8 +7698,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_power_photovoltaics-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7056,13 +7720,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power photovoltaics',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power photovoltaics',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_photovoltaics',
     'unique_id': 'solar_net_12345678-power_flow-power_photovoltaics',
@@ -7087,8 +7756,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_relative_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7108,6 +7778,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative autonomy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7115,6 +7786,7 @@
     'original_name': 'Relative autonomy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_autonomy',
     'unique_id': 'solar_net_12345678-power_flow-relative_autonomy',
@@ -7138,8 +7810,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_relative_self_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7159,13 +7832,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative self-consumption',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relative self consumption',
+    'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_self_consumption',
     'unique_id': 'solar_net_12345678-power_flow-relative_self_consumption',
@@ -7175,7 +7850,7 @@
 # name: test_gen24_storage[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self consumption',
+      'friendly_name': 'SolarNet Relative self-consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -7189,8 +7864,9 @@
 # ---
 # name: test_gen24_storage[sensor.solarnet_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7210,13 +7886,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': 'solar_net_12345678-power_flow-energy_total',
@@ -7241,8 +7922,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7262,13 +7944,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '234567-current_ac',
@@ -7293,8 +7980,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_ac_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7314,13 +8002,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '234567-power_ac',
@@ -7345,8 +8038,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7366,13 +8060,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '234567-voltage_ac',
@@ -7397,8 +8096,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7418,13 +8118,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '234567-current_dc',
@@ -7449,8 +8154,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7470,13 +8176,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '234567-voltage_dc',
@@ -7501,8 +8212,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_energy_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7522,13 +8234,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy day',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy day',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_day',
     'unique_id': '234567-energy_day',
@@ -7553,8 +8270,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_energy_year-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -7574,13 +8292,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy year',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy year',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_year',
     'unique_id': '234567-energy_year',
@@ -7605,8 +8328,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_error_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7624,6 +8348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7631,6 +8356,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '234567-error_code',
@@ -7652,8 +8378,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_error_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7770,6 +8497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7777,6 +8505,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '234567-error_message',
@@ -7897,8 +8626,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7918,13 +8648,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '234567-frequency_ac',
@@ -7949,8 +8684,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_led_color-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7968,6 +8704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED color',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7975,6 +8712,7 @@
     'original_name': 'LED color',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_color',
     'unique_id': '234567-led_color',
@@ -7996,8 +8734,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_led_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8015,6 +8754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8022,6 +8762,7 @@
     'original_name': 'LED state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_state',
     'unique_id': '234567-led_state',
@@ -8043,8 +8784,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_status_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8062,6 +8804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8069,6 +8812,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '234567-status_code',
@@ -8090,8 +8834,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_status_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8120,6 +8865,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8127,6 +8873,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '234567-status_message',
@@ -8159,8 +8906,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_3_0_1_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8180,13 +8928,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '234567-energy_total',
@@ -8211,8 +8964,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_ac_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8232,13 +8986,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'AC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_ac',
     'unique_id': '123456-current_ac',
@@ -8263,8 +9022,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_ac_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8284,13 +9044,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'AC power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_ac',
     'unique_id': '123456-power_ac',
@@ -8315,8 +9080,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_ac_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8336,13 +9102,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'AC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_ac',
     'unique_id': '123456-voltage_ac',
@@ -8367,8 +9138,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_dc_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8388,13 +9160,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'DC current',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_dc',
     'unique_id': '123456-current_dc',
@@ -8419,8 +9196,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_dc_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8440,13 +9218,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'DC voltage',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_dc',
     'unique_id': '123456-voltage_dc',
@@ -8471,8 +9254,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_energy_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8492,13 +9276,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy day',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy day',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_day',
     'unique_id': '123456-energy_day',
@@ -8523,8 +9312,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_energy_year-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8544,13 +9334,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy year',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy year',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_year',
     'unique_id': '123456-energy_year',
@@ -8575,8 +9370,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_error_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8594,6 +9390,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8601,6 +9398,7 @@
     'original_name': 'Error code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_code',
     'unique_id': '123456-error_code',
@@ -8622,8 +9420,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_error_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8740,6 +9539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8747,6 +9547,7 @@
     'original_name': 'Error message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error_message',
     'unique_id': '123456-error_message',
@@ -8867,8 +9668,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8888,13 +9690,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'frequency_ac',
     'unique_id': '123456-frequency_ac',
@@ -8919,8 +9726,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_led_color-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8938,6 +9746,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED color',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8945,6 +9754,7 @@
     'original_name': 'LED color',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_color',
     'unique_id': '123456-led_color',
@@ -8966,8 +9776,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_led_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8985,6 +9796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8992,6 +9804,7 @@
     'original_name': 'LED state',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'led_state',
     'unique_id': '123456-led_state',
@@ -9013,8 +9826,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_status_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9032,6 +9846,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9039,6 +9854,7 @@
     'original_name': 'Status code',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_code',
     'unique_id': '123456-status_code',
@@ -9060,8 +9876,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_status_message-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -9090,6 +9907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9097,6 +9915,7 @@
     'original_name': 'Status message',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_message',
     'unique_id': '123456-status_message',
@@ -9129,8 +9948,9 @@
 # ---
 # name: test_primo_s0[sensor.primo_5_0_1_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9150,13 +9970,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': '123456-energy_total',
@@ -9181,8 +10006,9 @@
 # ---
 # name: test_primo_s0[sensor.s0_meter_at_inverter_1_meter_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9200,6 +10026,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9207,6 +10034,7 @@
     'original_name': 'Meter location',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location',
     'unique_id': 'solar_net_123.4567890:S0 Meter at inverter 1-meter_location',
@@ -9228,8 +10056,9 @@
 # ---
 # name: test_primo_s0[sensor.s0_meter_at_inverter_1_meter_location_description-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -9255,6 +10084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location description',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9262,6 +10092,7 @@
     'original_name': 'Meter location description',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_location_description',
     'unique_id': 'solar_net_123.4567890:S0 Meter at inverter 1-meter_location_description',
@@ -9291,8 +10122,9 @@
 # ---
 # name: test_primo_s0[sensor.s0_meter_at_inverter_1_real_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9312,13 +10144,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Real power',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_real',
     'unique_id': 'solar_net_123.4567890:S0 Meter at inverter 1-power_real',
@@ -9343,8 +10180,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_co2_factor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9364,6 +10202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CO₂ factor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9371,6 +10210,7 @@
     'original_name': 'CO₂ factor',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2_factor',
     'unique_id': '123.4567890-co2_factor',
@@ -9394,8 +10234,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_energy_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9415,13 +10256,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy day',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy day',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_day',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_day',
@@ -9446,8 +10292,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_energy_year-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9467,13 +10314,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy year',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy year',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_year',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_year',
@@ -9498,8 +10350,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_grid_export_tariff-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9519,6 +10372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid export tariff',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9526,6 +10380,7 @@
     'original_name': 'Grid export tariff',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cash_factor',
     'unique_id': '123.4567890-cash_factor',
@@ -9549,8 +10404,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_grid_import_tariff-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9570,6 +10426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid import tariff',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9577,6 +10434,7 @@
     'original_name': 'Grid import tariff',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'delivery_factor',
     'unique_id': '123.4567890-delivery_factor',
@@ -9600,8 +10458,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_meter_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9619,6 +10478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9626,6 +10486,7 @@
     'original_name': 'Meter mode',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_mode',
     'unique_id': 'solar_net_123.4567890-power_flow-meter_mode',
@@ -9647,8 +10508,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_power_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9668,13 +10530,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid',
@@ -9699,8 +10566,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_power_grid_export-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9720,13 +10588,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid export',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid export',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_export',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_export',
@@ -9751,8 +10624,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_power_grid_import-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9772,13 +10646,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid import',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power grid import',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_grid_import',
     'unique_id': 'solar_net_123.4567890-power_flow-power_grid_import',
@@ -9803,8 +10682,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_power_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9824,13 +10704,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load',
@@ -9855,8 +10740,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_power_load_consumed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9876,13 +10762,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load consumed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load consumed',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_consumed',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_consumed',
@@ -9907,8 +10798,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_power_load_generated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9928,13 +10820,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load generated',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power load generated',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_load_generated',
     'unique_id': 'solar_net_123.4567890-power_flow-power_load_generated',
@@ -9959,8 +10856,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_power_photovoltaics-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9980,13 +10878,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power photovoltaics',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power photovoltaics',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_photovoltaics',
     'unique_id': 'solar_net_123.4567890-power_flow-power_photovoltaics',
@@ -10011,8 +10914,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_relative_autonomy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10032,6 +10936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative autonomy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10039,6 +10944,7 @@
     'original_name': 'Relative autonomy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_autonomy',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_autonomy',
@@ -10062,8 +10968,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_relative_self_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -10083,13 +10990,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative self-consumption',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Relative self consumption',
+    'original_name': 'Relative self-consumption',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relative_self_consumption',
     'unique_id': 'solar_net_123.4567890-power_flow-relative_self_consumption',
@@ -10099,7 +11008,7 @@
 # name: test_primo_s0[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self consumption',
+      'friendly_name': 'SolarNet Relative self-consumption',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -10113,8 +11022,9 @@
 # ---
 # name: test_primo_s0[sensor.solarnet_total_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -10134,13 +11044,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'fronius',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_total',
     'unique_id': 'solar_net_123.4567890-power_flow-energy_total',

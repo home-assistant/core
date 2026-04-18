@@ -260,7 +260,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         try:
             bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_BOOTID]
             bootid: int | None = int(bootid_str, 10)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             bootid = None
 
         if change == ssdp.SsdpChange.UPDATE:
@@ -353,10 +353,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         # Device was de/re-connected, state might have changed
         self.async_write_ha_state()
 
-    def async_write_ha_state(self) -> None:
+    def _async_write_ha_state(self) -> None:
         """Write the state."""
         self._attr_supported_features = self._supported_features()
-        super().async_write_ha_state()
+        super()._async_write_ha_state()
 
     async def _device_connect(self, location: str) -> None:
         """Connect to the device now that it's available."""

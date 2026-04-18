@@ -1,0 +1,591 @@
+# serializer version: 1
+# name: test_setup[aqua_contour][text.mock_title_contour_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_contour_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 1',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-contour_1_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Contour 1',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_contour_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Contour 1',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_contour_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 2',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-contour_2_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Contour 2',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_contour_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Contour 2',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_contour_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 3',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 3',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-contour_3_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Contour 3',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_contour_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Contour 3',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_contour_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 4',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 4',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-contour_4_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Contour 4',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_contour_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Contour 4',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_contour_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contour 5',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Contour 5',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contour_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-contour_5_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_contour_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Contour 5',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_contour_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Contour 5',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_position_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Position 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Position 1',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'position_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-position_1_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Position 1',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_position_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Position 1',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_position_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Position 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Position 2',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'position_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-position_2_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Position 2',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_position_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Position 2',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_position_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Position 3',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Position 3',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'position_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-position_3_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Position 3',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_position_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Position 3',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_position_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Position 4',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Position 4',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'position_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-position_4_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Position 4',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_position_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Position 4',
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.mock_title_position_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Position 5',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Position 5',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'position_name',
+    'unique_id': '00000000-0000-0000-0000-000000000003-position_5_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][text.mock_title_position_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Position 5',
+      'max': 20,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.mock_title_position_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Position 5',
+  })
+# ---

@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PiHoleConfigEntry
 from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .coordinator import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the service is on."""
-        return self.api.data.get("status") == "enabled"  # type: ignore[no-any-return]
+        return self.api.status == "enabled"  # type: ignore[no-any-return]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the service."""

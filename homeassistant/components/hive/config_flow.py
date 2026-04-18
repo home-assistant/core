@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from apyhiveapi import Auth
@@ -16,7 +17,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -24,7 +24,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
+from . import HiveConfigEntry
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -36,8 +39,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
-        self.tokens: dict[str, str] = {}
-        self.entry: ConfigEntry | None = None
+        self.tokens: dict[str, Any] = {}
         self.device_registration: bool = False
         self.device_name = "Home Assistant"
 
@@ -54,7 +56,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             # Get user from existing entry and abort if already setup
-            self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME])
+            await self.async_set_unique_id(self.data[CONF_USERNAME])
             if self.context["source"] != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
@@ -68,11 +70,22 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             except HiveApiError:
                 errors["base"] = "no_internet_available"
 
+            if (
+                auth_result := self.tokens.get("AuthenticationResult", {})
+            ) and auth_result.get("NewDeviceMetadata"):
+                _LOGGER.debug("Login successful, New device detected")
+                self.device_registration = True
+                return await self.async_step_configuration()
+
             if self.tokens.get("ChallengeName") == "SMS_MFA":
+                _LOGGER.debug("Login successful, SMS 2FA required")
                 # Complete SMS 2FA.
                 return await self.async_step_2fa()
 
             if not errors:
+                _LOGGER.debug(
+                    "Login successful, no new device detected, no 2FA required"
+                )
                 # Complete the entry.
                 try:
                     return await self.async_setup_hive_entry()
@@ -104,6 +117,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
+                _LOGGER.debug("2FA successful")
                 if self.source == SOURCE_REAUTH:
                     return await self.async_setup_hive_entry()
                 self.device_registration = True
@@ -120,10 +134,11 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             if self.device_registration:
+                _LOGGER.debug("Attempting to register device")
                 self.device_name = user_input["device_name"]
                 await self.hive_auth.device_registration(user_input["device_name"])
                 self.data["device_data"] = await self.hive_auth.get_device_data()
-
+                _LOGGER.debug("Device registration successful")
             try:
                 return await self.async_setup_hive_entry()
             except UnknownHiveError:
@@ -143,14 +158,15 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             raise UnknownHiveError
 
         # Setup the config entry
+        _LOGGER.debug("Setting up Hive entry")
         self.data["tokens"] = self.tokens
         if self.source == SOURCE_REAUTH:
-            assert self.entry
-            self.hass.config_entries.async_update_entry(
-                self.entry, title=self.data["username"], data=self.data
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                title=self.data["username"],
+                data=self.data,
+                reason="reauth_successful",
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.data["username"], data=self.data)
 
     async def async_step_reauth(
@@ -161,12 +177,13 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: entry_data[CONF_USERNAME],
             CONF_PASSWORD: entry_data[CONF_PASSWORD],
         }
+        _LOGGER.debug("Reauthenticating user")
         return await self.async_step_user(data)
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HiveConfigEntry,
     ) -> HiveOptionsFlowHandler:
         """Hive options callback."""
         return HiveOptionsFlowHandler(config_entry)
@@ -175,7 +192,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 class HiveOptionsFlowHandler(OptionsFlow):
     """Config flow options for Hive."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    config_entry: HiveConfigEntry
+
+    def __init__(self, config_entry: HiveConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
         self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
@@ -190,7 +209,7 @@ class HiveOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self.hive = self.hass.data["hive"][self.config_entry.entry_id]
+        self.hive = self.config_entry.runtime_data
         errors: dict[str, str] = {}
         if user_input is not None:
             new_interval = user_input.get(CONF_SCAN_INTERVAL)

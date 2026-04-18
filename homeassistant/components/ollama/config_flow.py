@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
 import sys
-from types import MappingProxyType
 from typing import Any
 
 import httpx
@@ -14,14 +14,17 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
-from homeassistant.const import CONF_LLM_HASS_API, CONF_URL
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import llm
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -35,19 +38,23 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.ssl import get_default_context
 
+from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
     CONF_NUM_CTX,
     CONF_PROMPT,
+    CONF_THINK,
+    DEFAULT_AI_TASK_NAME,
+    DEFAULT_CONVERSATION_NAME,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
     DEFAULT_NUM_CTX,
+    DEFAULT_THINK,
     DEFAULT_TIMEOUT,
     DOMAIN,
-    MAX_NUM_CTX,
     MIN_NUM_CTX,
     MODEL_NAMES,
 )
@@ -60,6 +67,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
+        vol.Optional(CONF_API_KEY): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    },
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_API_KEY): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -67,52 +85,198 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
-    VERSION = 1
+    VERSION = 3
+    MINOR_VERSION = 3
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self.url: str | None = None
-        self.model: str | None = None
-        self.client: ollama.AsyncClient | None = None
-        self.download_task: asyncio.Task | None = None
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        user_input = user_input or {}
-        self.url = user_input.get(CONF_URL, self.url)
-        self.model = user_input.get(CONF_MODEL, self.model)
-
-        if self.url is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, last_step=False
-            )
-
-        errors = {}
+    async def _async_validate_connection(
+        self, url: str, api_key: str | None
+    ) -> dict[str, str]:
+        """Validate connection and credentials against the Ollama server."""
+        errors: dict[str, str] = {}
 
         try:
-            self.client = ollama.AsyncClient(
-                host=self.url, verify=get_default_context()
+            client = ollama.AsyncClient(
+                host=url,
+                headers={"Authorization": f"Bearer {api_key}"} if api_key else None,
+                verify=get_default_context(),
             )
-            async with asyncio.timeout(DEFAULT_TIMEOUT):
-                response = await self.client.list()
 
-            downloaded_models: set[str] = {
-                model_info["model"] for model_info in response.get("models", [])
-            }
-        except (TimeoutError, httpx.ConnectError):
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
+                await client.list()
+
+        except ollama.ResponseError as err:
+            if err.status_code in (401, 403):
+                errors["base"] = "invalid_auth"
+            else:
+                _LOGGER.warning(
+                    "Error response from Ollama server at %s: status %s, detail: %s",
+                    url,
+                    err.status_code,
+                    str(err),
+                )
+                errors["base"] = "unknown"
+        except TimeoutError, httpx.ConnectError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
-        if errors:
+        return errors
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        if self.model is None:
+        errors = {}
+        url = user_input[CONF_URL].strip()
+        api_key = user_input.get(CONF_API_KEY)
+        if api_key:
+            api_key = api_key.strip()
+
+        try:
+            url = cv.url(url)
+        except vol.Invalid:
+            errors["base"] = "invalid_url"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, user_input
+                ),
+                errors=errors,
+            )
+
+        self._async_abort_entries_match({CONF_URL: url})
+        errors = await self._async_validate_connection(url, api_key)
+
+        if errors:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, user_input
+                ),
+                errors=errors,
+            )
+
+        entry_data: dict[str, str] = {CONF_URL: url}
+        if api_key:
+            entry_data[CONF_API_KEY] = api_key
+
+        return self.async_create_entry(title=url, data=entry_data)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when existing credentials are invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
+            )
+
+        api_key = user_input.get(CONF_API_KEY)
+        if api_key:
+            api_key = api_key.strip()
+
+        errors = await self._async_validate_connection(
+            reauth_entry.data[CONF_URL], api_key
+        )
+        if errors:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_REAUTH_DATA_SCHEMA, user_input
+                ),
+                errors=errors,
+            )
+
+        updated_data = {
+            **reauth_entry.data,
+            CONF_URL: reauth_entry.data[CONF_URL],
+        }
+        if api_key:
+            updated_data[CONF_API_KEY] = api_key
+        else:
+            updated_data.pop(CONF_API_KEY, None)
+
+        updated_options = {
+            key: value
+            for key, value in reauth_entry.options.items()
+            if key != CONF_API_KEY
+        }
+
+        return self.async_update_reload_and_abort(
+            reauth_entry,
+            data=updated_data,
+            options=updated_options,
+        )
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {
+            "conversation": OllamaSubentryFlowHandler,
+            "ai_task_data": OllamaSubentryFlowHandler,
+        }
+
+
+class OllamaSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing Ollama subentries."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self._name: str | None = None
+        self._model: str | None = None
+        self.download_task: asyncio.Task | None = None
+        self._config_data: dict[str, Any] | None = None
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
+
+    @property
+    def _client(self) -> ollama.AsyncClient:
+        """Return the Ollama client."""
+        entry: OllamaConfigEntry = self._get_entry()
+        return entry.runtime_data
+
+    async def async_step_set_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle model selection and configuration step."""
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is None:
+            # Get available models from Ollama server
+            try:
+                async with asyncio.timeout(DEFAULT_TIMEOUT):
+                    response = await self._client.list()
+
+                downloaded_models: set[str] = {
+                    model_info["model"] for model_info in response.get("models", [])
+                }
+            except TimeoutError, httpx.ConnectError, httpx.HTTPError:
+                _LOGGER.exception("Failed to get models from Ollama server")
+                return self.async_abort(reason="cannot_connect")
+
             # Show models that have been downloaded first, followed by all known
             # models (only latest tags).
             models_to_list = [
@@ -123,44 +287,73 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                 for m in sorted(MODEL_NAMES)
                 if m not in downloaded_models
             ]
-            model_step_schema = vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MODEL, description={"suggested_value": DEFAULT_MODEL}
-                    ): SelectSelector(
-                        SelectSelectorConfig(options=models_to_list, custom_value=True)
-                    ),
-                }
-            )
+
+            if self._is_new:
+                options = {}
+            else:
+                options = self._get_reconfigure_subentry().data.copy()
 
             return self.async_show_form(
-                step_id="user",
-                data_schema=model_step_schema,
+                step_id="set_options",
+                data_schema=vol.Schema(
+                    ollama_config_option_schema(
+                        self.hass,
+                        self._is_new,
+                        self._subentry_type,
+                        options,
+                        models_to_list,
+                    )
+                ),
             )
 
-        if self.model not in downloaded_models:
-            # Ollama server needs to download model first
-            return await self.async_step_download()
+        self._model = user_input[CONF_MODEL]
+        if self._is_new:
+            self._name = user_input.pop(CONF_NAME)
 
-        return self.async_create_entry(
-            title=_get_title(self.model),
-            data={CONF_URL: self.url, CONF_MODEL: self.model},
+        # Check if model needs to be downloaded
+        try:
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
+                response = await self._client.list()
+
+            currently_downloaded_models: set[str] = {
+                model_info["model"] for model_info in response.get("models", [])
+            }
+
+            if self._model not in currently_downloaded_models:
+                # Store the user input to use after download
+                self._config_data = user_input
+                # Ollama server needs to download model first
+                return await self.async_step_download()
+        except Exception:
+            _LOGGER.exception("Failed to check model availability")
+            return self.async_abort(reason="cannot_connect")
+
+        # Model is already downloaded, create/update the entry
+        if self._is_new:
+            return self.async_create_entry(
+                title=self._name,
+                data=user_input,
+            )
+
+        return self.async_update_and_abort(
+            self._get_entry(),
+            self._get_reconfigure_subentry(),
+            data=user_input,
         )
 
     async def async_step_download(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Step to wait for Ollama server to download a model."""
-        assert self.model is not None
-        assert self.client is not None
+        assert self._model is not None
 
         if self.download_task is None:
             # Tell Ollama server to pull the model.
             # The task will block until the model and metadata are fully
             # downloaded.
             self.download_task = self.hass.async_create_background_task(
-                self.client.pull(self.model),
-                f"Downloading {self.model}",
+                self._client.pull(self._model),
+                f"Downloading {self._model}",
             )
 
         if self.download_task.done():
@@ -176,125 +369,147 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             progress_task=self.download_task,
         )
 
-    async def async_step_finish(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Step after model downloading has succeeded."""
-        assert self.url is not None
-        assert self.model is not None
-
-        return self.async_create_entry(
-            title=_get_title(self.model),
-            data={CONF_URL: self.url, CONF_MODEL: self.model},
-        )
-
     async def async_step_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Step after model downloading has failed."""
         return self.async_abort(reason="download_failed")
 
-    @staticmethod
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Create the options flow."""
-        return OllamaOptionsFlow(config_entry)
-
-
-class OllamaOptionsFlow(OptionsFlow):
-    """Ollama options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.url: str = config_entry.data[CONF_URL]
-        self.model: str = config_entry.data[CONF_MODEL]
-
-    async def async_step_init(
+    async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            if user_input[CONF_LLM_HASS_API] == "none":
-                user_input.pop(CONF_LLM_HASS_API)
-            return self.async_create_entry(
-                title=_get_title(self.model), data=user_input
-            )
+    ) -> SubentryFlowResult:
+        """Step after model downloading has succeeded."""
+        assert self._config_data is not None
 
-        options = self.config_entry.options or MappingProxyType({})
-        schema = ollama_config_option_schema(self.hass, options)
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema),
+        # Model download completed, create/update the entry with stored config
+        if self._is_new:
+            return self.async_create_entry(
+                title=self._name,
+                data=self._config_data,
+            )
+        return self.async_update_and_abort(
+            self._get_entry(),
+            self._get_reconfigure_subentry(),
+            data=self._config_data,
         )
+
+    async_step_user = async_step_set_options
+    async_step_reconfigure = async_step_set_options
+
+
+def filter_invalid_llm_apis(hass: HomeAssistant, selected_apis: list[str]) -> list[str]:
+    """Accepts a list of LLM API IDs and filters this against those currently available."""
+
+    valid_llm_apis = [api.id for api in llm.async_get_apis(hass)]
+
+    return [api for api in selected_apis if api in valid_llm_apis]
 
 
 def ollama_config_option_schema(
-    hass: HomeAssistant, options: MappingProxyType[str, Any]
+    hass: HomeAssistant,
+    is_new: bool,
+    subentry_type: str,
+    options: Mapping[str, Any],
+    models_to_list: list[SelectOptionDict],
 ) -> dict:
     """Ollama options schema."""
-    hass_apis: list[SelectOptionDict] = [
-        SelectOptionDict(
-            label="No control",
-            value="none",
-        )
-    ]
-    hass_apis.extend(
-        SelectOptionDict(
-            label=api.name,
-            value=api.id,
-        )
-        for api in llm.async_get_apis(hass)
+    if is_new:
+        if subentry_type == "ai_task_data":
+            default_name = DEFAULT_AI_TASK_NAME
+        else:
+            default_name = DEFAULT_CONVERSATION_NAME
+
+        schema: dict = {
+            vol.Required(CONF_NAME, default=default_name): str,
+        }
+    else:
+        schema = {}
+
+    selected_llm_apis = filter_invalid_llm_apis(
+        hass, options.get(CONF_LLM_HASS_API, [])
     )
 
-    return {
-        vol.Optional(
-            CONF_PROMPT,
-            description={
-                "suggested_value": options.get(
-                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+    schema.update(
+        {
+            vol.Required(
+                CONF_MODEL,
+                description={"suggested_value": options.get(CONF_MODEL, DEFAULT_MODEL)},
+            ): SelectSelector(
+                SelectSelectorConfig(options=models_to_list, custom_value=True)
+            ),
+        }
+    )
+    if subentry_type == "conversation":
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_PROMPT,
+                    description={
+                        "suggested_value": options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        )
+                    },
+                ): TemplateSelector(),
+                vol.Optional(
+                    CONF_LLM_HASS_API,
+                    description={"suggested_value": selected_llm_apis},
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(
+                                label=api.name,
+                                value=api.id,
+                            )
+                            for api in llm.async_get_apis(hass)
+                        ],
+                        multiple=True,
+                    )
+                ),
+            }
+        )
+    schema.update(
+        {
+            vol.Optional(
+                CONF_NUM_CTX,
+                description={
+                    "suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)
+                },
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_NUM_CTX,
+                    step=1,
+                    mode=NumberSelectorMode.BOX,
                 )
-            },
-        ): TemplateSelector(),
-        vol.Optional(
-            CONF_LLM_HASS_API,
-            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            default="none",
-        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
-        vol.Optional(
-            CONF_NUM_CTX,
-            description={"suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=MIN_NUM_CTX, max=MAX_NUM_CTX, step=1, mode=NumberSelectorMode.BOX
-            )
-        ),
-        vol.Optional(
-            CONF_MAX_HISTORY,
-            description={
-                "suggested_value": options.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY)
-            },
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
-            )
-        ),
-        vol.Optional(
-            CONF_KEEP_ALIVE,
-            description={
-                "suggested_value": options.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
-            },
-        ): NumberSelector(
-            NumberSelectorConfig(
-                min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
-            )
-        ),
-    }
+            ),
+            vol.Optional(
+                CONF_MAX_HISTORY,
+                description={
+                    "suggested_value": options.get(
+                        CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY
+                    )
+                },
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=0, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(
+                CONF_KEEP_ALIVE,
+                description={
+                    "suggested_value": options.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
+                },
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+            vol.Optional(
+                CONF_THINK,
+                description={
+                    "suggested_value": options.get("think", DEFAULT_THINK),
+                },
+            ): BooleanSelector(),
+        }
+    )
 
-
-def _get_title(model: str) -> str:
-    """Get title for config entry."""
-    if model.endswith(":latest"):
-        model = model.split(":", maxsplit=1)[0]
-
-    return model
+    return schema

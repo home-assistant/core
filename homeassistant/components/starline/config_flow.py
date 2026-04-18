@@ -117,6 +117,9 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "developer_account_url": "https://my.starline.ru/developer",
+            },
         )
 
     @callback

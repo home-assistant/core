@@ -116,6 +116,8 @@ class IsraelRailEntitySensor(
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
+        if self.entity_description.index >= len(self.coordinator.data):
+            return None
         return self.entity_description.value_fn(
             self.coordinator.data[self.entity_description.index]
         )

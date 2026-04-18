@@ -23,12 +23,6 @@ class SpeechMetadata:
     sample_rate: AudioSampleRates
     channel: AudioChannels
 
-    def __post_init__(self) -> None:
-        """Finish initializing the metadata."""
-        self.bit_rate = AudioBitRates(int(self.bit_rate))
-        self.sample_rate = AudioSampleRates(int(self.sample_rate))
-        self.channel = AudioChannels(int(self.channel))
-
 
 @dataclass
 class SpeechResult:

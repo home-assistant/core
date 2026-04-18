@@ -1,6 +1,6 @@
 """Test homekit_controller diagnostics."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES

@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The provided credentials are for a different Hypontech Cloud account."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::hypontech::config::step::user::data_description::password%]",
+          "username": "[%key:component::hypontech::config::step::user::data_description::username%]"
+        },
+        "description": "Your Hypontech Cloud credentials have expired. Please re-enter your credentials to continue using this integration."
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your Hypontech Cloud account password.",
+          "username": "Your Hypontech Cloud account username."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lifetime_energy": {
+        "name": "Lifetime energy"
+      },
+      "today_energy": {
+        "name": "Today energy"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to Hypontech Cloud. Maybe you make too frequent connection from multiple devices in your network."
+    }
+  }
+}

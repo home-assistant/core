@@ -131,7 +131,7 @@ def mock_ble_device() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
         return_value=BLEDevice(
-            address="c0:ff:ee:c0:ff:ee", name=DEFAULT_NAME, rssi=-50, details={}
+            address="c0:ff:ee:c0:ff:ee", name=DEFAULT_NAME, details={}
         ),
     ) as ble_device:
         yield ble_device
@@ -159,9 +159,10 @@ def mock_ironosupdate() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_pynecil() -> Generator[AsyncMock]:
     """Mock Pynecil library."""
-    with patch(
-        "homeassistant.components.iron_os.Pynecil", autospec=True
-    ) as mock_client:
+    with (
+        patch("homeassistant.components.iron_os.Pynecil", autospec=True) as mock_client,
+        patch("homeassistant.components.iron_os.config_flow.Pynecil", new=mock_client),
+    ):
         client = mock_client.return_value
 
         client.get_device_info.return_value = DeviceInfoResponse(
@@ -170,6 +171,7 @@ def mock_pynecil() -> Generator[AsyncMock]:
             address="c0:ff:ee:c0:ff:ee",
             device_sn="0000c0ffeec0ffee",
             name=DEFAULT_NAME,
+            is_synced=True,
         )
         client.get_settings.return_value = SettingsDataResponse(
             sleep_temp=150,
@@ -225,4 +227,6 @@ def mock_pynecil() -> Generator[AsyncMock]:
             operating_mode=OperatingMode.SOLDERING,
             estimated_power=24.8,
         )
+        client._client = AsyncMock()
+        client._client.return_value.is_connected = True
         yield client

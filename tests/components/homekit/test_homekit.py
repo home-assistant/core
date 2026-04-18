@@ -21,6 +21,7 @@ from homeassistant.components.homekit import (
     STATUS_RUNNING,
     STATUS_STOPPED,
     STATUS_WAIT,
+    TYPE_AIR_PURIFIER,
     HomeKit,
 )
 from homeassistant.components.homekit.accessories import HomeBridge
@@ -51,6 +52,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
@@ -58,6 +60,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_ON,
     EntityCategory,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -1579,7 +1582,10 @@ async def test_homekit_finds_linked_batteries(
         original_device_class=SensorDeviceClass.BATTERY,
     )
     light = entity_registry.async_get_or_create(
-        "light", "powerwall", "demo", device_id=device_entry.id
+        "light",
+        "powerwall",
+        "demo",
+        device_id=device_entry.id,
     )
 
     hass.states.async_set(
@@ -1611,8 +1617,8 @@ async def test_homekit_finds_linked_batteries(
             "sw_version": "0.16.0",
             "hw_version": "2.34",
             "platform": "test",
-            "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
-            "linked_battery_sensor": "sensor.powerwall_battery",
+            "linked_battery_charging_sensor": binary_charging_sensor.entity_id,
+            "linked_battery_sensor": battery_sensor.entity_id,
         },
     )
 
@@ -1655,7 +1661,10 @@ async def test_homekit_async_get_integration_fails(
         original_device_class=SensorDeviceClass.BATTERY,
     )
     light = entity_registry.async_get_or_create(
-        "light", "invalid_integration_does_not_exist", "demo", device_id=device_entry.id
+        "light",
+        "invalid_integration_does_not_exist",
+        "demo",
+        device_id=device_entry.id,
     )
 
     hass.states.async_set(
@@ -1686,8 +1695,8 @@ async def test_homekit_async_get_integration_fails(
             "model": "Powerwall 2",
             "sw_version": "0.16.0",
             "platform": "invalid_integration_does_not_exist",
-            "linked_battery_charging_sensor": "binary_sensor.invalid_integration_does_not_exist_battery_charging",
-            "linked_battery_sensor": "sensor.invalid_integration_does_not_exist_battery",
+            "linked_battery_charging_sensor": binary_charging_sensor.entity_id,
+            "linked_battery_sensor": battery_sensor.entity_id,
         },
     )
 
@@ -1900,7 +1909,10 @@ async def test_homekit_ignored_missing_devices(
         original_device_class=SensorDeviceClass.BATTERY,
     )
     light_entity = light = entity_registry.async_get_or_create(
-        "light", "powerwall", "demo", device_id=device_entry.id
+        "light",
+        "powerwall",
+        "demo",
+        device_id=device_entry.id,
     )
     # Delete the device to make sure we fallback
     # to using the platform
@@ -1935,8 +1947,8 @@ async def test_homekit_ignored_missing_devices(
         ANY,
         {
             "platform": "Tesla Powerwall",
-            "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
-            "linked_battery_sensor": "sensor.powerwall_battery",
+            "linked_battery_charging_sensor": binary_sensor_entity.entity_id,
+            "linked_battery_sensor": sensor_entity.entity_id,
         },
     )
 
@@ -2125,7 +2137,10 @@ async def test_homekit_finds_linked_humidity_sensors(
         original_device_class=SensorDeviceClass.HUMIDITY,
     )
     humidifier = entity_registry.async_get_or_create(
-        "humidifier", "humidifier", "demo", device_id=device_entry.id
+        "humidifier",
+        "humidifier",
+        "demo",
+        device_id=device_entry.id,
     )
 
     hass.states.async_set(
@@ -2157,7 +2172,113 @@ async def test_homekit_finds_linked_humidity_sensors(
             "model": "Smart Brainy Clever Humidifier",
             "platform": "test",
             "sw_version": "0.16.1",
-            "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
+            "linked_humidity_sensor": humidity_sensor.entity_id,
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_finds_linked_air_purifier_sensors(
+    hass: HomeAssistant,
+    hk_driver,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HomeKit start method."""
+    entry = await async_init_integration(hass)
+
+    homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
+
+    homekit.driver = hk_driver
+    homekit.bridge = HomeBridge(hass, hk_driver, "mock_bridge")
+
+    config_entry = MockConfigEntry(domain="air_purifier", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        sw_version="0.16.1",
+        model="Smart Air Purifier",
+        manufacturer="Home Assistant",
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    humidity_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "air_purifier",
+        "humidity_sensor",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.HUMIDITY,
+    )
+    pm25_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "air_purifier",
+        "pm25_sensor",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.PM25,
+    )
+    temperature_sensor = entity_registry.async_get_or_create(
+        "sensor",
+        "air_purifier",
+        "temperature_sensor",
+        device_id=device_entry.id,
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+    )
+    air_purifier = entity_registry.async_get_or_create(
+        "fan",
+        "air_purifier",
+        "demo",
+        device_id=device_entry.id,
+    )
+
+    hass.states.async_set(
+        humidity_sensor.entity_id,
+        "42",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+        },
+    )
+    hass.states.async_set(
+        pm25_sensor.entity_id,
+        8,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.PM25,
+            ATTR_UNIT_OF_MEASUREMENT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        },
+    )
+    hass.states.async_set(
+        temperature_sensor.entity_id,
+        22,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+    )
+    hass.states.async_set(air_purifier.entity_id, STATE_ON)
+
+    with (
+        patch.object(homekit.bridge, "add_accessory"),
+        patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
+        patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc,
+        patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+    ):
+        await homekit.async_start()
+    await hass.async_block_till_done()
+
+    mock_get_acc.assert_called_with(
+        hass,
+        ANY,
+        ANY,
+        ANY,
+        {
+            "manufacturer": "Home Assistant",
+            "model": "Smart Air Purifier",
+            "platform": "air_purifier",
+            "sw_version": "0.16.1",
+            "type": TYPE_AIR_PURIFIER,
+            "linked_humidity_sensor": humidity_sensor.entity_id,
+            "linked_pm25_sensor": pm25_sensor.entity_id,
+            "linked_temperature_sensor": temperature_sensor.entity_id,
         },
     )
 

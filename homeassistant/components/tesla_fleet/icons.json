@@ -69,10 +69,10 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "off": "mdi:power",
-              "keep": "mdi:fan",
+              "camp": "mdi:tent",
               "dog": "mdi:dog",
-              "camp": "mdi:tent"
+              "keep": "mdi:fan",
+              "off": "mdi:power"
             }
           }
         }
@@ -163,6 +163,18 @@
       }
     },
     "sensor": {
+      "battery_energy_exported": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "battery_energy_imported_from_generator": {
+        "default": "mdi:generator-stationary"
+      },
+      "battery_energy_imported_from_grid": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "battery_energy_imported_from_solar": {
+        "default": "mdi:solar-power"
+      },
       "battery_power": {
         "default": "mdi:home-battery"
       },
@@ -174,6 +186,18 @@
           "starting": "mdi:play-circle",
           "stopped": "mdi:stop-circle"
         }
+      },
+      "consumer_energy_imported_from_battery": {
+        "default": "mdi:home-battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "default": "mdi:generator-stationary"
+      },
+      "consumer_energy_imported_from_grid": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "consumer_energy_imported_from_solar": {
+        "default": "mdi:solar-power"
       },
       "drive_state_active_route_destination": {
         "default": "mdi:routes"
@@ -193,23 +217,72 @@
       "energy_left": {
         "default": "mdi:battery"
       },
+      "generator_energy_exported": {
+        "default": "mdi:generator-stationary"
+      },
       "generator_power": {
         "default": "mdi:generator-stationary"
+      },
+      "grid_energy_exported_from_battery": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "grid_energy_exported_from_generator": {
+        "default": "mdi:generator-stationary"
+      },
+      "grid_energy_exported_from_solar": {
+        "default": "mdi:solar-power"
+      },
+      "grid_energy_imported": {
+        "default": "mdi:transmission-tower-import"
       },
       "grid_power": {
         "default": "mdi:transmission-tower"
       },
+      "grid_services_energy_exported": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "grid_services_energy_imported": {
+        "default": "mdi:transmission-tower-import"
+      },
       "grid_services_power": {
         "default": "mdi:transmission-tower"
+      },
+      "island_status": {
+        "default": "mdi:help-circle",
+        "state": {
+          "island_status_unknown": "mdi:help-circle",
+          "off_grid": "mdi:transmission-tower-off",
+          "off_grid_intentional": "mdi:account-cancel",
+          "off_grid_unintentional": "mdi:transmission-tower-off",
+          "on_grid": "mdi:transmission-tower"
+        }
       },
       "load_power": {
         "default": "mdi:power-plug"
       },
+      "solar_energy_exported": {
+        "default": "mdi:solar-power-variant"
+      },
       "solar_power": {
         "default": "mdi:solar-power"
       },
+      "total_battery_charge": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "total_battery_discharge": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "total_grid_energy_exported": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "total_home_usage": {
+        "default": "mdi:home-lightning-bolt"
+      },
       "total_pack_energy": {
         "default": "mdi:battery-high"
+      },
+      "total_solar_production": {
+        "default": "mdi:solar-power-variant"
       },
       "vin": {
         "default": "mdi:car-electric"
@@ -222,79 +295,6 @@
       },
       "wall_connector_state": {
         "default": "mdi:ev-station"
-      },
-      "island_status": {
-        "default": "mdi:help-circle",
-        "state": {
-          "on_grid": "mdi:transmission-tower",
-          "off_grid": "mdi:transmission-tower-off",
-          "off_grid_unintentional": "mdi:transmission-tower-off",
-          "island_status_unknown": "mdi:help-circle",
-          "off_grid_intentional": "mdi:account-cancel"
-        }
-      },
-      "total_home_usage": {
-        "default": "mdi:home-lightning-bolt"
-      },
-      "total_battery_charge": {
-        "default": "mdi:battery-arrow-up"
-      },
-      "total_battery_discharge": {
-        "default": "mdi:battery-arrow-down"
-      },
-      "total_solar_production": {
-        "default": "mdi:solar-power-variant"
-      },
-      "grid_energy_imported": {
-        "default": "mdi:transmission-tower-import"
-      },
-      "total_grid_energy_exported": {
-        "default": "mdi:transmission-tower-export"
-      },
-      "solar_energy_exported": {
-        "default": "mdi:solar-power-variant"
-      },
-      "generator_energy_exported": {
-        "default": "mdi:generator-stationary"
-      },
-      "grid_services_energy_imported": {
-        "default": "mdi:transmission-tower-import"
-      },
-      "grid_services_energy_exported": {
-        "default": "mdi:transmission-tower-export"
-      },
-      "grid_energy_exported_from_solar": {
-        "default": "mdi:solar-power"
-      },
-      "grid_energy_exported_from_generator": {
-        "default": "mdi:generator-stationary"
-      },
-      "grid_energy_exported_from_battery": {
-        "default": "mdi:battery-arrow-down"
-      },
-      "battery_energy_exported": {
-        "default": "mdi:battery-arrow-down"
-      },
-      "battery_energy_imported_from_grid": {
-        "default": "mdi:transmission-tower-import"
-      },
-      "battery_energy_imported_from_solar": {
-        "default": "mdi:solar-power"
-      },
-      "battery_energy_imported_from_generator": {
-        "default": "mdi:generator-stationary"
-      },
-      "consumer_energy_imported_from_grid": {
-        "default": "mdi:transmission-tower-import"
-      },
-      "consumer_energy_imported_from_solar": {
-        "default": "mdi:solar-power"
-      },
-      "consumer_energy_imported_from_battery": {
-        "default": "mdi:home-battery"
-      },
-      "consumer_energy_imported_from_generator": {
-        "default": "mdi:generator-stationary"
       }
     },
     "switch": {

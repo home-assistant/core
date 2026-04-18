@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'meater',
+        '40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Apption Labs',
+    'model': 'Meater Probe',
+    'model_id': None,
+    'name': 'Meater Probe 40a72384',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

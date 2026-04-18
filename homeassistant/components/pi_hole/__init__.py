@@ -2,29 +2,27 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
+from typing import Any, Literal
 
-from hole import Hole
-from hole.exceptions import HoleError
+from hole import Hole, HoleV5, HoleV6
+from hole.exceptions import HoleConnectionError, HoleError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
     CONF_LOCATION,
-    CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_STATISTICS_ONLY, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import CONF_STATISTICS_ONLY, DOMAIN
+from .coordinator import PiHoleConfigEntry, PiHoleData, PiHoleUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,25 +34,10 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-type PiHoleConfigEntry = ConfigEntry[PiHoleData]
-
-
-@dataclass
-class PiHoleData:
-    """Runtime data definition."""
-
-    api: Hole
-    coordinator: DataUpdateCoordinator[None]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bool:
     """Set up Pi-hole entry."""
-    name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
-    use_tls = entry.data[CONF_SSL]
-    verify_tls = entry.data[CONF_VERIFY_SSL]
-    location = entry.data[CONF_LOCATION]
-    api_key = entry.data.get(CONF_API_KEY, "")
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:
@@ -96,37 +79,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
 
     await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-    session = async_get_clientsession(hass, verify_tls)
-    api = Hole(
-        host,
-        session,
-        location=location,
-        tls=use_tls,
-        api_token=api_key,
-    )
+    _LOGGER.debug("Determining Pi-hole API version for %s", host)
+    version = await determine_api_version(hass, dict(entry.data))
+    _LOGGER.debug("Pi-hole API version determined: %s", version)
 
-    async def async_update_data() -> None:
-        """Fetch data from API endpoint."""
-        try:
-            await api.get_data()
-            await api.get_versions()
-        except HoleError as err:
-            raise UpdateFailed(f"Failed to communicate with API: {err}") from err
-        if not isinstance(api.data, dict):
-            raise ConfigEntryAuthFailed
+    # Once API version 5 is deprecated we should instantiate Hole directly
+    api = api_by_version(hass, dict(entry.data), version)
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=name,
-        update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
-    )
+    coordinator = PiHoleUpdateCoordinator(hass, api, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = PiHoleData(api, coordinator)
+    entry.runtime_data = PiHoleData(api, coordinator, version)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -136,3 +100,98 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Pi-hole entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def api_by_version(
+    hass: HomeAssistant,
+    entry: dict[str, Any],
+    version: int,
+    password: str | None = None,
+) -> HoleV5 | HoleV6:
+    """Create a pi-hole API object by API version number. Once V5 is deprecated this function can be removed."""
+
+    if password is None:
+        password = entry.get(CONF_API_KEY, "")
+    session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
+    hole_kwargs = {
+        "host": entry[CONF_HOST],
+        "session": session,
+        "location": entry[CONF_LOCATION],
+        "verify_tls": entry[CONF_VERIFY_SSL],
+        "version": version,
+    }
+    if version == 5:
+        hole_kwargs["tls"] = entry.get(CONF_SSL)
+        hole_kwargs["api_token"] = password
+    elif version == 6:
+        hole_kwargs["protocol"] = "https" if entry.get(CONF_SSL) else "http"
+        hole_kwargs["password"] = password
+
+    return Hole(**hole_kwargs)
+
+
+async def determine_api_version(
+    hass: HomeAssistant, entry: dict[str, Any]
+) -> Literal[5, 6]:
+    """Determine the API version of the Pi-hole instance without requiring authentication.
+
+    Neither API v5 or v6 provides an endpoint to check the version without authentication.
+    Version 6 provides other enddpoints that do not require authentication, so we can use those to determine the version
+    version 5 returns an empty list in response to unauthenticated requests.
+    Because we are using endpoints that are not designed for this purpose, we should log liberally to help with debugging.
+    """
+
+    holeV6 = api_by_version(hass, entry, 6, password="wrong_password")
+    try:
+        await holeV6.authenticate()
+    except HoleConnectionError as err:
+        _LOGGER.error(
+            "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version 5 API",
+            holeV6.base_url,
+            err,
+        )
+    # Ideally python-hole would raise a specific exception for authentication failures
+    except HoleError as ex_v6:
+        if str(ex_v6) == "Authentication failed: Invalid password":
+            _LOGGER.debug(
+                "Success connecting to Pi-hole at %s without auth, API version is : %s",
+                holeV6.base_url,
+                6,
+            )
+            return 6
+        _LOGGER.debug(
+            "Connection to %s failed: %s, trying API version 5", holeV6.base_url, ex_v6
+        )
+    else:
+        # It seems that occasionally the auth can succeed unexpectedly when there is a valid session
+        _LOGGER.warning(
+            "Authenticated with %s through v6 API, but succeeded with an incorrect password. This is a known bug",
+            holeV6.base_url,
+        )
+        return 6
+    holeV5 = api_by_version(hass, entry, 5, password="wrong_token")
+    try:
+        await holeV5.get_data()
+
+    except HoleConnectionError as err:
+        _LOGGER.error(
+            "Failed to connect to Pi-hole v5 API at %s: %s", holeV5.base_url, err
+        )
+    else:
+        # V5 API returns [] to unauthenticated requests
+        if not holeV5.data:
+            _LOGGER.debug(
+                "Response '[]' from API without auth, pihole API version 5 probably detected at %s",
+                holeV5.base_url,
+            )
+            return 5
+        _LOGGER.debug(
+            "Unexpected response from Pi-hole API at %s: %s",
+            holeV5.base_url,
+            str(holeV5.data),
+        )
+    _LOGGER.debug(
+        "Could not determine pi-hole API version at: %s",
+        holeV6.base_url,
+    )
+    raise HoleError("Could not determine Pi-hole API version")

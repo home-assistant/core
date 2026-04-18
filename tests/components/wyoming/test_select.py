@@ -3,9 +3,10 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components import assist_pipeline
-from homeassistant.components.assist_pipeline.pipeline import PipelineData
-from homeassistant.components.assist_pipeline.select import OPTION_PREFERRED
-from homeassistant.components.assist_pipeline.vad import VadSensitivity
+from homeassistant.components.assist_pipeline import OPTION_PREFERRED, VadSensitivity
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+    PipelineData,
+)
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

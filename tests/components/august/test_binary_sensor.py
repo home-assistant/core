@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -249,7 +249,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     pubnub = AugustPubNub()
 
     activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
-    config_entry = await _create_august_with_devices(
+    config_entry, _ = await _create_august_with_devices(
         hass, [lock_one], activities=activities, pubnub=pubnub
     )
     states = hass.states

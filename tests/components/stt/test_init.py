@@ -10,11 +10,17 @@ import pytest
 
 from homeassistant.components.stt import (
     DOMAIN,
+    AudioBitRates,
+    AudioChannels,
+    AudioCodecs,
+    AudioFormats,
+    AudioSampleRates,
     async_default_engine,
     async_get_provider,
     async_get_speech_to_text_engine,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -122,14 +128,16 @@ async def mock_config_entry_setup(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.STT]
+        )
         return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Unload up test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_unload(config_entry, Platform.STT)
         return True
 
     mock_integration(
@@ -228,6 +236,42 @@ async def test_stream_audio(
     )
     assert response.status == HTTPStatus.OK
     assert await response.json() == {"text": "test_result", "result": "success"}
+
+
+@pytest.mark.parametrize(
+    "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
+)
+async def test_stream_audio_uses_enum_values(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup: MockSTTProvider | MockSTTProviderEntity,
+) -> None:
+    """Test that HTTP API passes enum values to async_process_audio_stream."""
+    client = await hass_client()
+    response = await client.post(
+        f"/api/stt/{setup.url_path}",
+        headers={
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
+                " language=en"
+            )
+        },
+    )
+    assert response.status == HTTPStatus.OK
+
+    assert len(setup.calls) == 1
+    metadata, _ = setup.calls[0]
+
+    assert isinstance(metadata.format, AudioFormats)
+    assert metadata.format == AudioFormats.WAV
+    assert isinstance(metadata.codec, AudioCodecs)
+    assert metadata.codec == AudioCodecs.PCM
+    assert isinstance(metadata.bit_rate, AudioBitRates)
+    assert metadata.bit_rate == AudioBitRates.BITRATE_16
+    assert isinstance(metadata.sample_rate, AudioSampleRates)
+    assert metadata.sample_rate == AudioSampleRates.SAMPLERATE_16000
+    assert isinstance(metadata.channel, AudioChannels)
+    assert metadata.channel == AudioChannels.CHANNEL_MONO
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,7 @@
 """The Monzo integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -18,6 +20,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type MonzoConfigEntry = ConfigEntry[MonzoCoordinator]
+
 
 @dataclass
 class MonzoData:
@@ -30,10 +34,13 @@ class MonzoData:
 class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
     """Class to manage fetching Monzo data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: MonzoConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: AuthenticatedMonzoAPI
+        self,
+        hass: HomeAssistant,
+        config_entry: MonzoConfigEntry,
+        api: AuthenticatedMonzoAPI,
     ) -> None:
         """Initialize."""
         super().__init__(

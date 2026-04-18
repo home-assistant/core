@@ -1,0 +1,68 @@
+{
+  "serialNumber": "MR012345",
+  "type": "CoffeeMachine",
+  "name": "",
+  "location": null,
+  "modelCode": "LINEAMICRA",
+  "modelName": "LINEA MICRA",
+  "connected": false,
+  "connectionDate": 1742526019892,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": false,
+  "coffeeStation": null,
+  "imageUrl": "",
+  "bleAuthToken": null,
+  "widgets": [
+    {
+      "code": "CMMachineStatus",
+      "index": 1,
+      "output": {
+        "status": "StandBy",
+        "availableModes": ["BrewingMode", "StandBy"],
+        "mode": "StandBy",
+        "nextStatus": null,
+        "brewingStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMCoffeeBoiler",
+      "index": 1,
+      "output": {
+        "status": "StandBy",
+        "enabled": true,
+        "enabledSupported": false,
+        "targetTemperature": 94.0,
+        "targetTemperatureMin": 80,
+        "targetTemperatureMax": 100,
+        "targetTemperatureStep": 0.1,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamBoilerLevel",
+      "index": 1,
+      "output": {
+        "status": "StandBy",
+        "enabled": true,
+        "enabledSupported": true,
+        "targetLevel": "Level2",
+        "targetLevelSupported": true,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMNoWater",
+      "index": 1,
+      "output": {
+        "allarm": true
+      },
+      "tutorialUrl": null
+    }
+  ],
+  "invalidWidgets": [],
+  "runningCommands": []
+}

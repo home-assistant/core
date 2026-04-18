@@ -29,7 +29,7 @@ async def test_load_unload(
     """Test loading and unloading the MySensors config entry."""
     config_entry = integration
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = "binary_sensor.door_sensor_1_1"
     state = hass.states.get(entity_id)

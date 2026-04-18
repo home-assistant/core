@@ -6,7 +6,7 @@ from datetime import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
     ATTR_TIME,

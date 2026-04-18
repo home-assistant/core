@@ -12,7 +12,7 @@
   },
   "bluetooth": {
     "active": false,
-    "address": "AA:BB:CC:DD:EE:FF",
+    "address": "AA:BB:CC:DD:EE:EE",
     "available": true,
     "discoverable": true,
     "low_energy": {

@@ -4,13 +4,14 @@
   "codeowners": ["@rytilahti", "@shenxn"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/songpal",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["songpal"],
   "requirements": ["python-songpal==0.16.2"],
   "ssdp": [
     {
-      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1",
-      "manufacturer": "Sony Corporation"
+      "manufacturer": "Sony Corporation",
+      "st": "urn:schemas-sony-com:service:ScalarWebAPI:1"
     }
   ]
 }

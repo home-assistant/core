@@ -1,7 +1,8 @@
 """Tests for the Daikin config flow."""
 
+from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import PropertyMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiohttp import ClientError, web_exceptions
 from pydaikin.exceptions import DaikinException
@@ -18,6 +19,15 @@ from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.daikin.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture

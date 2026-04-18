@@ -2,26 +2,34 @@
 
 import logging
 
+from airtouch4pyapi import AirTouch
 from airtouch4pyapi.airtouch import AirTouchStatus
 
 from homeassistant.components.climate import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type AirTouch4ConfigEntry = ConfigEntry[AirtouchDataUpdateCoordinator]
+
 
 class AirtouchDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Airtouch data."""
 
-    def __init__(self, hass, airtouch):
+    def __init__(
+        self, hass: HomeAssistant, entry: AirTouch4ConfigEntry, airtouch: AirTouch
+    ) -> None:
         """Initialize global Airtouch data updater."""
         self.airtouch = airtouch
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

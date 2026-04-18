@@ -1,0 +1,90 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not have any custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: exempt
+    comment: Hassfest does not recognize the duplicate prevention logic. Duplicate entries are prevented by checking bucket, endpoint URL, and prefix in the config flow.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: S3 is a cloud service that is not discovered on the network.
+  discovery:
+    status: exempt
+    comment: S3 is a cloud service that is not discovered on the network.
+  docs-data-update: done
+  docs-examples:
+    status: exempt
+    comment: The integration extends core functionality and does not require examples.
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: This integration does not support physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: exempt
+    comment: There are no more detailed troubleshooting instructions available than what is already included in strings.json.
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration has a fixed set of devices.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: This integration does not use icons.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: There are no issues which can be repaired.
+  stale-devices:
+    status: exempt
+    comment: This is a service type integration with a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: todo
+  strict-typing: todo

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.12345_freeze_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'Freeze restrictions',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'freeze',
     'unique_id': 'aa:bb:cc:dd:ee:ff_freeze',
@@ -48,8 +51,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_hourly_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -67,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +79,7 @@
     'original_name': 'Hourly restrictions',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hourly',
     'unique_id': 'aa:bb:cc:dd:ee:ff_hourly',
@@ -95,8 +101,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_month_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Month restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +129,7 @@
     'original_name': 'Month restrictions',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'month',
     'unique_id': 'aa:bb:cc:dd:ee:ff_month',
@@ -142,8 +151,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_rain_delay_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -161,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain delay restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +179,7 @@
     'original_name': 'Rain delay restrictions',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'raindelay',
     'unique_id': 'aa:bb:cc:dd:ee:ff_raindelay',
@@ -189,8 +201,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_rain_sensor_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -208,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain sensor restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +229,7 @@
     'original_name': 'Rain sensor restrictions',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rainsensor',
     'unique_id': 'aa:bb:cc:dd:ee:ff_rainsensor',
@@ -236,8 +251,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12345_weekday_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -255,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekday restrictions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +279,7 @@
     'original_name': 'Weekday restrictions',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekday',
     'unique_id': 'aa:bb:cc:dd:ee:ff_weekday',

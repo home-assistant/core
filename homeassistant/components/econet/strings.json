@@ -1,27 +1,26 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
-    "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
     "step": {
       "user": {
-        "title": "Set up Rheem EcoNet Account",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "title": "Set up Rheem EcoNet Account"
       }
     }
   },
   "issues": {
     "migrate_aux_heat": {
-      "title": "Migration of EcoNet set_aux_heat action",
       "fix_flow": {
         "step": {
           "confirm": {
@@ -29,7 +28,8 @@
             "title": "[%key:component::econet::issues::migrate_aux_heat::title%]"
           }
         }
-      }
+      },
+      "title": "Migration of EcoNet set_aux_heat action"
     }
   }
 }

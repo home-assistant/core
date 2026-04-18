@@ -15,7 +15,7 @@ from . import UID, init_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-WATER_HEATER_ID = f"{Platform.WATER_HEATER}.{DOMAIN}"
+WATER_HEATER_ID = f"{Platform.WATER_HEATER}.atag_thermostat_{DOMAIN}"
 
 
 async def test_water_heater(

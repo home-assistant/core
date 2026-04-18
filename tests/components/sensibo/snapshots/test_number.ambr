@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[load_platforms0][number.bedroom_humidity_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -32,6 +34,7 @@
     'original_name': 'Humidity calibration',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibration_humidity',
     'unique_id': 'BBZZBBZZ-calibration_hum',
@@ -59,8 +62,9 @@
 # ---
 # name: test_number[load_platforms0][number.bedroom_temperature_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -83,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -90,6 +95,7 @@
     'original_name': 'Temperature calibration',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibration_temperature',
     'unique_id': 'BBZZBBZZ-calibration_temp',
@@ -117,8 +123,9 @@
 # ---
 # name: test_number[load_platforms0][number.hallway_humidity_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -141,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -148,6 +156,7 @@
     'original_name': 'Humidity calibration',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibration_humidity',
     'unique_id': 'ABC999111-calibration_hum',
@@ -175,8 +184,9 @@
 # ---
 # name: test_number[load_platforms0][number.hallway_temperature_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -199,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -206,6 +217,7 @@
     'original_name': 'Temperature calibration',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibration_temperature',
     'unique_id': 'ABC999111-calibration_temp',
@@ -233,8 +245,9 @@
 # ---
 # name: test_number[load_platforms0][number.kitchen_humidity_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -257,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -264,6 +278,7 @@
     'original_name': 'Humidity calibration',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibration_humidity',
     'unique_id': 'AAZZAAZZ-calibration_hum',
@@ -291,8 +306,9 @@
 # ---
 # name: test_number[load_platforms0][number.kitchen_temperature_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -315,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -322,6 +339,7 @@
     'original_name': 'Temperature calibration',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibration_temperature',
     'unique_id': 'AAZZAAZZ-calibration_temp',

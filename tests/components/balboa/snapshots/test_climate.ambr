@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate[climate.fakespa-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -31,6 +32,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -38,6 +40,7 @@
     'original_name': None,
     'platform': 'balboa',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'balboa',
     'unique_id': 'FakeSpa-Climate-c0ffee',

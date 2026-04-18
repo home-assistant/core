@@ -16,7 +16,7 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
-    DOMAIN as PLATFORM,
+    DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
@@ -30,7 +30,7 @@ from .conftest import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 from tests.typing import WebSocketGenerator
@@ -113,7 +113,7 @@ async def test_update_firmware(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -154,7 +154,9 @@ async def test_update_zigbee2_firmware(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test update of zigbee2 firmware where available."""
-    mock_info = Info.from_dict(load_json_object_fixture("info-MR1.json", DOMAIN))
+    mock_info = Info.from_dict(
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
+    )
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = mock_info
     await setup_integration(hass, mock_config_entry)
@@ -165,7 +167,7 @@ async def test_update_zigbee2_firmware(
     assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -210,7 +212,7 @@ async def test_update_legacy_firmware_v2(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -251,7 +253,7 @@ async def test_update_firmware_failed(
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
-        PLATFORM,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: entity_id},
         blocking=False,
@@ -298,7 +300,7 @@ async def test_update_reboot_timeout(
         ),
     ):
         await hass.services.async_call(
-            PLATFORM,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: entity_id},
             blocking=False,
@@ -338,7 +340,7 @@ async def test_update_release_notes(
     """Test firmware release notes."""
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info.from_dict(
-        load_json_object_fixture("info-MR1.json", DOMAIN)
+        await async_load_json_object_fixture(hass, "info-MR1.json", DOMAIN)
     )
     await setup_integration(hass, mock_config_entry)
     ws_client = await hass_ws_client(hass)

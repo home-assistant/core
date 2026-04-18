@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, load_fixture
+from tests.common import assert_setup_component, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -136,15 +136,15 @@ async def test_setup_component_test_entities(
     """Set up component."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("persongroups.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persongroups.json", DOMAIN),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("persons.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persons.json", DOMAIN),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("persons.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persons.json", DOMAIN),
     )
 
     with assert_setup_component(3, mf.DOMAIN):
@@ -204,15 +204,15 @@ async def test_service_person(
     """Set up component, test person services."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("persongroups.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persongroups.json", DOMAIN),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("persons.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persons.json", DOMAIN),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("persons.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persons.json", DOMAIN),
     )
 
     with assert_setup_component(3, mf.DOMAIN):
@@ -222,7 +222,7 @@ async def test_service_person(
 
     aioclient_mock.post(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("create_person.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "create_person.json", DOMAIN),
     )
     aioclient_mock.delete(
         ENDPOINT_URL.format(
@@ -276,15 +276,15 @@ async def test_service_face(
     """Set up component, test person face services."""
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups"),
-        text=load_fixture("persongroups.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persongroups.json", DOMAIN),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group1/persons"),
-        text=load_fixture("persons.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persons.json", DOMAIN),
     )
     aioclient_mock.get(
         ENDPOINT_URL.format("persongroups/test_group2/persons"),
-        text=load_fixture("persons.json", "microsoft_face"),
+        text=await async_load_fixture(hass, "persons.json", DOMAIN),
     )
 
     CONFIG["camera"] = {"platform": "demo"}

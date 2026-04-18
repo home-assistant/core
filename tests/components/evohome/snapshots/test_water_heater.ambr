@@ -25,7 +25,6 @@
       'away_mode': 'on',
       'current_temperature': 23.0,
       'friendly_name': 'Domestic Hot Water',
-      'icon': 'mdi:thermometer-lines',
       'max_temp': 60.0,
       'min_temp': 43.3,
       'operation_list': list([
@@ -53,7 +52,7 @@
           'temperature': 23.0,
         }),
       }),
-      'supported_features': <WaterHeaterEntityFeature: 6>,
+      'supported_features': <WaterHeaterEntityFeature: 14>,
       'target_temp_high': None,
       'target_temp_low': None,
       'temperature': None,
@@ -72,7 +71,6 @@
       'away_mode': 'on',
       'current_temperature': 23.0,
       'friendly_name': 'Domestic Hot Water',
-      'icon': 'mdi:thermometer-lines',
       'max_temp': 60.0,
       'min_temp': 43.3,
       'operation_list': list([
@@ -100,7 +98,7 @@
           'temperature': 23.0,
         }),
       }),
-      'supported_features': <WaterHeaterEntityFeature: 6>,
+      'supported_features': <WaterHeaterEntityFeature: 14>,
       'target_temp_high': None,
       'target_temp_low': None,
       'temperature': None,

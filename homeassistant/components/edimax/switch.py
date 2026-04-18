@@ -53,25 +53,9 @@ class SmartPlugSwitch(SwitchEntity):
     def __init__(self, smartplug, name):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._name = name
-        self._state = False
+        self._attr_name = name
+        self._attr_is_on = False
         self._info = None
-        self._mac = None
-
-    @property
-    def unique_id(self):
-        """Return the device's MAC address."""
-        return self._mac
-
-    @property
-    def name(self):
-        """Return the name of the Smart Plug, if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -85,6 +69,6 @@ class SmartPlugSwitch(SwitchEntity):
         """Update edimax switch."""
         if not self._info:
             self._info = self.smartplug.info
-            self._mac = self._info["mac"]
+            self._attr_unique_id = self._info["mac"]
 
-        self._state = self.smartplug.state == "ON"
+        self._attr_is_on = self.smartplug.state == "ON"

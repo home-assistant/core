@@ -21,6 +21,7 @@ async def async_get_config_entry_diagnostics(
             "title": entry.title,
             "data": entry.data,
             "options": entry.options,
+            "subentries": dict(entry.subentries),
         },
         TO_REDACT,
     )

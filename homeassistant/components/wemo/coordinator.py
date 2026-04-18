@@ -7,7 +7,7 @@ from dataclasses import dataclass, fields
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException, PyWeMoException
@@ -29,7 +29,7 @@ from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from .models import async_wemo_data
+from .models import DATA_WEMO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,6 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             name=wemo.name,
             update_interval=timedelta(seconds=30),
         )
-        self.hass = hass
         self.wemo = wemo
         self.device_id: str | None = None
         self.device_info = _create_device_info(wemo)
@@ -146,9 +145,10 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         if self._shutdown_requested:
             return
         await super().async_shutdown()
-        if TYPE_CHECKING:
-            # mypy doesn't known that the device_id is set in async_setup.
-            assert self.device_id is not None
+        if self.device_id is None:
+            # async_refresh failed in async_register_device before async_setup
+            # was called, so this coordinator was never fully registered.
+            return
         del _async_coordinators(self.hass)[self.device_id]
         assert self.options  # Always set by async_register_device.
         if self.options.enable_subscription:
@@ -316,9 +316,9 @@ def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordina
 
 @callback
 def _async_coordinators(hass: HomeAssistant) -> dict[str, DeviceCoordinator]:
-    return async_wemo_data(hass).config_entry_data.device_coordinators
+    return hass.data[DATA_WEMO].config_entry_data.device_coordinators
 
 
 @callback
 def _async_registry(hass: HomeAssistant) -> SubscriptionRegistry:
-    return async_wemo_data(hass).registry
+    return hass.data[DATA_WEMO].registry

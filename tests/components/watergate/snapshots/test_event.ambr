@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_event[event.sonic_duration_auto_shut_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -24,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Duration auto shut-off',
     'options': dict({
     }),
     'original_device_class': None,
@@ -31,6 +33,7 @@
     'original_name': 'Duration auto shut-off',
     'platform': 'watergate',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_shut_off_duration',
     'unique_id': 'a63182948ce2896a.auto_shut_off_duration',
@@ -56,8 +59,9 @@
 # ---
 # name: test_event[event.sonic_volume_auto_shut_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -79,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume auto shut-off',
     'options': dict({
     }),
     'original_device_class': None,
@@ -86,6 +91,7 @@
     'original_name': 'Volume auto shut-off',
     'platform': 'watergate',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_shut_off_volume',
     'unique_id': 'a63182948ce2896a.auto_shut_off_volume',

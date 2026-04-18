@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import AbodeSystem
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN_DATA, LOGGER
 from .entity import AbodeDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode camera devices."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = hass.data[DOMAIN_DATA]
 
     async_add_entities(
         AbodeCamera(data, device, timeline.CAPTURE_IMAGE)

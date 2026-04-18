@@ -15,9 +15,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry
+from .coordinator import PiHoleConfigEntry, PiHoleUpdateCoordinator
 from .entity import PiHoleEntity
 
 
@@ -33,7 +32,7 @@ BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
     PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_value=lambda api: bool(api.data.get("status") == "enabled"),
+        state_value=lambda api: bool(api.status == "enabled"),
     ),
 )
 
@@ -70,7 +69,7 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: PiHoleUpdateCoordinator,
         name: str,
         server_unique_id: str,
         description: PiHoleBinarySensorEntityDescription,

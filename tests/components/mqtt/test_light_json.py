@@ -82,6 +82,7 @@ light:
 """
 
 import copy
+import json
 from typing import Any
 from unittest.mock import call, patch
 
@@ -100,6 +101,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import json_loads
 
 from .common import (
@@ -169,6 +171,70 @@ COLOR_MODES_CONFIG = {
     }
 }
 
+GROUP_MEMBER_1_TOPIC = "homeassistant/light/member_1/config"
+GROUP_MEMBER_2_TOPIC = "homeassistant/light/member_2/config"
+GROUP_MEMBER_3_TOPIC = "homeassistant/light/member_3/config"
+GROUP_TOPIC = "homeassistant/light/group/config"
+GROUP_DISCOVERY_MEMBER_1_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-member1",
+        "unique_id": "very_unique_member1",
+        "name": "member1",
+        "default_entity_id": "light.member1",
+    }
+)
+GROUP_DISCOVERY_MEMBER_2_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-member2",
+        "unique_id": "very_unique_member2",
+        "name": "member2",
+        "default_entity_id": "light.member2",
+    }
+)
+GROUP_DISCOVERY_MEMBER_3_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-member3",
+        "unique_id": "very_unique_member3",
+        "name": "member3",
+        "default_entity_id": "light.member3",
+    }
+)
+GROUP_DISCOVERY_LIGHT_GROUP_CONFIG = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-group",
+        "state_topic": "test-state-topic-group",
+        "unique_id": "very_unique_group",
+        "name": "group",
+        "default_entity_id": "light.group",
+        "group": ["very_unique_member1", "very_unique_member2"],
+    }
+)
+GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_EXPANDED = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-group",
+        "state_topic": "test-state-topic-group",
+        "unique_id": "very_unique_group",
+        "name": "group",
+        "default_entity_id": "light.group",
+        "group": ["very_unique_member1", "very_unique_member2", "very_unique_member3"],
+    }
+)
+GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_NO_GROUP = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-group",
+        "state_topic": "test-state-topic-group",
+        "unique_id": "very_unique_group",
+        "name": "group",
+        "default_entity_id": "light.group",
+    }
+)
+
 
 class JsonValidator:
     """Helper to compare JSON."""
@@ -180,6 +246,19 @@ class JsonValidator:
     def __eq__(self, other: bytes | str) -> bool:  # type:ignore[override]
         """Compare JSON data."""
         return json_loads(self.jsondata) == json_loads(other)
+
+
+@pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
+async def test_simple_on_off_light(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test if setup fails with no command topic."""
+    assert await mqtt_mock_entry()
+    state = hass.states.get("light.test")
+    assert state and state.state == STATE_UNKNOWN
+    assert state.attributes["supported_color_modes"] == ["onoff"]
 
 
 @pytest.mark.parametrize(
@@ -330,7 +409,9 @@ async def test_no_color_brightness_color_temp_if_no_topics(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
-    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+    expected_features = (
+        light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
+    )
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
@@ -430,6 +511,58 @@ async def test_brightness_only(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
+                    "state_topic": "test_light",
+                    "command_topic": "test_light/set",
+                    "supported_color_modes": ["brightness"],
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                light.DOMAIN: {
+                    "schema": "json",
+                    "name": "test",
+                    "state_topic": "test_light",
+                    "command_topic": "test_light/set",
+                    "supported_color_modes": ["color_temp"],
+                }
+            }
+        },
+    ],
+)
+async def test_single_color_mode_turn_on(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test turning on a single color mode light does not raise.
+
+    Regression test: PR #162715 changed _attr_color_mode default to None
+    and added a strict check. The JSON schema must initialize color_mode
+    during setup so that turn_on does not raise "does not report a color mode".
+    """
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+
+    # This should not raise "does not report a color mode"
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light/set", '{"state":"ON"}', 0, False
+    )
+
+    async_fire_mqtt_message(hass, "test_light", '{"state":"ON", "brightness": 50}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
 
 
 @pytest.mark.parametrize(
@@ -582,6 +715,104 @@ async def test_controlling_state_color_temp_kelvin(
 
 
 @pytest.mark.parametrize(
+    ("hass_config", "expected_features"),
+    [
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "json",
+                        "name": "test",
+                        "state_topic": "test_light_rgb",
+                        "command_topic": "test_light_rgb/set",
+                    }
+                }
+            },
+            light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "json",
+                        "name": "test",
+                        "state_topic": "test_light_rgb",
+                        "command_topic": "test_light_rgb/set",
+                        "flash": True,
+                        "transition": True,
+                    }
+                }
+            },
+            light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "json",
+                        "name": "test",
+                        "state_topic": "test_light_rgb",
+                        "command_topic": "test_light_rgb/set",
+                        "flash": True,
+                        "transition": False,
+                    }
+                }
+            },
+            light.LightEntityFeature.FLASH,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "json",
+                        "name": "test",
+                        "state_topic": "test_light_rgb",
+                        "command_topic": "test_light_rgb/set",
+                        "flash": False,
+                        "transition": True,
+                    }
+                }
+            },
+            light.LightEntityFeature.TRANSITION,
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    light.DOMAIN: {
+                        "schema": "json",
+                        "name": "test",
+                        "state_topic": "test_light_rgb",
+                        "command_topic": "test_light_rgb/set",
+                        "flash": False,
+                        "transition": False,
+                    }
+                }
+            },
+            light.LightEntityFeature(0),
+        ),
+    ],
+    ids=[
+        "default",
+        "explicit_on",
+        "flash_only",
+        "transition_only",
+        "no_flash_not_transition",
+    ],
+)
+async def test_flash_and_transition_feature_flags(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    expected_features: light.LightEntityFeature,
+) -> None:
+    """Test for no RGB, brightness, color temp, effector XY."""
+    await mqtt_mock_entry()
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) is expected_features
+
+
+@pytest.mark.parametrize(
     "hass_config",
     [
         help_custom_config(
@@ -601,9 +832,11 @@ async def test_controlling_state_via_topic(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
     expected_features = (
-        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+        light.LightEntityFeature.EFFECT
+        | light.LightEntityFeature.FLASH
+        | light.LightEntityFeature.TRANSITION
     )
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) is expected_features
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("color_mode") is None
     assert state.attributes.get("color_temp_kelvin") is None
@@ -799,9 +1032,11 @@ async def test_sending_mqtt_commands_and_optimistic(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     expected_features = (
-        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+        light.LightEntityFeature.EFFECT
+        | light.LightEntityFeature.FLASH
+        | light.LightEntityFeature.TRANSITION
     )
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) is expected_features
     assert state.attributes.get("brightness") == 95
     assert state.attributes.get("color_mode") == "rgb"
     assert state.attributes.get("color_temp_kelvin") is None
@@ -1457,9 +1692,11 @@ async def test_effect(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
     expected_features = (
-        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+        light.LightEntityFeature.EFFECT
+        | light.LightEntityFeature.FLASH
+        | light.LightEntityFeature.TRANSITION
     )
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) is expected_features
 
     await common.async_turn_on(hass, "light.test")
 
@@ -1523,8 +1760,10 @@ async def test_flash_short_and_long(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
-    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+    expected_features = (
+        light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) is expected_features
 
     await common.async_turn_on(hass, "light.test", flash="short")
 
@@ -1586,8 +1825,10 @@ async def test_transition(
 
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
-    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+    expected_features = (
+        light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) is expected_features
     await common.async_turn_on(hass, "light.test", transition=15)
 
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1736,6 +1977,144 @@ async def test_white_scale(
     assert state.attributes.get("brightness") == 129
 
 
+async def test_light_group_discovery_members_before_group(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the discovery of a light group and linked entity IDs.
+
+    The members are discovered first, so they are known in the entity registry.
+    """
+    await mqtt_mock_entry()
+    # Discover light group members
+    async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, GROUP_DISCOVERY_MEMBER_1_CONFIG)
+    async_fire_mqtt_message(hass, GROUP_MEMBER_2_TOPIC, GROUP_DISCOVERY_MEMBER_2_CONFIG)
+    await hass.async_block_till_done()
+
+    # Discover group
+    async_fire_mqtt_message(hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG)
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") == [
+        "light.member1",
+        "light.member2",
+    ]
+
+    # Now create and discover a new member
+    async_fire_mqtt_message(hass, GROUP_MEMBER_3_TOPIC, GROUP_DISCOVERY_MEMBER_3_CONFIG)
+    await hass.async_block_till_done()
+
+    # Update the group discovery
+    async_fire_mqtt_message(
+        hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_EXPANDED
+    )
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+    assert hass.states.get("light.member3") is not None
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") == [
+        "light.member1",
+        "light.member2",
+        "light.member3",
+    ]
+
+
+async def test_light_group_discovery_group_before_members(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the discovery of a light group and linked entity IDs.
+
+    The group is discovered first, so the group members are
+    not (all) known yet in the entity registry.
+    The entity property should be updated as soon as member entities
+    are discovered, updated or removed.
+    """
+    await mqtt_mock_entry()
+
+    # Discover group
+    async_fire_mqtt_message(hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG)
+    await hass.async_block_till_done()
+
+    # Discover light group members
+    async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, GROUP_DISCOVERY_MEMBER_1_CONFIG)
+    async_fire_mqtt_message(hass, GROUP_MEMBER_2_TOPIC, GROUP_DISCOVERY_MEMBER_2_CONFIG)
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") == [
+        "light.member1",
+        "light.member2",
+    ]
+
+    # Remove member 1
+    async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, "")
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is None
+    assert hass.states.get("light.member2") is not None
+
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") == ["light.member2"]
+
+    # Rename member 2
+    entity_registry.async_update_entity(
+        "light.member2", new_entity_id="light.member2_updated"
+    )
+
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") == ["light.member2_updated"]
+
+
+async def test_update_discovery_with_members_without_init(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the discovery update of a light group and linked entity IDs."""
+    await mqtt_mock_entry()
+    # Discover light group members
+    async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, GROUP_DISCOVERY_MEMBER_1_CONFIG)
+    async_fire_mqtt_message(hass, GROUP_MEMBER_2_TOPIC, GROUP_DISCOVERY_MEMBER_2_CONFIG)
+    await hass.async_block_till_done()
+
+    # Discover group without members
+    async_fire_mqtt_message(
+        hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_NO_GROUP
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") is None
+
+    # Update the discovery with group members
+    async_fire_mqtt_message(hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG)
+    await hass.async_block_till_done()
+    assert "Group member update received for entity" in caplog.text
+
+
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -1766,8 +2145,10 @@ async def test_invalid_values(
     assert state.state == STATE_UNKNOWN
     color_modes = [light.ColorMode.COLOR_TEMP, light.ColorMode.HS]
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
-    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+    expected_features = (
+        light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) is expected_features
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("color_temp_kelvin") is None
@@ -1915,13 +2296,61 @@ async def test_custom_availability_payload(
     )
 
 
-async def test_setting_attribute_via_mqtt_json_message(
+async def test_setting_attribute_via_mqtt_json_message_single_light(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
         hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "unique_id": "very_unique_member_1",
+                    "name": "Part 1",
+                    "default_entity_id": "light.member_1",
+                },
+                {
+                    "unique_id": "very_unique_member_2",
+                    "name": "Part 2",
+                    "default_entity_id": "light.member_2",
+                },
+                {
+                    "unique_id": "very_unique_group",
+                    "name": "My group",
+                    "default_entity_id": "light.my_group",
+                    "json_attributes_topic": "attr-topic",
+                    "group": [
+                        "very_unique_member_1",
+                        "very_unique_member_2",
+                        "member_3_not_exists",
+                    ],
+                },
+            ),
+        )
+    ],
+)
+async def test_setting_attribute_via_mqtt_json_message_light_group(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
+    state = hass.states.get("light.my_group")
+
+    assert state and state.attributes.get("val") == "100"
+    assert state.attributes.get("group_entities") == [
+        "light.member_1",
+        "light.member_2",
+    ]
 
 
 async def test_setting_blocked_attribute_via_mqtt_json_message(

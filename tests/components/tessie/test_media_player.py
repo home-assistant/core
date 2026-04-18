@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tessie.coordinator import TESSIE_SYNC_INTERVAL
 from homeassistant.const import Platform
@@ -23,7 +23,6 @@ async def test_media_player(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_get_state,
-    mock_get_status,
 ) -> None:
     """Tests that the media player entity is correct when idle."""
 

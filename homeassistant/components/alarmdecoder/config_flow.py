@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from adext import AdExt
-from alarmdecoder.devices import SerialDevice, SocketDevice
+from alarmdecoder.devices import Device, SerialDevice, SocketDevice
 from alarmdecoder.util import NoDeviceError
 import voluptuous as vol
 
@@ -102,16 +102,21 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._async_current_entries(), user_input, self.protocol
             ):
                 return self.async_abort(reason="already_configured")
-            connection = {}
+            connection: dict[str, Any] = {}
             baud = None
+            device: Device
             if self.protocol == PROTOCOL_SOCKET:
-                host = connection[CONF_HOST] = user_input[CONF_HOST]
-                port = connection[CONF_PORT] = user_input[CONF_PORT]
-                title = f"{host}:{port}"
+                host = connection[CONF_HOST] = cast(str, user_input[CONF_HOST])
+                port = connection[CONF_PORT] = cast(int, user_input[CONF_PORT])
+                title: str = f"{host}:{port}"
                 device = SocketDevice(interface=(host, port))
             if self.protocol == PROTOCOL_SERIAL:
-                path = connection[CONF_DEVICE_PATH] = user_input[CONF_DEVICE_PATH]
-                baud = connection[CONF_DEVICE_BAUD] = user_input[CONF_DEVICE_BAUD]
+                path = connection[CONF_DEVICE_PATH] = cast(
+                    str, user_input[CONF_DEVICE_PATH]
+                )
+                baud = connection[CONF_DEVICE_BAUD] = cast(
+                    int, user_input[CONF_DEVICE_BAUD]
+                )
                 title = path
                 device = SerialDevice(interface=path)
 
@@ -132,6 +137,7 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during AlarmDecoder setup")
                 errors["base"] = "unknown"
 
+        schema: vol.Schema
         if self.protocol == PROTOCOL_SOCKET:
             schema = vol.Schema(
                 {

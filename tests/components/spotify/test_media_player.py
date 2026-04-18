@@ -7,12 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from spotifyaio import (
     PlaybackState,
-    ProductType,
     RepeatMode as SpotifyRepeatMode,
     SpotifyConnectionError,
     SpotifyNotFoundError,
 )
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -56,7 +55,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    async_load_fixture,
     snapshot_platform,
 )
 
@@ -95,7 +94,7 @@ async def test_podcast(
     """Test the Spotify entities while listening a podcast."""
     freezer.move_to("2023-10-21")
     mock_spotify.return_value.get_playback.return_value = PlaybackState.from_json(
-        load_fixture("playback_episode.json", DOMAIN)
+        await async_load_fixture(hass, "playback_episode.json", DOMAIN)
     )
     with (
         patch("secrets.token_hex", return_value="mock-token"),
@@ -106,20 +105,6 @@ async def test_podcast(
         await snapshot_platform(
             hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
-
-
-@pytest.mark.usefixtures("setup_credentials")
-async def test_free_account(
-    hass: HomeAssistant,
-    mock_spotify: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the Spotify entities with a free account."""
-    mock_spotify.return_value.get_current_user.return_value.product = ProductType.FREE
-    await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("media_player.spotify_spotify_1")
-    assert state
-    assert state.attributes["supported_features"] == 0
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -461,6 +446,11 @@ async def test_play_media_in_queue(
             "spotify:episode:3oRoMXsP2NRzm51lldj1RO",
             {"uris": ["spotify:episode:3oRoMXsP2NRzm51lldj1RO"]},
         ),
+        (
+            "spotify://current_user_saved_tracks",
+            "spotify:user:1112264111:collection",
+            {"context_uri": "spotify:user:1112264111:collection"},
+        ),
     ],
 )
 async def test_play_media(
@@ -599,7 +589,9 @@ async def test_fallback_show_image(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Spotify media player with a fallback image."""
-    playback = PlaybackState.from_json(load_fixture("playback_episode.json", DOMAIN))
+    playback = PlaybackState.from_json(
+        await async_load_fixture(hass, "playback_episode.json", DOMAIN)
+    )
     playback.item.images = []
     mock_spotify.return_value.get_playback.return_value = playback
     with patch("secrets.token_hex", return_value="mock-token"):
@@ -619,7 +611,9 @@ async def test_no_episode_images(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Spotify media player with no episode images."""
-    playback = PlaybackState.from_json(load_fixture("playback_episode.json", DOMAIN))
+    playback = PlaybackState.from_json(
+        await async_load_fixture(hass, "playback_episode.json", DOMAIN)
+    )
     playback.item.images = []
     playback.item.show.images = []
     mock_spotify.return_value.get_playback.return_value = playback

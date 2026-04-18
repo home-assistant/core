@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "voc_index": {
+        "default": "mdi:molecule"
+      }
+    }
+  },
+  "services": {
+    "send_info_skill": {
+      "service": "mdi:information"
+    },
+    "send_sound": {
+      "service": "mdi:cast-audio"
+    },
+    "send_text_command": {
+      "service": "mdi:microphone-message"
+    }
+  }
+}

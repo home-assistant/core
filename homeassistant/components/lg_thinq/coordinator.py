@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import time
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -37,7 +38,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=f"{DOMAIN}_{ha_bridge.device.device_id}",
         )
 
-        self.data = {}
+        self.data = ha_bridge.update_status(None)
         self.api = ha_bridge
         self.device_id = ha_bridge.device.device_id
         self.sub_id = ha_bridge.sub_id
@@ -70,6 +71,9 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 event_filter=self.async_config_update_filter,
             )
         )
+        # Time of day for fetching the device's energy usage
+        # (randomly assigned when device is first created in Home Assistant)
+        self.update_energy_at_time_of_day: time | None = None
 
     async def _handle_update_config(self, _: Event) -> None:
         """Handle update core config."""

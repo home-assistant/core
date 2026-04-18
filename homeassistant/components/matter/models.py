@@ -11,7 +11,8 @@ from matter_server.client.models.device_types import DeviceType
 from matter_server.client.models.node import MatterEndpoint
 
 from homeassistant.const import Platform
-from homeassistant.helpers.entity import EntityDescription
+
+from .entity import MatterEntityDescription
 
 type SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float
@@ -54,7 +55,7 @@ class MatterEntityInfo:
     attributes_to_watch: list[type[ClusterAttributeDescriptor]]
 
     # the entity description to use
-    entity_description: EntityDescription
+    entity_description: MatterEntityDescription
 
     # entity class to use to instantiate the entity
     entity_class: type
@@ -80,7 +81,7 @@ class MatterDiscoverySchema:
     platform: Platform
 
     # platform-specific entity description
-    entity_description: EntityDescription
+    entity_description: MatterEntityDescription
 
     # entity class to use to instantiate the entity
     entity_class: type
@@ -99,6 +100,9 @@ class MatterDiscoverySchema:
 
     # [optional] the endpoint's vendor_id must match ANY of these values
     vendor_id: tuple[int, ...] | None = None
+
+    # [optional] the endpoint's product_id must match ANY of these values
+    product_id: tuple[int, ...] | None = None
 
     # [optional] the endpoint's product_name must match ANY of these values
     product_name: tuple[str, ...] | None = None

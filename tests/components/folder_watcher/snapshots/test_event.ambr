@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_event_entity[1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,6 +36,7 @@
     'original_name': None,
     'platform': 'folder_watcher',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'folder_watcher',
     'unique_id': '1',

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button1',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -33,6 +35,7 @@
     'original_name': 'button1',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button1_button',
@@ -61,8 +64,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -86,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button2',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -93,6 +98,7 @@
     'original_name': 'button2',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button2_button',
@@ -121,8 +127,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -146,6 +153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button3',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -153,6 +161,7 @@
     'original_name': 'button3',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button3_button',
@@ -181,8 +190,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -206,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button4',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -213,6 +224,7 @@
     'original_name': 'button4',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button4_button',
@@ -241,8 +253,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -266,6 +279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button5',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -273,6 +287,7 @@
     'original_name': 'button5',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button5_button',
@@ -301,8 +316,9 @@
 # ---
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -326,6 +342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button6',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -333,6 +350,7 @@
     'original_name': 'button6',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
     'unique_id': '5e5b97f3-3094-44e6-abc0-f61283412d6a_button6_button',

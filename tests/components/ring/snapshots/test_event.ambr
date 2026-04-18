@@ -1,12 +1,13 @@
 # serializer version: 1
 # name: test_states[event.front_door_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'ding',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -24,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
@@ -31,6 +33,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '987654-ding',
@@ -44,7 +47,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        'ding',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Front Door Ding',
     }),
@@ -58,8 +61,9 @@
 # ---
 # name: test_states[event.front_door_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -81,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -88,6 +93,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '987654-motion',
@@ -115,8 +121,9 @@
 # ---
 # name: test_states[event.front_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -138,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -145,6 +153,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '765432-motion',
@@ -172,12 +181,13 @@
 # ---
 # name: test_states[event.ingress_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'ding',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -195,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
@@ -202,6 +213,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '185036587-ding',
@@ -215,7 +227,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        'ding',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Ingress Ding',
     }),
@@ -229,8 +241,9 @@
 # ---
 # name: test_states[event.ingress_intercom_unlock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -252,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intercom unlock',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -259,6 +273,7 @@
     'original_name': 'Intercom unlock',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'intercom_unlock',
     'unique_id': '185036587-intercom_unlock',
@@ -286,8 +301,9 @@
 # ---
 # name: test_states[event.internal_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -309,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -316,6 +333,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '345678-motion',

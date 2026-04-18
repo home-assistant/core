@@ -1,0 +1,34 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "InverFlow",
+  "category": "hwsb",
+  "product_id": "ircs2n82vgrozoew",
+  "product_name": "InverFlow",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-08-08T12:44:43+00:00",
+  "create_time": "2025-08-08T12:44:43+00:00",
+  "update_time": "2025-08-08T12:44:43+00:00",
+  "function": {},
+  "status_range": {
+    "cur_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 3000,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "cur_power": 405
+  },
+  "set_up": false,
+  "support_local": true
+}

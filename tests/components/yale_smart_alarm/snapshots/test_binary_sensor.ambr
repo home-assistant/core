@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[load_platforms0][binary_sensor.device4_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -27,6 +29,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF4-battery',
@@ -49,8 +52,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.device4_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -75,6 +80,7 @@
     'original_name': 'Door',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF4',
@@ -97,8 +103,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.device5_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -123,6 +131,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF5-battery',
@@ -145,8 +154,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.device5_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -171,6 +182,7 @@
     'original_name': 'Door',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF5',
@@ -193,8 +205,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.device6_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -219,6 +233,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF6-battery',
@@ -241,8 +256,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.device6_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -267,6 +284,7 @@
     'original_name': 'Door',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF6',
@@ -289,8 +307,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.test_username_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -315,6 +335,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '1-battery',
@@ -337,8 +358,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.test_username_jam-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Jam',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -363,6 +386,7 @@
     'original_name': 'Jam',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'jam',
     'unique_id': '1-jam',
@@ -385,8 +409,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.test_username_power_loss-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power loss',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -411,6 +437,7 @@
     'original_name': 'Power loss',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_loss',
     'unique_id': '1-acfail',
@@ -433,8 +460,9 @@
 # ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.test_username_tamper-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -459,6 +488,7 @@
     'original_name': 'Tamper',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tamper',
     'unique_id': '1-tamper',

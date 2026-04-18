@@ -8,11 +8,12 @@ from typing import Any
 from nio import MatrixRoom, RoomMessageText
 import pytest
 
-from homeassistant.components.matrix import MatrixBot, RoomID
+from homeassistant.components.matrix import MatrixBot, ReactionEvent, RoomID
 from homeassistant.core import Event, HomeAssistant
 
 from .conftest import (
     MOCK_EXPRESSION_COMMANDS,
+    MOCK_REACTION_COMMANDS,
     MOCK_WORD_COMMANDS,
     TEST_MXID,
     TEST_ROOM_A_ID,
@@ -32,7 +33,7 @@ class CommandTestParameters:
     """
 
     room_id: RoomID
-    room_message: RoomMessageText
+    room_message: RoomMessageText | ReactionEvent
     expected_event_data_extra: dict[str, Any] | None
 
     @property
@@ -68,6 +69,29 @@ word_command_global = partial(
     room_message=room_message_base(body="!WordTrigger arg1 arg2"),
     expected_event_data_extra={
         "command": "WordTriggerEventName",
+        "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
+        "args": ["arg1", "arg2"],
+    },
+)
+thread_source = {
+    "event_id": "fake_event_id",
+    "sender": "@SomeUser:example.com",
+    "origin_server_ts": 123456789,
+    "content": {
+        "m.relates_to": {
+            "rel_type": "m.thread",
+            "event_id": "fake_thread_parent",
+        }
+    },
+}
+word_command_global_in_thread = partial(
+    CommandTestParameters,
+    room_message=room_message_base(body="!WordTrigger arg1 arg2", source=thread_source),
+    expected_event_data_extra={
+        "command": "WordTriggerEventName",
+        "event_id": "fake_event_id",
+        "thread_parent": "fake_thread_parent",
         "args": ["arg1", "arg2"],
     },
 )
@@ -76,6 +100,8 @@ expr_command_global = partial(
     room_message=room_message_base(body="My name is FakeName"),
     expected_event_data_extra={
         "command": "ExpressionTriggerEventName",
+        "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
         "args": {"name": "FakeName"},
     },
 )
@@ -84,6 +110,8 @@ word_command_subset = partial(
     room_message=room_message_base(body="!WordTriggerSubset arg1 arg2"),
     expected_event_data_extra={
         "command": "WordTriggerSubsetEventName",
+        "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
         "args": ["arg1", "arg2"],
     },
 )
@@ -92,6 +120,8 @@ expr_command_subset = partial(
     room_message=room_message_base(body="Your name is FakeName"),
     expected_event_data_extra={
         "command": "ExpressionTriggerSubsetEventName",
+        "event_id": "fake_event_id",
+        "thread_parent": "fake_event_id",
         "args": {"name": "FakeName"},
     },
 )
@@ -114,15 +144,36 @@ self_command_global = partial(
     ),
     expected_event_data_extra=None,
 )
+reaction_base = partial(
+    ReactionEvent,
+    source={
+        "sender": "@SomeUser:example.com",
+        "origin_server_ts": 123456789,
+        "event_id": "event_id",
+    },
+)
+reaction_command_global = partial(
+    CommandTestParameters,
+    room_message=reaction_base(reacts_to="reacts_to_event_id", key="😄"),
+    expected_event_data_extra={
+        "command": "ReactionTriggerEventName",
+        "event_id": "reacts_to_event_id",
+        "args": {
+            "reaction": "😄",
+        },
+    },
+)
 
 
 @pytest.mark.parametrize(
     "command_params",
     chain(
         (word_command_global(room_id) for room_id in ALL_ROOMS),
+        (word_command_global_in_thread(room_id) for room_id in ALL_ROOMS),
         (expr_command_global(room_id) for room_id in ALL_ROOMS),
         (word_command_subset(room_id) for room_id in SUBSET_ROOMS),
         (expr_command_subset(room_id) for room_id in SUBSET_ROOMS),
+        (reaction_command_global(room_id) for room_id in ALL_ROOMS),
     ),
 )
 async def test_commands(
@@ -178,3 +229,4 @@ async def test_commands_parsing(hass: HomeAssistant, matrix_bot: MatrixBot) -> N
     await hass.async_start()
     assert matrix_bot._word_commands == MOCK_WORD_COMMANDS
     assert matrix_bot._expression_commands == MOCK_EXPRESSION_COMMANDS
+    assert matrix_bot._reaction_commands == MOCK_REACTION_COMMANDS

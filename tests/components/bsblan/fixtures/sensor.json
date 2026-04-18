@@ -16,5 +16,14 @@
     "dataType": 0,
     "readonly": 1,
     "unit": "&deg;C"
+  },
+  "total_energy": {
+    "name": "Total energy",
+    "error": 0,
+    "value": "7968",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 1,
+    "unit": "kWh"
   }
 }

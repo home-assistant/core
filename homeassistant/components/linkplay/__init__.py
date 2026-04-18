@@ -12,9 +12,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONTROLLER, CONTROLLER_KEY, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, SHARED_DATA, LinkPlaySharedData
+from .services import async_setup_services
 from .utils import async_get_client_session
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -25,6 +30,12 @@ class LinkPlayData:
 
 
 type LinkPlayConfigEntry = ConfigEntry[LinkPlayData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
@@ -44,11 +55,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
     # setup the controller and discover multirooms
     controller: LinkPlayController | None = None
     hass.data.setdefault(DOMAIN, {})
-    if CONTROLLER not in hass.data[DOMAIN]:
+    if SHARED_DATA not in hass.data[DOMAIN]:
         controller = LinkPlayController(session)
-        hass.data[DOMAIN][CONTROLLER_KEY] = controller
+        hass.data[DOMAIN][SHARED_DATA] = LinkPlaySharedData(controller, {})
     else:
-        controller = hass.data[DOMAIN][CONTROLLER_KEY]
+        controller = hass.data[DOMAIN][SHARED_DATA].controller
 
     await controller.add_bridge(bridge)
     await controller.discover_multirooms()
@@ -61,5 +72,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
     """Unload a config entry."""
+
+    # remove the bridge from the controller and discover multirooms
+    bridge: LinkPlayBridge | None = entry.runtime_data.bridge
+    controller: LinkPlayController = hass.data[DOMAIN][SHARED_DATA].controller
+    await controller.remove_bridge(bridge)
+    await controller.discover_multirooms()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

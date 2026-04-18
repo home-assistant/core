@@ -6,6 +6,7 @@ from typing import Any
 
 from attr import asdict
 
+from homeassistant.components.diagnostics import entity_entry_as_dict
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -42,7 +43,9 @@ async def async_get_config_entry_diagnostics(
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
 
-            entities.append({"entry": asdict(entity), "state": state_dict})
+            entities.append(
+                {"entry": entity_entry_as_dict(entity), "state": state_dict}
+            )
 
         devices.append({"device": asdict(device), "entities": entities})
 

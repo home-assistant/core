@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
@@ -23,13 +23,13 @@ if TYPE_CHECKING:
     from . import RenaultConfigEntry
     from .renault_hub import RenaultHub
 
-T = TypeVar("T", bound=KamereonVehicleDataAttributes)
-
 # We have potentially 7 coordinators per vehicle
 _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
 
 
-class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
+class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
+    DataUpdateCoordinator[T]
+):
     """Handle vehicle communication with Renault servers."""
 
     config_entry: RenaultConfigEntry

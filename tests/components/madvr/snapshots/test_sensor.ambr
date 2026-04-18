@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_decimal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect decimal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'Aspect decimal',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_dec',
     'unique_id': '00:11:22:33:44:55_aspect_dec',
@@ -48,8 +51,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_integer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -67,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect integer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +79,7 @@
     'original_name': 'Aspect integer',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_int',
     'unique_id': '00:11:22:33:44:55_aspect_int',
@@ -95,8 +101,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +129,7 @@
     'original_name': 'Aspect name',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_name',
     'unique_id': '00:11:22:33:44:55_aspect_name',
@@ -142,8 +151,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_aspect_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -161,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aspect resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +179,7 @@
     'original_name': 'Aspect resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'aspect_res',
     'unique_id': '00:11:22:33:44:55_aspect_res',
@@ -189,8 +201,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_cpu_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -210,13 +223,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'CPU temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_cpu',
     'unique_id': '00:11:22:33:44:55_temp_cpu',
@@ -241,8 +259,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_gpu_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -262,13 +281,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GPU temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'GPU temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_gpu',
     'unique_id': '00:11:22:33:44:55_temp_gpu',
@@ -293,8 +317,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_hdmi_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -314,13 +339,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HDMI temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'HDMI temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_hdmi',
     'unique_id': '00:11:22:33:44:55_temp_hdmi',
@@ -345,8 +375,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_aspect_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -369,6 +400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming aspect ratio',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -376,6 +408,7 @@
     'original_name': 'Incoming aspect ratio',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_aspect_ratio',
     'unique_id': '00:11:22:33:44:55_incoming_aspect_ratio',
@@ -402,8 +435,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_bit_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -427,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming bit depth',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -434,6 +469,7 @@
     'original_name': 'Incoming bit depth',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_bit_depth',
     'unique_id': '00:11:22:33:44:55_incoming_bit_depth',
@@ -461,8 +497,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_black_levels-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -485,6 +522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming black levels',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -492,6 +530,7 @@
     'original_name': 'Incoming black levels',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_black_levels',
     'unique_id': '00:11:22:33:44:55_incoming_black_levels',
@@ -518,8 +557,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_color_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -544,6 +584,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming color space',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -551,6 +592,7 @@
     'original_name': 'Incoming color space',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_color_space',
     'unique_id': '00:11:22:33:44:55_incoming_color_space',
@@ -579,8 +621,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_colorimetry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -608,6 +651,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming colorimetry',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -615,6 +659,7 @@
     'original_name': 'Incoming colorimetry',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_colorimetry',
     'unique_id': '00:11:22:33:44:55_incoming_colorimetry',
@@ -646,8 +691,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_frame_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -665,6 +711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming frame rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -672,6 +719,7 @@
     'original_name': 'Incoming frame rate',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_frame_rate',
     'unique_id': '00:11:22:33:44:55_incoming_frame_rate',
@@ -693,8 +741,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -712,6 +761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -719,6 +769,7 @@
     'original_name': 'Incoming resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_res',
     'unique_id': '00:11:22:33:44:55_incoming_res',
@@ -740,8 +791,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_incoming_signal_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -764,6 +816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Incoming signal type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -771,6 +824,7 @@
     'original_name': 'Incoming signal type',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'incoming_signal_type',
     'unique_id': '00:11:22:33:44:55_incoming_signal_type',
@@ -797,8 +851,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_mainboard_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -818,13 +873,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mainboard temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Mainboard temperature',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_mainboard',
     'unique_id': '00:11:22:33:44:55_temp_mainboard',
@@ -849,8 +909,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_masking_decimal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -868,6 +929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Masking decimal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -875,6 +937,7 @@
     'original_name': 'Masking decimal',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'masking_dec',
     'unique_id': '00:11:22:33:44:55_masking_dec',
@@ -896,8 +959,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_masking_integer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -915,6 +979,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Masking integer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -922,6 +987,7 @@
     'original_name': 'Masking integer',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'masking_int',
     'unique_id': '00:11:22:33:44:55_masking_int',
@@ -943,8 +1009,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_masking_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -962,6 +1029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Masking resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -969,6 +1037,7 @@
     'original_name': 'Masking resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'masking_res',
     'unique_id': '00:11:22:33:44:55_masking_res',
@@ -990,8 +1059,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_bit_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1015,6 +1085,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing bit depth',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1022,6 +1093,7 @@
     'original_name': 'Outgoing bit depth',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_bit_depth',
     'unique_id': '00:11:22:33:44:55_outgoing_bit_depth',
@@ -1049,8 +1121,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_black_levels-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1073,6 +1146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing black levels',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1080,6 +1154,7 @@
     'original_name': 'Outgoing black levels',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_black_levels',
     'unique_id': '00:11:22:33:44:55_outgoing_black_levels',
@@ -1106,8 +1181,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_color_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1132,6 +1208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing color space',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1139,6 +1216,7 @@
     'original_name': 'Outgoing color space',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_color_space',
     'unique_id': '00:11:22:33:44:55_outgoing_color_space',
@@ -1167,8 +1245,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_colorimetry-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1196,6 +1275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing colorimetry',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1203,6 +1283,7 @@
     'original_name': 'Outgoing colorimetry',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_colorimetry',
     'unique_id': '00:11:22:33:44:55_outgoing_colorimetry',
@@ -1234,8 +1315,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_frame_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1253,6 +1335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing frame rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1260,6 +1343,7 @@
     'original_name': 'Outgoing frame rate',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_frame_rate',
     'unique_id': '00:11:22:33:44:55_outgoing_frame_rate',
@@ -1281,8 +1365,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_resolution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1300,6 +1385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing resolution',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1307,6 +1393,7 @@
     'original_name': 'Outgoing resolution',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_res',
     'unique_id': '00:11:22:33:44:55_outgoing_res',
@@ -1328,8 +1415,9 @@
 # ---
 # name: test_sensor_setup_and_states[sensor.madvr_envy_outgoing_signal_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1352,6 +1440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing signal type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1359,6 +1448,7 @@
     'original_name': 'Outgoing signal type',
     'platform': 'madvr',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outgoing_signal_type',
     'unique_id': '00:11:22:33:44:55_outgoing_signal_type',

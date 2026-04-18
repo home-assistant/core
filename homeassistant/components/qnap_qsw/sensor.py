@@ -36,7 +36,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfDataRate,
@@ -48,8 +47,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_MAX, DOMAIN, QSW_COORD_DATA, RPM
-from .coordinator import QswDataCoordinator
+from .const import ATTR_MAX, RPM
+from .coordinator import QnapQswConfigEntry, QswDataCoordinator
 from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
@@ -287,11 +286,11 @@ PORT_SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: QnapQswConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW sensors from a config_entry."""
-    coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
+    coordinator = entry.runtime_data.data_coordinator
 
     entities: list[QswSensor] = [
         QswSensor(coordinator, description, entry)
@@ -354,7 +353,7 @@ class QswSensor(QswSensorEntity, SensorEntity):
         self,
         coordinator: QswDataCoordinator,
         description: QswSensorEntityDescription,
-        entry: ConfigEntry,
+        entry: QnapQswConfigEntry,
         type_id: int | None = None,
     ) -> None:
         """Initialize."""

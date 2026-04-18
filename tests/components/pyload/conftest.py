@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyloadapi.types import LoginResponse, StatusServerResponse
+from pyloadapi.types import StatusServerResponse
 import pytest
 
 from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -39,6 +40,21 @@ NEW_INPUT = {
 }
 
 
+ADDON_DISCOVERY_INFO = {
+    "addon": "pyLoad-ng",
+    CONF_URL: "http://539df76c-pyload-ng:8000/",
+    CONF_USERNAME: "pyload",
+    CONF_PASSWORD: "pyload",
+}
+
+ADDON_SERVICE_INFO = HassioServiceInfo(
+    config=ADDON_DISCOVERY_INFO,
+    name="pyLoad-ng Addon",
+    slug="p539df76c_pyload-ng",
+    uuid="1234",
+)
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -60,18 +76,6 @@ def mock_pyloadapi() -> Generator[MagicMock]:
         client = mock_client.return_value
         client.username = "username"
         client.api_url = "https://pyload.local:8000/"
-        client.login.return_value = LoginResponse(
-            {
-                "_permanent": True,
-                "authenticated": True,
-                "id": 2,
-                "name": "username",
-                "role": 0,
-                "perms": 0,
-                "template": "default",
-                "_flashes": [["message", "Logged in successfully"]],
-            }
-        )
 
         client.get_status.return_value = StatusServerResponse(
             {

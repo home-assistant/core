@@ -8,17 +8,16 @@ from typing import Any
 from pylutron import Button, Keypad, Led, Lutron, Output
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import LutronConfigEntry
 from .entity import LutronDevice, LutronKeypad
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron switch platform.
@@ -26,7 +25,7 @@ async def async_setup_entry(
     Adds switches from the Main Repeater associated with the config_entry as
     switch entities.
     """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
     entities: list[SwitchEntity] = []
 
     # Add Lutron Switches
@@ -88,11 +87,11 @@ class LutronLed(LutronKeypad, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the LED on."""
-        self._lutron_device.state = 1
+        self._lutron_device.state = Led.LED_ON
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the LED off."""
-        self._lutron_device.state = 0
+        self._lutron_device.state = Led.LED_OFF
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -109,4 +108,4 @@ class LutronLed(LutronKeypad, SwitchEntity):
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        self._attr_is_on = self._lutron_device.last_state
+        self._attr_is_on = self._lutron_device.last_state != Led.LED_OFF

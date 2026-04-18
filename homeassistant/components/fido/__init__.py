@@ -1,1 +1,1 @@
-"""The fido component."""
+"""The Fido integration."""

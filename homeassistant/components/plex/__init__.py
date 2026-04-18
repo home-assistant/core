@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     hass.data.setdefault(DOMAIN, hass_data)
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     hass.http.register_view(PlexImageView())
 
@@ -245,7 +245,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def get_plex_account(plex_server):
         try:
             return plex_server.account
-        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+        except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
             return None
 
     await hass.async_add_executor_job(get_plex_account, plex_server)

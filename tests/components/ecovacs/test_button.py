@@ -9,7 +9,7 @@ from deebot_client.commands.json import (
 )
 from deebot_client.events import LifeSpan
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.ecovacs.const import DOMAIN
@@ -78,16 +78,16 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
+                    "button.dusty_reset_round_mop_lifespan",
+                    ResetLifeSpan(LifeSpan.ROUND_MOP),
+                ),
+                (
                     "button.dusty_reset_side_brush_lifespan",
                     ResetLifeSpan(LifeSpan.SIDE_BRUSH),
                 ),
                 (
                     "button.dusty_reset_unit_care_lifespan",
                     ResetLifeSpan(LifeSpan.UNIT_CARE),
-                ),
-                (
-                    "button.dusty_reset_round_mop_lifespan",
-                    ResetLifeSpan(LifeSpan.ROUND_MOP),
                 ),
                 (
                     "button.dusty_empty_dustbin",

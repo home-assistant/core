@@ -30,9 +30,16 @@ async def async_setup_entry(
     async_add_entities(
         [
             DemoWaterHeater(
-                "Demo Water Heater", 119, UnitOfTemperature.FAHRENHEIT, False, "eco", 1
+                "demo_water_heater",
+                "Demo Water Heater",
+                119,
+                UnitOfTemperature.FAHRENHEIT,
+                False,
+                "eco",
+                1,
             ),
             DemoWaterHeater(
+                "demo_water_heater_celsius",
                 "Demo Water Heater Celsius",
                 45,
                 UnitOfTemperature.CELSIUS,
@@ -52,6 +59,7 @@ class DemoWaterHeater(WaterHeaterEntity):
 
     def __init__(
         self,
+        unique_id: str,
         name: str,
         target_temperature: int,
         unit_of_measurement: str,
@@ -60,6 +68,7 @@ class DemoWaterHeater(WaterHeaterEntity):
         target_temperature_step: float,
     ) -> None:
         """Initialize the water_heater device."""
+        self._attr_unique_id = unique_id
         self._attr_name = name
         if target_temperature is not None:
             self._attr_supported_features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE

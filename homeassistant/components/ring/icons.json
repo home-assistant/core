@@ -1,9 +1,6 @@
 {
   "entity": {
     "number": {
-      "volume": {
-        "default": "mdi:bell-ring"
-      },
       "doorbell_volume": {
         "default": "mdi:bell-ring"
       },
@@ -12,9 +9,15 @@
       },
       "voice_volume": {
         "default": "mdi:account-voice"
+      },
+      "volume": {
+        "default": "mdi:bell-ring"
       }
     },
     "sensor": {
+      "doorbell_volume": {
+        "default": "mdi:bell-ring"
+      },
       "last_activity": {
         "default": "mdi:history"
       },
@@ -24,20 +27,17 @@
       "last_motion": {
         "default": "mdi:history"
       },
-      "volume": {
-        "default": "mdi:bell-ring"
-      },
-      "doorbell_volume": {
-        "default": "mdi:bell-ring"
-      },
       "mic_volume": {
         "default": "mdi:microphone"
+      },
+      "open_door": {
+        "default": "mdi:door-closed-lock"
       },
       "voice_volume": {
         "default": "mdi:account-voice"
       },
-      "open_door": {
-        "default": "mdi:door-closed-lock"
+      "volume": {
+        "default": "mdi:bell-ring"
       },
       "wifi_signal_category": {
         "default": "mdi:wifi"
@@ -47,9 +47,6 @@
       }
     },
     "switch": {
-      "siren": {
-        "default": "mdi:alarm-bell"
-      },
       "in_home_chime": {
         "default": "mdi:bell-ring-outline",
         "state": {
@@ -61,6 +58,9 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
+      },
+      "siren": {
+        "default": "mdi:alarm-bell"
       }
     }
   }

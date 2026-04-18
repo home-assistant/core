@@ -38,11 +38,13 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
@@ -71,6 +73,7 @@ from .const import (
     DEFAULT_WS_PATH,
     DOMAIN,
     MQTT_CONNECTION_STATE,
+    MQTT_PROCESSED_SUBSCRIPTIONS,
     PROTOCOL_5,
     PROTOCOL_31,
     TRANSPORT_WEBSOCKETS,
@@ -109,6 +112,7 @@ INITIAL_SUBSCRIBE_COOLDOWN = 0.5
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
+SUBSCRIBE_TIMEOUT = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
 MAX_WILDCARD_SUBSCRIBES_PER_CALL = 1
@@ -170,7 +174,7 @@ async def async_publish(
             # requires bytes as payload
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
-            except (AttributeError, LookupError, UnicodeEncodeError):
+            except AttributeError, LookupError, UnicodeEncodeError:
                 _LOGGER.error(
                     "Can't encode payload for publishing %s on %s with encoding %s",
                     payload,
@@ -184,7 +188,38 @@ async def async_publish(
     )
 
 
-@bind_hass
+@callback
+def async_on_subscribe_done(
+    hass: HomeAssistant,
+    topic: str,
+    qos: int,
+    on_subscribe_status: CALLBACK_TYPE,
+) -> CALLBACK_TYPE:
+    """Call on_subscribe_done when the matched subscription was completed.
+
+    If a subscription is already present the callback will call
+    on_subscribe_status directly.
+    Call the returned callback to stop and cleanup status monitoring.
+    """
+
+    async def _sync_mqtt_subscribe(subscriptions: list[tuple[str, int]]) -> None:
+        if (topic, qos) not in subscriptions:
+            return
+        hass.loop.call_soon(on_subscribe_status)
+
+    mqtt_data = hass.data[DATA_MQTT]
+    if (
+        mqtt_data.client.connected
+        and mqtt_data.client.is_active_subscription(topic)
+        and not mqtt_data.client.is_pending_subscription(topic)
+    ):
+        hass.loop.call_soon(on_subscribe_status)
+
+    return async_dispatcher_connect(
+        hass, MQTT_PROCESSED_SUBSCRIPTIONS, _sync_mqtt_subscribe
+    )
+
+
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -236,7 +271,6 @@ def async_subscribe_internal(
     return client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
-@bind_hass
 def subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -293,10 +327,9 @@ class MqttClientSetup:
         """
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        from paho.mqtt import client as mqtt  # pylint: disable=import-outside-toplevel
+        from paho.mqtt import client as mqtt  # noqa: PLC0415
 
-        # pylint: disable-next=import-outside-toplevel
-        from .async_client import AsyncMQTTClient
+        from .async_client import AsyncMQTTClient  # noqa: PLC0415
 
         config = self._config
         clean_session: bool | None = None
@@ -524,8 +557,7 @@ class MQTT:
         """Start the misc periodic."""
         assert self._misc_timer is None, "Misc periodic already started"
         _LOGGER.debug("%s: Starting client misc loop", self.config_entry.title)
-        # pylint: disable=import-outside-toplevel
-        import paho.mqtt.client as mqtt
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         # Inner function to avoid having to check late import
         # each time the function is called.
@@ -642,11 +674,15 @@ class MQTT:
         if fileno > -1:
             self.loop.remove_writer(sock)
 
-    def _is_active_subscription(self, topic: str) -> bool:
+    def is_active_subscription(self, topic: str) -> bool:
         """Check if a topic has an active subscription."""
         return topic in self._simple_subscriptions or any(
             other.topic == topic for other in self._wildcard_subscriptions
         )
+
+    def is_pending_subscription(self, topic: str) -> bool:
+        """Check if a topic has a pending subscription."""
+        return topic in self._pending_subscriptions
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -665,8 +701,7 @@ class MQTT:
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
         """Connect to the host. Does not process messages yet."""
-        # pylint: disable-next=import-outside-toplevel
-        import paho.mqtt.client as mqtt
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         result: int | None = None
         self._available_future = client_available
@@ -724,8 +759,7 @@ class MQTT:
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
-        # pylint: disable-next=import-outside-toplevel
-        import paho.mqtt.client as mqtt
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         while True:
             if not self.connected:
@@ -839,9 +873,9 @@ class MQTT:
         """Return a string with the exception message."""
         # if msg_callback is a partial we return the name of the first argument
         if isinstance(msg_callback, partial):
-            call_back_name = getattr(msg_callback.args[0], "__name__")
+            call_back_name = msg_callback.args[0].__name__
         else:
-            call_back_name = getattr(msg_callback, "__name__")
+            call_back_name = msg_callback.__name__
         return (
             f"Exception in {call_back_name} when handling msg on "
             f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
@@ -903,7 +937,7 @@ class MQTT:
     @callback
     def _async_unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic."""
-        if self._is_active_subscription(topic):
+        if self.is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
             subs = self._matching_subscriptions(topic)
@@ -967,6 +1001,7 @@ class MQTT:
             self._last_subscribe = time.monotonic()
 
             await self._async_wait_for_mid_or_raise(mid, result)
+            async_dispatcher_send(self.hass, MQTT_PROCESSED_SUBSCRIPTIONS, chunk_list)
 
     async def _async_perform_unsubscribes(self) -> None:
         """Perform pending MQTT client unsubscribes."""
@@ -1109,7 +1144,7 @@ class MQTT:
             # decoding the same topic multiple times.
             topic = msg.topic
         except UnicodeDecodeError:
-            bare_topic: bytes = getattr(msg, "_topic")
+            bare_topic: bytes = msg._topic  # noqa: SLF001
             _LOGGER.warning(
                 "Skipping received%s message on invalid topic %s (qos=%s): %s",
                 " retained" if msg.retain else "",
@@ -1141,7 +1176,7 @@ class MQTT:
             if subscription.encoding is not None:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
-                except (AttributeError, UnicodeDecodeError):
+                except AttributeError, UnicodeDecodeError:
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload[0:8192],
@@ -1228,7 +1263,7 @@ class MQTT:
         """Handle a callback exception."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         _LOGGER.warning(
             "Error returned from MQTT server: %s",
@@ -1273,8 +1308,7 @@ class MQTT:
     ) -> None:
         """Wait for ACK from broker or raise on error."""
         if result_code != 0:
-            # pylint: disable-next=import-outside-toplevel
-            import paho.mqtt.client as mqtt
+            import paho.mqtt.client as mqtt  # noqa: PLC0415
 
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -1322,8 +1356,7 @@ class MQTT:
 
 
 def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
-    # pylint: disable-next=import-outside-toplevel
-    from paho.mqtt.matcher import MQTTMatcher
+    from paho.mqtt.matcher import MQTTMatcher  # noqa: PLC0415
 
     matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
     matcher[subscription] = True

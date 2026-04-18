@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -24,6 +23,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    OndiloIcoConfigEntry,
     OndiloIcoMeasuresCoordinator,
     OndiloIcoPoolData,
     OndiloIcoPoolsCoordinator,
@@ -78,11 +78,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OndiloIcoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ondilo ICO sensors."""
-    pools_coordinator: OndiloIcoPoolsCoordinator = hass.data[DOMAIN][entry.entry_id]
+    pools_coordinator = entry.runtime_data
     known_entities: set[str] = set()
 
     async_add_entities(get_new_entities(pools_coordinator, known_entities))
@@ -137,9 +137,11 @@ class OndiloICO(CoordinatorEntity[OndiloIcoMeasuresCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._pool_id = pool_id
-        self._attr_unique_id = f"{pool_data.ico['serial_number']}-{description.key}"
+        serial_number = pool_data.ico["serial_number"]
+        self._attr_unique_id = f"{serial_number}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, pool_data.ico["serial_number"])},
+            identifiers={(DOMAIN, serial_number)},
+            serial_number=serial_number,
         )
 
     @property

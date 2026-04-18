@@ -1,0 +1,30 @@
+{
+  "ImagesDiskUsage": {
+    "ActiveCount": 1,
+    "TotalCount": 4,
+    "Reclaimable": 12345678,
+    "TotalSize": 98765432,
+    "Items": []
+  },
+  "ContainersDiskUsage": {
+    "ActiveCount": 1,
+    "TotalCount": 4,
+    "Reclaimable": 12345678,
+    "TotalSize": 98765432,
+    "Items": []
+  },
+  "VolumesDiskUsage": {
+    "ActiveCount": 1,
+    "TotalCount": 4,
+    "Reclaimable": 12345678,
+    "TotalSize": 98765432,
+    "Items": []
+  },
+  "BuildCacheDiskUsage": {
+    "ActiveCount": 1,
+    "TotalCount": 4,
+    "Reclaimable": 12345678,
+    "TotalSize": 98765432,
+    "Items": []
+  }
+}

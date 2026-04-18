@@ -65,6 +65,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -76,6 +77,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -89,6 +91,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_registry_enabled_default=False,
     ),
@@ -102,6 +105,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -113,6 +117,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
     ),
     MinecraftServerSensorEntityDescription(
@@ -124,6 +129,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
     ),
     MinecraftServerSensorEntityDescription(

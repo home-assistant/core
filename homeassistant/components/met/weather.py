@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.weather import (
@@ -48,6 +48,8 @@ from .const import (
 )
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "Met.no"
 
 
@@ -82,7 +84,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
     """Calculate unique ID."""
     name_appendix = ""
     if hourly:

@@ -19,16 +19,18 @@ from .const import DOMAIN, SCAN_INTERVAL_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
+type SwitchBeeConfigEntry = ConfigEntry[SwitchBeeCoordinator]
+
 
 class SwitchBeeCoordinator(DataUpdateCoordinator[Mapping[int, SwitchBeeBaseDevice]]):
     """Class to manage fetching SwitchBee data API."""
 
-    config_entry: ConfigEntry
+    config_entry: SwitchBeeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SwitchBeeConfigEntry,
         swb_api: CentralUnitPolling | CentralUnitWsRPC,
     ) -> None:
         """Initialize."""

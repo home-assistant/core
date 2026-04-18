@@ -18,6 +18,10 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import BooleanSelector
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE, DOMAIN
 
@@ -45,6 +49,9 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for air-Q."""
 
     VERSION = 1
+
+    _discovered_host: str
+    _discovered_name: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,7 +87,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
 
             device_info = await airq.fetch_device_info()
-            await self.async_set_unique_id(device_info["id"])
+            await self.async_set_unique_id(device_info["id"], raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
             _LOGGER.debug("Creating an entry for %s", device_info["name"])
@@ -88,6 +95,58 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery of an air-Q device."""
+        self._discovered_host = discovery_info.host
+        self._discovered_name = discovery_info.properties.get("devicename", "air-Q")
+        device_id = discovery_info.properties.get(ATTR_PROPERTIES_ID)
+
+        if not device_id:
+            return self.async_abort(reason="incomplete_discovery")
+
+        await self.async_set_unique_id(device_id)
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: self._discovered_host},
+            reload_on_update=True,
+        )
+
+        self.context["title_placeholders"] = {"name": self._discovered_name}
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user confirmation of a discovered air-Q device."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            airq = AirQ(self._discovered_host, user_input[CONF_PASSWORD], session)
+            try:
+                await airq.validate()
+            except ClientConnectionError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            else:
+                return self.async_create_entry(
+                    title=self._discovered_name,
+                    data={
+                        CONF_IP_ADDRESS: self._discovered_host,
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            description_placeholders={"name": self._discovered_name},
+            errors=errors,
         )
 
     @staticmethod

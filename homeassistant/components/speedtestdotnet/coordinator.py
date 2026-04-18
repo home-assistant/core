@@ -29,11 +29,10 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api: speedtest.Speedtest,
     ) -> None:
         """Initialize the data object."""
-        self.hass = hass
         self.api = api
         self.servers: dict[str, dict] = {DEFAULT_SERVER: {}}
         super().__init__(
-            self.hass,
+            hass,
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,

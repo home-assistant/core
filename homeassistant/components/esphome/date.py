@@ -11,6 +11,8 @@ from homeassistant.components.date import DateEntity
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
+PARALLEL_UPDATES = 0
+
 
 class EsphomeDate(EsphomeEntity[DateInfo, DateState], DateEntity):
     """A date implementation for esphome."""
@@ -26,7 +28,13 @@ class EsphomeDate(EsphomeEntity[DateInfo, DateState], DateEntity):
 
     async def async_set_value(self, value: date) -> None:
         """Update the current date."""
-        self._client.date_command(self._key, value.year, value.month, value.day)
+        self._client.date_command(
+            self._key,
+            value.year,
+            value.month,
+            value.day,
+            device_id=self._static_info.device_id,
+        )
 
 
 async_setup_entry = partial(

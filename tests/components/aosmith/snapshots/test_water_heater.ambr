@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state[False][water_heater.my_water_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_temp': 130,
@@ -23,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -30,6 +32,7 @@
     'original_name': None,
     'platform': 'aosmith',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 5>,
     'translation_key': None,
     'unique_id': 'junctionId',
@@ -59,8 +62,9 @@
 # ---
 # name: test_state[True][water_heater.my_water_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_temp': 130,
@@ -86,6 +90,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -93,6 +98,7 @@
     'original_name': None,
     'platform': 'aosmith',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 7>,
     'translation_key': None,
     'unique_id': 'junctionId',

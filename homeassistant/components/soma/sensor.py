@@ -3,13 +3,12 @@
 from datetime import timedelta
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
-from .const import API, DEVICES, DOMAIN
+from . import SomaConfigEntry
 from .entity import SomaEntity
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
@@ -17,16 +16,14 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SomaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Soma sensor platform."""
 
-    devices = hass.data[DOMAIN][DEVICES]
+    data = config_entry.runtime_data
 
-    async_add_entities(
-        [SomaSensor(sensor, hass.data[DOMAIN][API]) for sensor in devices], True
-    )
+    async_add_entities([SomaSensor(sensor, data.api) for sensor in data.devices], True)
 
 
 class SomaSensor(SomaEntity, SensorEntity):

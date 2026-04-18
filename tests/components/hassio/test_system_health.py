@@ -5,6 +5,7 @@ import os
 from unittest.mock import patch
 
 from aiohttp import ClientError
+import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -15,18 +16,15 @@ from tests.common import get_system_health_info
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures(
+    "supervisor_root_info", "host_info", "os_info", "supervisor_info"
+)
 async def test_hassio_system_health(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test hassio system health."""
-    aioclient_mock.get("http://127.0.0.1/info", json={"result": "ok", "data": {}})
-    aioclient_mock.get("http://127.0.0.1/host/info", json={"result": "ok", "data": {}})
-    aioclient_mock.get("http://127.0.0.1/os/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
     aioclient_mock.get("https://version.home-assistant.io/stable.json", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info", json={"result": "ok", "data": {}}
-    )
 
     hass.config.components.add("hassio")
     assert await async_setup_component(hass, "system_health", {})
@@ -50,11 +48,28 @@ async def test_hassio_system_health(
     hass.data["hassio_supervisor_info"] = {
         "healthy": True,
         "supported": True,
-        "addons": [{"name": "Awesome Addon", "version": "1.0.0"}],
     }
+    hass.data["hassio_addons_info"] = {
+        "test": {
+            "name": "Awesome Addon",
+            "slug": "test",
+            "version": "1.0.0",
+        }
+    }
+    hass.data["hassio_addons_list"] = [
+        {
+            "slug": "test",
+            "name": "Awesome Addon",
+            "version": "1.0.0",
+        }
+    ]
     hass.data["hassio_network_info"] = {
         "host_internet": True,
         "supervisor_internet": True,
+        "interfaces": [
+            {"primary": False, "ipv4": {"nameservers": ["9.9.9.9"]}},
+            {"primary": True, "ipv4": {"nameservers": ["1.1.1.1"]}},
+        ],
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -76,6 +91,7 @@ async def test_hassio_system_health(
         "host_os": "Home Assistant OS 5.9",
         "installed_addons": "Awesome Addon (1.0.0)",
         "ntp_synchronized": True,
+        "nameservers": "1.1.1.1",
         "supervisor_api": "ok",
         "supervisor_version": "supervisor-2020.11.1",
         "supported": True,
@@ -85,18 +101,15 @@ async def test_hassio_system_health(
     }
 
 
+@pytest.mark.usefixtures(
+    "supervisor_root_info", "host_info", "os_info", "supervisor_info"
+)
 async def test_hassio_system_health_with_issues(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test hassio system health."""
-    aioclient_mock.get("http://127.0.0.1/info", json={"result": "ok", "data": {}})
-    aioclient_mock.get("http://127.0.0.1/host/info", json={"result": "ok", "data": {}})
-    aioclient_mock.get("http://127.0.0.1/os/info", json={"result": "ok", "data": {}})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
     aioclient_mock.get("https://version.home-assistant.io/stable.json", exc=ClientError)
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info", json={"result": "ok", "data": {}}
-    )
 
     hass.config.components.add("hassio")
     assert await async_setup_component(hass, "system_health", {})

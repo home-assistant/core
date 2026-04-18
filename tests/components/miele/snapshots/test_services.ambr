@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_services_with_response
+  dict({
+    'programs': list([
+      dict({
+        'parameters': dict({
+        }),
+        'program': 'Cottons',
+        'program_id': 1,
+      }),
+      dict({
+        'parameters': dict({
+        }),
+        'program': 'QuickPowerWash',
+        'program_id': 146,
+      }),
+      dict({
+        'parameters': dict({
+        }),
+        'program': 'Dark garments / Denim',
+        'program_id': 123,
+      }),
+      dict({
+        'parameters': dict({
+          'duration': dict({
+            'mandatory': True,
+            'max': dict({
+              'hours': 12,
+              'minutes': 0,
+            }),
+            'min': dict({
+              'hours': 0,
+              'minutes': 1,
+            }),
+          }),
+          'temperature': dict({
+            'mandatory': False,
+            'max': 250,
+            'min': 30,
+            'step': 5,
+          }),
+        }),
+        'program': 'Fan plus',
+        'program_id': 13,
+      }),
+      dict({
+        'parameters': dict({
+        }),
+        'program': 'Ristretto',
+        'program_id': 24000,
+      }),
+    ]),
+  })
+# ---

@@ -25,6 +25,7 @@ async def setup_config_entry(
     device: Mock | None = None,
     fritz: Mock | None = None,
     template: Mock | None = None,
+    trigger: Mock | None = None,
 ) -> MockConfigEntry:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
@@ -39,6 +40,9 @@ async def setup_config_entry(
     if template is not None and fritz is not None:
         fritz().get_templates.return_value = [template]
 
+    if trigger is not None and fritz is not None:
+        fritz().get_triggers.return_value = [trigger]
+
     await hass.config_entries.async_setup(entry.entry_id)
     if device is not None:
         await hass.async_block_till_done()
@@ -46,7 +50,10 @@ async def setup_config_entry(
 
 
 def set_devices(
-    fritz: Mock, devices: list[Mock] | None = None, templates: list[Mock] | None = None
+    fritz: Mock,
+    devices: list[Mock] | None = None,
+    templates: list[Mock] | None = None,
+    triggers: list[Mock] | None = None,
 ) -> None:
     """Set list of devices or templates."""
     if devices is not None:
@@ -55,11 +62,15 @@ def set_devices(
     if templates is not None:
         fritz().get_templates.return_value = templates
 
+    if triggers is not None:
+        fritz().get_triggers.return_value = triggers
+
 
 class FritzEntityBaseMock(Mock):
     """base mock of a AVM Fritz!Box binary sensor device."""
 
     ain = CONF_FAKE_AIN
+    device_and_unit_id = (CONF_FAKE_AIN, None)
     manufacturer = CONF_FAKE_MANUFACTURER
     name = CONF_FAKE_NAME
     productname = CONF_FAKE_PRODUCTNAME
@@ -103,6 +114,7 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     has_thermostat = True
     has_blind = False
     holiday_active = False
+    boost_active = False
     lock = "fake_locked"
     present = True
     summer_active = False
@@ -198,3 +210,11 @@ class FritzDeviceCoverUnknownPositionMock(FritzDeviceCoverMock):
     """Mock of a AVM Fritz!Box cover device with unknown position."""
 
     levelpercentage = None
+
+
+class FritzTriggerMock(FritzEntityBaseMock):
+    """Mock of a AVM Fritz!Box smarthome trigger."""
+
+    active = True
+    ain = "trg1234 56789"
+    name = "fake_trigger"

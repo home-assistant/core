@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Any, Concatenate
 
-from azure.core.exceptions import HttpResponseError
+from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 
 from homeassistant.components.backup import (
@@ -16,6 +16,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -80,6 +81,20 @@ def handle_backup_errors[_R, **P](
                 f"Error during backup operation in {func.__name__}:"
                 f" Status {err.status_code}, message: {err.message}"
             ) from err
+        except ServiceRequestError as err:
+            raise BackupAgentError(
+                f"Timeout during backup operation in {func.__name__}"
+            ) from err
+        except AzureError as err:
+            _LOGGER.debug(
+                "Error during backup in %s: %s",
+                func.__name__,
+                err,
+                exc_info=True,
+            )
+            raise BackupAgentError(
+                f"Error during backup operation in {func.__name__}: {err}"
+            ) from err
 
     return wrapper
 
@@ -115,6 +130,7 @@ class AzureStorageBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""

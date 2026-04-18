@@ -27,9 +27,25 @@ _LOGGER = logging.getLogger(__name__)
 class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for azure storage."""
 
-    def get_account_url(self, account_name: str) -> str:
-        """Get the account URL."""
-        return f"https://{account_name}.blob.core.windows.net/"
+    async def get_container_client(
+        self, account_name: str, container_name: str, storage_account_key: str
+    ) -> ContainerClient:
+        """Get the container client.
+
+        ContainerClient has a blocking call to open in cpython
+        """
+
+        session = async_get_clientsession(self.hass)
+
+        def create_container_client() -> ContainerClient:
+            return ContainerClient(
+                account_url=f"https://{account_name}.blob.core.windows.net/",
+                container_name=container_name,
+                credential=storage_account_key,
+                transport=AioHttpTransport(session=session),
+            )
+
+        return await self.hass.async_add_executor_job(create_container_client)
 
     async def validate_config(
         self, container_client: ContainerClient
@@ -58,11 +74,10 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_ACCOUNT_NAME: user_input[CONF_ACCOUNT_NAME]}
             )
-            container_client = ContainerClient(
-                account_url=self.get_account_url(user_input[CONF_ACCOUNT_NAME]),
+            container_client = await self.get_container_client(
+                account_name=user_input[CONF_ACCOUNT_NAME],
                 container_name=user_input[CONF_CONTAINER_NAME],
-                credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
-                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+                storage_account_key=user_input[CONF_STORAGE_ACCOUNT_KEY],
             )
             errors = await self.validate_config(container_client)
 
@@ -99,12 +114,12 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
-            container_client = ContainerClient(
-                account_url=self.get_account_url(reauth_entry.data[CONF_ACCOUNT_NAME]),
+            container_client = await self.get_container_client(
+                account_name=reauth_entry.data[CONF_ACCOUNT_NAME],
                 container_name=reauth_entry.data[CONF_CONTAINER_NAME],
-                credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
-                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+                storage_account_key=user_input[CONF_STORAGE_ACCOUNT_KEY],
             )
+
             errors = await self.validate_config(container_client)
             if not errors:
                 return self.async_update_reload_and_abort(
@@ -129,13 +144,10 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            container_client = ContainerClient(
-                account_url=self.get_account_url(
-                    reconfigure_entry.data[CONF_ACCOUNT_NAME]
-                ),
+            container_client = await self.get_container_client(
+                account_name=reconfigure_entry.data[CONF_ACCOUNT_NAME],
                 container_name=user_input[CONF_CONTAINER_NAME],
-                credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
-                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+                storage_account_key=user_input[CONF_STORAGE_ACCOUNT_KEY],
             )
             errors = await self.validate_config(container_client)
             if not errors:

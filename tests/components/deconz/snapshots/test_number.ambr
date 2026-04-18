@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entities[sensor_payload0-expected0][number.presence_sensor_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65535,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Delay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -32,6 +34,7 @@
     'original_name': 'Presence sensor Delay',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00-delay',
@@ -57,8 +60,9 @@
 # ---
 # name: test_number_entities[sensor_payload1-expected1][number.presence_sensor_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65535,
@@ -81,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -88,6 +93,7 @@
     'original_name': 'Presence sensor Duration',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00-duration',

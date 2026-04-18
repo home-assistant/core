@@ -14,6 +14,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .data import RadioThermInitData, RadioThermUpdate, async_get_data
 
+type RadioThermConfigEntry = ConfigEntry[RadioThermUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=15)
@@ -22,12 +24,12 @@ UPDATE_INTERVAL = timedelta(seconds=15)
 class RadioThermUpdateCoordinator(DataUpdateCoordinator[RadioThermUpdate]):
     """DataUpdateCoordinator to gather data for radio thermostats."""
 
-    config_entry: ConfigEntry
+    config_entry: RadioThermConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RadioThermConfigEntry,
         init_data: RadioThermInitData,
     ) -> None:
         """Initialize DataUpdateCoordinator."""

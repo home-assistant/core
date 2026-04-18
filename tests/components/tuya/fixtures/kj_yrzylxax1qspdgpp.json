@@ -1,0 +1,77 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bree",
+  "category": "kj",
+  "product_id": "yrzylxax1qspdgpp",
+  "product_name": "40\" Bladeless Tower Fan",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-06-22T07:35:33+00:00",
+  "create_time": "2025-06-22T07:35:33+00:00",
+  "update_time": "2025-06-22T07:35:33+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["sleep"]
+      }
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "3h", "4h", "5h"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["sleep"]
+      }
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "3h", "4h", "5h"]
+      }
+    },
+    "countdown_left": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 1440,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["E1", "E2"]
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "mode": "normal",
+    "countdown_set": "cancel",
+    "countdown_left": 0,
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

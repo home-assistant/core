@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.fakespa_circulation_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Circulation pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -27,6 +29,7 @@
     'original_name': 'Circulation pump',
     'platform': 'balboa',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'circ_pump',
     'unique_id': 'FakeSpa-Circ Pump-c0ffee',
@@ -49,8 +52,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.fakespa_filter_cycle_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -75,6 +80,7 @@
     'original_name': 'Filter cycle 1',
     'platform': 'balboa',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_1',
     'unique_id': 'FakeSpa-Filter1-c0ffee',
@@ -97,8 +103,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.fakespa_filter_cycle_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter cycle 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -123,6 +131,7 @@
     'original_name': 'Filter cycle 2',
     'platform': 'balboa',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_2',
     'unique_id': 'FakeSpa-Filter2-c0ffee',

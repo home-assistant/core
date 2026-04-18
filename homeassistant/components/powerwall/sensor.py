@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from operator import attrgetter, methodcaller
 from typing import TYPE_CHECKING
 
-from tesla_powerwall import GridState, MeterResponse, MeterType
+from tesla_powerwall import BatteryResponse, GridState, MeterResponse, MeterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,8 +29,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import POWERWALL_COORDINATOR
+from .coordinator import PowerwallConfigEntry, PowerwallRuntimeData
 from .entity import BatteryEntity, PowerWallEntity
-from .models import BatteryResponse, PowerwallConfigEntry, PowerwallRuntimeData
 
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
@@ -297,7 +297,6 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
     _attr_translation_key = "backup_reserve"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
     def unique_id(self) -> str:
@@ -315,7 +314,7 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = SensorStateClass.TOTAL
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
 

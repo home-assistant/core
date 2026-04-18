@@ -1,0 +1,9 @@
+{
+  "domain": "labs",
+  "name": "Home Assistant Labs",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/labs",
+  "integration_type": "system",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}

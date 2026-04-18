@@ -137,7 +137,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
             device = self._discovered_devices[mac]
             return self._async_create_entry_from_device(device)
 
-        current_unique_ids = self._async_current_ids()
+        current_unique_ids = self._async_current_ids(include_ignore=False)
         current_hosts = {
             entry.data[CONF_HOST]
             for entry in self._async_current_entries(include_ignore=False)

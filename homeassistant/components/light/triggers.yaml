@@ -1,0 +1,61 @@
+.trigger_common: &trigger_common
+  target: &trigger_light_target
+    entity:
+      domain: light
+  fields:
+    behavior: &trigger_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+    for: &trigger_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+.brightness_threshold_entity: &brightness_threshold_entity
+  - domain: input_number
+    unit_of_measurement: "%"
+  - domain: number
+    unit_of_measurement: "%"
+  - domain: sensor
+    unit_of_measurement: "%"
+
+.brightness_threshold_number: &brightness_threshold_number
+  min: 0
+  max: 100
+  mode: box
+  unit_of_measurement: "%"
+
+turned_on: *trigger_common
+turned_off: *trigger_common
+
+brightness_changed:
+  target: *trigger_light_target
+  fields:
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *brightness_threshold_entity
+          mode: changed
+          number: *brightness_threshold_number
+
+brightness_crossed_threshold:
+  target: *trigger_light_target
+  fields:
+    behavior: *trigger_behavior
+    for: *trigger_for
+    threshold:
+      required: true
+      selector:
+        numeric_threshold:
+          entity: *brightness_threshold_entity
+          mode: crossed
+          number: *brightness_threshold_number

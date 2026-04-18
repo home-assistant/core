@@ -15,7 +15,6 @@ from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -31,6 +30,7 @@ from .const import (
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
 )
+from .coordinator import TadoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +81,15 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.hass.async_add_executor_job(self.tado.device_activation)
             except Exception as ex:
+                ratelimit = await self.hass.async_add_executor_job(
+                    self.tado.rate_limit_info
+                )
+                if ratelimit.get("remaining") == "0":
+                    _LOGGER.error(
+                        "Tado API rate limit reached while waiting for device activation: %s",
+                        ex,
+                    )
+                    raise TadoRateLimitExceeded from ex
                 _LOGGER.exception("Error while waiting for device activation")
                 raise CannotConnect from ex
 
@@ -97,7 +106,10 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.login_task.done():
             _LOGGER.debug("Login task is done, checking results")
-            if self.login_task.exception():
+            ex = self.login_task.exception()
+            if isinstance(ex, TadoRateLimitExceeded):
+                return self.async_abort(reason="api_rate_limit_reached")
+            if ex:
                 return self.async_show_progress_done(next_step_id="timeout")
             self.refresh_token = await self.hass.async_add_executor_job(
                 self.tado.get_refresh_token
@@ -176,7 +188,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TadoConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -209,3 +221,7 @@ class OptionsFlowHandler(OptionsFlow):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class TadoRateLimitExceeded(HomeAssistantError):
+    """Error to indicate Tado API rate limit exceeded."""

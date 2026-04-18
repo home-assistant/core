@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select[envoy_eu_batt][select.envoy_1234_storage_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -33,6 +35,7 @@
     'original_name': 'Storage mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_mode',
     'unique_id': '1234_storage_mode',
@@ -59,8 +62,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.enpower_654321_storage_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -84,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,6 +96,7 @@
     'original_name': 'Storage mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_mode',
     'unique_id': '654321_storage_mode',
@@ -117,8 +123,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_generator_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -143,6 +150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -150,6 +158,7 @@
     'original_name': 'Generator action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_generator_action',
     'unique_id': '654321_relay_NC1_generator_action',
@@ -177,8 +186,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_grid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -203,6 +213,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -210,6 +221,7 @@
     'original_name': 'Grid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_grid_action',
     'unique_id': '654321_relay_NC1_grid_action',
@@ -237,8 +249,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_microgrid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -263,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -270,6 +284,7 @@
     'original_name': 'Microgrid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_microgrid_action',
     'unique_id': '654321_relay_NC1_microgrid_action',
@@ -297,8 +312,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc1_fixture_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -321,6 +337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -328,6 +345,7 @@
     'original_name': 'Mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_mode',
     'unique_id': '654321_relay_NC1_mode',
@@ -353,8 +371,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_generator_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -379,6 +398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,6 +406,7 @@
     'original_name': 'Generator action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_generator_action',
     'unique_id': '654321_relay_NC2_generator_action',
@@ -413,8 +434,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_grid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -439,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -446,6 +469,7 @@
     'original_name': 'Grid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_grid_action',
     'unique_id': '654321_relay_NC2_grid_action',
@@ -473,8 +497,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_microgrid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -499,6 +524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -506,6 +532,7 @@
     'original_name': 'Microgrid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_microgrid_action',
     'unique_id': '654321_relay_NC2_microgrid_action',
@@ -533,8 +560,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc2_fixture_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -557,6 +585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -564,6 +593,7 @@
     'original_name': 'Mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_mode',
     'unique_id': '654321_relay_NC2_mode',
@@ -589,8 +619,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_generator_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -615,6 +646,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -622,6 +654,7 @@
     'original_name': 'Generator action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_generator_action',
     'unique_id': '654321_relay_NC3_generator_action',
@@ -649,8 +682,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_grid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -675,6 +709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -682,6 +717,7 @@
     'original_name': 'Grid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_grid_action',
     'unique_id': '654321_relay_NC3_grid_action',
@@ -709,8 +745,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_microgrid_action-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -735,6 +772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -742,6 +780,7 @@
     'original_name': 'Microgrid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_microgrid_action',
     'unique_id': '654321_relay_NC3_microgrid_action',
@@ -769,8 +808,9 @@
 # ---
 # name: test_select[envoy_metered_batt_relay][select.nc3_fixture_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -793,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -800,6 +841,7 @@
     'original_name': 'Mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_mode',
     'unique_id': '654321_relay_NC3_mode',

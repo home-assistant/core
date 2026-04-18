@@ -17,17 +17,16 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import PanasonicVieraConfigEntry
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_MANUFACTURER,
     ATTR_MODEL_NUMBER,
-    ATTR_REMOTE,
     ATTR_UDN,
     DEFAULT_MANUFACTURER,
     DEFAULT_MODEL_NUMBER,
@@ -39,14 +38,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PanasonicVieraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Panasonic Viera TV from a config entry."""
 
     config = config_entry.data
 
-    remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
+    remote = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
 

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from pybalboa import SpaControl
 from pybalboa.enums import OffLowHighState, UnknownState
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import ATTR_PERCENTAGE
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform

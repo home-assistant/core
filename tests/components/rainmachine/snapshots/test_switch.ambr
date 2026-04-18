@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.12345_evening-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'Evening',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_2',
@@ -74,8 +77,9 @@
 # ---
 # name: test_switches[switch.12345_evening_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -93,6 +97,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -100,6 +105,7 @@
     'original_name': 'Evening enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_2_enabled',
@@ -123,8 +129,9 @@
 # ---
 # name: test_switches[switch.12345_extra_water_on_hot_days-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -142,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extra water on hot days',
     'options': dict({
     }),
     'original_device_class': None,
@@ -149,6 +157,7 @@
     'original_name': 'Extra water on hot days',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hot_days_extra_watering',
     'unique_id': 'aa:bb:cc:dd:ee:ff_hot_days_extra_watering',
@@ -171,8 +180,9 @@
 # ---
 # name: test_switches[switch.12345_flower_box-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -190,6 +200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box',
     'options': dict({
     }),
     'original_device_class': None,
@@ -197,6 +208,7 @@
     'original_name': 'Flower box',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2',
@@ -233,8 +245,9 @@
 # ---
 # name: test_switches[switch.12345_flower_box_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -252,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -259,6 +273,7 @@
     'original_name': 'Flower box enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_enabled',
@@ -282,8 +297,9 @@
 # ---
 # name: test_switches[switch.12345_freeze_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -301,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +325,7 @@
     'original_name': 'Freeze protection',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'freeze_protect_enabled',
     'unique_id': 'aa:bb:cc:dd:ee:ff_freeze_protect_enabled',
@@ -330,8 +348,9 @@
 # ---
 # name: test_switches[switch.12345_landscaping-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -349,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +376,7 @@
     'original_name': 'Landscaping',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1',
@@ -392,8 +413,9 @@
 # ---
 # name: test_switches[switch.12345_landscaping_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -411,6 +433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -418,6 +441,7 @@
     'original_name': 'Landscaping enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_enabled',
@@ -441,8 +465,9 @@
 # ---
 # name: test_switches[switch.12345_morning-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -460,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -467,6 +493,7 @@
     'original_name': 'Morning',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_1',
@@ -514,8 +541,9 @@
 # ---
 # name: test_switches[switch.12345_morning_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -533,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -540,6 +569,7 @@
     'original_name': 'Morning enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_1_enabled',
@@ -563,8 +593,9 @@
 # ---
 # name: test_switches[switch.12345_test-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -582,6 +613,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test',
     'options': dict({
     }),
     'original_device_class': None,
@@ -589,6 +621,7 @@
     'original_name': 'Test',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3',
@@ -625,8 +658,9 @@
 # ---
 # name: test_switches[switch.12345_test_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -644,6 +678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -651,6 +686,7 @@
     'original_name': 'Test enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_enabled',
@@ -674,8 +710,9 @@
 # ---
 # name: test_switches[switch.12345_zone_10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -693,6 +730,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10',
     'options': dict({
     }),
     'original_device_class': None,
@@ -700,6 +738,7 @@
     'original_name': 'Zone 10',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10',
@@ -736,8 +775,9 @@
 # ---
 # name: test_switches[switch.12345_zone_10_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -755,6 +795,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -762,6 +803,7 @@
     'original_name': 'Zone 10 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_enabled',
@@ -785,8 +827,9 @@
 # ---
 # name: test_switches[switch.12345_zone_11-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -804,6 +847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11',
     'options': dict({
     }),
     'original_device_class': None,
@@ -811,6 +855,7 @@
     'original_name': 'Zone 11',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11',
@@ -847,8 +892,9 @@
 # ---
 # name: test_switches[switch.12345_zone_11_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -866,6 +912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -873,6 +920,7 @@
     'original_name': 'Zone 11 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_enabled',
@@ -896,8 +944,9 @@
 # ---
 # name: test_switches[switch.12345_zone_12-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -915,6 +964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12',
     'options': dict({
     }),
     'original_device_class': None,
@@ -922,6 +972,7 @@
     'original_name': 'Zone 12',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12',
@@ -958,8 +1009,9 @@
 # ---
 # name: test_switches[switch.12345_zone_12_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -977,6 +1029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -984,6 +1037,7 @@
     'original_name': 'Zone 12 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_enabled',
@@ -1007,8 +1061,9 @@
 # ---
 # name: test_switches[switch.12345_zone_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1026,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1033,6 +1089,7 @@
     'original_name': 'Zone 4',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4',
@@ -1069,8 +1126,9 @@
 # ---
 # name: test_switches[switch.12345_zone_4_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1088,6 +1146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1095,6 +1154,7 @@
     'original_name': 'Zone 4 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_enabled',
@@ -1118,8 +1178,9 @@
 # ---
 # name: test_switches[switch.12345_zone_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1137,6 +1198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1144,6 +1206,7 @@
     'original_name': 'Zone 5',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5',
@@ -1180,8 +1243,9 @@
 # ---
 # name: test_switches[switch.12345_zone_5_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1199,6 +1263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1206,6 +1271,7 @@
     'original_name': 'Zone 5 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_enabled',
@@ -1229,8 +1295,9 @@
 # ---
 # name: test_switches[switch.12345_zone_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1248,6 +1315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1255,6 +1323,7 @@
     'original_name': 'Zone 6',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6',
@@ -1291,8 +1360,9 @@
 # ---
 # name: test_switches[switch.12345_zone_6_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1310,6 +1380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1317,6 +1388,7 @@
     'original_name': 'Zone 6 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_enabled',
@@ -1340,8 +1412,9 @@
 # ---
 # name: test_switches[switch.12345_zone_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1359,6 +1432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1366,6 +1440,7 @@
     'original_name': 'Zone 7',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7',
@@ -1402,8 +1477,9 @@
 # ---
 # name: test_switches[switch.12345_zone_7_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1421,6 +1497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1428,6 +1505,7 @@
     'original_name': 'Zone 7 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_enabled',
@@ -1451,8 +1529,9 @@
 # ---
 # name: test_switches[switch.12345_zone_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1470,6 +1549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1477,6 +1557,7 @@
     'original_name': 'Zone 8',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8',
@@ -1513,8 +1594,9 @@
 # ---
 # name: test_switches[switch.12345_zone_8_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1532,6 +1614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1539,6 +1622,7 @@
     'original_name': 'Zone 8 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_enabled',
@@ -1562,8 +1646,9 @@
 # ---
 # name: test_switches[switch.12345_zone_9-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1581,6 +1666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1588,6 +1674,7 @@
     'original_name': 'Zone 9',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9',
@@ -1624,8 +1711,9 @@
 # ---
 # name: test_switches[switch.12345_zone_9_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1643,6 +1731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1650,6 +1739,7 @@
     'original_name': 'Zone 9 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_enabled',

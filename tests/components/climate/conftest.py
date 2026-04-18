@@ -4,7 +4,6 @@ from collections.abc import Generator
 
 import pytest
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -45,7 +44,7 @@ def register_test_integration(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [CLIMATE_DOMAIN]
+            config_entry, [Platform.CLIMATE]
         )
         return True
 

@@ -84,4 +84,5 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={"minimum_minecraft_version": "1.4"},
         )

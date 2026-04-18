@@ -1,5 +1,6 @@
 """Test Homee locks."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,6 +19,13 @@ from homeassistant.helpers import entity_registry as er
 from . import build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.LOCK]):
+        yield
 
 
 async def setup_lock(
@@ -111,6 +119,23 @@ async def test_lock_changed_by(
     assert hass.states.get("lock.test_lock").attributes["changed_by"] == expected
 
 
+async def test_lock_changed_by_unknown_user(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+) -> None:
+    """Test lock changed by entries."""
+    mock_homee.nodes = [build_mock_node("lock.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    mock_homee.get_user_by_id.return_value = None  # Simulate unknown user
+    attribute = mock_homee.nodes[0].attributes[0]
+    attribute.changed_by = 2
+    attribute.changed_by_id = 1
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("lock.test_lock").attributes["changed_by"] == "user-Unknown"
+
+
 async def test_lock_snapshot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -119,7 +144,6 @@ async def test_lock_snapshot(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the lock snapshots."""
-    with patch("homeassistant.components.homee.PLATFORMS", [Platform.LOCK]):
-        await setup_lock(hass, mock_config_entry, mock_homee)
+    await setup_lock(hass, mock_config_entry, mock_homee)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

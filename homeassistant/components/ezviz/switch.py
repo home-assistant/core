@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from pyezviz.constants import DeviceSwitchType, SupportExt
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi.constants import DeviceSwitchType, SupportExt
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,

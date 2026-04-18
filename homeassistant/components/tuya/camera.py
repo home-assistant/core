@@ -2,28 +2,46 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_device_handlers.definition.camera import (
+    CameraQuirk,
+    TuyaCameraDefinition,
+    get_default_definition,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera as CameraEntity, CameraEntityFeature
+from homeassistant.components.camera import (
+    Camera as CameraEntity,
+    CameraEntityDescription,
+    CameraEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .entity import TuyaEntity
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-CAMERAS: tuple[str, ...] = (
-    # Smart Camera (including doorbells)
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sp",
-    # Smart Camera - Low power consumption camera
-    # Undocumented, see https://github.com/home-assistant/core/issues/132844
-    "dghsxj",
-)
+CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
+    DeviceCategory.DGHSXJ: CameraEntityDescription(key=""),
+    DeviceCategory.SP: CameraEntityDescription(key=""),
+}
+
+
+def _get_quirk_entities(
+    manager: Manager, device: CustomerDevice
+) -> list[TuyaCameraEntity] | None:
+    if (quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)) is None or (
+        entity_quirks := quirk.camera_quirks
+    ) is None:
+        return None
+    return [
+        TuyaCameraEntity(device, manager, definition, quirk=entity_quirk)
+        for entity_quirk in entity_quirks
+        if (definition := entity_quirk.definition_fn(device))
+    ]
 
 
 async def async_setup_entry(
@@ -32,20 +50,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya cameras dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya camera."""
         entities: list[TuyaCameraEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
-            if device.category in CAMERAS:
-                entities.append(TuyaCameraEntity(device, hass_data.manager))
+            device = manager.device_map[device_id]
+            if (quirk_entities := _get_quirk_entities(manager, device)) is not None:
+                entities.extend(quirk_entities)
+                continue
+            if description := CAMERAS.get(device.category):
+                entities.append(
+                    TuyaCameraEntity(
+                        device, manager, get_default_definition(device), description
+                    )
+                )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -63,21 +88,33 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
+        definition: TuyaCameraDefinition,
+        description: CameraEntityDescription | None = None,
+        *,
+        quirk: CameraQuirk | None = None,
     ) -> None:
         """Init Tuya Camera."""
-        super().__init__(device, device_manager)
+        super().__init__(device, device_manager, description)
         CameraEntity.__init__(self)
         self._attr_model = device.product_name
+        self._motion_detection_switch = definition.motion_detection_switch
+        self._recording_status = definition.recording_status
+        if quirk and quirk.key:
+            self._attr_unique_id = f"tuya.{device.id}_{quirk.key}"
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
-        return self.device.status.get(DPCode.RECORD_SWITCH, False)
+        if (status := self._read_wrapper(self._recording_status)) is not None:
+            return status
+        return False
 
     @property
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
-        return self.device.status.get(DPCode.MOTION_SWITCH, False)
+        if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
+            return status
+        return False
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
@@ -101,10 +138,10 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             height=height,
         )
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        self._send_command([{"code": DPCode.MOTION_SWITCH, "value": True}])
+        await self._async_send_wrapper_updates(self._motion_detection_switch, True)
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._send_command([{"code": DPCode.MOTION_SWITCH, "value": False}])
+        await self._async_send_wrapper_updates(self._motion_detection_switch, False)

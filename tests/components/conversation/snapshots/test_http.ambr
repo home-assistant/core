@@ -11,6 +11,7 @@
           'bn',
           'ca',
           'cs',
+          'cy',
           'da',
           'de',
           'de-CH',
@@ -27,9 +28,11 @@
           'hi',
           'hr',
           'hu',
+          'hy',
           'id',
           'is',
           'it',
+          'ja',
           'ka',
           'ko',
           'kw',
@@ -42,9 +45,10 @@
           'nb',
           'ne',
           'nl',
+          'pa',
           'pl',
           'pt',
-          'pt-br',
+          'pt-BR',
           'ro',
           'ru',
           'sk',
@@ -59,9 +63,9 @@
           'uk',
           'ur',
           'vi',
-          'zh-cn',
-          'zh-hk',
-          'zh-tw',
+          'zh-CN',
+          'zh-HK',
+          'zh-TW',
         ]),
       }),
       dict({
@@ -281,8 +285,6 @@
             'type': 'entity',
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -311,39 +313,6 @@
             'name': 'kitchen',
             'type': 'entity',
           }),
-        ]),
-        'targets': list([
-        ]),
-      }),
-      'language': 'en',
-      'response_type': 'action_done',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_http_processing_intent[homeassistant]
-  dict({
-    'continue_conversation': False,
-    'conversation_id': <ANY>,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
-            'type': 'entity',
-          }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -494,6 +463,7 @@
             'value': 'my cool light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
@@ -502,7 +472,6 @@
         'slots': dict({
           'name': 'my cool light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -519,6 +488,7 @@
             'value': 'my cool light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOff',
         }),
@@ -527,7 +497,6 @@
         'slots': dict({
           'name': 'my cool light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -549,6 +518,7 @@
             'value': 'light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassTurnOn',
         }),
@@ -558,7 +528,6 @@
           'area': 'kitchen',
           'domain': 'light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -585,6 +554,7 @@
             'value': 'on',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassGetState',
         }),
@@ -595,7 +565,6 @@
           'domain': 'lights',
           'state': 'on',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
@@ -620,6 +589,7 @@
           }),
         }),
         'file': 'en/beer.yaml',
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'OrderBeer',
         }),
@@ -660,6 +630,7 @@
             'value': 'test light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),
@@ -669,7 +640,6 @@
           'brightness': '100',
           'name': 'test light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.demo_1234': dict({
             'matched': True,
@@ -692,6 +662,7 @@
             'value': 'test light',
           }),
         }),
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'HassLightSet',
         }),
@@ -700,7 +671,6 @@
         'slots': dict({
           'name': 'test light',
         }),
-        'source': 'builtin',
         'targets': dict({
         }),
         'unmatched_slots': dict({

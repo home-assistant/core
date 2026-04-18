@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Device Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -32,6 +34,7 @@
     'original_name': 'Aqara FP1 Device Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
@@ -57,8 +60,9 @@
 # ---
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -82,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,6 +94,7 @@
     'original_name': 'Aqara FP1 Sensitivity',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
@@ -115,8 +121,9 @@
 # ---
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -140,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Trigger Distance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -147,6 +155,7 @@
     'original_name': 'Aqara FP1 Trigger Distance',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
@@ -173,8 +182,9 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -197,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Device Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -204,6 +215,7 @@
     'original_name': 'Aqara FP1 Device Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
@@ -229,8 +241,9 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -254,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,6 +275,7 @@
     'original_name': 'Aqara FP1 Sensitivity',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
@@ -287,8 +302,9 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -312,6 +328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Trigger Distance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -319,6 +336,7 @@
     'original_name': 'Aqara FP1 Trigger Distance',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
@@ -345,8 +363,9 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -369,6 +388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Device Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -376,6 +396,7 @@
     'original_name': 'Aqara FP1 Device Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode',
@@ -401,8 +422,9 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -426,6 +448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -433,6 +456,7 @@
     'original_name': 'Aqara FP1 Sensitivity',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity',
@@ -459,8 +483,9 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -484,6 +509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Trigger Distance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -491,6 +517,7 @@
     'original_name': 'Aqara FP1 Trigger Distance',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance',
@@ -517,8 +544,9 @@
 # ---
 # name: test_select[sensor_payload3-expected3][select.ikea_starkvind_fan_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -546,6 +574,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IKEA Starkvind Fan Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -553,6 +582,7 @@
     'original_name': 'IKEA Starkvind Fan Mode',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '0c:43:14:ff:fe:6c:20:12-01-fc7d-fan_mode',

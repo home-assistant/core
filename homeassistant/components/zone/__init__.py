@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 import logging
 from operator import attrgetter
 import sys
@@ -46,7 +46,7 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
 from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
@@ -108,31 +108,40 @@ ENTITY_ID_SORTER = attrgetter("entity_id")
 
 ZONE_ENTITY_IDS = "zone_entity_ids"
 
+DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
+DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
 
-@bind_hass
-def async_active_zone(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: int = 0
-) -> State | None:
-    """Find the active zone for given latitude, longitude.
+
+def async_in_zones(
+    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+) -> tuple[State | None, list[str]]:
+    """Find zones which contain the given latitude and longitude.
+
+    Returns a tuple of the closest active zone and a list of all zones which
+    contain the given latitude and longitude. The list of zones is sorted by
+    distance and then by radius so that the closest and smallest zone is first.
 
     This method must be run in the event loop.
     """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     min_dist: float = sys.maxsize
     closest: State | None = None
+    zones: list[tuple[str, float, float]] = []
 
     # This can be called before async_setup by device tracker
-    zone_entity_ids: Iterable[str] = hass.data.get(ZONE_ENTITY_IDS, ())
+    zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
 
     for entity_id in zone_entity_ids:
         if (
             not (zone := hass.states.get(entity_id))
             # Skip unavailable zones
             or zone.state == STATE_UNAVAILABLE
-            # Skip passive zones
-            or (zone_attrs := zone.attributes).get(ATTR_PASSIVE)
+        ):
+            continue
+        zone_attrs = zone.attributes
+        if (
             # Skip zones where we cannot calculate distance
-            or (
+            (
                 zone_dist := distance(
                     latitude,
                     longitude,
@@ -145,6 +154,12 @@ def async_active_zone(
             # lat/long is outside the zone
             or not (zone_dist - (zone_radius := zone_attrs[ATTR_RADIUS]) < radius)
         ):
+            continue
+
+        zones.append((zone.entity_id, zone_dist, zone_radius))
+
+        # Skip passive zones
+        if zone_attrs.get(ATTR_PASSIVE):
             continue
 
         # If have a closest and its not closer than the closest skip it
@@ -162,14 +177,26 @@ def async_active_zone(
         min_dist = zone_dist
         closest = zone
 
-    return closest
+    # Sort by distance and then by radius so the closest and smallest zone is first.
+    zones.sort(key=lambda x: (x[1], x[2]))
+    return (closest, [itm[0] for itm in zones])
+
+
+def async_active_zone(
+    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
+) -> State | None:
+    """Find the active zone for given latitude, longitude.
+
+    This method must be run in the event loop.
+    """
+    return async_in_zones(hass, latitude, longitude, radius)[0]
 
 
 @callback
 def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
     """Set up track of entity IDs for zones."""
-    zone_entity_ids: list[str] = hass.states.async_entity_ids(DOMAIN)
-    hass.data[ZONE_ENTITY_IDS] = zone_entity_ids
+    zone_entity_ids = hass.states.async_entity_ids(DOMAIN)
+    hass.data[DATA_ZONE_ENTITY_IDS] = zone_entity_ids
 
     @callback
     def _async_add_zone_entity_id(
@@ -265,8 +292,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all zones and load new ones from config."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            return
         await yaml_collection.async_load(conf[DOMAIN])
 
     service.async_register_admin_service(
@@ -290,7 +315,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
-    hass.data[DOMAIN] = storage_collection
+    hass.data[DATA_ZONE_STORAGE_COLLECTION] = storage_collection
 
     return True
 
@@ -312,13 +337,11 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up zone as config entry."""
-    storage_collection = cast(ZoneStorageCollection, hass.data[DOMAIN])
-
     data = dict(config_entry.data)
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
     data.setdefault(CONF_RADIUS, DEFAULT_RADIUS)
 
-    await storage_collection.async_create_item(data)
+    await hass.data[DATA_ZONE_STORAGE_COLLECTION].async_create_item(data)
 
     hass.async_create_task(
         hass.config_entries.async_remove(config_entry.entry_id), eager_start=True

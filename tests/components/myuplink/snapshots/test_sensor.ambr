@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor_states[sensor.gotham_city_average_outdoor_temp_bt1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,13 +23,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average outdoor temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Average outdoor temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40067',
@@ -53,8 +59,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_average_outdoor_temp_bt1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -74,13 +81,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average outdoor temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Average outdoor temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40067',
@@ -105,8 +117,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_calculated_supply_climate_system_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -126,13 +139,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calculated supply climate system 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Calculated supply climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43009',
@@ -157,8 +175,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_calculated_supply_climate_system_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -178,13 +197,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calculated supply climate system 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Calculated supply climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43009',
@@ -209,8 +233,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_condenser_bt12-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -230,13 +255,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser (BT12)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Condenser (BT12)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40017',
@@ -261,8 +291,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_condenser_bt12_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -282,13 +313,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser (BT12)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Condenser (BT12)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40017',
@@ -313,8 +349,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_be1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -334,13 +371,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40079',
@@ -365,8 +407,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_be1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -386,13 +429,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40079',
@@ -417,8 +465,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_be2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -438,13 +487,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40081',
@@ -469,8 +523,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_be2_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -490,13 +545,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40081',
@@ -521,8 +581,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_be3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -542,13 +603,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40083',
@@ -573,8 +639,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_be3_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -594,13 +661,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40083',
@@ -625,8 +697,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_compressor_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -646,13 +719,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Current compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-41778',
@@ -677,8 +755,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_compressor_frequency_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -698,13 +777,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Current compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-41778',
@@ -729,8 +813,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_fan_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -748,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current fan mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -755,6 +841,7 @@
     'original_name': 'Current fan mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_mode',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43108',
@@ -776,8 +863,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_fan_mode_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -795,6 +883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current fan mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -802,6 +891,7 @@
     'original_name': 'Current fan mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_mode',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43108',
@@ -823,8 +913,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_hot_water_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -842,6 +933,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current hot water mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -849,6 +941,7 @@
     'original_name': 'Current hot water mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43109',
@@ -871,8 +964,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_hot_water_mode_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -890,6 +984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current hot water mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -897,6 +992,7 @@
     'original_name': 'Current hot water mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43109',
@@ -919,8 +1015,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_outd_temp_bt1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -940,13 +1037,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current outd temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current outd temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40004',
@@ -971,8 +1073,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_current_outd_temp_bt1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -992,13 +1095,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current outd temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current outd temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40004',
@@ -1023,8 +1131,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_decrease_from_reference_value-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1042,6 +1151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Decrease from reference value',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1049,6 +1159,7 @@
     'original_name': 'Decrease from reference value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43125',
@@ -1071,8 +1182,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_decrease_from_reference_value_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1090,6 +1202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Decrease from reference value',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1097,6 +1210,7 @@
     'original_name': 'Decrease from reference value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43125',
@@ -1119,8 +1233,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_defrosting_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1140,6 +1255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrosting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1150,6 +1266,7 @@
     'original_name': 'Defrosting time',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43066',
@@ -1174,8 +1291,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_defrosting_time_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1195,6 +1313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrosting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1205,6 +1324,7 @@
     'original_name': 'Defrosting time',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43066',
@@ -1229,8 +1349,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_degree_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1248,6 +1369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1255,6 +1377,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -1277,8 +1400,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_degree_minutes_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1296,6 +1420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1303,6 +1428,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -1325,8 +1451,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_desired_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1344,6 +1471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1351,6 +1479,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-42770',
@@ -1373,8 +1502,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_desired_humidity_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1392,6 +1522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1399,6 +1530,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49633',
@@ -1421,8 +1553,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_desired_humidity_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1440,6 +1573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1447,6 +1581,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-42770',
@@ -1469,8 +1604,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_desired_humidity_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1488,6 +1624,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1495,6 +1632,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49633',
@@ -1517,8 +1655,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_discharge_bt14-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1538,13 +1677,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharge (BT14)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Discharge (BT14)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40018',
@@ -1569,8 +1713,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_discharge_bt14_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1590,13 +1735,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharge (BT14)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Discharge (BT14)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40018',
@@ -1621,8 +1771,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_dt_inverter_exh_air_bt20-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1642,13 +1793,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dT Inverter - exh air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'dT Inverter - exh air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43146',
@@ -1673,8 +1829,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_dt_inverter_exh_air_bt20_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1694,13 +1851,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dT Inverter - exh air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'dT Inverter - exh air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43146',
@@ -1725,8 +1887,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_evaporator_bt16-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1746,13 +1909,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator (BT16)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator (BT16)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40020',
@@ -1777,8 +1945,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_evaporator_bt16_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1798,13 +1967,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator (BT16)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator (BT16)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40020',
@@ -1829,8 +2003,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_exhaust_air_bt20-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1850,13 +2025,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Exhaust air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40025',
@@ -1881,8 +2061,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_exhaust_air_bt20_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1902,13 +2083,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Exhaust air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40025',
@@ -1933,8 +2119,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_extract_air_bt21-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1954,13 +2141,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air (BT21)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air (BT21)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40026',
@@ -1985,8 +2177,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_extract_air_bt21_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2006,13 +2199,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air (BT21)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air (BT21)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40026',
@@ -2037,8 +2235,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_heating_medium_pump_speed_gp1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2056,6 +2255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating medium pump speed (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2063,6 +2263,7 @@
     'original_name': 'Heating medium pump speed (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43437',
@@ -2085,8 +2286,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_heating_medium_pump_speed_gp1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2104,6 +2306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating medium pump speed (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2111,6 +2314,7 @@
     'original_name': 'Heating medium pump speed (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43437',
@@ -2133,8 +2337,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_charge_current_value_bt12_bt63-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2154,13 +2359,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43116',
@@ -2185,8 +2395,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_charge_current_value_bt12_bt63_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2206,13 +2417,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43116',
@@ -2237,8 +2453,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_charge_set_point_value-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2258,13 +2475,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge set point value',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge set point value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43115',
@@ -2289,8 +2511,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_charge_set_point_value_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2310,13 +2533,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge set point value',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge set point value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43115',
@@ -2341,8 +2569,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_charging_bt6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2362,13 +2591,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water charging (BT6)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water charging (BT6)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40014',
@@ -2393,8 +2627,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_charging_bt6_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2414,13 +2649,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water charging (BT6)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water charging (BT6)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40014',
@@ -2445,8 +2685,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_top_bt7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2466,13 +2707,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water top (BT7)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water top (BT7)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40013',
@@ -2497,8 +2743,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_hot_water_top_bt7_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2518,13 +2765,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water top (BT7)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water top (BT7)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40013',
@@ -2549,8 +2801,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_int_elec_add_heat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2578,6 +2831,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2585,6 +2839,7 @@
     'original_name': 'Int elec add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993',
@@ -2616,8 +2871,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_int_elec_add_heat_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2645,6 +2901,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2652,6 +2909,7 @@
     'original_name': 'Int elec add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993',
@@ -2683,8 +2941,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_int_elec_add_heat_raw-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2702,6 +2961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2709,6 +2969,7 @@
     'original_name': 'Int elec add heat raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993-raw',
@@ -2730,8 +2991,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_int_elec_add_heat_raw_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2749,6 +3011,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2756,6 +3019,7 @@
     'original_name': 'Int elec add heat raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993-raw',
@@ -2777,8 +3041,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_inverter_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2798,13 +3063,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Inverter temperature',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43140',
@@ -2829,8 +3099,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_inverter_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2850,13 +3121,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Inverter temperature',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43140',
@@ -2881,8 +3157,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_liquid_line_bt15-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2902,13 +3179,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid line (BT15)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Liquid line (BT15)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40019',
@@ -2933,8 +3215,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_liquid_line_bt15_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2954,13 +3237,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid line (BT15)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Liquid line (BT15)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40019',
@@ -2985,8 +3273,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_max_compressor_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3006,13 +3295,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Max compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43123',
@@ -3037,8 +3331,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_max_compressor_frequency_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3058,13 +3353,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Max compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43123',
@@ -3089,8 +3389,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_min_compressor_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3110,13 +3411,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Min compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43122',
@@ -3141,8 +3447,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_min_compressor_frequency_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3162,13 +3469,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Min compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43122',
@@ -3193,8 +3505,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_oil_temperature_bt29-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3214,13 +3527,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40146',
@@ -3245,8 +3563,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_oil_temperature_bt29_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3266,13 +3585,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40146',
@@ -3297,8 +3621,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_oil_temperature_ep15_bt29-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3318,13 +3643,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (EP15-BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (EP15-BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40145',
@@ -3349,8 +3679,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_oil_temperature_ep15_bt29_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3370,13 +3701,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (EP15-BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (EP15-BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40145',
@@ -3401,8 +3737,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_priority-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3430,6 +3767,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Priority',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3437,6 +3775,7 @@
     'original_name': 'Priority',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994',
@@ -3468,8 +3807,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_priority_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3497,6 +3837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Priority',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3504,6 +3845,7 @@
     'original_name': 'Priority',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994',
@@ -3535,8 +3877,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_priority_raw-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3554,6 +3897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prior\xadity raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3561,6 +3905,7 @@
     'original_name': 'Prior\xadity raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994-raw',
@@ -3582,8 +3927,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_priority_raw_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3601,6 +3947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prior\xadity raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3608,6 +3955,7 @@
     'original_name': 'Prior\xadity raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994-raw',
@@ -3629,8 +3977,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_r_start_diff_additional_heat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3648,6 +3997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'r start diff additional heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3655,6 +4005,7 @@
     'original_name': 'r start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072r',
@@ -3677,8 +4028,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_r_start_diff_additional_heat_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3696,6 +4048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'r start diff additional heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3703,6 +4056,7 @@
     'original_name': 'r start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072r',
@@ -3725,8 +4079,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_reference_air_speed_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3746,13 +4101,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reference, air speed sensor',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Reference, air speed sensor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'airflow',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43124',
@@ -3777,8 +4137,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_reference_air_speed_sensor_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3798,13 +4159,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reference, air speed sensor',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Reference, air speed sensor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'airflow',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43124',
@@ -3829,8 +4195,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_return_line_bt3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3850,13 +4217,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40012',
@@ -3881,8 +4253,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_return_line_bt3_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3902,13 +4275,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40012',
@@ -3933,8 +4311,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_return_line_bt62-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3954,13 +4333,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT62)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT62)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40048',
@@ -3985,8 +4369,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_return_line_bt62_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4006,13 +4391,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT62)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT62)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40048',
@@ -4037,8 +4427,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_room_temperature_bt50-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4058,13 +4449,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature (BT50)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature (BT50)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40033',
@@ -4089,8 +4485,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_room_temperature_bt50_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4110,13 +4507,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature (BT50)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature (BT50)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40033',
@@ -4141,8 +4543,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_status_compressor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4167,6 +4570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status compressor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4174,6 +4578,7 @@
     'original_name': 'Status compressor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427',
@@ -4202,8 +4607,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_status_compressor_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4228,6 +4634,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status compressor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4235,6 +4642,7 @@
     'original_name': 'Status compressor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427',
@@ -4263,8 +4671,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_status_compressor_raw-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4282,6 +4691,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status com\xadpressor raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4289,6 +4699,7 @@
     'original_name': 'Status com\xadpressor raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427-raw',
@@ -4310,8 +4721,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_status_compressor_raw_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4329,6 +4741,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status com\xadpressor raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4336,6 +4749,7 @@
     'original_name': 'Status com\xadpressor raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427-raw',
@@ -4357,8 +4771,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_suction_gas_bt17-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4378,13 +4793,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Suction gas (BT17)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Suction gas (BT17)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40022',
@@ -4409,8 +4829,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_suction_gas_bt17_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4430,13 +4851,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Suction gas (BT17)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Suction gas (BT17)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40022',
@@ -4461,8 +4887,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_supply_line_bt2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4482,13 +4909,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40008',
@@ -4513,8 +4945,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_supply_line_bt2_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4534,13 +4967,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40008',
@@ -4565,8 +5003,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_supply_line_bt61-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4586,13 +5025,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT61)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT61)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40047',
@@ -4617,8 +5061,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_supply_line_bt61_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4638,13 +5083,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT61)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT61)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40047',
@@ -4669,8 +5119,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_time_factor_add_heat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4688,6 +5139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time factor add heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4695,6 +5147,7 @@
     'original_name': 'Time factor add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43081',
@@ -4717,8 +5170,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_time_factor_add_heat_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4736,6 +5190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time factor add heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4743,6 +5198,7 @@
     'original_name': 'Time factor add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43081',
@@ -4765,8 +5221,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_value_air_velocity_sensor_bs1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4784,6 +5241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value, air velocity sensor (BS1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4791,6 +5249,7 @@
     'original_name': 'Value, air velocity sensor (BS1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40050',
@@ -4813,8 +5272,9 @@
 # ---
 # name: test_sensor_states[sensor.gotham_city_value_air_velocity_sensor_bs1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4832,6 +5292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value, air velocity sensor (BS1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4839,6 +5300,7 @@
     'original_name': 'Value, air velocity sensor (BS1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40050',

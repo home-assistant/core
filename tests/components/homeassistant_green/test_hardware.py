@@ -58,7 +58,7 @@ async def test_hardware_info(
                 "config_entries": [config_entry.entry_id],
                 "dongle": None,
                 "name": "Home Assistant Green",
-                "url": "https://green.home-assistant.io/documentation/",
+                "url": "https://support.nabucasa.com/hc/en-us/categories/24638797677853-Home-Assistant-Green",
             }
         ]
     }

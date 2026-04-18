@@ -5,7 +5,7 @@ from typing import Any
 
 from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_PASSWORD,
@@ -27,7 +27,7 @@ from .const import (
     STATE_ATTR_TORRENTS,
     TORRENT_FILTER,
 )
-from .coordinator import QBittorrentDataCoordinator
+from .coordinator import QBittorrentConfigEntry, QBittorrentDataCoordinator
 from .helpers import format_torrents, setup_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +68,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"device_id": entry_id or ""},
             )
 
-        coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][entry_id]
+        entry: QBittorrentConfigEntry | None = hass.config_entries.async_get_entry(
+            entry_id
+        )
+        if entry is None or entry.state != ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_entry_id",
+                translation_placeholders={"device_id": entry_id},
+            )
+        coordinator = entry.runtime_data
         items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
         info = format_torrents(items)
         return {
@@ -87,10 +96,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ) -> dict[str, Any] | None:
         torrents = {}
 
-        for key, value in hass.data[DOMAIN].items():
-            coordinator: QBittorrentDataCoordinator = value
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            coordinator: QBittorrentDataCoordinator = entry.runtime_data
             items = await coordinator.get_torrents(service_call.data[TORRENT_FILTER])
-            torrents[key] = format_torrents(items)
+            torrents[entry.entry_id] = format_torrents(items)
 
         return {
             STATE_ATTR_ALL_TORRENTS: torrents,
@@ -106,7 +115,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: QBittorrentConfigEntry
+) -> bool:
     """Set up qBittorrent from a config entry."""
 
     try:
@@ -127,19 +138,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = QBittorrentDataCoordinator(hass, config_entry, client)
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: QBittorrentConfigEntry
+) -> bool:
     """Unload qBittorrent config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        del hass.data[DOMAIN][config_entry.entry_id]
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

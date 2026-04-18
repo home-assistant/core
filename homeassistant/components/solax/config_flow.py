@@ -54,7 +54,7 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             serial_number = await validate_api(user_input)
-        except (ConnectionError, DiscoveryError):
+        except ConnectionError, DiscoveryError:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")

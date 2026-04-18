@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from linkplay.exceptions import LinkPlayRequestException
+from linkplay.manufacturers import MANUFACTURER_WIIM
 import pytest
 
 from homeassistant.components.linkplay.const import DOMAIN
@@ -180,6 +181,24 @@ async def test_zeroconf_flow_errors(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_flow_ignores_wiim_device(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test Zeroconf discovery is ignored for WiiM devices."""
+    mock_linkplay_factory_bridge.return_value.device.manufacturer = MANUFACTURER_WIIM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_linkplay_device"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_linkplay_factory_bridge: AsyncMock,
@@ -220,3 +239,28 @@ async def test_user_flow_errors(
         CONF_HOST: HOST,
     }
     assert result["result"].unique_id == UUID
+
+
+@pytest.mark.usefixtures("mock_linkplay_factory_bridge")
+async def test_zeroconf_no_probe_existing_device(
+    hass: HomeAssistant, mock_linkplay_factory_bridge: AsyncMock
+) -> None:
+    """Test we do not probe the device is the host is already configured."""
+    entry = MockConfigEntry(
+        data={CONF_HOST: HOST},
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=UUID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_linkplay_factory_bridge.mock_calls) == 0

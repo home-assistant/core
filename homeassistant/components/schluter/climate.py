@@ -89,19 +89,15 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         self._serial_number = serial_number
         self._api = api
         self._session_id = session_id
+        self._attr_unique_id = serial_number
 
     @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._serial_number
-
-    @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the thermostat."""
         return self.coordinator.data[self._serial_number].name
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.coordinator.data[self._serial_number].temperature
 
@@ -113,17 +109,17 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.coordinator.data[self._serial_number].set_point_temp
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Identify min_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Identify max_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].max_temp
 

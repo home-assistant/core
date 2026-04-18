@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[sensor.test_poe_switch_cpu_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -29,6 +31,7 @@
     'original_name': 'CPU usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage',
     'unique_id': '54-AF-97-00-00-01_cpu_usage',
@@ -52,8 +55,9 @@
 # ---
 # name: test_entities[sensor.test_poe_switch_device_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -81,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -88,6 +93,7 @@
     'original_name': 'Device status',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_status',
     'unique_id': '54-AF-97-00-00-01_device_status',
@@ -119,8 +125,9 @@
 # ---
 # name: test_entities[sensor.test_poe_switch_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -140,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -147,6 +155,7 @@
     'original_name': 'Memory usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_usage',
     'unique_id': '54-AF-97-00-00-01_mem_usage',
@@ -170,8 +179,9 @@
 # ---
 # name: test_entities[sensor.test_router_cpu_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -191,6 +201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -198,6 +209,7 @@
     'original_name': 'CPU usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cpu_usage',
     'unique_id': 'AA-BB-CC-DD-EE-FF_cpu_usage',
@@ -221,8 +233,9 @@
 # ---
 # name: test_entities[sensor.test_router_device_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -250,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -257,6 +271,7 @@
     'original_name': 'Device status',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_status',
     'unique_id': 'AA-BB-CC-DD-EE-FF_device_status',
@@ -288,8 +303,9 @@
 # ---
 # name: test_entities[sensor.test_router_memory_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -309,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -316,6 +333,7 @@
     'original_name': 'Memory usage',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mem_usage',
     'unique_id': 'AA-BB-CC-DD-EE-FF_mem_usage',

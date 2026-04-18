@@ -8,7 +8,7 @@ import threading
 from typing import IO, cast
 
 from aiohttp import BodyPartReader
-from aiohttp.hdrs import CONTENT_DISPOSITION
+from aiohttp.hdrs import CONTENT_DISPOSITION, CONTENT_TYPE
 from aiohttp.web import FileResponse, Request, Response, StreamResponse
 from multidict import istr
 
@@ -17,12 +17,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import frame
 from homeassistant.util import slugify
+from homeassistant.util.async_iterator import AsyncIteratorReader, AsyncIteratorWriter
 
 from . import util
 from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
-from .models import BackupNotFound
+from .models import AgentBackup, BackupNotFound, InvalidBackupFilename
 
 
 @callback
@@ -76,7 +77,8 @@ class DownloadBackupView(HomeAssistantView):
             return Response(status=HTTPStatus.NOT_FOUND)
 
         headers = {
-            CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
+            CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar",
+            CONTENT_TYPE: "application/x-tar",
         }
 
         try:
@@ -85,7 +87,15 @@ class DownloadBackupView(HomeAssistantView):
                     request, headers, backup_id, agent_id, agent, manager
                 )
             return await self._send_backup_with_password(
-                hass, request, headers, backup_id, agent_id, password, agent, manager
+                hass,
+                backup,
+                request,
+                headers,
+                backup_id,
+                agent_id,
+                password,
+                agent,
+                manager,
             )
         except BackupNotFound:
             return Response(status=HTTPStatus.NOT_FOUND)
@@ -116,6 +126,7 @@ class DownloadBackupView(HomeAssistantView):
     async def _send_backup_with_password(
         self,
         hass: HomeAssistant,
+        backup: AgentBackup,
         request: Request,
         headers: dict[istr, str],
         backup_id: str,
@@ -134,7 +145,7 @@ class DownloadBackupView(HomeAssistantView):
                 return Response(status=HTTPStatus.NOT_FOUND)
         else:
             stream = await agent.async_download_backup(backup_id)
-            reader = cast(IO[bytes], util.AsyncIteratorReader(hass, stream))
+            reader = cast(IO[bytes], AsyncIteratorReader(hass.loop, stream))
 
         worker_done_event = asyncio.Event()
 
@@ -142,9 +153,10 @@ class DownloadBackupView(HomeAssistantView):
             """Call by the worker thread when it's done."""
             hass.loop.call_soon_threadsafe(worker_done_event.set)
 
-        stream = util.AsyncIteratorWriter(hass)
+        stream = AsyncIteratorWriter(hass.loop)
         worker = threading.Thread(
-            target=util.decrypt_backup, args=[reader, stream, password, on_done, 0, []]
+            target=util.decrypt_backup,
+            args=[backup, reader, stream, password, on_done, 0, []],
         )
         try:
             worker.start()
@@ -182,6 +194,11 @@ class UploadBackupView(HomeAssistantView):
         try:
             backup_id = await manager.async_receive_backup(
                 contents=contents, agent_ids=agent_ids
+            )
+        except InvalidBackupFilename as err:
+            return Response(
+                body=str(err),
+                status=HTTPStatus.BAD_REQUEST,
             )
         except OSError as err:
             return Response(

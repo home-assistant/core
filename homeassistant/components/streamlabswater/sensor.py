@@ -10,15 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import StreamlabsCoordinator
-from .const import DOMAIN
-from .coordinator import StreamlabsData
+from .coordinator import StreamlabsConfigEntry, StreamlabsCoordinator, StreamlabsData
 from .entity import StreamlabsWaterEntity
 
 
@@ -59,11 +56,11 @@ SENSORS: tuple[StreamlabsWaterSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StreamlabsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Streamlabs water sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         StreamLabsSensor(coordinator, location_id, entity_description)

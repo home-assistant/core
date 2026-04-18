@@ -6,14 +6,13 @@ from contextlib import suppress
 import logging
 import os
 
-from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
 )
 
-from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -27,9 +26,26 @@ from .const import (
     VICARE_TOKEN_FILENAME,
 )
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
-from .utils import get_device, get_device_serial, login
+from .utils import get_device_serial, login
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: ViCareConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if config_entry.version > 1:
+        return False
+
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        _LOGGER.debug("Migrating ViCare config entry from version 1.1 to 1.2")
+        data = {**config_entry.data}
+        data.pop("heating_type", None)
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
+        _LOGGER.debug("Migration to version 1.2 successful")
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
@@ -51,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     return True
 
 
-def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
+def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> ViCareData:
     """Set up PyVicare API."""
     client = login(hass, entry.data)
 
@@ -74,8 +90,9 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
         )
 
     devices = [
-        ViCareDevice(config=device_config, api=get_device(entry, device_config))
+        ViCareDevice(config=device_config, api=device_config.asAutoDetectDevice())
         for device_config in device_config_list
+        if bool(device_config.isOnline())
     ]
     return ViCareData(client=client, devices=devices)
 
@@ -144,7 +161,7 @@ async def async_migrate_devices_and_entities(
                 # convert climate entity unique id
                 # from `<device_identifier>-<circuit_no>`
                 # to `<device_identifier>-heating-<circuit_no>`
-                if entity_entry.domain == DOMAIN_CLIMATE:
+                if entity_entry.domain == CLIMATE_DOMAIN:
                     unique_id_parts[len(unique_id_parts) - 1] = (
                         f"{entity_entry.translation_key}-"
                         f"{unique_id_parts[len(unique_id_parts) - 1]}"

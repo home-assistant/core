@@ -14,6 +14,7 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
+from homeassistant.util.ssl import create_client_context
 
 from tests.common import get_fixture_path
 
@@ -84,6 +85,7 @@ def message():
         "Home Assistant",
         0,
         True,
+        create_client_context(),
     )
 
 
@@ -172,7 +174,7 @@ def test_sending_insecure_files_fails(
         patch("email.utils.make_msgid", return_value=sample_email),
         pytest.raises(ServiceValidationError) as exc,
     ):
-        result, _ = message.send_message(message_data, data=data)
+        _result, _ = message.send_message(message_data, data=data)
     assert exc.value.translation_key == "remote_path_not_allowed"
     assert exc.value.translation_domain == DOMAIN
     assert (

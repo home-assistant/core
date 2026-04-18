@@ -4,11 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-from homeassistant.components.comelit.const import (
-    BRIDGE,
-    DOMAIN as COMELIT_DOMAIN,
-    VEDO,
-)
+from homeassistant.components.comelit.const import BRIDGE, DOMAIN, VEDO
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 
 from .const import (
@@ -50,17 +46,20 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
     ):
         bridge = mock_comelit_serial_bridge.return_value
         bridge.get_all_devices.return_value = deepcopy(BRIDGE_DEVICE_QUERY)
+        bridge.get_all_areas_and_zones.return_value = deepcopy(VEDO_DEVICE_QUERY)
+        bridge.vedo_enabled.return_value = True
         bridge.host = BRIDGE_HOST
         bridge.port = BRIDGE_PORT
+        bridge.base_url = f"http://{BRIDGE_HOST}:{BRIDGE_PORT}"
         bridge.device_pin = BRIDGE_PIN
         yield bridge
 
 
 @pytest.fixture
-def mock_serial_bridge_config_entry() -> Generator[MockConfigEntry]:
+def mock_serial_bridge_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit bridge."""
     return MockConfigEntry(
-        domain=COMELIT_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: BRIDGE_HOST,
             CONF_PORT: BRIDGE_PORT,
@@ -88,16 +87,17 @@ def mock_vedo() -> Generator[AsyncMock]:
         vedo.get_all_areas_and_zones.return_value = deepcopy(VEDO_DEVICE_QUERY)
         vedo.host = VEDO_HOST
         vedo.port = VEDO_PORT
+        vedo.base_url = f"http://{VEDO_HOST}:{VEDO_PORT}"
         vedo.device_pin = VEDO_PIN
         vedo.type = VEDO
         yield vedo
 
 
 @pytest.fixture
-def mock_vedo_config_entry() -> Generator[MockConfigEntry]:
+def mock_vedo_config_entry() -> MockConfigEntry:
     """Mock a Comelit config entry for Comelit vedo."""
     return MockConfigEntry(
-        domain=COMELIT_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: VEDO_HOST,
             CONF_PORT: VEDO_PORT,

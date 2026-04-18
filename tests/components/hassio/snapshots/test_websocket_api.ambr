@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_read_update_config
+  dict({
+    'id': 1,
+    'result': dict({
+      'add_on_backup_before_update': False,
+      'add_on_backup_retain_copies': 1,
+      'core_backup_before_update': False,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_read_update_config.1
+  dict({
+    'id': 2,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_read_update_config.2
+  dict({
+    'id': 3,
+    'result': dict({
+      'add_on_backup_before_update': True,
+      'add_on_backup_retain_copies': 2,
+      'core_backup_before_update': True,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---

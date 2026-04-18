@@ -4,9 +4,6 @@
       "chlorine": {
         "default": "mdi:pool"
       },
-      "water_temp": {
-        "default": "mdi:coolant-temperature"
-      },
       "chlorine_high": {
         "default": "mdi:pool"
       },
@@ -18,6 +15,9 @@
       },
       "ph_low": {
         "default": "mdi:pool"
+      },
+      "water_temp": {
+        "default": "mdi:coolant-temperature"
       }
     }
   }

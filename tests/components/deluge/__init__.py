@@ -21,3 +21,9 @@ GET_TORRENT_STATUS_RESPONSE = {
     "dht_upload_rate": 7818.0,
     "dht_download_rate": 2658.0,
 }
+
+GET_TORRENT_STATES_RESPONSE = {
+    "6dcd3f46d09547b62bf07ba9b2943c95d53ddae3": {b"state": b"Seeding"},
+    "1c56ea49918b9baed94cf4bc0ee9f324efc8841a": {b"state": b"Downloading"},
+    "fbf4dab701189a344fa5ab06d7b87c11a74e3da0": {b"state": b"Seeding"},
+}

@@ -47,7 +47,7 @@ def setup_platform(
     for port, name in ports.items():
         try:
             led = setup_output(address, port, invert_logic)
-        except (ValueError, IndexError, KeyError, OSError):
+        except ValueError, IndexError, KeyError, OSError:
             return
         new_switch = RemoteRPiGPIOSwitch(name, led)
         devices.append(new_switch)

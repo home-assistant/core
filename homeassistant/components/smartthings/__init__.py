@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import contextlib
+from copy import deepcopy
 from dataclasses import dataclass
-from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
+    Category,
     ComponentStatus,
     Device,
     DeviceEvent,
@@ -21,9 +21,11 @@ from pysmartthings import (
     SmartThings,
     SmartThingsAuthenticationFailedError,
     SmartThingsConnectionError,
+    SmartThingsError,
     SmartThingsSinkError,
     Status,
 )
+from pysmartthings.models import HealthStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,6 +33,9 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
+    ATTR_SERIAL_NUMBER,
+    ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
@@ -39,10 +44,16 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -63,6 +74,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def format_zigbee_address(address: str) -> str:
+    """Format a zigbee address to be more readable."""
+    return ":".join(address.lower()[i : i + 2] for i in range(0, 16, 2))
+
+
 @dataclass
 class SmartThingsData:
     """Define an object to hold SmartThings data."""
@@ -79,6 +95,7 @@ class FullDevice:
 
     device: Device
     status: dict[str, ComponentStatus]
+    online: bool
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -98,8 +115,11 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
+    Platform.VACUUM,
     Platform.VALVE,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -109,14 +129,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     # after migration but still require reauthentication
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = OAuth2Session(hass, entry, implementation)
 
     try:
         await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if err.status == HTTPStatus.BAD_REQUEST:
-            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from err
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
 
     client = SmartThings(session=async_get_clientsession(hass))
@@ -191,8 +217,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         }
         devices = await client.get_devices()
         for device in devices:
+            if (
+                (main_component := device.components.get(MAIN)) is not None
+                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
+            ):
+                device_status[device.device_id] = FullDevice(
+                    device=device,
+                    status={},
+                    online=True,
+                )
+                continue
             status = process_status(await client.get_device_status(device.device_id))
-            device_status[device.device_id] = FullDevice(device=device, status=status)
+            online = await client.get_device_health(device.device_id)
+            device_status[device.device_id] = FullDevice(
+                device=device, status=status, online=online.state == HealthStatus.ONLINE
+            )
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 
@@ -271,7 +310,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         )
-        if device_id in device_status:
+        if any(
+            device_id.startswith(device_identifier)
+            for device_identifier in device_status
+        ):
             continue
         device_registry.async_update_device(
             device_entry.id, remove_config_entry_id=entry.entry_id
@@ -382,6 +424,33 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             minor_version=2,
         )
 
+    if entry.minor_version < 3:
+        data = deepcopy(dict(entry.data))
+        old_data: dict[str, Any] | None = data.pop(OLD_DATA, None)
+        if old_data is not None:
+            _LOGGER.info("Found old data during migration")
+            client = SmartThings(session=async_get_clientsession(hass))
+            access_token = old_data[CONF_ACCESS_TOKEN]
+            installed_app_id = old_data[CONF_INSTALLED_APP_ID]
+            try:
+                app = await client.get_installed_app(access_token, installed_app_id)
+                _LOGGER.info("Found old app %s, named %s", app.app_id, app.display_name)
+                await client.delete_installed_app(access_token, installed_app_id)
+                await client.delete_smart_app(access_token, app.app_id)
+            except SmartThingsError as err:
+                _LOGGER.warning(
+                    "Could not clean up old smart app during migration: %s", err
+                )
+            else:
+                _LOGGER.info("Successfully cleaned up old smart app during migration")
+            if CONF_TOKEN not in data:
+                data[OLD_DATA] = {CONF_LOCATION_ID: old_data[CONF_LOCATION_ID]}
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            minor_version=3,
+        )
+
     return True
 
 
@@ -426,12 +495,21 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
+            if device.device.hub.hub_eui:
+                connections = kwargs.setdefault(ATTR_CONNECTIONS, set())
+                connections.add(
+                    (
+                        dr.CONNECTION_ZIGBEE,
+                        format_zigbee_address(device.device.hub.hub_eui),
+                    )
+                )
         if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
                 {
                     ATTR_MANUFACTURER: ocf.manufacturer_name,
+                    ATTR_MODEL_ID: ocf.model_code,
                     ATTR_MODEL: (
                         (ocf.model_number.split("|")[0]) if ocf.model_number else None
                     ),
@@ -448,14 +526,65 @@ def create_devices(
                     ATTR_SW_VERSION: viper.software_version,
                 }
             )
+        if (zigbee := device.device.zigbee) is not None:
+            kwargs[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
+            }
+        if (matter := device.device.matter) is not None:
+            kwargs.update(
+                {
+                    ATTR_HW_VERSION: matter.hardware_version,
+                    ATTR_SW_VERSION: matter.software_version,
+                    ATTR_SERIAL_NUMBER: matter.serial_number,
+                }
+            )
+        if (main_component := device.status.get(MAIN)) is not None:
+            if (
+                device_identification := main_component.get(
+                    Capability.SAMSUNG_CE_DEVICE_IDENTIFICATION
+                )
+            ) is not None:
+                new_kwargs = {
+                    ATTR_SERIAL_NUMBER: device_identification[
+                        Attribute.SERIAL_NUMBER
+                    ].value
+                }
+                if ATTR_MODEL_ID not in kwargs:
+                    new_kwargs[ATTR_MODEL_ID] = device_identification[
+                        Attribute.MODEL_NAME
+                    ].value
+                kwargs.update(new_kwargs)
+            if (
+                device_status := main_component.get(Capability.SAMSUNG_IM_DEVICESTATUS)
+            ) is not None:
+                mac_connections: set[tuple[str, str]] = set()
+                status = cast(dict[str, str], device_status[Attribute.STATUS].value)
+                if wifi_mac := status.get("wifiMac"):
+                    mac_connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
+                if bluetooth_address := status.get("btAddr"):
+                    mac_connections.add(
+                        (dr.CONNECTION_BLUETOOTH, bluetooth_address.lower())
+                    )
+                if mac_connections:
+                    kwargs.setdefault(ATTR_CONNECTIONS, set()).update(mac_connections)
+        if (
+            device_registry.async_get_device({(DOMAIN, device.device.device_id)})
+            is None
+        ):
+            kwargs.update(
+                {
+                    ATTR_SUGGESTED_AREA: (
+                        rooms.get(device.device.room_id)
+                        if device.device.room_id
+                        else None
+                    )
+                }
+            )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
             configuration_url="https://account.smartthings.com",
             name=device.device.label,
-            suggested_area=(
-                rooms.get(device.device.room_id) if device.device.room_id else None
-            ),
             **kwargs,
         )
 
@@ -470,6 +599,12 @@ KEEP_CAPABILITY_QUIRK: dict[
         lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
     ),
     Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: (
+        lambda status: status[Attribute.LIGHTING].value is not None
+    ),
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_BEEP: (
+        lambda status: status[Attribute.BEEP].value is not None
+    ),
 }
 
 
@@ -488,7 +623,13 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
         )
         if disabled_components is not None:
             for component in disabled_components:
-                if component in status:
+                # Burner components are named burner-06
+                # but disabledComponents contain burner-6
+                if "burner" in component:
+                    burner_id = int(component.split("-")[-1])
+                    component = f"burner-0{burner_id}"
+                # Don't delete 'lamp' component even when disabled
+                if component in status and component != "lamp":
                     del status[component]
     for component_status in status.values():
         process_component_status(component_status)

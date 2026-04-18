@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatars enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'Avatars enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_enable_avatars',
     'unique_id': '1234567890abcdef#system_enable_avatars',
@@ -48,8 +51,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -67,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Debug enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +79,7 @@
     'original_name': 'Debug enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_debug',
     'unique_id': '1234567890abcdef#system_debug',
@@ -95,8 +101,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filelocking enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +129,7 @@
     'original_name': 'Filelocking enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_filelocking_enabled',
     'unique_id': '1234567890abcdef#system_filelocking.enabled',
@@ -142,8 +151,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -161,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +179,7 @@
     'original_name': 'JIT active',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_on',
     'unique_id': '1234567890abcdef#jit_on',
@@ -189,8 +201,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -208,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +229,7 @@
     'original_name': 'JIT enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_enabled',
     'unique_id': '1234567890abcdef#jit_enabled',
@@ -236,8 +251,9 @@
 # ---
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -255,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Previews enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +279,7 @@
     'original_name': 'Previews enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_enable_previews',
     'unique_id': '1234567890abcdef#system_enable_previews',

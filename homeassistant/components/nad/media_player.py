@@ -198,8 +198,10 @@ class NADtcp(MediaPlayerEntity):
         self._nad_receiver = NADReceiverTCP(config.get(CONF_HOST))
         self._min_vol = (config[CONF_MIN_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
         self._max_vol = (config[CONF_MAX_VOLUME] + 90) * 2  # from dB to nad vol (0-200)
-        self._volume_step = config[CONF_VOLUME_STEP]
         self._nad_volume = None
+        vol_range = self._max_vol - self._min_vol
+        if vol_range:
+            self._attr_volume_step = 2 * config[CONF_VOLUME_STEP] / vol_range
         self._source_list = self._nad_receiver.available_sources()
 
     def turn_off(self) -> None:
@@ -209,14 +211,6 @@ class NADtcp(MediaPlayerEntity):
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._nad_receiver.power_on()
-
-    def volume_up(self) -> None:
-        """Step volume up in the configured increments."""
-        self._nad_receiver.set_volume(self._nad_volume + 2 * self._volume_step)
-
-    def volume_down(self) -> None:
-        """Step volume down in the configured increments."""
-        self._nad_receiver.set_volume(self._nad_volume - 2 * self._volume_step)
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""

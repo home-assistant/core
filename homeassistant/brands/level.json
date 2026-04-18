@@ -1,0 +1,5 @@
+{
+  "domain": "level",
+  "name": "Level",
+  "iot_standards": ["matter"]
+}

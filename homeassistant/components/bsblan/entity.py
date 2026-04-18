@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from yarl import URL
+
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -10,26 +13,70 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BSBLanData
-from .const import DOMAIN
-from .coordinator import BSBLanUpdateCoordinator
+from .const import DEFAULT_PORT, DOMAIN
+from .coordinator import BSBLanCoordinator, BSBLanFastCoordinator, BSBLanSlowCoordinator
 
 
-class BSBLanEntity(CoordinatorEntity[BSBLanUpdateCoordinator]):
-    """Defines a base BSBLan entity."""
+class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
+    """Base BSBLan entity with common device info setup."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: BSBLanUpdateCoordinator, data: BSBLanData) -> None:
-        """Initialize BSBLan entity."""
-        super().__init__(coordinator, data)
-        host = coordinator.config_entry.data["host"]
+    def __init__(self, coordinator: _T, data: BSBLanData) -> None:
+        """Initialize BSBLan entity with device info."""
+        super().__init__(coordinator)
+        host = coordinator.config_entry.data[CONF_HOST]
+        port = coordinator.config_entry.data.get(CONF_PORT, DEFAULT_PORT)
         mac = data.device.MAC
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
             connections={(CONNECTION_NETWORK_MAC, format_mac(mac))},
             name=data.device.name,
             manufacturer="BSBLAN Inc.",
-            model=data.info.device_identification.value,
+            model=(
+                data.info.device_identification.value
+                if data.info.device_identification
+                and data.info.device_identification.value
+                else None
+            ),
+            model_id=(
+                f"{data.info.controller_family.value}_{data.info.controller_variant.value}"
+                if data.info.controller_family
+                and data.info.controller_variant
+                and data.info.controller_family.value
+                and data.info.controller_variant.value
+                else None
+            ),
             sw_version=data.device.version,
-            configuration_url=f"http://{host}",
+            configuration_url=str(URL.build(scheme="http", host=host, port=port)),
+        )
+
+
+class BSBLanEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
+    """Defines a base BSBLan entity using the fast coordinator."""
+
+    def __init__(self, coordinator: BSBLanFastCoordinator, data: BSBLanData) -> None:
+        """Initialize BSBLan entity."""
+        super().__init__(coordinator, data)
+
+
+class BSBLanDualCoordinatorEntity(BSBLanEntity):
+    """Entity that listens to both fast and slow coordinators."""
+
+    def __init__(
+        self,
+        fast_coordinator: BSBLanFastCoordinator,
+        slow_coordinator: BSBLanSlowCoordinator,
+        data: BSBLanData,
+    ) -> None:
+        """Initialize BSBLan entity with both coordinators."""
+        super().__init__(fast_coordinator, data)
+        self.slow_coordinator = slow_coordinator
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        # Also listen to slow coordinator updates
+        self.async_on_remove(
+            self.slow_coordinator.async_add_listener(self._handle_coordinator_update)
         )

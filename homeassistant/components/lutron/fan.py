@@ -2,25 +2,21 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pylutron import Output
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import LutronConfigEntry
 from .entity import LutronDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron fan platform.
@@ -28,7 +24,7 @@ async def async_setup_entry(
     Adds fan controls from the Main Repeater associated with the config_entry as
     fan entities.
     """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
     async_add_entities(
         [
             LutronFan(area_name, device, entry_data.client)
@@ -87,7 +83,7 @@ class LutronFan(LutronDevice, FanEntity):
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        level = self._lutron_device.last_level()
+        level = int(self._lutron_device.last_level())
         self._attr_is_on = level > 0
         self._attr_percentage = level
         if self._prev_percentage is None or level != 0:

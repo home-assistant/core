@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[fan.my_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -29,6 +31,7 @@
     'original_name': None,
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH',
@@ -55,8 +58,9 @@
 # ---
 # name: test_states[fan.my_device_my_fan_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,
@@ -76,6 +80,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'my_fan_0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +88,7 @@
     'original_name': 'my_fan_0',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH00',
@@ -109,8 +115,9 @@
 # ---
 # name: test_states[fan.my_device_my_fan_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,
@@ -130,6 +137,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'my_fan_1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -137,6 +145,7 @@
     'original_name': 'my_fan_1',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH01',
@@ -183,7 +192,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -193,7 +201,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.cashflow_expense_year_to_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Expense year to date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -29,6 +31,7 @@
     'original_name': 'Expense year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_expense',
     'unique_id': '222260252323873333_cashflow_sum_expense',
@@ -53,8 +56,9 @@
 # ---
 # name: test_all_entities[sensor.cashflow_income_year_to_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -74,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Income year to date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -81,6 +86,7 @@
     'original_name': 'Income year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sum_income',
     'unique_id': '222260252323873333_cashflow_sum_income',
@@ -105,8 +111,9 @@
 # ---
 # name: test_all_entities[sensor.cashflow_savings_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -124,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Savings rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -134,6 +142,7 @@
     'original_name': 'Savings rate',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'savings_rate',
     'unique_id': '222260252323873333_cashflow_savings_rate',
@@ -156,8 +165,9 @@
 # ---
 # name: test_all_entities[sensor.cashflow_savings_year_to_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -177,6 +187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Savings year to date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -184,6 +195,7 @@
     'original_name': 'Savings year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'savings',
     'unique_id': '222260252323873333_cashflow_savings',
@@ -208,8 +220,9 @@
 # ---
 # name: test_all_entities[sensor.manual_entry_wallet_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -229,6 +242,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -236,6 +250,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_186321412999033223_balance',
@@ -261,8 +276,9 @@
 # ---
 # name: test_all_entities[sensor.manual_entry_wallet_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -280,6 +296,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -287,6 +304,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_186321412999033223_age',
@@ -310,8 +328,9 @@
 # ---
 # name: test_all_entities[sensor.rando_bank_checking_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -331,6 +350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -338,6 +358,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000002_balance',
@@ -364,8 +385,9 @@
 # ---
 # name: test_all_entities[sensor.rando_bank_checking_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -383,6 +405,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -390,6 +413,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_900000002_age',
@@ -413,8 +437,9 @@
 # ---
 # name: test_all_entities[sensor.rando_brokerage_brokerage_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -434,6 +459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -441,6 +467,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000000_balance',
@@ -467,8 +494,9 @@
 # ---
 # name: test_all_entities[sensor.rando_brokerage_brokerage_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -486,6 +514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -493,6 +522,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_900000000_age',
@@ -516,8 +546,9 @@
 # ---
 # name: test_all_entities[sensor.rando_credit_credit_card_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -537,6 +568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -544,6 +576,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_9000000007_balance',
@@ -570,8 +603,9 @@
 # ---
 # name: test_all_entities[sensor.rando_credit_credit_card_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -589,6 +623,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -596,6 +631,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_9000000007_age',
@@ -619,8 +655,9 @@
 # ---
 # name: test_all_entities[sensor.rando_employer_investments_401_k_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -640,6 +677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -647,6 +685,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000022_balance',
@@ -673,8 +712,9 @@
 # ---
 # name: test_all_entities[sensor.rando_employer_investments_401_k_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -692,6 +732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -699,6 +740,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_90000000022_age',
@@ -722,8 +764,9 @@
 # ---
 # name: test_all_entities[sensor.rando_investments_roth_ira_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -743,6 +786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -750,6 +794,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_900000000012_balance',
@@ -776,8 +821,9 @@
 # ---
 # name: test_all_entities[sensor.rando_investments_roth_ira_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -795,6 +841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -802,6 +849,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_900000000012_age',
@@ -825,8 +873,9 @@
 # ---
 # name: test_all_entities[sensor.rando_mortgage_mortgage_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -846,6 +895,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -853,6 +903,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000030_balance',
@@ -879,8 +930,9 @@
 # ---
 # name: test_all_entities[sensor.rando_mortgage_mortgage_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -898,6 +950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -905,6 +958,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_90000000030_age',
@@ -928,8 +982,9 @@
 # ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -947,6 +1002,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -954,6 +1010,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_121212192626186051_age',
@@ -977,8 +1034,9 @@
 # ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -998,6 +1056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -1005,6 +1064,7 @@
     'original_name': 'Value',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'value',
     'unique_id': '222260252323873333_121212192626186051_value',
@@ -1031,8 +1091,9 @@
 # ---
 # name: test_all_entities[sensor.zillow_house_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1052,6 +1113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -1059,6 +1121,7 @@
     'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': '222260252323873333_90000000020_balance',
@@ -1085,8 +1148,9 @@
 # ---
 # name: test_all_entities[sensor.zillow_house_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1104,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1111,6 +1176,7 @@
     'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': '222260252323873333_90000000020_age',

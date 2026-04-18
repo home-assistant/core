@@ -307,6 +307,29 @@ class Searcher:
             automation.automations_with_device(self.hass, device_id),
         )
 
+        # Automations referencing labels assigned to this device
+        for label_id in device_entry.labels:
+            self._add(
+                ItemType.AUTOMATION,
+                automation.automations_with_label(self.hass, label_id),
+            )
+
+        if device_entry.area_id:
+            # Automations referencing this device via its area
+            self._add(
+                ItemType.AUTOMATION,
+                automation.automations_with_area(self.hass, device_entry.area_id),
+            )
+            # Automations referencing this device via its areas floor
+            if area_entry := self._area_registry.async_get_area(device_entry.area_id):
+                if area_entry.floor_id:
+                    self._add(
+                        ItemType.AUTOMATION,
+                        automation.automations_with_floor(
+                            self.hass, area_entry.floor_id
+                        ),
+                    )
+
         # Scripts referencing this device
         self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device_id))
 

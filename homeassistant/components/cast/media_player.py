@@ -10,8 +10,10 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate
 
-import pychromecast
+import pychromecast.config
+import pychromecast.const
 from pychromecast.controllers.homeassistant import HomeAssistantController
+import pychromecast.controllers.media
 from pychromecast.controllers.media import (
     MEDIA_PLAYER_ERROR_CODES,
     MEDIA_PLAYER_STATE_BUFFERING,
@@ -60,7 +62,7 @@ from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
     CONF_IGNORE_CEC,
-    DOMAIN as CAST_DOMAIN,
+    DOMAIN,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -315,7 +317,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._cast_view_remove_handler: CALLBACK_TYPE | None = None
         self._attr_unique_id = str(cast_info.uuid)
         self._attr_device_info = DeviceInfo(
-            identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
+            identifiers={(DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),
             model=cast_info.cast_info.model_name,
             name=str(cast_info.friendly_name),
@@ -591,7 +593,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Generate root node."""
         children = []
         # Add media browsers
-        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
+        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
             children.extend(
                 await platform.async_get_media_browser_root_object(
                     self.hass, self._chromecast.cast_type
@@ -650,7 +652,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         platform: CastProtocol
         assert media_content_type is not None
-        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
+        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
             browse_media = await platform.async_browse_media(
                 self.hass,
                 media_content_type,
@@ -680,7 +682,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
 
         # Handle media supported by a known cast app
-        if media_type == CAST_DOMAIN:
+        if media_type == DOMAIN:
             try:
                 app_data = json.loads(media_id)
                 if metadata := extra.get("metadata"):
@@ -712,7 +714,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return
 
         # Try the cast platforms
-        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
+        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
             result = await platform.async_play_media(
                 self.hass, self.entity_id, chromecast, media_type, media_id
             )
@@ -802,9 +804,24 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
-        # The lovelace app loops media to prevent timing out, don't show that
+        if (chromecast := self._chromecast) is None or (
+            cast_status := self.cast_status
+        ) is None:
+            # Not connected to any chromecast, or not yet got any status
+            return None
+
+        if (
+            chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST
+            and not chromecast.ignore_cec
+            and cast_status.is_active_input is False
+        ):
+            # The display interface for the device has been turned off or switched away
+            return MediaPlayerState.OFF
+
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            # The lovelace app loops media to prevent timing out, don't show that
             return MediaPlayerState.PLAYING
+
         if (media_status := self._media_status()[0]) is not None:
             if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
                 return MediaPlayerState.PLAYING
@@ -814,14 +831,17 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 return MediaPlayerState.PAUSED
             if media_status.player_is_idle:
                 return MediaPlayerState.IDLE
-        if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
-            if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
-                # Some apps don't report media status, show the player as playing
-                return MediaPlayerState.PLAYING
-            return MediaPlayerState.IDLE
-        if self._chromecast is not None and self._chromecast.is_idle:
+
+        if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
+            # Some apps don't report media status, show the player as playing
+            return MediaPlayerState.PLAYING
+
+        if self.app_id in (pychromecast.IDLE_APP_ID, None):
+            # We have no active app or the home screen app. This is
+            # same app as APP_BACKDROP.
             return MediaPlayerState.OFF
-        return None
+
+        return MediaPlayerState.IDLE
 
     @property
     def media_content_id(self) -> str | None:

@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from . import TedeeConfigEntry
 
 TO_REDACT = {
-    "lock_id",
+    "id",
 }
 
 

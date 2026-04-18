@@ -6,13 +6,12 @@ from typing import Any
 
 from iaqualink.device import AqualinkSwitch
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import refresh_system
-from .const import DOMAIN as AQUALINK_DOMAIN
+from . import AqualinkConfigEntry, refresh_system
+from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -21,23 +20,27 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AqualinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (HassAqualinkSwitch(dev) for dev in hass.data[AQUALINK_DOMAIN][SWITCH_DOMAIN]),
-        True,
+        HassAqualinkSwitch(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.switches
     )
 
 
-class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
+class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):
     """Representation of a switch."""
 
-    def __init__(self, dev: AqualinkSwitch) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkSwitch
+    ) -> None:
         """Initialize AquaLink switch."""
-        super().__init__(dev)
-        name = self._attr_name = dev.label
+        super().__init__(coordinator, dev)
+        name = dev.label
         if name == "Cleaner":
             self._attr_icon = "mdi:robot-vacuum"
         elif name == "Waterfall" or name.endswith("Dscnt"):

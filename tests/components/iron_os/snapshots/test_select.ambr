@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_state[select.pinecil_animation_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Animation speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,6 +36,7 @@
     'original_name': 'Animation speed',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.ANIMATION_SPEED: 'animation_speed'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_animation_speed',
@@ -61,8 +64,9 @@
 # ---
 # name: test_state[select.pinecil_boot_logo_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -90,6 +94,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boot logo duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,6 +102,7 @@
     'original_name': 'Boot logo duration',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.LOGO_DURATION: 'logo_duration'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_logo_duration',
@@ -127,8 +133,9 @@
 # ---
 # name: test_state[select.pinecil_button_locking_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -152,6 +159,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button locking mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -159,6 +167,7 @@
     'original_name': 'Button locking mode',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.LOCKING_MODE: 'locking_mode'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_locking_mode',
@@ -185,8 +194,9 @@
 # ---
 # name: test_state[select.pinecil_display_orientation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -210,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display orientation mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -217,6 +228,7 @@
     'original_name': 'Display orientation mode',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.ORIENTATION_MODE: 'orientation_mode'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_orientation_mode',
@@ -243,8 +255,9 @@
 # ---
 # name: test_state[select.pinecil_power_delivery_3_1_epr-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -268,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power Delivery 3.1 EPR',
     'options': dict({
     }),
     'original_device_class': None,
@@ -275,6 +289,7 @@
     'original_name': 'Power Delivery 3.1 EPR',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.USB_PD_MODE: 'usb_pd_mode'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_usb_pd_mode',
@@ -301,8 +316,9 @@
 # ---
 # name: test_state[select.pinecil_power_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -328,6 +344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power source',
     'options': dict({
     }),
     'original_device_class': None,
@@ -335,6 +352,7 @@
     'original_name': 'Power source',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.MIN_DC_VOLTAGE_CELLS: 'min_dc_voltage_cells'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_min_dc_voltage_cells',
@@ -363,8 +381,9 @@
 # ---
 # name: test_state[select.pinecil_scrolling_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -387,6 +406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scrolling speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -394,6 +414,7 @@
     'original_name': 'Scrolling speed',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.DESC_SCROLL_SPEED: 'desc_scroll_speed'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_desc_scroll_speed',
@@ -419,8 +440,9 @@
 # ---
 # name: test_state[select.pinecil_soldering_tip_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -445,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soldering tip type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -452,6 +475,7 @@
     'original_name': 'Soldering tip type',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.TIP_TYPE: 'tip_type'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_tip_type',
@@ -479,8 +503,9 @@
 # ---
 # name: test_state[select.pinecil_start_up_behavior-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -505,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start-up behavior',
     'options': dict({
     }),
     'original_device_class': None,
@@ -512,6 +538,7 @@
     'original_name': 'Start-up behavior',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.AUTOSTART_MODE: 'autostart_mode'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_autostart_mode',
@@ -539,8 +566,9 @@
 # ---
 # name: test_state[select.pinecil_temperature_display_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -563,6 +591,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature display unit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -570,6 +599,7 @@
     'original_name': 'Temperature display unit',
     'platform': 'iron_os',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PinecilSelect.TEMP_UNIT: 'temp_unit'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_temp_unit',

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_setup[switch.mock_title_auto_zigbee_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto Zigbee update',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -27,6 +29,7 @@
     'original_name': 'Auto Zigbee update',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_zigbee_update',
     'unique_id': 'aa:bb:cc:dd:ee:ff-auto_zigbee_update',
@@ -49,8 +52,9 @@
 # ---
 # name: test_switch_setup[switch.mock_title_disable_leds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -59,7 +63,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_disable_leds',
     'has_entity_name': True,
     'hidden_by': None,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disable LEDs',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -75,6 +80,7 @@
     'original_name': 'Disable LEDs',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disable_led',
     'unique_id': 'aa:bb:cc:dd:ee:ff-disable_led',
@@ -97,8 +103,9 @@
 # ---
 # name: test_switch_setup[switch.mock_title_led_night_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -107,7 +114,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_led_night_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED night mode',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -123,6 +131,7 @@
     'original_name': 'LED night mode',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'night_mode',
     'unique_id': 'aa:bb:cc:dd:ee:ff-night_mode',
@@ -145,8 +154,9 @@
 # ---
 # name: test_switch_setup[switch.mock_title_vpn_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -155,7 +165,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.mock_title_vpn_enabled',
     'has_entity_name': True,
     'hidden_by': None,
@@ -164,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VPN enabled',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -171,6 +182,7 @@
     'original_name': 'VPN enabled',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vpn_enabled',
     'unique_id': 'aa:bb:cc:dd:ee:ff-vpn_enabled',

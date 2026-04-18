@@ -60,7 +60,7 @@ async def test_numbers_implementation(
         blocking=True,
     )
 
-    mocked_method = getattr(mock_flexit_bacnet, "set_fan_setpoint_supply_air_fire")
+    mocked_method = mock_flexit_bacnet.set_fan_setpoint_supply_air_fire
     assert len(mocked_method.mock_calls) == 1
     assert hass.states.get(ENTITY_ID).state == "60"
 
@@ -76,7 +76,7 @@ async def test_numbers_implementation(
         blocking=True,
     )
 
-    mocked_method = getattr(mock_flexit_bacnet, "set_fan_setpoint_supply_air_fire")
+    mocked_method = mock_flexit_bacnet.set_fan_setpoint_supply_air_fire
     assert len(mocked_method.mock_calls) == 2
     assert hass.states.get(ENTITY_ID).state == "40"
 
@@ -94,7 +94,7 @@ async def test_numbers_implementation(
             blocking=True,
         )
 
-    mocked_method = getattr(mock_flexit_bacnet, "set_fan_setpoint_supply_air_fire")
+    mocked_method = mock_flexit_bacnet.set_fan_setpoint_supply_air_fire
     assert len(mocked_method.mock_calls) == 3
 
     mock_flexit_bacnet.set_fan_setpoint_supply_air_fire.side_effect = None

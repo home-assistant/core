@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinators': dict({
+      '0': dict({
+        'status': dict({
+          'ac_system': dict({
+            'master_serial': '**REDACTED**',
+            'master_wc_firmware_version': '1.0.0',
+            'master_wc_model': 'Test Model',
+            'outdoor_unit': None,
+            'system_name': 'Test System',
+          }),
+          'alerts': None,
+          'is_online': True,
+          'live_aircon': None,
+          'master_info': dict({
+            'live_humidity_pc': 50.0,
+            'live_outdoor_temp_c': 0.0,
+            'live_temp_c': 22.0,
+          }),
+          'peripherals': list([
+          ]),
+          'remote_zone_info': list([
+          ]),
+          'serial_number': '**REDACTED**',
+          'user_aircon_settings': dict({
+            'away_mode': False,
+            'enabled_zones': list([
+            ]),
+            'fan_mode': 'LOW',
+            'is_on': False,
+            'mode': 'COOL',
+            'quiet_mode_enabled': False,
+            'temperature_setpoint_cool_c': 24.0,
+            'temperature_setpoint_heat_c': 20.0,
+            'turbo_mode_enabled': dict({
+              'Enabled': False,
+              'Supported': True,
+            }),
+          }),
+        }),
+        'system': dict({
+          'links': dict({
+          }),
+          'serial': '**REDACTED**',
+          'type': None,
+        }),
+      }),
+    }),
+    'entry_data': dict({
+      'api_token': '**REDACTED**',
+    }),
+  })
+# ---

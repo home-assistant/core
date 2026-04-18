@@ -28,6 +28,7 @@ from .const import (
     ATTR_MODEL,
     CONF_NICKNAME,
     CONF_USE_PSK,
+    CONF_USE_SSL,
     DOMAIN,
     NICKNAME_PREFIX,
 )
@@ -46,11 +47,12 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
     def create_client(self) -> None:
         """Create Bravia TV client from config."""
         host = self.device_config[CONF_HOST]
+        ssl = self.device_config[CONF_USE_SSL]
         session = async_create_clientsession(
             self.hass,
             cookie_jar=CookieJar(unsafe=True, quote_cookie=False),
         )
-        self.client = BraviaClient(host=host, session=session)
+        self.client = BraviaClient(host=host, session=session, ssl=ssl)
 
     async def gen_instance_ids(self) -> tuple[str, str]:
         """Generate client_id and nickname."""
@@ -79,14 +81,16 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         system_info = await self.client.get_system_info()
         cid = system_info[ATTR_CID].lower()
-        title = system_info[ATTR_MODEL]
 
         self.device_config[CONF_MAC] = system_info[ATTR_MAC]
 
         await self.async_set_unique_id(cid)
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=title, data=self.device_config)
+        return self.async_create_entry(
+            title=f"{system_info['name']} {system_info[ATTR_MODEL]}",
+            data=self.device_config,
+        )
 
     async def async_reauth_device(self) -> ConfigFlowResult:
         """Reauthorize Bravia TV device from config."""
@@ -121,10 +125,10 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle authorize step."""
-        self.create_client()
-
         if user_input is not None:
             self.device_config[CONF_USE_PSK] = user_input[CONF_USE_PSK]
+            self.device_config[CONF_USE_SSL] = user_input[CONF_USE_SSL]
+            self.create_client()
             if user_input[CONF_USE_PSK]:
                 return await self.async_step_psk()
             return await self.async_step_pin()
@@ -134,6 +138,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_USE_PSK, default=False): bool,
+                    vol.Required(CONF_USE_SSL, default=False): bool,
                 }
             ),
         )

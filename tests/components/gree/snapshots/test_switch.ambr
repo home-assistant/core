@@ -66,8 +66,9 @@
 # name: test_registry_settings
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -85,6 +86,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Panel light',
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -92,14 +94,16 @@
       'original_name': 'Panel light',
       'platform': 'gree',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'light',
       'unique_id': 'aabbcc112233_Panel Light',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -117,6 +121,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Quiet mode',
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -124,14 +129,16 @@
       'original_name': 'Quiet mode',
       'platform': 'gree',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'quiet',
       'unique_id': 'aabbcc112233_Quiet',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -149,6 +156,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Fresh air',
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -156,14 +164,16 @@
       'original_name': 'Fresh air',
       'platform': 'gree',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'fresh_air',
       'unique_id': 'aabbcc112233_Fresh Air',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -181,6 +191,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Xtra fan',
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -188,14 +199,16 @@
       'original_name': 'Xtra fan',
       'platform': 'gree',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'xfan',
       'unique_id': 'aabbcc112233_XFan',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -213,6 +226,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Health mode',
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -220,6 +234,7 @@
       'original_name': 'Health mode',
       'platform': 'gree',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'health_mode',
       'unique_id': 'aabbcc112233_Health mode',

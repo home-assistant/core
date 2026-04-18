@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.test_ha_1000_series-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -33,6 +35,7 @@
     'original_name': None,
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'printer',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_printer',
@@ -67,8 +70,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_black_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -88,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -95,6 +100,7 @@
     'original_name': 'Black ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_0',
@@ -121,8 +127,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_cyan_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -142,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -149,6 +157,7 @@
     'original_name': 'Cyan ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_1',
@@ -175,8 +184,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_magenta_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -196,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -203,6 +214,7 @@
     'original_name': 'Magenta ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_2',
@@ -229,8 +241,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_photo_black_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -250,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photo black ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -257,6 +271,7 @@
     'original_name': 'Photo black ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_3',
@@ -283,8 +298,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -302,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -309,6 +326,7 @@
     'original_name': 'Uptime',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_uptime',
@@ -331,8 +349,9 @@
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_yellow_ink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -352,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow ink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -359,6 +379,7 @@
     'original_name': 'Yellow ink',
     'platform': 'ipp',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'marker',
     'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_marker_4',

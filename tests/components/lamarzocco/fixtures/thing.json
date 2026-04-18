@@ -1,0 +1,16 @@
+{
+  "serialNumber": "GS012345",
+  "type": "CoffeeMachine",
+  "name": "GS012345",
+  "location": "HOME",
+  "modelCode": "GS3AV",
+  "modelName": "GS3AV",
+  "connected": true,
+  "connectionDate": 1742489087479,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": false,
+  "coffeeStation": null,
+  "imageUrl": "https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png",
+  "bleAuthToken": null
+}

@@ -85,7 +85,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         # According to API docs, color mode is "ct", "effect" or "hs"
         # https://forum.nanoleaf.me/docs/openapi#_4qgqrz96f44d
@@ -125,8 +125,10 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             await self._nanoleaf.turn_on()
             if brightness:
                 await self._nanoleaf.set_brightness(int(brightness / 2.55))
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         transition: float | None = kwargs.get(ATTR_TRANSITION)
         await self._nanoleaf.turn_off(None if transition is None else int(transition))
+        await self.coordinator.async_refresh()

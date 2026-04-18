@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from incomfortclient import FaultCode
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

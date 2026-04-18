@@ -14,15 +14,13 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import SettingDataUpdateCoordinator
+from .coordinator import PlenticoreConfigEntry, SettingDataUpdateCoordinator
 from .helper import PlenticoreDataFormatter
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,16 +67,32 @@ NUMBER_SETTINGS_DATA = [
         fmt_from="format_round",
         fmt_to="format_round_back",
     ),
+    PlenticoreNumberEntityDescription(
+        key="active_power_limitation",
+        device_class=NumberDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:solar-power",
+        name="Active Power Limitation",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_max_value=10000,
+        native_min_value=0,
+        native_step=1,
+        module_id="devices:local",
+        data_id="Inverter:ActivePowerLimitation",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
+    ),
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PlenticoreConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Kostal Plenticore Number entities."""
-    plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore = entry.runtime_data
 
     entities = []
 

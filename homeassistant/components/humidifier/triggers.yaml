@@ -1,0 +1,39 @@
+.trigger_common: &trigger_common
+  target: &trigger_humidifier_target
+    entity:
+      domain: humidifier
+  fields:
+    behavior: &trigger_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+    for: &trigger_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+started_drying: *trigger_common
+started_humidifying: *trigger_common
+turned_on: *trigger_common
+turned_off: *trigger_common
+
+mode_changed:
+  target: *trigger_humidifier_target
+  fields:
+    behavior: *trigger_behavior
+    for: *trigger_for
+    mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: available_modes
+          multiple: true

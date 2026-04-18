@@ -10,6 +10,7 @@ from collections.abc import (
     Iterable,
 )
 from dataclasses import replace
+import datetime as dt
 from datetime import datetime
 from io import StringIO
 import os
@@ -30,9 +31,10 @@ from aiohasupervisor.models import (
 )
 from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 from aiohasupervisor.models.mounts import MountsInfo
+from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
@@ -47,12 +49,12 @@ from homeassistant.components.backup import (
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.backup import RESTORE_JOB_ID_ENV
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import async_initialize_backup
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
-from tests.common import mock_platform
+from tests.common import async_load_json_object_fixture, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
@@ -267,6 +269,7 @@ TEST_JOB_NOT_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_JOB_DONE = supervisor_jobs.Job(
     name="backup_manager_partial_backup",
@@ -278,6 +281,7 @@ TEST_JOB_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
     name="backup_manager_partial_restore",
@@ -293,10 +297,12 @@ TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
                 "Backup was made on supervisor version 2025.02.2.dev3105, "
                 "can't restore on 2025.01.2.dev3105"
             ),
+            stage=None,
         )
     ],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 
 
@@ -324,7 +330,6 @@ async def setup_backup_integration(
     hass: HomeAssistant, hassio_enabled: None, supervisor_client: AsyncMock
 ) -> None:
     """Set up Backup integration."""
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -464,7 +469,6 @@ async def test_agent_info(
     client = await hass_ws_client(hass)
     supervisor_client.mounts.info.return_value = mounts
 
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
@@ -495,7 +499,9 @@ async def test_agent_info(
                 "database_included": True,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
+                "failed_addons": [],
                 "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": ["share"],
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0",
@@ -515,7 +521,9 @@ async def test_agent_info(
                 "database_included": False,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
+                "failed_addons": [],
                 "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": ["share"],
                 "homeassistant_included": False,
                 "homeassistant_version": None,
@@ -602,22 +610,119 @@ async def test_agent_download_unavailable_backup(
 async def test_agent_upload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
-    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    ws_client = await hass_ws_client(hass)
+    # First call: reader_writer gets backup details after receiving the file.
+    # Second call: agent's async_get_backup check raises not found so the
+    # agent proceeds with the upload instead of skipping it.
+    supervisor_client.backups.backup_info.side_effect = [
+        TEST_BACKUP_DETAILS,
+        SupervisorNotFoundError(),
+    ]
+
+    upload_call_bytes: list[bytearray] = []
+
+    async def mock_upload(
+        stream: AsyncIterator[bytes], *args: Any, **kwargs: Any
+    ) -> str:
+        """Mock upload that consumes the wrapped stream."""
+        received = bytearray()
+        async for chunk in stream:
+            received.extend(chunk)
+        upload_call_bytes.append(received)
+        return TEST_BACKUP_DETAILS.slug
+
+    supervisor_client.backups.upload_backup.side_effect = mock_upload
+    supervisor_client.backups.download_backup.return_value.__aiter__.return_value = (
+        iter((b"backup data",))
+    )
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await ws_client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await ws_client.receive_json()
+    assert response["success"] is True
 
     supervisor_client.backups.reload.assert_not_called()
     resp = await client.post(
         "/api/backup/upload?agent_id=hassio.local",
         data={"file": StringIO("test")},
     )
+    await hass.async_block_till_done()
 
     assert resp.status == 201
+    # First upload call: reader_writer receives the raw upload stream.
+    assert upload_call_bytes[0] == b"test"
+    # Second upload call: agent uploads via stream_with_progress wrapper.
+    assert upload_call_bytes[1] == b"backup data"
     supervisor_client.backups.reload.assert_not_called()
-    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.download_backup.assert_called_once()
     supervisor_client.backups.remove_backup.assert_not_called()
+
+    # Verify upload progress events were emitted
+    upload_progress_events: list[dict[str, Any]] = []
+    while True:
+        response = await ws_client.receive_json()
+        event = response.get("event")
+        if event is None:
+            continue
+        if "uploaded_bytes" in event and event.get("agent_id") == "hassio.local":
+            upload_progress_events.append(event)
+        if event == {"manager_state": "idle"}:
+            break
+
+    assert upload_progress_events
+    # Verify at least one event had uploaded_bytes less than total_bytes
+    assert any(
+        event["uploaded_bytes"] < event["total_bytes"]
+        for event in upload_progress_events
+    )
+    # Verify all events had uploaded_bytes less than or equal to total_bytes
+    assert all(
+        event["uploaded_bytes"] <= event["total_bytes"]
+        for event in upload_progress_events
+    )
+
+
+@pytest.mark.parametrize(
+    "suggested_filename",
+    [
+        "../traversal.tar",
+        "../../etc/passwd",
+        "subdir/backup.tar",
+        ".",
+        "..",
+        "../..",
+        "..\\traversal.tar",
+        "C:\\fakepath\\backup.tar",
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
+async def test_agent_upload_path_traversal(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    suggested_filename: str,
+) -> None:
+    """Test agent upload rejects filenames with path traversal."""
+    client = await hass_client()
+
+    data = FormData(quote_fields=False)
+    data.add_field(
+        "file",
+        "test",
+        filename=suggested_filename,
+        content_type="application/octet-stream",
+    )
+    resp = await client.post(
+        "/api/backup/upload?agent_id=hassio.local",
+        data=data,
+    )
+
+    assert resp.status == 400
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
@@ -651,7 +756,9 @@ async def test_agent_get_backup(
             "database_included": True,
             "date": "1970-01-01T00:00:00+00:00",
             "extra_metadata": {},
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": ["share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
@@ -971,6 +1078,17 @@ async def test_reader_writer_create(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -984,6 +1102,141 @@ async def test_reader_writer_create(
 
     response = await client.receive_json()
     assert response["event"] == {"manager_state": "idle"}
+
+
+@pytest.mark.usefixtures("addon_info", "hassio_client", "setup_backup_integration")
+@pytest.mark.parametrize(
+    "addon_info_side_effect",
+    # Getting info fails for one of the addons, should fall back to slug
+    [[Mock(slug="core_ssh", version="0.0.0"), SupervisorError("Boom")]],
+)
+async def test_reader_writer_create_addon_folder_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    addon_info_side_effect: list[Any],
+) -> None:
+    """Test generating a backup."""
+    addon_info_side_effect[0].name = "Advanced SSH & Web Terminal"
+    assert dt.datetime.__name__ == "HAFakeDatetime"
+    assert dt.HAFakeDatetime.__name__ == "HAFakeDatetime"
+    client = await hass_ws_client(hass)
+    freezer.move_to("2025-01-30 13:42:12.345678")
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    supervisor_client.jobs.get_job.side_effect = [
+        TEST_JOB_NOT_DONE,
+        supervisor_jobs.Job.from_dict(
+            (
+                await async_load_json_object_fixture(
+                    hass, "backup_done_with_addon_folder_errors.json", DOMAIN
+                )
+            )["data"]
+        ),
+    ]
+
+    issue_registry = ir.async_get(hass)
+    assert not issue_registry.issues
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {
+                "agent_ids": ["hassio.local"],
+                "include_addons": ["core_ssh", "core_whisper"],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": ["media", "share"],
+                "name": "Test",
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"backup_job_id": TEST_JOB_ID}
+
+    supervisor_client.backups.partial_backup.assert_called_once_with(
+        replace(
+            DEFAULT_BACKUP_OPTIONS,
+            addons={"core_ssh", "core_whisper"},
+            extra=DEFAULT_BACKUP_OPTIONS.extra | {"with_automatic_settings": True},
+            folders={Folder.MEDIA, Folder.SHARE, Folder.SSL},
+        )
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {"done": True, "uuid": TEST_JOB_ID, "reference": "test_slug"},
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": None,
+        "state": "completed",
+    }
+
+    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.remove_backup.assert_not_called()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    # Check that the expected issue was created
+    assert list(issue_registry.issues) == [("backup", "automatic_backup_failed")]
+    issue = issue_registry.issues[("backup", "automatic_backup_failed")]
+    assert issue.translation_key == "automatic_backup_failed_agents_addons_folders"
+    assert issue.translation_placeholders == {
+        "failed_addons": "Advanced SSH & Web Terminal, core_whisper",
+        "failed_agents": "-",
+        "failed_folders": "share, ssl, media",
+    }
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
@@ -1078,6 +1331,17 @@ async def test_reader_writer_create_report_progress(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1140,6 +1404,17 @@ async def test_reader_writer_create_job_done(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1176,6 +1451,16 @@ async def test_reader_writer_create_job_done(
             False,
             [],
         ),
+        # LOCATION_LOCAL_STORAGE should be moved to the front of the list
+        (
+            [],
+            None,
+            ["hassio.share1", "hassio.local", "hassio.share2", "hassio.share3"],
+            None,
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
+            False,
+            [],
+        ),
         (
             [],
             "hunter2",
@@ -1185,54 +1470,86 @@ async def test_reader_writer_create_job_done(
             True,
             [],
         ),
+        # LOCATION_LOCAL_STORAGE should be moved to the front of the list
         (
-            [
-                {
-                    "type": "backup/config/update",
-                    "agents": {
-                        "hassio.local": {"protected": False},
-                    },
-                }
-            ],
+            [],
             "hunter2",
-            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            ["hassio.share1", "hassio.local", "hassio.share2", "hassio.share3"],
             "hunter2",
-            ["share1", "share2", "share3"],
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
             True,
-            [LOCATION_LOCAL_STORAGE],
+            [],
         ),
+        # Prefer the list of locations which has LOCATION_LOCAL_STORAGE
         (
             [
                 {
                     "type": "backup/config/update",
                     "agents": {
                         "hassio.local": {"protected": False},
-                        "hassio.share1": {"protected": False},
-                    },
-                }
-            ],
-            "hunter2",
-            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
-            "hunter2",
-            ["share2", "share3"],
-            True,
-            [LOCATION_LOCAL_STORAGE, "share1"],
-        ),
-        (
-            [
-                {
-                    "type": "backup/config/update",
-                    "agents": {
-                        "hassio.local": {"protected": False},
-                        "hassio.share1": {"protected": False},
-                        "hassio.share2": {"protected": False},
                     },
                 }
             ],
             "hunter2",
             ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
             None,
-            [LOCATION_LOCAL_STORAGE, "share1", "share2"],
+            [LOCATION_LOCAL_STORAGE],
+            True,
+            ["share1", "share2", "share3"],
+        ),
+        # If the list of locations does not have LOCATION_LOCAL_STORAGE, send the
+        # longest list
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
+            ["share1", "share2", "share3"],
+            True,
+            ["share0"],
+        ),
+        # Prefer the list of encrypted locations if the lists are the same length
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                        "hassio.share1": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
+            ["share2", "share3"],
+            True,
+            ["share0", "share1"],
+        ),
+        # If the list of locations does not have LOCATION_LOCAL_STORAGE, send the
+        # longest list
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                        "hassio.share1": {"protected": False},
+                        "hassio.share2": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            None,
+            ["share0", "share1", "share2"],
             True,
             ["share3"],
         ),
@@ -1283,7 +1600,7 @@ async def test_reader_writer_create_per_agent_encryption(
                 server=f"share{i}",
                 type=supervisor_mounts.MountType.CIFS,
             )
-            for i in range(1, 4)
+            for i in range(4)
         ],
     )
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
@@ -1300,7 +1617,6 @@ async def test_reader_writer_create_per_agent_encryption(
     )
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
     supervisor_client.mounts.info.return_value = mounts
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
     for command in commands:
@@ -1359,6 +1675,17 @@ async def test_reader_writer_create_per_agent_encryption(
         "manager_state": "create_backup",
         "reason": None,
         "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
         "state": "in_progress",
     }
 
@@ -1539,10 +1866,51 @@ async def test_reader_writer_create_missing_reference_error(
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
-@pytest.mark.parametrize("exception", [SupervisorError("Boom!"), Exception("Boom!")])
 @pytest.mark.parametrize(
-    ("method", "download_call_count", "remove_call_count"),
-    [("download_backup", 1, 1), ("remove_backup", 1, 1)],
+    (
+        "exception",
+        "method",
+        "download_call_count",
+        "remove_call_count",
+        "expected_events_before_failed",
+    ),
+    [
+        (
+            SupervisorError("Boom!"),
+            "download_backup",
+            1,
+            1,
+            [],
+        ),
+        (
+            Exception("Boom!"),
+            "download_backup",
+            1,
+            1,
+            [
+                {
+                    "manager_state": "create_backup",
+                    "reason": None,
+                    "stage": "cleaning_up",
+                    "state": "in_progress",
+                }
+            ],
+        ),
+        (
+            SupervisorError("Boom!"),
+            "remove_backup",
+            1,
+            1,
+            [],
+        ),
+        (
+            Exception("Boom!"),
+            "remove_backup",
+            1,
+            1,
+            [],
+        ),
+    ],
 )
 async def test_reader_writer_create_download_remove_error(
     hass: HomeAssistant,
@@ -1552,6 +1920,7 @@ async def test_reader_writer_create_download_remove_error(
     method: str,
     download_call_count: int,
     remove_call_count: int,
+    expected_events_before_failed: list[dict[str, str]],
 ) -> None:
     """Test download and remove error when generating a backup."""
     client = await hass_ws_client(hass)
@@ -1614,7 +1983,13 @@ async def test_reader_writer_create_download_remove_error(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    for expected_event in expected_events_before_failed:
+        assert response["event"] == expected_event
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": "upload_failed",
@@ -1775,6 +2150,17 @@ async def test_reader_writer_create_remote_backup(
         "manager_state": "create_backup",
         "reason": None,
         "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
         "state": "in_progress",
     }
 
@@ -2436,7 +2822,6 @@ async def test_restore_progress_after_restart(
 
     supervisor_client.jobs.get_job.return_value = get_job_result
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2460,7 +2845,6 @@ async def test_restore_progress_after_restart_report_progress(
 
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2543,7 +2927,6 @@ async def test_restore_progress_after_restart_unknown_job(
 
     supervisor_client.jobs.get_job.side_effect = SupervisorError
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2643,7 +3026,6 @@ async def test_config_load_config_info(
 
     hass_storage.update(storage_data)
 
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
     await hass.async_block_till_done()
 

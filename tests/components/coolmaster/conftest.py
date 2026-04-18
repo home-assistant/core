@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.coolmaster.climate import CoolmasterClimate
 from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -41,7 +42,46 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "clean_filter": True,
         "swing": "horizontal",
     },
+    "L1.102": {
+        "is_on": True,
+        "thermostat": 20,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "vlow",
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
+    "L1.103": {
+        "is_on": True,
+        "thermostat": 25,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "Med",  # Test case insensitivity for fan speed
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
+    "L1.104": {
+        "is_on": True,
+        "thermostat": 25,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "ULTRA",  # Test unknown fan speed handling
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
 }
+
+
+@pytest.fixture
+def unit_count():
+    """Fixture to expose the number of pre-defined units."""
+    return len(TEST_UNITS)
 
 
 class CoolMasterNetUnitMock:
@@ -111,8 +151,57 @@ class CoolMasterNetMock:
         }
 
 
+class CoolMasterNetErrorMock:
+    """Mock for CoolMasterNet."""
+
+    def __init__(self, *_args: Any, **kwargs: Any) -> None:
+        """Initialize the CoolMasterNetMock."""
+        self._units = copy.deepcopy(TEST_UNITS)
+        self._fail_count = 0
+
+    async def info(self) -> dict[str, Any]:
+        """Return info about the bridge device."""
+        return DEFAULT_INFO
+
+    async def status(self) -> dict[str, CoolMasterNetUnitMock]:
+        """Return the units."""
+        if self._fail_count > 0:
+            self._fail_count -= 1
+            raise OSError("Simulated communication error")
+        return {
+            unit_id: CoolMasterNetUnitMock(unit_id, attributes)
+            for unit_id, attributes in self._units.items()
+        }
+
+
+class CoolMasterNetEmptyStatusMock:
+    """Mock for CoolMasterNet."""
+
+    def __init__(self, *_args: Any, **kwargs: Any) -> None:
+        """Initialize the CoolMasterNetMock."""
+        self._units = copy.deepcopy(TEST_UNITS)
+        self._call_count = 0
+
+    async def info(self) -> dict[str, Any]:
+        """Return info about the bridge device."""
+        return DEFAULT_INFO
+
+    async def status(self) -> dict[str, CoolMasterNetUnitMock]:
+        """Return the units."""
+        self._call_count += 1
+        if self._call_count == 1:
+            return {
+                unit_id: CoolMasterNetUnitMock(unit_id, attributes)
+                for unit_id, attributes in self._units.items()
+            }
+
+        return {}
+
+
 @pytest.fixture
-async def load_int(hass: HomeAssistant) -> MockConfigEntry:
+async def load_int(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> MockConfigEntry:
     """Set up the Coolmaster integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -133,3 +222,62 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
     await hass.async_block_till_done()
 
     return config_entry
+
+
+@pytest.fixture
+async def config_entry_with_errors(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the Coolmaster integration in Home Assistant."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+        },
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.coolmaster.CoolMasterNet",
+        new=CoolMasterNetErrorMock,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry
+
+
+@pytest.fixture
+async def config_entry_with_empty_status(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up the Coolmaster integration in Home Assistant."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+            "supported_modes": [HVACMode.OFF, HVACMode.COOL, HVACMode.HEAT],
+        },
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.coolmaster.CoolMasterNet",
+        new=CoolMasterNetEmptyStatusMock,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry
+
+
+@pytest.fixture(autouse=True)
+def reset_warned_fan_speeds():
+    """Reset the warned unknown fan speeds set before each test."""
+    # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this fixture.
+    # This is necessary because `warned_unknown_fan_speeds` is a class variable and would persist
+    # across tests otherwise.
+    CoolmasterClimate.warned_unknown_fan_speeds.clear()
+    yield
+    CoolmasterClimate.warned_unknown_fan_speeds.clear()

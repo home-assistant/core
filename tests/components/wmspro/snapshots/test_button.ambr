@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_button_update
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by WMS WebControl pro API',
+      'device_class': 'identify',
+      'friendly_name': 'Markise Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.markise_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

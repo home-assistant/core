@@ -1,0 +1,5 @@
+{
+  "domain": "heatit",
+  "name": "Heatit",
+  "iot_standards": ["zwave"]
+}

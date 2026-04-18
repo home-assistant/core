@@ -6,9 +6,9 @@ import asyncio
 
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
+from intellifire4py.const import IntelliFireApiMode
 from intellifire4py.model import IntelliFireCommonFireplaceData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -21,18 +21,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
+    API_MODE_LOCAL,
     CONF_AUTH_COOKIE,
     CONF_CONTROL_MODE,
     CONF_READ_MODE,
     CONF_SERIAL,
     CONF_USER_ID,
     CONF_WEB_CLIENT_ID,
-    DOMAIN,
     INIT_WAIT_TIME_SECONDS,
     LOGGER,
     STARTUP_TIMEOUT,
 )
-from .coordinator import IntellifireDataUpdateCoordinator
+from .coordinator import IntellifireConfigEntry, IntellifireDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -45,7 +45,9 @@ PLATFORMS = [
 ]
 
 
-def _construct_common_data(entry: ConfigEntry) -> IntelliFireCommonFireplaceData:
+def _construct_common_data(
+    entry: IntellifireConfigEntry,
+) -> IntelliFireCommonFireplaceData:
     """Convert config entry data into IntelliFireCommonFireplaceData."""
 
     return IntelliFireCommonFireplaceData(
@@ -55,12 +57,16 @@ def _construct_common_data(entry: ConfigEntry) -> IntelliFireCommonFireplaceData
         serial=entry.data[CONF_SERIAL],
         api_key=entry.data[CONF_API_KEY],
         ip_address=entry.data[CONF_IP_ADDRESS],
-        read_mode=entry.options[CONF_READ_MODE],
-        control_mode=entry.options[CONF_CONTROL_MODE],
+        read_mode=IntelliFireApiMode(entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)),
+        control_mode=IntelliFireApiMode(
+            entry.options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+        ),
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: IntellifireConfigEntry
+) -> bool:
     """Migrate entries."""
     LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -95,17 +101,39 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             hass.config_entries.async_update_entry(
                 config_entry,
                 data=new,
-                options={CONF_READ_MODE: "local", CONF_CONTROL_MODE: "local"},
+                options={
+                    CONF_READ_MODE: API_MODE_LOCAL,
+                    CONF_CONTROL_MODE: API_MODE_LOCAL,
+                },
                 unique_id=new[CONF_SERIAL],
                 version=1,
-                minor_version=2,
+                minor_version=3,
             )
-            LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
+            LOGGER.debug("Migration to 1.3 successful")
+
+        if config_entry.minor_version < 3:
+            # Migrate old option keys (cloud_read, cloud_control) to new keys
+            old_options = config_entry.options
+            new_options = {
+                CONF_READ_MODE: old_options.get(
+                    "cloud_read", old_options.get(CONF_READ_MODE, API_MODE_LOCAL)
+                ),
+                CONF_CONTROL_MODE: old_options.get(
+                    "cloud_control", old_options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+                ),
+            }
+            hass.config_entries.async_update_entry(
+                config_entry,
+                options=new_options,
+                version=1,
+                minor_version=3,
+            )
+            LOGGER.debug("Migration to 1.3 successful (options keys renamed)")
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) -> bool:
     """Set up IntelliFire from a config entry."""
 
     if CONF_USERNAME not in entry.data:
@@ -115,7 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         fireplace: UnifiedFireplace = (
             await UnifiedFireplace.build_fireplace_from_common(
-                _construct_common_data(entry)
+                _construct_common_data(entry),
+                polling_enabled=False,
             )
         )
         LOGGER.debug("Waiting for Fireplace to Initialize")
@@ -133,11 +162,45 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     LOGGER.debug("Fireplace to Initialized - Awaiting first refresh")
     await data_update_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_update_coordinator
+    entry.runtime_data = data_update_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
+
+
+async def async_update_options(
+    hass: HomeAssistant, entry: IntellifireConfigEntry
+) -> None:
+    """Handle options update."""
+    coordinator: IntellifireDataUpdateCoordinator = entry.runtime_data
+
+    new_read_mode = IntelliFireApiMode(
+        entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)
+    )
+    new_control_mode = IntelliFireApiMode(
+        entry.options.get(CONF_CONTROL_MODE, API_MODE_LOCAL)
+    )
+
+    fireplace = coordinator.fireplace
+    current_read_mode = fireplace.read_mode
+    current_control_mode = fireplace.control_mode
+
+    # Only update modes that actually changed
+    if new_read_mode != current_read_mode:
+        LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
+        await fireplace.set_read_mode(new_read_mode)
+
+    if new_control_mode != current_control_mode:
+        LOGGER.debug(
+            "Updating control mode: %s -> %s", current_control_mode, new_control_mode
+        )
+        await fireplace.set_control_mode(new_control_mode)
+
+    # Refresh data with new mode settings
+    await coordinator.async_request_refresh()
 
 
 async def _async_wait_for_initialization(
@@ -151,9 +214,8 @@ async def _async_wait_for_initialization(
         await asyncio.sleep(INIT_WAIT_TIME_SECONDS)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: IntellifireConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

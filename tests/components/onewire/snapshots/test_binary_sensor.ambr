@@ -1,8 +1,60 @@
 # serializer version: 1
+# name: test_binary_sensors[binary_sensor.05_111111111111_sensed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.05_111111111111_sensed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensed',
+    'platform': 'onewire',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensed',
+    'unique_id': '/05.111111111111/sensed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.05_111111111111_sensed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_file': '/05.111111111111/sensed',
+      'friendly_name': '05.111111111111 Sensed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.05_111111111111_sensed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.12_111111111111_sensed_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +80,7 @@
     'original_name': 'Sensed A',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/12.111111111111/sensed.A',
@@ -38,7 +92,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/12.111111111111/sensed.A',
       'friendly_name': '12.111111111111 Sensed A',
-      'raw_value': 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12_111111111111_sensed_a',
@@ -50,8 +103,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.12_111111111111_sensed_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -76,6 +131,7 @@
     'original_name': 'Sensed B',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/12.111111111111/sensed.B',
@@ -87,7 +143,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/12.111111111111/sensed.B',
       'friendly_name': '12.111111111111 Sensed B',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.12_111111111111_sensed_b',
@@ -99,8 +154,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,6 +182,7 @@
     'original_name': 'Sensed 0',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.0',
@@ -136,7 +194,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.0',
       'friendly_name': '29.111111111111 Sensed 0',
-      'raw_value': 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_0',
@@ -148,8 +205,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -174,6 +233,7 @@
     'original_name': 'Sensed 1',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.1',
@@ -185,7 +245,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.1',
       'friendly_name': '29.111111111111 Sensed 1',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_1',
@@ -197,8 +256,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -223,6 +284,7 @@
     'original_name': 'Sensed 2',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.2',
@@ -234,7 +296,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.2',
       'friendly_name': '29.111111111111 Sensed 2',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_2',
@@ -246,8 +307,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -265,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -272,6 +335,7 @@
     'original_name': 'Sensed 3',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.3',
@@ -283,7 +347,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.3',
       'friendly_name': '29.111111111111 Sensed 3',
-      'raw_value': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_3',
@@ -295,8 +358,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -314,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -321,6 +386,7 @@
     'original_name': 'Sensed 4',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.4',
@@ -332,7 +398,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.4',
       'friendly_name': '29.111111111111 Sensed 4',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_4',
@@ -344,8 +409,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -363,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -370,6 +437,7 @@
     'original_name': 'Sensed 5',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.5',
@@ -381,7 +449,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.5',
       'friendly_name': '29.111111111111 Sensed 5',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_5',
@@ -393,8 +460,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -412,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -419,6 +488,7 @@
     'original_name': 'Sensed 6',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.6',
@@ -430,7 +500,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.6',
       'friendly_name': '29.111111111111 Sensed 6',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_6',
@@ -442,8 +511,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -461,6 +531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -468,6 +539,7 @@
     'original_name': 'Sensed 7',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/29.111111111111/sensed.7',
@@ -479,7 +551,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/29.111111111111/sensed.7',
       'friendly_name': '29.111111111111 Sensed 7',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.29_111111111111_sensed_7',
@@ -491,8 +562,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.3a_111111111111_sensed_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -510,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -517,6 +590,7 @@
     'original_name': 'Sensed A',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/3A.111111111111/sensed.A',
@@ -528,7 +602,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/3A.111111111111/sensed.A',
       'friendly_name': '3A.111111111111 Sensed A',
-      'raw_value': 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.3a_111111111111_sensed_a',
@@ -540,8 +613,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.3a_111111111111_sensed_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -559,6 +633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -566,6 +641,7 @@
     'original_name': 'Sensed B',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensed_id',
     'unique_id': '/3A.111111111111/sensed.B',
@@ -577,7 +653,6 @@
     'attributes': ReadOnlyDict({
       'device_file': '/3A.111111111111/sensed.B',
       'friendly_name': '3A.111111111111 Sensed B',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.3a_111111111111_sensed_b',
@@ -589,8 +664,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -608,6 +684,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -615,6 +692,7 @@
     'original_name': 'Hub short on branch 0',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hub_short_id',
     'unique_id': '/EF.111111111113/hub/short.0',
@@ -627,7 +705,6 @@
       'device_class': 'problem',
       'device_file': '/EF.111111111113/hub/short.0',
       'friendly_name': 'EF.111111111113 Hub short on branch 0',
-      'raw_value': 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_0',
@@ -639,8 +716,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -658,6 +736,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -665,6 +744,7 @@
     'original_name': 'Hub short on branch 1',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hub_short_id',
     'unique_id': '/EF.111111111113/hub/short.1',
@@ -677,7 +757,6 @@
       'device_class': 'problem',
       'device_file': '/EF.111111111113/hub/short.1',
       'friendly_name': 'EF.111111111113 Hub short on branch 1',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_1',
@@ -689,8 +768,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -708,6 +788,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -715,6 +796,7 @@
     'original_name': 'Hub short on branch 2',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hub_short_id',
     'unique_id': '/EF.111111111113/hub/short.2',
@@ -727,7 +809,6 @@
       'device_class': 'problem',
       'device_file': '/EF.111111111113/hub/short.2',
       'friendly_name': 'EF.111111111113 Hub short on branch 2',
-      'raw_value': 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_2',
@@ -739,8 +820,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.ef_111111111113_hub_short_on_branch_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -758,6 +840,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 3',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -765,6 +848,7 @@
     'original_name': 'Hub short on branch 3',
     'platform': 'onewire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hub_short_id',
     'unique_id': '/EF.111111111113/hub/short.3',
@@ -777,7 +861,6 @@
       'device_class': 'problem',
       'device_file': '/EF.111111111113/hub/short.3',
       'friendly_name': 'EF.111111111113 Hub short on branch 3',
-      'raw_value': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_3',

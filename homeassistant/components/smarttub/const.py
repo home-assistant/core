@@ -4,8 +4,6 @@ DOMAIN = "smarttub"
 
 EVENT_SMARTTUB = "smarttub"
 
-SMARTTUB_CONTROLLER = "smarttub_controller"
-
 SCAN_INTERVAL = 60
 
 POLLING_TIMEOUT = 10
@@ -26,3 +24,4 @@ ATTR_LIGHTS = "lights"
 ATTR_PUMPS = "pumps"
 ATTR_REMINDERS = "reminders"
 ATTR_STATUS = "status"
+ATTR_SENSORS = "sensors"

@@ -1,20 +1,29 @@
 """Device tracker for Mobile app."""
 
+from collections.abc import Callable
+from typing import Any
+
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
-    ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
     TrackerEntity,
+)
+from homeassistant.components.zone import (
+    ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
+    HOME_ZONE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
+    ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    STATE_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -45,24 +54,24 @@ async def async_setup_entry(
 class MobileAppEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
-    def __init__(self, entry, data=None):
+    def __init__(self, entry: ConfigEntry) -> None:
         """Set up Mobile app entity."""
         self._entry = entry
-        self._data = data
-        self._dispatch_unsub = None
+        self._data: dict[str, Any] = {}
+        self._dispatch_unsub: Callable[[], None] | None = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID."""
         return self._entry.data[ATTR_DEVICE_ID]
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._data.get(ATTR_BATTERY)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:
@@ -72,12 +81,12 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return attrs
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
-        return self._data.get(ATTR_GPS_ACCURACY)
+        return self._data.get(ATTR_GPS_ACCURACY, 0)
 
     @property
-    def latitude(self):
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
         if (gps := self._data.get(ATTR_GPS)) is None:
             return None
@@ -85,7 +94,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return gps[0]
 
     @property
-    def longitude(self):
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
         if (gps := self._data.get(ATTR_GPS)) is None:
             return None
@@ -93,19 +102,25 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return gps[1]
 
     @property
-    def location_name(self):
+    def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         if location_name := self._data.get(ATTR_LOCATION_NAME):
+            if location_name == HOME_ZONE:
+                return STATE_HOME
+            if zone_state := self.hass.states.get(
+                ZONE_ENTITY_ID_FORMAT.format(location_name)
+            ):
+                return zone_state.name
             return location_name
         return None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._entry.data[ATTR_DEVICE_NAME]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return device_info(self._entry.data)
 
@@ -118,12 +133,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
             self.update_data,
         )
 
-        # Don't restore if we got set up with data.
-        if self._data is not None:
-            return
-
         if (state := await self.async_get_last_state()) is None:
-            self._data = {}
             return
 
         attr = state.attributes
@@ -144,7 +154,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
             self._dispatch_unsub = None
 
     @callback
-    def update_data(self, data):
+    def update_data(self, data: dict[str, Any]) -> None:
         """Mark the device as seen."""
         self._data = data
         self.async_write_ha_state()

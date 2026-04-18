@@ -11,6 +11,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/withings",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aiowithings"],
   "requirements": ["aiowithings==3.1.6"]

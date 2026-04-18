@@ -7,17 +7,17 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DOMAIN_DEVICE_TRACKER,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     is_on as device_tracker_is_on,
 )
 from homeassistant.components.group import get_entity_ids as group_get_entity_ids
 from homeassistant.components.light import (
     ATTR_PROFILE,
     ATTR_TRANSITION,
-    DOMAIN as DOMAIN_LIGHT,
+    DOMAIN as LIGHT_DOMAIN,
     is_on as light_is_on,
 )
-from homeassistant.components.person import DOMAIN as DOMAIN_PERSON
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
@@ -97,13 +97,13 @@ async def activate_automation(  # noqa: C901
     logger = logging.getLogger(__name__)
 
     if device_group is None:
-        device_entity_ids = hass.states.async_entity_ids(DOMAIN_DEVICE_TRACKER)
+        device_entity_ids = hass.states.async_entity_ids(DEVICE_TRACKER_DOMAIN)
     else:
         device_entity_ids = group_get_entity_ids(
-            hass, device_group, DOMAIN_DEVICE_TRACKER
+            hass, device_group, DEVICE_TRACKER_DOMAIN
         )
         device_entity_ids.extend(
-            group_get_entity_ids(hass, device_group, DOMAIN_PERSON)
+            group_get_entity_ids(hass, device_group, PERSON_DOMAIN)
         )
 
     if not device_entity_ids:
@@ -112,9 +112,9 @@ async def activate_automation(  # noqa: C901
 
     # Get the light IDs from the specified group
     if light_group is None:
-        light_ids = hass.states.async_entity_ids(DOMAIN_LIGHT)
+        light_ids = hass.states.async_entity_ids(LIGHT_DOMAIN)
     else:
-        light_ids = group_get_entity_ids(hass, light_group, DOMAIN_LIGHT)
+        light_ids = group_get_entity_ids(hass, light_group, LIGHT_DOMAIN)
 
     if not light_ids:
         logger.error("No lights found to turn on")
@@ -147,7 +147,7 @@ async def activate_automation(  # noqa: C901
         if not anyone_home() or light_is_on(hass, light_id):
             return
         await hass.services.async_call(
-            DOMAIN_LIGHT,
+            LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: light_id,
@@ -222,7 +222,7 @@ async def activate_automation(  # noqa: C901
             logger.info("Home coming event for %s. Turning lights on", entity)
             hass.async_create_task(
                 hass.services.async_call(
-                    DOMAIN_LIGHT,
+                    LIGHT_DOMAIN,
                     SERVICE_TURN_ON,
                     {ATTR_ENTITY_ID: light_ids, ATTR_PROFILE: light_profile},
                 )
@@ -241,7 +241,7 @@ async def activate_automation(  # noqa: C901
                 if now > start_point + index * LIGHT_TRANSITION_TIME:
                     hass.async_create_task(
                         hass.services.async_call(
-                            DOMAIN_LIGHT, SERVICE_TURN_ON, {ATTR_ENTITY_ID: light_id}
+                            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: light_id}
                         )
                     )
 
@@ -273,7 +273,7 @@ async def activate_automation(  # noqa: C901
         logger.info("Everyone has left but there are lights on. Turning them off")
         hass.async_create_task(
             hass.services.async_call(
-                DOMAIN_LIGHT, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: light_ids}
+                LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: light_ids}
             )
         )
 

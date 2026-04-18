@@ -1,1 +1,1 @@
-"""The blinksticklight component."""
+"""The BlinkStick integration."""

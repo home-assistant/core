@@ -5,13 +5,13 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
-from aiotedee.exception import (
+from aiotedee.exceptions import (
     TedeeAuthException,
     TedeeClientException,
     TedeeWebhookException,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from homeassistant.components.webhook import async_generate_url

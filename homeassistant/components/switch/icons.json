@@ -1,12 +1,14 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:toggle-switch-variant-off"
+    },
+    "is_on": {
+      "condition": "mdi:toggle-switch-variant"
+    }
+  },
   "entity_component": {
     "_": {
-      "default": "mdi:toggle-switch-variant",
-      "state": {
-        "off": "mdi:toggle-switch-variant-off"
-      }
-    },
-    "switch": {
       "default": "mdi:toggle-switch-variant",
       "state": {
         "off": "mdi:toggle-switch-variant-off"
@@ -16,6 +18,12 @@
       "default": "mdi:power-plug",
       "state": {
         "off": "mdi:power-plug-off"
+      }
+    },
+    "switch": {
+      "default": "mdi:toggle-switch-variant",
+      "state": {
+        "off": "mdi:toggle-switch-variant-off"
       }
     }
   },
@@ -28,6 +36,14 @@
     },
     "turn_on": {
       "service": "mdi:toggle-switch-variant"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:toggle-switch-variant-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:toggle-switch-variant"
     }
   }
 }

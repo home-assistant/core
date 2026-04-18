@@ -311,7 +311,7 @@ async def _async_get_device_automation_capabilities(
 
     try:
         capabilities = await getattr(platform, function_name)(hass, automation)
-    except (EntityNotFound, InvalidDeviceAutomationConfig):
+    except EntityNotFound, InvalidDeviceAutomationConfig:
         return {}
 
     capabilities = capabilities.copy()

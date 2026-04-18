@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[fan.model0_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,6 +36,7 @@
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 9>,
     'translation_key': 'ventilation',
     'unique_id': 'gateway0_deviceSerialViAir300F-ventilation',
@@ -55,6 +58,11 @@
         <VentilationMode.SENSOR_OVERRIDE: 'sensor_override'>,
       ]),
       'supported_features': <FanEntityFeature: 9>,
+      'vicare_quickmodes': list([
+        'comfort',
+        'eco',
+        'holiday',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'fan.model0_ventilation',
@@ -66,8 +74,9 @@
 # ---
 # name: test_all_entities[fan.model1_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -91,13 +100,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:fan-off',
+    'original_icon': 'mdi:fan',
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 25>,
     'translation_key': 'ventilation',
     'unique_id': 'gateway1_deviceId1-ventilation',
@@ -108,7 +119,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model1 Ventilation',
-      'icon': 'mdi:fan-off',
+      'icon': 'mdi:fan',
       'percentage': 0,
       'percentage_step': 25.0,
       'preset_mode': None,
@@ -118,6 +129,11 @@
         <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
       ]),
       'supported_features': <FanEntityFeature: 25>,
+      'vicare_quickmodes': list([
+        'comfort',
+        'eco',
+        'holiday',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'fan.model1_ventilation',
@@ -129,8 +145,9 @@
 # ---
 # name: test_all_entities[fan.model2_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -154,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -161,6 +179,7 @@
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 8>,
     'translation_key': 'ventilation',
     'unique_id': 'gateway2_################-ventilation',
@@ -179,6 +198,11 @@
         <VentilationMode.STANDARD: 'standard'>,
       ]),
       'supported_features': <FanEntityFeature: 8>,
+      'vicare_quickmodes': list([
+        'comfort',
+        'eco',
+        'holiday',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'fan.model2_ventilation',

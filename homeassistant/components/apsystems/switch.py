@@ -43,7 +43,7 @@ class ApSystemsInverterSwitch(ApSystemsEntity, SwitchEntity):
         """Update switch status and availability."""
         try:
             status = await self._api.get_device_power_status()
-        except (TimeoutError, ClientConnectionError, InverterReturnedError):
+        except TimeoutError, ClientConnectionError, InverterReturnedError:
             self._attr_available = False
         else:
             self._attr_available = True

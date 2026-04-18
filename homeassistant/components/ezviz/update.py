@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyezviz import HTTPError, PyEzvizError
+from pyezvizapi import HTTPError, PyEzvizError
 
 from homeassistant.components.update import (
     UpdateDeviceClass,

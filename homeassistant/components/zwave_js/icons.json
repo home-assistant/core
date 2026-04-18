@@ -63,6 +63,9 @@
     "clear_lock_usercode": {
       "service": "mdi:eraser"
     },
+    "get_lock_usercode": {
+      "service": "mdi:lock-smart"
+    },
     "invoke_cc_api": {
       "service": "mdi:api"
     },

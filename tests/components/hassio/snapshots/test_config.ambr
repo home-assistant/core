@@ -1,0 +1,46 @@
+# serializer version: 1
+# name: test_load_config_store[storage_data0]
+  dict({
+    'hassio_user': '766572795f764572b95f72616e646f6d',
+    'update_config': dict({
+      'add_on_backup_before_update': False,
+      'add_on_backup_retain_copies': 1,
+      'core_backup_before_update': False,
+    }),
+  })
+# ---
+# name: test_load_config_store[storage_data1]
+  dict({
+    'hassio_user': '00112233445566778899aabbccddeeff',
+    'update_config': dict({
+      'add_on_backup_before_update': False,
+      'add_on_backup_retain_copies': 1,
+      'core_backup_before_update': False,
+    }),
+  })
+# ---
+# name: test_load_config_store[storage_data2]
+  dict({
+    'hassio_user': '00112233445566778899aabbccddeeff',
+    'update_config': dict({
+      'add_on_backup_before_update': True,
+      'add_on_backup_retain_copies': 2,
+      'core_backup_before_update': True,
+    }),
+  })
+# ---
+# name: test_save_config_store
+  dict({
+    'data': dict({
+      'hassio_user': '766572795f764572b95f72616e646f6d',
+      'update_config': dict({
+        'add_on_backup_before_update': False,
+        'add_on_backup_retain_copies': 1,
+        'core_backup_before_update': False,
+      }),
+    }),
+    'key': 'hassio',
+    'minor_version': 1,
+    'version': 1,
+  })
+# ---

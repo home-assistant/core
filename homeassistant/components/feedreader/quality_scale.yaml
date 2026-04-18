@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom actions are defined.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: missing test for uniqueness of feed URL.
+  config-flow:
+    status: todo
+    comment: missing data descriptions
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No custom actions are defined.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No custom actions are defined.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication support.
+  test-coverage:
+    status: done
+    comment: Can use freezer for skipping time instead
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: No discovery support.
+  discovery:
+    status: exempt
+    comment: No discovery support.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry, represents one service.
+  entity-category: done
+  entity-device-class:
+    status: exempt
+    comment: Matches no available event entity class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Only one entity per config entry.
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: done
+    comment: Only one repair-issue for yaml-import defined.
+  stale-devices:
+    status: exempt
+    comment: Each config entry, represents one service.
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: feedparser lib is not async.
+  inject-websession:
+    status: todo
+    comment: feedparser lib doesn't take a session as argument.
+  strict-typing:
+    status: todo
+    comment: feedparser lib is not fully typed.

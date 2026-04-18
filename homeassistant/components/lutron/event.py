@@ -1,17 +1,17 @@
 """Support for Lutron events."""
 
 from enum import StrEnum
+from typing import cast
 
-from pylutron import Button, Keypad, Lutron, LutronEvent
+from pylutron import Button, Keypad, Lutron, LutronEntity, LutronEvent
 
 from homeassistant.components.event import EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, DOMAIN, LutronData
+from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, LutronConfigEntry
 from .entity import LutronKeypad
 
 
@@ -32,11 +32,11 @@ LEGACY_EVENT_TYPES: dict[LutronEventType, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron event platform."""
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
 
     async_add_entities(
         LutronEventEntity(area_name, keypad, button, entry_data.client)
@@ -79,9 +79,10 @@ class LutronEventEntity(LutronKeypad, EventEntity):
 
     @callback
     def handle_event(
-        self, button: Button, _context: None, event: LutronEvent, _params: dict
+        self, button: LutronEntity, _context: None, event: LutronEvent, _params: dict
     ) -> None:
         """Handle received event."""
+        button = cast(Button, button)
         action: LutronEventType | None = None
         if self._has_release_event:
             if event == Button.Event.PRESSED:

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last 5 minutes',
     'options': dict({
     }),
     'original_device_class': None,
@@ -29,6 +31,7 @@
     'original_name': 'Amount of active users last 5 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_activeusers_last5minutes',
     'unique_id': '1234567890abcdef#activeUsers_last5minutes',
@@ -51,8 +54,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -72,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last day',
     'options': dict({
     }),
     'original_device_class': None,
@@ -79,6 +84,7 @@
     'original_name': 'Amount of active users last day',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_activeusers_last24hours',
     'unique_id': '1234567890abcdef#activeUsers_last24hours',
@@ -101,8 +107,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -122,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last hour',
     'options': dict({
     }),
     'original_device_class': None,
@@ -129,6 +137,7 @@
     'original_name': 'Amount of active users last hour',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_activeusers_last1hour',
     'unique_id': '1234567890abcdef#activeUsers_last1hour',
@@ -151,8 +160,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -172,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of files',
     'options': dict({
     }),
     'original_device_class': None,
@@ -179,6 +190,7 @@
     'original_name': 'Amount of files',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_files',
     'unique_id': '1234567890abcdef#storage_num_files',
@@ -201,8 +213,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -222,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of group shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,6 +243,7 @@
     'original_name': 'Amount of group shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_groups',
     'unique_id': '1234567890abcdef#shares_num_shares_groups',
@@ -251,8 +266,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -272,6 +288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of link shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -279,6 +296,7 @@
     'original_name': 'Amount of link shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_link',
     'unique_id': '1234567890abcdef#shares_num_shares_link',
@@ -301,8 +319,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -322,6 +341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of local storages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -329,6 +349,7 @@
     'original_name': 'Amount of local storages',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages_local',
     'unique_id': '1234567890abcdef#storage_num_storages_local',
@@ -351,8 +372,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -372,6 +394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of mail shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -379,6 +402,7 @@
     'original_name': 'Amount of mail shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_mail',
     'unique_id': '1234567890abcdef#shares_num_shares_mail',
@@ -401,8 +425,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -422,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of other storages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -429,6 +455,7 @@
     'original_name': 'Amount of other storages',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages_other',
     'unique_id': '1234567890abcdef#storage_num_storages_other',
@@ -451,8 +478,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -472,6 +500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of passwordless link shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -479,6 +508,7 @@
     'original_name': 'Amount of passwordless link shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_link_no_password',
     'unique_id': '1234567890abcdef#shares_num_shares_link_no_password',
@@ -501,8 +531,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -522,6 +553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of room shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -529,6 +561,7 @@
     'original_name': 'Amount of room shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_room',
     'unique_id': '1234567890abcdef#shares_num_shares_room',
@@ -551,8 +584,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -572,6 +606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -579,6 +614,7 @@
     'original_name': 'Amount of shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares',
     'unique_id': '1234567890abcdef#shares_num_shares',
@@ -601,8 +637,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -622,6 +659,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares received',
     'options': dict({
     }),
     'original_device_class': None,
@@ -629,6 +667,7 @@
     'original_name': 'Amount of shares received',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_fed_shares_received',
     'unique_id': '1234567890abcdef#shares_num_fed_shares_received',
@@ -651,8 +690,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -672,6 +712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares sent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -679,6 +720,7 @@
     'original_name': 'Amount of shares sent',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_fed_shares_sent',
     'unique_id': '1234567890abcdef#shares_num_fed_shares_sent',
@@ -701,8 +743,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -722,6 +765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of storages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -729,6 +773,7 @@
     'original_name': 'Amount of storages',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages',
     'unique_id': '1234567890abcdef#storage_num_storages',
@@ -751,8 +796,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -772,6 +818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of storages at home',
     'options': dict({
     }),
     'original_device_class': None,
@@ -779,6 +826,7 @@
     'original_name': 'Amount of storages at home',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_storages_home',
     'unique_id': '1234567890abcdef#storage_num_storages_home',
@@ -801,8 +849,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -822,6 +871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of user',
     'options': dict({
     }),
     'original_device_class': None,
@@ -829,6 +879,7 @@
     'original_name': 'Amount of user',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_storage_num_users',
     'unique_id': '1234567890abcdef#storage_num_users',
@@ -851,8 +902,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -872,6 +924,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of user shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -879,6 +932,7 @@
     'original_name': 'Amount of user shares',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_shares_num_shares_user',
     'unique_id': '1234567890abcdef#shares_num_shares_user',
@@ -901,8 +955,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -922,6 +977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apps installed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -929,6 +985,7 @@
     'original_name': 'Apps installed',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_apps_num_installed',
     'unique_id': '1234567890abcdef#system_apps_num_installed',
@@ -951,8 +1008,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_expunges-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -972,6 +1030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache expunges',
     'options': dict({
     }),
     'original_device_class': None,
@@ -979,6 +1038,7 @@
     'original_name': 'Cache expunges',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_expunges',
     'unique_id': '1234567890abcdef#cache_expunges',
@@ -1001,8 +1061,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1020,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache memory',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1027,6 +1089,7 @@
     'original_name': 'Cache memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_memory_type',
     'unique_id': '1234567890abcdef#cache_memory_type',
@@ -1048,8 +1111,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1067,6 +1131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache memory size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1080,6 +1145,7 @@
     'original_name': 'Cache memory size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_mem_size',
     'unique_id': '1234567890abcdef#cache_mem_size',
@@ -1103,8 +1169,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1124,6 +1191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of entries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1131,6 +1199,7 @@
     'original_name': 'Cache number of entries',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_entries',
     'unique_id': '1234567890abcdef#cache_num_entries',
@@ -1153,8 +1222,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_hits-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1174,6 +1244,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of hits',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1181,6 +1252,7 @@
     'original_name': 'Cache number of hits',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_hits',
     'unique_id': '1234567890abcdef#cache_num_hits',
@@ -1203,8 +1275,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_inserts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1224,6 +1297,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of inserts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1231,6 +1305,7 @@
     'original_name': 'Cache number of inserts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_inserts',
     'unique_id': '1234567890abcdef#cache_num_inserts',
@@ -1253,8 +1328,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_misses-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1274,6 +1350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of misses',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1281,6 +1358,7 @@
     'original_name': 'Cache number of misses',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_misses',
     'unique_id': '1234567890abcdef#cache_num_misses',
@@ -1303,8 +1381,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_slots-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1324,6 +1403,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of slots',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1331,6 +1411,7 @@
     'original_name': 'Cache number of slots',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_num_slots',
     'unique_id': '1234567890abcdef#cache_num_slots',
@@ -1353,8 +1434,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1372,6 +1454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1379,6 +1462,7 @@
     'original_name': 'Cache start time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_start_time',
     'unique_id': '1234567890abcdef#cache_start_time',
@@ -1401,8 +1485,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1420,6 +1505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache TTL',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1427,6 +1513,7 @@
     'original_name': 'Cache TTL',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_cache_ttl',
     'unique_id': '1234567890abcdef#cache_ttl',
@@ -1448,8 +1535,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1467,6 +1555,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 15 minutes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1477,6 +1566,7 @@
     'original_name': 'CPU load last 15 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_cpuload_15',
     'unique_id': '1234567890abcdef#system_cpuload_15',
@@ -1499,8 +1589,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1518,6 +1609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 1 minute',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1528,6 +1620,7 @@
     'original_name': 'CPU load last 1 minute',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_cpuload_1',
     'unique_id': '1234567890abcdef#system_cpuload_1',
@@ -1550,8 +1643,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1569,6 +1663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 5 minutes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1579,6 +1674,7 @@
     'original_name': 'CPU load last 5 minutes',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_cpuload_5',
     'unique_id': '1234567890abcdef#system_cpuload_5',
@@ -1601,8 +1697,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1620,6 +1717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1633,6 +1731,7 @@
     'original_name': 'Database size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_database_size',
     'unique_id': '1234567890abcdef#database_size',
@@ -1656,8 +1755,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1675,6 +1775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1682,6 +1783,7 @@
     'original_name': 'Database type',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_database_type',
     'unique_id': '1234567890abcdef#database_type',
@@ -1703,8 +1805,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1722,6 +1825,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1729,6 +1833,7 @@
     'original_name': 'Database version',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_database_version',
     'unique_id': '1234567890abcdef#database_version',
@@ -1750,8 +1855,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1769,6 +1875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1782,6 +1889,7 @@
     'original_name': 'Free memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_mem_free',
     'unique_id': '1234567890abcdef#system_mem_free',
@@ -1805,8 +1913,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1824,6 +1933,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1837,6 +1947,7 @@
     'original_name': 'Free space',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_freespace',
     'unique_id': '1234567890abcdef#system_freespace',
@@ -1860,8 +1971,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1879,6 +1991,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free swap memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1892,6 +2005,7 @@
     'original_name': 'Free swap memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_swap_free',
     'unique_id': '1234567890abcdef#system_swap_free',
@@ -1915,8 +2029,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_buffer_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1934,6 +2049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned buffer size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1947,6 +2063,7 @@
     'original_name': 'Interned buffer size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_buffer_size',
     'unique_id': '1234567890abcdef#interned_strings_usage_buffer_size',
@@ -1970,8 +2087,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_free_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1989,6 +2107,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2002,6 +2121,7 @@
     'original_name': 'Interned free memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_free_memory',
     'unique_id': '1234567890abcdef#interned_strings_usage_free_memory',
@@ -2025,8 +2145,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_number_of_strings-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2046,6 +2167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned number of strings',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2053,6 +2175,7 @@
     'original_name': 'Interned number of strings',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_number_of_strings',
     'unique_id': '1234567890abcdef#interned_strings_usage_number_of_strings',
@@ -2075,8 +2198,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_used_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2094,6 +2218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned used memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2107,6 +2232,7 @@
     'original_name': 'Interned used memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_interned_strings_usage_used_memory',
     'unique_id': '1234567890abcdef#interned_strings_usage_used_memory',
@@ -2130,8 +2256,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_free-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2149,6 +2276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT buffer free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2162,6 +2290,7 @@
     'original_name': 'JIT buffer free',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_buffer_free',
     'unique_id': '1234567890abcdef#jit_buffer_free',
@@ -2185,8 +2314,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2204,6 +2334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT buffer size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2217,6 +2348,7 @@
     'original_name': 'JIT buffer size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_buffer_size',
     'unique_id': '1234567890abcdef#jit_buffer_size',
@@ -2240,8 +2372,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_kind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2259,6 +2392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT kind',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2266,6 +2400,7 @@
     'original_name': 'JIT kind',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_kind',
     'unique_id': '1234567890abcdef#jit_kind',
@@ -2287,8 +2422,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_flags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2306,6 +2442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT opt flags',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2313,6 +2450,7 @@
     'original_name': 'JIT opt flags',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_opt_flags',
     'unique_id': '1234567890abcdef#jit_opt_flags',
@@ -2334,8 +2472,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2353,6 +2492,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT opt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2360,6 +2500,7 @@
     'original_name': 'JIT opt level',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_opt_level',
     'unique_id': '1234567890abcdef#jit_opt_level',
@@ -2381,8 +2522,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_miss_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2402,6 +2544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache blacklist miss ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2409,6 +2552,7 @@
     'original_name': 'Opcache blacklist miss ratio',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_blacklist_miss_ratio',
     'unique_id': '1234567890abcdef#opcache_statistics_blacklist_miss_ratio',
@@ -2432,8 +2576,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_misses-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2453,6 +2598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache blacklist misses',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2460,6 +2606,7 @@
     'original_name': 'Opcache blacklist misses',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_blacklist_misses',
     'unique_id': '1234567890abcdef#opcache_statistics_blacklist_misses',
@@ -2482,8 +2629,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_keys-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2503,6 +2651,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache cached keys',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2510,6 +2659,7 @@
     'original_name': 'Opcache cached keys',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_num_cached_keys',
     'unique_id': '1234567890abcdef#opcache_statistics_num_cached_keys',
@@ -2532,8 +2682,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_scripts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2553,6 +2704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache cached scripts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2560,6 +2712,7 @@
     'original_name': 'Opcache cached scripts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_num_cached_scripts',
     'unique_id': '1234567890abcdef#opcache_statistics_num_cached_scripts',
@@ -2582,8 +2735,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_current_wasted_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2601,6 +2755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache current wasted percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2611,6 +2766,7 @@
     'original_name': 'Opcache current wasted percentage',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_current_wasted_percentage',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_current_wasted_percentage',
@@ -2633,8 +2789,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_free_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2652,6 +2809,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2665,6 +2823,7 @@
     'original_name': 'Opcache free memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_free_memory',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_free_memory',
@@ -2688,8 +2847,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hash_restarts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2709,6 +2869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hash restarts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2716,6 +2877,7 @@
     'original_name': 'Opcache hash restarts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_hash_restarts',
     'unique_id': '1234567890abcdef#opcache_statistics_hash_restarts',
@@ -2738,8 +2900,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hit_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2757,6 +2920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hit rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2767,6 +2931,7 @@
     'original_name': 'Opcache hit rate',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_opcache_hit_rate',
     'unique_id': '1234567890abcdef#opcache_statistics_opcache_hit_rate',
@@ -2789,8 +2954,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hits-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2810,6 +2976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hits',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2817,6 +2984,7 @@
     'original_name': 'Opcache hits',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_hits',
     'unique_id': '1234567890abcdef#opcache_statistics_hits',
@@ -2839,8 +3007,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_last_restart_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2858,6 +3027,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache last restart time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2865,6 +3035,7 @@
     'original_name': 'Opcache last restart time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_last_restart_time',
     'unique_id': '1234567890abcdef#opcache_statistics_last_restart_time',
@@ -2887,8 +3058,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_manual_restarts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2908,6 +3080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache manual restarts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2915,6 +3088,7 @@
     'original_name': 'Opcache manual restarts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_manual_restarts',
     'unique_id': '1234567890abcdef#opcache_statistics_manual_restarts',
@@ -2937,8 +3111,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_max_cached_keys-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2958,6 +3133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache max cached keys',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2965,6 +3141,7 @@
     'original_name': 'Opcache max cached keys',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_max_cached_keys',
     'unique_id': '1234567890abcdef#opcache_statistics_max_cached_keys',
@@ -2987,8 +3164,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_misses-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3008,6 +3186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache misses',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3015,6 +3194,7 @@
     'original_name': 'Opcache misses',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_misses',
     'unique_id': '1234567890abcdef#opcache_statistics_misses',
@@ -3037,8 +3217,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_out_of_memory_restarts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3058,6 +3239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache out of memory restarts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3065,6 +3247,7 @@
     'original_name': 'Opcache out of memory restarts',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_oom_restarts',
     'unique_id': '1234567890abcdef#opcache_statistics_oom_restarts',
@@ -3087,8 +3270,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3106,6 +3290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3113,6 +3298,7 @@
     'original_name': 'Opcache start time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_opcache_statistics_start_time',
     'unique_id': '1234567890abcdef#opcache_statistics_start_time',
@@ -3135,8 +3321,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_used_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3154,6 +3341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache used memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3167,6 +3355,7 @@
     'original_name': 'Opcache used memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_used_memory',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_used_memory',
@@ -3190,8 +3379,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_wasted_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3209,6 +3399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache wasted memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3222,6 +3413,7 @@
     'original_name': 'Opcache wasted memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_opcache_memory_usage_wasted_memory',
     'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_wasted_memory',
@@ -3245,8 +3437,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3264,13 +3457,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP max execution time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'PHP max execution time',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_max_execution_time',
     'unique_id': '1234567890abcdef#server_php_max_execution_time',
@@ -3294,8 +3492,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3313,6 +3512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3326,6 +3526,7 @@
     'original_name': 'PHP memory limit',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_memory_limit',
     'unique_id': '1234567890abcdef#server_php_memory_limit',
@@ -3349,8 +3550,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3368,6 +3570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP upload maximum filesize',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3381,6 +3584,7 @@
     'original_name': 'PHP upload maximum filesize',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_upload_max_filesize',
     'unique_id': '1234567890abcdef#server_php_upload_max_filesize',
@@ -3404,8 +3608,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3423,6 +3628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3430,6 +3636,7 @@
     'original_name': 'PHP version',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_php_version',
     'unique_id': '1234567890abcdef#server_php_version',
@@ -3451,8 +3658,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_available_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3470,6 +3678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA available memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3483,6 +3692,7 @@
     'original_name': 'SMA available memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_sma_avail_mem',
     'unique_id': '1234567890abcdef#sma_avail_mem',
@@ -3506,8 +3716,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_number_of_segments-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3527,6 +3738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA number of segments',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3534,6 +3746,7 @@
     'original_name': 'SMA number of segments',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_sma_num_seg',
     'unique_id': '1234567890abcdef#sma_num_seg',
@@ -3556,8 +3769,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_segment_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3575,6 +3789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA segment size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3588,6 +3803,7 @@
     'original_name': 'SMA segment size',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_sma_seg_size',
     'unique_id': '1234567890abcdef#sma_seg_size',
@@ -3611,8 +3827,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_distributed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3630,6 +3847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache distributed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3637,6 +3855,7 @@
     'original_name': 'System memcache distributed',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_memcache_distributed',
     'unique_id': '1234567890abcdef#system_memcache.distributed',
@@ -3658,8 +3877,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_local-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3677,6 +3897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache local',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3684,6 +3905,7 @@
     'original_name': 'System memcache local',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_memcache_local',
     'unique_id': '1234567890abcdef#system_memcache.local',
@@ -3705,8 +3927,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_locking-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3724,6 +3947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache locking',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3731,6 +3955,7 @@
     'original_name': 'System memcache locking',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_memcache_locking',
     'unique_id': '1234567890abcdef#system_memcache.locking',
@@ -3752,8 +3977,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_theme-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3771,6 +3997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System theme',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3778,6 +4005,7 @@
     'original_name': 'System theme',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_theme',
     'unique_id': '1234567890abcdef#system_theme',
@@ -3799,8 +4027,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3818,6 +4047,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3825,6 +4055,7 @@
     'original_name': 'System version',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_version',
     'unique_id': '1234567890abcdef#system_version',
@@ -3846,8 +4077,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3865,6 +4097,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3878,6 +4111,7 @@
     'original_name': 'Total memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_mem_total',
     'unique_id': '1234567890abcdef#system_mem_total',
@@ -3901,8 +4135,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3920,6 +4155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total swap memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3933,6 +4169,7 @@
     'original_name': 'Total swap memory',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_swap_total',
     'unique_id': '1234567890abcdef#system_swap_total',
@@ -3956,8 +4193,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_updates_available-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3977,6 +4215,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Updates available',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3984,6 +4223,7 @@
     'original_name': 'Updates available',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_apps_num_updates_available',
     'unique_id': '1234567890abcdef#system_apps_num_updates_available',
@@ -4006,8 +4246,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_webserver-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4025,6 +4266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Webserver',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4032,6 +4274,7 @@
     'original_name': 'Webserver',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_server_webserver',
     'unique_id': '1234567890abcdef#server_webserver',

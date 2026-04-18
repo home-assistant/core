@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from logging import getLogger
 import mimetypes
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
 from homeassistant.components import http
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
-    BrowseError,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -122,9 +122,11 @@ class SynologyPhotosMediaSource(MediaSource):
                 DOMAIN, identifier.unique_id
             )
         )
-        assert entry
+        if TYPE_CHECKING:
+            assert entry
         diskstation = entry.runtime_data
-        assert diskstation.api.photos is not None
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
 
         if identifier.album_id is None:
             # Get Albums
@@ -132,7 +134,8 @@ class SynologyPhotosMediaSource(MediaSource):
                 albums = await diskstation.api.photos.get_albums()
             except SynologyDSMException:
                 return []
-            assert albums is not None
+            if TYPE_CHECKING:
+                assert albums is not None
 
             ret = [
                 BrowseMediaSource(
@@ -141,6 +144,17 @@ class SynologyPhotosMediaSource(MediaSource):
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
                     title="All images",
+                    can_play=False,
+                    can_expand=True,
+                )
+            ]
+            ret += [
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"{item.identifier}/shared",
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_type=MediaClass.IMAGE,
+                    title="Shared space",
                     can_play=False,
                     can_expand=True,
                 )
@@ -162,14 +176,26 @@ class SynologyPhotosMediaSource(MediaSource):
 
         # Request items of album
         # Get Items
-        album = SynoPhotosAlbum(int(identifier.album_id), "", 0, identifier.passphrase)
-        try:
-            album_items = await diskstation.api.photos.get_items_from_album(
-                album, 0, 1000
+        if identifier.album_id == "shared":
+            # Get items from shared space
+            try:
+                album_items = await diskstation.api.photos.get_items_from_shared_space(
+                    0, 1000
+                )
+            except SynologyDSMException:
+                return []
+        else:
+            album = SynoPhotosAlbum(
+                int(identifier.album_id), "", 0, identifier.passphrase
             )
-        except SynologyDSMException:
-            return []
-        assert album_items is not None
+            try:
+                album_items = await diskstation.api.photos.get_items_from_album(
+                    album, 0, 1000
+                )
+            except SynologyDSMException:
+                return []
+        if TYPE_CHECKING:
+            assert album_items is not None
 
         ret = []
         for album_item in album_items:
@@ -228,7 +254,8 @@ class SynologyPhotosMediaSource(MediaSource):
         self, item: SynoPhotosItem, diskstation: SynologyDSMData
     ) -> str | None:
         """Get thumbnail."""
-        assert diskstation.api.photos is not None
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
 
         try:
             thumbnail = await diskstation.api.photos.get_item_thumbnail_url(item)
@@ -269,9 +296,11 @@ class SynologyDsmMediaView(http.HomeAssistantView):
                 DOMAIN, source_dir_id
             )
         )
-        assert entry
+        if TYPE_CHECKING:
+            assert entry
         diskstation = entry.runtime_data
-        assert diskstation.api.photos is not None
+        if TYPE_CHECKING:
+            assert diskstation.api.photos is not None
         item = SynoPhotosItem(image_id, "", "", "", cache_key, "xl", shared, passphrase)
         try:
             if passphrase:

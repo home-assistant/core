@@ -73,6 +73,13 @@ STEP_MODBUS_DATA_SCHEMA = vol.Schema(
 )
 
 
+STEP_MODBUS_PLACEHOLDERS = {
+    "tcp": "tcp://[HOST]:[PORT]",
+    "serial": "serial://[LOCAL DEVICE]",
+    "rfc2217": "rfc2217://[HOST]:[PORT]",
+}
+
+
 class FieldError(Exception):
     """Field with invalid data."""
 
@@ -89,7 +96,6 @@ async def validate_nibegw_input(
     """Validate the user input allows us to connect."""
 
     heatpump = HeatPump(Model[data[CONF_MODEL]])
-    heatpump.word_swap = True
     await heatpump.initialize()
 
     connection = NibeGW(
@@ -106,6 +112,9 @@ async def validate_nibegw_input(
         raise FieldError(
             "Address already in use", "listening_port", "address_in_use"
         ) from exception
+
+    if heatpump.word_swap is None:
+        heatpump.word_swap = True
 
     try:
         await connection.verify_connectivity()
@@ -183,7 +192,9 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the modbus step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="modbus", data_schema=STEP_MODBUS_DATA_SCHEMA
+                step_id="modbus",
+                data_schema=STEP_MODBUS_DATA_SCHEMA,
+                description_placeholders=STEP_MODBUS_PLACEHOLDERS,
             )
 
         errors = {}
@@ -200,7 +211,10 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
-            step_id="modbus", data_schema=STEP_MODBUS_DATA_SCHEMA, errors=errors
+            step_id="modbus",
+            data_schema=STEP_MODBUS_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=STEP_MODBUS_PLACEHOLDERS,
         )
 
     async def async_step_nibegw(

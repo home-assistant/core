@@ -21,7 +21,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -31,15 +30,15 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })
 # ---
 # name: test_states[sensor.my_device_alarm_source-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -57,6 +56,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm source',
     'options': dict({
     }),
     'original_device_class': None,
@@ -64,6 +64,7 @@
     'original_name': 'Alarm source',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_source',
     'unique_id': '123456789ABCDEFGH_alarm_source',
@@ -72,8 +73,9 @@
 # ---
 # name: test_states[sensor.my_device_auto_off_at-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -91,13 +93,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-off at',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Auto off at',
+    'original_name': 'Auto-off at',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_off_at',
     'unique_id': '123456789ABCDEFGH_auto_off_at',
@@ -108,7 +112,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'my_device Auto off at',
+      'friendly_name': 'my_device Auto-off at',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_device_auto_off_at',
@@ -120,8 +124,9 @@
 # ---
 # name: test_states[sensor.my_device_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -148,6 +154,7 @@
     'original_name': 'Battery',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_level',
     'unique_id': '123456789ABCDEFGH_battery_level',
@@ -172,8 +179,9 @@
 # ---
 # name: test_states[sensor.my_device_charging_contacts_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -191,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging contacts remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -201,6 +210,7 @@
     'original_name': 'Charging contacts remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_contacts_remaining',
     'unique_id': '123456789ABCDEFGH_charging_contacts_remaining',
@@ -209,8 +219,9 @@
 # ---
 # name: test_states[sensor.my_device_charging_contacts_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -228,6 +239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging contacts used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -238,6 +250,7 @@
     'original_name': 'Charging contacts used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_contacts_used',
     'unique_id': '123456789ABCDEFGH_charging_contacts_used',
@@ -246,8 +259,9 @@
 # ---
 # name: test_states[sensor.my_device_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -267,7 +281,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
       }),
@@ -277,6 +295,7 @@
     'original_name': 'Cleaning area',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_area',
     'unique_id': '123456789ABCDEFGH_clean_area',
@@ -296,13 +315,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.2',
+    'state': '0.18580608',
   })
 # ---
 # name: test_states[sensor.my_device_cleaning_progress-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -322,6 +342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -329,6 +350,7 @@
     'original_name': 'Cleaning progress',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_progress',
     'unique_id': '123456789ABCDEFGH_clean_progress',
@@ -337,8 +359,9 @@
 # ---
 # name: test_states[sensor.my_device_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,7 +379,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -366,6 +393,7 @@
     'original_name': 'Cleaning time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_time',
     'unique_id': '123456789ABCDEFGH_clean_time',
@@ -384,13 +412,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.00',
+    'state': '12.0',
   })
 # ---
 # name: test_states[sensor.my_device_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -410,6 +439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -420,6 +450,7 @@
     'original_name': 'Current',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
     'unique_id': '123456789ABCDEFGH_current_a',
@@ -444,8 +475,9 @@
 # ---
 # name: test_states[sensor.my_device_current_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -465,6 +497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -475,6 +508,7 @@
     'original_name': 'Current consumption',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current_consumption',
     'unique_id': '123456789ABCDEFGH_current_power_w',
@@ -499,8 +533,9 @@
 # ---
 # name: test_states[sensor.my_device_device_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -518,6 +553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -525,6 +561,7 @@
     'original_name': 'Device time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_time',
     'unique_id': '123456789ABCDEFGH_device_time',
@@ -533,8 +570,9 @@
 # ---
 # name: test_states[sensor.my_device_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -567,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -574,6 +613,7 @@
     'original_name': 'Error',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vacuum_error',
     'unique_id': '123456789ABCDEFGH_vacuum_error',
@@ -610,8 +650,9 @@
 # ---
 # name: test_states[sensor.my_device_filter_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -629,6 +670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -639,6 +681,7 @@
     'original_name': 'Filter remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_remaining',
     'unique_id': '123456789ABCDEFGH_filter_remaining',
@@ -647,8 +690,9 @@
 # ---
 # name: test_states[sensor.my_device_filter_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -666,6 +710,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -676,6 +721,7 @@
     'original_name': 'Filter used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_used',
     'unique_id': '123456789ABCDEFGH_filter_used',
@@ -684,8 +730,9 @@
 # ---
 # name: test_states[sensor.my_device_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -705,6 +752,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -712,6 +760,7 @@
     'original_name': 'Humidity',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '123456789ABCDEFGH_humidity',
@@ -736,8 +785,9 @@
 # ---
 # name: test_states[sensor.my_device_last_clean_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -755,6 +805,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -762,6 +813,7 @@
     'original_name': 'Last clean start',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_clean_timestamp',
     'unique_id': '123456789ABCDEFGH_last_clean_timestamp',
@@ -770,8 +822,9 @@
 # ---
 # name: test_states[sensor.my_device_last_cleaned_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -789,6 +842,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last cleaned area',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -799,6 +853,7 @@
     'original_name': 'Last cleaned area',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_clean_area',
     'unique_id': '123456789ABCDEFGH_last_clean_area',
@@ -807,8 +862,9 @@
 # ---
 # name: test_states[sensor.my_device_last_cleaned_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -828,6 +884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last cleaned time',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -838,6 +895,7 @@
     'original_name': 'Last cleaned time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_clean_time',
     'unique_id': '123456789ABCDEFGH_last_clean_time',
@@ -846,8 +904,9 @@
 # ---
 # name: test_states[sensor.my_device_last_water_leak_alert-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -865,6 +924,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last water leak alert',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -872,6 +932,7 @@
     'original_name': 'Last water leak alert',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_alert_timestamp',
     'unique_id': '123456789ABCDEFGH_water_alert_timestamp',
@@ -894,8 +955,9 @@
 # ---
 # name: test_states[sensor.my_device_main_brush_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -913,6 +975,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -923,6 +986,7 @@
     'original_name': 'Main brush remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_brush_remaining',
     'unique_id': '123456789ABCDEFGH_main_brush_remaining',
@@ -931,8 +995,9 @@
 # ---
 # name: test_states[sensor.my_device_main_brush_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -950,6 +1015,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -960,6 +1026,7 @@
     'original_name': 'Main brush used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_brush_used',
     'unique_id': '123456789ABCDEFGH_main_brush_used',
@@ -968,8 +1035,9 @@
 # ---
 # name: test_states[sensor.my_device_on_since-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -987,6 +1055,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On since',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -994,6 +1063,7 @@
     'original_name': 'On since',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_since',
     'unique_id': '123456789ABCDEFGH_on_since',
@@ -1002,8 +1072,9 @@
 # ---
 # name: test_states[sensor.my_device_report_interval-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1021,6 +1092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Report interval',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
@@ -1028,6 +1100,7 @@
     'original_name': 'Report interval',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'report_interval',
     'unique_id': '123456789ABCDEFGH_report_interval',
@@ -1036,8 +1109,9 @@
 # ---
 # name: test_states[sensor.my_device_sensor_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1055,6 +1129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1065,6 +1140,7 @@
     'original_name': 'Sensor remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensor_remaining',
     'unique_id': '123456789ABCDEFGH_sensor_remaining',
@@ -1073,8 +1149,9 @@
 # ---
 # name: test_states[sensor.my_device_sensor_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1092,6 +1169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1102,6 +1180,7 @@
     'original_name': 'Sensor used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensor_used',
     'unique_id': '123456789ABCDEFGH_sensor_used',
@@ -1110,8 +1189,9 @@
 # ---
 # name: test_states[sensor.my_device_side_brush_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1129,6 +1209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush remaining',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1139,6 +1220,7 @@
     'original_name': 'Side brush remaining',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'side_brush_remaining',
     'unique_id': '123456789ABCDEFGH_side_brush_remaining',
@@ -1147,8 +1229,9 @@
 # ---
 # name: test_states[sensor.my_device_side_brush_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1166,6 +1249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush used',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
@@ -1176,6 +1260,7 @@
     'original_name': 'Side brush used',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'side_brush_used',
     'unique_id': '123456789ABCDEFGH_side_brush_used',
@@ -1184,8 +1269,9 @@
 # ---
 # name: test_states[sensor.my_device_signal_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1205,6 +1291,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1212,6 +1299,7 @@
     'original_name': 'Signal level',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'signal_level',
     'unique_id': '123456789ABCDEFGH_signal_level',
@@ -1234,8 +1322,9 @@
 # ---
 # name: test_states[sensor.my_device_signal_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1255,6 +1344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1262,6 +1352,7 @@
     'original_name': 'Signal strength',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rssi',
     'unique_id': '123456789ABCDEFGH_rssi',
@@ -1270,8 +1361,9 @@
 # ---
 # name: test_states[sensor.my_device_ssid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1289,6 +1381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SSID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1296,6 +1389,7 @@
     'original_name': 'SSID',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ssid',
     'unique_id': '123456789ABCDEFGH_ssid',
@@ -1304,8 +1398,9 @@
 # ---
 # name: test_states[sensor.my_device_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1325,6 +1420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
@@ -1332,6 +1428,7 @@
     'original_name': 'Temperature',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '123456789ABCDEFGH_temperature',
@@ -1340,8 +1437,9 @@
 # ---
 # name: test_states[sensor.my_device_this_month_s_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1361,6 +1459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "This month's consumption",
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1371,6 +1470,7 @@
     'original_name': "This month's consumption",
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_this_month',
     'unique_id': '123456789ABCDEFGH_consumption_this_month',
@@ -1395,8 +1495,9 @@
 # ---
 # name: test_states[sensor.my_device_today_s_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1416,6 +1517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "Today's consumption",
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1426,6 +1528,7 @@
     'original_name': "Today's consumption",
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_today',
     'unique_id': '123456789ABCDEFGH_today_energy_kwh',
@@ -1450,8 +1553,9 @@
 # ---
 # name: test_states[sensor.my_device_total_cleaning_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1471,6 +1575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -1481,6 +1586,7 @@
     'original_name': 'Total cleaning area',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_clean_area',
     'unique_id': '123456789ABCDEFGH_total_clean_area',
@@ -1489,8 +1595,9 @@
 # ---
 # name: test_states[sensor.my_device_total_cleaning_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1510,6 +1617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1517,6 +1625,7 @@
     'original_name': 'Total cleaning count',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_clean_count',
     'unique_id': '123456789ABCDEFGH_total_clean_count',
@@ -1525,8 +1634,9 @@
 # ---
 # name: test_states[sensor.my_device_total_cleaning_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1546,6 +1656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
@@ -1556,6 +1667,7 @@
     'original_name': 'Total cleaning time',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_clean_time',
     'unique_id': '123456789ABCDEFGH_total_clean_time',
@@ -1564,8 +1676,9 @@
 # ---
 # name: test_states[sensor.my_device_total_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1585,6 +1698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1595,6 +1709,7 @@
     'original_name': 'Total consumption',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'consumption_total',
     'unique_id': '123456789ABCDEFGH_total_energy_kwh',
@@ -1619,8 +1734,9 @@
 # ---
 # name: test_states[sensor.my_device_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1640,6 +1756,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1650,6 +1767,7 @@
     'original_name': 'Voltage',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': '123456789ABCDEFGH_voltage',

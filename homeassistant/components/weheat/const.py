@@ -13,7 +13,7 @@ OAUTH2_AUTHORIZE = (
 OAUTH2_TOKEN = (
     "https://auth.weheat.nl/auth/realms/Weheat/protocol/openid-connect/token/"
 )
-API_URL = "https://api.weheat.nl"
+API_URL = "https://api.weheat.nl/third_party"
 OAUTH2_SCOPES = ["openid", "offline_access"]
 
 
@@ -25,3 +25,4 @@ LOGGER: Logger = getLogger(__package__)
 DISPLAY_PRECISION_WATTS = 0
 DISPLAY_PRECISION_COP = 1
 DISPLAY_PRECISION_WATER_TEMP = 1
+DISPLAY_PRECISION_FLOW = 1

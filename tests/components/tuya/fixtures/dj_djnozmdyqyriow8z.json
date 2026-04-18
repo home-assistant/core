@@ -1,0 +1,482 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Fakkel 8",
+  "category": "dj",
+  "product_id": "djnozmdyqyriow8z",
+  "product_name": "Candle RGB-CCT",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2021-06-30T12:13:49+00:00",
+  "create_time": "2021-06-30T12:13:49+00:00",
+  "update_time": "2021-06-30T12:13:49+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    },
+    "scene_data_v2": {
+      "type": "Json",
+      "value": {
+        "scene_num": {
+          "min": 1,
+          "scale": 0,
+          "max": 8,
+          "step": 1
+        },
+        "scene_units": {
+          "unit_change_mode": {
+            "range": ["static", "jump", "gradient"]
+          },
+          "unit_switch_duration": {
+            "min": 0,
+            "scale": 0,
+            "max": 100,
+            "step": 1
+          },
+          "unit_gradient_duration": {
+            "min": 0,
+            "scale": 0,
+            "max": 100,
+            "step": 1
+          },
+          "bright": {
+            "min": 0,
+            "scale": 0,
+            "max": 1000,
+            "step": 1
+          },
+          "temperature": {
+            "min": 0,
+            "scale": 0,
+            "max": 1000,
+            "step": 1
+          },
+          "h": {
+            "min": 0,
+            "scale": 0,
+            "unit": "",
+            "max": 360,
+            "step": 1
+          },
+          "s": {
+            "min": 0,
+            "scale": 0,
+            "unit": "",
+            "max": 1000,
+            "step": 1
+          },
+          "v": {
+            "min": 0,
+            "scale": 0,
+            "unit": "",
+            "max": 1000,
+            "step": 1
+          }
+        }
+      }
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_data": {
+      "type": "Json",
+      "value": {
+        "change_mode": {
+          "range": ["direct", "gradient"]
+        },
+        "bright": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "temperature": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "rhythm_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "sleep_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "wakeup_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "remote_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    },
+    "scene_data_v2": {
+      "type": "Json",
+      "value": {
+        "scene_num": {
+          "min": 1,
+          "scale": 0,
+          "max": 8,
+          "step": 1
+        },
+        "scene_units": {
+          "unit_change_mode": {
+            "range": ["static", "jump", "gradient"]
+          },
+          "unit_switch_duration": {
+            "min": 0,
+            "scale": 0,
+            "max": 100,
+            "step": 1
+          },
+          "unit_gradient_duration": {
+            "min": 0,
+            "scale": 0,
+            "max": 100,
+            "step": 1
+          },
+          "bright": {
+            "min": 0,
+            "scale": 0,
+            "max": 1000,
+            "step": 1
+          },
+          "temperature": {
+            "min": 0,
+            "scale": 0,
+            "max": 1000,
+            "step": 1
+          },
+          "h": {
+            "min": 0,
+            "scale": 0,
+            "unit": "",
+            "max": 360,
+            "step": 1
+          },
+          "s": {
+            "min": 0,
+            "scale": 0,
+            "unit": "",
+            "max": 1000,
+            "step": 1
+          },
+          "v": {
+            "min": 0,
+            "scale": 0,
+            "unit": "",
+            "max": 1000,
+            "step": 1
+          }
+        }
+      }
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_data": {
+      "type": "Json",
+      "value": {
+        "change_mode": {
+          "range": ["direct", "gradient"]
+        },
+        "bright": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "temperature": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "rhythm_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "sleep_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "wakeup_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "remote_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_led": true,
+    "work_mode": "white",
+    "bright_value_v2": 280,
+    "temp_value_v2": 0,
+    "colour_data_v2": {
+      "h": 56,
+      "s": 1000,
+      "v": 1000
+    },
+    "scene_data_v2": {
+      "scene_num": 8,
+      "scene_units": [
+        {
+          "bright": 0,
+          "h": 0,
+          "s": 1000,
+          "temperature": 0,
+          "unit_change_mode": "gradient",
+          "unit_gradient_duration": 70,
+          "unit_switch_duration": 70,
+          "v": 1000
+        },
+        {
+          "bright": 0,
+          "h": 120,
+          "s": 1000,
+          "temperature": 0,
+          "unit_change_mode": "gradient",
+          "unit_gradient_duration": 70,
+          "unit_switch_duration": 70,
+          "v": 1000
+        },
+        {
+          "bright": 0,
+          "h": 240,
+          "s": 1000,
+          "temperature": 0,
+          "unit_change_mode": "gradient",
+          "unit_gradient_duration": 70,
+          "unit_switch_duration": 70,
+          "v": 1000
+        },
+        {
+          "bright": 0,
+          "h": 61,
+          "s": 1000,
+          "temperature": 0,
+          "unit_change_mode": "gradient",
+          "unit_gradient_duration": 70,
+          "unit_switch_duration": 70,
+          "v": 1000
+        },
+        {
+          "bright": 0,
+          "h": 174,
+          "s": 1000,
+          "temperature": 0,
+          "unit_change_mode": "gradient",
+          "unit_gradient_duration": 70,
+          "unit_switch_duration": 70,
+          "v": 1000
+        },
+        {
+          "bright": 0,
+          "h": 275,
+          "s": 1000,
+          "temperature": 0,
+          "unit_change_mode": "gradient",
+          "unit_gradient_duration": 70,
+          "unit_switch_duration": 70,
+          "v": 1000
+        }
+      ]
+    },
+    "countdown_1": 0,
+    "control_data": "",
+    "rhythm_mode": "AAAAAAA=",
+    "sleep_mode": "AAA=",
+    "wakeup_mode": "AAA=",
+    "remote_switch": true
+  },
+  "set_up": true,
+  "support_local": true
+}

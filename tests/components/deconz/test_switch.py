@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
+from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -110,7 +110,7 @@ async def test_remove_legacy_on_off_output_as_light(
 ) -> None:
     """Test that switch platform cleans up legacy light entities."""
     assert entity_registry.async_get_or_create(
-        LIGHT_DOMAIN, DECONZ_DOMAIN, "00:00:00:00:00:00:00:00-00"
+        LIGHT_DOMAIN, DOMAIN, "00:00:00:00:00:00:00:00-00"
     )
 
     await config_entry_factory()

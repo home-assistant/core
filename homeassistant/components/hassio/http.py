@@ -70,7 +70,7 @@ PATHS_ADMIN = re.compile(
     r"|backups/new/upload"
     r"|audio/logs(/follow|/boots/-?\d+(/follow)?)?"
     r"|cli/logs(/follow|/boots/-?\d+(/follow)?)?"
-    r"|core/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|core/logs(/latest|/follow|/boots/-?\d+(/follow)?)?"
     r"|dns/logs(/follow|/boots/-?\d+(/follow)?)?"
     r"|host/logs(/follow|/boots(/-?\d+(/follow)?)?)?"
     r"|multicast/logs(/follow|/boots/-?\d+(/follow)?)?"
@@ -265,6 +265,8 @@ def _get_timeout(path: str) -> ClientTimeout:
 def should_compress(content_type: str, path: str | None = None) -> bool:
     """Return if we should compress a response."""
     if path is not None and NO_COMPRESS.match(path):
+        return False
+    if content_type.startswith("text/event-stream"):
         return False
     if content_type.startswith("image/"):
         return "svg" in content_type

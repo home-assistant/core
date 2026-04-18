@@ -6,7 +6,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from renault_api.kamereon import exceptions, schemas
+from renault_api.kamereon import exceptions, models, schemas
 from renault_api.renault_account import RenaultAccount
 
 from homeassistant.components.renault.const import DOMAIN
@@ -69,13 +69,41 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
 @pytest.fixture(name="patch_get_vehicles")
 def patch_get_vehicles(vehicle_type: str) -> Generator[None]:
     """Mock fixtures."""
+    fixture_code = vehicle_type if vehicle_type in MOCK_VEHICLES else "zoe_40"
+    return_value: models.KamereonVehiclesResponse = (
+        schemas.KamereonVehiclesResponseSchema.loads(
+            load_fixture(f"renault/vehicle_{fixture_code}.json")
+        )
+    )
+
+    if vehicle_type == "missing_details":
+        return_value.vehicleLinks[0].vehicleDetails = None
+    elif vehicle_type == "multi":
+        return_value.vehicleLinks.extend(
+            schemas.KamereonVehiclesResponseSchema.loads(
+                load_fixture("renault/vehicle_captur_fuel.json")
+            ).vehicleLinks
+        )
+
+    # Mock supports_endpoint to return True for soc-levels (battery SoC),
+    # but only when vehicleDetails is available.
+    vehicle_details = return_value.vehicleLinks[0].vehicleDetails
+    if vehicle_details is not None:
+        original_supports_endpoint = vehicle_details.supports_endpoint
+
+        def mock_supports_endpoint(endpoint: str) -> bool:
+            if endpoint == "soc-levels":
+                vehicle_fixtures = MOCK_VEHICLES.get(fixture_code)
+                return bool(
+                    vehicle_fixtures and "battery_soc" in vehicle_fixtures["endpoints"]
+                )
+            return original_supports_endpoint(endpoint)
+
+        vehicle_details.supports_endpoint = mock_supports_endpoint
+
     with patch(
         "renault_api.renault_account.RenaultAccount.get_vehicles",
-        return_value=(
-            schemas.KamereonVehiclesResponseSchema.loads(
-                load_fixture(f"renault/vehicle_{vehicle_type}.json")
-            )
-        ),
+        return_value=return_value,
     ):
         yield
 
@@ -89,11 +117,21 @@ def _get_fixtures(vehicle_type: str) -> MappingProxyType:
             if "battery_status" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleBatteryStatusDataSchema),
+        "battery_soc": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['battery_soc']}")
+            if "battery_soc" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleBatterySocDataSchema),
         "charge_mode": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['charge_mode']}")
             if "charge_mode" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleChargeModeDataSchema),
+        "charging_settings": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['charging_settings']}")
+            if "charging_settings" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleChargingSettingsDataSchema),
         "cockpit": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['cockpit']}")
             if "cockpit" in mock_vehicle["endpoints"]
@@ -119,6 +157,11 @@ def _get_fixtures(vehicle_type: str) -> MappingProxyType:
             if "res_state" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleResStateDataSchema),
+        "pressure": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['pressure']}")
+            if "pressure" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleTyrePressureDataSchema),
     }
 
 
@@ -130,8 +173,14 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
             "renault_api.renault_vehicle.RenaultVehicle.get_battery_status"
         ) as get_battery_status,
         patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_battery_soc"
+        ) as get_battery_soc,
+        patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_charge_mode"
         ) as get_charge_mode,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_charging_settings"
+        ) as get_charging_settings,
         patch("renault_api.renault_vehicle.RenaultVehicle.get_cockpit") as get_cockpit,
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_hvac_status"
@@ -145,15 +194,21 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_res_state"
         ) as get_res_state,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_tyre_pressure"
+        ) as get_tyre_pressure,
     ):
         yield {
             "battery_status": get_battery_status,
+            "battery_soc": get_battery_soc,
             "charge_mode": get_charge_mode,
+            "charging_settings": get_charging_settings,
             "cockpit": get_cockpit,
             "hvac_status": get_hvac_status,
             "location": get_location,
             "lock_status": get_lock_status,
             "res_state": get_res_state,
+            "pressure": get_tyre_pressure,
         }
 
 

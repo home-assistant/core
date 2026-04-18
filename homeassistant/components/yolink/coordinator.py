@@ -5,16 +5,19 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime, timedelta
 import logging
+from typing import Any
 
+from yolink.client_request import ClientRequest
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
+from yolink.model import BRDP
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_DEVICE_STATE, DOMAIN, YOLINK_OFFLINE_TIME
+from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +50,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.device = device
         self.paired_device = paired_device
         self.dev_online = True
+        self.dev_net_type = None
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
@@ -76,7 +80,28 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
+            _LOGGER.error(
+                "Failed to obtain device status, device: %s, error: %s ",
+                self.device.device_id,
+                yl_client_err,
+            )
             raise UpdateFailed from yl_client_err
         if device_state is not None:
+            dev_lora_info = device_state.get(ATTR_LORA_INFO)
+            if dev_lora_info is not None:
+                self.dev_net_type = dev_lora_info.get("devNetType")
             return device_state
         return {}
+
+    async def call_device(self, request: ClientRequest) -> dict[str, Any]:
+        """Call device api."""
+        try:
+            # call_device will check result, fail by raise YoLinkClientError
+            resp: BRDP = await self.device.call_device(request)
+        except YoLinkAuthFailError as yl_auth_err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(yl_auth_err) from yl_auth_err
+        except YoLinkClientError as yl_client_err:
+            raise HomeAssistantError(yl_client_err) from yl_client_err
+        else:
+            return resp.data

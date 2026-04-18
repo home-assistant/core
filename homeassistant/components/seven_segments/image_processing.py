@@ -70,19 +70,24 @@ class ImageProcessingSsocr(ImageProcessingEntity):
 
     _attr_device_class = ImageProcessingDeviceClass.OCR
 
-    def __init__(self, hass, camera_entity, config, name):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        camera_entity: str,
+        config: ConfigType,
+        name: str | None,
+    ) -> None:
         """Initialize seven segments processing."""
-        self.hass = hass
-        self._camera_entity = camera_entity
+        self._attr_camera_entity = camera_entity
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"SevenSegment OCR {split_entity_id(camera_entity)[1]}"
-        self._state = None
+            self._attr_name = f"SevenSegment OCR {split_entity_id(camera_entity)[1]}"
+        self._attr_state = None
 
         self.filepath = os.path.join(
-            self.hass.config.config_dir,
-            f"ssocr-{self._name.replace(' ', '_')}.png",
+            hass.config.config_dir,
+            f"ssocr-{self._attr_name.replace(' ', '_')}.png",
         )
         crop = [
             "crop",
@@ -106,22 +111,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         ]
         self._command.append(self.filepath)
 
-    @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera_entity
-
-    @property
-    def name(self):
-        """Return the name of the image processor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._state
-
-    def process_image(self, image):
+    def process_image(self, image: bytes) -> None:
         """Process the image."""
         stream = io.BytesIO(image)
         img = Image.open(stream)
@@ -135,9 +125,9 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         ) as ocr:
             out = ocr.communicate()
             if out[0] != b"":
-                self._state = out[0].strip().decode("utf-8")
+                self._attr_state = out[0].strip().decode("utf-8")
             else:
-                self._state = None
+                self._attr_state = None
                 _LOGGER.warning(
                     "Unable to detect value: %s", out[1].strip().decode("utf-8")
                 )

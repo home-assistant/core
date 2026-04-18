@@ -53,6 +53,7 @@ class SensorManager:
             LOGGER,
             name="sensor",
             update_method=self.async_update_data,
+            config_entry=bridge.config_entry,
             update_interval=self.SCAN_INTERVAL,
             request_refresh_debouncer=debounce.Debouncer(
                 bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
@@ -180,7 +181,7 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):  # pylint: disable=hass
         )
 
     @property
-    def state_class(self):
+    def state_class(self) -> SensorStateClass:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
         return SensorStateClass.MEASUREMENT
 
@@ -205,6 +206,6 @@ class GenericZLLSensor(GenericHueSensor):
     """Representation of a Hue-brand, physical sensor."""
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {"battery_level": self.sensor.battery}

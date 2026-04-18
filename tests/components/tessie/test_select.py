@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
 from tesla_fleet_api.exceptions import UnsupportedVehicle
 
@@ -125,6 +125,8 @@ async def test_errors(hass: HomeAssistant) -> None:
         )
     mock_set.assert_called_once()
     assert error.value.__cause__ == ERROR_UNKNOWN
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "cannot_connect"
 
     # Test changing energy select with unknown error
     with (

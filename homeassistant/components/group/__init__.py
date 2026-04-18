@@ -28,7 +28,6 @@ from homeassistant.helpers.group import (
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 #
 # Below we ensure the config_flow is imported so it does not need the import
@@ -72,6 +71,7 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +102,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if the group state is in its ON-state."""
     if REG_KEY not in hass.data:
@@ -116,11 +115,10 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 # expand_entity_ids and get_entity_ids are for backwards compatibility only
-expand_entity_ids = bind_hass(_expand_entity_ids)
-get_entity_ids = bind_hass(_get_entity_ids)
+expand_entity_ids = _expand_entity_ids
+get_entity_ids = _get_entity_ids
 
 
-@bind_hass
 def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Get all groups that contain this entity.
 
@@ -141,13 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["group_type"],)
     )
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -190,8 +182,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         - Remove group.group entities not created by service calls and set them up again
         - Reload xxx.group platforms
         """
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
 
         # Simplified + modified version of EntityPlatform.async_reset:
         # - group.group never retries setup

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxiliary_water_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit auxiliary water pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -27,6 +29,7 @@
     'original_name': 'Indoor unit auxiliary water pump',
     'platform': 'weheat',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indoor_unit_auxiliary_pump_state',
     'unique_id': '0000-1111-2222-3333_indoor_unit_auxiliary_pump_state',
@@ -49,8 +52,9 @@
 # ---
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_electric_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit electric heater',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -75,6 +80,7 @@
     'original_name': 'Indoor unit electric heater',
     'platform': 'weheat',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indoor_unit_electric_heater_state',
     'unique_id': '0000-1111-2222-3333_indoor_unit_electric_heater_state',
@@ -97,8 +103,9 @@
 # ---
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_gas_boiler_heating_allowed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit gas boiler heating allowed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +131,7 @@
     'original_name': 'Indoor unit gas boiler heating allowed',
     'platform': 'weheat',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indoor_unit_gas_boiler_state',
     'unique_id': '0000-1111-2222-3333_indoor_unit_gas_boiler_state',
@@ -144,8 +153,9 @@
 # ---
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_water_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -163,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor unit water pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -170,6 +181,7 @@
     'original_name': 'Indoor unit water pump',
     'platform': 'weheat',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indoor_unit_water_pump_state',
     'unique_id': '0000-1111-2222-3333_indoor_unit_water_pump_state',

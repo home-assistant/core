@@ -31,8 +31,8 @@ from .const import (
     ADVANTAGE_AIR_STATE_ON,
     ADVANTAGE_AIR_STATE_OPEN,
 )
+from .coordinator import AdvantageAirCoordinator
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
-from .models import AdvantageAirData
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVACMode.HEAT,
@@ -90,16 +90,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up AdvantageAir climate platform."""
 
-    instance = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     entities: list[ClimateEntity] = []
-    if aircons := instance.coordinator.data.get("aircons"):
+    if aircons := coordinator.data.get("aircons"):
         for ac_key, ac_device in aircons.items():
-            entities.append(AdvantageAirAC(instance, ac_key))
+            entities.append(AdvantageAirAC(coordinator, ac_key))
             for zone_key, zone in ac_device["zones"].items():
                 # Only add zone climate control when zone is in temperature control
                 if zone["type"] > 0:
-                    entities.append(AdvantageAirZone(instance, ac_key, zone_key))
+                    entities.append(AdvantageAirZone(coordinator, ac_key, zone_key))
     async_add_entities(entities)
 
 
@@ -114,9 +114,9 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_name = None
     _support_preset = ClimateEntityFeature(0)
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
+    def __init__(self, coordinator: AdvantageAirCoordinator, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
-        super().__init__(instance, ac_key)
+        super().__init__(coordinator, ac_key)
 
         self._attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
 
@@ -282,9 +282,11 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     _attr_max_temp = 32
     _attr_min_temp = 16
 
-    def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
+    def __init__(
+        self, coordinator: AdvantageAirCoordinator, ac_key: str, zone_key: str
+    ) -> None:
         """Initialize an AdvantageAir Zone control."""
-        super().__init__(instance, ac_key, zone_key)
+        super().__init__(coordinator, ac_key, zone_key)
         self._attr_name = self._zone["name"]
 
     @property

@@ -9,19 +9,17 @@ from iaqualink.device import AqualinkThermostat
 from iaqualink.systems.iaqua.device import AqualinkState
 
 from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import refresh_system
-from .const import DOMAIN as AQUALINK_DOMAIN
+from . import AqualinkConfigEntry, refresh_system
+from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
@@ -32,20 +30,19 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AqualinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (
-            HassAqualinkThermostat(dev)
-            for dev in hass.data[AQUALINK_DOMAIN][CLIMATE_DOMAIN]
-        ),
-        True,
+        HassAqualinkThermostat(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.thermostats
     )
 
 
-class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
+class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
     """Representation of a thermostat."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
@@ -55,10 +52,11 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, dev: AqualinkThermostat) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkThermostat
+    ) -> None:
         """Initialize AquaLink thermostat."""
-        super().__init__(dev)
-        self._attr_name = dev.label.split(" ")[0]
+        super().__init__(coordinator, dev)
         self._attr_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT
             if dev.unit == "F"

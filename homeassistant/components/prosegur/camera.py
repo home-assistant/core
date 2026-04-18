@@ -9,7 +9,6 @@ from pyprosegur.exceptions import ProsegurException
 from pyprosegur.installation import Camera as InstallationCamera, Installation
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -17,15 +16,15 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from . import DOMAIN
-from .const import SERVICE_REQUEST_IMAGE
+from . import ProsegurConfigEntry
+from .const import DOMAIN, SERVICE_REQUEST_IMAGE
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ProsegurConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Prosegur camera platform."""
@@ -38,12 +37,12 @@ async def async_setup_entry(
     )
 
     _installation = await Installation.retrieve(
-        hass.data[DOMAIN][entry.entry_id], entry.data["contract"]
+        entry.runtime_data, entry.data["contract"]
     )
 
     async_add_entities(
         [
-            ProsegurCamera(_installation, camera, hass.data[DOMAIN][entry.entry_id])
+            ProsegurCamera(_installation, camera, entry.runtime_data)
             for camera in _installation.cameras
         ],
         update_before_add=True,

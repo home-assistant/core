@@ -10,20 +10,15 @@ import random
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
-from hass_nabucasa import Cloud, CloudError
-from hass_nabucasa.api import CloudApiError, CloudApiNonRetryableError
-from hass_nabucasa.cloud_api import (
-    FilesHandlerListEntry,
-    async_files_delete_file,
-    async_files_list,
-)
-from hass_nabucasa.files import FilesError, StorageType, calculate_b64md5
+from hass_nabucasa import Cloud, CloudApiError, CloudApiNonRetryableError, CloudError
+from hass_nabucasa.files import FilesError, StorageType, StoredFile, calculate_b64md5
 
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
@@ -112,6 +107,7 @@ class CloudBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -142,6 +138,7 @@ class CloudBackupAgent(BackupAgent):
                     base64md5hash=base64md5hash,
                     metadata=metadata,
                     size=size,
+                    on_progress=on_progress,
                 )
                 break
             except CloudApiNonRetryableError as err:
@@ -186,8 +183,7 @@ class CloudBackupAgent(BackupAgent):
         """
         backup = await self._async_get_backup(backup_id)
         try:
-            await async_files_delete_file(
-                self._cloud,
+            await self._cloud.files.delete(
                 storage_type=StorageType.BACKUP,
                 filename=backup["Key"],
             )
@@ -199,12 +195,10 @@ class CloudBackupAgent(BackupAgent):
         backups = await self._async_list_backups()
         return [AgentBackup.from_dict(backup["Metadata"]) for backup in backups]
 
-    async def _async_list_backups(self) -> list[FilesHandlerListEntry]:
+    async def _async_list_backups(self) -> list[StoredFile]:
         """List backups."""
         try:
-            backups = await async_files_list(
-                self._cloud, storage_type=StorageType.BACKUP
-            )
+            backups = await self._cloud.files.list(storage_type=StorageType.BACKUP)
         except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to list backups") from err
 
@@ -220,7 +214,7 @@ class CloudBackupAgent(BackupAgent):
         backup = await self._async_get_backup(backup_id)
         return AgentBackup.from_dict(backup["Metadata"])
 
-    async def _async_get_backup(self, backup_id: str) -> FilesHandlerListEntry:
+    async def _async_get_backup(self, backup_id: str) -> StoredFile:
         """Return a backup."""
         backups = await self._async_list_backups()
 

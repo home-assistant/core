@@ -3,18 +3,42 @@
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.tessie.switch import DESCRIPTIONS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import StateType
 
 from .common import RESPONSE_OK, assert_entities, setup_platform
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("Starting", True),
+        ("Charging", True),
+        ("Stopped", False),
+        (True, True),
+        (False, False),
+        ("Unexpected", False),
+        (None, False),
+    ],
+)
+def test_charge_switch_state(value: StateType, expected: bool) -> None:
+    """Test charging switch state conversion."""
+    description = next(
+        description
+        for description in DESCRIPTIONS
+        if description.key == "charge_state_charging_state"
+    )
+    assert description.value_func(value) is expected
 
 
 async def test_switches(

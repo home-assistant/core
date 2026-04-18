@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -14,7 +14,7 @@ from aiounifi.interfaces.api_handlers import (
     ItemEvent,
     UnsubscribeType,
 )
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
 
 from homeassistant.core import callback
@@ -32,8 +32,7 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 if TYPE_CHECKING:
     from .hub import UnifiHub
 
-HandlerT = TypeVar("HandlerT", bound=APIHandler)
-SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
 @callback
@@ -95,14 +94,14 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
+class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescription):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     """Provide api_handler from api."""
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
     """Provide device info object based on hub and obj_id."""
-    object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
+    object_fn: Callable[[aiounifi.Controller, str], ItemT]
     """Retrieve object based on api and obj_id."""
     unique_id_fn: Callable[[UnifiHub, str], str]
     """Provide a unique ID based on hub and obj_id."""
@@ -112,7 +111,7 @@ class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     """Determine if config entry options allow creation of entity."""
     available_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: hub.available
     """Determine if entity is available, default is if connection is working."""
-    name_fn: Callable[[ApiItemT], str | None] = lambda obj: None
+    name_fn: Callable[[ItemT], str | None] = lambda obj: None
     """Entity name function, can be used to extend entity name beyond device name."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
@@ -128,17 +127,17 @@ class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     """If entity needs to do regular checks on state."""
 
 
-class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
+class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
-    entity_description: UnifiEntityDescription[HandlerT, ApiItemT]
+    entity_description: UnifiEntityDescription[HandlerT, ItemT]
     _attr_unique_id: str
 
     def __init__(
         self,
         obj_id: str,
         hub: UnifiHub,
-        description: UnifiEntityDescription[HandlerT, ApiItemT],
+        description: UnifiEntityDescription[HandlerT, ItemT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
@@ -256,6 +255,11 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
         Defaults to using async_update_state to set initial state.
         """
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
+
+    @callback
+    def get_object(self) -> ItemT:
+        """Return the latest object for this entity."""
+        return self.entity_description.object_fn(self.api, self._obj_id)
 
     @callback
     @abstractmethod

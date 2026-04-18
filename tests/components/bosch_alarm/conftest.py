@@ -4,6 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from bosch_alarm_mode2.const import PANEL_FAMILY, PanelModel
 from bosch_alarm_mode2.panel import Area, Door, Output, Point
 from bosch_alarm_mode2.utils import Observable
 import pytest
@@ -13,7 +14,14 @@ from homeassistant.components.bosch_alarm.const import (
     CONF_USER_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_PORT,
+)
+from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
 
@@ -32,10 +40,16 @@ def model(request: pytest.FixtureRequest) -> Generator[str]:
 
 @pytest.fixture
 def extra_config_entry_data(
-    model: str, model_name: str, config_flow_data: dict[str, Any]
+    model: str, panel_model: PanelModel, config_flow_data: dict[str, Any]
 ) -> dict[str, Any]:
     """Return extra config entry data."""
-    return {CONF_MODEL: model_name} | config_flow_data
+    return {CONF_MODEL: panel_model.name} | config_flow_data
+
+
+@pytest.fixture(params=[None])
+def mac_address(request: pytest.FixtureRequest) -> str | None:
+    """Return entity mac address."""
+    return request.param
 
 
 @pytest.fixture
@@ -51,19 +65,19 @@ def config_flow_data(model: str) -> dict[str, Any]:
 
 
 @pytest.fixture
-def model_name(model: str) -> str | None:
+def panel_model(model: str) -> PanelModel | None:
     """Return extra config entry data."""
     return {
-        "solution_3000": "Solution 3000",
-        "amax_3000": "AMAX 3000",
-        "b5512": "B5512 (US1B)",
+        "solution_3000": PanelModel("Solution 3000", PANEL_FAMILY.SOLUTION),
+        "amax_3000": PanelModel("AMAX 3000", PANEL_FAMILY.AMAX),
+        "b5512": PanelModel("B5512 (US1B)", PANEL_FAMILY.BG_SERIES),
     }.get(model)
 
 
 @pytest.fixture
 def serial_number(model: str) -> str | None:
     """Return extra config entry data."""
-    if model == "solution_3000":
+    if model == "b5512":
         return "1234567890"
     return None
 
@@ -118,6 +132,8 @@ def door() -> Generator[Door]:
     mock.name = "Main Door"
     mock.status_observer = AsyncMock(spec=Observable)
     mock.is_open.return_value = False
+    mock.is_cycling.return_value = False
+    mock.is_secured.return_value = False
     mock.is_locked.return_value = True
     return mock
 
@@ -131,7 +147,8 @@ def area() -> Generator[Area]:
     mock.alarm_observer = AsyncMock(spec=Observable)
     mock.ready_observer = AsyncMock(spec=Observable)
     mock.alarms = []
-    mock.faults = []
+    mock.alarms_ids = []
+    mock.faults = 0
     mock.all_ready = True
     mock.part_ready = True
     mock.is_triggered.return_value = False
@@ -150,7 +167,7 @@ def mock_panel(
     door: AsyncMock,
     output: AsyncMock,
     points: dict[int, AsyncMock],
-    model_name: str,
+    panel_model: str,
     serial_number: str | None,
 ) -> Generator[AsyncMock]:
     """Define a fixture to set up Bosch Alarm."""
@@ -165,9 +182,10 @@ def mock_panel(
         client.doors = {1: door}
         client.outputs = {1: output}
         client.points = points
-        client.model = model_name
+        client.model = panel_model
         client.faults = []
         client.events = []
+        client.panel_faults_ids = []
         client.firmware_version = "1.0.0"
         client.protocol_version = "1.0.0"
         client.serial_number = serial_number
@@ -179,17 +197,21 @@ def mock_panel(
 
 @pytest.fixture
 def mock_config_entry(
-    extra_config_entry_data: dict[str, Any], serial_number: str | None
+    extra_config_entry_data: dict[str, Any],
+    serial_number: str | None,
+    mac_address: str | None,
 ) -> MockConfigEntry:
     """Mock config entry for bosch alarm."""
+    data = {
+        CONF_HOST: "0.0.0.0",
+        CONF_PORT: 7700,
+        CONF_MODEL: "bosch_alarm_test_data.model",
+    }
+    if mac_address:
+        data[CONF_MAC] = format_mac(mac_address)
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=serial_number,
         entry_id="01JQ917ACKQ33HHM7YCFXYZX51",
-        data={
-            CONF_HOST: "0.0.0.0",
-            CONF_PORT: 7700,
-            CONF_MODEL: "bosch_alarm_test_data.model",
-        }
-        | extra_config_entry_data,
+        data=data | extra_config_entry_data,
     )

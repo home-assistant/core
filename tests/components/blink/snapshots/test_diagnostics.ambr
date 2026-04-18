@@ -28,7 +28,7 @@
       'data': dict({
         'account_id': 654321,
         'client_id': 123456,
-        'device_id': 'Home Assistant',
+        'hardware_id': 'Home Assistant',
         'host': 'u034.immedia-semi.com',
         'password': '**REDACTED**',
         'region_id': 'u034',
@@ -52,7 +52,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': None,
-      'version': 3,
+      'version': 4,
     }),
   })
 # ---

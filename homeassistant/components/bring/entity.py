@@ -8,17 +8,17 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import BringDataUpdateCoordinator
+from .coordinator import BringBaseCoordinator
 
 
-class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
+class BringBaseEntity(CoordinatorEntity[BringBaseCoordinator]):
     """Bring base entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: BringDataUpdateCoordinator,
+        coordinator: BringBaseCoordinator,
         bring_list: BringList,
     ) -> None:
         """Initialize the entity."""
@@ -34,5 +34,7 @@ class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
             },
             manufacturer="Bring! Labs AG",
             model="Bring! Grocery Shopping List",
-            configuration_url=f"https://web.getbring.com/app/lists/{list(self.coordinator.lists).index(bring_list)}",
+            configuration_url=f"https://web.getbring.com/app/lists/{list(self.coordinator.lists).index(bring_list)}"
+            if bring_list in self.coordinator.lists
+            else None,
         )

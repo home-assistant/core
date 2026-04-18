@@ -508,8 +508,14 @@ async def test_no_follow_logs_compress(
     hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that we do not compress follow logs."""
-    aioclient_mock.get("http://127.0.0.1/supervisor/logs/follow")
-    aioclient_mock.get("http://127.0.0.1/supervisor/logs")
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/logs/follow",
+        headers={"Content-Type": "text/plain"},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/logs",
+        headers={"Content-Type": "text/plain"},
+    )
 
     resp1 = await hassio_client.get("/api/hassio/supervisor/logs/follow")
     resp2 = await hassio_client.get("/api/hassio/supervisor/logs")
@@ -519,6 +525,32 @@ async def test_no_follow_logs_compress(
     assert resp1.headers.get("Content-Encoding") is None
 
     assert resp2.status == HTTPStatus.OK
+    assert resp2.headers.get("Content-Encoding") == "deflate"
+
+
+async def test_no_event_stream_compress(
+    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test that we do not compress SSE (Server-Sent Events) streams."""
+    aioclient_mock.get(
+        "http://127.0.0.1/app/events",
+        headers={"Content-Type": "text/event-stream"},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/app/data",
+        headers={"Content-Type": "application/json"},
+    )
+
+    resp1 = await hassio_client.get("/api/hassio/app/events")
+    resp2 = await hassio_client.get("/api/hassio/app/data")
+
+    # Check we got right response
+    assert resp1.status == HTTPStatus.OK
+    # SSE (text/event-stream) should not be compressed to allow streaming
+    assert resp1.headers.get("Content-Encoding") is None
+
+    assert resp2.status == HTTPStatus.OK
+    # Regular JSON should be compressed
     assert resp2.headers.get("Content-Encoding") == "deflate"
 
 

@@ -41,6 +41,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         device_name: str,
         connectable: bool,
         model: SwitchbotModel,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize global switchbot data updater."""
         super().__init__(
@@ -57,6 +58,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         self.device_name = device_name
         self.base_unique_id = base_unique_id
         self.model = model
+        self.config_entry = config_entry
         self._ready_event = asyncio.Event()
         self._was_unavailable = True
 
@@ -70,6 +72,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         # and we actually have a way to connect to the device
         return (
             self.hass.state is CoreState.running
+            and self.connectable
             and self.device.poll_needed(seconds_since_last_poll)
             and bool(
                 bluetooth.async_ble_device_from_address(
@@ -91,6 +94,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         """Handle the device going unavailable."""
         super()._async_handle_unavailable(service_info)
         self._was_unavailable = True
+        _LOGGER.info("Device %s is unavailable", self.device_name)
 
     @callback
     def _async_handle_bluetooth_event(
@@ -114,6 +118,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False
+        _LOGGER.info("Device %s is online", self.device_name)
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 

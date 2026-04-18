@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 import datetime
 import logging
 from typing import Any
@@ -21,17 +22,139 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import automation, calendar
-from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.components.calendar.trigger import (
+    CONF_OFFSET_TYPE,
+    EVENT_END,
+    EVENT_START,
+    OFFSET_TYPE_AFTER,
+    OFFSET_TYPE_BEFORE,
+)
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_LABEL_ID,
+    CONF_OFFSET,
+    CONF_OPTIONS,
+    CONF_PLATFORM,
+    CONF_TARGET,
+    SERVICE_TURN_OFF,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity
 
-from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_device_registry,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class TriggerFormat:
+    """Abstraction for different trigger configuration formats."""
+
+    id: str
+
+    def get_platform(self, event_type: str) -> str:
+        """Get the platform string for trigger payload assertions."""
+        raise NotImplementedError
+
+    def get_trigger_data(
+        self, entity_id: str, event_type: str, offset: datetime.timedelta | None = None
+    ) -> dict[str, Any]:
+        """Get the trigger configuration data."""
+        raise NotImplementedError
+
+    def get_expected_call_data(
+        self, entity_id: str, event_type: str, calendar_event: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Get the expected call data for assertion."""
+        return {
+            "platform": self.get_platform(event_type),
+            "event": event_type,
+            "entity_id": entity_id,
+            "calendar_event": calendar_event,
+        }
+
+
+@dataclass
+class LegacyTriggerFormat(TriggerFormat):
+    """Legacy trigger format using platform: calendar with entity_id and event."""
+
+    id: str = "legacy"
+
+    def get_platform(self, event_type: str) -> str:
+        """Get the platform string for trigger payload assertions."""
+        return calendar.DOMAIN
+
+    def get_trigger_data(
+        self, entity_id: str, event_type: str, offset: datetime.timedelta | None = None
+    ) -> dict[str, Any]:
+        """Get the trigger configuration data."""
+        trigger_data: dict[str, Any] = {
+            CONF_PLATFORM: calendar.DOMAIN,
+            "entity_id": entity_id,
+            "event": event_type,
+        }
+        if offset:
+            trigger_data[CONF_OFFSET] = offset
+        return trigger_data
+
+
+@dataclass
+class TargetTriggerFormat(TriggerFormat):
+    """Target trigger format using platform: calendar.event_started/ended with target."""
+
+    id: str = "target"
+
+    def get_platform(self, event_type: str) -> str:
+        """Get the platform string for trigger payload assertions."""
+        trigger_type = "event_started" if event_type == EVENT_START else "event_ended"
+        return f"{calendar.DOMAIN}.{trigger_type}"
+
+    def get_trigger_data(
+        self, entity_id: str, event_type: str, offset: datetime.timedelta | None = None
+    ) -> dict[str, Any]:
+        """Get the trigger configuration data."""
+        trigger_type = "event_started" if event_type == EVENT_START else "event_ended"
+        trigger_data: dict[str, Any] = {
+            CONF_PLATFORM: f"{calendar.DOMAIN}.{trigger_type}",
+            CONF_TARGET: {"entity_id": entity_id},
+        }
+        if offset:
+            options: dict[str, Any] = {}
+            # Convert signed offset to offset + offset_type
+            if offset < datetime.timedelta(0):
+                options[CONF_OFFSET] = -offset
+                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_BEFORE
+            else:
+                options[CONF_OFFSET] = offset
+                options[CONF_OFFSET_TYPE] = OFFSET_TYPE_AFTER
+            trigger_data[CONF_OPTIONS] = options
+        return trigger_data
+
+
+TRIGGER_FORMATS = [LegacyTriggerFormat(), TargetTriggerFormat()]
+TRIGGER_FORMAT_IDS = [fmt.id for fmt in TRIGGER_FORMATS]
+
+
+@pytest.fixture(params=TRIGGER_FORMATS, ids=TRIGGER_FORMAT_IDS)
+def trigger_format(request: pytest.FixtureRequest) -> TriggerFormat:
+    """Fixture providing both trigger formats for parameterized tests."""
+    return request.param
 
 
 CALENDAR_ENTITY_ID = "calendar.calendar_2"
@@ -41,6 +164,7 @@ TEST_AUTOMATION_ACTION = {
     "data": {
         "platform": "{{ trigger.platform }}",
         "event": "{{ trigger.event }}",
+        "entity_id": "{{ trigger.entity_id }}",
         "calendar_event": "{{ trigger.calendar_event }}",
     },
 }
@@ -50,6 +174,59 @@ TEST_AUTOMATION_ACTION = {
 # amount to trigger either type of event with a small jitter.
 TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(minutes=1)
 TEST_UPDATE_INTERVAL = datetime.timedelta(minutes=7)
+
+TARGET_TEST_FIRST_START_CALL_DATA = [
+    {
+        "platform": "calendar.event_started",
+        "event": "start",
+        "entity_id": "calendar.calendar_1",
+        "calendar_event": {
+            "start": "2022-04-19T11:00:00+00:00",
+            "end": "2022-04-19T11:30:00+00:00",
+            "summary": "Event on Calendar 1",
+            "all_day": False,
+        },
+    }
+]
+TARGET_TEST_SECOND_START_CALL_DATA = [
+    {
+        "platform": "calendar.event_started",
+        "event": "start",
+        "entity_id": "calendar.calendar_2",
+        "calendar_event": {
+            "start": "2022-04-19T11:15:00+00:00",
+            "end": "2022-04-19T11:45:00+00:00",
+            "summary": "Event on Calendar 2",
+            "all_day": False,
+        },
+    }
+]
+TARGET_TEST_FIRST_END_CALL_DATA = [
+    {
+        "platform": "calendar.event_ended",
+        "event": "end",
+        "entity_id": "calendar.calendar_1",
+        "calendar_event": {
+            "start": "2022-04-19T11:00:00+00:00",
+            "end": "2022-04-19T11:30:00+00:00",
+            "summary": "Event on Calendar 1",
+            "all_day": False,
+        },
+    }
+]
+TARGET_TEST_SECOND_END_CALL_DATA = [
+    {
+        "platform": "calendar.event_ended",
+        "event": "end",
+        "entity_id": "calendar.calendar_2",
+        "calendar_event": {
+            "start": "2022-04-19T11:15:00+00:00",
+            "end": "2022-04-19T11:45:00+00:00",
+            "summary": "Event on Calendar 2",
+            "all_day": False,
+        },
+    }
+]
 
 
 class FakeSchedule:
@@ -110,18 +287,65 @@ async def mock_setup_platform(
     await hass.async_block_till_done()
 
 
+@pytest.fixture
+def target_calendars(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+    label_registry: lr.LabelRegistry,
+):
+    """Associate calendar entities with different targets.
+
+    Sets up the following target structure:
+    - area_both: An area containing both calendar entities
+    - label_calendar_1: A label assigned to calendar 1 only
+    - device_calendar_1: A device associated with calendar 1
+    - device_calendar_2: A device associated with calendar 2
+    - area_devices: An area containing both devices
+    """
+    area_both = area_registry.async_get_or_create("area_both_calendars")
+    label_calendar_1 = label_registry.async_create("calendar_1_label")
+    label_on_devices = label_registry.async_create("label_on_devices")
+
+    device_calendar_1 = dr.DeviceEntry(
+        id="device_calendar_1", labels=[label_on_devices.label_id]
+    )
+    device_calendar_2 = dr.DeviceEntry(
+        id="device_calendar_2", labels=[label_on_devices.label_id]
+    )
+    mock_device_registry(
+        hass,
+        {
+            device_calendar_1.id: device_calendar_1,
+            device_calendar_2.id: device_calendar_2,
+        },
+    )
+
+    # Associate calendar entities with targets
+    entity_registry.async_update_entity(
+        "calendar.calendar_1",
+        area_id=area_both.id,
+        labels={label_calendar_1.label_id},
+        device_id=device_calendar_1.id,
+    )
+    entity_registry.async_update_entity(
+        "calendar.calendar_2",
+        area_id=area_both.id,
+        device_id=device_calendar_2.id,
+    )
+
+
 @asynccontextmanager
 async def create_automation(
-    hass: HomeAssistant, event_type: str, offset=None
+    hass: HomeAssistant,
+    trigger_format: TriggerFormat,
+    event_type: str,
+    offset: datetime.timedelta | None = None,
 ) -> AsyncIterator[None]:
-    """Register an automation."""
-    trigger_data = {
-        "platform": calendar.DOMAIN,
-        "entity_id": CALENDAR_ENTITY_ID,
-        "event": event_type,
-    }
-    if offset:
-        trigger_data["offset"] = offset
+    """Register an automation using the specified trigger format."""
+    trigger_data = trigger_format.get_trigger_data(
+        CALENDAR_ENTITY_ID, event_type, offset
+    )
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -173,13 +397,14 @@ async def test_event_start_trigger(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test the a calendar trigger based on start time."""
     event_data = test_entity.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
@@ -187,19 +412,17 @@ async def test_event_start_trigger(
         )
 
     assert calls_data() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data,
-        }
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
     ]
 
 
 @pytest.mark.parametrize(
-    ("offset_str", "offset_delta"),
+    ("offset_delta"),
     [
-        ("-01:00", datetime.timedelta(hours=-1)),
-        ("+01:00", datetime.timedelta(hours=1)),
+        datetime.timedelta(hours=-1),
+        datetime.timedelta(hours=1),
     ],
 )
 async def test_event_start_trigger_with_offset(
@@ -207,15 +430,17 @@ async def test_event_start_trigger_with_offset(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
-    offset_str,
-    offset_delta,
+    trigger_format: TriggerFormat,
+    offset_delta: datetime.timedelta,
 ) -> None:
     """Test the a calendar trigger based on start time with an offset."""
     event_data = test_entity.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START, offset=offset_str):
+    async with create_automation(
+        hass, trigger_format, EVENT_START, offset=offset_delta
+    ):
         # No calls yet
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:55:00+00:00") + offset_delta,
@@ -227,11 +452,9 @@ async def test_event_start_trigger_with_offset(
             datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
         )
         assert calls_data() == [
-            {
-                "platform": "calendar",
-                "event": EVENT_START,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data
+            )
         ]
 
 
@@ -240,13 +463,14 @@ async def test_event_end_trigger(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test the a calendar trigger based on end time."""
     event_data = test_entity.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
     )
-    async with create_automation(hass, EVENT_END):
+    async with create_automation(hass, trigger_format, EVENT_END):
         # Event started, nothing should fire yet
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
@@ -258,19 +482,17 @@ async def test_event_end_trigger(
             datetime.datetime.fromisoformat("2022-04-19 12:10:00+00:00")
         )
         assert calls_data() == [
-            {
-                "platform": "calendar",
-                "event": EVENT_END,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_END, event_data
+            )
         ]
 
 
 @pytest.mark.parametrize(
-    ("offset_str", "offset_delta"),
+    ("offset_delta"),
     [
-        ("-01:00", datetime.timedelta(hours=-1)),
-        ("+01:00", datetime.timedelta(hours=1)),
+        datetime.timedelta(hours=-1),
+        datetime.timedelta(hours=1),
     ],
 )
 async def test_event_end_trigger_with_offset(
@@ -278,15 +500,15 @@ async def test_event_end_trigger_with_offset(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
-    offset_str,
-    offset_delta,
+    trigger_format: TriggerFormat,
+    offset_delta: datetime.timedelta,
 ) -> None:
     """Test the a calendar trigger based on end time with an offset."""
     event_data = test_entity.create_event(
         start=datetime.datetime.fromisoformat("2022-04-19 12:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 12:30:00+00:00"),
     )
-    async with create_automation(hass, EVENT_END, offset=offset_str):
+    async with create_automation(hass, trigger_format, EVENT_END, offset=offset_delta):
         # No calls yet
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 12:05:00+00:00") + offset_delta,
@@ -298,11 +520,9 @@ async def test_event_end_trigger_with_offset(
             datetime.datetime.fromisoformat("2022-04-19 12:35:00+00:00") + offset_delta,
         )
         assert calls_data() == [
-            {
-                "platform": "calendar",
-                "event": EVENT_END,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_END, event_data
+            )
         ]
 
 
@@ -310,10 +530,14 @@ async def test_calendar_trigger_with_no_events(
     hass: HomeAssistant,
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test a calendar trigger setup  with no events."""
 
-    async with create_automation(hass, EVENT_START), create_automation(hass, EVENT_END):
+    async with (
+        create_automation(hass, trigger_format, EVENT_START),
+        create_automation(hass, trigger_format, EVENT_END),
+    ):
         # No calls, at arbitrary times
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00")
@@ -326,6 +550,7 @@ async def test_multiple_start_events(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test that a trigger fires for multiple events."""
 
@@ -337,21 +562,17 @@ async def test_multiple_start_events(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
     assert calls_data() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
     ]
 
 
@@ -360,6 +581,7 @@ async def test_multiple_end_events(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test that a trigger fires for multiple events."""
 
@@ -371,22 +593,18 @@ async def test_multiple_end_events(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
-    async with create_automation(hass, EVENT_END):
+    async with create_automation(hass, trigger_format, EVENT_END):
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
 
     assert calls_data() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_END,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": "calendar",
-            "event": EVENT_END,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_END, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_END, event_data2
+        ),
     ]
 
 
@@ -395,6 +613,7 @@ async def test_multiple_events_sharing_start_time(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test that a trigger fires for every event sharing a start time."""
 
@@ -406,22 +625,18 @@ async def test_multiple_events_sharing_start_time(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:35:00+00:00")
         )
 
     assert calls_data() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
     ]
 
 
@@ -430,6 +645,7 @@ async def test_overlap_events(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test that a trigger fires for events that overlap."""
 
@@ -441,22 +657,18 @@ async def test_overlap_events(
         start=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
         )
 
     assert calls_data() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
     ]
 
 
@@ -493,7 +705,7 @@ async def test_legacy_entity_type(
                 "action": TEST_AUTOMATION_ACTION,
                 "trigger": {
                     "platform": calendar.DOMAIN,
-                    "entity_id": "calendar.calendar_3",
+                    "entity_id": "calendar.calendar_4",
                 },
             }
         },
@@ -507,6 +719,7 @@ async def test_update_next_event(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test detection of a new event after initial trigger is setup."""
 
@@ -514,7 +727,7 @@ async def test_update_next_event(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         # No calls before event start
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 10:45:00+00:00")
@@ -532,16 +745,12 @@ async def test_update_next_event(
             datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00")
         )
     assert calls_data() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data2,
-        },
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data1,
-        },
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data2
+        ),
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data1
+        ),
     ]
 
 
@@ -550,6 +759,7 @@ async def test_update_missed(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test that new events are missed if they arrive outside the update interval."""
 
@@ -557,7 +767,7 @@ async def test_update_missed(
         start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         # Events are refreshed at t+TEST_UPDATE_INTERVAL minutes. A new event is
         # added, but the next update happens after the event is already over.
         await fake_schedule.fire_until(
@@ -575,11 +785,9 @@ async def test_update_missed(
             datetime.datetime.fromisoformat("2022-04-19 11:05:00+00:00")
         )
         assert calls_data() == [
-            {
-                "platform": "calendar",
-                "event": EVENT_START,
-                "calendar_event": event_data1,
-            },
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data1
+            ),
         ]
 
 
@@ -641,22 +849,21 @@ async def test_event_payload(
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     set_time_zone: None,
+    trigger_format: TriggerFormat,
     create_data,
     fire_time,
     payload_data,
 ) -> None:
     """Test the fields in the calendar event payload are set."""
     test_entity.create_event(**create_data)
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(fire_time)
         assert calls_data() == [
-            {
-                "platform": "calendar",
-                "event": EVENT_START,
-                "calendar_event": payload_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, payload_data
+            )
         ]
 
 
@@ -666,6 +873,7 @@ async def test_trigger_timestamp_window_edge(
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test that events in the edge of a scan are included."""
     freezer.move_to("2022-04-19 11:00:00+00:00")
@@ -675,18 +883,16 @@ async def test_trigger_timestamp_window_edge(
         start=datetime.datetime.fromisoformat("2022-04-19 11:14:00+00:00"),
         end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
             datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
         )
         assert calls_data() == [
-            {
-                "platform": "calendar",
-                "event": EVENT_START,
-                "calendar_event": event_data,
-            }
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event_data
+            )
         ]
 
 
@@ -696,6 +902,7 @@ async def test_event_start_trigger_dst(
     fake_schedule: FakeSchedule,
     test_entity: MockCalendarEntity,
     freezer: FrozenDateTimeFactory,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test a calendar event trigger happening at the start of daylight savings time."""
     await hass.config.async_set_time_zone("America/Los_Angeles")
@@ -720,7 +927,7 @@ async def test_event_start_trigger_dst(
         start=datetime.datetime(2023, 3, 12, 3, 30, tzinfo=tzinfo),
         end=datetime.datetime(2023, 3, 12, 3, 45, tzinfo=tzinfo),
     )
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         await fake_schedule.fire_until(
@@ -728,21 +935,15 @@ async def test_event_start_trigger_dst(
         )
 
         assert calls_data() == [
-            {
-                "platform": "calendar",
-                "event": EVENT_START,
-                "calendar_event": event1_data,
-            },
-            {
-                "platform": "calendar",
-                "event": EVENT_START,
-                "calendar_event": event2_data,
-            },
-            {
-                "platform": "calendar",
-                "event": EVENT_START,
-                "calendar_event": event3_data,
-            },
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event1_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event2_data
+            ),
+            trigger_format.get_expected_call_data(
+                CALENDAR_ENTITY_ID, EVENT_START, event3_data
+            ),
         ]
 
 
@@ -751,8 +952,8 @@ async def test_config_entry_reload(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entities: list[MockCalendarEntity],
-    setup_platform: None,
     config_entry: MockConfigEntry,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test the a calendar trigger after a config entry reload.
 
@@ -761,7 +962,7 @@ async def test_config_entry_reload(
     the automation kept a reference to the specific entity which would be
     invalid after a config entry was reloaded.
     """
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         assert await hass.config_entries.async_reload(config_entry.entry_id)
@@ -778,11 +979,9 @@ async def test_config_entry_reload(
         )
 
     assert calls_data() == [
-        {
-            "platform": "calendar",
-            "event": EVENT_START,
-            "calendar_event": event_data,
-        }
+        trigger_format.get_expected_call_data(
+            CALENDAR_ENTITY_ID, EVENT_START, event_data
+        )
     ]
 
 
@@ -791,12 +990,12 @@ async def test_config_entry_unload(
     calls_data: Callable[[], list[dict[str, Any]]],
     fake_schedule: FakeSchedule,
     test_entities: list[MockCalendarEntity],
-    setup_platform: None,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    trigger_format: TriggerFormat,
 ) -> None:
     """Test an automation that references a calendar entity that is unloaded."""
-    async with create_automation(hass, EVENT_START):
+    async with create_automation(hass, trigger_format, EVENT_START):
         assert len(calls_data()) == 0
 
         assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -806,3 +1005,172 @@ async def test_config_entry_unload(
         )
 
     assert "Entity does not exist calendar.calendar_2" in caplog.text
+
+
+@pytest.mark.usefixtures("target_calendars")
+@pytest.mark.parametrize(
+    (
+        "trigger_target_conf",
+        "first_start_call_data",
+        "first_end_call_data",
+        "second_start_call_data",
+        "second_end_call_data",
+    ),
+    [
+        ({}, [], [], [], []),
+        (
+            {ATTR_ENTITY_ID: "calendar.calendar_2"},
+            [],
+            [],
+            TARGET_TEST_SECOND_START_CALL_DATA,
+            TARGET_TEST_SECOND_END_CALL_DATA,
+        ),
+        (
+            {ATTR_ENTITY_ID: ["calendar.calendar_1", "calendar.calendar_2"]},
+            TARGET_TEST_FIRST_START_CALL_DATA,
+            TARGET_TEST_FIRST_END_CALL_DATA,
+            TARGET_TEST_SECOND_START_CALL_DATA,
+            TARGET_TEST_SECOND_END_CALL_DATA,
+        ),
+        (
+            {ATTR_AREA_ID: "area_both_calendars"},
+            TARGET_TEST_FIRST_START_CALL_DATA,
+            TARGET_TEST_FIRST_END_CALL_DATA,
+            TARGET_TEST_SECOND_START_CALL_DATA,
+            TARGET_TEST_SECOND_END_CALL_DATA,
+        ),
+        (
+            {ATTR_LABEL_ID: "calendar_1_label"},
+            TARGET_TEST_FIRST_START_CALL_DATA,
+            TARGET_TEST_FIRST_END_CALL_DATA,
+            [],
+            [],
+        ),
+        (
+            {ATTR_DEVICE_ID: "device_calendar_1"},
+            TARGET_TEST_FIRST_START_CALL_DATA,
+            TARGET_TEST_FIRST_END_CALL_DATA,
+            [],
+            [],
+        ),
+        (
+            {ATTR_DEVICE_ID: "device_calendar_2"},
+            [],
+            [],
+            TARGET_TEST_SECOND_START_CALL_DATA,
+            TARGET_TEST_SECOND_END_CALL_DATA,
+        ),
+        (
+            {ATTR_LABEL_ID: "label_on_devices"},
+            TARGET_TEST_FIRST_START_CALL_DATA,
+            TARGET_TEST_FIRST_END_CALL_DATA,
+            TARGET_TEST_SECOND_START_CALL_DATA,
+            TARGET_TEST_SECOND_END_CALL_DATA,
+        ),
+    ],
+)
+async def test_trigger_with_targets(
+    hass: HomeAssistant,
+    calls_data: Callable[[], list[dict[str, Any]]],
+    fake_schedule: FakeSchedule,
+    test_entities: list[MockCalendarEntity],
+    trigger_target_conf: dict[str, Any],
+    first_start_call_data: list[dict[str, Any]],
+    first_end_call_data: list[dict[str, Any]],
+    second_start_call_data: list[dict[str, Any]],
+    second_end_call_data: list[dict[str, Any]],
+) -> None:
+    """Test that triggers fire for multiple calendar entities with target selector."""
+    calendar_1 = test_entities[0]
+    calendar_2 = test_entities[1]
+
+    calendar_1.create_event(
+        start=datetime.datetime.fromisoformat("2022-04-19 11:00:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:30:00+00:00"),
+        summary="Event on Calendar 1",
+    )
+    calendar_2.create_event(
+        start=datetime.datetime.fromisoformat("2022-04-19 11:15:00+00:00"),
+        end=datetime.datetime.fromisoformat("2022-04-19 11:45:00+00:00"),
+        summary="Event on Calendar 2",
+    )
+
+    trigger_start = {
+        CONF_PLATFORM: "calendar.event_started",
+        CONF_TARGET: {**trigger_target_conf},
+    }
+    trigger_end = {
+        CONF_PLATFORM: "calendar.event_ended",
+        CONF_TARGET: {**trigger_target_conf},
+    }
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "alias": "start_trigger",
+                    "trigger": trigger_start,
+                    "action": TEST_AUTOMATION_ACTION,
+                    "mode": "queued",
+                },
+                {
+                    "alias": "end_trigger",
+                    "trigger": trigger_end,
+                    "action": TEST_AUTOMATION_ACTION,
+                    "mode": "queued",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls_data()) == 0
+
+    # Advance past first event start
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:10:00+00:00")
+    )
+    assert calls_data() == first_start_call_data
+
+    # Advance past second event start
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:20:00+00:00")
+    )
+    assert calls_data() == first_start_call_data + second_start_call_data
+
+    # Advance past first event end
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:40:00+00:00")
+    )
+    assert (
+        calls_data()
+        == first_start_call_data + second_start_call_data + first_end_call_data
+    )
+
+    # Advance past second event end
+    await fake_schedule.fire_until(
+        datetime.datetime.fromisoformat("2022-04-19 11:50:00+00:00")
+    )
+    assert (
+        calls_data()
+        == first_start_call_data
+        + second_start_call_data
+        + first_end_call_data
+        + second_end_call_data
+    )
+
+    # Disable automations to cleanup lingering timers
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "automation.start_trigger"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "automation.end_trigger"},
+        blocking=True,
+    )

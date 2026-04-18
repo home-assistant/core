@@ -25,6 +25,7 @@ def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager
     """Return an update manager for a given Broadlink device."""
     update_managers: dict[str, type[BroadlinkUpdateManager]] = {
         "A1": BroadlinkA1UpdateManager,
+        "A2": BroadlinkA2UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
         "HYS": BroadlinkThermostatUpdateManager,
         "LB1": BroadlinkLB1UpdateManager,
@@ -63,6 +64,7 @@ class BroadlinkUpdateManager(ABC, Generic[_ApiT]):
             device.hass,
             _LOGGER,
             name=f"{device.name} ({device.api.model} at {device.api.host[0]})",
+            config_entry=device.config,
             update_method=self.async_update,
             update_interval=self.SCAN_INTERVAL,
         )
@@ -110,6 +112,16 @@ class BroadlinkUpdateManager(ABC, Generic[_ApiT]):
 
 class BroadlinkA1UpdateManager(BroadlinkUpdateManager[blk.a1]):
     """Manages updates for Broadlink A1 devices."""
+
+    SCAN_INTERVAL = timedelta(seconds=10)
+
+    async def async_fetch_data(self) -> dict[str, Any]:
+        """Fetch data from the device."""
+        return await self.device.async_request(self.device.api.check_sensors_raw)
+
+
+class BroadlinkA2UpdateManager(BroadlinkUpdateManager[blk.a2]):
+    """Manages updates for Broadlink A2 devices."""
 
     SCAN_INTERVAL = timedelta(seconds=10)
 

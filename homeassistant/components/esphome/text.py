@@ -17,6 +17,8 @@ from .entity import (
 )
 from .enum_mapper import EsphomeEnumMapper
 
+PARALLEL_UPDATES = 0
+
 TEXT_MODES: EsphomeEnumMapper[EsphomeTextMode, TextMode] = EsphomeEnumMapper(
     {
         EsphomeTextMode.TEXT: TextMode.TEXT,
@@ -48,7 +50,9 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
     @convert_api_error_ha_error
     async def async_set_value(self, value: str) -> None:
         """Update the current value."""
-        self._client.text_command(self._key, value)
+        self._client.text_command(
+            self._key, value, device_id=self._static_info.device_id
+        )
 
 
 async_setup_entry = partial(

@@ -2,7 +2,15 @@
 
 from dataclasses import dataclass
 
-from elgato import BatteryInfo, Elgato, ElgatoConnectionError, Info, Settings, State
+from elgato import (
+    BatteryInfo,
+    Elgato,
+    ElgatoConnectionError,
+    ElgatoError,
+    Info,
+    Settings,
+    State,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -59,4 +67,12 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
                 state=await self.client.state(),
             )
         except ElgatoConnectionError as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+        except ElgatoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+            ) from err

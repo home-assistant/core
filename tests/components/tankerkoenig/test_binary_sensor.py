@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant

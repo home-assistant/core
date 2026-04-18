@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import dataclasses
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
-from .const import (
-    DATA_COMPONENT,
-    DATA_DEFAULT_ENTITY,
-    HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
-)
+from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT, IntentSource
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -32,6 +34,12 @@ from .trace import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+TRIGGER_INTENT_NAME_PREFIX = "HassSentenceTrigger"
+
+if TYPE_CHECKING:
+    from .default_agent import DefaultAgent
+    from .trigger import TRIGGER_CALLBACK_TYPE
 
 
 @singleton.singleton("conversation_agent")
@@ -54,8 +62,10 @@ def async_get_agent(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
-    if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
-        return hass.data[DATA_DEFAULT_ENTITY]
+    manager = get_agent_manager(hass)
+
+    if agent_id is None or agent_id == HOME_ASSISTANT_AGENT:
+        return manager.default_agent
 
     if "." in agent_id:
         return hass.data[DATA_COMPONENT].get_entity(agent_id)
@@ -76,6 +86,7 @@ async def async_converse(
     language: str | None = None,
     agent_id: str | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     extra_system_prompt: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
@@ -102,6 +113,7 @@ async def async_converse(
         context=context,
         conversation_id=conversation_id,
         device_id=device_id,
+        satellite_id=satellite_id,
         language=language,
         agent_id=agent_id,
         extra_system_prompt=extra_system_prompt,
@@ -130,6 +142,10 @@ async def async_converse(
         return result
 
 
+type IntentSourceConfig = dict[str, dict[str, Any]]
+type IntentsCallback = Callable[[dict[IntentSource, IntentSourceConfig]], None]
+
+
 class AgentManager:
     """Class to manage conversation agents."""
 
@@ -137,6 +153,14 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
+        self.default_agent: DefaultAgent | None = None
+        self._intents: dict[IntentSource, IntentSourceConfig] = {
+            IntentSource.CONFIG: {"intents": {}},
+            IntentSource.TRIGGER: {"intents": {}},
+        }
+        self._intents_subscribers: list[IntentsCallback] = []
+        self._trigger_callbacks: dict[int, TRIGGER_CALLBACK_TYPE] = {}
+        self._trigger_callback_counter: int = 0
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -166,6 +190,7 @@ class AgentManager:
                 AgentInfo(
                     id=agent_id,
                     name=config_entry.title or config_entry.domain,
+                    supports_streaming=False,
                 )
             )
         return agents
@@ -184,3 +209,78 @@ class AgentManager:
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
         self._agents.pop(agent_id, None)
+
+    async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
+        """Set up the default agent."""
+        self.default_agent = agent
+
+    @callback
+    def subscribe_intents(self, subscriber: IntentsCallback) -> CALLBACK_TYPE:
+        """Subscribe to intents updates.
+
+        The subscriber callback is called immediately with all intent sources
+        and whenever intents are updated (only with the changed source).
+        """
+        subscriber(self._intents)
+        self._intents_subscribers.append(subscriber)
+
+        @callback
+        def unsubscribe() -> None:
+            """Unsubscribe from intents updates."""
+            self._intents_subscribers.remove(subscriber)
+
+        return unsubscribe
+
+    def _notify_intents_subscribers(self, source: IntentSource) -> None:
+        """Notify all intents subscribers of a change to a specific source."""
+        update = {source: self._intents[source]}
+        for subscriber in self._intents_subscribers:
+            subscriber(update)
+
+    def update_config_intents(self, intents: dict[str, Any]) -> None:
+        """Update config intents."""
+        self._intents[IntentSource.CONFIG]["intents"] = intents
+        self._notify_intents_subscribers(IntentSource.CONFIG)
+
+    def register_trigger(
+        self, sentences: list[str], trigger_callback: TRIGGER_CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
+        """Register a trigger."""
+        trigger_id = self._trigger_callback_counter
+        self._trigger_callback_counter += 1
+        trigger_intent_name = f"{TRIGGER_INTENT_NAME_PREFIX}{trigger_id}"
+
+        trigger_intents = self._intents[IntentSource.TRIGGER]
+        trigger_intents["intents"][trigger_intent_name] = {
+            "data": [{"sentences": sentences}]
+        }
+        self._trigger_callbacks[trigger_id] = trigger_callback
+        self._notify_intents_subscribers(IntentSource.TRIGGER)
+
+        @callback
+        def unregister_trigger() -> None:
+            """Unregister the trigger."""
+            del trigger_intents["intents"][trigger_intent_name]
+            del self._trigger_callbacks[trigger_id]
+            self._notify_intents_subscribers(IntentSource.TRIGGER)
+
+        return unregister_trigger
+
+    @property
+    def trigger_sentences(self) -> list[str]:
+        """Get all trigger sentences."""
+        sentences: list[str] = []
+        trigger_intents = self._intents[IntentSource.TRIGGER]
+        for trigger_intent in trigger_intents.get("intents", {}).values():
+            for data in trigger_intent.get("data", []):
+                sentences.extend(data.get("sentences", []))
+        return sentences
+
+    def get_trigger_callback(
+        self, trigger_intent_name: str
+    ) -> TRIGGER_CALLBACK_TYPE | None:
+        """Get the callback for a trigger from its intent name."""
+        if not trigger_intent_name.startswith(TRIGGER_INTENT_NAME_PREFIX):
+            return None
+        trigger_id = int(trigger_intent_name[len(TRIGGER_INTENT_NAME_PREFIX) :])
+        return self._trigger_callbacks.get(trigger_id)

@@ -9,22 +9,48 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
-pytestmark = pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
+from tests.common import snapshot_platform
+
+pytestmark = pytest.mark.usefixtures(
+    "system_get_info", "dsl_get_info", "voip_get_info", "wan_get_info"
+)
 
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.SENSOR]):
+    with (
+        patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.SENSOR]),
+        patch(
+            "homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.SENSOR]
+        ),
+        patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
+    ):
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
+    config_entry_with_auth: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for SFR Box sensors."""
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    await hass.async_block_till_done()
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, config_entry_with_auth.entry_id
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_no_auth(
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -32,24 +58,5 @@ async def test_sensors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
-
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    # Some entities are disabled, enable them and reload before checking states
-    for ent in entity_entries:
-        entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    # Ensure auth-only entities are not registered
+    assert sorted(entity_registry.entities) == snapshot

@@ -1,4 +1,4 @@
-"""Tests for the Hyperion component."""
+"""Tests for the Hyperion integration."""
 
 from __future__ import annotations
 

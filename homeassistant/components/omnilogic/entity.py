@@ -1,7 +1,5 @@
 """Common classes and elements for Omnilogic Integration."""
 
-from typing import Any
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -54,40 +52,14 @@ class OmniLogicEntity(CoordinatorEntity[OmniLogicUpdateCoordinator]):
         unique_id = unique_id.replace(" ", "_")
 
         self._kind = kind
-        self._name = entity_friendly_name
-        self._unique_id = unique_id
+        self._attr_name = entity_friendly_name
+        self._attr_unique_id = unique_id
         self._item_id = item_id
-        self._icon = icon
-        self._attrs: dict[str, Any] = {}
-        self._msp_system_id = msp_system_id
-        self._backyard_name = coordinator.data[backyard_id]["BackyardName"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the entity."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return the attributes."""
-        return self._attrs
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Define the device as back yard/MSP System."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._msp_system_id)},
+        self._attr_icon = icon
+        self._attr_extra_state_attributes = {}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, msp_system_id)},
             manufacturer="Hayward",
             model="OmniLogic",
-            name=self._backyard_name,
+            name=coordinator.data[backyard_id]["BackyardName"],
         )

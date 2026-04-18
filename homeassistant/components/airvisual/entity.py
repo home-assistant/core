@@ -2,29 +2,25 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import AirVisualDataUpdateCoordinator
 
 
-class AirVisualEntity(CoordinatorEntity):
+class AirVisualEntity(CoordinatorEntity[AirVisualDataUpdateCoordinator]):
     """Define a generic AirVisual entity."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        entry: ConfigEntry,
+        coordinator: AirVisualDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
-        self._entry = entry
         self.entity_description = description
 
     async def async_added_to_hass(self) -> None:

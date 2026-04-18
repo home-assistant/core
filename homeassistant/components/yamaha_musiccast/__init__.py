@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 
+from aiohttp import DummyCookieJar
 from aiomusiccast.musiccast_device import MusicCastDevice
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
 from .coordinator import MusicCastDataUpdateCoordinator
@@ -52,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = MusicCastDevice(
         entry.data[CONF_HOST],
-        async_get_clientsession(hass),
+        async_create_clientsession(hass, cookie_jar=DummyCookieJar()),
         entry.data[CONF_UPNP_DESC],
     )
     coordinator = MusicCastDataUpdateCoordinator(hass, entry, client=client)

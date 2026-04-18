@@ -13,7 +13,6 @@ from bring_api import (
     BringNotificationType,
     BringRequestException,
 )
-import voluptuous as vol
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -23,15 +22,9 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_ITEM_NAME,
-    ATTR_NOTIFICATION_TYPE,
-    DOMAIN,
-    SERVICE_PUSH_NOTIFICATION,
-)
+from .const import DOMAIN
 from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
@@ -44,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.data
     lists_added: set[str] = set()
 
     @callback
@@ -63,19 +56,6 @@ async def async_setup_entry(
     coordinator.async_add_listener(add_entities)
     add_entities()
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_PUSH_NOTIFICATION,
-        {
-            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
-                vol.Upper, vol.Coerce(BringNotificationType)
-            ),
-            vol.Optional(ATTR_ITEM_NAME): cv.string,
-        },
-        "async_send_message",
-    )
-
 
 class BringTodoListEntity(BringBaseEntity, TodoListEntity):
     """A To-do List representation of the Bring! Shopping List."""
@@ -88,6 +68,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
+    coordinator: BringDataUpdateCoordinator
 
     def __init__(
         self, coordinator: BringDataUpdateCoordinator, bring_list: BringList
@@ -107,7 +88,9 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
                     description=item.specification,
                     status=TodoItemStatus.NEEDS_ACTION,
                 )
-                for item in self.bring_list.content.items.purchase
+                for item in sorted(
+                    self.bring_list.content.items.purchase, key=lambda i: i.itemId
+                )
             ),
             *(
                 TodoItem(

@@ -139,6 +139,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             result = await client_api
 
+        except ec2.InvalidSystemModeError:
+            raise
+
         except ec2.ApiRequestFailedError as err:
             self.logger.error(err)
             return None

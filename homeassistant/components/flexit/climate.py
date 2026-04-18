@@ -14,13 +14,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.modbus import (
-    CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
-    DEFAULT_HUB,
-    ModbusHub,
-    get_hub,
-)
+from homeassistant.components.modbus import ModbusHub, get_hub
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -33,7 +27,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+# These constants are not offered by modbus, because modbus do not have
+# an official API.
+CALL_TYPE_REGISTER_HOLDING = "holding"
+CALL_TYPE_REGISTER_INPUT = "input"
 CALL_TYPE_WRITE_REGISTER = "write_register"
+DEFAULT_HUB = "modbus_hub"
+
 CONF_HUB = "hub"
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(

@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirVisualProConfigEntry
+from .coordinator import AirVisualProConfigEntry
 from .entity import AirVisualProEntity
 
 

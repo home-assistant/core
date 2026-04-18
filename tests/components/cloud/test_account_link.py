@@ -177,9 +177,9 @@ async def test_get_services_error(hass: HomeAssistant) -> None:
             "hass_nabucasa.account_link.async_fetch_available_services",
             side_effect=TimeoutError,
         ),
+        pytest.raises(config_entry_oauth2_flow.ImplementationUnavailableError),
     ):
-        assert await account_link._get_services(hass) == []
-        assert account_link.DATA_SERVICES not in hass.data
+        await account_link._get_services(hass)
 
 
 @pytest.mark.usefixtures("current_request_with_host")

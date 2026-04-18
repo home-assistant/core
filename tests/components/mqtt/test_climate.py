@@ -29,9 +29,11 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.mqtt.climate import (
-    DEFAULT_INITIAL_TEMPERATURE,
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
     VALUE_TEMPLATE_KEYS,
+)
+from homeassistant.components.mqtt.const import (
+    DEFAULT_CLIMATE_INITIAL_TEMPERATURE as DEFAULT_INITIAL_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -404,13 +406,6 @@ async def test_turn_on_and_off_optimistic_with_power_command(
             ),
             "heat",
             None,
-        ),
-        (
-            help_custom_config(
-                climate.DOMAIN, DEFAULT_CONFIG, ({"modes": ["off", "dry"]},)
-            ),
-            None,
-            "off",
         ),
         (
             help_custom_config(

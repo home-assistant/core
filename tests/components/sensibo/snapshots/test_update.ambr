@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_update[load_platforms0][update.bedroom_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -27,6 +29,7 @@
     'original_name': 'Firmware',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'BBZZBBZZ-fw_ver_available',
@@ -39,7 +42,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/sensibo/icon.png',
+      'entity_picture': '/api/brands/integration/sensibo/icon.png',
       'friendly_name': 'Bedroom Firmware',
       'in_progress': False,
       'installed_version': 'PUR00111',
@@ -61,8 +64,9 @@
 # ---
 # name: test_update[load_platforms0][update.hallway_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -80,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -87,6 +92,7 @@
     'original_name': 'Firmware',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ABC999111-fw_ver_available',
@@ -99,7 +105,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/sensibo/icon.png',
+      'entity_picture': '/api/brands/integration/sensibo/icon.png',
       'friendly_name': 'Hallway Firmware',
       'in_progress': False,
       'installed_version': 'SKY30046',
@@ -121,8 +127,9 @@
 # ---
 # name: test_update[load_platforms0][update.kitchen_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -140,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -147,6 +155,7 @@
     'original_name': 'Firmware',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AAZZAAZZ-fw_ver_available',
@@ -159,7 +168,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/sensibo/icon.png',
+      'entity_picture': '/api/brands/integration/sensibo/icon.png',
       'friendly_name': 'Kitchen Firmware',
       'in_progress': False,
       'installed_version': 'PUR00111',

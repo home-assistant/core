@@ -57,7 +57,10 @@ async def test_add_invalid_dataset(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"] == {"code": "invalid_format", "message": "unknown type 222"}
+    assert msg["error"] == {
+        "code": "invalid_format",
+        "message": "expected 173 bytes for tag 222, got 2",
+    }
 
 
 async def test_delete_dataset(

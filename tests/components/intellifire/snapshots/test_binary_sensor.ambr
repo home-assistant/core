@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_accessory_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Accessory error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -27,6 +29,7 @@
     'original_name': 'Accessory error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'accessory_error',
     'unique_id': 'error_accessory_mock_serial',
@@ -50,8 +53,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_cloud_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -76,6 +81,7 @@
     'original_name': 'Cloud connectivity',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connectivity',
     'unique_id': 'cloud_connectivity_mock_serial',
@@ -99,8 +105,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_disabled_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disabled error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -125,6 +133,7 @@
     'original_name': 'Disabled error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disabled_error',
     'unique_id': 'error_disabled_mock_serial',
@@ -148,8 +157,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_ecm_offline_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ECM offline error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -174,6 +185,7 @@
     'original_name': 'ECM offline error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ecm_offline_error',
     'unique_id': 'error_ecm_offline_mock_serial',
@@ -197,8 +209,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_delay_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan delay error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -223,6 +237,7 @@
     'original_name': 'Fan delay error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_delay_error',
     'unique_id': 'error_fan_delay_mock_serial',
@@ -246,8 +261,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -265,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -272,6 +289,7 @@
     'original_name': 'Fan error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_error',
     'unique_id': 'error_fan_mock_serial',
@@ -295,8 +313,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -314,6 +333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flame',
     'options': dict({
     }),
     'original_device_class': None,
@@ -321,6 +341,7 @@
     'original_name': 'Flame',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flame',
     'unique_id': 'on_off_mock_serial',
@@ -343,8 +364,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -362,13 +384,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flame error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Flame Error',
+    'original_name': 'Flame error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flame_error',
     'unique_id': 'error_flame_mock_serial',
@@ -380,7 +404,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
       'device_class': 'problem',
-      'friendly_name': 'IntelliFire Flame Error',
+      'friendly_name': 'IntelliFire Flame error',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.intellifire_flame_error',
@@ -392,8 +416,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_lights_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -411,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lights error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -418,6 +444,7 @@
     'original_name': 'Lights error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lights_error',
     'unique_id': 'error_lights_mock_serial',
@@ -441,8 +468,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_local_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -460,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Local connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -467,6 +496,7 @@
     'original_name': 'Local connectivity',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'local_connectivity',
     'unique_id': 'local_connectivity_mock_serial',
@@ -490,8 +520,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -509,6 +540,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maintenance error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -516,6 +548,7 @@
     'original_name': 'Maintenance error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maintenance_error',
     'unique_id': 'error_maintenance_mock_serial',
@@ -539,8 +572,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_offline_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -558,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Offline error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -565,6 +600,7 @@
     'original_name': 'Offline error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'offline_error',
     'unique_id': 'error_offline_mock_serial',
@@ -588,8 +624,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_flame_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -607,6 +644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pilot flame error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -614,6 +652,7 @@
     'original_name': 'Pilot flame error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pilot_flame_error',
     'unique_id': 'error_pilot_flame_mock_serial',
@@ -637,8 +676,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_light_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -656,6 +696,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pilot light on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -663,6 +704,7 @@
     'original_name': 'Pilot light on',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pilot_light_on',
     'unique_id': 'pilot_light_on_mock_serial',
@@ -685,8 +727,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_soft_lock_out_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -704,6 +747,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soft lock out error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -711,6 +755,7 @@
     'original_name': 'Soft lock out error',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'soft_lock_out_error',
     'unique_id': 'error_soft_lock_out_mock_serial',
@@ -734,8 +779,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_thermostat_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -753,6 +799,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -760,6 +807,7 @@
     'original_name': 'Thermostat on',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thermostat_on',
     'unique_id': 'thermostat_on_mock_serial',
@@ -782,8 +830,9 @@
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_timer_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -801,6 +850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -808,6 +858,7 @@
     'original_name': 'Timer on',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'timer_on',
     'unique_id': 'timer_on_mock_serial',

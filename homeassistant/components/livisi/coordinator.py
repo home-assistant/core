@@ -26,14 +26,16 @@ from .const import (
     LOGGER,
 )
 
+type LivisiConfigEntry = ConfigEntry[LivisiDataUpdateCoordinator]
+
 
 class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching LIVISI data API."""
 
-    config_entry: ConfigEntry
+    config_entry: LivisiConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, aiolivisi: AioLivisi
+        self, hass: HomeAssistant, config_entry: LivisiConfigEntry, aiolivisi: AioLivisi
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -43,7 +45,6 @@ class LivisiDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
             name="Livisi devices",
             update_interval=timedelta(seconds=DEVICE_POLLING_DELAY),
         )
-        self.hass = hass
         self.aiolivisi = aiolivisi
         self.websocket = Websocket(aiolivisi)
         self.devices: set[str] = set()

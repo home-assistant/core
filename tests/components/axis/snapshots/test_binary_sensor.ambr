@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[event0][binary_sensor.home_daynight_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DayNight 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
@@ -27,6 +29,7 @@
     'original_name': 'DayNight 1',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tns1:VideoSource/tnsaxis:DayNightVision-1',
@@ -49,8 +52,9 @@
 # ---
 # name: test_binary_sensors[event10][binary_sensor.home_object_analytics_device1scenario8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Object Analytics Device1Scenario8',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -75,6 +80,7 @@
     'original_name': 'Object Analytics Device1Scenario8',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8-Device1Scenario8',
@@ -97,8 +103,9 @@
 # ---
 # name: test_binary_sensors[event1][binary_sensor.home_sound_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
@@ -123,6 +131,7 @@
     'original_name': 'Sound 1',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tns1:AudioSource/tnsaxis:TriggerLevel-1',
@@ -145,8 +154,9 @@
 # ---
 # name: test_binary_sensors[event2][binary_sensor.home_pir_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PIR sensor',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -171,6 +182,7 @@
     'original_name': 'PIR sensor',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tns1:Device/tnsaxis:IO/Port-0',
@@ -193,8 +205,9 @@
 # ---
 # name: test_binary_sensors[event3][binary_sensor.home_pir_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PIR 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -219,6 +233,7 @@
     'original_name': 'PIR 0',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tns1:Device/tnsaxis:Sensor/PIR-0',
@@ -241,8 +256,9 @@
 # ---
 # name: test_binary_sensors[event4][binary_sensor.home_fence_guard_profile_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fence Guard Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -267,6 +284,7 @@
     'original_name': 'Fence Guard Profile 1',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/FenceGuard/Camera1Profile1-Camera1Profile1',
@@ -289,8 +307,9 @@
 # ---
 # name: test_binary_sensors[event5][binary_sensor.home_motion_guard_profile_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion Guard Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -315,6 +335,7 @@
     'original_name': 'Motion Guard Profile 1',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1-Camera1Profile1',
@@ -337,8 +358,9 @@
 # ---
 # name: test_binary_sensors[event6][binary_sensor.home_loitering_guard_profile_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loitering Guard Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -363,6 +386,7 @@
     'original_name': 'Loitering Guard Profile 1',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1-Camera1Profile1',
@@ -385,8 +409,9 @@
 # ---
 # name: test_binary_sensors[event7][binary_sensor.home_vmd4_profile_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VMD4 Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -411,6 +437,7 @@
     'original_name': 'VMD4 Profile 1',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1-Camera1Profile1',
@@ -433,8 +460,9 @@
 # ---
 # name: test_binary_sensors[event8][binary_sensor.home_object_analytics_scenario_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Object Analytics Scenario 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -459,6 +488,7 @@
     'original_name': 'Object Analytics Scenario 1',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1-Device1Scenario1',
@@ -481,8 +511,9 @@
 # ---
 # name: test_binary_sensors[event9][binary_sensor.home_vmd4_camera1profile9-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,6 +531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VMD4 Camera1Profile9',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -507,6 +539,7 @@
     'original_name': 'VMD4 Camera1Profile9',
     'platform': 'axis',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00:40:8c:12:34:56-tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile9-Camera1Profile9',

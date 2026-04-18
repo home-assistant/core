@@ -11,7 +11,11 @@ from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -202,7 +206,9 @@ async def test_old_identifiers_are_removed(
 
 
 async def test_smart_by_bond_device_suggested_area(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we can setup a smart by bond device and get the suggested area."""
     config_entry = MockConfigEntry(
@@ -241,11 +247,13 @@ async def test_smart_by_bond_device_suggested_area(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "KXXX12345")})
     assert device is not None
-    assert device.suggested_area == "Den"
+    assert device.area_id == area_registry.async_get_area_by_name("Den").id
 
 
 async def test_bridge_device_suggested_area(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we can setup a bridge bond device and get the suggested area."""
     config_entry = MockConfigEntry(
@@ -289,7 +297,7 @@ async def test_bridge_device_suggested_area(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
     assert device is not None
-    assert device.suggested_area == "Office"
+    assert device.area_id == area_registry.async_get_area_by_name("Office").id
 
 
 async def test_device_remove_devices(

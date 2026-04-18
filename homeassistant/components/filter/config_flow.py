@@ -105,9 +105,18 @@ DATA_SCHEMA_SETUP = vol.Schema(
 )
 
 BASE_OPTIONS_SCHEMA = {
+    vol.Optional(CONF_ENTITY_ID): EntitySelector(EntitySelectorConfig(read_only=True)),
+    vol.Optional(CONF_FILTER_NAME): SelectSelector(
+        SelectSelectorConfig(
+            options=FILTERS,
+            mode=SelectSelectorMode.DROPDOWN,
+            translation_key=CONF_FILTER_NAME,
+            read_only=True,
+        )
+    ),
     vol.Optional(CONF_FILTER_PRECISION, default=DEFAULT_PRECISION): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
-    )
+    ),
 }
 
 OUTLIER_SCHEMA = vol.Schema(
@@ -237,6 +246,7 @@ class FilterConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

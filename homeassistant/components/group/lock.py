@@ -20,9 +20,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -32,6 +29,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.group import GenericGroup
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -117,46 +115,12 @@ class LockGroup(GroupEntity, LockEntity):
     ) -> None:
         """Initialize a lock group."""
         self._entity_ids = entity_ids
+        self.group = GenericGroup(self, entity_ids)
         self._attr_supported_features = LockEntityFeature.OPEN
 
         self._attr_name = name
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
-
-    async def async_lock(self, **kwargs: Any) -> None:
-        """Forward the lock command to all locks in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
-        _LOGGER.debug("Forwarded lock command: %s", data)
-
-        await self.hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_LOCK,
-            data,
-            blocking=True,
-            context=self._context,
-        )
-
-    async def async_unlock(self, **kwargs: Any) -> None:
-        """Forward the unlock command to all locks in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
-        await self.hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            data,
-            blocking=True,
-            context=self._context,
-        )
-
-    async def async_open(self, **kwargs: Any) -> None:
-        """Forward the open command to all locks in the group."""
-        data = {ATTR_ENTITY_ID: self._entity_ids}
-        await self.hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_OPEN,
-            data,
-            blocking=True,
-            context=self._context,
-        )
 
     @callback
     def async_update_group_state(self) -> None:

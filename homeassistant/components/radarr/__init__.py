@@ -9,8 +9,11 @@ from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import (
     CalendarUpdateCoordinator,
     DiskSpaceDataUpdateCoordinator,
@@ -22,8 +25,17 @@ from .coordinator import (
     RadarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Radarr integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bool:

@@ -15,6 +15,8 @@ from homeassistant.components.homekit.const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
+    CONF_LINKED_VALVE_DURATION,
+    CONF_LINKED_VALVE_END_TIME,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -128,6 +130,25 @@ def test_validate_entity_config() -> None:
             }
         },
         {"switch.test": {CONF_TYPE: "invalid_type"}},
+        {
+            "switch.test": {
+                CONF_TYPE: "sprinkler",
+                CONF_LINKED_VALVE_DURATION: "number.valve_duration",  # Must be input_number entity
+                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",  # Must be sensor (timestamp) entity
+            }
+        },
+        {"fan.test": {CONF_TYPE: "invalid_type"}},
+        {
+            "valve.test": {
+                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",  # Must be sensor (timestamp) entity
+                CONF_LINKED_VALVE_DURATION: "number.valve_duration",  # Must be input_number
+            }
+        },
+        {
+            "valve.test": {
+                CONF_TYPE: "sprinkler",  # Extra keys not allowed
+            }
+        },
     ]
 
     for conf in configs:
@@ -211,6 +232,19 @@ def test_validate_entity_config() -> None:
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
+    config = {
+        CONF_TYPE: TYPE_SPRINKLER,
+        CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
+        CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+    }
+    assert vec({"switch.sprinkler": config}) == {
+        "switch.sprinkler": {
+            CONF_TYPE: TYPE_SPRINKLER,
+            CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
+            CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
     assert vec({"sensor.co": {CONF_THRESHOLD_CO: 500}}) == {
         "sensor.co": {CONF_THRESHOLD_CO: 500, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
@@ -240,6 +274,17 @@ def test_validate_entity_config() -> None:
             CONF_VIDEO_PROFILE_NAMES: DEFAULT_VIDEO_PROFILE_NAMES,
             CONF_AUDIO_PACKET_SIZE: DEFAULT_AUDIO_PACKET_SIZE,
             CONF_VIDEO_PACKET_SIZE: DEFAULT_VIDEO_PACKET_SIZE,
+            CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
+        }
+    }
+    config = {
+        CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
+        CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
+    }
+    assert vec({"valve.demo": config}) == {
+        "valve.demo": {
+            CONF_LINKED_VALVE_DURATION: "input_number.valve_duration",
+            CONF_LINKED_VALVE_END_TIME: "sensor.valve_end_time",
             CONF_LOW_BATTERY_THRESHOLD: DEFAULT_LOW_BATTERY_THRESHOLD,
         }
     }

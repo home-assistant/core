@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
-from bond_async import Bond, BPUPSubscriptions, start_bpup
+from bond_async import Bond, BPUPSubscriptions, RequestorUUID, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,14 +16,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
+from homeassistant.helpers.typing import ConfigType
 
 from .const import BRIDGE_MAKE, DOMAIN
 from .models import BondData
+from .services import async_setup_services
 from .utils import BondHub
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BUTTON,
     Platform.COVER,
@@ -38,6 +41,12 @@ _LOGGER = logging.getLogger(__name__)
 type BondConfigEntry = ConfigEntry[BondData]
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
@@ -49,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
         token=token,
         timeout=ClientTimeout(total=_API_TIMEOUT),
         session=async_get_clientsession(hass),
+        requestor_uuid=RequestorUUID.HOME_ASSISTANT,
     )
     hub = BondHub(bond, host)
     try:

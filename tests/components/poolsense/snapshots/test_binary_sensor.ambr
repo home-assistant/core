@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.test_test_com_chlorine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -27,6 +29,7 @@
     'original_name': 'Chlorine status',
     'platform': 'poolsense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'chlorine_status',
     'unique_id': 'test@test.com-Chlorine Status',
@@ -50,8 +53,9 @@
 # ---
 # name: test_all_entities[binary_sensor.test_test_com_ph_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -76,6 +81,7 @@
     'original_name': 'pH status',
     'platform': 'poolsense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ph_status',
     'unique_id': 'test@test.com-pH Status',

@@ -178,7 +178,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 self._async_update_current_humidity(humidity_state)
 
     @callback
-    @pyhap_callback  # type: ignore[misc]
+    @pyhap_callback  # type: ignore[untyped-decorator]
     def run(self) -> None:
         """Handle accessory driver started event.
 

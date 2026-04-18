@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -81,7 +82,7 @@ class WorldTidesInfoSensor(SensorEntity):
         return self._name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this device."""
         attr = {}
 

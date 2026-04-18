@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -26,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SYSTEM_ID, DOMAIN
-from .coordinator import PVOutputDataUpdateCoordinator
+from .coordinator import PvOutputConfigEntry, PVOutputDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -97,11 +96,11 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PvOutputConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a PVOutput sensors based on a config entry."""
-    coordinator: PVOutputDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     system = await coordinator.pvoutput.system()
 
     async_add_entities(

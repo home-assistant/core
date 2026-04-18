@@ -12,8 +12,6 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "lupusec"
-
 NOTIFICATION_ID = "lupusec_notification"
 NOTIFICATION_TITLE = "Lupusec Security Setup"
 
@@ -24,8 +22,10 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
+type LupusecConfigEntry = ConfigEntry[lupupy.Lupusec]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: LupusecConfigEntry) -> bool:
     """Set up this integration using UI."""
 
     host = entry.data[CONF_HOST]
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = lupusec_system
+    entry.runtime_data = lupusec_system
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

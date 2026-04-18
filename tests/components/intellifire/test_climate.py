@@ -2,9 +2,8 @@
 
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -15,7 +14,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@freeze_time("2021-01-01T12:00:00Z")
+@pytest.mark.freeze_time("2021-01-01T12:00:00Z")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_sensor_entities(
     hass: HomeAssistant,

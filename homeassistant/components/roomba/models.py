@@ -6,6 +6,10 @@ from dataclasses import dataclass
 
 from roombapy import Roomba
 
+from homeassistant.config_entries import ConfigEntry
+
+type RoombaConfigEntry = ConfigEntry[RoombaData]
+
 
 @dataclass
 class RoombaData:

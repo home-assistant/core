@@ -1,0 +1,134 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Living room dehumidifier",
+  "category": "cs",
+  "product_id": "b9oyi2yofflroq1g",
+  "product_name": "Dehumidifier ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-02-25T10:34:41+00:00",
+  "create_time": "2025-02-25T10:34:41+00:00",
+  "update_time": "2025-02-25T10:34:41+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "dehumidify_set_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 25,
+        "max": 80,
+        "scale": 0,
+        "step": 5
+      }
+    },
+    "fan_speed_enum": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "high"]
+      }
+    },
+    "swing": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "uv": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "3h"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "dehumidify_set_value": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 25,
+        "max": 80,
+        "scale": 0,
+        "step": 5
+      }
+    },
+    "fan_speed_enum": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "high"]
+      }
+    },
+    "humidity_indoor": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "swing": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "anion": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "uv": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "3h"]
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["E1", "E2"]
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "dehumidify_set_value": 47,
+    "fan_speed_enum": "high",
+    "humidity_indoor": 48,
+    "swing": true,
+    "anion": false,
+    "uv": false,
+    "child_lock": false,
+    "countdown_set": "cancel",
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

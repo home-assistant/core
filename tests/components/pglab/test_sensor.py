@@ -2,9 +2,8 @@
 
 import json
 
-from freezegun import freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
@@ -14,7 +13,7 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 
-@freeze_time("2024-02-26 01:21:34")
+@pytest.mark.freeze_time("2024-02-26 01:21:34")
 @pytest.mark.parametrize(
     "sensor_suffix",
     [

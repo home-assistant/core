@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 import importlib
 import logging
 import sys
@@ -53,11 +52,10 @@ async def async_import_module(hass: HomeAssistant, name: str) -> ModuleType:
         if isinstance(ex, ModuleNotFoundError):
             failure_cache[name] = True
         import_future.set_exception(ex)
-        with suppress(BaseException):
-            # Set the exception retrieved flag on the future since
-            # it will never be retrieved unless there
-            # are concurrent calls
-            import_future.result()
+        # Set the exception retrieved flag on the future since
+        # it will never be retrieved unless there
+        # are concurrent calls
+        import_future.exception()
         raise
     finally:
         del import_futures[name]

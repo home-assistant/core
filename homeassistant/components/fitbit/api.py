@@ -1,22 +1,30 @@
 """API for fitbit bound to Home Assistant OAuth."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import logging
 from typing import Any, cast
 
 from fitbit import Fitbit
 from fitbit.exceptions import HTTPException, HTTPUnauthorized
+from fitbit_web_api import ApiClient, Configuration, DevicesApi, UserApi
+from fitbit_web_api.exceptions import (
+    ApiException,
+    OpenApiException,
+    UnauthorizedException,
+)
+from fitbit_web_api.models.device import Device
+from fitbit_web_api.models.user import User
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import FitbitUnitSystem
 from .exceptions import FitbitApiException, FitbitAuthException
-from .model import FitbitDevice, FitbitProfile
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +46,7 @@ class FitbitApi(ABC):
     ) -> None:
         """Initialize Fitbit auth."""
         self._hass = hass
-        self._profile: FitbitProfile | None = None
+        self._profile: User | None = None
         self._unit_system = unit_system
 
     @abstractmethod
@@ -58,18 +66,24 @@ class FitbitApi(ABC):
             expires_at=float(token[CONF_EXPIRES_AT]),
         )
 
-    async def async_get_user_profile(self) -> FitbitProfile:
+    async def _async_get_fitbit_web_api(self) -> ApiClient:
+        """Create and return an ApiClient configured with the current access token."""
+        token = await self.async_get_access_token()
+        configuration = Configuration()
+        configuration.pool_manager = async_get_clientsession(self._hass)
+        configuration.access_token = token[CONF_ACCESS_TOKEN]
+        return await self._hass.async_add_executor_job(ApiClient, configuration)
+
+    async def async_get_user_profile(self) -> User:
         """Return the user profile from the API."""
         if self._profile is None:
-            client = await self._async_get_client()
-            response: dict[str, Any] = await self._run(client.user_profile_get)
-            _LOGGER.debug("user_profile_get=%s", response)
-            profile = response["user"]
-            self._profile = FitbitProfile(
-                encoded_id=profile["encodedId"],
-                display_name=profile["displayName"],
-                locale=profile.get("locale"),
-            )
+            client = await self._async_get_fitbit_web_api()
+            api = UserApi(client)
+            api_response = await self._run_async(api.get_profile)
+            if not api_response.user:
+                raise FitbitApiException("No user profile returned from fitbit API")
+            _LOGGER.debug("user_profile_get=%s", api_response.to_dict())
+            self._profile = api_response.user
         return self._profile
 
     async def async_get_unit_system(self) -> FitbitUnitSystem:
@@ -94,21 +108,13 @@ class FitbitApi(ABC):
             return FitbitUnitSystem.METRIC
         return FitbitUnitSystem.EN_US
 
-    async def async_get_devices(self) -> list[FitbitDevice]:
-        """Return available devices."""
-        client = await self._async_get_client()
-        devices: list[dict[str, str]] = await self._run(client.get_devices)
+    async def async_get_devices(self) -> list[Device]:
+        """Return available devices using fitbit-web-api."""
+        client = await self._async_get_fitbit_web_api()
+        devices_api = DevicesApi(client)
+        devices: list[Device] = await self._run_async(devices_api.get_devices)
         _LOGGER.debug("get_devices=%s", devices)
-        return [
-            FitbitDevice(
-                id=device["id"],
-                device_version=device["deviceVersion"],
-                battery_level=int(device["batteryLevel"]),
-                battery=device["battery"],
-                type=device["type"],
-            )
-            for device in devices
-        ]
+        return devices
 
     async def async_get_latest_time_series(self, resource_type: str) -> dict[str, Any]:
         """Return the most recent value from the time series for the specified resource type."""
@@ -139,6 +145,20 @@ class FitbitApi(ABC):
         except HTTPException as err:
             _LOGGER.debug("Error from fitbit API: %s", err)
             raise FitbitApiException("Error from fitbit API") from err
+
+    async def _run_async[_T](self, func: Callable[[], Awaitable[_T]]) -> _T:
+        """Run client command."""
+        try:
+            return await func()
+        except UnauthorizedException as err:
+            _LOGGER.debug("Unauthorized error from fitbit API: %s", err)
+            raise FitbitAuthException("Authentication error from fitbit API") from err
+        except ApiException as err:
+            _LOGGER.debug("Error from fitbit API: %s", err)
+            raise FitbitApiException("Error from fitbit API") from err
+        except OpenApiException as err:
+            _LOGGER.debug("Error communicating with fitbit API: %s", err)
+            raise FitbitApiException("Communication error from fitbit API") from err
 
 
 class OAuthFitbitApi(FitbitApi):

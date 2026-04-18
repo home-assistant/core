@@ -141,6 +141,12 @@ SSDP = {
             "manufacturer": "Logitech",
         },
     ],
+    "hegel": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Hegel",
+        },
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1",
@@ -164,6 +170,13 @@ SSDP = {
         {
             "manufacturer": "Hyperion Open Source Ambient Lighting",
             "st": "urn:hyperion-project.org:device:basic:1",
+        },
+    ],
+    "imeon_inverter": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "IMEON",
+            "st": "upnp:rootdevice",
         },
     ],
     "isy994": [
@@ -346,7 +359,7 @@ SSDP = {
             "modelDescription": "UniFi Dream Machine Pro Max",
         },
     ],
-    "unifiprotect": [
+    "unifi_discovery": [
         {
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine",
@@ -378,6 +391,12 @@ SSDP = {
             "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
         },
     ],
+    "victron_gx": [
+        {
+            "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
+        },
+    ],
     "webostv": [
         {
             "st": "urn:lge-com:service:webos-second-screen:1",
@@ -391,6 +410,16 @@ SSDP = {
     "wilight": [
         {
             "manufacturer": "All Automacao Ltda",
+        },
+    ],
+    "xbox": [
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox 360",
+        },
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox One",
         },
     ],
     "yamaha_musiccast": [

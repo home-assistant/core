@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_buttons[healer_fixture][button.test_user_allocate_all_stat_points-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'Allocate all stat points',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
@@ -48,8 +51,9 @@
 # ---
 # name: test_buttons[healer_fixture][button.test_user_blessing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -67,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blessing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +79,7 @@
     'original_name': 'Blessing',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.HEAL_ALL: 'heal_all'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_heal_all',
@@ -96,8 +102,9 @@
 # ---
 # name: test_buttons[healer_fixture][button.test_user_buy_a_health_potion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -115,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -122,6 +130,7 @@
     'original_name': 'Buy a health potion',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
@@ -144,8 +153,9 @@
 # ---
 # name: test_buttons[healer_fixture][button.test_user_healing_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -163,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Healing light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -170,6 +181,7 @@
     'original_name': 'Healing light',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.HEAL: 'heal'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_heal',
@@ -192,8 +204,9 @@
 # ---
 # name: test_buttons[healer_fixture][button.test_user_protective_aura-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -211,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Protective aura',
     'options': dict({
     }),
     'original_device_class': None,
@@ -218,6 +232,7 @@
     'original_name': 'Protective aura',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.PROTECT_AURA: 'protect_aura'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_protect_aura',
@@ -240,8 +255,9 @@
 # ---
 # name: test_buttons[healer_fixture][button.test_user_revive_from_death-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -259,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
     'original_device_class': None,
@@ -266,6 +283,7 @@
     'original_name': 'Revive from death',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
@@ -287,8 +305,9 @@
 # ---
 # name: test_buttons[healer_fixture][button.test_user_searing_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -306,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Searing brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -313,6 +333,7 @@
     'original_name': 'Searing brightness',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.BRIGHTNESS: 'brightness'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_brightness',
@@ -335,8 +356,9 @@
 # ---
 # name: test_buttons[healer_fixture][button.test_user_start_my_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -354,6 +376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,6 +384,7 @@
     'original_name': 'Start my day',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
@@ -382,8 +406,9 @@
 # ---
 # name: test_buttons[rogue_fixture][button.test_user_allocate_all_stat_points-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -401,6 +426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -408,6 +434,7 @@
     'original_name': 'Allocate all stat points',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
@@ -429,8 +456,9 @@
 # ---
 # name: test_buttons[rogue_fixture][button.test_user_buy_a_health_potion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -448,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -455,6 +484,7 @@
     'original_name': 'Buy a health potion',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
@@ -477,8 +507,9 @@
 # ---
 # name: test_buttons[rogue_fixture][button.test_user_revive_from_death-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -496,6 +527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
     'original_device_class': None,
@@ -503,6 +535,7 @@
     'original_name': 'Revive from death',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
@@ -524,8 +557,9 @@
 # ---
 # name: test_buttons[rogue_fixture][button.test_user_start_my_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -543,6 +577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
     'original_device_class': None,
@@ -550,6 +585,7 @@
     'original_name': 'Start my day',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
@@ -571,8 +607,9 @@
 # ---
 # name: test_buttons[rogue_fixture][button.test_user_stealth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -590,6 +627,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stealth',
     'options': dict({
     }),
     'original_device_class': None,
@@ -597,6 +635,7 @@
     'original_name': 'Stealth',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.STEALTH: 'stealth'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_stealth',
@@ -619,8 +658,9 @@
 # ---
 # name: test_buttons[rogue_fixture][button.test_user_tools_of_the_trade-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -638,6 +678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tools of the trade',
     'options': dict({
     }),
     'original_device_class': None,
@@ -645,6 +686,7 @@
     'original_name': 'Tools of the trade',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.TOOLS_OF_TRADE: 'tools_of_trade'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_tools_of_trade',
@@ -667,8 +709,9 @@
 # ---
 # name: test_buttons[warrior_fixture][button.test_user_allocate_all_stat_points-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -686,6 +729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -693,6 +737,7 @@
     'original_name': 'Allocate all stat points',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
@@ -714,8 +759,9 @@
 # ---
 # name: test_buttons[warrior_fixture][button.test_user_buy_a_health_potion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -733,6 +779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -740,6 +787,7 @@
     'original_name': 'Buy a health potion',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
@@ -762,8 +810,9 @@
 # ---
 # name: test_buttons[warrior_fixture][button.test_user_defensive_stance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -781,6 +830,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defensive stance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -788,6 +838,7 @@
     'original_name': 'Defensive stance',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.DEFENSIVE_STANCE: 'defensive_stance'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_defensive_stance',
@@ -810,8 +861,9 @@
 # ---
 # name: test_buttons[warrior_fixture][button.test_user_intimidating_gaze-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -829,6 +881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intimidating gaze',
     'options': dict({
     }),
     'original_device_class': None,
@@ -836,6 +889,7 @@
     'original_name': 'Intimidating gaze',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.INTIMIDATE: 'intimidate'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intimidate',
@@ -858,8 +912,9 @@
 # ---
 # name: test_buttons[warrior_fixture][button.test_user_revive_from_death-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -877,6 +932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
     'original_device_class': None,
@@ -884,6 +940,7 @@
     'original_name': 'Revive from death',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
@@ -905,8 +962,9 @@
 # ---
 # name: test_buttons[warrior_fixture][button.test_user_start_my_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -924,6 +982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
     'original_device_class': None,
@@ -931,6 +990,7 @@
     'original_name': 'Start my day',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
@@ -952,8 +1012,9 @@
 # ---
 # name: test_buttons[warrior_fixture][button.test_user_valorous_presence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -971,6 +1032,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valorous presence',
     'options': dict({
     }),
     'original_device_class': None,
@@ -978,6 +1040,7 @@
     'original_name': 'Valorous presence',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.VALOROUS_PRESENCE: 'valorous_presence'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_valorous_presence',
@@ -1000,8 +1063,9 @@
 # ---
 # name: test_buttons[wizard_fixture][button.test_user_allocate_all_stat_points-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1019,6 +1083,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allocate all stat points',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1026,6 +1091,7 @@
     'original_name': 'Allocate all stat points',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
@@ -1047,8 +1113,9 @@
 # ---
 # name: test_buttons[wizard_fixture][button.test_user_buy_a_health_potion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1066,6 +1133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Buy a health potion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1073,6 +1141,7 @@
     'original_name': 'Buy a health potion',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
@@ -1095,8 +1164,9 @@
 # ---
 # name: test_buttons[wizard_fixture][button.test_user_chilling_frost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1114,6 +1184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chilling frost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1121,6 +1192,7 @@
     'original_name': 'Chilling frost',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.FROST: 'frost'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_frost',
@@ -1143,8 +1215,9 @@
 # ---
 # name: test_buttons[wizard_fixture][button.test_user_earthquake-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1162,6 +1235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Earthquake',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1169,6 +1243,7 @@
     'original_name': 'Earthquake',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.EARTH: 'earth'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_earth',
@@ -1191,8 +1266,9 @@
 # ---
 # name: test_buttons[wizard_fixture][button.test_user_ethereal_surge-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1210,6 +1286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ethereal surge',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1217,6 +1294,7 @@
     'original_name': 'Ethereal surge',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.MPHEAL: 'mpheal'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mpheal',
@@ -1239,8 +1317,9 @@
 # ---
 # name: test_buttons[wizard_fixture][button.test_user_revive_from_death-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1258,6 +1337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Revive from death',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1265,6 +1345,7 @@
     'original_name': 'Revive from death',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
@@ -1286,8 +1367,9 @@
 # ---
 # name: test_buttons[wizard_fixture][button.test_user_start_my_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1305,6 +1387,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start my day',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1312,6 +1395,7 @@
     'original_name': 'Start my day',
     'platform': 'habitica',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',

@@ -11,6 +11,7 @@ import pytest
 from requests_mock.mocker import Mocker
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -20,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -97,7 +99,7 @@ def mock_config_entry(
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -189,12 +191,13 @@ def mock_profile_response(
 
 
 @pytest.fixture(name="profile", autouse=True)
-def mock_profile(requests_mock: Mocker, profile_response: dict[str, Any]) -> None:
+def mock_profile(
+    aioclient_mock: AiohttpClientMocker, profile_response: dict[str, Any]
+) -> None:
     """Fixture to setup fake requests made to Fitbit API during config flow."""
-    requests_mock.register_uri(
-        "GET",
+    aioclient_mock.get(
         PROFILE_API_URL,
-        status_code=HTTPStatus.OK,
+        status=HTTPStatus.OK,
         json=profile_response,
     )
 
@@ -206,12 +209,13 @@ def mock_device_response() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(autouse=True)
-def mock_devices(requests_mock: Mocker, devices_response: dict[str, Any]) -> None:
+def mock_devices(
+    aioclient_mock: AiohttpClientMocker, devices_response: dict[str, Any]
+) -> None:
     """Fixture to setup fake device responses."""
-    requests_mock.register_uri(
-        "GET",
+    aioclient_mock.get(
         DEVICES_API_URL,
-        status_code=HTTPStatus.OK,
+        status=HTTPStatus.OK,
         json=devices_response,
     )
 

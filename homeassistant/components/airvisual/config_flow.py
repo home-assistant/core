@@ -130,7 +130,7 @@ class AirVisualFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 try:
                     await coro
-                except (InvalidKeyError, KeyExpiredError, UnauthorizedError):
+                except InvalidKeyError, KeyExpiredError, UnauthorizedError:
                     errors[CONF_API_KEY] = "invalid_api_key"
                 except NotFoundError:
                     errors[CONF_CITY] = "location_not_found"

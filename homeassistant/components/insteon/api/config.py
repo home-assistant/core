@@ -146,14 +146,14 @@ async def async_link_to_dict(
     device_name = await async_device_name(dev_registry, address)
     target_name = await async_device_name(dev_registry, record.target)
     link_dict["address"] = str(address)
-    link_dict["device_name"] = device_name if device_name else str(address)
+    link_dict["device_name"] = device_name or str(address)
     link_dict["mem_addr"] = record.mem_addr
     link_dict["in_use"] = record.is_in_use
     link_dict["group"] = record.group
     link_dict["is_controller"] = record.is_controller
     link_dict["highwater"] = record.is_high_water_mark
     link_dict["target"] = str(record.target)
-    link_dict["target_name"] = target_name if target_name else str(record.target)
+    link_dict["target_name"] = target_name or str(record.target)
     link_dict["data1"] = record.data1
     link_dict["data2"] = record.data2
     link_dict["data3"] = record.data3

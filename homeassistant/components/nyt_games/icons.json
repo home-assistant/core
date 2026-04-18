@@ -1,14 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "wordles_played": {
-        "default": "mdi:text-long"
+      "connections_played": {
+        "default": "mdi:table-large"
       },
-      "won": {
-        "default": "mdi:trophy-award"
-      },
-      "streak": {
-        "default": "mdi:calendar-range"
+      "last_played": {
+        "default": "mdi:calendar"
       },
       "max_streak": {
         "default": "mdi:calendar-month"
@@ -16,17 +13,20 @@
       "spelling_bees_played": {
         "default": "mdi:beehive-outline"
       },
-      "total_words": {
-        "default": "mdi:beehive-outline"
+      "streak": {
+        "default": "mdi:calendar-range"
       },
       "total_pangrams": {
         "default": "mdi:beehive-outline"
       },
-      "connections_played": {
-        "default": "mdi:table-large"
+      "total_words": {
+        "default": "mdi:beehive-outline"
       },
-      "last_played": {
-        "default": "mdi:calendar"
+      "won": {
+        "default": "mdi:trophy-award"
+      },
+      "wordles_played": {
+        "default": "mdi:text-long"
       }
     }
   }

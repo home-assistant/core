@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.devolo_home_network.const import SHORT_UPDATE_INTERVAL
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -24,21 +25,20 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_image_setup(hass: HomeAssistant) -> None:
+async def test_image_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test default setup of the image component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
-    assert (
-        hass.states.get(
-            f"{IMAGE_DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code"
-        )
-        is not None
-    )
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert not entity_registry.async_get(
+        f"{IMAGE_DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code"
+    ).disabled
 
 
 @pytest.mark.freeze_time("2023-01-13 12:00:00+00:00")
@@ -53,18 +53,18 @@ async def test_guest_wifi_qr(
     """Test showing a QR code of the guest wifi credentials."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    state_key = f"{IMAGE_DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code"
+    entity_id = f"{IMAGE_DOMAIN}.{device_name}_guest_wi_fi_credentials_as_qr_code"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state.name == "Mock Title Guest Wi-Fi credentials as QR code"
     assert state.state == dt_util.utcnow().isoformat()
-    assert entity_registry.async_get(state_key) == snapshot
+    assert entity_registry.async_get(entity_id) == snapshot
 
     client = await hass_client()
-    resp = await client.get(f"/api/image_proxy/{state_key}")
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body == snapshot
@@ -75,7 +75,7 @@ async def test_guest_wifi_qr(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -87,13 +87,11 @@ async def test_guest_wifi_qr(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == dt_util.utcnow().isoformat()
 
     client = await hass_client()
-    resp = await client.get(f"/api/image_proxy/{state_key}")
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
     assert resp.status == HTTPStatus.OK
     assert await resp.read() != body
-
-    await hass.config_entries.async_unload(entry.entry_id)

@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
+from typing import Any
 
-from homeassistant.const import CONF_ID, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 
+from .const import DOMAIN, SENSOR_UNIQUE_ID_MIGRATION
 from .coordinator import TwenteMilieuConfigEntry, TwenteMilieuDataUpdateCoordinator
-
-SERVICE_UPDATE = "update"
-SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
@@ -20,6 +18,21 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: TwenteMilieuConfigEntry
 ) -> bool:
     """Set up Twente Milieu from a config entry."""
+    old_prefix = f"{DOMAIN}_{entry.unique_id}_"
+
+    @callback
+    def _migrate_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, Any] | None:
+        if not entity_entry.unique_id.startswith(old_prefix):
+            return None
+        old_key = entity_entry.unique_id.removeprefix(old_prefix)
+        if (new_key := SENSOR_UNIQUE_ID_MIGRATION.get(old_key)) is None:
+            return None
+        return {"new_unique_id": f"{entry.unique_id}_{new_key}"}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)
+
     coordinator = TwenteMilieuDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 

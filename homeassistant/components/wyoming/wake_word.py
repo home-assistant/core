@@ -147,8 +147,10 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                                     queued_audio = [audio_task.result()]
 
                                 return wake_word.DetectionResult(
-                                    wake_word_id=detection.name,
-                                    wake_word_phrase=self._get_phrase(detection.name),
+                                    wake_word_id=detection.name or "",
+                                    wake_word_phrase=self._get_phrase(
+                                        detection.name or ""
+                                    ),
                                     timestamp=detection.timestamp,
                                     queued_audio=queued_audio,
                                 )
@@ -188,7 +190,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                     for task in pending:
                         task.cancel()
 
-        except (OSError, WyomingError):
+        except OSError, WyomingError:
             _LOGGER.exception("Error processing audio stream")
 
         return None

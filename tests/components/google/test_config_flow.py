@@ -22,6 +22,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -59,7 +60,7 @@ async def request_setup(current_request_with_host: None) -> None:
 @pytest.fixture(autouse=True)
 async def setup_app_creds(hass: HomeAssistant) -> None:
     """Fixture to setup application credentials component."""
-    await async_setup_component(hass, "application_credentials", {})
+    await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
 
 
 @pytest.fixture
@@ -570,7 +571,7 @@ async def test_reauth_flow(
     ("primary_calendar_error", "primary_calendar_status", "reason"),
     [
         (ClientError(), None, "cannot_connect"),
-        (None, HTTPStatus.FORBIDDEN, "api_disabled"),
+        (None, HTTPStatus.FORBIDDEN, "calendar_api_disabled"),
         (None, HTTPStatus.SERVICE_UNAVAILABLE, "cannot_connect"),
     ],
 )

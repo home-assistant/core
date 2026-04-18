@@ -21,11 +21,13 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, STATE_
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from .conftest import MockGenericDeviceEntryType
+
 
 async def test_generic_number_entity(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic number entity."""
     entity_info = [
@@ -33,7 +35,6 @@ async def test_generic_number_entity(
             object_id="mynumber",
             key=1,
             name="my number",
-            unique_id="my_number",
             max_value=100,
             min_value=0,
             step=1,
@@ -48,24 +49,24 @@ async def test_generic_number_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("number.test_mynumber")
+    state = hass.states.get("number.test_my_number")
     assert state is not None
     assert state.state == "50"
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_mynumber", ATTR_VALUE: 50},
+        {ATTR_ENTITY_ID: "number.test_my_number", ATTR_VALUE: 50},
         blocking=True,
     )
-    mock_client.number_command.assert_has_calls([call(1, 50)])
+    mock_client.number_command.assert_has_calls([call(1, 50, device_id=0)])
     mock_client.number_command.reset_mock()
 
 
 async def test_generic_number_nan(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic number entity with nan state."""
     entity_info = [
@@ -73,7 +74,6 @@ async def test_generic_number_nan(
             object_id="mynumber",
             key=1,
             name="my number",
-            unique_id="my_number",
             max_value=100,
             min_value=0,
             step=1,
@@ -89,7 +89,7 @@ async def test_generic_number_nan(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("number.test_mynumber")
+    state = hass.states.get("number.test_my_number")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -97,7 +97,7 @@ async def test_generic_number_nan(
 async def test_generic_number_with_unit_of_measurement_as_empty_string(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic number entity with nan state."""
     entity_info = [
@@ -105,7 +105,6 @@ async def test_generic_number_with_unit_of_measurement_as_empty_string(
             object_id="mynumber",
             key=1,
             name="my number",
-            unique_id="my_number",
             max_value=100,
             min_value=0,
             step=1,
@@ -121,7 +120,7 @@ async def test_generic_number_with_unit_of_measurement_as_empty_string(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("number.test_mynumber")
+    state = hass.states.get("number.test_my_number")
     assert state is not None
     assert state.state == "42"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -130,7 +129,7 @@ async def test_generic_number_with_unit_of_measurement_as_empty_string(
 async def test_generic_number_entity_set_when_disconnected(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_generic_device_entry,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
     """Test a generic number entity."""
     entity_info = [
@@ -138,7 +137,6 @@ async def test_generic_number_entity_set_when_disconnected(
             object_id="mynumber",
             key=1,
             name="my number",
-            unique_id="my_number",
             max_value=100,
             min_value=0,
             step=1,
@@ -160,7 +158,7 @@ async def test_generic_number_entity_set_when_disconnected(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_mynumber", ATTR_VALUE: 20},
+            {ATTR_ENTITY_ID: "number.test_my_number", ATTR_VALUE: 20},
             blocking=True,
         )
     mock_client.number_command.reset_mock()

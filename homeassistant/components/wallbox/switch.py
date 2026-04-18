@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -14,10 +13,9 @@ from .const import (
     CHARGER_PAUSE_RESUME_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
-    DOMAIN,
     ChargerStatus,
 )
-from .coordinator import WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
 SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
@@ -30,14 +28,18 @@ SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WallboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox sensor entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
     async_add_entities(
         [WallboxSwitch(coordinator, SWITCH_TYPES[CHARGER_PAUSE_RESUME_KEY])]
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxSwitch(WallboxEntity, SwitchEntity):

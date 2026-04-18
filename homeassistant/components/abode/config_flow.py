@@ -64,7 +64,7 @@ class AbodeFlowHandler(ConfigFlow, domain=DOMAIN):
             else:
                 errors = {"base": "cannot_connect"}
 
-        except (ConnectTimeout, HTTPError):
+        except ConnectTimeout, HTTPError:
             errors = {"base": "cannot_connect"}
 
         if errors:

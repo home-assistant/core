@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 
 import pytest
 from requests import ConnectTimeout
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.rova import DOMAIN
+from homeassistant.components.rova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

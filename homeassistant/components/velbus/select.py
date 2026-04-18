@@ -1,6 +1,6 @@
 """Support for Velbus select."""
 
-from velbusaio.channels import SelectedProgram
+from velbusaio.properties import SelectedProgram
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
@@ -31,6 +31,7 @@ class VelbusSelect(VelbusEntity, SelectEntity):
 
     _channel: SelectedProgram
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "select_program"
 
     def __init__(
         self,

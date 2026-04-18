@@ -1,0 +1,127 @@
+{
+  "name": "Intercom",
+  "category": "sp",
+  "product_id": "csr2fqitalj5o0tq",
+  "product_name": "Security Camera ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-10-31T14:49:40+00:00",
+  "create_time": "2025-10-31T14:49:40+00:00",
+  "update_time": "2025-10-31T14:49:40+00:00",
+  "function": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "sd_storge": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "sd_status": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 5,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "movement_detect_pic": {
+      "type": "Raw",
+      "value": {}
+    },
+    "sd_format_state": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": -20000,
+        "max": 20000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "doorbell_active": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "doorbell_pic": {
+      "type": "Raw",
+      "value": {}
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "alarm_message": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status": {
+    "basic_flip": false,
+    "basic_osd": true,
+    "motion_sensitivity": 1,
+    "sd_storge": "0|0|0",
+    "sd_status": 1,
+    "sd_format": false,
+    "movement_detect_pic": "**REDACTED**",
+    "sd_format_state": 0,
+    "motion_switch": false,
+    "doorbell_active": "",
+    "doorbell_pic": "**REDACTED**",
+    "device_restart": false,
+    "alarm_message": "**REDACTED**"
+  }
+}

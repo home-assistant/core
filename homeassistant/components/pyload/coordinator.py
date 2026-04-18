@@ -64,19 +64,12 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
                 **await self.pyload.get_status(),
                 free_space=await self.pyload.free_space(),
             )
-        except InvalidAuth:
-            try:
-                await self.pyload.login()
-            except InvalidAuth as exc:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_authentication_exception",
-                    translation_placeholders={CONF_USERNAME: self.pyload.username},
-                ) from exc
-            _LOGGER.debug(
-                "Unable to retrieve data due to cookie expiration, retrying after 20 seconds"
-            )
-            return self.data
+        except InvalidAuth as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_USERNAME: self.pyload.username},
+            ) from e
         except CannotConnect as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -92,7 +85,6 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
         """Set up the coordinator."""
 
         try:
-            await self.pyload.login()
             self.version = await self.pyload.version()
         except CannotConnect as e:
             raise ConfigEntryNotReady(

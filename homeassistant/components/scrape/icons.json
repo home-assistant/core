@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "sections": {
+          "advanced": "mdi:cog",
+          "auth": "mdi:lock"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "sections": {
+          "advanced": "mdi:cog"
+        }
+      }
+    }
+  }
+}

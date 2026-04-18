@@ -2,15 +2,19 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar, override
+from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
+from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.types import FilterErrorCode
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.components.sensor.const import SensorDeviceClass
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfFrequency, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,14 +24,35 @@ from .entity import EheimDigitalEntity
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
-_DeviceT_co = TypeVar("_DeviceT_co", bound=EheimDigitalDevice, covariant=True)
-
 
 @dataclass(frozen=True, kw_only=True)
-class EheimDigitalSensorDescription(SensorEntityDescription, Generic[_DeviceT_co]):
+class EheimDigitalSensorDescription[_DeviceT: EheimDigitalDevice](
+    SensorEntityDescription
+):
     """Class describing EHEIM Digital sensor entities."""
 
-    value_fn: Callable[[_DeviceT_co], float | str | None]
+    value_fn: Callable[[_DeviceT], float | str | None]
+
+
+FILTER_DESCRIPTIONS: tuple[EheimDigitalSensorDescription[EheimDigitalFilter], ...] = (
+    EheimDigitalSensorDescription[EheimDigitalFilter](
+        key="current_speed",
+        translation_key="current_speed",
+        value_fn=lambda device: device.current_speed,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=1,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
+    EheimDigitalSensorDescription[EheimDigitalFilter](
+        key="service_hours",
+        translation_key="service_hours",
+        value_fn=lambda device: device.service_hours,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_unit_of_measurement=UnitOfTime.DAYS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
@@ -51,11 +76,7 @@ CLASSICVARIO_DESCRIPTIONS: tuple[
     EheimDigitalSensorDescription[EheimDigitalClassicVario](
         key="error_code",
         translation_key="error_code",
-        value_fn=(
-            lambda device: device.error_code.name.lower()
-            if device.error_code is not None
-            else None
-        ),
+        value_fn=lambda device: device.error_code.name.lower(),
         device_class=SensorDeviceClass.ENUM,
         options=[name.lower() for name in FilterErrorCode._member_names_],
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -75,8 +96,15 @@ async def async_setup_entry(
         device_address: dict[str, EheimDigitalDevice],
     ) -> None:
         """Set up the light entities for one or multiple devices."""
-        entities: list[EheimDigitalSensor[EheimDigitalDevice]] = []
+        entities: list[EheimDigitalSensor[Any]] = []
         for device in device_address.values():
+            if isinstance(device, EheimDigitalFilter):
+                entities += [
+                    EheimDigitalSensor[EheimDigitalFilter](
+                        coordinator, device, description
+                    )
+                    for description in FILTER_DESCRIPTIONS
+                ]
             if isinstance(device, EheimDigitalClassicVario):
                 entities += [
                     EheimDigitalSensor[EheimDigitalClassicVario](
@@ -91,18 +119,18 @@ async def async_setup_entry(
     async_setup_device_entities(coordinator.hub.devices)
 
 
-class EheimDigitalSensor(
-    EheimDigitalEntity[_DeviceT_co], SensorEntity, Generic[_DeviceT_co]
+class EheimDigitalSensor[_DeviceT: EheimDigitalDevice](
+    EheimDigitalEntity[_DeviceT], SensorEntity
 ):
     """Represent a EHEIM Digital sensor entity."""
 
-    entity_description: EheimDigitalSensorDescription[_DeviceT_co]
+    entity_description: EheimDigitalSensorDescription[_DeviceT]
 
     def __init__(
         self,
         coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT_co,
-        description: EheimDigitalSensorDescription[_DeviceT_co],
+        device: _DeviceT,
+        description: EheimDigitalSensorDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital number entity."""
         super().__init__(coordinator, device)

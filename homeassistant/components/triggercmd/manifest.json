@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/triggercmd",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["triggercmd==0.0.27"]
+  "requirements": ["triggercmd==0.0.36"]
 }

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.car_bill_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -32,6 +34,7 @@
     'original_name': 'Bill energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bill_energy',
     'unique_id': '12345-abc123-bill-energy',
@@ -58,8 +61,9 @@
 # ---
 # name: test_sensors[sensor.car_daily_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -79,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -89,6 +94,7 @@
     'original_name': 'Daily energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_energy',
     'unique_id': '12345-abc123-daily-energy',
@@ -115,8 +121,9 @@
 # ---
 # name: test_sensors[sensor.car_monthly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -136,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -146,6 +154,7 @@
     'original_name': 'Monthly energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_energy',
     'unique_id': '12345-abc123-monthly-energy',
@@ -172,8 +181,9 @@
 # ---
 # name: test_sensors[sensor.car_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -193,13 +203,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:car-electric',
     'original_name': 'Power',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-abc123-usage',
@@ -226,8 +241,9 @@
 # ---
 # name: test_sensors[sensor.car_weekly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -247,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -257,6 +274,7 @@
     'original_name': 'Weekly energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_energy',
     'unique_id': '12345-abc123-weekly-energy',
@@ -283,8 +301,9 @@
 # ---
 # name: test_sensors[sensor.car_yearly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -304,6 +323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -314,6 +334,7 @@
     'original_name': 'Yearly energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yearly_energy',
     'unique_id': '12345-abc123-yearly-energy',
@@ -340,8 +361,9 @@
 # ---
 # name: test_sensors[sensor.oven_bill_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -361,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -371,6 +394,7 @@
     'original_name': 'Bill energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bill_energy',
     'unique_id': '12345-def456-bill-energy',
@@ -397,8 +421,9 @@
 # ---
 # name: test_sensors[sensor.oven_daily_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -418,6 +443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -428,6 +454,7 @@
     'original_name': 'Daily energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_energy',
     'unique_id': '12345-def456-daily-energy',
@@ -454,8 +481,9 @@
 # ---
 # name: test_sensors[sensor.oven_monthly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -475,6 +503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -485,6 +514,7 @@
     'original_name': 'Monthly energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_energy',
     'unique_id': '12345-def456-monthly-energy',
@@ -511,8 +541,9 @@
 # ---
 # name: test_sensors[sensor.oven_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -532,13 +563,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': 'mdi:stove',
     'original_name': 'Power',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-def456-usage',
@@ -565,8 +601,9 @@
 # ---
 # name: test_sensors[sensor.oven_weekly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -586,6 +623,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -596,6 +634,7 @@
     'original_name': 'Weekly energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weekly_energy',
     'unique_id': '12345-def456-weekly-energy',
@@ -622,8 +661,9 @@
 # ---
 # name: test_sensors[sensor.oven_yearly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -643,6 +683,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -653,6 +694,7 @@
     'original_name': 'Yearly energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yearly_energy',
     'unique_id': '12345-def456-yearly-energy',
@@ -679,8 +721,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -700,13 +743,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill Energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-bill-usage',
@@ -733,8 +781,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -754,13 +803,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill From Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill From Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-bill-from_grid',
@@ -787,8 +841,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -808,13 +863,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Net Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill Net Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-bill-net_production',
@@ -841,8 +901,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -860,6 +921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -867,6 +929,7 @@
     'original_name': 'Bill Net Production Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-bill-production_pct',
@@ -890,8 +953,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -911,13 +975,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-bill-production',
@@ -944,8 +1013,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -963,6 +1033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -970,6 +1041,7 @@
     'original_name': 'Bill Solar Powered Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-bill-solar_powered',
@@ -993,8 +1065,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1014,13 +1087,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bill To Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Bill To Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-bill-to_grid',
@@ -1047,8 +1125,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1068,13 +1147,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily Energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-daily-usage',
@@ -1101,8 +1185,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1122,13 +1207,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily From Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily From Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-daily-from_grid',
@@ -1155,8 +1245,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1176,13 +1267,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Net Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily Net Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-daily-net_production',
@@ -1209,8 +1305,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1228,6 +1325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1235,6 +1333,7 @@
     'original_name': 'Daily Net Production Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-daily-production_pct',
@@ -1258,8 +1357,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1279,13 +1379,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-daily-production',
@@ -1312,8 +1417,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1331,6 +1437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1338,6 +1445,7 @@
     'original_name': 'Daily Solar Powered Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-daily-solar_powered',
@@ -1361,8 +1469,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1382,13 +1491,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily To Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Daily To Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-daily-to_grid',
@@ -1415,8 +1529,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1436,13 +1551,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-active-usage',
@@ -1468,8 +1588,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_l1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1489,13 +1610,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'L1 Voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'L1 Voltage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-L1',
@@ -1521,8 +1647,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_l2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1542,13 +1669,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'L2 Voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'L2 Voltage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-L2',
@@ -1574,8 +1706,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1595,13 +1728,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly Energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-monthly-usage',
@@ -1628,8 +1766,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1649,13 +1788,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly From Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly From Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-monthly-from_grid',
@@ -1682,8 +1826,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1703,13 +1848,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Net Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly Net Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-monthly-net_production',
@@ -1736,8 +1886,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1755,6 +1906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1762,6 +1914,7 @@
     'original_name': 'Monthly Net Production Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-monthly-production_pct',
@@ -1785,8 +1938,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1806,13 +1960,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-monthly-production',
@@ -1839,8 +1998,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1858,6 +2018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1865,6 +2026,7 @@
     'original_name': 'Monthly Solar Powered Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-monthly-solar_powered',
@@ -1888,8 +2050,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1909,13 +2072,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly To Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Monthly To Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-monthly-to_grid',
@@ -1942,8 +2110,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1963,13 +2132,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-active-production',
@@ -1995,8 +2169,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2016,13 +2191,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly Energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-weekly-usage',
@@ -2049,8 +2229,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2070,13 +2251,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly From Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly From Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-weekly-from_grid',
@@ -2103,8 +2289,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2124,13 +2311,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Net Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly Net Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-weekly-net_production',
@@ -2157,8 +2349,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2176,6 +2369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2183,6 +2377,7 @@
     'original_name': 'Weekly Net Production Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-weekly-production_pct',
@@ -2206,8 +2401,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2227,13 +2423,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-weekly-production',
@@ -2260,8 +2461,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2279,6 +2481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2286,6 +2489,7 @@
     'original_name': 'Weekly Solar Powered Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-weekly-solar_powered',
@@ -2309,8 +2513,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2330,13 +2535,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly To Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Weekly To Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-weekly-to_grid',
@@ -2363,8 +2573,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2384,13 +2595,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly Energy',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-yearly-usage',
@@ -2417,8 +2633,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2438,13 +2655,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly From Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly From Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-yearly-from_grid',
@@ -2471,8 +2693,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2492,13 +2715,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Net Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly Net Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-yearly-net_production',
@@ -2525,8 +2753,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2544,6 +2773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Net Production Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2551,6 +2781,7 @@
     'original_name': 'Yearly Net Production Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-yearly-production_pct',
@@ -2574,8 +2805,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2595,13 +2827,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Production',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly Production',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-yearly-production',
@@ -2628,8 +2865,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2647,6 +2885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly Solar Powered Percentage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2654,6 +2893,7 @@
     'original_name': 'Yearly Solar Powered Percentage',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-yearly-solar_powered',
@@ -2677,8 +2917,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2698,13 +2939,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly To Grid',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Yearly To Grid',
     'platform': 'sense',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-yearly-to_grid',

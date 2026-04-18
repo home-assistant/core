@@ -1,20 +1,4 @@
 # Describes the format for Habitica service
-api_call:
-  fields:
-    name:
-      required: true
-      example: "xxxNotAValidNickxxx"
-      selector:
-        text:
-    path:
-      required: true
-      example: '["tasks", "user", "post"]'
-      selector:
-        object:
-    args:
-      example: '{"text": "Use API from Home Assistant", "type": "todo"}'
-      selector:
-        object:
 cast_skill:
   fields:
     config_entry: &config_entry
@@ -291,6 +275,15 @@ update_todo:
           selector:
             text:
               multiple: true
+        collapse_checklist: &collapse_checklist
+          required: false
+          selector:
+            select:
+              options:
+                - collapsed
+                - expanded
+              mode: list
+              translation_key: collapse_checklist
     priority: *priority
     duedate_options:
       collapsed: true
@@ -334,6 +327,7 @@ create_todo:
     name: *name
     notes: *notes
     add_checklist_item: *add_checklist_item
+    collapse_checklist: *collapse_checklist
     priority: *priority
     date: *due_date
     reminder: *reminder
@@ -435,6 +429,7 @@ create_daily:
     name: *name
     notes: *notes
     add_checklist_item: *add_checklist_item
+    collapse_checklist: *collapse_checklist
     priority: *priority
     start_date: *start_date
     frequency: *frequency_daily

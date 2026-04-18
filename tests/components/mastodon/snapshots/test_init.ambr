@@ -17,7 +17,6 @@
         'trwnh_mastodon_social',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Mastodon gGmbH',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.4.0-nightly.2025-02-07',
     'via_device_id': None,
   })

@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
+    ATTR_IN_ZONES,
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -23,6 +24,7 @@ from homeassistant.components.zone import ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_FRIENDLY_NAME,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -146,12 +148,14 @@ class MockTrackerEntity(TrackerEntity):
         location_name: str | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
+        location_accuracy: float = 0,
     ) -> None:
         """Initialize entity."""
         self._battery_level = battery_level
         self._location_name = location_name
         self._latitude = latitude
         self._longitude = longitude
+        self._location_accuracy = location_accuracy
 
     @property
     def battery_level(self) -> int | None:
@@ -181,6 +185,11 @@ class MockTrackerEntity(TrackerEntity):
         """Return longitude value of the device."""
         return self._longitude
 
+    @property
+    def location_accuracy(self) -> float:
+        """Return the accuracy of the location in meters."""
+        return self._location_accuracy
+
 
 @pytest.fixture(name="battery_level")
 def battery_level_fixture() -> int | None:
@@ -206,6 +215,12 @@ def longitude_fixture() -> float | None:
     return None
 
 
+@pytest.fixture(name="location_accuracy")
+def accuracy_fixture() -> float:
+    """Return the location accuracy of the entity for the test."""
+    return 0
+
+
 @pytest.fixture(name="tracker_entity")
 def tracker_entity_fixture(
     entity_id: str,
@@ -213,6 +228,7 @@ def tracker_entity_fixture(
     location_name: str | None,
     latitude: float | None,
     longitude: float | None,
+    location_accuracy: float = 0,
 ) -> MockTrackerEntity:
     """Create a test tracker entity."""
     entity = MockTrackerEntity(
@@ -220,6 +236,7 @@ def tracker_entity_fixture(
         location_name=location_name,
         latitude=latitude,
         longitude=longitude,
+        location_accuracy=location_accuracy,
     )
     entity.entity_id = entity_id
     return entity
@@ -368,6 +385,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: [],
                 ATTR_LATITUDE: 1.0,
                 ATTR_LONGITUDE: 2.0,
             },
@@ -381,6 +399,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.home"],
                 ATTR_LATITUDE: 50.0,
                 ATTR_LONGITUDE: 60.0,
             },
@@ -394,6 +413,7 @@ async def test_load_unload_entry(
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
                 ATTR_GPS_ACCURACY: 0,
+                ATTR_IN_ZONES: ["zone.other_zone", "zone.other_zone_larger"],
                 ATTR_LATITUDE: -50.0,
                 ATTR_LONGITUDE: -60.0,
             },
@@ -406,6 +426,7 @@ async def test_load_unload_entry(
             "zen_zone",
             {
                 ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
             },
         ),
         (
@@ -414,7 +435,10 @@ async def test_load_unload_entry(
             None,
             None,
             STATE_UNKNOWN,
-            {ATTR_SOURCE_TYPE: SourceType.GPS},
+            {
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
         ),
         (
             100,
@@ -422,7 +446,11 @@ async def test_load_unload_entry(
             None,
             None,
             STATE_UNKNOWN,
-            {ATTR_BATTERY_LEVEL: 100, ATTR_SOURCE_TYPE: SourceType.GPS},
+            {
+                ATTR_BATTERY_LEVEL: 100,
+                ATTR_SOURCE_TYPE: SourceType.GPS,
+                ATTR_IN_ZONES: [],
+            },
         ),
     ],
 )
@@ -446,6 +474,11 @@ async def test_tracker_entity_state(
         "zone.other_zone",
         "0",
         {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 300},
+    )
+    hass.states.async_set(
+        "zone.other_zone_larger",
+        "0",
+        {ATTR_LATITUDE: -50.0, ATTR_LONGITUDE: -60.0, ATTR_RADIUS: 500},
     )
     await hass.async_block_till_done()
     # Write state again to ensure the zone state is taken into account.
@@ -491,6 +524,7 @@ async def test_scanner_entity_state(
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
         ATTR_HOST_NAME: hostname,
+        ATTR_FRIENDLY_NAME: "Device from other integration",
     }
     assert entity_state.state == STATE_NOT_HOME
 
@@ -513,6 +547,7 @@ def test_tracker_entity() -> None:
     assert entity.battery_level is None
     assert entity.should_poll is False
     assert entity.force_update is True
+    assert entity.location_accuracy == 0
 
     class MockEntity(TrackerEntity):
         """Mock tracker class."""
@@ -772,6 +807,7 @@ async def test_entity_has_device_info(
             return dr.DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)},
                 identifiers={(TEST_DOMAIN, "device1")},
+                name="Test Device",
                 manufacturer="manufacturer",
                 model="model",
             )
@@ -788,8 +824,42 @@ async def test_entity_has_device_info(
     )  # should be enabled
     assert len(entity_registry.entities) == 1
     assert (
-        entity_registry.entities[
-            f"{DOMAIN}.{TEST_DOMAIN}_{TEST_MAC_ADDRESS.replace(':', '_').lower()}"
-        ].config_entry_id
+        entity_registry.entities[f"{DOMAIN}.test_device"].config_entry_id
         == config_entry.entry_id
     )
+
+
+async def test_tracker_entity_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test unavailable tracker entity does not fail on bad latitude/longitude."""
+
+    class _MockTrackerEntity(MockTrackerEntity):
+        """Test tracker entity that starts with unavailable state."""
+
+        _attr_available = False
+
+        @property
+        def latitude(self) -> float | None:
+            """Return latitude value of the device."""
+            raise ValueError("Upstream error")
+
+        @property
+        def longitude(self) -> float | None:
+            """Return longitude value of the device."""
+            raise ValueError("Upstream error")
+
+    tracker_entity = _MockTrackerEntity()
+    tracker_entity.entity_id = entity_id
+
+    config_entry = await create_mock_platform(hass, config_entry, [tracker_entity])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unavailable"
+    assert state.attributes == {}

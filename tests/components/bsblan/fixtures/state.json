@@ -2,7 +2,7 @@
   "hvac_mode": {
     "name": "Operating mode",
     "error": 0,
-    "value": "heat",
+    "value": 3,
     "desc": "Komfort",
     "dataType": 1,
     "readonly": 0,

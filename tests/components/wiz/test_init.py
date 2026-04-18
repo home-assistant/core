@@ -74,7 +74,9 @@ async def test_wrong_device_now_has_our_ip(hass: HomeAssistant) -> None:
     bulb.mac = "dddddddddddd"
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    await hass.async_block_till_done(wait_background_tasks=True)
+
+    with _patch_wizlight():
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_reload_on_title_change(hass: HomeAssistant) -> None:

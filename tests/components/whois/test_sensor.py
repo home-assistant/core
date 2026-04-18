@@ -32,6 +32,7 @@ pytestmark = [
         "sensor.home_assistant_io_registrant",
         "sensor.home_assistant_io_registrar",
         "sensor.home_assistant_io_reseller",
+        "sensor.home_assistant_io_status",
     ],
 )
 async def test_whois_sensors(
@@ -73,6 +74,7 @@ async def test_whois_sensors_missing_some_attrs(
         "sensor.home_assistant_io_registrant",
         "sensor.home_assistant_io_registrar",
         "sensor.home_assistant_io_reseller",
+        "sensor.home_assistant_io_status",
     ],
 )
 async def test_disabled_by_default_sensors(
@@ -98,6 +100,7 @@ async def test_disabled_by_default_sensors(
         "sensor.home_assistant_io_registrant",
         "sensor.home_assistant_io_registrar",
         "sensor.home_assistant_io_reseller",
+        "sensor.home_assistant_io_status",
     ],
 )
 async def test_no_data(

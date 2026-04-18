@@ -5,15 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pysnmp.hlapi.asyncio as hlapi
-from pysnmp.hlapi.asyncio import (
+import pysnmp.hlapi.v3arch.asyncio as hlapi
+from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     ObjectIdentity,
     ObjectType,
     UdpTransportTarget,
     UsmUserData,
-    getCmd,
-    setCmd,
+    get_cmd,
+    set_cmd,
 )
 from pysnmp.proto.rfc1902 import (
     Counter32,
@@ -169,7 +169,7 @@ async def async_setup_platform(
     else:
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
-    transport = UdpTransportTarget((host, port))
+    transport = await UdpTransportTarget.create((host, port))
     request_args = await async_create_request_cmd_args(
         hass, auth_data, transport, baseoid
     )
@@ -228,9 +228,16 @@ class SnmpSwitch(SwitchEntity):
         self._state: bool | None = None
         self._payload_on = payload_on
         self._payload_off = payload_off
-        self._target = UdpTransportTarget((host, port))
+        self._host = host
+        self._port = port
         self._request_args = request_args
         self._command_args = command_args
+
+    async def async_added_to_hass(self) -> None:
+        """Run when this Entity has been added to HA."""
+        # The transport creation is done once this entity is registered with HA
+        # (rather than in the __init__)
+        self._target = await UdpTransportTarget.create((self._host, self._port))  # pylint: disable=attribute-defined-outside-init
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
@@ -255,7 +262,7 @@ class SnmpSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state."""
-        get_result = await getCmd(*self._request_args)
+        get_result = await get_cmd(*self._request_args)
         errindication, errstatus, errindex, restable = get_result
 
         if errindication:
@@ -291,6 +298,6 @@ class SnmpSwitch(SwitchEntity):
 
     async def _set(self, value: Any) -> None:
         """Set the state of the switch."""
-        await setCmd(
+        await set_cmd(
             *self._command_args, ObjectType(ObjectIdentity(self._commandoid), value)
         )

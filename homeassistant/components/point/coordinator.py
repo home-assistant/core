@@ -6,8 +6,8 @@ import logging
 from typing import Any
 
 from pypoint import PointSession
-from tempora.utc import fromtimestamp
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import parse_datetime
@@ -16,17 +16,24 @@ from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type PointConfigEntry = ConfigEntry[PointDataUpdateCoordinator]
+
 
 class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Class to manage fetching Point data from the API."""
 
-    def __init__(self, hass: HomeAssistant, point: PointSession) -> None:
+    config_entry: PointConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, point: PointSession, config_entry: PointConfigEntry
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
         self.point = point
         self.device_updates: dict[str, datetime] = {}
@@ -62,7 +69,9 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                 or device.device_id not in self.device_updates
                 or self.device_updates[device.device_id] < last_updated
             ):
-                self.device_updates[device.device_id] = last_updated or fromtimestamp(0)
+                self.device_updates[device.device_id] = (
+                    last_updated or datetime.fromtimestamp(0)
+                )
                 self.data[device.device_id] = {
                     k: await device.sensor(k)
                     for k in ("temperature", "humidity", "sound_pressure")

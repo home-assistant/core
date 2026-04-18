@@ -2,9 +2,9 @@
 
 import logging
 
-from datadog import initialize, statsd
-import voluptuous as vol
+from datadog import DogStatsd, initialize
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -15,91 +15,82 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
-from homeassistant.helpers.typing import ConfigType
+
+from . import config_flow as config_flow
+from .const import CONF_RATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_RATE = "rate"
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 8125
-DEFAULT_PREFIX = "hass"
-DEFAULT_RATE = 1
-DOMAIN = "datadog"
+type DatadogConfigEntry = ConfigEntry[DogStatsd]
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-                vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
-                    vol.Coerce(int), vol.Range(min=1)
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Datadog component."""
+async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
+    """Set up Datadog from a config entry."""
 
-    conf = config[DOMAIN]
-    host = conf[CONF_HOST]
-    port = conf[CONF_PORT]
-    sample_rate = conf[CONF_RATE]
-    prefix = conf[CONF_PREFIX]
+    data = entry.data
+    options = entry.options
+    host = data[CONF_HOST]
+    port = data[CONF_PORT]
+    prefix = options[CONF_PREFIX]
+    sample_rate = options[CONF_RATE]
+
+    statsd_client = DogStatsd(
+        host=host, port=port, namespace=prefix, disable_telemetry=True
+    )
+    entry.runtime_data = statsd_client
 
     initialize(statsd_host=host, statsd_port=port)
 
     def logbook_entry_listener(event):
-        """Listen for logbook entries and send them as events."""
         name = event.data.get("name")
         message = event.data.get("message")
 
-        statsd.event(
+        entry.runtime_data.event(
             title="Home Assistant",
-            text=f"%%% \n **{name}** {message} \n %%%",
+            message=f"%%% \n **{name}** {message} \n %%%",
             tags=[
                 f"entity:{event.data.get('entity_id')}",
                 f"domain:{event.data.get('domain')}",
             ],
         )
 
-        _LOGGER.debug("Sent event %s", event.data.get("entity_id"))
-
     def state_changed_listener(event):
-        """Listen for new messages on the bus and sends them to Datadog."""
         state = event.data.get("new_state")
-
         if state is None or state.state == STATE_UNKNOWN:
             return
 
-        states = dict(state.attributes)
         metric = f"{prefix}.{state.domain}"
         tags = [f"entity:{state.entity_id}"]
 
-        for key, value in states.items():
-            if isinstance(value, (float, int)):
-                attribute = f"{metric}.{key.replace(' ', '_')}"
+        for key, value in state.attributes.items():
+            if isinstance(value, (float, int, bool)):
                 value = int(value) if isinstance(value, bool) else value
-                statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)
-
-                _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)
+                attribute = f"{metric}.{key.replace(' ', '_')}"
+                entry.runtime_data.gauge(
+                    attribute, value, sample_rate=sample_rate, tags=tags
+                )
 
         try:
             value = state_helper.state_as_number(state)
+            entry.runtime_data.gauge(metric, value, sample_rate=sample_rate, tags=tags)
         except ValueError:
-            _LOGGER.debug("Error sending %s: %s (tags: %s)", metric, state.state, tags)
-            return
+            pass
 
-        statsd.gauge(metric, value, sample_rate=sample_rate, tags=tags)
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
+    )
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed_listener)
+    )
 
-        _LOGGER.debug("Sent metric %s: %s (tags: %s)", metric, value, tags)
+    return True
 
-    hass.bus.listen(EVENT_LOGBOOK_ENTRY, logbook_entry_listener)
-    hass.bus.listen(EVENT_STATE_CHANGED, state_changed_listener)
 
+async def async_unload_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:
+    """Unload a Datadog config entry."""
+    runtime = entry.runtime_data
+    runtime.flush()
+    runtime.close_socket()
     return True

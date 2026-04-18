@@ -6,23 +6,20 @@ from collections.abc import Iterable
 from typing import Any
 
 from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, SERVICE_CLEAN_ROOM, SHARK
-from .coordinator import SharkIqUpdateCoordinator
+from .const import ATTR_ROOMS, DOMAIN, LOGGER, SHARK
+from .coordinator import SharkIqConfigEntry, SharkIqUpdateCoordinator
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: VacuumActivity.PAUSED,
@@ -44,16 +41,15 @@ ATTR_ERROR_CODE = "last_error_code"
 ATTR_ERROR_MSG = "last_error_message"
 ATTR_LOW_LIGHT = "low_light"
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
-ATTR_ROOMS = "rooms"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SharkIqConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Shark IQ vacuum cleaner."""
-    coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
     LOGGER.debug(
@@ -62,17 +58,6 @@ async def async_setup_entry(
         ", ".join([d.name for d in devices]),
     )
     async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CLEAN_ROOM,
-        {
-            vol.Required(ATTR_ROOMS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        },
-        "async_clean_room",
-    )
 
 
 class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):

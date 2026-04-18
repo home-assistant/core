@@ -8,7 +8,7 @@ from typing import Any
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, async_rounded_state
 from homeassistant.components.tomorrowio.config_flow import (
     _get_config_schema,
     _get_unique_id,
@@ -142,9 +142,10 @@ async def _setup(
 
 def check_sensor_state(hass: HomeAssistant, entity_name: str, value: str):
     """Check the state of a Tomorrow.io sensor."""
-    state = hass.states.get(CC_SENSOR_ENTITY_ID.format(entity_name))
+    entity_id = CC_SENSOR_ENTITY_ID.format(entity_name)
+    state = hass.states.get(entity_id)
     assert state
-    assert state.state == value
+    assert async_rounded_state(hass, entity_id, state) == value
     assert state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
 
 
@@ -168,7 +169,7 @@ async def test_v4_sensor(hass: HomeAssistant) -> None:
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
     check_sensor_state(hass, FEELS_LIKE, "101.3")
-    check_sensor_state(hass, DEW_POINT, "72.82")
+    check_sensor_state(hass, DEW_POINT, "72.8")
     check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "29.47")
     check_sensor_state(hass, GHI, "0")
     check_sensor_state(hass, CLOUD_BASE, "0.74")
@@ -201,8 +202,8 @@ async def test_v4_sensor_imperial(hass: HomeAssistant) -> None:
     check_sensor_state(hass, WEED_POLLEN, "none")
     check_sensor_state(hass, TREE_POLLEN, "none")
     check_sensor_state(hass, FEELS_LIKE, "214.3")
-    check_sensor_state(hass, DEW_POINT, "163.08")
-    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "0.427")
+    check_sensor_state(hass, DEW_POINT, "163.1")
+    check_sensor_state(hass, PRESSURE_SURFACE_LEVEL, "0.43")
     check_sensor_state(hass, GHI, "0.0")
     check_sensor_state(hass, CLOUD_BASE, "0.46")
     check_sensor_state(hass, CLOUD_COVER, "100")

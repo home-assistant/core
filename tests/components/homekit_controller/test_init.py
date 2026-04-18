@@ -10,7 +10,6 @@ from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakePairing
-from attr import asdict
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -174,6 +173,7 @@ async def test_offline_device_raises(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery")
 async def test_ble_device_only_checks_is_available(
     hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
@@ -242,6 +242,34 @@ async def test_ble_device_only_checks_is_available(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
+async def test_ble_device_populates_connections(
+    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
+) -> None:
+    """Test a BLE device populates connections in the device registry."""
+    aid = get_next_aid()
+
+    accessory = Accessory.create_with_info(
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+
+    await async_setup_component(hass, DOMAIN, {})
+    config_entry, _ = await setup_test_accessories_with_controller(
+        hass, [accessory], controller
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    dev_reg = dr.async_get(hass)
+    assert (
+        dev_reg.async_get_device(
+            identifiers={}, connections={("bluetooth", "AA:BB:CC:DD:EE:FF")}
+        )
+        is not None
+    )
+
+
 @pytest.mark.parametrize("example", FIXTURES, ids=lambda val: str(val.stem))
 async def test_snapshots(
     hass: HomeAssistant,
@@ -284,22 +312,8 @@ async def test_snapshots(
                 state_dict["attributes"].pop("access_token", None)
                 state_dict["attributes"].pop("entity_picture", None)
 
-            entry = asdict(entity_entry)
-            entry.pop("id", None)
-            entry.pop("device_id", None)
-            entry.pop("created_at", None)
-            entry.pop("modified_at", None)
-            entry.pop("_cache", None)
+            entities.append({"entry": entity_entry, "state": state_dict})
 
-            entities.append({"entry": entry, "state": state_dict})
-
-        device_dict = asdict(device)
-        device_dict.pop("id", None)
-        device_dict.pop("via_device_id", None)
-        device_dict.pop("created_at", None)
-        device_dict.pop("modified_at", None)
-        device_dict.pop("_cache", None)
-
-        devices.append({"device": device_dict, "entities": entities})
+        devices.append({"device": device, "entities": entities})
 
     assert snapshot == devices

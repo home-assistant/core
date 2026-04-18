@@ -3,6 +3,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
@@ -15,6 +16,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
@@ -26,12 +28,14 @@
 # name: test_file[system_bridge_media_source_file_image]
   dict({
     'mime_type': 'image/jpeg',
+    'path': None,
     'url': 'http://127.0.0.1:9170/api/media/file/data?token=abc-123-def-456-ghi&base=documents&path=testimage.jpg',
   })
 # ---
 # name: test_file[system_bridge_media_source_file_text]
   dict({
     'mime_type': 'text/plain',
+    'path': None,
     'url': 'http://127.0.0.1:9170/api/media/file/data?token=abc-123-def-456-ghi&base=documents&path=testfile.txt',
   })
 # ---
@@ -39,6 +43,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',
@@ -51,6 +56,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_content_type': '',

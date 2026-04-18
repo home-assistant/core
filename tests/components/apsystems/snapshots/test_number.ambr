@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.mock_title_max_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max output',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER: 'power'>,
@@ -32,6 +34,7 @@
     'original_name': 'Max output',
     'platform': 'apsystems',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_output',
     'unique_id': 'MY_SERIAL_NUMBER_output_limit',

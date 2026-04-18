@@ -21,7 +21,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -31,15 +30,15 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })
 # ---
 # name: test_states[select.my_device_alarm_sound-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -79,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm sound',
     'options': dict({
     }),
     'original_device_class': None,
@@ -86,6 +86,7 @@
     'original_name': 'Alarm sound',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_sound',
     'unique_id': '123456789ABCDEFGH_alarm_sound',
@@ -128,8 +129,9 @@
 # ---
 # name: test_states[select.my_device_alarm_volume-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -153,6 +155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -160,6 +163,7 @@
     'original_name': 'Alarm volume',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_volume',
     'unique_id': '123456789ABCDEFGH_alarm_volume',
@@ -186,8 +190,9 @@
 # ---
 # name: test_states[select.my_device_light_preset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -211,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light preset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -218,6 +224,7 @@
     'original_name': 'Light preset',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_preset',
     'unique_id': '123456789ABCDEFGH_light_preset',

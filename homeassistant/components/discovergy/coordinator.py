@@ -14,6 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 type DiscovergyConfigEntry = ConfigEntry[list[DiscovergyUpdateCoordinator]]
@@ -51,7 +53,12 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
             )
         except InvalidLogin as err:
             raise ConfigEntryAuthFailed(
-                "Auth expired while fetching last reading"
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
             ) from err
         except (HTTPError, DiscovergyClientError) as err:
-            raise UpdateFailed(f"Error while fetching last reading: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="reading_update_failed",
+                translation_placeholders={"meter_id": self.meter.meter_id},
+            ) from err

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[sensor.bahnhofsstr_1a_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -32,6 +34,7 @@
     'original_name': 'Heating',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating',
@@ -55,8 +58,9 @@
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_heating_cost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -76,6 +80,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -86,6 +91,7 @@
     'original_name': 'Heating cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_COST: 'heating_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating_cost',
@@ -110,8 +116,9 @@
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_heating_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -131,6 +138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -141,6 +149,7 @@
     'original_name': 'Heating energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_ENERGY: 'heating_energy'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_heating_energy',
@@ -165,8 +174,9 @@
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_hot_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -186,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -196,6 +207,7 @@
     'original_name': 'Hot water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER: 'hot_water'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water',
@@ -220,8 +232,9 @@
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_hot_water_cost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -241,6 +254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -251,6 +265,7 @@
     'original_name': 'Hot water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_COST: 'hot_water_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water_cost',
@@ -275,8 +290,9 @@
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_hot_water_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -296,6 +312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -306,6 +323,7 @@
     'original_name': 'Hot water energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_ENERGY: 'hot_water_energy'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_hot_water_energy',
@@ -330,8 +348,9 @@
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -351,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -361,6 +381,7 @@
     'original_name': 'Water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER: 'water'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_water',
@@ -385,8 +406,9 @@
 # ---
 # name: test_setup[sensor.bahnhofsstr_1a_water_cost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -406,6 +428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -416,6 +439,7 @@
     'original_name': 'Water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER_COST: 'water_cost'>,
     'unique_id': 'eaf5c5c8-889f-4a3c-b68c-e9a676505762_water_cost',
@@ -440,8 +464,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -461,6 +486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -471,6 +497,7 @@
     'original_name': 'Heating',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING: 'heating'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating',
@@ -494,8 +521,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_heating_cost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -515,6 +543,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -525,6 +554,7 @@
     'original_name': 'Heating cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_COST: 'heating_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating_cost',
@@ -549,8 +579,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_heating_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -570,6 +601,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -580,6 +612,7 @@
     'original_name': 'Heating energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HEATING_ENERGY: 'heating_energy'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_heating_energy',
@@ -604,8 +637,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_hot_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -625,6 +659,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -635,6 +670,7 @@
     'original_name': 'Hot water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER: 'hot_water'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water',
@@ -659,8 +695,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_hot_water_cost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -680,6 +717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -690,6 +728,7 @@
     'original_name': 'Hot water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_COST: 'hot_water_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water_cost',
@@ -714,8 +753,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_hot_water_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -735,6 +775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -745,6 +786,7 @@
     'original_name': 'Hot water energy',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.HOT_WATER_ENERGY: 'hot_water_energy'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_hot_water_energy',
@@ -769,8 +811,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -790,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -800,6 +844,7 @@
     'original_name': 'Water',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER: 'water'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_water',
@@ -824,8 +869,9 @@
 # ---
 # name: test_setup[sensor.luxemburger_str_1_water_cost-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -845,6 +891,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water cost',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -855,6 +902,7 @@
     'original_name': 'Water cost',
     'platform': 'ista_ecotrend',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <IstaSensorEntity.WATER_COST: 'water_cost'>,
     'unique_id': '26e93f1a-c828-11ea-87d0-0242ac130003_water_cost',

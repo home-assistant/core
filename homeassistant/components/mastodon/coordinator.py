@@ -6,13 +6,20 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from mastodon import Mastodon
-from mastodon.Mastodon import Account, Instance, InstanceV2, MastodonError
+from mastodon.Mastodon import (
+    Account,
+    Instance,
+    InstanceV2,
+    MastodonError,
+    MastodonUnauthorizedError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass
@@ -51,6 +58,11 @@ class MastodonCoordinator(DataUpdateCoordinator[Account]):
             account: Account = await self.hass.async_add_executor_job(
                 self.client.account_verify_credentials
             )
+        except MastodonUnauthorizedError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from error
         except MastodonError as ex:
             raise UpdateFailed(ex) from ex
 

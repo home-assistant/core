@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from ismartgate.common import AbstractDoor, get_door_by_id
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import DeviceDataUpdateCoordinator
+from .coordinator import DeviceDataUpdateCoordinator, GogoGateConfigEntry
 
 
 class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
@@ -18,7 +19,7 @@ class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: GogoGateConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
         unique_id: str,
@@ -63,6 +64,6 @@ class GoGoGate2Entity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"door_id": self._door_id}

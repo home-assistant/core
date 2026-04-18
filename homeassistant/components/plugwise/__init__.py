@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DEV_CLASS, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 
@@ -27,10 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(coordinator.api.gateway_id))},
         manufacturer="Plugwise",
-        model=coordinator.api.smile_model,
-        model_id=coordinator.api.smile_model_id,
-        name=coordinator.api.smile_name,
-        sw_version=str(coordinator.api.smile_version),
+        model=coordinator.api.smile.model,
+        model_id=coordinator.api.smile.model_id,
+        name=coordinator.api.smile.name,
+        sw_version=str(coordinator.api.smile.version),
     )  # required for adding the entity-less P1 Gateway
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -47,7 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    - Migrates old unique ID's from old binary_sensors and switches to the new unique ID's
+    Migrates old unique ID's from old binary_sensors and switches to the new unique ID's.
     """
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
@@ -80,7 +80,7 @@ def migrate_sensor_entities(
     # Migrating opentherm_outdoor_temperature
     # to opentherm_outdoor_air_temperature sensor
     for device_id, device in coordinator.data.items():
-        if device["dev_class"] != "heater_central":
+        if device[DEV_CLASS] != "heater_central":
             continue
 
         old_unique_id = f"{device_id}-outdoor_temperature"

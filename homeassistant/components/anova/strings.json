@@ -1,19 +1,19 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
-      }
-    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        }
+      }
     }
   },
   "entity": {
@@ -21,38 +21,38 @@
       "cook_time": {
         "name": "Cook time"
       },
-      "state": {
-        "name": "State",
-        "state": {
-          "preheating": "Preheating",
-          "cooking": "Cooking",
-          "maintaining": "Maintaining",
-          "timer_expired": "Timer expired",
-          "set_timer": "Set timer",
-          "no_state": "No state"
-        }
-      },
-      "mode": {
-        "name": "[%key:common::config_flow::data::mode%]",
-        "state": {
-          "startup": "Startup",
-          "idle": "[%key:common::state::idle%]",
-          "cook": "Cooking",
-          "low_water": "Low water",
-          "ota": "OTA update",
-          "provisioning": "Provisioning",
-          "high_temp": "High temperature",
-          "device_failure": "Device failure"
-        }
-      },
-      "target_temperature": {
-        "name": "Target temperature"
-      },
       "cook_time_remaining": {
         "name": "Cook time remaining"
       },
       "heater_temperature": {
         "name": "Heater temperature"
+      },
+      "mode": {
+        "name": "[%key:common::config_flow::data::mode%]",
+        "state": {
+          "cook": "Cooking",
+          "device_failure": "Device failure",
+          "high_temp": "High temperature",
+          "idle": "[%key:common::state::idle%]",
+          "low_water": "Low water",
+          "ota": "OTA update",
+          "provisioning": "Provisioning",
+          "startup": "Startup"
+        }
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "cooking": "Cooking",
+          "maintaining": "Maintaining",
+          "no_state": "No state",
+          "preheating": "Preheating",
+          "set_timer": "Set timer",
+          "timer_expired": "Timer expired"
+        }
+      },
+      "target_temperature": {
+        "name": "Target temperature"
       },
       "triac_temperature": {
         "name": "Triac temperature"

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_media_player[media_player.test_media_player-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -21,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Media player',
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -28,6 +30,7 @@
     'original_name': 'Media player',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 16437>,
     'translation_key': 'media',
     'unique_id': 'LRWXF7EK4KC700000-media',
@@ -80,8 +83,9 @@
 # ---
 # name: test_media_player_noscope[media_player.test_media_player-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -100,6 +104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Media player',
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -107,6 +112,7 @@
     'original_name': 'Media player',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'media',
     'unique_id': 'LRWXF7EK4KC700000-media',

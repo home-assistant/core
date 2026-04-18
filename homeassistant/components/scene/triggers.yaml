@@ -1,0 +1,4 @@
+activated:
+  target:
+    entity:
+      domain: scene

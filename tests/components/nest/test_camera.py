@@ -826,7 +826,6 @@ async def test_camera_multiple_streams(
     assert cam is not None
     assert cam.state == CameraState.STREAMING
     # Prefer WebRTC over RTSP/HLS
-    assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
     client = await hass_ws_client(hass)
     assert await async_frontend_stream_types(client, "camera.my_camera") == [
         StreamType.WEB_RTC
@@ -905,7 +904,6 @@ async def test_webrtc_refresh_expired_stream(
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == CameraState.STREAMING
-    assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
     client = await hass_ws_client(hass)
     assert await async_frontend_stream_types(client, "camera.my_camera") == [
         StreamType.WEB_RTC

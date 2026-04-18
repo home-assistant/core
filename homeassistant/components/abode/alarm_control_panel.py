@@ -13,8 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeSystem
-from .const import DOMAIN
+from .const import DOMAIN_DATA
 from .entity import AbodeDevice
 
 
@@ -24,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode alarm control panel device."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = hass.data[DOMAIN_DATA]
     async_add_entities(
         [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))]
     )

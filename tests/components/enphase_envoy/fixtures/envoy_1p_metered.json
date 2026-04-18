@@ -37,6 +37,39 @@
     "system_consumption_phases": null,
     "system_net_consumption_phases": null,
     "system_production_phases": null,
+    "ctmeters": {
+      "production": {
+        "eid": "100000010",
+        "timestamp": 1708006110,
+        "energy_delivered": 11234,
+        "energy_received": 12345,
+        "active_power": 100,
+        "power_factor": 0.11,
+        "voltage": 111,
+        "current": 0.2,
+        "frequency": 50.1,
+        "state": "enabled",
+        "measurement_type": "production",
+        "metering_status": "normal",
+        "status_flags": ["production-imbalance", "power-on-unused-phase"]
+      },
+      "net-consumption": {
+        "eid": "100000020",
+        "timestamp": 1708006120,
+        "energy_delivered": 21234,
+        "energy_received": 22345,
+        "active_power": 101,
+        "power_factor": 0.21,
+        "voltage": 112,
+        "current": 0.3,
+        "frequency": 50.2,
+        "state": "enabled",
+        "measurement_type": "net-consumption",
+        "metering_status": "normal",
+        "status_flags": []
+      }
+    },
+    "ctmeters_phases": {},
     "ctmeter_production": {
       "eid": "100000010",
       "timestamp": 1708006110,
@@ -78,7 +111,17 @@
         "serial_number": "1",
         "last_report_date": 1,
         "last_report_watts": 1,
-        "max_report_watts": 1
+        "max_report_watts": 1,
+        "dc_voltage": null,
+        "dc_current": null,
+        "ac_voltage": null,
+        "ac_current": null,
+        "ac_frequency": null,
+        "temperature": null,
+        "energy_produced": null,
+        "energy_today": null,
+        "lifetime_energy": null,
+        "last_report_duration": null
       }
     },
     "tariff": {

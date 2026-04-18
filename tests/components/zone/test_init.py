@@ -126,8 +126,11 @@ async def test_active_zone_skips_passive_zones(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    active = zone.async_active_zone(hass, 32.880600, -117.237561)
-    assert active is None
+    active_zone = zone.async_active_zone(hass, 32.880600, -117.237561)
+    assert active_zone is None
+    active_zone, in_zones = zone.async_in_zones(hass, 32.880600, -117.237561)
+    assert active_zone is None
+    assert in_zones == ["zone.passive_zone"]
 
 
 async def test_active_zone_skips_passive_zones_2(hass: HomeAssistant) -> None:
@@ -147,8 +150,11 @@ async def test_active_zone_skips_passive_zones_2(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
-    active = zone.async_active_zone(hass, 32.880700, -117.237561)
-    assert active.entity_id == "zone.active_zone"
+    active_zone = zone.async_active_zone(hass, 32.880700, -117.237561)
+    assert active_zone.entity_id == "zone.active_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, 32.880600, -117.237561)
+    assert active_zone.entity_id == "zone.active_zone"
+    assert in_zones == ["zone.active_zone"]
 
 
 async def test_active_zone_prefers_smaller_zone_if_same_distance(
@@ -178,8 +184,11 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance(
         },
     )
 
-    active = zone.async_active_zone(hass, latitude, longitude)
-    assert active.entity_id == "zone.small_zone"
+    active_zone = zone.async_active_zone(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.small_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.small_zone"
+    assert in_zones == ["zone.small_zone", "zone.big_zone"]
 
 
 async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
@@ -203,8 +212,11 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
         },
     )
 
-    active = zone.async_active_zone(hass, latitude, longitude)
-    assert active.entity_id == "zone.smallest_zone"
+    active_zone = zone.async_active_zone(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.smallest_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude)
+    assert active_zone.entity_id == "zone.smallest_zone"
+    assert in_zones == ["zone.smallest_zone"]
 
 
 async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
@@ -263,11 +275,17 @@ async def test_async_active_zone_with_non_zero_radius(
     assert home_state.attributes["latitude"] == 32.87336
     assert home_state.attributes["longitude"] == -117.22743
 
-    active = zone.async_active_zone(hass, latitude, longitude, 5000)
-    assert active.entity_id == "zone.home"
+    active_zone = zone.async_active_zone(hass, latitude, longitude, 5000)
+    assert active_zone.entity_id == "zone.home"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude, 5000)
+    assert active_zone.entity_id == "zone.home"
+    assert in_zones == ["zone.home", "zone.small_zone", "zone.big_zone"]
 
-    active = zone.async_active_zone(hass, latitude, longitude, 0)
-    assert active.entity_id == "zone.small_zone"
+    active_zone = zone.async_active_zone(hass, latitude, longitude, 0)
+    assert active_zone.entity_id == "zone.small_zone"
+    active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude, 0)
+    assert active_zone.entity_id == "zone.small_zone"
+    assert in_zones == ["zone.small_zone", "zone.big_zone"]
 
 
 async def test_core_config_update(hass: HomeAssistant) -> None:
@@ -567,6 +585,9 @@ async def test_unavailable_zone(hass: HomeAssistant) -> None:
     hass.states.async_set("zone.bla", "unavailable", {"restored": True})
 
     assert zone.async_active_zone(hass, 0.0, 0.01) is None
+    active_zone, in_zones = zone.async_in_zones(hass, 0.0, 0.01)
+    assert active_zone is None
+    assert in_zones == []
 
     assert zone.in_zone(hass.states.get("zone.bla"), 0, 0) is False
 

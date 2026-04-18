@@ -1,0 +1,12 @@
+{
+  "current_state": "running",
+  "is_suspended": false,
+  "resources": {
+    "memory_bytes": 1111,
+    "cpu_absolute": 22,
+    "disk_bytes": 3333,
+    "network_rx_bytes": 44,
+    "network_tx_bytes": 55,
+    "uptime": 6666
+  }
+}

@@ -29,8 +29,9 @@ from .const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from .entity import JewishCalendarConfigEntry, JewishCalendarData
-from .service import async_setup_services
+from .coordinator import JewishCalendarData, JewishCalendarUpdateCoordinator
+from .entity import JewishCalendarConfigEntry
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -69,7 +70,7 @@ async def async_setup_entry(
         )
     )
 
-    config_entry.runtime_data = JewishCalendarData(
+    data = JewishCalendarData(
         language,
         diaspora,
         location,
@@ -77,15 +78,11 @@ async def async_setup_entry(
         havdalah_offset,
     )
 
+    coordinator = JewishCalendarUpdateCoordinator(hass, config_entry, data)
+    await coordinator.async_config_entry_first_refresh()
+
+    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    async def update_listener(
-        hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
-    ) -> None:
-        # Trigger update of states for all platforms
-        await hass.config_entries.async_reload(config_entry.entry_id)
-
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
     return True
 
 
@@ -93,7 +90,12 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    ):
+        coordinator = config_entry.runtime_data
+        await coordinator.async_shutdown()
+    return unload_ok
 
 
 async def async_migrate_entry(
@@ -131,12 +133,17 @@ async def async_migrate_entry(
             return {"new_unique_id": new_unique_id}
         return None
 
-    if config_entry.version > 1:
+    if config_entry.version > 2:
         # This means the user has downgraded from a future version
         return False
 
     if config_entry.version == 1:
         await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
         hass.config_entries.async_update_entry(config_entry, version=2)
+
+    if config_entry.version == 2:
+        new_data = {**config_entry.data}
+        new_data[CONF_LANGUAGE] = config_entry.data[CONF_LANGUAGE][:2]
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
 
     return True

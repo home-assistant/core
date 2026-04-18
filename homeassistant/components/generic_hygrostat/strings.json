@@ -1,10 +1,7 @@
 {
-  "title": "Generic hygrostat",
   "config": {
     "step": {
       "user": {
-        "title": "Create generic hygrostat",
-        "description": "Create a humidifier entity that controls the humidity via a switch and sensor.",
         "data": {
           "device_class": "Device class",
           "dry_tolerance": "Dry tolerance",
@@ -20,7 +17,9 @@
           "min_cycle_duration": "Set a minimum duration for which the specified switch must remain in its current state before it can be toggled off or on.",
           "target_sensor": "Sensor with current humidity.",
           "wet_tolerance": "The minimum amount of difference between the humidity read by the sensor specified in the target sensor option and the target humidity that must change prior to being switched off."
-        }
+        },
+        "description": "Create a humidifier entity that controls the humidity via a switch and sensor.",
+        "title": "Create generic hygrostat"
       }
     }
   },
@@ -48,9 +47,10 @@
   "selector": {
     "device_class": {
       "options": {
-        "humidifier": "Humidifier",
-        "dehumidifier": "Dehumidifier"
+        "dehumidifier": "Dehumidifier",
+        "humidifier": "Humidifier"
       }
     }
-  }
+  },
+  "title": "Generic hygrostat"
 }

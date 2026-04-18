@@ -42,6 +42,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
 
         self._requesting_position: CALLBACK_TYPE | None = None
         self._previous_positions: list[int | dict | None] = []
+        self._previous_angles: list[int | None] = []
 
         if blind.device_type in DEVICE_TYPES_WIFI:
             self._update_interval_moving = UPDATE_INTERVAL_MOVING_WIFI
@@ -112,17 +113,27 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         """Request a state update from the blind at a scheduled point in time."""
         # add the last position to the list and keep the list at max 2 items
         self._previous_positions.append(self._blind.position)
+        self._previous_angles.append(self._blind.angle)
         if len(self._previous_positions) > 2:
             del self._previous_positions[: len(self._previous_positions) - 2]
+        if len(self._previous_angles) > 2:
+            del self._previous_angles[: len(self._previous_angles) - 2]
 
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Update_trigger)
 
         self.coordinator.async_update_listeners()
 
-        if len(self._previous_positions) < 2 or not all(
-            self._blind.position == prev_position
-            for prev_position in self._previous_positions
+        if (
+            len(self._previous_positions) < 2
+            or not all(
+                self._blind.position == prev_position
+                for prev_position in self._previous_positions
+            )
+            or len(self._previous_angles) < 2
+            or not all(
+                self._blind.angle == prev_angle for prev_angle in self._previous_angles
+            )
         ):
             # keep updating the position @self._update_interval_moving until the position does not change.
             self._requesting_position = async_call_later(
@@ -132,6 +143,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             )
         else:
             self._previous_positions = []
+            self._previous_angles = []
             self._requesting_position = None
 
     async def async_request_position_till_stop(self, delay: int | None = None) -> None:
@@ -140,7 +152,8 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             delay = self._update_interval_moving
 
         self._previous_positions = []
-        if self._blind.position is None:
+        self._previous_angles = []
+        if self._blind.position is None and self._blind.angle is None:
             return
         if self._requesting_position is not None:
             self._requesting_position()

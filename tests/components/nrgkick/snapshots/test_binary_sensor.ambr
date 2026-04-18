@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_binary_sensor_entities[binary_sensor.nrgkick_test_charge_permitted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.nrgkick_test_charge_permitted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge permitted',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge permitted',
+    'platform': 'nrgkick',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_permitted',
+    'unique_id': 'TEST123456_charge_permitted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_entities[binary_sensor.nrgkick_test_charge_permitted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'NRGkick Test Charge permitted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.nrgkick_test_charge_permitted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

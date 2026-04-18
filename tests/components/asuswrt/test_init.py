@@ -26,5 +26,5 @@ async def test_disconnect_on_stop(hass: HomeAssistant, connect_legacy) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    assert connect_legacy.return_value.connection.disconnect.call_count == 1
+    assert connect_legacy.return_value.async_disconnect.await_count == 1
     assert config_entry.state is ConfigEntryState.LOADED

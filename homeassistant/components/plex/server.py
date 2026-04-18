@@ -114,7 +114,7 @@ class PlexServer:
         if not self._plex_account and self._use_plex_tv:
             try:
                 self._plex_account = plexapi.myplex.MyPlexAccount(token=self._token)
-            except (BadRequest, Unauthorized):
+            except BadRequest, Unauthorized:
                 self._use_plex_tv = False
                 _LOGGER.error("Not authorized to access plex.tv with provided token")
                 raise
@@ -402,7 +402,7 @@ class PlexServer:
                     identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except (NotFound, requests.exceptions.ConnectionError):
+            except NotFound, requests.exceptions.ConnectionError:
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'AREA 1',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 2>,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-area-0',
@@ -52,8 +55,9 @@
 # ---
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -71,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -78,6 +83,7 @@
     'original_name': 'AREA 2',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 2>,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-area-1',
@@ -103,8 +109,9 @@
 # ---
 # name: test_alarm_control_panels[alarm_control_panel.direct_panel_https_1_1_1_1_443_api_v2_area_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -122,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -129,6 +137,7 @@
     'original_name': 'AREA 3',
     'platform': 'elmax',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 2>,
     'translation_key': None,
     'unique_id': '13762559c53cd093171-area-2',

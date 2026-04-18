@@ -1,27 +1,38 @@
 """HTTP view that converts audio from a URL to a preferred format."""
 
 import asyncio
-from collections import defaultdict
+from collections import defaultdict, deque
+import contextlib
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
+import re
 import secrets
 from typing import Final
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter, BaseRequest
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.ffmpeg import FFmpegManager
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DATA_FFMPEG_PROXY
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 _MAX_CONVERSIONS_PER_DEVICE: Final[int] = 2
+_MAX_STDERR_LINES: Final[int] = 64
+_PROC_WAIT_TIMEOUT: Final[int] = 5
+_STDERR_DRAIN_TIMEOUT: Final[int] = 1
+_SENSITIVE_QUERY_PARAMS: Final[re.Pattern[str]] = re.compile(
+    r"(?<=[?&])(authSig|token|key|password|secret)=[^&\s]+", re.IGNORECASE
+)
 
 
+@callback
 def async_create_proxy_url(
     hass: HomeAssistant,
     device_id: str,
@@ -32,7 +43,7 @@ def async_create_proxy_url(
     width: int | None = None,
 ) -> str:
     """Create a use proxy URL that automatically converts the media."""
-    data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
+    data = hass.data[DATA_FFMPEG_PROXY]
     return data.async_create_proxy_url(
         device_id, media_url, media_format, rate, channels, width
     )
@@ -212,8 +223,10 @@ class FFmpegConvertResponse(web.StreamResponse):
         assert proc.stdout is not None
         assert proc.stderr is not None
 
+        stderr_lines: deque[str] = deque(maxlen=_MAX_STDERR_LINES)
         stderr_task = self.hass.async_create_background_task(
-            self._dump_ffmpeg_stderr(proc), "ESPHome media proxy dump stderr"
+            self._collect_ffmpeg_stderr(proc, stderr_lines),
+            "ESPHome media proxy dump stderr",
         )
 
         try:
@@ -232,33 +245,80 @@ class FFmpegConvertResponse(web.StreamResponse):
             if request.transport:
                 request.transport.abort()
             raise  # don't log error
-        except:
+        except Exception:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
             raise
         finally:
             # Allow conversion info to be removed
             self.convert_info.is_finished = True
 
-            # stop dumping ffmpeg stderr task
-            stderr_task.cancel()
+            # Ensure subprocess and stderr cleanup run even if this task
+            # is cancelled (e.g., during shutdown)
+            try:
+                # Terminate hangs, so kill is used
+                if proc.returncode is None:
+                    proc.kill()
 
-            # Terminate hangs, so kill is used
-            if proc.returncode is None:
-                proc.kill()
+                # Wait for process to exit so returncode is set
+                await asyncio.wait_for(proc.wait(), timeout=_PROC_WAIT_TIMEOUT)
+
+                # Let stderr collector finish draining
+                if not stderr_task.done():
+                    try:
+                        await asyncio.wait_for(
+                            stderr_task, timeout=_STDERR_DRAIN_TIMEOUT
+                        )
+                    except TimeoutError:
+                        stderr_task.cancel()
+                        with contextlib.suppress(asyncio.CancelledError):
+                            await stderr_task
+            except TimeoutError:
+                _LOGGER.warning(
+                    "Timed out waiting for ffmpeg process to exit for device %s",
+                    self.device_id,
+                )
+                stderr_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await stderr_task
+            except asyncio.CancelledError:
+                # Kill the process if we were interrupted
+                if proc.returncode is None:
+                    proc.kill()
+                stderr_task.cancel()
+                raise
+
+            if proc.returncode is not None and proc.returncode > 0:
+                _LOGGER.error(
+                    "FFmpeg conversion failed for device %s (return code %s):\n%s",
+                    self.device_id,
+                    proc.returncode,
+                    "\n".join(
+                        _SENSITIVE_QUERY_PARAMS.sub(r"\1=REDACTED", line)
+                        for line in stderr_lines
+                    ),
+                )
 
             # Close connection by writing EOF unless already closing
             if request.transport and not request.transport.is_closing():
-                await writer.write_eof()
+                with contextlib.suppress(ConnectionResetError, RuntimeError, OSError):
+                    await writer.write_eof()
 
-    async def _dump_ffmpeg_stderr(
+    async def _collect_ffmpeg_stderr(
         self,
         proc: asyncio.subprocess.Process,
+        stderr_lines: deque[str],
     ) -> None:
-        assert proc.stdout is not None
+        """Collect stderr output from ffmpeg for error reporting."""
         assert proc.stderr is not None
 
         while self.hass.is_running and (chunk := await proc.stderr.readline()):
-            _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, chunk.decode().rstrip())
+            line = chunk.decode(errors="replace").rstrip()
+            stderr_lines.append(line)
+            _LOGGER.debug(
+                "ffmpeg[%s] output: %s",
+                proc.pid,
+                _SENSITIVE_QUERY_PARAMS.sub(r"\1=REDACTED", line),
+            )
 
 
 class FFmpegProxyView(HomeAssistantView):
@@ -313,3 +373,16 @@ class FFmpegProxyView(HomeAssistantView):
         assert writer is not None
         await resp.transcode(request, writer)
         return resp
+
+
+DATA_FFMPEG_PROXY: HassKey[FFmpegProxyData] = HassKey(f"{DOMAIN}.ffmpeg_proxy")
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the ffmpeg proxy."""
+    proxy_data = FFmpegProxyData()
+    hass.data[DATA_FFMPEG_PROXY] = proxy_data
+    hass.http.register_view(
+        FFmpegProxyView(ffmpeg.get_ffmpeg_manager(hass), proxy_data)
+    )

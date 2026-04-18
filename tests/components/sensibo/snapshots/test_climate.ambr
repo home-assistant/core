@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate[load_platforms0][climate.bedroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,6 +36,7 @@
     'original_name': None,
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 384>,
     'translation_key': 'climate_device',
     'unique_id': 'BBZZBBZZ',
@@ -63,8 +66,9 @@
 # ---
 # name: test_climate[load_platforms0][climate.hallway-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -109,6 +113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +121,7 @@
     'original_name': None,
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 937>,
     'translation_key': 'climate_device',
     'unique_id': 'ABC999111',
@@ -170,8 +176,9 @@
 # ---
 # name: test_climate[load_platforms0][climate.kitchen-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -201,6 +208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -208,6 +216,7 @@
     'original_name': None,
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 392>,
     'translation_key': 'climate_device',
     'unique_id': 'AAZZAAZZ',

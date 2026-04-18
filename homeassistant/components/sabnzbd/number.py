@@ -38,8 +38,8 @@ NUMBER_DESCRIPTIONS: tuple[SabnzbdNumberEntityDescription, ...] = (
         native_min_value=0,
         native_step=1,
         native_unit_of_measurement=PERCENTAGE,
-        set_fn=lambda coordinator, speed: (
-            coordinator.sab_api.set_speed_limit(int(speed))
+        set_fn=lambda coordinator, speed: coordinator.sab_api.set_speed_limit(
+            int(speed)
         ),
     ),
 )

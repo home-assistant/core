@@ -1,1 +1,1 @@
-"""The denon component."""
+"""The Denon Network Receivers integration."""

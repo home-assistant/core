@@ -21,6 +21,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["aioguardian"],
-  "requirements": ["aioguardian==2022.07.0"],
+  "requirements": ["aioguardian==2026.01.1"],
   "zeroconf": ["_api._udp.local."]
 }

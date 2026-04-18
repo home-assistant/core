@@ -8,13 +8,12 @@ from dataclasses import dataclass
 from tololib import ToloClient, ToloSettings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, AromaTherapySlot, LampMode
-from .coordinator import ToloSaunaUpdateCoordinator
+from .const import AromaTherapySlot, LampMode
+from .coordinator import ToloConfigEntry, ToloSaunaUpdateCoordinator
 from .entity import ToloSaunaCoordinatorEntity
 
 
@@ -53,11 +52,11 @@ SELECTS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ToloConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities for TOLO Sauna."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         ToloSelectEntity(coordinator, entry, description) for description in SELECTS
     )
@@ -73,7 +72,7 @@ class ToloSelectEntity(ToloSaunaCoordinatorEntity, SelectEntity):
     def __init__(
         self,
         coordinator: ToloSaunaUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: ToloConfigEntry,
         entity_description: ToloSelectEntityDescription,
     ) -> None:
         """Initialize TOLO select entity."""

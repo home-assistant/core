@@ -9,6 +9,7 @@ from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
 from .coordinator import (
+    get_addons_list,
     get_host_info,
     get_info,
     get_network_info,
@@ -35,6 +36,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     host_info = get_host_info(hass) or {}
     supervisor_info = get_supervisor_info(hass)
     network_info = get_network_info(hass) or {}
+    addons_list = get_addons_list(hass) or []
 
     healthy: bool | dict[str, str]
     if supervisor_info is not None and supervisor_info.get("healthy"):
@@ -54,6 +56,15 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             "error": "Unsupported",
         }
 
+    nameservers = set()
+    for interface in network_info.get("interfaces", []):
+        if not interface.get("primary"):
+            continue
+        if ipv4 := interface.get("ipv4"):
+            nameservers.update(ipv4.get("nameservers", []))
+        if ipv6 := interface.get("ipv6"):
+            nameservers.update(ipv6.get("nameservers", []))
+
     information = {
         "host_os": host_info.get("operating_system"),
         "update_channel": info.get("channel"),
@@ -62,6 +73,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         "docker_version": info.get("docker"),
         "disk_total": f"{host_info.get('disk_total')} GB",
         "disk_used": f"{host_info.get('disk_used')} GB",
+        "nameservers": ", ".join(nameservers),
         "healthy": healthy,
         "supported": supported,
         "host_connectivity": network_info.get("host_internet"),
@@ -74,6 +86,8 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         os_info = get_os_info(hass) or {}
         information["board"] = os_info.get("board")
 
+    # Not using aiohasupervisor for ping call below intentionally. Given system health
+    # context, it seems preferable to do this check with minimal dependencies
     information["supervisor_api"] = system_health.async_check_can_reach_url(
         hass,
         SUPERVISOR_PING.format(ip_address=ip_address),
@@ -85,8 +99,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     )
 
     information["installed_addons"] = ", ".join(
-        f"{addon['name']} ({addon['version']})"
-        for addon in (supervisor_info or {}).get("addons", [])
+        f"{addon['name']} ({addon['version']})" for addon in addons_list
     )
 
     return information

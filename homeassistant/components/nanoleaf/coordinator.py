@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aionanoleaf import InvalidToken, Nanoleaf, Unavailable
+from aionanoleaf2 import InvalidToken, Nanoleaf, Unavailable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

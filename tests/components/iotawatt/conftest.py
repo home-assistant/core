@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.iotawatt import DOMAIN
+from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -14,7 +14,9 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock config entry added to HA."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"})
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Test Device", data={"host": "1.2.3.4"}
+    )
     entry.add_to_hass(hass)
     return entry
 

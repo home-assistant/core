@@ -1,0 +1,93 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "El termostato de la cocina",
+  "category": "wk",
+  "product_id": "IAYz2WK1th0cMLmL",
+  "product_name": "thermostat",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2022-11-15T08:35:43+00:00",
+  "create_time": "2022-11-15T08:35:43+00:00",
+  "update_time": "2022-11-15T08:35:43+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 10,
+        "max": 70,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "eco": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 5
+      }
+    }
+  },
+  "status_range": {
+    "eco": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 10,
+        "max": 70,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 5
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "temp_set": 46,
+    "upper_temp": 45,
+    "eco": false,
+    "child_lock": true
+  },
+  "set_up": true,
+  "support_local": true
+}

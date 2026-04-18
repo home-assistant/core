@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_media_player[media_player.my_super_test_player_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -21,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -28,8 +30,9 @@
     'original_name': None,
     'platform': 'music_assistant',
     'previous_unique_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 4126655>,
-    'translation_key': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 8320959>,
+    'translation_key': 'media_player',
     'unique_id': '00:00:00:00:00:02',
     'unit_of_measurement': None,
   })
@@ -54,7 +57,8 @@
       'media_duration': 300,
       'media_position': 0,
       'media_title': 'Test Track',
-      'supported_features': <MediaPlayerEntityFeature: 4126655>,
+      'source': 'Spotify Connect',
+      'supported_features': <MediaPlayerEntityFeature: 8320959>,
       'volume_level': 0.2,
     }),
     'context': <ANY>,
@@ -67,8 +71,9 @@
 # ---
 # name: test_media_player[media_player.test_group_player_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
     }),
@@ -87,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -94,8 +100,9 @@
     'original_name': None,
     'platform': 'music_assistant',
     'previous_unique_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 4126655>,
-    'translation_key': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 8320959>,
+    'translation_key': 'media_player',
     'unique_id': 'test_group_player_1',
     'unit_of_measurement': None,
   })
@@ -123,9 +130,9 @@
       'media_position': 232,
       'media_position_updated_at': datetime.datetime(2024, 10, 30, 18, 31, 49, 565951, tzinfo=datetime.timezone.utc),
       'media_title': 'November Rain',
-      'repeat': 'all',
+      'repeat': <RepeatMode.ALL: 'all'>,
       'shuffle': True,
-      'supported_features': <MediaPlayerEntityFeature: 4126655>,
+      'supported_features': <MediaPlayerEntityFeature: 8320959>,
       'volume_level': 0.06,
     }),
     'context': <ANY>,
@@ -138,10 +145,19 @@
 # ---
 # name: test_media_player[media_player.test_player_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
+      'sound_mode_list': list([
+        'munich_translation',
+        'stuttgart_translation',
+      ]),
+      'source_list': list([
+        'Music Assistant Queue',
+        'Line-In',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -158,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -165,8 +182,9 @@
     'original_name': None,
     'platform': 'music_assistant',
     'previous_unique_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 4126655>,
-    'translation_key': None,
+    'suggested_object_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 8388543>,
+    'translation_key': 'media_player',
     'unique_id': '00:00:00:00:00:01',
     'unit_of_measurement': None,
   })
@@ -181,7 +199,15 @@
       ]),
       'icon': 'mdi:speaker',
       'mass_player_type': 'player',
-      'supported_features': <MediaPlayerEntityFeature: 4126655>,
+      'sound_mode_list': list([
+        'munich_translation',
+        'stuttgart_translation',
+      ]),
+      'source_list': list([
+        'Music Assistant Queue',
+        'Line-In',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 8388543>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.test_player_1',
@@ -215,6 +241,8 @@
               'version': '',
             }),
           ]),
+          'explicit': False,
+          'favorite': False,
           'image': None,
           'media_type': <MediaType.TRACK: 'track'>,
           'name': 'November Rain',
@@ -225,6 +253,7 @@
         'queue_item_id': '5d95dc5be77e4f7eb4939f62cfef527b',
         'stream_details': dict({
           'bit_depth': 16,
+          'bit_rate': 0,
           'content_type': 'ogg',
           'item_id': '3YRCqOhFifThpSRFJ1VWFM',
           'provider': 'spotify',
@@ -253,6 +282,8 @@
               'version': '',
             }),
           ]),
+          'explicit': None,
+          'favorite': False,
           'image': None,
           'media_type': <MediaType.TRACK: 'track'>,
           'name': 'Golden Brown',
@@ -263,6 +294,7 @@
         'queue_item_id': '990ae8f29cdf4fb588d679b115621f55',
         'stream_details': dict({
           'bit_depth': 16,
+          'bit_rate': 0,
           'content_type': 'flac',
           'item_id': '1004735',
           'provider': 'qobuz',

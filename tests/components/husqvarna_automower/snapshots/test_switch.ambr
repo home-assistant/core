@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_snapshot[switch.test_mower_1_avoid_danger_zone-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avoid Danger Zone',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'Avoid Danger Zone',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stay_out_zones',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_AAAAAAAA-BBBB-CCCC-DDDD-123456789101_stay_out_zones',
@@ -48,8 +51,9 @@
 # ---
 # name: test_switch_snapshot[switch.test_mower_1_avoid_springflowers-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -67,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avoid Springflowers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +79,7 @@
     'original_name': 'Avoid Springflowers',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stay_out_zones',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_81C6EEA2-D139-4FEA-B134-F22A6B3EA403_stay_out_zones',
@@ -95,8 +101,9 @@
 # ---
 # name: test_switch_snapshot[switch.test_mower_1_back_lawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Back lawn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +129,7 @@
     'original_name': 'Back lawn',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'work_area_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_654321_work_area',
@@ -142,8 +151,9 @@
 # ---
 # name: test_switch_snapshot[switch.test_mower_1_enable_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -161,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +179,7 @@
     'original_name': 'Enable schedule',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'enable_schedule',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_enable_schedule',
@@ -189,8 +201,9 @@
 # ---
 # name: test_switch_snapshot[switch.test_mower_1_front_lawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -208,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +229,7 @@
     'original_name': 'Front lawn',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'work_area_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_work_area',
@@ -236,8 +251,9 @@
 # ---
 # name: test_switch_snapshot[switch.test_mower_1_my_lawn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -255,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +279,7 @@
     'original_name': 'My lawn',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'my_lawn_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_work_area',
@@ -283,8 +301,9 @@
 # ---
 # name: test_switch_snapshot[switch.test_mower_2_enable_schedule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -302,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -309,6 +329,7 @@
     'original_name': 'Enable schedule',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'enable_schedule',
     'unique_id': '1234_enable_schedule',

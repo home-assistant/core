@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
-from systembridgemodels.modules.cpu import PerCPU
-from systembridgemodels.modules.displays import Display
-from systembridgemodels.modules.gpus import GPU
+from systembridgeconnector.models.modules.cpu import PerCPU
+from systembridgeconnector.models.modules.displays import Display
+from systembridgeconnector.models.modules.gpus import GPU
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PORT,
     PERCENTAGE,
@@ -33,8 +32,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
@@ -233,7 +231,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="boot_time",
         translation_key="boot_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:av-timer",
         value=lambda data: datetime.fromtimestamp(data.system.boot_time, tz=UTC),
     ),
     SystemBridgeSensorEntityDescription(
@@ -242,7 +239,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
-        icon="mdi:chip",
         value=lambda data: data.cpu.power,
     ),
     SystemBridgeSensorEntityDescription(
@@ -252,7 +248,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfFrequency.GIGAHERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         suggested_display_precision=2,
-        icon="mdi:speedometer",
         value=cpu_speed,
     ),
     SystemBridgeSensorEntityDescription(
@@ -278,7 +273,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="kernel",
         translation_key="kernel",
-        icon="mdi:devices",
         value=lambda data: data.system.platform,
     ),
     SystemBridgeSensorEntityDescription(
@@ -288,7 +282,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
-        icon="mdi:memory",
         value=memory_free,
     ),
     SystemBridgeSensorEntityDescription(
@@ -307,20 +300,17 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
-        icon="mdi:memory",
         value=memory_used,
     ),
     SystemBridgeSensorEntityDescription(
         key="os",
         translation_key="os",
-        icon="mdi:devices",
         value=lambda data: f"{data.system.platform} {data.system.platform_version}",
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_count",
         translation_key="processes",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:counter",
         value=lambda data: len(data.processes),
     ),
     SystemBridgeSensorEntityDescription(
@@ -329,19 +319,25 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
-        icon="mdi:percent",
         value=lambda data: data.cpu.usage,
+    ),
+    SystemBridgeSensorEntityDescription(
+        key="power_usage",
+        translation_key="power_usage",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=2,
+        value=lambda data: data.system.power_usage,
     ),
     SystemBridgeSensorEntityDescription(
         key="version",
         translation_key="version",
-        icon="mdi:counter",
         value=lambda data: data.system.version,
     ),
     SystemBridgeSensorEntityDescription(
         key="version_latest",
         translation_key="version_latest",
-        icon="mdi:counter",
         value=lambda data: data.system.version_latest,
     ),
 )
@@ -366,11 +362,11 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up System Bridge sensor based on a config entry."""
-    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         SystemBridgeSensor(coordinator, description, entry.data[CONF_PORT])
@@ -392,9 +388,9 @@ async def async_setup_entry(
                     suggested_display_precision=2,
                     icon="mdi:harddisk",
                     value=(
-                        lambda data,
-                        dk=index_device,
-                        pk=index_partition: partition_usage(data, dk, pk)
+                        lambda data, dk=index_device, pk=index_partition: (
+                            partition_usage(data, dk, pk)
+                        )
                     ),
                 ),
                 entry.data[CONF_PORT],
@@ -419,7 +415,6 @@ async def async_setup_entry(
                 key="displays_connected",
                 translation_key="displays_connected",
                 state_class=SensorStateClass.MEASUREMENT,
-                icon="mdi:monitor",
                 value=lambda data: len(data.displays) if data.displays else None,
             ),
             entry.data[CONF_PORT],
@@ -568,7 +563,6 @@ async def async_setup_entry(
                         key=f"gpu_{gpu.id}_power_usage",
                         name=f"{gpu.name} power usage",
                         entity_registry_enabled_default=False,
-                        device_class=SensorDeviceClass.POWER,
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfPower.WATT,
                         value=lambda data, k=index: gpu_power_usage(data, k),

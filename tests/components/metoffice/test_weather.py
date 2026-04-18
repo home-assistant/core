@@ -29,7 +29,7 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -43,33 +43,30 @@ def no_sensor():
 
 
 @pytest.fixture
-async def wavertree_data(requests_mock: requests_mock.Mocker) -> dict[str, _Matcher]:
+async def wavertree_data(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> dict[str, _Matcher]:
     """Mock data for the Wavertree location."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
-    all_sites = json.dumps(mock_json["all_sites"])
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
-    sitelist_mock = requests_mock.get(
-        "/public/data/val/wxfcs/all/json/sitelist/", text=all_sites
-    )
     wavertree_hourly_mock = requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=3hourly",
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
         text=wavertree_hourly,
     )
     wavertree_daily_mock = requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=daily",
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
         text=wavertree_daily,
     )
     return {
-        "sitelist_mock": sitelist_mock,
         "wavertree_hourly_mock": wavertree_hourly_mock,
         "wavertree_daily_mock": wavertree_daily_mock,
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_site_cannot_connect(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -77,9 +74,14 @@ async def test_site_cannot_connect(
 ) -> None:
     """Test we handle cannot connect error."""
 
-    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
-    requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
-    requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=daily", text="")
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text="",
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text="",
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -91,15 +93,14 @@ async def test_site_cannot_connect(
 
     assert len(device_registry.devices) == 0
 
-    assert hass.states.get("weather.met_office_wavertree_3hourly") is None
-    assert hass.states.get("weather.met_office_wavertree_daily") is None
+    assert hass.states.get("weather.met_office_wavertree") is None
     for sensor in WAVERTREE_SENSOR_RESULTS.values():
         sensor_name = sensor[0]
         sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
         assert sensor is None
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_site_cannot_update(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
@@ -115,21 +116,43 @@ async def test_site_cannot_update(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    weather = hass.states.get("weather.met_office_wavertree_daily")
+    weather = hass.states.get("weather.met_office_wavertree")
     assert weather
 
-    requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
-    requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=daily", text="")
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text="",
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text="",
+    )
 
-    future_time = utcnow() + timedelta(minutes=20)
+    future_time = utcnow() + timedelta(minutes=40)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    weather = hass.states.get("weather.met_office_wavertree_daily")
+    weather = hass.states.get("weather.met_office_wavertree")
+    assert weather.state == STATE_UNAVAILABLE
+
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        status_code=404,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        status_code=404,
+    )
+
+    future_time = utcnow() + timedelta(minutes=40)
+    async_fire_time_changed(hass, future_time)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    weather = hass.states.get("weather.met_office_wavertree")
     assert weather.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_one_weather_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -153,17 +176,17 @@ async def test_one_weather_site_running(
     assert device_wavertree.name == "Met Office Wavertree"
 
     # Wavertree daily weather platform expected results
-    weather = hass.states.get("weather.met_office_wavertree_daily")
+    weather = hass.states.get("weather.met_office_wavertree")
     assert weather
 
-    assert weather.state == "sunny"
-    assert weather.attributes.get("temperature") == 19
-    assert weather.attributes.get("wind_speed") == 14.48
-    assert weather.attributes.get("wind_bearing") == "SSE"
-    assert weather.attributes.get("humidity") == 50
+    assert weather.state == "rainy"
+    assert weather.attributes.get("temperature") == 9.3
+    assert weather.attributes.get("wind_speed") == 28.33
+    assert weather.attributes.get("wind_bearing") == 176.0
+    assert weather.attributes.get("humidity") == 95
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_two_weather_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -173,16 +196,9 @@ async def test_two_weather_sites_running(
     """Test we handle two different weather sites both running."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
     kingslynn_daily = json.dumps(mock_json["kingslynn_daily"])
-
-    requests_mock.get(
-        "/public/data/val/wxfcs/all/json/322380?res=3hourly", text=kingslynn_hourly
-    )
-    requests_mock.get(
-        "/public/data/val/wxfcs/all/json/322380?res=daily", text=kingslynn_daily
-    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -190,6 +206,17 @@ async def test_two_weather_sites_running(
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text=kingslynn_hourly,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=kingslynn_daily,
+    )
+
     entry2 = MockConfigEntry(
         domain=DOMAIN,
         data=METOFFICE_CONFIG_KINGSLYNN,
@@ -209,29 +236,29 @@ async def test_two_weather_sites_running(
     assert device_wavertree.name == "Met Office Wavertree"
 
     # Wavertree daily weather platform expected results
-    weather = hass.states.get("weather.met_office_wavertree_daily")
+    weather = hass.states.get("weather.met_office_wavertree")
     assert weather
 
-    assert weather.state == "sunny"
-    assert weather.attributes.get("temperature") == 19
-    assert weather.attributes.get("wind_speed") == 14.48
+    assert weather.state == "rainy"
+    assert weather.attributes.get("temperature") == 9.3
+    assert weather.attributes.get("wind_speed") == 28.33
     assert weather.attributes.get("wind_speed_unit") == "km/h"
-    assert weather.attributes.get("wind_bearing") == "SSE"
-    assert weather.attributes.get("humidity") == 50
+    assert weather.attributes.get("wind_bearing") == 176.0
+    assert weather.attributes.get("humidity") == 95
 
     # King's Lynn daily weather platform expected results
-    weather = hass.states.get("weather.met_office_king_s_lynn_daily")
+    weather = hass.states.get("weather.met_office_king_s_lynn")
     assert weather
 
-    assert weather.state == "cloudy"
-    assert weather.attributes.get("temperature") == 9
-    assert weather.attributes.get("wind_speed") == 6.44
+    assert weather.state == "rainy"
+    assert weather.attributes.get("temperature") == 7.9
+    assert weather.attributes.get("wind_speed") == 35.75
     assert weather.attributes.get("wind_speed_unit") == "km/h"
-    assert weather.attributes.get("wind_bearing") == "ESE"
-    assert weather.attributes.get("humidity") == 75
+    assert weather.attributes.get("wind_bearing") == 180.0
+    assert weather.attributes.get("humidity") == 98
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_new_config_entry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
 ) -> None:
@@ -250,7 +277,7 @@ async def test_new_config_entry(
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("service"),
     [SERVICE_GET_FORECASTS],
@@ -276,37 +303,30 @@ async def test_forecast_service(
     assert wavertree_data["wavertree_daily_mock"].call_count == 1
     assert wavertree_data["wavertree_hourly_mock"].call_count == 1
 
-    for forecast_type in ("daily", "hourly"):
+    for forecast_type in ("daily", "hourly", "twice_daily"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
             service,
             {
-                "entity_id": "weather.met_office_wavertree_daily",
+                "entity_id": "weather.met_office_wavertree",
                 "type": forecast_type,
             },
             blocking=True,
             return_response=True,
         )
         assert response == snapshot
-
-    # Calling the services should use cached data
-    assert wavertree_data["wavertree_daily_mock"].call_count == 1
-    assert wavertree_data["wavertree_hourly_mock"].call_count == 1
 
     # Trigger data refetch
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert wavertree_data["wavertree_daily_mock"].call_count == 2
-    assert wavertree_data["wavertree_hourly_mock"].call_count == 1
-
-    for forecast_type in ("daily", "hourly"):
+    for forecast_type in ("daily", "hourly", "twice_daily"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
             service,
             {
-                "entity_id": "weather.met_office_wavertree_daily",
+                "entity_id": "weather.met_office_wavertree",
                 "type": forecast_type,
             },
             blocking=True,
@@ -314,41 +334,18 @@ async def test_forecast_service(
         )
         assert response == snapshot
 
-    # Calling the services should update the hourly forecast
-    assert wavertree_data["wavertree_daily_mock"].call_count == 2
-    assert wavertree_data["wavertree_hourly_mock"].call_count == 2
 
-    # Update fails
-    requests_mock.get("/public/data/val/wxfcs/all/json/354107?res=3hourly", text="")
-
-    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    response = await hass.services.async_call(
-        WEATHER_DOMAIN,
-        service,
-        {
-            "entity_id": "weather.met_office_wavertree_daily",
-            "type": "hourly",
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert response == snapshot
-
-
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_legacy_config_entry_is_removed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
 ) -> None:
     """Test the expected entities are created."""
-    # Pre-create the hourly entity
+    # Pre-create the daily entity
     entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "53.38374_-2.90929",
-        suggested_object_id="met_office_wavertree_3_hourly",
+        suggested_object_id="met_office_wavertree_daily",
     )
 
     entry = MockConfigEntry(
@@ -365,8 +362,7 @@ async def test_legacy_config_entry_is_removed(
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
-@pytest.mark.parametrize("forecast_type", ["daily", "hourly"])
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_forecast_subscription(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -374,7 +370,6 @@ async def test_forecast_subscription(
     snapshot: SnapshotAssertion,
     no_sensor,
     wavertree_data: dict[str, _Matcher],
-    forecast_type: str,
 ) -> None:
     """Test multiple forecast."""
     client = await hass_ws_client(hass)
@@ -391,8 +386,8 @@ async def test_forecast_subscription(
     await client.send_json_auto_id(
         {
             "type": "weather/subscribe_forecast",
-            "forecast_type": forecast_type,
-            "entity_id": "weather.met_office_wavertree_daily",
+            "forecast_type": "hourly",
+            "entity_id": "weather.met_office_wavertree",
         }
     )
     msg = await client.receive_json()

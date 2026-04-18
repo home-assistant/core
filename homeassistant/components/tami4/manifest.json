@@ -4,6 +4,7 @@
   "codeowners": ["@Guy293"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tami4",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
   "requirements": ["Tami4EdgeAPI==3.0"]
 }

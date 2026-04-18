@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.lock_1a2b_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -27,6 +29,7 @@
     'original_name': 'Charging',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12345-charging',
@@ -49,8 +52,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_1a2b_lock_uncalibrated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock uncalibrated',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -75,6 +80,7 @@
     'original_name': 'Lock uncalibrated',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uncalibrated',
     'unique_id': '12345-uncalibrated',
@@ -97,8 +103,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_1a2b_pullspring_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pullspring enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +131,7 @@
     'original_name': 'Pullspring enabled',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pullspring_enabled',
     'unique_id': '12345-pullspring_enabled',
@@ -144,8 +153,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_1a2b_semi_locked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -163,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Semi locked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -170,6 +181,7 @@
     'original_name': 'Semi locked',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'semi_locked',
     'unique_id': '12345-semi_locked',
@@ -191,8 +203,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -210,6 +223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -217,6 +231,7 @@
     'original_name': 'Charging',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '98765-charging',
@@ -237,10 +252,62 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.lock_2c3d_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.lock_2c3d_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Door',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Door',
+    'platform': 'tedee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '98765-door_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.lock_2c3d_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Lock-2C3D Door',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.lock_2c3d_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_lock_uncalibrated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -258,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock uncalibrated',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -265,6 +333,7 @@
     'original_name': 'Lock uncalibrated',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uncalibrated',
     'unique_id': '98765-uncalibrated',
@@ -287,8 +356,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_pullspring_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -306,6 +376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pullspring enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -313,6 +384,7 @@
     'original_name': 'Pullspring enabled',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pullspring_enabled',
     'unique_id': '98765-pullspring_enabled',
@@ -334,8 +406,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_semi_locked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -353,6 +426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Semi locked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -360,6 +434,7 @@
     'original_name': 'Semi locked',
     'platform': 'tedee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'semi_locked',
     'unique_id': '98765-semi_locked',

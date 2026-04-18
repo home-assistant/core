@@ -97,7 +97,7 @@ async def async_attach_trigger(
     if config[CONF_TYPE] == CONF_TYPE_COMMAND:
         event_data["values"] = {"Command": config[CONF_SUBTYPE]}
     elif config[CONF_TYPE] == CONF_TYPE_STATUS:
-        event_data["values"] = {"Status": config[CONF_SUBTYPE]}
+        event_data["values"] = {"Sensor Status": config[CONF_SUBTYPE]}
 
     event_config = event_trigger.TRIGGER_SCHEMA(
         {

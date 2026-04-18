@@ -27,7 +27,6 @@ from epson_projector.const import (
     VOL_UP,
     VOLUME,
 )
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -36,17 +35,12 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EpsonConfigEntry
-from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
+from .const import ATTR_CMODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,12 +57,6 @@ async def async_setup_entry(
         entry=config_entry,
     )
     async_add_entities([projector_entity], True)
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SELECT_CMODE,
-        {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
-        SERVICE_SELECT_CMODE,
-    )
 
 
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):

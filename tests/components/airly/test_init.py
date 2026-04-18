@@ -5,7 +5,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.components.airly.coordinator import set_update_interval
 from homeassistant.config_entries import ConfigEntryState
@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import API_POINT_URL, init_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -69,7 +69,9 @@ async def test_config_without_unique_id(
         },
     )
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
+    aioclient_mock.get(
+        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.LOADED
@@ -92,7 +94,9 @@ async def test_config_with_turned_off_station(
         },
     )
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("no_station.json", "airly"))
+    aioclient_mock.get(
+        API_POINT_URL, text=await async_load_fixture(hass, "no_station.json", DOMAIN)
+    )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -124,7 +128,7 @@ async def test_update_interval(
 
     aioclient_mock.get(
         API_POINT_URL,
-        text=load_fixture("valid_station.json", "airly"),
+        text=await async_load_fixture(hass, "valid_station.json", DOMAIN),
         headers=HEADERS,
     )
     entry.add_to_hass(hass)
@@ -159,7 +163,7 @@ async def test_update_interval(
 
     aioclient_mock.get(
         "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
-        text=load_fixture("valid_station.json", "airly"),
+        text=await async_load_fixture(hass, "valid_station.json", DOMAIN),
         headers=HEADERS,
     )
     entry.add_to_hass(hass)
@@ -216,7 +220,9 @@ async def test_migrate_device_entry(
         },
     )
 
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
+    aioclient_mock.get(
+        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
+    )
     config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
@@ -239,7 +245,7 @@ async def test_remove_air_quality_entities(
 ) -> None:
     """Test remove air_quality entities from registry."""
     entity_registry.async_get_or_create(
-        AIR_QUALITY_PLATFORM,
+        AIR_QUALITY_DOMAIN,
         DOMAIN,
         "123-456",
         suggested_object_id="home",

@@ -26,6 +26,9 @@ STORAGE_KEY: Final = f"{DOMAIN}/telegrams_history.json"
 
 # dispatcher signal for KNX interface device triggers
 SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
+SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType(
+    "knx_data_secure_issue_telegram"
+)
 
 
 class DecodedTelegramPayload(TypedDict):
@@ -42,6 +45,7 @@ class TelegramDict(DecodedTelegramPayload):
     """Represent a Telegram as a dict."""
 
     # this has to be in sync with the frontend implementation
+    data_secure: bool | None
     destination: str
     destination_name: str
     direction: str
@@ -72,6 +76,11 @@ class Telegrams:
             xknx.telegram_queue.register_telegram_received_cb(
                 telegram_received_cb=self._xknx_telegram_cb,
                 match_for_outgoing=True,
+            )
+        )
+        self._xknx_data_secure_group_key_issue_cb_handle = (
+            xknx.telegram_queue.register_data_secure_group_key_issue_cb(
+                self._xknx_data_secure_group_key_issue_cb,
             )
         )
         self.recent_telegrams: deque[TelegramDict] = deque(maxlen=log_size)
@@ -107,6 +116,14 @@ class Telegrams:
             self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
         async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
 
+    def _xknx_data_secure_group_key_issue_cb(self, telegram: Telegram) -> None:
+        """Handle telegrams with undecodable data secure payload from xknx."""
+        telegram_dict = self.telegram_to_dict(telegram)
+        self.recent_telegrams.append(telegram_dict)
+        async_dispatcher_send(
+            self.hass, SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM, telegram, telegram_dict
+        )
+
     def telegram_to_dict(self, telegram: Telegram) -> TelegramDict:
         """Convert a Telegram to a dict."""
         dst_name = ""
@@ -137,6 +154,7 @@ class Telegrams:
             value = _serializable_decoded_data(telegram.decoded_data.value)
 
         return TelegramDict(
+            data_secure=telegram.data_secure,
             destination=f"{telegram.destination_address}",
             destination_name=dst_name,
             direction=telegram.direction.value,

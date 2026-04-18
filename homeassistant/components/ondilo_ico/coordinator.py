@@ -16,8 +16,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN
 from .api import OndiloClient
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +41,16 @@ class OndiloIcoMeasurementData:
     sensors: dict[str, Any]
 
 
+type OndiloIcoConfigEntry = ConfigEntry[OndiloIcoPoolsCoordinator]
+
+
 class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolData]]):
     """Fetch Ondilo ICO pools data from API."""
 
-    config_entry: ConfigEntry
+    config_entry: OndiloIcoConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: OndiloClient
+        self, hass: HomeAssistant, config_entry: OndiloIcoConfigEntry, api: OndiloClient
     ) -> None:
         """Initialize."""
         super().__init__(

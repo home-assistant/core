@@ -20,19 +20,21 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
+type OctoprintConfigEntry = ConfigEntry[OctoprintDataUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Octoprint data."""
 
-    config_entry: ConfigEntry
+    config_entry: OctoprintConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         octoprint: OctoprintClient,
-        config_entry: ConfigEntry,
+        config_entry: OctoprintConfigEntry,
         interval: int,
     ) -> None:
         """Initialize."""
@@ -43,7 +45,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             name=f"octoprint-{config_entry.entry_id}",
             update_interval=timedelta(seconds=interval),
         )
-        self._octoprint = octoprint
+        self.octoprint = octoprint
         self._printer_offline = False
         self.data = {"printer": None, "job": None, "last_read_time": None}
 
@@ -51,7 +53,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via API."""
         printer = None
         try:
-            job = await self._octoprint.get_job_info()
+            job = await self.octoprint.get_job_info()
         except UnauthorizedException as err:
             raise ConfigEntryAuthFailed from err
         except ApiError as err:
@@ -61,7 +63,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         # printer will return a 409, so continue using the last
         # reading if there is one
         try:
-            printer = await self._octoprint.get_printer_info()
+            printer = await self.octoprint.get_printer_info()
         except PrinterOffline:
             if not self._printer_offline:
                 _LOGGER.debug("Unable to retrieve printer information: Printer offline")

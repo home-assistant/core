@@ -1,0 +1,82 @@
+[
+  {
+    "id": 12345,
+    "name": "Generator 1",
+    "weatherCondition": "Mist",
+    "weatherTempF": 46.11200000000006,
+    "weatherTimePeriod": "Day",
+    "address": {
+      "lat": 41.334111,
+      "long": -72.3333111,
+      "address1": "Highway 66",
+      "address2": null,
+      "city": "Somewhere",
+      "state": "CA",
+      "postalCode": "000000",
+      "country": "US"
+    },
+    "devices": [
+      {
+        "id": 12345,
+        "serialNumber": "123MGVHR4567",
+        "displayName": "Generator 1",
+        "deviceHost": "Oncue",
+        "hasAcceptedPrivacyPolicy": true,
+        "address": {
+          "lat": 41.334111,
+          "long": -72.3333111,
+          "address1": "Highway 66",
+          "address2": null,
+          "city": "Somewhere",
+          "state": "CA",
+          "postalCode": "000000",
+          "country": "US"
+        },
+        "product": "Rdc2v4",
+        "productDisplayName": "RDC 2.4",
+        "controllerType": "RDC2 (Blue Board)",
+        "firmwareVersion": "3.4.5",
+        "currentFirmware": "RDC2.4 3.4.5",
+        "isConnected": true,
+        "lastConnectedTimestamp": "2025-04-14T09:30:17+00:00",
+        "deviceIpAddress": "1.1.1.1:2402",
+        "macAddress": "91:E1:20:63:10:00",
+        "status": "ReadyToRun",
+        "statusUpdateTimestamp": "2025-04-14T09:29:01+00:00",
+        "dealerOrgs": [
+          {
+            "id": 123,
+            "businessPartnerNo": "123456",
+            "name": "Generators R Us",
+            "e164PhoneNumber": "+199999999999",
+            "displayPhoneNumber": "(999) 999-9999",
+            "wizardStep": "OnboardingComplete",
+            "wizardComplete": true,
+            "address": {
+              "lat": null,
+              "long": null,
+              "address1": "Highway 66",
+              "address2": null,
+              "city": "Revisited",
+              "state": "CA",
+              "postalCode": "000000",
+              "country": null
+            },
+            "userCount": 4,
+            "technicianCount": 3,
+            "deviceCount": 71,
+            "adminEmails": ["admin@gmail.com"]
+          }
+        ],
+        "alertCount": 0,
+        "model": "Model20KW",
+        "modelDisplayName": "20 KW",
+        "lastMaintenanceTimestamp": "2025-04-10T09:12:59",
+        "nextMaintenanceTimestamp": "2026-04-10T09:12:59",
+        "maintenancePeriodDays": 365,
+        "hasServiceAgreement": null,
+        "totalRuntimeHours": 120.2
+      }
+    ]
+  }
+]

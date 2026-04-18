@@ -82,7 +82,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
                     await test_connection()
             except TimeoutError:
                 return self._show_form({"base": "timeout_connect"})
-            except (ConnectionError, SerialException):
+            except ConnectionError, SerialException:
                 return self._show_form({"base": "cannot_connect"})
 
             return self._create_entry(gw_id, name, device)

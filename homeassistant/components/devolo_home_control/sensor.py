@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
@@ -185,9 +187,11 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
         """
         return f"{self._attr_unique_id}_{self._sensor_type}"
 
-    def _sync(self, message: tuple) -> None:
+    def sync_callback(self, message: tuple) -> None:
         """Update the consumption sensor state."""
         if message[0] == self._attr_unique_id:
+            if TYPE_CHECKING:
+                assert self._attr_unique_id is not None
             self._value = getattr(
                 self._device_instance.consumption_property[self._attr_unique_id],
                 self._sensor_type,

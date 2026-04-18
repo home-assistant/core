@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[electricity last transmitted]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last transmitted',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -27,6 +29,7 @@
     'original_name': 'Last transmitted',
     'platform': 'discovergy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_transmitted',
     'unique_id': 'abc123-last_transmitted',
@@ -38,8 +41,9 @@
 # ---
 # name: test_sensor[electricity total consumption]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -59,6 +63,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
@@ -69,6 +74,7 @@
     'original_name': 'Total consumption',
     'platform': 'discovergy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_consumption',
     'unique_id': 'abc123-energy',
@@ -93,8 +99,9 @@
 # ---
 # name: test_sensor[electricity total power]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -114,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -124,6 +132,7 @@
     'original_name': 'Total power',
     'platform': 'discovergy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_power',
     'unique_id': 'abc123-power',
@@ -148,8 +157,9 @@
 # ---
 # name: test_sensor[gas last transmitted]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last transmitted',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -174,6 +185,7 @@
     'original_name': 'Last transmitted',
     'platform': 'discovergy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_transmitted',
     'unique_id': 'def456-last_transmitted',
@@ -185,8 +197,9 @@
 # ---
 # name: test_sensor[gas total consumption]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -206,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total gas consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
@@ -216,6 +230,7 @@
     'original_name': 'Total gas consumption',
     'platform': 'discovergy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_gas_consumption',
     'unique_id': 'def456-volume',

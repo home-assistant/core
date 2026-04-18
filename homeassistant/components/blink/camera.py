@@ -6,32 +6,26 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from blinkpy.auth import UnauthorizedError
+from blinkpy.camera import BlinkCamera as BlinkCameraAPI
 from requests.exceptions import ChunkedEncodingError
-import voluptuous as vol
 
 from homeassistant.components.camera import Camera
-from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DEFAULT_BRAND,
-    DOMAIN,
-    SERVICE_RECORD,
-    SERVICE_SAVE_RECENT_CLIPS,
-    SERVICE_SAVE_VIDEO,
-    SERVICE_TRIGGER,
-)
+from .const import DEFAULT_BRAND, DOMAIN
 from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_VIDEO_CLIP = "video"
-ATTR_IMAGE = "image"
 PARALLEL_UPDATES = 1
 
 
@@ -50,20 +44,6 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RECORD, None, "record")
-    platform.async_register_entity_service(SERVICE_TRIGGER, None, "trigger_camera")
-    platform.async_register_entity_service(
-        SERVICE_SAVE_RECENT_CLIPS,
-        {vol.Required(CONF_FILE_PATH): cv.string},
-        "save_recent_clips",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SAVE_VIDEO,
-        {vol.Required(CONF_FILENAME): cv.string},
-        "save_video",
-    )
-
 
 class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     """An implementation of a Blink Camera."""
@@ -71,7 +51,9 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: BlinkUpdateCoordinator, name, camera) -> None:
+    def __init__(
+        self, coordinator: BlinkUpdateCoordinator, name, camera: BlinkCameraAPI
+    ) -> None:
         """Initialize a camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
@@ -101,6 +83,9 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 translation_domain=DOMAIN,
                 translation_key="failed_arm",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         self._camera.motion_enabled = True
         await self.coordinator.async_refresh()
@@ -114,6 +99,9 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 translation_domain=DOMAIN,
                 translation_key="failed_disarm",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         self._camera.motion_enabled = False
         await self.coordinator.async_refresh()
@@ -137,6 +125,9 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 translation_domain=DOMAIN,
                 translation_key="failed_clip",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         self.async_write_ha_state()
 
@@ -149,6 +140,9 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 translation_domain=DOMAIN,
                 translation_key="failed_snap",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         self.async_write_ha_state()
 
@@ -182,6 +176,9 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
             ) from err
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
     async def save_video(self, filename) -> None:
         """Handle save video service calls."""
@@ -200,3 +197,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
             ) from err
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er

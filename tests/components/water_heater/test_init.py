@@ -2,24 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     DOMAIN,
     SERVICE_SET_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
-    WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -30,7 +27,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    import_and_test_deprecated_constant,
     mock_integration,
     mock_platform,
 )
@@ -139,7 +135,9 @@ async def test_operation_mode_validation(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.WATER_HEATER]
+        )
         return True
 
     async def async_setup_entry_water_heater_platform(
@@ -208,30 +206,3 @@ async def test_operation_mode_validation(
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "WaterHeaterEntityEntityDescription",
-            "WaterHeaterEntityDescription",
-            WaterHeaterEntityDescription,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        water_heater,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2026.1",
-    )

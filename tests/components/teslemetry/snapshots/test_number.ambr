@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[number.energy_site_backup_reserve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -25,13 +26,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
-    'original_icon': 'mdi:battery-alert',
+    'original_icon': None,
     'original_name': 'Backup reserve',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backup_reserve_percent',
     'unique_id': '123456-backup_reserve_percent',
@@ -43,7 +46,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Energy Site Backup reserve',
-      'icon': 'mdi:battery-alert',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -60,8 +62,9 @@
 # ---
 # name: test_number[number.energy_site_off_grid_reserve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -84,13 +87,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-grid reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
-    'original_icon': 'mdi:battery-unknown',
-    'original_name': 'Off grid reserve',
+    'original_icon': None,
+    'original_name': 'Off-grid reserve',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_grid_vehicle_charging_reserve_percent',
     'unique_id': '123456-off_grid_vehicle_charging_reserve_percent',
@@ -101,8 +106,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Energy Site Off grid reserve',
-      'icon': 'mdi:battery-unknown',
+      'friendly_name': 'Energy Site Off-grid reserve',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -119,8 +123,9 @@
 # ---
 # name: test_number[number.test_charge_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 16,
@@ -143,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge current',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
@@ -150,6 +156,7 @@
     'original_name': 'Charge current',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_current_request',
     'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_current_request',
@@ -177,8 +184,9 @@
 # ---
 # name: test_number[number.test_charge_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -201,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -208,6 +217,7 @@
     'original_name': 'Charge limit',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_limit_soc',
     'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_limit_soc',
@@ -232,10 +242,4 @@
     'last_updated': <ANY>,
     'state': '80',
   })
-# ---
-# name: test_number_streaming[number.test_charge_current-state]
-  '24'
-# ---
-# name: test_number_streaming[number.test_charge_limit-state]
-  '99'
 # ---

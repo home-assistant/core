@@ -262,6 +262,6 @@ def _patch_wifibulb(device=None, no_device=False):
         if no_device:
             bulb.async_setup = AsyncMock(side_effect=asyncio.TimeoutError)
             return bulb
-        return device if device else _mocked_bulb()
+        return device or _mocked_bulb()
 
     return patch("homeassistant.components.flux_led.AIOWifiLedBulb", new=_wifi_led_bulb)

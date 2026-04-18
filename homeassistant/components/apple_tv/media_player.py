@@ -115,11 +115,13 @@ class AppleTvMediaPlayer(
     """Representation of an Apple TV media player."""
 
     _attr_supported_features = SUPPORT_APPLE_TV
+    _attr_name = None
 
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager)
         self._playing: Playing | None = None
+        self._playing_last_updated: datetime | None = None
         self._app_list: dict[str, str] = {}
 
     @callback
@@ -190,7 +192,7 @@ class AppleTvMediaPlayer(
             self._is_feature_available(FeatureName.PowerState)
             and self.atv.power.power_state == PowerState.Off
         ):
-            return MediaPlayerState.STANDBY
+            return MediaPlayerState.OFF
         if self._playing:
             state = self._playing.device_state
             if state in (DeviceState.Idle, DeviceState.Loading):
@@ -199,7 +201,7 @@ class AppleTvMediaPlayer(
                 return MediaPlayerState.PLAYING
             if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return MediaPlayerState.PAUSED
-            return MediaPlayerState.STANDBY  # Bad or unknown state?
+            return MediaPlayerState.IDLE  # Bad or unknown state?
         return None
 
     @callback
@@ -209,6 +211,7 @@ class AppleTvMediaPlayer(
         This is a callback function from pyatv.interface.PushListener.
         """
         self._playing = playstatus
+        self._playing_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
 
     @callback
@@ -236,6 +239,15 @@ class AppleTvMediaPlayer(
         This is a callback function from pyatv.interface.AudioListener.
         """
         self.async_write_ha_state()
+
+    @callback
+    def volume_device_update(
+        self, output_device: OutputDevice, old_level: float, new_level: float
+    ) -> None:
+        """Output device volume was updated.
+
+        This is a callback function from pyatv.interface.AudioListener.
+        """
 
     @callback
     def outputdevices_update(
@@ -316,7 +328,7 @@ class AppleTvMediaPlayer(
     def media_position_updated_at(self) -> datetime | None:
         """Last valid time of media position."""
         if self.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
-            return dt_util.utcnow()
+            return self._playing_last_updated
         return None
 
     async def async_play_media(

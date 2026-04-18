@@ -65,16 +65,18 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type HKOConfigEntry = ConfigEntry[HKOUpdateCoordinator]
+
 
 class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HKO Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: HKOConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: HKOConfigEntry,
         session: ClientSession,
         district: str,
         location: str,
@@ -117,7 +119,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     for item in data[API_TEMPERATURE][API_DATA]
                     if item[API_PLACE] == self.location
                 ),
-                0,
+                None,
             ),
         }
 

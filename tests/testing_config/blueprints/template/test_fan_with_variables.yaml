@@ -1,0 +1,18 @@
+blueprint:
+  name: Test With Variables
+  description: Creates a test with variables
+  domain: template
+  input:
+    sensor:
+      name: Sensor Entity
+      description: The sensor entity
+      selector:
+        entity:
+          domain: sensor
+variables:
+  sensor: !input sensor
+fan:
+  availability: "{{ sensor | has_value }}"
+  state: "{{ is_state(sensor,'on') }}"
+  turn_on: []
+  turn_off: []

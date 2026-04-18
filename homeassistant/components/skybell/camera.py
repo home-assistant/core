@@ -7,14 +7,12 @@ from haffmpeg.camera import CameraMjpeg
 
 from homeassistant.components.camera import Camera, CameraEntityDescription
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SkybellDataUpdateCoordinator
+from .coordinator import SkybellConfigEntry, SkybellDataUpdateCoordinator
 from .entity import SkybellEntity
 
 CAMERA_TYPES: tuple[CameraEntityDescription, ...] = (
@@ -31,13 +29,13 @@ CAMERA_TYPES: tuple[CameraEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SkybellConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Skybell camera."""
     entities = []
     for description in CAMERA_TYPES:
-        for coordinator in hass.data[DOMAIN][entry.entry_id]:
+        for coordinator in entry.runtime_data:
             if description.key == "avatar":
                 entities.append(SkybellCamera(coordinator, description))
             else:

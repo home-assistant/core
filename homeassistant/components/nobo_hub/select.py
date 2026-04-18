@@ -5,13 +5,13 @@ from __future__ import annotations
 from pynobo import nobo
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import NoboHubConfigEntry
 from .const import (
     ATTR_HARDWARE_VERSION,
     ATTR_SERIAL,
@@ -25,13 +25,13 @@ from .const import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NoboHubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
 
     # Setup connection with hub
-    hub: nobo = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     override_type = (
         nobo.API.OVERRIDE_TYPE_NOW
@@ -69,10 +69,12 @@ class NoboGlobalSelector(SelectEntity):
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hub.hub_serial)},
+            serial_number=hub.hub_serial,
             name=hub.hub_info[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
-            model=f"Nobø Ecohub ({hub.hub_info[ATTR_HARDWARE_VERSION]})",
+            model="Nobø Ecohub",
             sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],
+            hw_version=hub.hub_info[ATTR_HARDWARE_VERSION],
         )
 
     async def async_added_to_hass(self) -> None:

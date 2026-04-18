@@ -13,6 +13,7 @@ from homeassistant.util.ssl import get_default_context
 from .const import TIMEOUT
 from .errors import (
     ConnectionRefused,
+    ConnectionReset,
     ConnectionTimeout,
     ResolveFailed,
     ValidationFailure,
@@ -58,6 +59,8 @@ async def get_cert_expiry_timestamp(
         raise ConnectionRefused(
             f"Connection refused by server: {hostname}:{port}"
         ) from err
+    except ConnectionResetError as err:
+        raise ConnectionReset(f"Connection reset by server: {hostname}:{port}") from err
     except ssl.CertificateError as err:
         raise ValidationFailure(err.verify_message) from err
     except ssl.SSLError as err:

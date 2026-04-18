@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_binary_sensors[binary_sensor.mock_title_ethernet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ethernet',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -27,6 +29,7 @@
     'original_name': 'Ethernet',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ethernet',
     'unique_id': 'aa:bb:cc:dd:ee:ff_ethernet',
@@ -49,8 +52,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.mock_title_internet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internet',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -75,6 +80,7 @@
     'original_name': 'Internet',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'internet',
     'unique_id': 'aa:bb:cc:dd:ee:ff_internet',
@@ -97,8 +103,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.mock_title_vpn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VPN',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -123,6 +131,7 @@
     'original_name': 'VPN',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vpn',
     'unique_id': 'aa:bb:cc:dd:ee:ff_vpn',
@@ -145,8 +154,9 @@
 # ---
 # name: test_all_binary_sensors[binary_sensor.mock_title_wi_fi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -171,6 +182,7 @@
     'original_name': 'Wi-Fi',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi',
     'unique_id': 'aa:bb:cc:dd:ee:ff_wifi',

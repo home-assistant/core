@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_switch_entity
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Switch Controller Test Entity Name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.switch_controller_test_entity_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

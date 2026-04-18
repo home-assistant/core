@@ -171,7 +171,7 @@ class HolidayFixFlow(RepairsFlow):
             step_id="fix_remove_holiday",
             data_schema=new_schema,
             description_placeholders={
-                CONF_COUNTRY: self.country if self.country else "-",
+                CONF_COUNTRY: self.country or "-",
                 CONF_REMOVE_HOLIDAYS: self.named_holiday,
                 "title": self.entry.title,
             },

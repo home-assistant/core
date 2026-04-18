@@ -1,5 +1,6 @@
 """Test Homee valves."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -21,6 +22,13 @@ from homeassistant.helpers import entity_registry as er
 from . import build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.VALVE]):
+        yield
 
 
 async def test_valve_set_position(
@@ -104,7 +112,6 @@ async def test_valve_snapshot(
     """Test the valve snapshots."""
     mock_homee.nodes = [build_mock_node("valve.json")]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    with patch("homeassistant.components.homee.PLATFORMS", [Platform.VALVE]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

@@ -348,7 +348,8 @@ async def test_asleep_or_offline(
     # Run a command but fail trying to wake up the vehicle
     mock_wake_up.side_effect = InvalidCommand
     with pytest.raises(
-        HomeAssistantError, match="The data request or command is unknown."
+        HomeAssistantError,
+        match="Failed to wake up vehicle",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -401,7 +402,8 @@ async def test_climate_noscope(
     entity_id = "climate.test_climate"
 
     with pytest.raises(
-        ServiceValidationError, match="Climate mode off is not supported"
+        ServiceValidationError,
+        match="HVAC mode off is not valid. Valid HVAC modes are: heat_cool",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -444,7 +446,7 @@ async def test_climate_notemp(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
+        match="Set temperature action was used with the 'Lower/Upper target temperature' parameter but the entity does not support it",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

@@ -9,18 +9,34 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def _flow_data():
+def _flow_data(advanced=False):
     options = {"host": "1.1.1.1"}
     for mode in AVAILABLE_MODES:
         options[mode] = True
     options["swing_support"] = False
+    if advanced:
+        options["send_wakeup_prompt"] = True
     return options
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form_non_advanced(hass: HomeAssistant) -> None:
+    """Test we get the form in non-advanced mode."""
+    await form_base(hass, advanced=False)
+
+
+async def test_form_advanced(hass: HomeAssistant) -> None:
+    """Test we get the form in advanced mode."""
+    await form_base(hass, advanced=True)
+
+
+async def form_base(hass: HomeAssistant, advanced: bool) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_USER,
+            "show_advanced_options": advanced,
+        },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -36,18 +52,22 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], _flow_data()
+            result["flow_id"], _flow_data(advanced)
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
-    assert result2["data"] == {
+    _expected_data = {
         "host": "1.1.1.1",
         "port": 10102,
         "supported_modes": AVAILABLE_MODES,
         "swing_support": False,
+        "send_wakeup_prompt": False,
     }
+    if advanced:
+        _expected_data["send_wakeup_prompt"] = True
+    assert result2["data"] == _expected_data
     assert len(mock_setup_entry.mock_calls) == 1
 
 

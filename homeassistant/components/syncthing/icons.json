@@ -4,11 +4,11 @@
       "syncthing": {
         "default": "mdi:folder-alert",
         "state": {
-          "unknown": "mdi:folder",
           "idle": "mdi:folder",
+          "paused": "mdi:folder-clock",
           "scanning": "mdi:folder-search",
           "syncing": "mdi:folder-sync",
-          "paused": "mdi:folder-clock"
+          "unknown": "mdi:folder"
         }
       }
     }

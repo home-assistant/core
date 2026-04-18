@@ -55,4 +55,4 @@ async def test_client_usage_while_not_connected(client_data: ESPHomeClientData) 
     with pytest.raises(
         BleakError, match=f"{ESP_NAME}.*{ESP_MAC_ADDRESS}.*not connected"
     ):
-        assert await client.write_gatt_char("test", b"test") is False
+        assert await client.write_gatt_char("test", b"test", False) is False

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DANFOSS_AIR_DOMAIN
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Danfoss Air HRV switch platform."""
-    data = hass.data[DANFOSS_AIR_DOMAIN]
+    data = hass.data[DOMAIN]
 
     switches = [
         [
@@ -59,21 +59,10 @@ class DanfossAir(SwitchEntity):
     def __init__(self, data, name, state_command, on_command, off_command):
         """Initialize the switch."""
         self._data = data
-        self._name = name
+        self._attr_name = name
         self._state_command = state_command
         self._on_command = on_command
         self._off_command = off_command
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -89,6 +78,6 @@ class DanfossAir(SwitchEntity):
         """Update the switch's state."""
         self._data.update()
 
-        self._state = self._data.get_value(self._state_command)
-        if self._state is None:
+        self._attr_is_on = self._data.get_value(self._state_command)
+        if self._attr_is_on is None:
             _LOGGER.debug("Could not get data for %s", self._state_command)

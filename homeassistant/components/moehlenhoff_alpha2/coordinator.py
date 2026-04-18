@@ -17,14 +17,16 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
+type Alpha2ConfigEntry = ConfigEntry[Alpha2BaseCoordinator]
+
 
 class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Keep the base instance in one place and centralize the update."""
 
-    config_entry: ConfigEntry
+    config_entry: Alpha2ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, base: Alpha2Base
+        self, hass: HomeAssistant, config_entry: Alpha2ConfigEntry, base: Alpha2Base
     ) -> None:
         """Initialize Alpha2Base data updater."""
         self.base = base

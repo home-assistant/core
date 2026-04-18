@@ -15,6 +15,8 @@ from homeassistant.helpers.check_config import (
     HomeAssistantConfig,
     async_check_ha_config_file,
 )
+from homeassistant.helpers.condition import CONDITIONS
+from homeassistant.helpers.trigger import TRIGGERS
 from homeassistant.requirements import RequirementsNotFound
 
 from tests.common import (
@@ -493,6 +495,11 @@ async def test_missing_included_file(hass: HomeAssistant) -> None:
 
 async def test_automation_config_platform(hass: HomeAssistant) -> None:
     """Test automation async config."""
+    # Remove keys pre-populated by the test fixture to simulate
+    # the check_config script which doesn't run bootstrap.
+    del hass.data[TRIGGERS]
+    del hass.data[CONDITIONS]
+
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG
         + """
@@ -514,6 +521,9 @@ blueprint:
 trigger:
   platform: event
   event_type: !input trigger_event
+condition:
+  condition: template
+  value_template: "{{ true }}"
 action:
   service: !input service_to_call
 """,

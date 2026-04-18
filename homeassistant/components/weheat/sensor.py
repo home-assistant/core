@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,6 +25,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DISPLAY_PRECISION_COP,
+    DISPLAY_PRECISION_FLOW,
     DISPLAY_PRECISION_WATER_TEMP,
     DISPLAY_PRECISION_WATTS,
 )
@@ -142,9 +144,9 @@ SENSORS = [
         device_class=SensorDeviceClass.ENUM,
         options=[s.name.lower() for s in HeatPump.State],
         value_fn=(
-            lambda status: status.heat_pump_state.name.lower()
-            if status.heat_pump_state
-            else None
+            lambda status: (
+                status.heat_pump_state.name.lower() if status.heat_pump_state else None
+            )
         ),
     ),
     WeHeatSensorEntityDescription(
@@ -160,6 +162,15 @@ SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda status: status.compressor_percentage,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="central_heating_flow_volume",
+        key="central_heating_flow_volume",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_FLOW,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        value_fn=lambda status: status.central_heating_flow_volume,
     ),
 ]
 
@@ -182,6 +193,15 @@ DHW_SENSORS = [
         suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
         value_fn=lambda status: status.dhw_bottom_temperature,
     ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_flow_volume",
+        key="dhw_flow_volume",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_FLOW,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        value_fn=lambda status: status.dhw_flow_volume,
+    ),
 ]
 
 ENERGY_SENSORS = [
@@ -198,8 +218,83 @@ ENERGY_SENSORS = [
         key="energy_output",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda status: status.energy_output,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_heating",
+        key="electricity_used_heating",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_heating,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_cooling",
+        key="electricity_used_cooling",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_cooling,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_defrost",
+        key="electricity_used_defrost",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_defrost,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_standby",
+        key="electricity_used_standby",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_standby,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output_heating",
+        key="energy_output_heating",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_out_heating,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output_cooling",
+        key="energy_output_cooling",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda status: status.energy_out_cooling,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output_defrost",
+        key="energy_output_defrost",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda status: status.energy_out_defrost,
+    ),
+]
+
+DHW_ENERGY_SENSORS = [
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_dhw",
+        key="electricity_used_dhw",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_dhw,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output_dhw",
+        key="energy_output_dhw",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_out_dhw,
     ),
 ]
 
@@ -231,6 +326,16 @@ async def async_setup_entry(
                 )
                 for entity_description in DHW_SENSORS
                 if entity_description.value_fn(weheatdata.data_coordinator.data)
+                is not None
+            )
+            entities.extend(
+                WeheatHeatPumpSensor(
+                    weheatdata.heat_pump_info,
+                    weheatdata.energy_coordinator,
+                    entity_description,
+                )
+                for entity_description in DHW_ENERGY_SENSORS
+                if entity_description.value_fn(weheatdata.energy_coordinator.data)
                 is not None
             )
         entities.extend(

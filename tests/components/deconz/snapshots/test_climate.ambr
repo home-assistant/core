@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate_device_with_cooling_support[sensor_payload0][climate.zen_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -38,6 +39,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zen-01',
     'options': dict({
     }),
     'original_device_class': None,
@@ -45,6 +47,7 @@
     'original_name': 'Zen-01',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
     'translation_key': None,
     'unique_id': '00:24:46:00:00:11:6f:56-01-0201',
@@ -89,8 +92,9 @@
 # ---
 # name: test_climate_device_with_fan_support[sensor_payload0][climate.zen_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -126,6 +130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zen-01',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,6 +138,7 @@
     'original_name': 'Zen-01',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
     'translation_key': None,
     'unique_id': '00:24:46:00:00:11:6f:56-01-0201',
@@ -177,8 +183,9 @@
 # ---
 # name: test_climate_device_with_preset[sensor_payload0][climate.zen_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -223,6 +230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zen-01',
     'options': dict({
     }),
     'original_device_class': None,
@@ -230,6 +238,7 @@
     'original_name': 'Zen-01',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': None,
     'unique_id': '00:24:46:00:00:11:6f:56-01-0201',
@@ -284,8 +293,9 @@
 # ---
 # name: test_climate_device_without_cooling_support[sensor_payload0][climate.thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -311,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -318,6 +329,7 @@
     'original_name': 'Thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -352,8 +364,9 @@
 # ---
 # name: test_clip_climate_device[config_entry_options0-sensor_payload0][climate.clip_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -378,6 +391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CLIP thermostat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -385,6 +399,7 @@
     'original_name': 'CLIP thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:02-00',
@@ -417,8 +432,9 @@
 # ---
 # name: test_clip_climate_device[config_entry_options0-sensor_payload0][climate.thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -444,6 +460,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -451,6 +468,7 @@
     'original_name': 'Thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',
@@ -485,8 +503,9 @@
 # ---
 # name: test_simple_climate_device[sensor_payload0][climate.thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -511,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'thermostat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -518,6 +538,7 @@
     'original_name': 'thermostat',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
     'unique_id': '14:b4:57:ff:fe:d5:4e:77-01-0201',

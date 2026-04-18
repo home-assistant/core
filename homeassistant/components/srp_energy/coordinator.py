@@ -23,14 +23,19 @@ from .const import (
 TIMEOUT = 10
 PHOENIX_ZONE_INFO = dt_util.get_time_zone(PHOENIX_TIME_ZONE)
 
+type SRPEnergyConfigEntry = ConfigEntry[SRPEnergyDataUpdateCoordinator]
+
 
 class SRPEnergyDataUpdateCoordinator(DataUpdateCoordinator[float]):
     """A srp_energy Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SRPEnergyConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, client: SrpEnergyClient
+        self,
+        hass: HomeAssistant,
+        config_entry: SRPEnergyConfigEntry,
+        client: SrpEnergyClient,
     ) -> None:
         """Initialize the srp_energy data coordinator."""
         self._client = client

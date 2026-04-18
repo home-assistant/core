@@ -4,8 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import store
 from homeassistant.components.backup.const import DOMAIN
@@ -19,7 +18,6 @@ from tests.common import async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 async def test_sensors(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -104,6 +102,8 @@ async def test_sensor_updates(
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
+    state = hass.states.get("sensor.backup_last_attempted_automatic_backup")
+    assert state.state == "2024-11-11T03:45:00+00:00"
     state = hass.states.get("sensor.backup_last_successful_automatic_backup")
     assert state.state == "2024-11-11T03:45:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
@@ -113,6 +113,8 @@ async def test_sensor_updates(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.backup_last_attempted_automatic_backup")
+    assert state.state == "2024-11-13T11:00:00+00:00"
     state = hass.states.get("sensor.backup_last_successful_automatic_backup")
     assert state.state == "2024-11-13T11:00:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")

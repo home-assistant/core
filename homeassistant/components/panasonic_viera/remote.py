@@ -6,18 +6,16 @@ from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Remote
+from . import PanasonicVieraConfigEntry, Remote
 from .const import (
     ATTR_DEVICE_INFO,
     ATTR_MANUFACTURER,
     ATTR_MODEL_NUMBER,
-    ATTR_REMOTE,
     ATTR_UDN,
     DEFAULT_MANUFACTURER,
     DEFAULT_MODEL_NUMBER,
@@ -27,14 +25,14 @@ from .const import (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PanasonicVieraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Panasonic Viera TV Remote from a config entry."""
 
     config = config_entry.data
 
-    remote = hass.data[DOMAIN][config_entry.entry_id][ATTR_REMOTE]
+    remote = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
 

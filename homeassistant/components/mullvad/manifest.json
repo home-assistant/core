@@ -4,6 +4,7 @@
   "codeowners": ["@meichthys"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mullvad",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": ["mullvad-api==1.0.0"],
   "single_config_entry": true

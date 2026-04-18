@@ -3,19 +3,24 @@
 from unittest.mock import patch
 
 import pytest
+from soco.exceptions import SoCoException
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_PLAY,
 )
 from homeassistant.components.sonos import DOMAIN
-from homeassistant.components.sonos.const import DATA_SONOS, SCAN_INTERVAL
+from homeassistant.components.sonos.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent, group_speakers, ungroup_speakers
 
-from tests.common import async_fire_time_changed, load_fixture, load_json_value_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
 
 
 async def test_fallback_to_polling(
@@ -33,7 +38,7 @@ async def test_fallback_to_polling(
     await hass.async_block_till_done()
     await fire_zgs_event()
 
-    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
+    speaker = list(config_entry.runtime_data.discovered.values())[0]
     assert speaker.soco is soco
     assert speaker._subscriptions
     assert not speaker.subscriptions_failed
@@ -56,7 +61,7 @@ async def test_fallback_to_polling(
 
 
 async def test_subscription_creation_fails(
-    hass: HomeAssistant, async_setup_sonos
+    hass: HomeAssistant, async_setup_sonos, config_entry: MockConfigEntry
 ) -> None:
     """Test that subscription creation failures are handled."""
     with patch(
@@ -66,7 +71,7 @@ async def test_subscription_creation_fails(
         await async_setup_sonos()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    speaker = list(hass.data[DATA_SONOS].discovered.values())[0]
+    speaker = list(config_entry.runtime_data.discovered.values())[0]
     assert not speaker._subscriptions
 
     with patch.object(speaker, "_resub_cooldown_expires_at", None):
@@ -74,22 +79,6 @@ async def test_subscription_creation_fails(
         await hass.async_block_till_done()
 
     assert speaker._subscriptions
-
-
-def _create_zgs_sonos_event(
-    fixture_file: str, soco_1: MockSoCo, soco_2: MockSoCo, create_uui_ds: bool = True
-) -> SonosMockEvent:
-    """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
-    zgs = load_fixture(fixture_file, DOMAIN)
-    variables = {}
-    variables["ZoneGroupState"] = zgs
-    # Sonos does not always send this variable with zgs events
-    if create_uui_ds:
-        variables["zone_player_uui_ds_in_group"] = f"{soco_1.uid},{soco_2.uid}"
-    event = SonosMockEvent(soco_1, soco_1.zoneGroupTopology, variables)
-    if create_uui_ds:
-        event.zone_player_uui_ds_in_group = f"{soco_1.uid},{soco_2.uid}"
-    return event
 
 
 def _create_avtransport_sonos_event(
@@ -137,11 +126,8 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2 - Group the speakers, living room is the coordinator
-    event = _create_zgs_sonos_event(
-        "zgs_group.xml", soco_lr, soco_br, create_uui_ds=True
-    )
-    soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
-    soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
+    group_speakers(soco_lr, soco_br)
+
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.living_room")
     assert state.attributes["group_members"] == [
@@ -163,11 +149,8 @@ async def test_zgs_event_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 3 - Ungroup the speakers
-    event = _create_zgs_sonos_event(
-        "zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False
-    )
-    soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
-    soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
+    ungroup_speakers(soco_lr, soco_br)
+
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.living_room")
     assert state.attributes["group_members"] == ["media_player.living_room"]
@@ -201,13 +184,41 @@ async def test_zgs_avtransport_group_speakers(
     soco_br.play.reset_mock()
 
     # Test 2- Send a zgs event to return living room to its own coordinator
-    event = _create_zgs_sonos_event(
-        "zgs_two_single.xml", soco_lr, soco_br, create_uui_ds=False
-    )
-    soco_lr.zoneGroupTopology.subscribe.return_value._callback(event)
-    soco_br.zoneGroupTopology.subscribe.return_value._callback(event)
+    ungroup_speakers(soco_lr, soco_br)
     await hass.async_block_till_done(wait_background_tasks=True)
     # Call should route to the living room
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 1
     assert soco_br.play.call_count == 0
+
+
+async def test_async_offline_without_subscription_lock(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+) -> None:
+    """Test unloading entry works when subscription lock was never created.
+
+    This can happen when a speaker is discovered but setup() fails early
+    before async_setup() is scheduled. The integration should handle this
+    gracefully during unload.
+    """
+    # Make play_mode raise an exception to cause setup() to fail early.
+    # The speaker is added to discovered before setup() is called in _add_speaker,
+    # so this creates a speaker in discovered without _subscription_lock being created.
+    # Using PropertyMock to only affect this specific test's soco instance.
+    with patch.object(
+        type(soco),
+        "play_mode",
+        new_callable=lambda: property(
+            fget=lambda self: (_ for _ in ()).throw(SoCoException("Connection failed"))
+        ),
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Unload should succeed without AssertionError even though
+        # _subscription_lock was never created
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)

@@ -75,7 +75,7 @@ class MelnorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self._create_entry(address)
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(
             self.hass, connectable=True
         ):

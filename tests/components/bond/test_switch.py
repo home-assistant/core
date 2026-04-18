@@ -5,9 +5,9 @@ from datetime import timedelta
 from bond_async import Action, DeviceType
 import pytest
 
-from homeassistant.components.bond.const import (
+from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond.services import (
     ATTR_POWER_STATE,
-    DOMAIN as BOND_DOMAIN,
     SERVICE_SET_POWER_TRACKED_STATE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -94,7 +94,7 @@ async def test_switch_set_power_belief(hass: HomeAssistant) -> None:
 
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
@@ -118,7 +118,7 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
         patch_bond_device_state(),
     ):
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,

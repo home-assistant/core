@@ -55,8 +55,7 @@ async def fixture_mock_connection(mock_connection_construct):
 @pytest.fixture(name="coils")
 async def fixture_coils(mock_connection: MockConnection):
     """Return a dict with coil data."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.nibe_heatpump import HeatPump
+    from homeassistant.components.nibe_heatpump import HeatPump  # noqa: PLC0415
 
     get_coils_original = HeatPump.get_coils
     get_coil_by_address_original = HeatPump.get_coil_by_address

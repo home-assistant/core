@@ -1,32 +1,20 @@
 """Tests for the Spotify config flow."""
 
 from http import HTTPStatus
-from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 import pytest
-from spotifyaio import SpotifyConnectionError
+from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-BLANK_ZEROCONF_INFO = ZeroconfServiceInfo(
-    ip_address=ip_address("1.2.3.4"),
-    ip_addresses=[ip_address("1.2.3.4")],
-    hostname="mock_hostname",
-    name="mock_name",
-    port=None,
-    properties={},
-    type="mock_type",
-)
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
@@ -37,25 +25,6 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_credentials"
-
-
-async def test_zeroconf_abort_if_existing_entry(hass: HomeAssistant) -> None:
-    """Check zeroconf flow aborts when an entry already exist."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -126,6 +95,13 @@ async def test_full_flow(
     assert result["result"].unique_id == "1112264111"
 
 
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (SpotifyConnectionError, "connection_error"),
+        (SpotifyForbiddenError, "user_not_premium"),
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("setup_credentials")
 async def test_abort_if_spotify_error(
@@ -133,6 +109,8 @@ async def test_abort_if_spotify_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_spotify: MagicMock,
+    exception: Exception,
+    reason: str,
 ) -> None:
     """Check Spotify errors causes flow to abort."""
     result = await hass.config_entries.flow.async_init(
@@ -159,12 +137,12 @@ async def test_abort_if_spotify_error(
         },
     )
 
-    mock_spotify.return_value.get_current_user.side_effect = SpotifyConnectionError
+    mock_spotify.return_value.get_current_user.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == reason
 
 
 @pytest.mark.usefixtures("current_request_with_host")

@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
@@ -26,6 +26,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -66,8 +67,7 @@ def add_province_and_language_to_schema(
 
     _country = country_holidays(country=country)
     if country_default_language := (_country.default_language):
-        selectable_languages = _country.supported_languages
-        new_selectable_languages = list(selectable_languages)
+        new_selectable_languages = list(_country.supported_languages)
         language_schema = {
             vol.Optional(
                 CONF_LANGUAGE, default=country_default_language
@@ -79,10 +79,22 @@ def add_province_and_language_to_schema(
         }
 
     if provinces := all_countries.get(country):
+        if _country.subdivisions_aliases and (
+            subdiv_aliases := _country.get_subdivision_aliases()
+        ):
+            province_options: list[Any] = [
+                SelectOptionDict(value=k, label=", ".join(v))
+                for k, v in subdiv_aliases.items()
+            ]
+            for option in province_options:
+                if option["label"] == "":
+                    option["label"] = option["value"]
+        else:
+            province_options = provinces
         province_schema = {
             vol.Optional(CONF_PROVINCE): SelectSelector(
                 SelectSelectorConfig(
-                    options=provinces,
+                    options=province_options,
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key=CONF_PROVINCE,
                 )
@@ -143,20 +155,9 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             subdiv=province,
             years=year,
             language=language,
+            categories=[PUBLIC, *user_input.get(CONF_CATEGORY, [])],
         )
-        if (
-            (supported_languages := obj_holidays.supported_languages)
-            and language
-            and language.startswith("en")
-        ):
-            for lang in supported_languages:
-                if lang.startswith("en"):
-                    obj_holidays = country_holidays(
-                        country,
-                        subdiv=province,
-                        years=year,
-                        language=lang,
-                    )
+
     else:
         obj_holidays = HolidayBase(years=year)
 
@@ -314,7 +315,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class WorkdayOptionsFlowHandler(OptionsFlow):
+class WorkdayOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Workday options."""
 
     async def async_step_init(

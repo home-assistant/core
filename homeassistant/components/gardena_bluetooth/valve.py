@@ -6,7 +6,11 @@ from typing import Any
 
 from gardena_bluetooth.const import Valve
 
-from homeassistant.components.valve import ValveEntity, ValveEntityFeature
+from homeassistant.components.valve import (
+    ValveDeviceClass,
+    ValveEntity,
+    ValveEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -37,11 +41,12 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
     _attr_is_closed: bool | None = None
     _attr_reports_position = False
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+    _attr_device_class = ValveDeviceClass.WATER
 
     characteristics = {
-        Valve.state.uuid,
-        Valve.manual_watering_time.uuid,
-        Valve.remaining_open_time.uuid,
+        Valve.state.unique_id,
+        Valve.manual_watering_time.unique_id,
+        Valve.remaining_open_time.unique_id,
     }
 
     def __init__(
@@ -52,7 +57,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
         super().__init__(
             coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
         )
-        self._attr_unique_id = f"{coordinator.address}-{Valve.state.uuid}"
+        self._attr_unique_id = f"{coordinator.address}-{Valve.state.unique_id}"
 
     def _handle_coordinator_update(self) -> None:
         self._attr_is_closed = not self.coordinator.get_cached(Valve.state)

@@ -17,15 +17,12 @@ STORAGE_VERSION = 1
 
 @dataclass(slots=True)
 class DomainData:
-    """Define a class that stores global esphome data in hass.data[DOMAIN]."""
+    """Define a class that stores global esphome data."""
 
     _stores: dict[str, ESPHomeStorage] = field(default_factory=dict)
 
     def get_entry_data(self, entry: ESPHomeConfigEntry) -> RuntimeEntryData:
-        """Return the runtime entry data associated with this config entry.
-
-        Raises KeyError if the entry isn't loaded yet.
-        """
+        """Return the runtime entry data associated with this config entry."""
         return entry.runtime_data
 
     def get_or_create_store(

@@ -17,7 +17,6 @@
         '1234',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WOLF GmbH',
@@ -27,15 +26,15 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
-# name: test_sensors[sensor.energy_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_energy_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -45,7 +44,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.energy_parameter',
+    'entity_id': 'sensor.wolf_smartset_energy_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -53,41 +52,47 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy Parameter',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:6005200000',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[sensor.energy_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_energy_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Energy Parameter',
+      'friendly_name': 'Wolf SmartSet Energy Parameter',
       'parameter_id': 6005200000,
       'parent': 'Heating',
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       'value_id': 6002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.energy_parameter',
+    'entity_id': 'sensor.wolf_smartset_energy_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '183',
   })
 # ---
-# name: test_sensors[sensor.flow_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_flow_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -97,7 +102,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.flow_parameter',
+    'entity_id': 'sensor.wolf_smartset_flow_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -105,41 +110,47 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow Parameter',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Flow Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:11005200000',
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
-# name: test_sensors[sensor.flow_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_flow_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
-      'friendly_name': 'Flow Parameter',
+      'friendly_name': 'Wolf SmartSet Flow Parameter',
       'parameter_id': 11005200000,
       'parent': 'Heating',
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
       'value_id': 1100280001,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.flow_parameter',
+    'entity_id': 'sensor.wolf_smartset_flow_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
 # ---
-# name: test_sensors[sensor.frequency_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_frequency_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -149,7 +160,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.frequency_parameter',
+    'entity_id': 'sensor.wolf_smartset_frequency_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -157,41 +168,47 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency Parameter',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:9005200000',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
-# name: test_sensors[sensor.frequency_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_frequency_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
-      'friendly_name': 'Frequency Parameter',
+      'friendly_name': 'Wolf SmartSet Frequency Parameter',
       'parameter_id': 9005200000,
       'parent': 'Heating',
       'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
       'value_id': 9002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.frequency_parameter',
+    'entity_id': 'sensor.wolf_smartset_frequency_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_sensors[sensor.hours_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_hours_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -201,7 +218,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hours_parameter',
+    'entity_id': 'sensor.wolf_smartset_hours_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -209,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,16 +234,17 @@
     'original_name': 'Hours Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:7005200000',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensors[sensor.hours_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_hours_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hours Parameter',
+      'friendly_name': 'Wolf SmartSet Hours Parameter',
       'icon': 'mdi:clock',
       'parameter_id': 7005200000,
       'parent': 'Heating',
@@ -233,17 +252,18 @@
       'value_id': 7002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hours_parameter',
+    'entity_id': 'sensor.wolf_smartset_hours_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_sensors[sensor.list_item_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_list_item_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -253,7 +273,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.list_item_parameter',
+    'entity_id': 'sensor.wolf_smartset_list_item_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -261,6 +281,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List Item Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -268,32 +289,34 @@
     'original_name': 'List Item Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state',
     'unique_id': '1234:8005200000',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.list_item_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_list_item_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'List Item Parameter',
+      'friendly_name': 'Wolf SmartSet List Item Parameter',
       'parameter_id': 8005200000,
       'parent': 'Heating',
       'value_id': 8002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.list_item_parameter',
+    'entity_id': 'sensor.wolf_smartset_list_item_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'ein',
   })
 # ---
-# name: test_sensors[sensor.percentage_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_percentage_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -303,7 +326,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.percentage_parameter',
+    'entity_id': 'sensor.wolf_smartset_percentage_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -311,6 +334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Percentage Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -318,33 +342,35 @@
     'original_name': 'Percentage Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:2005200000',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.percentage_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_percentage_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Percentage Parameter',
+      'friendly_name': 'Wolf SmartSet Percentage Parameter',
       'parameter_id': 2005200000,
       'parent': 'Solar',
       'unit_of_measurement': '%',
       'value_id': 2002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.percentage_parameter',
+    'entity_id': 'sensor.wolf_smartset_percentage_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_sensors[sensor.power_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_power_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -354,7 +380,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.power_parameter',
+    'entity_id': 'sensor.wolf_smartset_power_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -362,41 +388,47 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power Parameter',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Power Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:5005200000',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
-# name: test_sensors[sensor.power_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_power_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Power Parameter',
+      'friendly_name': 'Wolf SmartSet Power Parameter',
       'parameter_id': 5005200000,
       'parent': 'Heating',
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
       'value_id': 5002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.power_parameter',
+    'entity_id': 'sensor.wolf_smartset_power_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_sensors[sensor.pressure_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_pressure_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -406,7 +438,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.pressure_parameter',
+    'entity_id': 'sensor.wolf_smartset_pressure_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -414,41 +446,47 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure Parameter',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Pressure Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:4005200000',
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_sensors[sensor.pressure_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_pressure_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'Pressure Parameter',
+      'friendly_name': 'Wolf SmartSet Pressure Parameter',
       'parameter_id': 4005200000,
       'parent': 'Heating',
       'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
       'value_id': 4002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.pressure_parameter',
+    'entity_id': 'sensor.wolf_smartset_pressure_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_sensors[sensor.rpm_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_rpm_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -460,7 +498,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rpm_parameter',
+    'entity_id': 'sensor.wolf_smartset_rpm_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -468,6 +506,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RPM Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -475,16 +514,17 @@
     'original_name': 'RPM Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:10005200000',
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_sensors[sensor.rpm_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_rpm_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'RPM Parameter',
+      'friendly_name': 'Wolf SmartSet RPM Parameter',
       'parameter_id': 10005200000,
       'parent': 'Heating',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -492,17 +532,18 @@
       'value_id': 1000280001,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rpm_parameter',
+    'entity_id': 'sensor.wolf_smartset_rpm_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1500',
   })
 # ---
-# name: test_sensors[sensor.simple_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_simple_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -512,7 +553,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.simple_parameter',
+    'entity_id': 'sensor.wolf_smartset_simple_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -520,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Simple Parameter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -527,32 +569,34 @@
     'original_name': 'Simple Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:1005200000',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.simple_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_simple_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Simple Parameter',
+      'friendly_name': 'Wolf SmartSet Simple Parameter',
       'parameter_id': 1005200000,
       'parent': 'DHW',
       'value_id': 1002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.simple_parameter',
+    'entity_id': 'sensor.wolf_smartset_simple_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12',
   })
 # ---
-# name: test_sensors[sensor.temperature_parameter-entry]
+# name: test_sensors[sensor.wolf_smartset_temperature_parameter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -562,7 +606,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.temperature_parameter',
+    'entity_id': 'sensor.wolf_smartset_temperature_parameter',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -570,31 +614,36 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature Parameter',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature Parameter',
     'platform': 'wolflink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '1234:3005200000',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[sensor.temperature_parameter-state]
+# name: test_sensors[sensor.wolf_smartset_temperature_parameter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Temperature Parameter',
+      'friendly_name': 'Wolf SmartSet Temperature Parameter',
       'parameter_id': 3005200000,
       'parent': 'Solar',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       'value_id': 3002800000,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.temperature_parameter',
+    'entity_id': 'sensor.wolf_smartset_temperature_parameter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

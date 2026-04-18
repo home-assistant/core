@@ -1,0 +1,717 @@
+# serializer version: 1
+# name: test_add_item
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_add_item_service
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_api_update_fails
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_api_update_fails.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_api_update_fails.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_clear_completed_items
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_clear_completed_items.1
+  list([
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_clear_completed_items.2
+  list([
+  ])
+# ---
+# name: test_clear_completed_items_service
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_clear_completed_items_service.1
+  list([
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_clear_completed_items_service.2
+  list([
+  ])
+# ---
+# name: test_deprecated_api_clear_completed
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_clear_completed.1
+  list([
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_clear_completed.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_create
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_create_fail
+  '<file missing>'
+# ---
+# name: test_deprecated_api_get_all
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_get_all.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_update
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_update.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_deprecated_api_update.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_recent_items_intent
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+  ])
+# ---
+# name: test_recent_items_intent.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+  ])
+# ---
+# name: test_remove_item
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_remove_item.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_remove_item.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_remove_item_service
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_remove_item_service.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_sort_list_service
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'zzz',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'ddd',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'aaa',
+    }),
+  ])
+# ---
+# name: test_sort_list_service.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'aaa',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'ddd',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'zzz',
+    }),
+  ])
+# ---
+# name: test_sort_list_service.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'zzz',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'ddd',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'aaa',
+    }),
+  ])
+# ---
+# name: test_update_list
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_update_list.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'dupe',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'dupe',
+    }),
+  ])
+# ---
+# name: test_ws_add_item
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+  ])
+# ---
+# name: test_ws_add_item_fail
+  '<file missing>'
+# ---
+# name: test_ws_clear_items
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_clear_items.1
+  list([
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_clear_items.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_get_items
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_get_items.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_remove_item
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_ws_remove_item.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'cheese',
+    }),
+  ])
+# ---
+# name: test_ws_remove_item_fail
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+  ])
+# ---
+# name: test_ws_remove_item_fail.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+  ])
+# ---
+# name: test_ws_reorder_items
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'apple',
+    }),
+  ])
+# ---
+# name: test_ws_reorder_items.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'apple',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_ws_reorder_items.2
+  list([
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'apple',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_ws_reorder_items.3
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'apple',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_reorder_items_failure
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'apple',
+    }),
+  ])
+# ---
+# name: test_ws_reorder_items_failure.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'apple',
+    }),
+  ])
+# ---
+# name: test_ws_reorder_items_failure.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'apple',
+    }),
+  ])
+# ---
+# name: test_ws_update_item
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_update_item.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_update_item.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'soda',
+    }),
+    dict({
+      'complete': True,
+      'id': '<ANY>',
+      'name': 'wine',
+    }),
+  ])
+# ---
+# name: test_ws_update_item_fail
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_ws_update_item_fail.1
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---
+# name: test_ws_update_item_fail.2
+  list([
+    dict({
+      'complete': False,
+      'id': '<ANY>',
+      'name': 'beer',
+    }),
+  ])
+# ---

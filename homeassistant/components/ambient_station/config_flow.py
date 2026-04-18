@@ -31,7 +31,7 @@ class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.data_schema,
-            errors=errors if errors else {},
+            errors=errors or {},
         )
 
     async def async_step_user(

@@ -21,13 +21,9 @@ from homeassistant.components.androidtv.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.components.androidtv.media_player import (
+from homeassistant.components.androidtv.services import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
-    SERVICE_ADB_COMMAND,
-    SERVICE_DOWNLOAD,
-    SERVICE_LEARN_SENDEVENT,
-    SERVICE_UPLOAD,
 )
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -54,9 +50,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -163,7 +159,7 @@ async def test_reconnect(
 
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == STATE_STANDBY
+        assert state.state == STATE_IDLE
         assert MSG_RECONNECT[patch_key] in caplog.record_tuples[2]
 
 
@@ -503,7 +499,7 @@ async def test_adb_command(hass: HomeAssistant) -> None:
         ) as patch_shell:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADB_COMMAND,
+                "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
             )
@@ -534,7 +530,7 @@ async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
         ):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADB_COMMAND,
+                "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
             )
@@ -563,7 +559,7 @@ async def test_adb_command_key(hass: HomeAssistant) -> None:
         ) as patch_shell:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADB_COMMAND,
+                "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
             )
@@ -594,7 +590,7 @@ async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
         ) as patch_get_props:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_ADB_COMMAND,
+                "adb_command",
                 {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
                 blocking=True,
             )
@@ -624,7 +620,7 @@ async def test_learn_sendevent(hass: HomeAssistant) -> None:
         ) as patch_learn_sendevent:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_LEARN_SENDEVENT,
+                "learn_sendevent",
                 {ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
@@ -672,7 +668,7 @@ async def test_update_lock_not_acquired(hass: HomeAssistant) -> None:
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == STATE_STANDBY
+        assert state.state == STATE_IDLE
 
 
 async def test_download(hass: HomeAssistant) -> None:
@@ -693,7 +689,7 @@ async def test_download(hass: HomeAssistant) -> None:
         with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_pull") as patch_pull:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_DOWNLOAD,
+                "download",
                 {
                     ATTR_ENTITY_ID: entity_id,
                     ATTR_DEVICE_PATH: device_path,
@@ -710,7 +706,7 @@ async def test_download(hass: HomeAssistant) -> None:
         ):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_DOWNLOAD,
+                "download",
                 {
                     ATTR_ENTITY_ID: entity_id,
                     ATTR_DEVICE_PATH: device_path,
@@ -739,7 +735,7 @@ async def test_upload(hass: HomeAssistant) -> None:
         with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_push") as patch_push:
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_UPLOAD,
+                "upload",
                 {
                     ATTR_ENTITY_ID: entity_id,
                     ATTR_DEVICE_PATH: device_path,
@@ -756,7 +752,7 @@ async def test_upload(hass: HomeAssistant) -> None:
         ):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_UPLOAD,
+                "upload",
                 {
                     ATTR_ENTITY_ID: entity_id,
                     ATTR_DEVICE_PATH: device_path,

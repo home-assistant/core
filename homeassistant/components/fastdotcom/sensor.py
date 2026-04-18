@@ -51,6 +51,8 @@ class SpeedtestSensor(CoordinatorEntity[FastdotcomDataUpdateCoordinator], Sensor
     @property
     def native_value(
         self,
-    ) -> float:
+    ) -> float | None:
         """Return the state of the sensor."""
-        return self.coordinator.data
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get("download_speed")

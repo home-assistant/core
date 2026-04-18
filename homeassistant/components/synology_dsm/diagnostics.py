@@ -32,6 +32,7 @@ async def async_get_config_entry_diagnostics(
             "uptime": dsm_info.uptime,
             "temperature": dsm_info.temperature,
         },
+        "external_usb": {"devices": {}, "partitions": {}},
         "network": {"interfaces": {}},
         "storage": {"disks": {}, "volumes": {}},
         "surveillance_station": {"cameras": {}, "camera_diagnostics": {}},
@@ -42,6 +43,27 @@ async def async_get_config_entry_diagnostics(
             "fetching_entities": syno_api._fetching_entities,  # noqa: SLF001
         },
     }
+
+    if syno_api.external_usb is not None:
+        for device in syno_api.external_usb.get_devices.values():
+            if device is not None:
+                diag_data["external_usb"]["devices"][device.device_id] = {
+                    "name": device.device_name,
+                    "manufacturer": device.device_manufacturer,
+                    "model": device.device_product_name,
+                    "type": device.device_type,
+                    "status": device.device_status,
+                    "size_total": device.device_size_total(False),
+                }
+                for partition in device.device_partitions.values():
+                    if partition is not None:
+                        diag_data["external_usb"]["partitions"][partition.name_id] = {
+                            "name": partition.partition_title,
+                            "filesystem": partition.filesystem,
+                            "share_name": partition.share_name,
+                            "size_used": partition.partition_size_used(False),
+                            "size_total": partition.partition_size_total(False),
+                        }
 
     if syno_api.network is not None:
         for intf in syno_api.network.interfaces:

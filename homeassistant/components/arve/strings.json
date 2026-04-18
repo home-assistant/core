@@ -1,19 +1,19 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Set up your Arve device",
-        "data": {
-          "access_token": "Arve token",
-          "client_secret": "Arve customer token"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "Arve token",
+          "client_secret": "Arve customer token"
+        },
+        "description": "Set up your Arve device"
+      }
     }
   },
   "entity": {

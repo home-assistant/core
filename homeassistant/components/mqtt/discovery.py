@@ -21,7 +21,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -47,7 +51,10 @@ from .const import (
 )
 from .models import DATA_MQTT, MqttComponentConfig, MqttOriginInfo, ReceiveMessage
 from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
-from .util import async_forward_entry_setup_and_setup_discovery
+from .util import (
+    async_cleanup_device_registry,
+    async_forward_entry_setup_and_setup_discovery,
+)
 
 ABBREVIATIONS_SET = set(ABBREVIATIONS)
 DEVICE_ABBREVIATIONS_SET = set(DEVICE_ABBREVIATIONS)
@@ -254,7 +261,7 @@ def _generate_device_config(
     comp_config = config[CONF_COMPONENTS]
     for platform, discover_id in mqtt_data.discovery_already_discovered:
         ids = discover_id.split(" ")
-        component_node_id = ids.pop(0)
+        component_node_id = f"{ids.pop(1)} {ids.pop(0)}" if len(ids) > 2 else ids.pop(0)
         component_object_id = " ".join(ids)
         if not ids:
             continue
@@ -565,7 +572,28 @@ async def async_start(  # noqa: C901
         elif payload:
             _async_add_component(payload)
         else:
-            # Unhandled discovery message
+            entity_registry = er.async_get(hass)
+            if (
+                (
+                    entity_hash := mqtt_data.discovery_discovered_and_disabled.pop(
+                        discovery_hash, None
+                    )
+                )
+                and (entity_id := entity_registry.entities.get_entity_id(entity_hash))
+                and (entity_entry := entity_registry.async_get(entity_id))
+            ):
+                # Cleanup discovered disabled entity / device
+                entity_registry.async_remove(entity_id)
+                hass.async_create_task(
+                    async_cleanup_device_registry(
+                        hass,
+                        device_id=entity_entry.device_id,
+                        config_entry_id=entity_entry.config_entry_id,
+                    ),
+                    name=f"Check for cleanup device registry for {entity_id}",
+                )
+
+            # Finish handling discovery message
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )

@@ -1,0 +1,50 @@
+{
+  "serialNumber": "MR123456",
+  "type": "CoffeeMachine",
+  "name": "MR123456",
+  "location": null,
+  "modelCode": "LINEAMICRA",
+  "modelName": "LINEA MICRA",
+  "connected": true,
+  "connectionDate": 1742526019892,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": false,
+  "coffeeStation": null,
+  "imageUrl": "https://lion.lamarzocco.io/img/thing-model/detail/lineamicra/lineamicra-1-c-bianco.png",
+  "bleAuthToken": null,
+  "actualFirmwares": [
+    {
+      "type": "Gateway",
+      "buildVersion": "v5.0.9",
+      "changeLog": "What’s new in this version:\n\n* New La Marzocco compatibility\n* Improved connectivity\n* Improved pairing process\n* Improved statistics\n* Boilers heating time\n* Last backflush date (GS3 MP excluded)\n* Automatic gateway updates option",
+      "thingModelCode": "LineaMicra",
+      "status": "ToUpdate",
+      "availableUpdate": {
+        "type": "Gateway",
+        "buildVersion": "v5.0.10",
+        "changeLog": "What’s new in this version:\n\n* fixed an issue that could cause the machine powers up outside scheduled time\n* minor improvements",
+        "thingModelCode": "LineaMicra"
+      }
+    },
+    {
+      "type": "Machine",
+      "buildVersion": "v1.17",
+      "changeLog": null,
+      "thingModelCode": "LineaMicra",
+      "status": "Updated",
+      "availableUpdate": null
+    }
+  ],
+  "wifiSsid": "MyWifi",
+  "wifiRssi": -51,
+  "plumbInSupported": true,
+  "isPlumbedIn": true,
+  "cropsterSupported": false,
+  "cropsterActive": null,
+  "hemroSupported": false,
+  "hemroActive": null,
+  "factoryResetSupported": true,
+  "autoUpdateSupported": true,
+  "autoUpdate": false
+}

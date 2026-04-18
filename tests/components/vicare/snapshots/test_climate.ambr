@@ -1,13 +1,14 @@
 # serializer version: 1
 # name: test_all_entities[climate.model0_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_modes': list([
         'comfort',
@@ -32,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
     }),
     'original_device_class': None,
@@ -39,6 +41,7 @@
     'original_name': 'Heating',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'heating',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating-0',
@@ -53,7 +56,7 @@
       'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_mode': None,
       'preset_modes': list([
@@ -85,13 +88,14 @@
 # ---
 # name: test_all_entities[climate.model0_heating_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_modes': list([
         'comfort',
@@ -116,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +128,7 @@
     'original_name': 'Heating',
     'platform': 'vicare',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
     'translation_key': 'heating',
     'unique_id': 'gateway0_deviceSerialVitodens300W-heating-1',
@@ -137,7 +143,7 @@
       'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_mode': None,
       'preset_modes': list([

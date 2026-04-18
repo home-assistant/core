@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[todo.mealie_freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': 'Freezer',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <TodoListEntityFeature: 15>,
     'translation_key': 'shopping_list',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_e9d78ff2-4b23-4b77-a3a8-464827100b46',
@@ -44,13 +47,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---
 # name: test_entities[todo.mealie_special_groceries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Special groceries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +80,7 @@
     'original_name': 'Special groceries',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <TodoListEntityFeature: 15>,
     'translation_key': 'shopping_list',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_f8438635-8211-4be8-80d0-0aa42e37a5f2',
@@ -92,13 +98,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---
 # name: test_entities[todo.mealie_supermarket-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supermarket',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +131,7 @@
     'original_name': 'Supermarket',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <TodoListEntityFeature: 15>,
     'translation_key': 'shopping_list',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_27edbaab-2ec6-441f-8490-0283ea77585f',
@@ -140,6 +149,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---

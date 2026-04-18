@@ -10,11 +10,11 @@
       }
     },
     "sensor": {
-      "altitude": {
-        "default": "mdi:altimeter"
-      },
       "address": {
         "default": "mdi:map-marker"
+      },
+      "altitude": {
+        "default": "mdi:altimeter"
       },
       "geofence": {
         "default": "mdi:map-marker"

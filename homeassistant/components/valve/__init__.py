@@ -62,6 +62,7 @@ class ValveEntityFeature(IntFlag):
 
 
 ATTR_CURRENT_POSITION = "current_position"
+ATTR_IS_CLOSED = "is_closed"
 ATTR_POSITION = "position"
 
 
@@ -189,11 +190,20 @@ class ValveEntity(Entity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any] | None:
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if not self.reports_position:
-            return None
-        return {ATTR_CURRENT_POSITION: self.current_valve_position}
+        data: dict[str, Any] = {}
+
+        if self.reports_position:
+            if (current_valve_position := self.current_valve_position) is None:
+                data[ATTR_IS_CLOSED] = None
+            else:
+                data[ATTR_IS_CLOSED] = current_valve_position == 0
+            data[ATTR_CURRENT_POSITION] = current_valve_position
+        else:
+            data[ATTR_IS_CLOSED] = self.is_closed
+
+        return data
 
     @property
     def supported_features(self) -> ValveEntityFeature:

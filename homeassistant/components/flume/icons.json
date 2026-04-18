@@ -1,11 +1,11 @@
 {
   "entity": {
     "binary_sensor": {
-      "leak": {
-        "default": "mdi:pipe-leak"
-      },
       "flow": {
         "default": "mdi:waves"
+      },
+      "leak": {
+        "default": "mdi:pipe-leak"
       }
     }
   },

@@ -12,18 +12,14 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-import requests
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -112,6 +108,42 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         value_getter=lambda api: api.getOneTimeCharge(),
     ),
+    ViCareBinarySensorEntityDescription(
+        key="device_error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_getter=lambda api: len(api.getDeviceErrors()) > 0,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="identification_mode",
+        translation_key="identification_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getIdentification(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="mounting_mode",
+        translation_key="mounting_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getMountingMode(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="child_safety_lock_mode",
+        translation_key="child_safety_lock_mode",
+        value_getter=lambda api: api.getChildLock() == "active",
+        entity_registry_enabled_default=False,
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="valve",
+        translation_key="valve",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_getter=lambda api: api.isValveOpen(),
+    ),
+    ViCareBinarySensorEntityDescription(
+        key="ventilation_frost_protection",
+        translation_key="ventilation_frost_protection",
+        value_getter=lambda api: api.getHeatExchangerFrostProtectionActive(),
+    ),
 )
 
 
@@ -194,14 +226,5 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
 
     def update(self) -> None:
         """Update state of sensor."""
-        try:
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_is_on = self.entity_description.value_getter(self._api)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
+            self._attr_is_on = self.entity_description.value_getter(self._api)

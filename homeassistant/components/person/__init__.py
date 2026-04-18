@@ -11,10 +11,12 @@ import voluptuous as vol
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
+    ATTR_IN_ZONES,
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
@@ -27,7 +29,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
-    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -51,7 +52,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 
 from .const import DOMAIN
 
@@ -92,7 +92,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 async def async_create_person(
     hass: HomeAssistant,
     name: str,
@@ -110,7 +109,6 @@ async def async_create_person(
     )
 
 
-@bind_hass
 async def async_add_user_device_tracker(
     hass: HomeAssistant, user_id: str, device_tracker_entity_id: str
 ) -> None:
@@ -403,8 +401,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_reload_yaml(call: ServiceCall) -> None:
         """Reload YAML."""
         conf = await entity_component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            return
         await yaml_collection.async_load(
             await filter_yaml_data(hass, conf.get(DOMAIN, []))
         )
@@ -437,6 +433,7 @@ class Person(
         self._unsub_track_device: Callable[[], None] | None = None
         self._attr_state: str | None = None
         self.device_trackers: list[str] = []
+        self._in_zones: list[str] = []
 
         self._attr_unique_id = config[CONF_ID]
         self._set_attrs_from_config()
@@ -465,7 +462,7 @@ class Person(
         """Register device trackers."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._parse_source_state(state)
+            self._parse_source_state(state, state)
 
         if self.hass.is_running:
             # Update person now if hass is already running.
@@ -515,7 +512,7 @@ class Person(
     @callback
     def _update_state(self) -> None:
         """Update the state."""
-        latest_non_gps_home = latest_not_home = latest_gps = latest = None
+        latest_non_gps_home = latest_not_home = latest_gps = latest = coordinates = None
         for entity_id in self._config[CONF_DEVICE_TRACKERS]:
             state = self.hass.states.get(entity_id)
 
@@ -526,39 +523,51 @@ class Person(
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)
-            elif state.state == STATE_NOT_HOME:
+            else:
                 latest_not_home = _get_latest(latest_not_home, state)
 
         if latest_non_gps_home:
             latest = latest_non_gps_home
+            if (
+                latest_non_gps_home.attributes.get(ATTR_LATITUDE) is None
+                and latest_non_gps_home.attributes.get(ATTR_LONGITUDE) is None
+                and (home_zone := self.hass.states.get(ENTITY_ID_HOME))
+            ):
+                coordinates = home_zone
+            else:
+                coordinates = latest_non_gps_home
         elif latest_gps:
             latest = latest_gps
+            coordinates = latest_gps
         else:
             latest = latest_not_home
+            coordinates = latest_not_home
 
-        if latest:
-            self._parse_source_state(latest)
+        if latest and coordinates:
+            self._parse_source_state(latest, coordinates)
         else:
             self._attr_state = None
             self._source = None
             self._latitude = None
             self._longitude = None
             self._gps_accuracy = None
+            self._in_zones = []
 
         self._update_extra_state_attributes()
         self.async_write_ha_state()
 
     @callback
-    def _parse_source_state(self, state: State) -> None:
+    def _parse_source_state(self, state: State, coordinates: State) -> None:
         """Parse source state and set person attributes.
 
         This is a device tracker state or the restored person state.
         """
         self._attr_state = state.state
         self._source = state.entity_id
-        self._latitude = state.attributes.get(ATTR_LATITUDE)
-        self._longitude = state.attributes.get(ATTR_LONGITUDE)
-        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
+        self._latitude = coordinates.attributes.get(ATTR_LATITUDE)
+        self._longitude = coordinates.attributes.get(ATTR_LONGITUDE)
+        self._gps_accuracy = coordinates.attributes.get(ATTR_GPS_ACCURACY)
+        self._in_zones = coordinates.attributes.get(ATTR_IN_ZONES, [])
 
     @callback
     def _update_extra_state_attributes(self) -> None:
@@ -567,6 +576,7 @@ class Person(
             ATTR_EDITABLE: self.editable,
             ATTR_ID: self.unique_id,
             ATTR_DEVICE_TRACKERS: self.device_trackers,
+            ATTR_IN_ZONES: self._in_zones,
         }
 
         if self._latitude is not None:

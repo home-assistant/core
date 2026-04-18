@@ -1,0 +1,70 @@
+upload_image:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: opendisplay
+    image:
+      required: true
+      selector:
+        media:
+          accept:
+            - image/*
+    advanced_options:
+      collapsed: true
+      fields:
+        rotation:
+          required: false
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 270
+              step: 90
+              mode: slider
+        dither_mode:
+          required: false
+          default: "burkes"
+          selector:
+            select:
+              translation_key: dither_mode
+              options:
+                - "none"
+                - "burkes"
+                - "ordered"
+                - "floyd_steinberg"
+                - "atkinson"
+                - "stucki"
+                - "sierra"
+                - "sierra_lite"
+                - "jarvis_judice_ninke"
+        refresh_mode:
+          required: false
+          default: "full"
+          selector:
+            select:
+              translation_key: refresh_mode
+              options:
+                - "full"
+                - "fast"
+        fit_mode:
+          required: false
+          default: "contain"
+          selector:
+            select:
+              translation_key: fit_mode
+              options:
+                - "stretch"
+                - "contain"
+                - "cover"
+                - "crop"
+        tone_compression:
+          required: false
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 1
+              mode: slider
+              unit_of_measurement: "%"

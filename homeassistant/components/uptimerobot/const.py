@@ -21,3 +21,6 @@ ATTRIBUTION: Final = "Data provided by UptimeRobot"
 ATTR_TARGET: Final = "target"
 
 API_ATTR_OK: Final = "ok"
+
+STATUS_UP = "UP"
+STATUS_DOWN = "DOWN"

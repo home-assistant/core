@@ -1,7 +1,10 @@
 """Support for Neato botvac connected vacuum cleaners."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pybotvac import Account
 from urllib3.response import HTTPResponse
@@ -9,8 +12,6 @@ from urllib3.response import HTTPResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
-
-from .const import NEATO_MAP_DATA, NEATO_PERSISTENT_MAPS, NEATO_ROBOTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,14 +23,17 @@ class NeatoHub:
         """Initialize the Neato hub."""
         self._hass = hass
         self.my_neato: Account = neato
+        self.robots: set[Any] = set()
+        self.persistent_maps: dict[str, Any] = {}
+        self.map_data: dict[str, Any] = {}
 
     @Throttle(timedelta(minutes=1))
     def update_robots(self) -> None:
         """Update the robot states."""
-        _LOGGER.debug("Running HUB.update_robots %s", self._hass.data.get(NEATO_ROBOTS))
-        self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
-        self._hass.data[NEATO_PERSISTENT_MAPS] = self.my_neato.persistent_maps
-        self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
+        _LOGGER.debug("Running HUB.update_robots %s", self.robots)
+        self.robots = self.my_neato.robots
+        self.persistent_maps = self.my_neato.persistent_maps
+        self.map_data = self.my_neato.maps
 
     def download_map(self, url: str) -> HTTPResponse:
         """Download a new map image."""

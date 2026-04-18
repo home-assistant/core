@@ -21,7 +21,7 @@ from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN
 from .coordinator import DeviceCoordinator, async_register_device
-from .models import WemoConfigEntryData, WemoData, async_wemo_data
+from .models import DATA_WEMO, WemoConfigEntryData, WemoData
 
 # Max number of devices to initialize at once. This limit is in place to
 # avoid tying up too many executor threads with WeMo device setup.
@@ -117,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wemo config entry."""
-    wemo_data = async_wemo_data(hass)
+    wemo_data = hass.data[DATA_WEMO]
     dispatcher = WemoDispatcher(entry)
     discovery = WemoDiscovery(hass, dispatcher, wemo_data.static_config, entry)
     wemo_data.config_entry_data = WemoConfigEntryData(
@@ -138,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a wemo config entry."""
     _LOGGER.debug("Unloading WeMo")
-    wemo_data = async_wemo_data(hass)
+    wemo_data = hass.data[DATA_WEMO]
 
     wemo_data.config_entry_data.discovery.async_stop_discovery()
 
@@ -161,7 +161,7 @@ async def async_wemo_dispatcher_connect(
     module = dispatch.__module__  # Example: "homeassistant.components.wemo.switch"
     platform = Platform(module.rsplit(".", 1)[1])
 
-    dispatcher = async_wemo_data(hass).config_entry_data.dispatcher
+    dispatcher = hass.data[DATA_WEMO].config_entry_data.dispatcher
     await dispatcher.async_connect_platform(platform, dispatch)
 
 

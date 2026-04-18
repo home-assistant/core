@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.body_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -26,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -33,6 +35,7 @@
     'original_name': 'Battery',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery',
@@ -60,8 +63,9 @@
 # ---
 # name: test_all_entities[sensor.henk_active_calories_burnt_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -81,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active calories burnt today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -91,6 +96,7 @@
     'original_name': 'Active calories burnt today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_active_calories_burnt_today',
     'unique_id': 'withings_12345_activity_active_calories_burnt_today',
@@ -115,8 +121,9 @@
 # ---
 # name: test_all_entities[sensor.henk_active_time_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -136,7 +143,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active time today',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -146,6 +157,7 @@
     'original_name': 'Active time today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_active_duration_today',
     'unique_id': 'withings_12345_activity_active_duration_today',
@@ -166,13 +178,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.530',
+    'state': '0.529722222222222',
   })
 # ---
 # name: test_all_entities[sensor.henk_average_heart_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -192,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +213,7 @@
     'original_name': 'Average heart rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'average_heart_rate',
     'unique_id': 'withings_12345_sleep_heart_rate_average_bpm',
@@ -222,8 +237,9 @@
 # ---
 # name: test_all_entities[sensor.henk_average_respiratory_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -243,6 +259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -250,6 +267,7 @@
     'original_name': 'Average respiratory rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'average_respiratory_rate',
     'unique_id': 'withings_12345_sleep_respiratory_average_bpm',
@@ -273,8 +291,9 @@
 # ---
 # name: test_all_entities[sensor.henk_body_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -294,13 +313,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Body temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Body temperature',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'body_temperature',
     'unique_id': 'withings_12345_body_temperature_c',
@@ -325,8 +349,9 @@
 # ---
 # name: test_all_entities[sensor.henk_bone_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -346,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bone mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -356,6 +382,7 @@
     'original_name': 'Bone mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bone_mass',
     'unique_id': 'withings_12345_bone_mass_kg',
@@ -380,8 +407,9 @@
 # ---
 # name: test_all_entities[sensor.henk_breathing_disturbances_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -401,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Breathing disturbances intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -408,6 +437,7 @@
     'original_name': 'Breathing disturbances intensity',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'breathing_disturbances_intensity',
     'unique_id': 'withings_12345_sleep_breathing_disturbances_intensity',
@@ -430,8 +460,9 @@
 # ---
 # name: test_all_entities[sensor.henk_calories_burnt_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -449,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calories burnt last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -459,6 +491,7 @@
     'original_name': 'Calories burnt last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_active_calories_burnt',
     'unique_id': 'withings_12345_workout_active_calories_burnt',
@@ -481,8 +514,9 @@
 # ---
 # name: test_all_entities[sensor.henk_deep_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -502,7 +536,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deep sleep',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -512,6 +550,7 @@
     'original_name': 'Deep sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'deep_sleep',
     'unique_id': 'withings_12345_sleep_deep_duration_seconds',
@@ -531,13 +570,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.617',
+    'state': '1.61666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_diastolic_blood_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -557,25 +597,31 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Diastolic blood pressure',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Diastolic blood pressure',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'diastolic_blood_pressure',
     'unique_id': 'withings_12345_diastolic_blood_pressure_mmhg',
-    'unit_of_measurement': 'mmhg',
+    'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_diastolic_blood_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
       'friendly_name': 'henk Diastolic blood pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'mmhg',
+      'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_diastolic_blood_pressure',
@@ -587,8 +633,9 @@
 # ---
 # name: test_all_entities[sensor.henk_distance_travelled_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -606,6 +653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance travelled last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -616,6 +664,7 @@
     'original_name': 'Distance travelled last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_distance',
     'unique_id': 'withings_12345_workout_distance',
@@ -639,8 +688,9 @@
 # ---
 # name: test_all_entities[sensor.henk_distance_travelled_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -660,6 +710,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance travelled today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -670,6 +721,7 @@
     'original_name': 'Distance travelled today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_distance_today',
     'unique_id': 'withings_12345_activity_distance_today',
@@ -695,8 +747,9 @@
 # ---
 # name: test_all_entities[sensor.henk_electrodermal_activity_feet-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -714,6 +767,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity feet',
     'options': dict({
     }),
     'original_device_class': None,
@@ -721,6 +775,7 @@
     'original_name': 'Electrodermal activity feet',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electrodermal_activity_feet',
     'unique_id': 'withings_12345_electrodermal_activity_feet',
@@ -743,8 +798,9 @@
 # ---
 # name: test_all_entities[sensor.henk_electrodermal_activity_left_foot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -762,6 +818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity left foot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -769,6 +826,7 @@
     'original_name': 'Electrodermal activity left foot',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electrodermal_activity_left_foot',
     'unique_id': 'withings_12345_electrodermal_activity_left_foot',
@@ -791,8 +849,9 @@
 # ---
 # name: test_all_entities[sensor.henk_electrodermal_activity_right_foot-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -810,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity right foot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -817,6 +877,7 @@
     'original_name': 'Electrodermal activity right foot',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'electrodermal_activity_right_foot',
     'unique_id': 'withings_12345_electrodermal_activity_right_foot',
@@ -839,8 +900,9 @@
 # ---
 # name: test_all_entities[sensor.henk_elevation_change_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -858,13 +920,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elevation change last workout',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Elevation change last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_elevation',
     'unique_id': 'withings_12345_workout_floors_climbed',
@@ -888,8 +955,9 @@
 # ---
 # name: test_all_entities[sensor.henk_elevation_change_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -909,13 +977,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elevation change today',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
     'original_name': 'Elevation change today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_elevation_today',
     'unique_id': 'withings_12345_activity_floors_climbed_today',
@@ -941,8 +1014,9 @@
 # ---
 # name: test_all_entities[sensor.henk_extracellular_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -962,13 +1036,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extracellular water',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
     'original_name': 'Extracellular water',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'extracellular_water',
     'unique_id': 'withings_12345_extracellular_water',
@@ -993,8 +1072,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1014,6 +1094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1024,6 +1105,7 @@
     'original_name': 'Fat free mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass',
     'unique_id': 'withings_12345_fat_free_mass_kg',
@@ -1048,8 +1130,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_left_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1069,6 +1152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1079,6 +1163,7 @@
     'original_name': 'Fat free mass in left arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_left_arm',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_left_arm',
@@ -1103,8 +1188,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_left_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1124,6 +1210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1134,6 +1221,7 @@
     'original_name': 'Fat free mass in left leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_left_leg',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_left_leg',
@@ -1158,8 +1246,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_right_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1179,6 +1268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1189,6 +1279,7 @@
     'original_name': 'Fat free mass in right arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_right_arm',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_right_arm',
@@ -1213,8 +1304,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_right_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1234,6 +1326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1244,6 +1337,7 @@
     'original_name': 'Fat free mass in right leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_right_leg',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_right_leg',
@@ -1268,8 +1362,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_free_mass_in_torso-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1289,6 +1384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1299,6 +1395,7 @@
     'original_name': 'Fat free mass in torso',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_free_mass_for_segments_torso',
     'unique_id': 'withings_12345_fat_free_mass_for_segments_torso',
@@ -1323,8 +1420,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1344,6 +1442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1354,6 +1453,7 @@
     'original_name': 'Fat mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass',
     'unique_id': 'withings_12345_fat_mass_kg',
@@ -1378,8 +1478,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_left_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1399,6 +1500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1409,6 +1511,7 @@
     'original_name': 'Fat mass in left arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_left_arm',
     'unique_id': 'withings_12345_fat_mass_for_segments_left_arm',
@@ -1433,8 +1536,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_left_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1454,6 +1558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1464,6 +1569,7 @@
     'original_name': 'Fat mass in left leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_left_leg',
     'unique_id': 'withings_12345_fat_mass_for_segments_left_leg',
@@ -1488,8 +1594,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_right_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1509,6 +1616,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1519,6 +1627,7 @@
     'original_name': 'Fat mass in right arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_right_arm',
     'unique_id': 'withings_12345_fat_mass_for_segments_right_arm',
@@ -1543,8 +1652,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_right_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1564,6 +1674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1574,6 +1685,7 @@
     'original_name': 'Fat mass in right leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_right_leg',
     'unique_id': 'withings_12345_fat_mass_for_segments_right_leg',
@@ -1598,8 +1710,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_mass_in_torso-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1619,6 +1732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1629,6 +1743,7 @@
     'original_name': 'Fat mass in torso',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_mass_for_segments_torso',
     'unique_id': 'withings_12345_fat_mass_for_segments_torso',
@@ -1653,8 +1768,9 @@
 # ---
 # name: test_all_entities[sensor.henk_fat_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1674,6 +1790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat ratio',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1684,6 +1801,7 @@
     'original_name': 'Fat ratio',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fat_ratio',
     'unique_id': 'withings_12345_fat_ratio_pct',
@@ -1707,8 +1825,9 @@
 # ---
 # name: test_all_entities[sensor.henk_heart_pulse-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1728,6 +1847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heart pulse',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1735,6 +1855,7 @@
     'original_name': 'Heart pulse',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heart_pulse',
     'unique_id': 'withings_12345_heart_pulse_bpm',
@@ -1758,8 +1879,9 @@
 # ---
 # name: test_all_entities[sensor.henk_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1779,6 +1901,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Height',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1789,6 +1912,7 @@
     'original_name': 'Height',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'height',
     'unique_id': 'withings_12345_height_m',
@@ -1813,8 +1937,9 @@
 # ---
 # name: test_all_entities[sensor.henk_hydration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1834,13 +1959,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hydration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
     'original_name': 'Hydration',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hydration',
     'unique_id': 'withings_12345_hydration',
@@ -1865,8 +1995,9 @@
 # ---
 # name: test_all_entities[sensor.henk_intense_activity_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1886,7 +2017,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intense activity today',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -1896,6 +2031,7 @@
     'original_name': 'Intense activity today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_intense_duration_today',
     'unique_id': 'withings_12345_activity_intense_duration_today',
@@ -1921,8 +2057,9 @@
 # ---
 # name: test_all_entities[sensor.henk_intracellular_water-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1942,13 +2079,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intracellular water',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
     'original_name': 'Intracellular water',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'intracellular_water',
     'unique_id': 'withings_12345_intracellular_water',
@@ -1973,8 +2115,9 @@
 # ---
 # name: test_all_entities[sensor.henk_last_workout_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1992,7 +2135,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout duration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -2002,6 +2149,7 @@
     'original_name': 'Last workout duration',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_duration',
     'unique_id': 'withings_12345_workout_duration',
@@ -2025,8 +2173,9 @@
 # ---
 # name: test_all_entities[sensor.henk_last_workout_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2044,6 +2193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2051,6 +2201,7 @@
     'original_name': 'Last workout intensity',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_intensity',
     'unique_id': 'withings_12345_workout_intensity',
@@ -2072,8 +2223,9 @@
 # ---
 # name: test_all_entities[sensor.henk_last_workout_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2143,6 +2295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2150,6 +2303,7 @@
     'original_name': 'Last workout type',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_type',
     'unique_id': 'withings_12345_workout_type',
@@ -2223,8 +2377,9 @@
 # ---
 # name: test_all_entities[sensor.henk_light_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2244,7 +2399,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light sleep',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -2254,6 +2413,7 @@
     'original_name': 'Light sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_sleep',
     'unique_id': 'withings_12345_sleep_light_duration_seconds',
@@ -2273,13 +2433,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.900',
+    'state': '2.9',
   })
 # ---
 # name: test_all_entities[sensor.henk_maximum_heart_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2299,6 +2460,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2306,6 +2468,7 @@
     'original_name': 'Maximum heart rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_heart_rate',
     'unique_id': 'withings_12345_sleep_heart_rate_max_bpm',
@@ -2329,8 +2492,9 @@
 # ---
 # name: test_all_entities[sensor.henk_maximum_respiratory_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2350,6 +2514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2357,6 +2522,7 @@
     'original_name': 'Maximum respiratory rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_respiratory_rate',
     'unique_id': 'withings_12345_sleep_respiratory_max_bpm',
@@ -2380,8 +2546,9 @@
 # ---
 # name: test_all_entities[sensor.henk_minimum_heart_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2401,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2408,6 +2576,7 @@
     'original_name': 'Minimum heart rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'minimum_heart_rate',
     'unique_id': 'withings_12345_sleep_heart_rate_min_bpm',
@@ -2431,8 +2600,9 @@
 # ---
 # name: test_all_entities[sensor.henk_minimum_respiratory_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2452,6 +2622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2459,6 +2630,7 @@
     'original_name': 'Minimum respiratory rate',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'minimum_respiratory_rate',
     'unique_id': 'withings_12345_sleep_respiratory_min_bpm',
@@ -2482,8 +2654,9 @@
 # ---
 # name: test_all_entities[sensor.henk_moderate_activity_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -2503,7 +2676,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moderate activity today',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -2513,6 +2690,7 @@
     'original_name': 'Moderate activity today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_moderate_duration_today',
     'unique_id': 'withings_12345_activity_moderate_duration_today',
@@ -2533,13 +2711,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.8',
+    'state': '24.7833333333333',
   })
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2559,6 +2738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2569,6 +2749,7 @@
     'original_name': 'Muscle mass',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass',
     'unique_id': 'withings_12345_muscle_mass_kg',
@@ -2593,8 +2774,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_left_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2614,6 +2796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2624,6 +2807,7 @@
     'original_name': 'Muscle mass in left arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_left_arm',
     'unique_id': 'withings_12345_muscle_mass_for_segments_left_arm',
@@ -2648,8 +2832,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_left_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2669,6 +2854,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2679,6 +2865,7 @@
     'original_name': 'Muscle mass in left leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_left_leg',
     'unique_id': 'withings_12345_muscle_mass_for_segments_left_leg',
@@ -2703,8 +2890,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_right_arm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2724,6 +2912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2734,6 +2923,7 @@
     'original_name': 'Muscle mass in right arm',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_right_arm',
     'unique_id': 'withings_12345_muscle_mass_for_segments_right_arm',
@@ -2758,8 +2948,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_right_leg-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2779,6 +2970,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2789,6 +2981,7 @@
     'original_name': 'Muscle mass in right leg',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_right_leg',
     'unique_id': 'withings_12345_muscle_mass_for_segments_right_leg',
@@ -2813,8 +3006,9 @@
 # ---
 # name: test_all_entities[sensor.henk_muscle_mass_in_torso-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2834,6 +3028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2844,6 +3039,7 @@
     'original_name': 'Muscle mass in torso',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muscle_mass_for_segments_torso',
     'unique_id': 'withings_12345_muscle_mass_for_segments_torso',
@@ -2868,8 +3064,9 @@
 # ---
 # name: test_all_entities[sensor.henk_pause_during_last_workout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2887,7 +3084,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause during last workout',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -2897,6 +3098,7 @@
     'original_name': 'Pause during last workout',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'workout_pause_duration',
     'unique_id': 'withings_12345_workout_pause_duration',
@@ -2920,8 +3122,9 @@
 # ---
 # name: test_all_entities[sensor.henk_pulse_wave_velocity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2941,13 +3144,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pulse wave velocity',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Pulse wave velocity',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pulse_wave_velocity',
     'unique_id': 'withings_12345_pulse_wave_velocity',
@@ -2972,8 +3180,9 @@
 # ---
 # name: test_all_entities[sensor.henk_rem_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2993,7 +3202,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'REM sleep',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3003,6 +3216,7 @@
     'original_name': 'REM sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rem_sleep',
     'unique_id': 'withings_12345_sleep_rem_duration_seconds',
@@ -3022,13 +3236,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.667',
+    'state': '0.666666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_skin_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3048,13 +3263,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Skin temperature',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'skin_temperature',
     'unique_id': 'withings_12345_skin_temperature_c',
@@ -3079,8 +3299,9 @@
 # ---
 # name: test_all_entities[sensor.henk_sleep_goal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3100,7 +3321,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep goal',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3110,6 +3335,7 @@
     'original_name': 'Sleep goal',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sleep_goal',
     'unique_id': 'withings_12345_sleep_goal',
@@ -3129,13 +3355,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8.000',
+    'state': '8.0',
   })
 # ---
 # name: test_all_entities[sensor.henk_sleep_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3155,6 +3382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3162,6 +3390,7 @@
     'original_name': 'Sleep score',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sleep_score',
     'unique_id': 'withings_12345_sleep_score',
@@ -3185,8 +3414,9 @@
 # ---
 # name: test_all_entities[sensor.henk_snoring-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3206,7 +3436,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snoring',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -3216,6 +3450,7 @@
     'original_name': 'Snoring',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'snoring',
     'unique_id': 'withings_12345_sleep_snoring',
@@ -3240,8 +3475,9 @@
 # ---
 # name: test_all_entities[sensor.henk_snoring_episode_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3261,6 +3497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snoring episode count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3268,6 +3505,7 @@
     'original_name': 'Snoring episode count',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'snoring_episode_count',
     'unique_id': 'withings_12345_sleep_snoring_eposode_count',
@@ -3290,8 +3528,9 @@
 # ---
 # name: test_all_entities[sensor.henk_soft_activity_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3311,7 +3550,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soft activity today',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -3321,6 +3564,7 @@
     'original_name': 'Soft activity today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_soft_duration_today',
     'unique_id': 'withings_12345_activity_soft_duration_today',
@@ -3341,13 +3585,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '25.3',
+    'state': '25.2666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_spo2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3367,6 +3612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SpO2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3374,6 +3620,7 @@
     'original_name': 'SpO2',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spo2',
     'unique_id': 'withings_12345_spo2_pct',
@@ -3397,8 +3644,9 @@
 # ---
 # name: test_all_entities[sensor.henk_step_goal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3418,6 +3666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Step goal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3425,6 +3674,7 @@
     'original_name': 'Step goal',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'step_goal',
     'unique_id': 'withings_12345_step_goal',
@@ -3448,8 +3698,9 @@
 # ---
 # name: test_all_entities[sensor.henk_steps_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3469,6 +3720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steps today',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3476,6 +3728,7 @@
     'original_name': 'Steps today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_steps_today',
     'unique_id': 'withings_12345_activity_steps_today',
@@ -3500,8 +3753,9 @@
 # ---
 # name: test_all_entities[sensor.henk_systolic_blood_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3521,25 +3775,31 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Systolic blood pressure',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
     'original_name': 'Systolic blood pressure',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'systolic_blood_pressure',
     'unique_id': 'withings_12345_systolic_blood_pressure_mmhg',
-    'unit_of_measurement': 'mmhg',
+    'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_systolic_blood_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
       'friendly_name': 'henk Systolic blood pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'mmhg',
+      'unit_of_measurement': <UnitOfPressure.MMHG: 'mmHg'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_systolic_blood_pressure',
@@ -3551,8 +3811,9 @@
 # ---
 # name: test_all_entities[sensor.henk_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3572,13 +3833,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'withings_12345_temperature_c',
@@ -3603,8 +3869,9 @@
 # ---
 # name: test_all_entities[sensor.henk_time_to_sleep-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3624,7 +3891,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to sleep',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3634,6 +3905,7 @@
     'original_name': 'Time to sleep',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_to_sleep',
     'unique_id': 'withings_12345_sleep_tosleep_duration_seconds',
@@ -3653,13 +3925,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.150',
+    'state': '0.15',
   })
 # ---
 # name: test_all_entities[sensor.henk_time_to_wakeup-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3679,7 +3952,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to wakeup',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3689,6 +3966,7 @@
     'original_name': 'Time to wakeup',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_to_wakeup',
     'unique_id': 'withings_12345_sleep_towakeup_duration_seconds',
@@ -3708,13 +3986,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.317',
+    'state': '0.316666666666667',
   })
 # ---
 # name: test_all_entities[sensor.henk_total_calories_burnt_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -3734,6 +4013,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total calories burnt today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3744,6 +4024,7 @@
     'original_name': 'Total calories burnt today',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'activity_total_calories_burnt_today',
     'unique_id': 'withings_12345_activity_total_calories_burnt_today',
@@ -3768,8 +4049,9 @@
 # ---
 # name: test_all_entities[sensor.henk_vascular_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3787,6 +4069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vascular age',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3794,6 +4077,7 @@
     'original_name': 'Vascular age',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vascular_age',
     'unique_id': 'withings_12345_vascular_age',
@@ -3815,8 +4099,9 @@
 # ---
 # name: test_all_entities[sensor.henk_visceral_fat_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3834,6 +4119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visceral fat index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3841,6 +4127,7 @@
     'original_name': 'Visceral fat index',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'visceral_fat_index',
     'unique_id': 'withings_12345_visceral_fat',
@@ -3862,8 +4149,9 @@
 # ---
 # name: test_all_entities[sensor.henk_vo2_max-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3883,6 +4171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VO2 max',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3890,6 +4179,7 @@
     'original_name': 'VO2 max',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vo2_max',
     'unique_id': 'withings_12345_vo2_max',
@@ -3913,8 +4203,9 @@
 # ---
 # name: test_all_entities[sensor.henk_wakeup_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3934,6 +4225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wakeup count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3941,6 +4233,7 @@
     'original_name': 'Wakeup count',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wakeup_count',
     'unique_id': 'withings_12345_sleep_wakeup_count',
@@ -3964,8 +4257,9 @@
 # ---
 # name: test_all_entities[sensor.henk_wakeup_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3985,7 +4279,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wakeup time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -3995,6 +4293,7 @@
     'original_name': 'Wakeup time',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wakeup_time',
     'unique_id': 'withings_12345_sleep_wakeup_duration_seconds',
@@ -4014,13 +4313,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.850',
+    'state': '0.85',
   })
 # ---
 # name: test_all_entities[sensor.henk_weight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4040,6 +4340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weight',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4050,6 +4351,7 @@
     'original_name': 'Weight',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'withings_12345_weight_kg',
@@ -4074,8 +4376,9 @@
 # ---
 # name: test_all_entities[sensor.henk_weight_goal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4095,13 +4398,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weight goal',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
     'original_name': 'Weight goal',
     'platform': 'withings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'weight_goal',
     'unique_id': 'withings_12345_weight_goal',

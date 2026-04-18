@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_snapshot[button.test_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +29,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00055511EECC-1-4',
@@ -48,8 +51,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_automatic_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -67,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Automatic mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +79,7 @@
     'original_name': 'Automatic mode',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'automatic_mode',
     'unique_id': '00055511EECC-1-1',
@@ -95,8 +101,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_briefly_open-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Briefly open',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +129,7 @@
     'original_name': 'Briefly open',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'briefly_open',
     'unique_id': '00055511EECC-1-2',
@@ -142,8 +151,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_identification_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -161,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identification mode',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -168,6 +179,7 @@
     'original_name': 'Identification mode',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'identification_mode',
     'unique_id': '00055511EECC-1-3',
@@ -190,8 +202,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_impulse_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -209,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,6 +230,7 @@
     'original_name': 'Impulse 1',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'impulse_instance',
     'unique_id': '00055511EECC-1-5',
@@ -237,8 +252,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_impulse_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -256,6 +272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Impulse 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -263,6 +280,7 @@
     'original_name': 'Impulse 2',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'impulse_instance',
     'unique_id': '00055511EECC-1-6',
@@ -284,8 +302,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -303,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -310,6 +330,7 @@
     'original_name': 'Light',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': '00055511EECC-1-7',
@@ -331,8 +352,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_open_partially-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -350,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open partially',
     'options': dict({
     }),
     'original_device_class': None,
@@ -357,6 +380,7 @@
     'original_name': 'Open partially',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'open_partial',
     'unique_id': '00055511EECC-1-8',
@@ -378,8 +402,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_open_permanently-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -397,6 +422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open permanently',
     'options': dict({
     }),
     'original_device_class': None,
@@ -404,6 +430,7 @@
     'original_name': 'Open permanently',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'permanently_open',
     'unique_id': '00055511EECC-1-9',
@@ -425,8 +452,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_reset_meter_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -444,6 +472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -451,6 +480,7 @@
     'original_name': 'Reset meter 1',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_meter_instance',
     'unique_id': '00055511EECC-1-10',
@@ -472,8 +502,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_reset_meter_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -491,6 +522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset meter 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -498,6 +530,7 @@
     'original_name': 'Reset meter 2',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_meter_instance',
     'unique_id': '00055511EECC-1-11',
@@ -519,8 +552,9 @@
 # ---
 # name: test_button_snapshot[button.test_button_ventilate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -538,6 +572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ventilate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -545,6 +580,7 @@
     'original_name': 'Ventilate',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ventilate',
     'unique_id': '00055511EECC-1-12',

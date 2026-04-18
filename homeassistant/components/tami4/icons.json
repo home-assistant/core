@@ -9,26 +9,26 @@
       }
     },
     "sensor": {
-      "uv_last_replacement": {
+      "filter_last_replacement": {
         "default": "mdi:calendar"
       },
-      "uv_upcoming_replacement": {
+      "filter_litters_passed": {
+        "default": "mdi:water"
+      },
+      "filter_status": {
+        "default": "mdi:clipboard-check-multiple"
+      },
+      "filter_upcoming_replacement": {
+        "default": "mdi:calendar"
+      },
+      "uv_last_replacement": {
         "default": "mdi:calendar"
       },
       "uv_status": {
         "default": "mdi:clipboard-check-multiple"
       },
-      "filter_last_replacement": {
+      "uv_upcoming_replacement": {
         "default": "mdi:calendar"
-      },
-      "filter_upcoming_replacement": {
-        "default": "mdi:calendar"
-      },
-      "filter_status": {
-        "default": "mdi:clipboard-check-multiple"
-      },
-      "filter_litters_passed": {
-        "default": "mdi:water"
       }
     }
   }

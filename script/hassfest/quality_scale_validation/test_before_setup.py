@@ -33,6 +33,11 @@ def _get_exception_name(expression: ast.expr) -> str:
         # Raise namespace.???
         return _get_exception_name(expression.value)
 
+    if isinstance(expression, ast.Subscript):
+        # Raise errors[0][0]
+        # Unable to determine exception name
+        return None
+
     raise AssertionError(
         f"Raise is neither Attribute nor Call nor Name: {type(expression)}"
     )
@@ -40,7 +45,8 @@ def _get_exception_name(expression: ast.expr) -> str:
 
 def _raises_exception(integration: Integration) -> bool:
     """Check that a valid exception is raised."""
-    for module_file in integration.path.rglob("*.py"):
+    # Sorted to ensure reproducible checks
+    for module_file in sorted(integration.path.rglob("*.py")):
         module = ast_parse_module(module_file)
         for node in ast.walk(module):
             if (

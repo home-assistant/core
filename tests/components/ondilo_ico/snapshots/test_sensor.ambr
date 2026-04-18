@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.pool_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -29,6 +31,7 @@
     'original_name': 'Battery',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'W1122333044455-battery',
@@ -53,8 +56,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_oxydo_reduction_potential-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -74,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
     'original_device_class': None,
@@ -81,6 +86,7 @@
     'original_name': 'Oxydo reduction potential',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oxydo_reduction_potential',
     'unique_id': 'W1122333044455-orp',
@@ -104,8 +110,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_ph-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -125,6 +132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -132,6 +140,7 @@
     'original_name': 'pH',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'W1122333044455-ph',
@@ -155,8 +164,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_rssi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -176,6 +186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -183,6 +194,7 @@
     'original_name': 'RSSI',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rssi',
     'unique_id': 'W1122333044455-rssi',
@@ -206,8 +218,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_salt-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -227,6 +240,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
     'original_device_class': None,
@@ -234,6 +248,7 @@
     'original_name': 'Salt',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt',
     'unique_id': 'W1122333044455-salt',
@@ -257,8 +272,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_tds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -278,6 +294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -285,6 +302,7 @@
     'original_name': 'TDS',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tds',
     'unique_id': 'W1122333044455-tds',
@@ -308,8 +326,9 @@
 # ---
 # name: test_sensors[sensor.pool_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -329,13 +348,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'W1122333044455-temperature',
@@ -360,8 +384,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -381,6 +406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -388,6 +414,7 @@
     'original_name': 'Battery',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'W2233304445566-battery',
@@ -412,8 +439,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_oxydo_reduction_potential-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -433,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
     'original_device_class': None,
@@ -440,6 +469,7 @@
     'original_name': 'Oxydo reduction potential',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'oxydo_reduction_potential',
     'unique_id': 'W2233304445566-orp',
@@ -463,8 +493,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_ph-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -484,6 +515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -491,6 +523,7 @@
     'original_name': 'pH',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'W2233304445566-ph',
@@ -514,8 +547,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_rssi-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -535,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -542,6 +577,7 @@
     'original_name': 'RSSI',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rssi',
     'unique_id': 'W2233304445566-rssi',
@@ -565,8 +601,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_salt-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -586,6 +623,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
     'original_device_class': None,
@@ -593,6 +631,7 @@
     'original_name': 'Salt',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salt',
     'unique_id': 'W2233304445566-salt',
@@ -616,8 +655,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_tds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -637,6 +677,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -644,6 +685,7 @@
     'original_name': 'TDS',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tds',
     'unique_id': 'W2233304445566-tds',
@@ -667,8 +709,9 @@
 # ---
 # name: test_sensors[sensor.pool_2_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -688,13 +731,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'ondilo_ico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'W2233304445566-temperature',

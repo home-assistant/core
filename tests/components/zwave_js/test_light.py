@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 
+import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.light import (
@@ -26,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -40,6 +42,12 @@ from .common import (
 
 ZDB5100_ENTITY = "light.matrix_office"
 HSM200_V1_ENTITY = "light.hsm200"
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.LIGHT]
 
 
 async def test_light(
@@ -1065,6 +1073,16 @@ async def test_light_color_only(
     )
     await update_color(0, 0, 0)
 
+    # Turn off again and make sure last color/brightness is still preserved
+    # when turning on light again in the next step
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        blocking=True,
+    )
+    await update_color(0, 0, 0)
+
     client.async_send_command.reset_mock()
 
     # Assert that the brightness is preserved when turning on with color
@@ -1086,6 +1104,92 @@ async def test_light_color_only(
     assert args["value"] == {"red": 0, "green": 0, "blue": 123}
 
     client.async_send_command.reset_mock()
+
+    await update_color(0, 0, 123)
+
+    # Turn off twice
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        blocking=True,
+    )
+    await update_color(0, 0, 0)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        blocking=True,
+    )
+    await update_color(0, 0, 0)
+
+    state = hass.states.get(HSM200_V1_ENTITY)
+    assert state.state == STATE_OFF
+
+    client.async_send_command.reset_mock()
+
+    # Assert that turning on after successive off calls works and keeps the last color
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_BRIGHTNESS: 150},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 0,
+        "property": "targetColor",
+    }
+    assert args["value"] == {"red": 0, "green": 0, "blue": 150}
+
+    client.async_send_command.reset_mock()
+
+    await update_color(0, 0, 150)
+
+    # Force the light to turn off
+    await update_color(0, 0, 0)
+
+    # Turn off already off light, we won't be aware of last color and brightness
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        blocking=True,
+    )
+    await update_color(0, 0, 0)
+
+    state = hass.states.get(HSM200_V1_ENTITY)
+    assert state.state == STATE_OFF
+
+    client.async_send_command.reset_mock()
+
+    # Assert that turning on light after off call with unknown off color/brightness state
+    # works and that light turns on to white with specified brightness
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_BRIGHTNESS: 160},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == node.node_id
+    assert args["valueId"] == {
+        "commandClass": 51,
+        "endpoint": 0,
+        "property": "targetColor",
+    }
+    assert args["value"] == {"red": 160, "green": 160, "blue": 160}
+
+    client.async_send_command.reset_mock()
+
+    await update_color(160, 160, 160)
 
     # Clear the color value to trigger an unknown state
     event = Event(

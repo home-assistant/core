@@ -24,31 +24,29 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
     LOGGER,
     VALUES_COOL_WITH_ROOM_SENSOR_OFF,
     VALUES_MIXING_VALVE_CLOSED_STATE,
     VALUES_PRIORITY_COOLING,
     VALUES_PRIORITY_HEATING,
 )
-from .coordinator import CoilCoordinator
+from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NibeHeatpumpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     main_unit = UNIT_COILGROUPS[coordinator.series]["main"]
 

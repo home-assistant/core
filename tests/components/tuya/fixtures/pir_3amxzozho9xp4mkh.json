@@ -1,0 +1,42 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "rat trap hedge",
+  "category": "pir",
+  "product_id": "3amxzozho9xp4mkh",
+  "product_name": "Smart Motion Sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2021-11-17T11:36:06+00:00",
+  "create_time": "2021-11-17T11:36:06+00:00",
+  "update_time": "2021-11-17T11:36:06+00:00",
+  "function": {},
+  "status_range": {
+    "pir": {
+      "type": "Enum",
+      "value": {
+        "range": ["pir"]
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "temper_alarm": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "pir": "pir",
+    "battery_state": "low",
+    "temper_alarm": false
+  },
+  "set_up": true,
+  "support_local": true
+}

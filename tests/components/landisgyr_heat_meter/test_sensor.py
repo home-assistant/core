@@ -6,7 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import serial
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from ultraheat_api.response import HeatMeterResponse
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
@@ -146,7 +146,7 @@ async def test_exception_on_polling(
     await hass.async_block_till_done()
 
     # check if initial setup succeeded
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
+    state = hass.states.get("sensor.landis_gyr_heat_meter_heat_meter_heat_usage_gj")
     assert state
     assert state.state == "123.0"
 
@@ -155,7 +155,7 @@ async def test_exception_on_polling(
     freezer.tick(POLLING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
+    state = hass.states.get("sensor.landis_gyr_heat_meter_heat_meter_heat_usage_gj")
     assert state.state == STATE_UNAVAILABLE
 
     # # Now 'enable' and see if next poll succeeds
@@ -167,6 +167,6 @@ async def test_exception_on_polling(
     freezer.tick(POLLING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.heat_meter_heat_usage_gj")
+    state = hass.states.get("sensor.landis_gyr_heat_meter_heat_meter_heat_usage_gj")
     assert state
     assert state.state == "124.0"

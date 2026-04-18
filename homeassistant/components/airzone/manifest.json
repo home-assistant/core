@@ -9,7 +9,8 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/airzone",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioairzone"],
-  "requirements": ["aioairzone==1.0.0"]
+  "requirements": ["aioairzone==1.0.5"]
 }

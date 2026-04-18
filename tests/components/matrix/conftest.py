@@ -30,6 +30,7 @@ from homeassistant.components.matrix import (
     CONF_COMMANDS,
     CONF_EXPRESSION,
     CONF_HOMESERVER,
+    CONF_REACTION,
     CONF_ROOMS,
     CONF_WORD,
     EVENT_MATRIX_COMMAND,
@@ -38,7 +39,7 @@ from homeassistant.components.matrix import (
     RoomAnyID,
     RoomID,
 )
-from homeassistant.components.matrix.const import DOMAIN as MATRIX_DOMAIN
+from homeassistant.components.matrix.const import DOMAIN
 from homeassistant.components.matrix.notify import CONF_DEFAULT_ROOM
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
@@ -137,7 +138,7 @@ class _MockAsyncClient(AsyncClient):
 
 
 MOCK_CONFIG_DATA = {
-    MATRIX_DOMAIN: {
+    DOMAIN: {
         CONF_HOMESERVER: "https://matrix.example.com",
         CONF_USERNAME: TEST_MXID,
         CONF_PASSWORD: TEST_PASSWORD,
@@ -153,6 +154,10 @@ MOCK_CONFIG_DATA = {
                 CONF_NAME: "ExpressionTriggerEventName",
             },
             {
+                CONF_REACTION: "😄",
+                CONF_NAME: "ReactionTriggerEventName",
+            },
+            {
                 CONF_WORD: "WordTriggerSubset",
                 CONF_NAME: "WordTriggerSubsetEventName",
                 CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
@@ -166,7 +171,7 @@ MOCK_CONFIG_DATA = {
     },
     NOTIFY_DOMAIN: {
         CONF_NAME: TEST_NOTIFIER_NAME,
-        CONF_PLATFORM: MATRIX_DOMAIN,
+        CONF_PLATFORM: DOMAIN,
         CONF_DEFAULT_ROOM: TEST_DEFAULT_ROOM,
     },
 }
@@ -239,6 +244,30 @@ MOCK_EXPRESSION_COMMANDS = {
     ],
 }
 
+MOCK_REACTION_COMMANDS = {
+    TEST_ROOM_A_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        }
+    },
+    TEST_ROOM_B_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+    },
+    TEST_ROOM_C_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+    },
+}
+
 
 @pytest.fixture
 def mock_client():
@@ -282,13 +311,13 @@ async def matrix_bot(
     The resulting MatrixBot will have a mocked _client.
     """
 
-    assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG_DATA)
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     await hass.async_block_till_done()
 
     # Accessing hass.data in tests is not desirable, but all the tests here
     # currently do this.
-    assert isinstance(matrix_bot := hass.data[MATRIX_DOMAIN], MatrixBot)
+    assert isinstance(matrix_bot := hass.data[DOMAIN], MatrixBot)
 
     await hass.async_start()
 
@@ -298,7 +327,7 @@ async def matrix_bot(
 @pytest.fixture
 def matrix_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
-    return async_capture_events(hass, MATRIX_DOMAIN)
+    return async_capture_events(hass, DOMAIN)
 
 
 @pytest.fixture

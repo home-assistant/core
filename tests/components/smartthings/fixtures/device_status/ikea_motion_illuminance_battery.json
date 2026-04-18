@@ -1,0 +1,72 @@
+{
+  "components": {
+    "main": {
+      "refresh": {},
+      "motionSensor": {
+        "motion": {
+          "value": "inactive",
+          "timestamp": "2026-03-13T14:37:59.536Z"
+        }
+      },
+      "illuminanceMeasurement": {
+        "illuminance": {
+          "value": 16,
+          "unit": "lux",
+          "timestamp": "2026-03-13T14:48:36.080Z"
+        }
+      },
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2026-03-13T01:26:14.860Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "imageTransferProgress": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "1.0.7 (16777223)",
+          "timestamp": "2026-03-02T17:05:13.014Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2026-03-02T17:05:13.011Z"
+        },
+        "estimatedTimeRemaining": {
+          "value": null
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2026-03-02T17:05:12.989Z"
+        },
+        "currentVersion": {
+          "value": "1.0.7 (16777223)",
+          "timestamp": "2026-03-02T17:05:13.013Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        },
+        "supportsProgressReports": {
+          "value": null
+        }
+      }
+    }
+  }
+}

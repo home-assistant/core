@@ -93,7 +93,7 @@ async def mock_application_credentials_integration(
 ):
     """Mock a application_credentials integration."""
     with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
-        assert await async_setup_component(hass, "application_credentials", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await setup_application_credentials_integration(
             hass, TEST_DOMAIN, authorization_server
         )
@@ -629,7 +629,7 @@ async def test_websocket_without_platform(
     hass: HomeAssistant, ws_client: ClientFixture
 ) -> None:
     """Test an integration without the application credential platform."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass.config.components.add(TEST_DOMAIN)
 
     client = await ws_client()
@@ -658,7 +658,7 @@ async def test_websocket_without_authorization_server(
     hass: HomeAssistant, ws_client: ClientFixture
 ) -> None:
     """Test platform with incorrect implementation."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass.config.components.add(TEST_DOMAIN)
 
     # Platform does not implemenent async_get_authorization_server
@@ -703,7 +703,7 @@ async def test_platform_with_auth_implementation(
 ) -> None:
     """Test config flow with custom OAuth2 implementation."""
 
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass.config.components.add(TEST_DOMAIN)
 
     async def get_auth_impl(

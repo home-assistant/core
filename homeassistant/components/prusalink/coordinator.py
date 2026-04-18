@@ -21,24 +21,31 @@ from pyprusalink.types import InvalidAuth, PrusaLinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Allow automations using homeassistant.update_entity to collect
+# rapidly-changing metrics.
+_MINIMUM_REFRESH_INTERVAL = 1.0
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
+
+
+type PrusaLinkConfigEntry = ConfigEntry[dict[str, PrusaLinkUpdateCoordinator]]
 
 
 class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
     """Update coordinator for the printer."""
 
-    config_entry: ConfigEntry
+    config_entry: PrusaLinkConfigEntry
     expect_change_until = 0.0
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: PrusaLink
+        self, hass: HomeAssistant, config_entry: PrusaLinkConfigEntry, api: PrusaLink
     ) -> None:
         """Initialize the update coordinator."""
         self.api = api
@@ -49,6 +56,9 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=self._get_update_interval(None),
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=_MINIMUM_REFRESH_INTERVAL, immediate=True
+            ),
         )
 
     async def _async_update_data(self) -> T:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,7 +35,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @contextmanager
-def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Iterator[Path]:
+def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
     """Get an uploaded file.
 
     File is removed at the end of the context.

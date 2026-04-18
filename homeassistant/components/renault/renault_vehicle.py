@@ -43,7 +43,11 @@ def with_error_wrapping[**_P, _R](
         try:
             return await func(self, *args, **kwargs)
         except RenaultException as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     return wrapper
 
@@ -90,6 +94,13 @@ class RenaultVehicleProxy:
         self.hvac_target_temperature = 21
         self._scan_interval = scan_interval
         self._hub = hub
+
+    def update_scan_interval(self, scan_interval: timedelta) -> None:
+        """Set the scan interval for the vehicle."""
+        if scan_interval != self._scan_interval:
+            self._scan_interval = scan_interval
+            for coordinator in self.coordinators.values():
+                coordinator.update_interval = scan_interval
 
     @property
     def details(self) -> models.KamereonVehicleDetails:
@@ -154,14 +165,23 @@ class RenaultVehicleProxy:
         return await self._vehicle.set_charge_mode(charge_mode)
 
     @with_error_wrapping
-    async def set_charge_start(self) -> models.KamereonVehicleChargingStartActionData:
+    async def set_charge_start(
+        self, when: datetime | None = None
+    ) -> models.KamereonVehicleChargingStartActionData:
         """Start vehicle charge."""
-        return await self._vehicle.set_charge_start()
+        return await self._vehicle.set_charge_start(when)
 
     @with_error_wrapping
     async def set_charge_stop(self) -> models.KamereonVehicleChargingStartActionData:
         """Stop vehicle charge."""
         return await self._vehicle.set_charge_stop()
+
+    @with_error_wrapping
+    async def set_battery_soc(
+        self, min_soc: int, target_soc: int
+    ) -> models.KamereonVehicleBatterySocActionData:
+        """Set vehicle battery SoC levels."""
+        return await self._vehicle.set_battery_soc(min=min_soc, target=target_soc)
 
     @with_error_wrapping
     async def set_ac_stop(self) -> models.KamereonVehicleHvacStartActionData:
@@ -199,6 +219,16 @@ class RenaultVehicleProxy:
         """Set vehicle charge schedules."""
         return await self._vehicle.set_charge_schedules(schedules)
 
+    @with_error_wrapping
+    async def sound_horn(self) -> None:
+        """Start vehicle horn."""
+        await self._vehicle.start_horn()
+
+    @with_error_wrapping
+    async def flash_lights(self) -> None:
+        """Start vehicle lights."""
+        await self._vehicle.start_lights()
+
 
 COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
     RenaultCoordinatorDescription(
@@ -229,6 +259,12 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         update_method=lambda x: x.get_charge_mode,
     ),
     RenaultCoordinatorDescription(
+        endpoint="charging-settings",
+        key="charging_settings",
+        requires_electricity=True,
+        update_method=lambda x: x.get_charging_settings,
+    ),
+    RenaultCoordinatorDescription(
         endpoint="lock-status",
         key="lock_status",
         update_method=lambda x: x.get_lock_status,
@@ -237,5 +273,16 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         endpoint="res-state",
         key="res_state",
         update_method=lambda x: x.get_res_state,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="pressure",
+        key="pressure",
+        update_method=lambda x: x.get_tyre_pressure,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="soc-levels",
+        key="battery_soc",
+        requires_electricity=True,
+        update_method=lambda x: x.get_battery_soc,
     ),
 )

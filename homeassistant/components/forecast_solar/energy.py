@@ -20,5 +20,7 @@ async def async_get_solar_forecast(
         "wh_hours": {
             timestamp.isoformat(): val
             for timestamp, val in entry.runtime_data.data.wh_period.items()
+            if val != 0
+            or (timestamp.hour, timestamp.minute, timestamp.second) != (0, 0, 0)
         }
     }

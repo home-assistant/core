@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN as UNIFI_DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
@@ -22,7 +22,7 @@ SAVE_DELAY = 10
 STORAGE_KEY = "unifi_data"
 STORAGE_VERSION = 1
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(UNIFI_DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -76,9 +76,7 @@ async def async_remove_config_entry_device(
     """Remove config entry from a device."""
     hub = config_entry.runtime_data
     return not any(
-        identifier
-        for _, identifier in device_entry.connections
-        if identifier in hub.api.clients or identifier in hub.api.devices
+        identifier in hub.api.devices for _, identifier in device_entry.connections
     )
 
 

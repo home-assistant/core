@@ -9,7 +9,6 @@ from surepy.enums import Location
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -24,7 +23,7 @@ from .const import (
     SERVICE_SET_LOCK_STATE,
     SERVICE_SET_PET_LOCATION,
 )
-from .coordinator import SurePetcareDataCoordinator
+from .coordinator import SurePetcareConfigEntry, SurePetcareDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +31,10 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=3)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) -> bool:
     """Set up Sure Petcare from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     try:
-        hass.data[DOMAIN][entry.entry_id] = coordinator = SurePetcareDataCoordinator(
-            hass,
-            entry,
-        )
+        coordinator = SurePetcareDataCoordinator(hass, entry)
     except SurePetcareAuthenticationError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
         raise ConfigEntryAuthFailed from error
@@ -49,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     lock_state_service_schema = vol.Schema(
@@ -91,10 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: SurePetcareConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -15,6 +15,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -155,6 +156,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -236,7 +238,7 @@ class SynologyDSMBackupAgent(BackupAgent):
                 raise BackupAgentError("Failed to read meta data") from err
 
         try:
-            files = await self._file_station.get_files(path=self.path)
+            files = await self._file_station.get_files(path=self.path, limit=1000)
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to list backups") from err
 

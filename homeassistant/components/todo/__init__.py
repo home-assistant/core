@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+import copy
 import dataclasses
 import datetime
 import logging
@@ -28,7 +29,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonValueType
 
 from .const import (
     ATTR_DESCRIPTION,
@@ -95,6 +95,12 @@ TODO_ITEM_FIELD_SCHEMA = {
     vol.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
 }
 TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
+TODO_SERVICE_GET_ITEMS_SCHEMA = {
+    vol.Optional(ATTR_STATUS): vol.All(
+        cv.ensure_list,
+        [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
+    ),
+}
 
 
 def _validate_supported_features(
@@ -129,7 +135,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Required(ATTR_ITEM): vol.All(
+                        cv.string, str.strip, vol.Length(min=1)
+                    ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -144,7 +152,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.make_entity_service_schema(
                 {
                     vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_RENAME): vol.All(
+                        cv.string, str.strip, vol.Length(min=1)
+                    ),
                     vol.Optional(ATTR_STATUS): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
@@ -173,14 +183,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         TodoServices.GET_ITEMS,
-        cv.make_entity_service_schema(
-            {
-                vol.Optional(ATTR_STATUS): vol.All(
-                    cv.ensure_list,
-                    [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
-                ),
-            }
-        ),
+        cv.make_entity_service_schema(TODO_SERVICE_GET_ITEMS_SCHEMA),
         _async_get_todo_items,
         supports_response=SupportsResponse.ONLY,
     )
@@ -224,6 +227,9 @@ class TodoItem:
     description: str | None = None
     """A more complete description than that provided by the summary."""
 
+    completed: datetime.datetime | None = None
+    """The date and time that a to-do item was marked completed."""
+
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
@@ -234,7 +240,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
-    _update_listeners: list[Callable[[list[JsonValueType] | None], None]] | None = None
+    _update_listeners: list[Callable[[list[TodoItem] | None], None]] | None = None
 
     @property
     def state(self) -> int | None:
@@ -275,13 +281,9 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @callback
     def async_subscribe_updates(
-        self,
-        listener: Callable[[list[JsonValueType] | None], None],
+        self, listener: Callable[[list[TodoItem] | None], None]
     ) -> CALLBACK_TYPE:
-        """Subscribe to To-do list item updates.
-
-        Called by websocket API.
-        """
+        """Subscribe to To-do list item updates."""
         if self._update_listeners is None:
             self._update_listeners = []
         self._update_listeners.append(listener)
@@ -300,9 +302,12 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not self._update_listeners:
             return
 
-        todo_items: list[JsonValueType] = [
-            dataclasses.asdict(item) for item in self.todo_items or ()
-        ]
+        todo_items = (
+            [copy.copy(item) for item in self.todo_items]
+            if self.todo_items is not None
+            else None
+        )
+
         for listener in self._update_listeners:
             listener(todo_items)
 
@@ -335,14 +340,13 @@ async def websocket_handle_subscribe_todo_items(
         return
 
     @callback
-    def todo_item_listener(todo_items: list[JsonValueType] | None) -> None:
+    def todo_item_listener(todo_items: list[TodoItem] | None) -> None:
         """Push updated To-do list items to websocket."""
+        items = [dataclasses.asdict(item) for item in todo_items or []]
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {
-                    "items": todo_items,
-                },
+                {"items": items},
             )
         )
 
@@ -351,7 +355,7 @@ async def websocket_handle_subscribe_todo_items(
     )
     connection.send_result(msg["id"])
 
-    # Push an initial forecast update
+    # Push an initial list update
     entity.async_update_listeners()
 
 

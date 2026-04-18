@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[climate.testserial123-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -42,6 +43,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,6 +51,7 @@
     'original_name': None,
     'platform': 'fujitsu_fglair',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': 'testserial123',
@@ -96,8 +99,9 @@
 # ---
 # name: test_entities[climate.testserial345-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -137,6 +141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -144,6 +149,7 @@
     'original_name': None,
     'platform': 'fujitsu_fglair',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 425>,
     'translation_key': None,
     'unique_id': 'testserial345',

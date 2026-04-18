@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
-from serial.tools import list_ports_common
 
 from homeassistant import config_entries, setup
 from homeassistant.components.aurora_abb_powerone.const import (
@@ -11,6 +10,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_MODEL,
     DOMAIN,
 )
+from homeassistant.components.usb import SerialDevice
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -23,9 +23,16 @@ async def test_form(hass: HomeAssistant) -> None:
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     fakecomports = []
-    fakecomports.append(list_ports_common.ListPortInfo("/dev/ttyUSB7"))
+    fakecomports.append(
+        SerialDevice(
+            device="/dev/ttyUSB7",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        )
+    )
     with patch(
-        "serial.tools.list_ports.comports",
+        "homeassistant.components.aurora_abb_powerone.config_flow.usb.async_scan_serial_ports",
         return_value=fakecomports,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -85,7 +92,7 @@ async def test_form_no_comports(hass: HomeAssistant) -> None:
 
     fakecomports = []
     with patch(
-        "serial.tools.list_ports.comports",
+        "homeassistant.components.aurora_abb_powerone.config_flow.usb.async_scan_serial_ports",
         return_value=fakecomports,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -99,9 +106,16 @@ async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
     """Test we display correct info when the comport is invalid.."""
 
     fakecomports = []
-    fakecomports.append(list_ports_common.ListPortInfo("/dev/ttyUSB7"))
+    fakecomports.append(
+        SerialDevice(
+            device="/dev/ttyUSB7",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        )
+    )
     with patch(
-        "serial.tools.list_ports.comports",
+        "homeassistant.components.aurora_abb_powerone.config_flow.usb.async_scan_serial_ports",
         return_value=fakecomports,
     ):
         result = await hass.config_entries.flow.async_init(

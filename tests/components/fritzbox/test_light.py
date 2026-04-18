@@ -4,13 +4,9 @@ from datetime import timedelta
 from unittest.mock import Mock, call, patch
 
 from requests.exceptions import HTTPError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fritzbox.const import (
-    COLOR_MODE,
-    COLOR_TEMP_MODE,
-    DOMAIN as FB_DOMAIN,
-)
+from homeassistant.components.fritzbox.const import COLOR_MODE, COLOR_TEMP_MODE, DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -54,7 +50,7 @@ async def test_setup(
 
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.LIGHT]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
         )
     assert entry.state is ConfigEntryState.LOADED
 
@@ -75,7 +71,7 @@ async def test_setup_non_color(
 
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.LIGHT]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
         )
     assert entry.state is ConfigEntryState.LOADED
 
@@ -97,7 +93,7 @@ async def test_setup_non_color_non_level(
 
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.LIGHT]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
         )
     assert entry.state is ConfigEntryState.LOADED
 
@@ -122,7 +118,7 @@ async def test_setup_color(
 
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.LIGHT]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
         )
     assert entry.state is ConfigEntryState.LOADED
 
@@ -137,7 +133,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -162,7 +158,7 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
     }
     device.fullcolorsupport = True
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -191,7 +187,7 @@ async def test_turn_on_color_no_fullcolorsupport(
     }
     device.fullcolorsupport = False
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     await hass.services.async_call(
@@ -216,7 +212,7 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
@@ -232,7 +228,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     assert fritz().update_devices.call_count == 1
     assert fritz().login.call_count == 1
@@ -252,20 +248,21 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     device.get_colors.return_value = {
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
-    fritz().update_devices.side_effect = HTTPError("Boom")
+    fritz().update_devices.side_effect = ["", HTTPError("Boom"), ""]
     entry = await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], device=device, fritz=fritz
     )
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert fritz().update_devices.call_count == 2
-    assert fritz().login.call_count == 2
+    assert entry.state is ConfigEntryState.LOADED
 
-    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    assert fritz().update_devices.call_count == 1
+    assert fritz().login.call_count == 1
+
+    next_update = dt_util.utcnow() + timedelta(seconds=35)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert fritz().update_devices.call_count == 4
-    assert fritz().login.call_count == 4
+    assert fritz().update_devices.call_count == 3
+    assert fritz().login.call_count == 2
 
 
 async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
@@ -278,7 +275,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     device.color_mode = COLOR_TEMP_MODE
     device.color_temp = 2700
     assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
     state = hass.states.get(ENTITY_ID)

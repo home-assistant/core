@@ -8,6 +8,7 @@ from http import HTTPStatus
 import logging
 from xml.parsers.expat import ExpatError
 
+from aiohttp import ClientSession
 import voluptuous as vol
 import xmltodict
 
@@ -150,7 +151,7 @@ async def async_setup_platform(
     apikey = config[CONF_API_KEY]
     bandwidthcap = config[CONF_TOTAL_BANDWIDTH]
 
-    ts_data = StartcaData(hass.loop, websession, apikey, bandwidthcap)
+    ts_data = StartcaData(websession, apikey, bandwidthcap)
     ret = await ts_data.async_update()
     if ret is False:
         _LOGGER.error("Invalid Start.ca API key: %s", apikey)
@@ -176,7 +177,9 @@ async def async_setup_platform(
 class StartcaSensor(SensorEntity):
     """Representation of Start.ca Bandwidth sensor."""
 
-    def __init__(self, startcadata, name, description: SensorEntityDescription) -> None:
+    def __init__(
+        self, startcadata: StartcaData, name: str, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.startcadata = startcadata
@@ -194,9 +197,10 @@ class StartcaSensor(SensorEntity):
 class StartcaData:
     """Get data from Start.ca API."""
 
-    def __init__(self, loop, websession, api_key, bandwidth_cap):
+    def __init__(
+        self, websession: ClientSession, api_key: str, bandwidth_cap: int
+    ) -> None:
         """Initialize the data object."""
-        self.loop = loop
         self.websession = websession
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
@@ -215,7 +219,7 @@ class StartcaData:
         return float(value) * 10**-9
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self) -> bool:
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"

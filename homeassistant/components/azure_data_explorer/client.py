@@ -80,7 +80,7 @@ class AzureDataExplorerClient:
     def test_connection(self) -> None:
         """Test connection, will throw Exception if it cannot connect."""
 
-        query = f"{self._table} | take 1"
+        query = f"['{self._table}'] | take 1"
 
         self.query_client.execute_query(self._database, query)
 

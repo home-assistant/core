@@ -1,5 +1,7 @@
 """Constants for the Voice over IP integration."""
 
+from typing import Final
+
 DOMAIN = "voip"
 
 RATE = 16000
@@ -14,3 +16,5 @@ RTP_AUDIO_SETTINGS = {
 
 CONF_SIP_PORT = "sip_port"
 CONF_SIP_USER = "sip_user"
+
+STORAGE_VER: Final = 1

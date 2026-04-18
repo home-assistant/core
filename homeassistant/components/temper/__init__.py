@@ -1,1 +1,1 @@
-"""The temper component."""
+"""The TEMPer integration."""

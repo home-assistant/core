@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type PermobilConfigEntry = ConfigEntry[MyPermobilCoordinator]
+
 
 @dataclass
 class MyPermobilData:
@@ -26,10 +28,10 @@ class MyPermobilData:
 class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
     """MyPermobil coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: PermobilConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, p_api: MyPermobil
+        self, hass: HomeAssistant, config_entry: PermobilConfigEntry, p_api: MyPermobil
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(

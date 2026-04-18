@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_climate[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -29,6 +30,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -36,6 +38,7 @@
     'original_name': 'Cabin overheat protection',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': 'climate_state_cabin_overheat_protection',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_cabin_overheat_protection',
@@ -68,8 +71,9 @@
 # ---
 # name: test_climate[climate.test_climate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -104,6 +108,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -111,6 +116,7 @@
     'original_name': 'Climate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRW3F7EK4NC700000-driver_temp',
@@ -153,8 +159,9 @@
 # ---
 # name: test_climate_alt[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -181,6 +188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -188,6 +196,7 @@
     'original_name': 'Cabin overheat protection',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 384>,
     'translation_key': 'climate_state_cabin_overheat_protection',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_cabin_overheat_protection',
@@ -219,8 +228,9 @@
 # ---
 # name: test_climate_alt[climate.test_climate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -255,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +273,7 @@
     'original_name': 'Climate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRW3F7EK4NC700000-driver_temp',
@@ -304,8 +316,9 @@
 # ---
 # name: test_climate_noscope[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -332,6 +345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -339,6 +353,7 @@
     'original_name': 'Cabin overheat protection',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_cabin_overheat_protection',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_cabin_overheat_protection',
@@ -347,8 +362,9 @@
 # ---
 # name: test_climate_noscope[climate.test_climate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -373,6 +389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -380,6 +397,7 @@
     'original_name': 'Climate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRW3F7EK4NC700000-driver_temp',
@@ -401,9 +419,8 @@
       ]),
       'max_temp': 40,
       'min_temp': 30,
-      'supported_features': <ClimateEntityFeature: 385>,
+      'supported_features': <ClimateEntityFeature: 384>,
       'target_temp_step': 5,
-      'temperature': None,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_cabin_overheat_protection',

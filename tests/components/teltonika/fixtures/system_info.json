@@ -1,0 +1,236 @@
+{
+  "mnf_info": {
+    "mac_eth": "001122334455",
+    "name": "RUTX5000XXXX",
+    "hw_ver": "0202",
+    "batch": "0024",
+    "serial": "1234567890",
+    "mac": "001122334456",
+    "bl_ver": "3.0"
+  },
+  "static": {
+    "fw_version": "RUTX_R_00.07.17.3",
+    "kernel": "6.6.96",
+    "system": "ARMv7 Processor rev 5 (v7l)",
+    "device_name": "RUTX50 Test",
+    "hostname": "RUTX50",
+    "cpu_count": 4,
+    "release": {
+      "distribution": "OpenWrt",
+      "revision": "r16279-5cc0535800",
+      "version": "21.02.0",
+      "target": "ipq40xx/generic",
+      "description": "OpenWrt 21.02.0 r16279-5cc0535800"
+    },
+    "fw_build_date": "2025-09-04 14:49:05",
+    "model": "RUTX50",
+    "board_name": "teltonika,rutx"
+  },
+  "features": {
+    "ipv6": true
+  },
+  "board": {
+    "modems": [
+      {
+        "id": "2-1",
+        "num": "1",
+        "builtin": true,
+        "sim_count": 2,
+        "gps_out": true,
+        "primary": true,
+        "revision": "RG501QEUAAR12A11M4G_04.202.04.202",
+        "modem_func_id": 2,
+        "multi_apn": true,
+        "operator_scan": true,
+        "dhcp_filter": true,
+        "dynamic_mtu": true,
+        "ipv6": true,
+        "volte": true,
+        "csd": false,
+        "band_list": [
+          "WCDMA_850",
+          "WCDMA_900",
+          "WCDMA_2100",
+          "LTE_B1",
+          "LTE_B3",
+          "LTE_B5",
+          "LTE_B7",
+          "LTE_B8",
+          "LTE_B20",
+          "LTE_B28",
+          "LTE_B32",
+          "LTE_B38",
+          "LTE_B40",
+          "LTE_B41",
+          "LTE_B42",
+          "LTE_B43",
+          "NSA_5G_N1",
+          "NSA_5G_N3",
+          "NSA_5G_N5",
+          "NSA_5G_N7",
+          "NSA_5G_N8",
+          "NSA_5G_N20",
+          "NSA_5G_N28",
+          "NSA_5G_N38",
+          "NSA_5G_N40",
+          "NSA_5G_N41",
+          "NSA_5G_N77",
+          "NSA_5G_N78",
+          "5G_N1",
+          "5G_N3",
+          "5G_N5",
+          "5G_N7",
+          "5G_N8",
+          "5G_N20",
+          "5G_N28",
+          "5G_N38",
+          "5G_N40",
+          "5G_N41",
+          "5G_N77",
+          "5G_N78"
+        ],
+        "product": "0800",
+        "vendor": "2c7c",
+        "gps": "1",
+        "stop_bits": "8",
+        "baudrate": "115200",
+        "type": "gobinet",
+        "desc": "Quectel RG50X",
+        "control": "2"
+      }
+    ],
+    "network": {
+      "wan": {
+        "proto": "dhcp",
+        "device": "eth1",
+        "default_ip": null
+      },
+      "lan": {
+        "proto": "static",
+        "device": "eth0",
+        "default_ip": "192.168.1.1"
+      }
+    },
+    "model": {
+      "id": "teltonika,rutx",
+      "platform": "RUTX",
+      "name": "RUTX50"
+    },
+    "usb_jack": "/usb3/3-1/",
+    "network_options": {
+      "readonly_vlans": 2,
+      "max_mtu": 9000,
+      "vlans": 128
+    },
+    "switch": {
+      "switch0": {
+        "enable": true,
+        "roles": [
+          {
+            "ports": "1 2 3 4 0",
+            "role": "lan",
+            "device": "eth0"
+          },
+          {
+            "ports": "5 0",
+            "role": "wan",
+            "device": "eth1"
+          }
+        ],
+        "ports": [
+          {
+            "device": "eth0",
+            "num": 0,
+            "want_untag": true,
+            "need_tag": false,
+            "role": null,
+            "index": null
+          },
+          {
+            "device": null,
+            "num": 1,
+            "want_untag": null,
+            "need_tag": null,
+            "role": "lan",
+            "index": null
+          },
+          {
+            "device": null,
+            "num": 2,
+            "want_untag": null,
+            "need_tag": null,
+            "role": "lan",
+            "index": null
+          },
+          {
+            "device": null,
+            "num": 3,
+            "want_untag": null,
+            "need_tag": null,
+            "role": "lan",
+            "index": null
+          },
+          {
+            "device": null,
+            "num": 4,
+            "want_untag": null,
+            "need_tag": null,
+            "role": "lan",
+            "index": null
+          },
+          {
+            "device": "eth1",
+            "num": 0,
+            "want_untag": true,
+            "need_tag": false,
+            "role": null,
+            "index": null
+          },
+          {
+            "device": null,
+            "num": 5,
+            "want_untag": null,
+            "need_tag": null,
+            "role": "wan",
+            "index": null
+          }
+        ],
+        "reset": true
+      }
+    },
+    "hw_info": {
+      "wps": false,
+      "rs232": false,
+      "nat_offloading": true,
+      "dual_sim": true,
+      "bluetooth": false,
+      "soft_port_mirror": false,
+      "vcert": null,
+      "micro_usb": false,
+      "wifi": true,
+      "sd_card": false,
+      "multi_tag": true,
+      "dual_modem": false,
+      "sfp_switch": null,
+      "dsa": false,
+      "hw_nat": false,
+      "sw_rst_on_init": null,
+      "at_sim": true,
+      "port_link": true,
+      "ios": true,
+      "usb": true,
+      "console": false,
+      "dual_band_ssid": true,
+      "gps": true,
+      "ethernet": true,
+      "sfp_port": false,
+      "rs485": false,
+      "mobile": true,
+      "poe": false,
+      "gigabit_port": true,
+      "field_2_5_gigabit_port": false,
+      "esim": false,
+      "modem_reset": null
+    }
+  }
+}

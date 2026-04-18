@@ -1,6 +1,7 @@
 """Implementation of a base class for all IHC devices."""
 
 import logging
+from typing import Any
 
 from ihcsdk.ihccontroller import IHCController
 
@@ -70,7 +71,7 @@ class IHCEntity(Entity):
         return f"{self.controller_id}-{self.ihc_id}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if not self.hass.data[DOMAIN][self.controller_id][CONF_INFO]:
             return {}
