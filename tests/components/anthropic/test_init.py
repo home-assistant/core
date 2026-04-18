@@ -13,6 +13,7 @@ import httpx
 from httpx import URL, Request, Response
 import pytest
 
+from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
 from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
@@ -31,6 +32,8 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+MINOR_VERSION = AnthropicConfigFlow.MINOR_VERSION
 
 
 @pytest.mark.parametrize(
@@ -210,7 +213,7 @@ async def test_migration_from_v1_to_v2(
     await hass.async_block_till_done()
 
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 4
+    assert mock_config_entry.minor_version == MINOR_VERSION
     assert mock_config_entry.data == {"api_key": "1234"}
     assert mock_config_entry.options == {}
 
@@ -410,7 +413,9 @@ async def test_migration_from_v1_disabled(
     assert entry.disabled_by is merged_config_entry_disabled_by
     assert entry.version == 2
     assert (
-        entry.minor_version == 3 if merged_config_entry_disabled_by is not None else 4
+        entry.minor_version == 3
+        if merged_config_entry_disabled_by is not None
+        else MINOR_VERSION
     )
     assert not entry.options
     assert entry.title == "Claude conversation"
@@ -531,7 +536,7 @@ async def test_migration_from_v1_to_v2_with_multiple_keys(
 
     for idx, entry in enumerate(entries):
         assert entry.version == 2
-        assert entry.minor_version == 4
+        assert entry.minor_version == MINOR_VERSION
         assert not entry.options
         assert len(entry.subentries) == 1
         subentry = list(entry.subentries.values())[0]
@@ -622,7 +627,7 @@ async def test_migration_from_v1_to_v2_with_same_keys(
 
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 4
+    assert entry.minor_version == MINOR_VERSION
     assert not entry.options
     assert len(entry.subentries) == 2  # Two subentries from the two original entries
 
@@ -742,7 +747,7 @@ async def test_migration_from_v2_1_to_v2_2(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.version == 2
-    assert entry.minor_version == 4
+    assert entry.minor_version == MINOR_VERSION
     assert not entry.options
     assert entry.title == "Claude"
     assert len(entry.subentries) == 2
@@ -819,7 +824,7 @@ async def test_migration_from_v2_1_to_v2_2(
             DeviceEntryDisabler.CONFIG_ENTRY,
             RegistryEntryDisabler.CONFIG_ENTRY,
             True,
-            4,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -829,7 +834,7 @@ async def test_migration_from_v2_1_to_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
             True,
-            4,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.DEVICE,
@@ -839,7 +844,7 @@ async def test_migration_from_v2_1_to_v2_2(
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
             True,
-            4,
+            MINOR_VERSION,
             None,
             DeviceEntryDisabler.USER,
             RegistryEntryDisabler.USER,
@@ -849,7 +854,7 @@ async def test_migration_from_v2_1_to_v2_2(
             None,
             None,
             True,
-            4,
+            MINOR_VERSION,
             None,
             None,
             None,
@@ -1035,7 +1040,7 @@ async def test_migrate_entry_to_v2_4(
 
     # Check that minor version was updated
     assert mock_config_entry.version == 2
-    assert mock_config_entry.minor_version == 4
+    assert mock_config_entry.minor_version == MINOR_VERSION
 
     # Verify data was not changed for the first subentry
     assert mock_config_entry.subentries["mock_id_1"].data == {
