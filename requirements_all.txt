@@ -923,6 +923,7 @@ enturclient==0.2.4
 # homeassistant.components.environment_canada
 env-canada==0.13.2
 
+# homeassistant.components.moon
 # homeassistant.components.season
 ephem==4.1.6
 
@@ -1559,9 +1560,6 @@ momonga==0.3.0
 
 # homeassistant.components.monzo
 monzopy==1.5.1
-
-# homeassistant.components.moon
-ephem==4.1.6
 
 # homeassistant.components.mopeka
 mopeka-iot-ble==0.8.0
