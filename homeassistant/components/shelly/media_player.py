@@ -109,7 +109,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def _media_meta(self) -> dict[str, Any]:
         """Return the media metadata."""
-        return cast(dict[str, Any], self.status["playback"]["media_meta"])
+        return cast(dict[str, Any], self.status["playback"].get("media_meta", {}))
 
     @property
     def state(self) -> MediaPlayerState:
@@ -148,7 +148,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_album_name(self) -> str | None:
         """Return the album name of current playing media."""
-        if self.status["playback"]["media_type"] == "RADIO":
+        if self.status["playback"].get("media_type") == "RADIO":
             return None
 
         if album := self._media_meta.get("album"):
@@ -159,7 +159,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Return the duration of current playing media in seconds."""
-        if self.status["playback"]["media_type"] == "RADIO":
+        if self.status["playback"].get("media_type") == "RADIO":
             return None
 
         if (duration := self._media_meta.get("duration")) is not None:
@@ -193,27 +193,27 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self.call_rpc("Media.MediaPlayer.PlayOrPause", {})
+        await self.coordinator.device.media_play_or_pause()
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self.call_rpc("Media.MediaPlayer.PlayOrPause", {})
+        await self.coordinator.device.media_play_or_pause()
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self.call_rpc("Media.MediaPlayer.Stop", {})
+        await self.coordinator.device.media_stop()
 
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await self.call_rpc("Media.MediaPlayer.Next", {})
+        await self.coordinator.device.media_next()
 
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        await self.call_rpc("Media.MediaPlayer.Previous", {})
+        await self.coordinator.device.media_previous()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        await self.call_rpc("Media.SetVolume", {"volume": volume * 10})
+        await self.coordinator.device.media_set_volume(round(volume * 10))
 
     async def async_browse_media(
         self,
@@ -253,9 +253,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_local_audio(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for local audio files."""
         if expanded:
-            result: dict[str, Any] = await self.coordinator.device.call_rpc(
-                "Media.List", {}
-            )
+            result: list[
+                dict[str, Any]
+            ] = await self.coordinator.device.media_list_media()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=item["title"],
@@ -266,8 +266,8 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
                     can_play=True,
                     can_expand=False,
                 )
-                for item in result["list"]
-                if item.get("type") == "AUDIO"
+                for item in result
+                if item["type"] == "AUDIO"
             ]
         else:
             children = None
@@ -286,9 +286,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_radio_stations(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for radio stations."""
         if expanded:
-            result: dict[str, Any] = await self.coordinator.device.call_rpc(
-                "Media.Radio.ListFavourites", {}
-            )
+            result: list[
+                dict[str, Any]
+            ] = await self.coordinator.device.media_list_radio_stations()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=station["name"],
@@ -299,7 +299,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
                     can_play=True,
                     can_expand=False,
                 )
-                for station in result["list"]
+                for station in result
             ]
         else:
             children = None
@@ -323,11 +323,11 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     ) -> None:
         """Play media by type and id."""
         if media_type == CONTENT_TYPE_LOCAL_RADIO:
-            await self.call_rpc("Media.Radio.PlayFavourite", {"id": int(media_id)})
+            await self.coordinator.device.media_play_radio_station(int(media_id))
             return
 
         if media_type == CONTENT_TYPE_LOCAL_AUDIO:
-            await self.call_rpc("Media.MediaPlayer.Play", {"id": int(media_id)})
+            await self.coordinator.device.media_play_media(int(media_id))
             return
 
         raise HomeAssistantError(
