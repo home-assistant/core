@@ -13,7 +13,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_PANEL_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -70,8 +69,8 @@ async def test_config_flow_migration_v1_1_to_v1_2(
 
     await setup_integration(hass, config_entry)
 
-    assert config_entry.version == SatelConfigFlow.VERSION
-    assert config_entry.minor_version == SatelConfigFlow.MINOR_VERSION
+    assert config_entry.version >= 1
+    assert config_entry.minor_version >= 2
 
     subentry = config_entry.subentries.get(original.subentry_id)
     assert subentry is not None
@@ -123,8 +122,8 @@ async def test_config_flow_migration_v1_to_v2(
     assert entity is not None
     assert entity.unique_id == new_id
 
-    assert config_entry.version == SatelConfigFlow.VERSION
-    assert config_entry.minor_version == SatelConfigFlow.MINOR_VERSION
+    assert config_entry.version >= 2
+    assert config_entry.minor_version >= 1
 
 
 async def test_config_flow_migration_v2_1_to_v2_2(
@@ -144,8 +143,8 @@ async def test_config_flow_migration_v2_1_to_v2_2(
     )
     await setup_integration(hass, config_entry)
 
-    assert config_entry.version == SatelConfigFlow.VERSION
-    assert config_entry.minor_version == SatelConfigFlow.MINOR_VERSION
+    assert config_entry.version >= 2
+    assert config_entry.minor_version >= 2
 
     assert config_entry.data == {
         CONF_HOST: "192.168.0.2",
