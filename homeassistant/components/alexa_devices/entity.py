@@ -69,15 +69,14 @@ class AmazonServiceEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, service_device_id(coordinator))},
             manufacturer="Amazon",
-            name=coordinator.config_entry.title,
             entry_type=DeviceEntryType.SERVICE,
         )
         self.entity_description = description
         self._attr_unique_id = (
-            f"{slugify(coordinator.config_entry.title)}-{description.key}"
+            f"{slugify(coordinator.config_entry.unique_id)}-{description.key}"
         )
 
 
 def service_device_id(coordinator: AmazonDevicesCoordinator) -> str:
     """Return service device id."""
-    return slugify(f"{coordinator.config_entry.title}_service_device")
+    return slugify(f"{coordinator.config_entry.unique_id}_service_device")

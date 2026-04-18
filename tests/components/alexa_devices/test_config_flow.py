@@ -19,7 +19,7 @@ from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_CODE, TEST_PASSWORD, TEST_USERNAME
+from .const import TEST_CODE, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -51,11 +51,11 @@ async def test_full_flow(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
-    assert result["result"].unique_id == TEST_USERNAME
+    assert result["result"].unique_id == TEST_USER_ID
     mock_amazon_devices_client.login.login_mode_interactive.assert_called_once_with(
         "023123"
     )
@@ -170,7 +170,7 @@ async def test_reauth_successful(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: "other_fake_password",
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
@@ -228,7 +228,7 @@ async def test_reauth_not_successful(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: "fake_password",
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
@@ -268,7 +268,7 @@ async def test_reconfigure_successful(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: new_password,
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }
@@ -327,7 +327,7 @@ async def test_reconfigure_fails(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         },
     }

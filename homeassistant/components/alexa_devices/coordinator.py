@@ -145,7 +145,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entity_id = entity_registry.async_get_entity_id(
                 Platform.BUTTON,
                 DOMAIN,
-                f"{slugify(self.config_entry.title)}-{slugify(routine)}",
+                f"{slugify(self.config_entry.unique_id)}-{slugify(routine)}",
             )
             if entity_id:
                 entity_registry.async_remove(entity_id)

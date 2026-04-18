@@ -13,7 +13,13 @@ from homeassistant.components.alexa_devices.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USERNAME
+from .const import (
+    TEST_DEVICE_1,
+    TEST_DEVICE_1_SN,
+    TEST_PASSWORD,
+    TEST_USER_ID,
+    TEST_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +50,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.login = AsyncMock()
         client.login.login_mode_interactive.return_value = {
-            "customer_info": {"user_id": TEST_USERNAME},
+            "customer_info": {"user_id": TEST_USER_ID},
             CONF_SITE: "https://www.amazon.com",
         }
         client.get_devices_data.return_value = {
@@ -69,7 +75,7 @@ def mock_config_entry() -> MockConfigEntry:
                 CONF_SITE: "https://www.amazon.com",
             },
         },
-        unique_id=TEST_USERNAME,
+        unique_id=TEST_USER_ID,
         version=1,
         minor_version=3,
     )
