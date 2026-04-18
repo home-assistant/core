@@ -25,4 +25,3 @@ set_window_open:
           min: 1
           max: 86400
           unit_of_measurement: seconds
-
