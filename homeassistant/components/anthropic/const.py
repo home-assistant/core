@@ -64,7 +64,3 @@ TOOL_SEARCH_UNSUPPORTED_MODELS = [
     "claude-3",
     "claude-haiku",
 ]
-
-DEPRECATED_MODELS = [
-    "claude-3",
-]

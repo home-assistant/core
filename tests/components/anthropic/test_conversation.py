@@ -742,7 +742,7 @@ async def test_extended_thinking(
         },
         {
             CONF_LLM_HASS_API: "assist",
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_THINKING_EFFORT: "none",
         },
     ],
@@ -830,7 +830,7 @@ async def test_extended_thinking_tool_call(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_THINKING_EFFORT: "medium",
         },
     )
@@ -1120,7 +1120,7 @@ async def test_web_search_dynamic_filtering(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
             CONF_WEB_SEARCH: True,
             CONF_WEB_SEARCH_MAX_USES: 5,
@@ -1263,7 +1263,7 @@ async def test_bash_code_execution(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
         },
     )
@@ -1343,7 +1343,7 @@ async def test_bash_code_execution_error(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
         },
     )
@@ -1511,7 +1511,7 @@ async def test_text_editor_code_execution(
         next(iter(mock_config_entry.subentries.values())),
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-opus-4-7",
             CONF_CODE_EXECUTION: True,
         },
     )

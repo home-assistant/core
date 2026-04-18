@@ -303,7 +303,7 @@
         'role': 'assistant',
       }),
     ]),
-    'model': 'claude-opus-4-6',
+    'model': 'claude-opus-4-7',
     'stream': True,
     'system': list([
       dict({
@@ -370,6 +370,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
   })

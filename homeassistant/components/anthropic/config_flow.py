@@ -431,6 +431,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 effort_options.append("medium")
             if effort_capability.high.supported:
                 effort_options.append("high")
+            if effort_capability.xhigh and effort_capability.xhigh.supported:
+                effort_options.append("xhigh")
             if effort_capability.max.supported:
                 effort_options.append("max")
             step_schema[
