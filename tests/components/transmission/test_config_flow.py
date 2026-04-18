@@ -193,6 +193,13 @@ async def test_flow_version_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "transmission_version"}
 
+    mock_transmission_client.return_value.server_version = "4.0.5 (a6fe2a64aa)"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG_DATA,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_success(
     hass: HomeAssistant,
@@ -314,3 +321,13 @@ async def test_reauth_version_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "transmission_version"}
+
+    mock_transmission_client.return_value.server_version = "4.0.5 (a6fe2a64aa)"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "password": "test-password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
