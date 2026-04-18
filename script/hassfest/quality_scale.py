@@ -1432,7 +1432,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hisense_aehw4a1",
     "history_stats",
     "hitron_coda",
-    "hive",
     "hko",
     "hlk_sw16",
     "holiday",
