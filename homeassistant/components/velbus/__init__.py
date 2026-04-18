@@ -84,16 +84,16 @@ async def velbus_scan_task(
         )
         ir.async_delete_issue(hass, DOMAIN, f"stale_device_{entry_id}_{address}")
 
+    registered_addresses: set[str] = set()
     for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
         device_address: str | None = next(
             (ident[1] for ident in device.identifiers if ident[0] == DOMAIN),
             None,
         )
-        if (
-            device_address is None
-            or device.via_device_id is not None
-            or device_address in found_addresses
-        ):
+        if device_address is None or device.via_device_id is not None:
+            continue
+        registered_addresses.add(device_address)
+        if device_address in found_addresses:
             continue
         ir.async_create_issue(
             hass,
@@ -107,6 +107,14 @@ async def velbus_scan_task(
                 "address": device_address,
             },
         )
+
+    issue_prefix = f"stale_device_{entry_id}_"
+    issue_reg = ir.async_get(hass)
+    for domain, issue_id in list(issue_reg.issues):
+        if domain == DOMAIN and issue_id.startswith(issue_prefix):
+            address = issue_id[len(issue_prefix) :]
+            if address not in registered_addresses:
+                ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:

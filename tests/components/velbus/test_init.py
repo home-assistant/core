@@ -433,3 +433,29 @@ async def test_stale_subdevice_no_repair_issue(
         )
         is None
     )
+
+
+async def test_stale_device_issue_cleared_when_device_deleted(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a stale device issue is cleared when the device is deleted from the registry."""
+    issue_id = f"stale_device_{config_entry.entry_id}_999"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="stale_device",
+        translation_placeholders={"name": "Deleted Module", "address": "999"},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # No device with address 999 in the registry — simulates user having deleted it
+    await init_integration(hass, config_entry)
+
+    # Issue must be cleaned up since the device no longer exists in the registry
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
