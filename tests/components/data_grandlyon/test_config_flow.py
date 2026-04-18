@@ -90,27 +90,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_no_credentials(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we can create an entry without credentials (no API call made)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Data Grand Lyon"
-    assert result["data"] == {}
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -152,8 +131,14 @@ async def test_form_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        return_value=[],
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+        )
+        await hass.async_block_till_done()
 
     # Second flow shows the form but aborts on submit
     result = await hass.config_entries.flow.async_init(
@@ -161,7 +146,13 @@ async def test_form_already_configured(
     )
     assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    with patch(
+        "homeassistant.components.data_grandlyon.config_flow.DataGrandLyonClient.get_tcl_passages",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

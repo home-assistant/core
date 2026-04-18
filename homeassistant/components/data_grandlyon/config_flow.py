@@ -86,9 +86,6 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns None on success, or an error key for the errors dict.
         """
-        if not data.get(CONF_USERNAME):
-            return "invalid_auth"
-
         session = async_get_clientsession(self.hass)
         client = DataGrandLyonClient(
             session=session,
