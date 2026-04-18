@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity
@@ -9,10 +12,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import EVOHOME_DATA
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoEntity, is_valid_zone, unique_zone_id
+from .entity import is_valid_zone, unique_zone_id
 
 
 async def async_setup_platform(
@@ -40,19 +44,23 @@ async def async_setup_platform(
 
     async_add_entities(entities)
 
-    for entity in entities:
-        await entity.update_attrs()
 
-
-class EvoResetButtonBase(EvoEntity, ButtonEntity):
-    """Base for reset button entities."""
+class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEntity):
+    """Base for Evohome's Button entities."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _evo_state_attr_names = ()
+
+    _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
+    _evo_id_attr: str
 
     async def async_press(self) -> None:
         """Reset the Evohome entity to its base operating mode."""
         await self.coordinator.call_client_api(self._evo_device.reset())
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return the evohome-specific state attributes."""
+        return {self._evo_id_attr: self._evo_device.id}
 
 
 class EvoResetSystemButton(EvoResetButtonBase):
