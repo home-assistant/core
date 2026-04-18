@@ -112,14 +112,14 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
     _attr_should_poll = True
-    _attr_translation_key = "battery"
 
     def __init__(self, device: dict[str, Any], data: LutronCasetaData) -> None:
         """Initialize the battery sensor."""
         super().__init__(device, data)
-        # The base entity sets the shade name; remove it so translation_key provides
-        # the sensor name.
-        del self._attr_name
+        # The base entity sets the shade name; remove it so the battery device
+        # class provides the sensor name.
+        if hasattr(self, "_attr_name"):
+            delattr(self, "_attr_name")
         self._attr_is_on: bool | None = None
 
     @property
