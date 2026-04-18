@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -32,254 +37,179 @@ from .entity import AquariteEntity
 PARALLEL_UPDATES = 1
 
 
+def _convert_float(value: Any) -> float | None:
+    return float(value)
+
+
+def _convert_hundredths(value: Any) -> float | None:
+    return float(value) / 100
+
+
+def _convert_tenths(value: Any) -> float | None:
+    return float(value) / 10
+
+
+def _convert_minutes_to_hours(value: Any) -> float | None:
+    return float(value) / 60
+
+
+def _convert_int(value: Any) -> int | None:
+    return int(value)
+
+
+@dataclass(frozen=True, kw_only=True)
+class AquariteSensorEntityDescription(SensorEntityDescription):
+    """Describes an Aquarite sensor entity."""
+
+    value_path: str
+    value_fn: Callable[[Any], Any] = _convert_float
+    exists_path: str | None = None
+
+
+SENSOR_DESCRIPTIONS: tuple[AquariteSensorEntityDescription, ...] = (
+    AquariteSensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="main.temperature",
+    ),
+    AquariteSensorEntityDescription(
+        key="cd",
+        translation_key="cd",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="modules.cd.current",
+        value_fn=_convert_hundredths,
+        exists_path=PATH_HASCD,
+    ),
+    AquariteSensorEntityDescription(
+        key="cl",
+        translation_key="cl",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="modules.cl.current",
+        value_fn=_convert_hundredths,
+        exists_path=PATH_HASCL,
+    ),
+    AquariteSensorEntityDescription(
+        key="ph",
+        translation_key="ph",
+        device_class=SensorDeviceClass.PH,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="modules.ph.current",
+        value_fn=_convert_hundredths,
+        exists_path=PATH_HASPH,
+    ),
+    AquariteSensorEntityDescription(
+        key="rx",
+        translation_key="rx",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="modules.rx.current",
+        value_fn=_convert_int,
+        exists_path=PATH_HASRX,
+    ),
+    AquariteSensorEntityDescription(
+        key="uv",
+        translation_key="uv",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="modules.uv.current",
+        value_fn=_convert_hundredths,
+        exists_path=PATH_HASUV,
+    ),
+    AquariteSensorEntityDescription(
+        key="filtration_intel_time",
+        translation_key="filtration_intel_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_path="filtration.intel.time",
+        value_fn=_convert_minutes_to_hours,
+    ),
+    AquariteSensorEntityDescription(
+        key="rssi",
+        translation_key="rssi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_path="main.RSSI",
+        value_fn=_convert_int,
+    ),
+    AquariteSensorEntityDescription(
+        key="pool_name",
+        translation_key="pool_name",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_path="",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AquariteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Aquarite sensors for every pool on the account."""
-    entities: list[AquariteEntity] = []
+    entities: list[AquariteSensorEntity] = []
+
     for coordinator in entry.runtime_data.coordinators.values():
-        entities.extend(_build_entities_for_coordinator(coordinator))
+        for description in SENSOR_DESCRIPTIONS:
+            if description.exists_path is not None and not coordinator.get_value(
+                description.exists_path
+            ):
+                continue
+            entities.append(AquariteSensorEntity(coordinator, description))
+
+        # Electrolysis/hydrolysis: dynamic key based on hardware type
+        if coordinator.get_value(PATH_HASHIDRO):
+            is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
+            entities.append(
+                AquariteSensorEntity(
+                    coordinator,
+                    AquariteSensorEntityDescription(
+                        key="electrolysis" if is_electrolysis else "hydrolysis",
+                        translation_key=(
+                            "electrolysis" if is_electrolysis else "hydrolysis"
+                        ),
+                        native_unit_of_measurement="g/h",
+                        state_class=SensorStateClass.MEASUREMENT,
+                        value_path="hidro.current",
+                        value_fn=_convert_tenths,
+                    ),
+                )
+            )
+
     async_add_entities(entities)
 
 
-def _build_entities_for_coordinator(
-    coordinator: AquariteDataUpdateCoordinator,
-) -> list[AquariteEntity]:
-    """Create all sensor entities for a single pool."""
-    entities: list[AquariteEntity] = [
-        AquariteTemperatureSensorEntity(coordinator, "temperature", "main.temperature"),
-    ]
+class AquariteSensorEntity(AquariteEntity, SensorEntity):
+    """Generic Aquarite sensor driven by an entity description."""
 
-    if coordinator.get_value(PATH_HASCD):
-        entities.append(
-            AquariteValueSensorEntity(coordinator, "cd", "modules.cd.current")
-        )
-    if coordinator.get_value(PATH_HASCL):
-        entities.append(
-            AquariteValueSensorEntity(coordinator, "cl", "modules.cl.current")
-        )
-    if coordinator.get_value(PATH_HASPH):
-        entities.append(
-            AquariteValueSensorEntity(
-                coordinator,
-                "ph",
-                "modules.ph.current",
-                device_class=SensorDeviceClass.PH,
-            )
-        )
-    if coordinator.get_value(PATH_HASRX):
-        entities.append(
-            AquariteRxValueSensorEntity(coordinator, "rx", "modules.rx.current")
-        )
-    if coordinator.get_value(PATH_HASUV):
-        entities.append(
-            AquariteValueSensorEntity(coordinator, "uv", "modules.uv.current")
-        )
-    if coordinator.get_value(PATH_HASHIDRO):
-        is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
-        key = "electrolysis" if is_electrolysis else "hydrolysis"
-        entities.append(
-            AquariteHydrolyserSensorEntity(coordinator, key, "hidro.current")
-        )
-
-    # Wi-Fi signal strength (diagnostic, off by default)
-    entities.append(AquariteRssiSensorEntity(coordinator))
-
-    # Time and Interval Sensors
-    entities.append(
-        AquariteTimeSensorEntity(
-            coordinator, "filtration_intel_time", "filtration.intel.time"
-        )
-    )
-
-    entities.append(AquaritePoolNameSensorEntity(coordinator))
-    return entities
-
-
-class AquariteTemperatureSensorEntity(AquariteEntity, SensorEntity):
-    """Temperature sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    entity_description: AquariteSensorEntityDescription
 
     def __init__(
         self,
         coordinator: AquariteDataUpdateCoordinator,
-        translation_key: str,
-        value_path: str,
+        description: AquariteSensorEntityDescription,
     ) -> None:
-        """Initialize the temperature sensor."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
-        self._value_path = value_path
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(translation_key)
+        self.entity_description = description
+        self._attr_unique_id = self.build_unique_id(description.key)
 
     @property
-    def native_value(self) -> float | None:
-        """Return the temperature value."""
-        value = self.coordinator.get_value(self._value_path)
-        try:
-            return float(value)
-        except TypeError, ValueError:
+    def native_value(self) -> float | int | str | None:
+        """Return the sensor value, transformed by the description's value_fn."""
+        # Pool name is a special case (not from coordinator data)
+        if not self.entity_description.value_path:
+            return self.coordinator.pool_name
+
+        value = self.coordinator.get_value(self.entity_description.value_path)
+        if value is None:
             return None
-
-
-class AquariteValueSensorEntity(AquariteEntity, SensorEntity):
-    """Generic value sensor entity."""
-
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(
-        self,
-        coordinator: AquariteDataUpdateCoordinator,
-        translation_key: str,
-        value_path: str,
-        device_class: SensorDeviceClass | None = None,
-        native_unit_of_measurement: str | None = None,
-    ) -> None:
-        """Initialize the value sensor."""
-        super().__init__(coordinator)
-        self._value_path = value_path
-        self._attr_device_class = device_class
-        self._attr_native_unit_of_measurement = native_unit_of_measurement
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(translation_key)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the sensor value."""
-        value = self.coordinator.get_value(self._value_path)
         try:
-            return float(value) / 100
-        except TypeError, ValueError:
-            return None
-
-
-class AquariteTimeSensorEntity(AquariteEntity, SensorEntity):
-    """Time sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_native_unit_of_measurement = UnitOfTime.HOURS
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(
-        self,
-        coordinator: AquariteDataUpdateCoordinator,
-        translation_key: str,
-        value_path: str,
-    ) -> None:
-        """Initialize the time sensor."""
-        super().__init__(coordinator)
-        self._value_path = value_path
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(translation_key)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the time value in hours."""
-        value = self.coordinator.get_value(self._value_path)
-        try:
-            return float(value) / 60
-        except TypeError, ValueError:
-            return None
-
-
-class AquariteHydrolyserSensorEntity(AquariteEntity, SensorEntity):
-    """Hydrolyser sensor entity."""
-
-    _attr_native_unit_of_measurement = "g/h"
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(
-        self,
-        coordinator: AquariteDataUpdateCoordinator,
-        translation_key: str,
-        value_path: str,
-    ) -> None:
-        """Initialize the hydrolyser sensor."""
-        super().__init__(coordinator)
-        self._value_path = value_path
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(translation_key)
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the hydrolyser value."""
-        value = self.coordinator.get_value(self._value_path)
-        try:
-            return float(value) / 10
-        except TypeError, ValueError:
-            return None
-
-
-class AquariteRxValueSensorEntity(AquariteEntity, SensorEntity):
-    """Redox value sensor entity."""
-
-    _attr_native_unit_of_measurement = UnitOfElectricPotential.MILLIVOLT
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(
-        self,
-        coordinator: AquariteDataUpdateCoordinator,
-        translation_key: str,
-        value_path: str,
-    ) -> None:
-        """Initialize the Rx sensor."""
-        super().__init__(coordinator)
-        self._value_path = value_path
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(translation_key)
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the Rx value."""
-        value = self.coordinator.get_value(self._value_path)
-        try:
-            return int(value)
-        except TypeError, ValueError:
-            return None
-
-
-class AquaritePoolNameSensorEntity(AquariteEntity, SensorEntity):
-    """Pool name sensor entity."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    def __init__(self, coordinator: AquariteDataUpdateCoordinator) -> None:
-        """Initialize the pool name sensor."""
-        super().__init__(coordinator)
-        self._attr_translation_key = "pool_name"
-        self._attr_unique_id = self.build_unique_id("pool_name")
-
-    @property
-    def native_value(self) -> str:
-        """Return the pool name."""
-        return self.coordinator.pool_name
-
-
-class AquariteRssiSensorEntity(AquariteEntity, SensorEntity):
-    """Controller Wi-Fi signal strength sensor."""
-
-    _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
-    _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(self, coordinator: AquariteDataUpdateCoordinator) -> None:
-        """Initialize the RSSI sensor."""
-        super().__init__(coordinator)
-        self._attr_translation_key = "rssi"
-        self._attr_unique_id = self.build_unique_id("rssi")
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the RSSI value."""
-        value = self.coordinator.get_value("main.RSSI")
-        try:
-            return int(value)
+            return self.entity_description.value_fn(value)
         except TypeError, ValueError:
             return None
