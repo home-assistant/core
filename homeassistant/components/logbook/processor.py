@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 import logging
 import time
 from typing import TYPE_CHECKING, Any
 
+from lru import LRU
 from sqlalchemy.engine import Result
 from sqlalchemy.engine.row import Row
+from sqlalchemy.orm import Session
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.filters import Filters
@@ -37,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.event_type import EventType
 
 from .const import (
@@ -80,9 +83,17 @@ from .models import (
     async_event_to_row,
 )
 from .queries import statement_for_request
-from .queries.common import PSEUDO_EVENT_STATE_CHANGED
+from .queries.common import (
+    PSEUDO_EVENT_STATE_CHANGED,
+    select_context_user_ids_for_context_ids,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Bound for the parent-context user-id cache — only needs to bridge the
+# historical→live handoff, so the in-flight set is realistically ~tens with
+# peak bursts of ~100. Ceiling bounds memory in pathological cases.
+MAX_CONTEXT_USER_IDS_CACHE = 256
 
 
 @dataclass(slots=True)
@@ -99,6 +110,14 @@ class LogbookRun:
     include_entity_name: bool
     timestamp: bool
     memoize_new_contexts: bool = True
+    # True when this run will switch to a live stream; gates population of
+    # context_user_ids (wasted work for one-shot REST/get_events callers).
+    for_live_stream: bool = False
+    # context_id -> user_id for parent context attribution; persisted across
+    # batches so child rows can inherit user_id from a parent seen earlier.
+    context_user_ids: LRU[bytes, bytes] = field(
+        default_factory=lambda: LRU(MAX_CONTEXT_USER_IDS_CACHE)
+    )
 
 
 class EventProcessor:
@@ -113,6 +132,7 @@ class EventProcessor:
         context_id: str | None = None,
         timestamp: bool = False,
         include_entity_name: bool = True,
+        for_live_stream: bool = False,
     ) -> None:
         """Init the event stream."""
         assert not (context_id and (entity_ids or device_ids)), (
@@ -133,6 +153,7 @@ class EventProcessor:
             entity_name_cache=EntityNameCache(self.hass),
             include_entity_name=include_entity_name,
             timestamp=timestamp,
+            for_live_stream=for_live_stream,
         )
         self.context_augmenter = ContextAugmenter(self.logbook_run)
 
@@ -180,13 +201,67 @@ class EventProcessor:
                 self.filters,
                 self.context_id,
             )
-            return self.humanify(
-                execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            rows = execute_stmt_lambda_element(session, stmt, orm_rows=False)
+            query_parent_user_ids: dict[bytes, bytes] | None = None
+            if self.entity_ids or self.device_ids:
+                # Filtered queries exclude parent call_service rows for
+                # unrelated targets, so child contexts lose user attribution
+                # without a pre-pass. all_stmt already includes them.
+                rows = list(rows)
+                query_parent_user_ids = self._fetch_parent_user_ids(
+                    session, rows, instance.max_bind_vars
+                )
+            return self.humanify(rows, query_parent_user_ids)
+
+    def _fetch_parent_user_ids(
+        self,
+        session: Session,
+        rows: list[Row],
+        max_bind_vars: int,
+    ) -> dict[bytes, bytes] | None:
+        """Resolve parent-context user_ids for rows in a filtered query.
+
+        Done in Python rather than as a SQL union branch because the
+        context_parent_id_bin column is sparsely populated — scanning the
+        States table for non-null parents costs ~40% of the overall query
+        on real datasets. Here we collect only the parent ids we actually
+        need and fetch them via an indexed point-lookup on context_id_bin.
+        """
+        cache = self.logbook_run.context_user_ids
+        pending: set[bytes] = {
+            parent_id
+            for row in rows
+            if (parent_id := row[CONTEXT_PARENT_ID_BIN_POS]) and parent_id not in cache
+        }
+        if not pending:
+            return None
+        query_parent_user_ids: dict[bytes, bytes] = {}
+        # The lambda statement unions events and states, so each id appears
+        # in two IN clauses — halve the chunk size to stay under the
+        # database's max bind variable count.
+        for pending_chunk in chunked_or_all(pending, max_bind_vars // 2):
+            # Schema allows NULL but the query's WHERE clauses exclude it;
+            # explicit checks satisfy the type checker.
+            query_parent_user_ids.update(
+                {
+                    parent_id: user_id
+                    for parent_id, user_id in execute_stmt_lambda_element(
+                        session,
+                        select_context_user_ids_for_context_ids(pending_chunk),
+                        orm_rows=False,
+                    )
+                    if parent_id is not None and user_id is not None
+                }
             )
+        if self.logbook_run.for_live_stream:
+            cache.update(query_parent_user_ids)
+        return query_parent_user_ids
 
     def humanify(
-        self, rows: Generator[EventAsRow] | Sequence[Row] | Result
-    ) -> list[dict[str, str]]:
+        self,
+        rows: Generator[EventAsRow] | Sequence[Row] | Result,
+        query_parent_user_ids: dict[bytes, bytes] | None = None,
+    ) -> list[dict[str, Any]]:
         """Humanify rows."""
         return list(
             _humanify(
@@ -195,6 +270,7 @@ class EventProcessor:
                 self.ent_reg,
                 self.logbook_run,
                 self.context_augmenter,
+                query_parent_user_ids,
             )
         )
 
@@ -205,6 +281,7 @@ def _humanify(
     ent_reg: er.EntityRegistry,
     logbook_run: LogbookRun,
     context_augmenter: ContextAugmenter,
+    query_parent_user_ids: dict[bytes, bytes] | None,
 ) -> Generator[dict[str, Any]]:
     """Generate a converted list of events into entries."""
     # Continuous sensors, will be excluded from the logbook
@@ -220,11 +297,21 @@ def _humanify(
     context_id_bin: bytes
     data: dict[str, Any]
 
+    context_user_ids = logbook_run.context_user_ids
+    # Skip the LRU write on one-shot runs — the LogbookRun is discarded.
+    populate_context_user_ids = logbook_run.for_live_stream
+
     # Process rows
     for row in rows:
         context_id_bin = row[CONTEXT_ID_BIN_POS]
         if memoize_new_contexts and context_id_bin not in context_lookup:
             context_lookup[context_id_bin] = row
+        if (
+            populate_context_user_ids
+            and (context_user_id_bin := row[CONTEXT_USER_ID_BIN_POS])
+            and context_id_bin not in context_user_ids
+        ):
+            context_user_ids[context_id_bin] = context_user_id_bin
         if row[CONTEXT_ONLY_POS]:
             continue
         event_type = row[EVENT_TYPE_POS]
@@ -310,6 +397,28 @@ def _humanify(
             )
         ):
             context_augmenter.augment(data, context_row)
+
+        # Fall back to the parent context for child contexts that inherit
+        # user attribution (e.g., generic_thermostat -> switch turn_on).
+        # Read from context_lookup directly instead of get_context() to
+        # avoid the origin_event fallback which would return the *child*
+        # row's origin event, not the parent's.
+        if CONTEXT_USER_ID not in data and (
+            context_parent_id_bin := row[CONTEXT_PARENT_ID_BIN_POS]
+        ):
+            parent_user_id_bin: bytes | None = context_user_ids.get(
+                context_parent_id_bin
+            )
+            if parent_user_id_bin is None and query_parent_user_ids is not None:
+                parent_user_id_bin = query_parent_user_ids.get(context_parent_id_bin)
+            if (
+                parent_user_id_bin is None
+                and (parent_row := context_lookup.get(context_parent_id_bin))
+                is not None
+            ):
+                parent_user_id_bin = parent_row[CONTEXT_USER_ID_BIN_POS]
+            if parent_user_id_bin:
+                data[CONTEXT_USER_ID] = bytes_to_uuid_hex_or_none(parent_user_id_bin)
 
         yield data
 
