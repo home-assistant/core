@@ -284,6 +284,49 @@ async def test_create_album_failed(
         )
 
 
+async def test_delete_service_config_entry_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test delete service call with a config entry that does not exist."""
+    await setup_integration(hass, mock_config_entry)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "service_config_entry_not_found"
+
+
+async def test_delete_service_config_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test delete service call with a config entry that is not loaded."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
 async def test_delete_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
