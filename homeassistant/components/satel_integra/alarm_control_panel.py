@@ -78,6 +78,7 @@ class SatelIntegraAlarmPanel(
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(
         self,

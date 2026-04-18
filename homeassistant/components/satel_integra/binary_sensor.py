@@ -80,6 +80,8 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
 ):
     """Base binary sensor for Satel Integra."""
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: _CoordinatorT,

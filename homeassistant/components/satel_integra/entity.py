@@ -35,7 +35,6 @@ class SatelIntegraEntity[_CoordinatorT: SatelIntegraBaseCoordinator](
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _attr_name = None
 
     _controller: AsyncSatel
 

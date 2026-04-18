@@ -56,6 +56,8 @@ class SatelIntegraSwitch(
 ):
     """Representation of an Satel Integra switch."""
 
+    _attr_name = None
+
     def __init__(
         self,
         coordinator: SatelIntegraOutputsCoordinator,

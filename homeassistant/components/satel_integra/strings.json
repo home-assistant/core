@@ -192,13 +192,6 @@
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      }
-    }
-  },
   "exceptions": {
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
