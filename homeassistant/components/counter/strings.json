@@ -1,6 +1,7 @@
 {
   "common": {
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_value": {
@@ -96,6 +97,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reached maximum"
@@ -105,6 +109,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reached minimum"
@@ -114,6 +121,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::trigger_for_name%]"
         }
       },
       "name": "Counter reset"
