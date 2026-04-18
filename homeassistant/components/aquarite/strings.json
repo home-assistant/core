@@ -27,14 +27,8 @@
       "cd": {
         "name": "CD"
       },
-      "city": {
-        "name": "City"
-      },
       "cl": {
         "name": "CL"
-      },
-      "country": {
-        "name": "Country"
       },
       "electrolysis": {
         "name": "Electrolysis"
@@ -44,12 +38,6 @@
       },
       "hydrolysis": {
         "name": "Hydrolysis"
-      },
-      "latitude": {
-        "name": "Latitude"
-      },
-      "longitude": {
-        "name": "Longitude"
       },
       "ph": {
         "name": "pH"
@@ -63,17 +51,11 @@
       "rx": {
         "name": "Rx"
       },
-      "street": {
-        "name": "Street"
-      },
       "temperature": {
         "name": "Temperature"
       },
       "uv": {
         "name": "UV"
-      },
-      "zipcode": {
-        "name": "Zipcode"
       }
     }
   }

@@ -4,14 +4,8 @@
       "cd": {
         "default": "mdi:gauge"
       },
-      "city": {
-        "default": "mdi:city"
-      },
       "cl": {
         "default": "mdi:gauge"
-      },
-      "country": {
-        "default": "mdi:earth"
       },
       "electrolysis": {
         "default": "mdi:flash"
@@ -21,12 +15,6 @@
       },
       "hydrolysis": {
         "default": "mdi:flash"
-      },
-      "latitude": {
-        "default": "mdi:latitude"
-      },
-      "longitude": {
-        "default": "mdi:longitude"
       },
       "ph": {
         "default": "mdi:ph"
@@ -40,17 +28,11 @@
       "rx": {
         "default": "mdi:gauge"
       },
-      "street": {
-        "default": "mdi:road"
-      },
       "temperature": {
         "default": "mdi:thermometer"
       },
       "uv": {
         "default": "mdi:weather-sunny-alert"
-      },
-      "zipcode": {
-        "default": "mdi:numeric"
       }
     }
   }

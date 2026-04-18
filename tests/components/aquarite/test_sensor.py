@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant.components.aquarite.sensor import (
     AquariteHydrolyserSensorEntity,
-    AquariteLocationSensorEntity,
     AquaritePoolNameSensorEntity,
     AquariteRssiSensorEntity,
     AquariteRxValueSensorEntity,
@@ -212,26 +211,6 @@ def test_time_sensor_native_value_non_numeric() -> None:
     assert entity.native_value is None
 
 
-# ── Location sensor ─────────────────────────────────────────────
-
-
-def test_location_native_value_city(
-    mock_coordinator: MagicMock,
-) -> None:
-    """Test location sensor returns the correct form field."""
-    with _patch_entity_init():
-        entity = AquariteLocationSensorEntity(mock_coordinator, "city", "city")
-    assert entity.native_value == "Waterloo"
-
-
-def test_location_native_value_missing() -> None:
-    """Test returns None when form data is missing."""
-    coord = _make_coordinator({})
-    with _patch_entity_init():
-        entity = AquariteLocationSensorEntity(coord, "city", "city")
-    assert entity.native_value is None
-
-
 # ── RSSI sensor ─────────────────────────────────────────────────
 
 
@@ -314,10 +293,6 @@ async def test_async_setup_entry_full_modules(
     assert "cd" not in translation_keys
     assert "cl" not in translation_keys
     assert "uv" not in translation_keys
-    # Location sensors
-    assert {"city", "street", "zipcode", "country", "latitude", "longitude"} <= (
-        translation_keys
-    )
 
 
 async def test_async_setup_entry_hydrolysis_branch(hass: HomeAssistant) -> None:

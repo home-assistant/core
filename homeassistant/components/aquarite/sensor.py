@@ -94,17 +94,6 @@ def _build_entities_for_coordinator(
         )
     )
 
-    # Location sensors (diagnostic, off by default)
-    for translation_key, key in (
-        ("city", "city"),
-        ("street", "street"),
-        ("zipcode", "zipcode"),
-        ("country", "country"),
-        ("latitude", "lat"),
-        ("longitude", "lng"),
-    ):
-        entities.append(AquariteLocationSensorEntity(coordinator, translation_key, key))
-
     entities.append(AquaritePoolNameSensorEntity(coordinator))
     return entities
 
@@ -252,31 +241,6 @@ class AquariteRxValueSensorEntity(AquariteEntity, SensorEntity):
             return int(value)
         except TypeError, ValueError:
             return None
-
-
-class AquariteLocationSensorEntity(AquariteEntity, SensorEntity):
-    """Location sensor entity."""
-
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(
-        self,
-        coordinator: AquariteDataUpdateCoordinator,
-        translation_key: str,
-        form_key: str,
-    ) -> None:
-        """Initialize the location sensor."""
-        super().__init__(coordinator)
-        self._form_key = form_key
-        self._attr_translation_key = translation_key
-        self._attr_unique_id = self.build_unique_id(translation_key)
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the location value."""
-        form = self.coordinator.get_value("form")
-        return form.get(self._form_key) if form else None
 
 
 class AquaritePoolNameSensorEntity(AquariteEntity, SensorEntity):
