@@ -602,7 +602,6 @@ homeassistant.components.vodafone_station.*
 homeassistant.components.volvo.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
-homeassistant.components.wibeee.*
 homeassistant.components.wallbox.*
 homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
@@ -615,6 +614,7 @@ homeassistant.components.webostv.*
 homeassistant.components.websocket_api.*
 homeassistant.components.wemo.*
 homeassistant.components.whois.*
+homeassistant.components.wibeee.*
 homeassistant.components.withings.*
 homeassistant.components.wiz.*
 homeassistant.components.wled.*
