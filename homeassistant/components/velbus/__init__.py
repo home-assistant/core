@@ -65,8 +65,8 @@ async def velbus_scan_task(
     # create all modules
     dev_reg = dr.async_get(hass)
     found_addresses: set[str] = set()
-    for module in controller.get_modules().values():
-        address = str(module.get_addresses()[0])
+    for module_address, module in controller.get_modules().items():
+        address = str(module_address)
         found_addresses.add(address)
         dev_reg.async_get_or_create(
             config_entry_id=entry_id,
