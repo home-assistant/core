@@ -130,11 +130,7 @@ AMCREST_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(DOMAIN): vol.All(
-            cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names
-        )
-    },
+    {DOMAIN: vol.All(cv.ensure_list, [AMCREST_SCHEMA], _has_unique_names)},
     extra=vol.ALLOW_EXTRA,
 )
 
