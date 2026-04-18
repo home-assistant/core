@@ -8,9 +8,9 @@ Handles both update modes:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 from xml.etree.ElementTree import ParseError as XMLParseError
 
 import aiohttp
@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 # Type alias: phase_key -> sensor_key -> value
-WibeeeData = Mapping[str, Mapping[str, str]]
+WibeeeData = dict[str, dict[str, Any]] | None
 
 
 class WibeeeCoordinator(DataUpdateCoordinator[WibeeeData]):
