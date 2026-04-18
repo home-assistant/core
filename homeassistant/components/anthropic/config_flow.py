@@ -108,7 +108,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthropic."""
 
     VERSION = 2
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
