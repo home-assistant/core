@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 import datetime
+import hashlib
 from typing import Any, Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
@@ -190,6 +192,28 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             return cast(str, thumb)
 
         return None
+
+    @property
+    def media_image_remotely_accessible(self) -> bool:
+        """Return True if the image URL is remotely accessible."""
+        return self.media_image_url is not None
+
+    @property
+    def media_image_hash(self) -> str | None:
+        """Hash value for media image."""
+        if (thumb := self._media_meta.get("thumb")) and thumb.startswith("data"):
+            return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
+        return super().media_image_hash
+
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch media image of current playing track."""
+        if (thumb := self._media_meta.get("thumb")) and thumb.startswith("data"):
+            prefix, image_data = thumb.split(",", 1)
+            image = base64.b64decode(image_data)
+            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
+            return (image, mime)
+
+        return await super().async_get_media_image()
 
     async def async_media_play(self) -> None:
         """Send play command."""
