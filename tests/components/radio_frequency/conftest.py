@@ -3,7 +3,7 @@
 from typing import override
 
 import pytest
-from rf_protocols import ModulationType, RadioFrequencyCommand, Timing
+from rf_protocols import ModulationType, RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
 from homeassistant.components.radio_frequency.const import DOMAIN
@@ -34,9 +34,9 @@ class MockRadioFrequencyCommand(RadioFrequencyCommand):
         )
 
     @override
-    def get_raw_timings(self) -> list[Timing]:
+    def get_raw_timings(self) -> list[int]:
         """Return mock timings."""
-        return [Timing(high_us=350, low_us=1050), Timing(high_us=350, low_us=350)]
+        return [350, -1050, 350, -350]
 
 
 class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
