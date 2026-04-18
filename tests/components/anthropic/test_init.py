@@ -112,6 +112,7 @@ async def test_init_repair_issue(
             "chat_model": "claude-3-opus-20240229",
         },
     )
+    await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated")
 
