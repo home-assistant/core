@@ -94,7 +94,7 @@
       "message": "Failed to create folder: {message}"
     },
     "delete_error": {
-      "message": "Failed to delete file from OneDrive: {message}"
+      "message": "Failed to delete file(s) from OneDrive: {message}"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"

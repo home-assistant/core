@@ -478,7 +478,7 @@ async def test_delete_empty_destination_path(
     """Test delete service raises when destination_path is an empty list."""
     await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises((HomeAssistantError, ServiceValidationError, vol.Invalid)):
+    with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             DOMAIN,
             DELETE_SERVICE,
