@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -64,6 +65,7 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
+    MIN_THINKING_BUDGET,
     NON_ADAPTIVE_THINKING_MODELS,
     NON_THINKING_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
@@ -103,22 +105,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
     )
     await client.models.list(timeout=10.0)
-
-
-async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionDict]:
-    """Get list of available models."""
-    try:
-        models = (await client.models.list()).data
-    except anthropic.AnthropicError:
-        models = []
-    _LOGGER.debug("Available models: %s", models)
-    return [
-        SelectOptionDict(
-            label=model_info.display_name,
-            value=model_alias(model_info.id),
-        )
-        for model_info in models
-    ]
 
 
 class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -217,6 +203,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
     options: dict[str, Any]
+    model_info: anthropic.types.ModelInfo
 
     @property
     def _is_new(self) -> bool:
@@ -330,20 +317,15 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage advanced options."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         step_schema: VolDictType = {
             vol.Optional(
                 CONF_CHAT_MODEL,
                 default=DEFAULT[CONF_CHAT_MODEL],
             ): SelectSelector(
-                SelectSelectorConfig(
-                    options=await self._get_model_list(), custom_value=True
-                )
+                SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
             ),
-            vol.Optional(
-                CONF_MAX_TOKENS,
-                default=DEFAULT[CONF_MAX_TOKENS],
-            ): int,
             vol.Optional(
                 CONF_TEMPERATURE,
                 default=DEFAULT[CONF_TEMPERATURE],
@@ -363,6 +345,25 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             self.options.update(user_input)
 
+            coordinator = self._get_entry().runtime_data
+            self.model_info, status = coordinator.get_model_info(
+                self.options[CONF_CHAT_MODEL]
+            )
+            if not status:
+                # Couldn't find the model in the cached list, try to fetch it directly
+                client = coordinator.client
+                try:
+                    self.model_info = await client.models.retrieve(
+                        self.options[CONF_CHAT_MODEL], timeout=10.0
+                    )
+                except anthropic.NotFoundError:
+                    errors[CONF_CHAT_MODEL] = "model_not_found"
+                except anthropic.AnthropicError as err:
+                    errors[CONF_CHAT_MODEL] = "api_error"
+                    description_placeholders["message"] = (
+                        err.message if isinstance(err, anthropic.APIError) else str(err)
+                    )
+
             if not errors:
                 return await self.async_step_model()
 
@@ -372,6 +373,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Schema(step_schema), self.options
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_model(
@@ -380,7 +382,19 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         """Manage model-specific options."""
         errors: dict[str, str] = {}
 
-        step_schema: VolDictType = {}
+        step_schema: VolDictType = {
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                default=DEFAULT[CONF_MAX_TOKENS],
+            ): vol.All(
+                NumberSelector(
+                    NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
+                ),
+                vol.Coerce(int),
+            )
+            if self.model_info.max_tokens
+            else cv.positive_int,
+        }
 
         model = self.options[CONF_CHAT_MODEL]
 
@@ -391,14 +405,15 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
                 )
-            ] = vol.All(
-                NumberSelector(
-                    NumberSelectorConfig(
-                        min=0,
-                        max=self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-                    )
-                ),
-                vol.Coerce(int),
+            ] = (
+                vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
+                    ),
+                    vol.Coerce(int),
+                )
+                if self.model_info.max_tokens
+                else cv.positive_int
             )
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
@@ -467,9 +482,19 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
-            user_input = {}
+            # Currently our schema is always present, but if one day it becomes empty,
+            # then the below line is needed to skip this step
+            user_input = {}  # pragma: no cover
 
         if user_input is not None:
+            if (
+                CONF_THINKING_BUDGET in user_input
+                and user_input[CONF_THINKING_BUDGET] >= MIN_THINKING_BUDGET
+                and user_input[CONF_THINKING_BUDGET]
+                >= user_input.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
+            ):
+                errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
+
             if user_input.get(CONF_WEB_SEARCH, DEFAULT[CONF_WEB_SEARCH]) and not errors:
                 if user_input.get(
                     CONF_WEB_SEARCH_USER_LOCATION,
@@ -501,13 +526,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             last_step=True,
         )
 
-    async def _get_model_list(self) -> list[SelectOptionDict]:
+    def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        client = anthropic.AsyncAnthropic(
-            api_key=self._get_entry().data[CONF_API_KEY],
-            http_client=get_async_client(self.hass),
-        )
-        return await get_model_list(client)
+        coordinator = self._get_entry().runtime_data
+        return [
+            SelectOptionDict(
+                label=model_info.display_name,
+                value=model_alias(model_info.id),
+            )
+            for model_info in coordinator.data or []
+        ]
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""

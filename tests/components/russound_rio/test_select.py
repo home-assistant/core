@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiorussound.models import PartyMode
+from aiorussound.rio.models import PartyMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

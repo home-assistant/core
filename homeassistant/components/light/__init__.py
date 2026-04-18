@@ -26,7 +26,6 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 from homeassistant.util import color as color_util
 
 from .const import (  # noqa: F401
@@ -223,7 +222,6 @@ LIGHT_TURN_OFF_SCHEMA: VolDictType = {
 _LOGGER = logging.getLogger(__name__)
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the lights are on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
