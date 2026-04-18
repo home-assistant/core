@@ -14,7 +14,7 @@
     "velbus-protocol"
   ],
   "quality_scale": "silver",
-  "requirements": ["velbus-aio==2026.4.0"],
+  "requirements": ["velbus-aio==2026.4.1"],
   "usb": [
     {
       "pid": "0B1B",
