@@ -2837,8 +2837,6 @@ renson-endura-delta==1.7.2
 reolink-aio==0.19.1
 
 # homeassistant.components.honeywell_string_lights
-rf-protocols==0.1.0
-
 # homeassistant.components.radio_frequency
 rf-protocols==1.0.0
 

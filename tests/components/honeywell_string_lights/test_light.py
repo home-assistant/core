@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from rf_protocols import HoneywellStringLightsTurnOff, HoneywellStringLightsTurnOn
-
+from homeassistant.components.honeywell_string_lights.light import COMMANDS
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -44,8 +43,7 @@ async def test_turn_on_off_sends_commands(
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     assert len(mock_transmitter.send_command_calls) == 1
-    command = mock_transmitter.send_command_calls[0]
-    assert isinstance(command, HoneywellStringLightsTurnOn)
+    assert mock_transmitter.send_command_calls[0] is COMMANDS.load_command("turn_on")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -56,9 +54,7 @@ async def test_turn_on_off_sends_commands(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     assert len(mock_transmitter.send_command_calls) == 2
-    assert isinstance(
-        mock_transmitter.send_command_calls[1], HoneywellStringLightsTurnOff
-    )
+    assert mock_transmitter.send_command_calls[1] is COMMANDS.load_command("turn_off")
 
 
 async def test_restore_state(

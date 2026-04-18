@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from rf_protocols import (
-    HoneywellStringLightsTurnOff,
-    HoneywellStringLightsTurnOn,
-    RadioFrequencyCommand,
-)
+from rf_protocols import load_codes
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
@@ -21,6 +17,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .entity import HoneywellStringLightsEntity
 
 PARALLEL_UPDATES = 1
+
+COMMANDS = load_codes("honeywell/string_lights")
 
 
 async def async_setup_entry(
@@ -38,6 +36,7 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
+    _attr_is_on = False
     _attr_name = None
     _attr_should_poll = False
 
@@ -49,16 +48,17 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        await self._async_send_command(HoneywellStringLightsTurnOn())
+        await self._async_send_command("turn_on")
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self._async_send_command(HoneywellStringLightsTurnOff())
+        await self._async_send_command("turn_off")
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def _async_send_command(self, command: RadioFrequencyCommand) -> None:
-        """Send an RF command using the configured transmitter."""
+    async def _async_send_command(self, name: str) -> None:
+        """Load the named command and send it via the configured transmitter."""
+        command = await self.hass.async_add_executor_job(COMMANDS.load_command, name)
         await async_send_command(self.hass, self._transmitter, command)

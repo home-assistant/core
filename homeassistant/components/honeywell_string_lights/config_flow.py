@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from rf_protocols import HoneywellStringLightsTurnOn
+from rf_protocols import RadioFrequencyCommand
 import voluptuous as vol
 
 from homeassistant.components.radio_frequency import async_get_transmitters
@@ -13,8 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from .const import CONF_TRANSMITTER, DOMAIN
-
-_SAMPLE_COMMAND = HoneywellStringLightsTurnOn()
+from .light import COMMANDS
 
 
 class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -26,9 +25,12 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        sample_command: RadioFrequencyCommand = await self.hass.async_add_executor_job(
+            COMMANDS.load_command, "turn_on"
+        )
         try:
             transmitters = async_get_transmitters(
-                self.hass, _SAMPLE_COMMAND.frequency, _SAMPLE_COMMAND.modulation
+                self.hass, sample_command.frequency, sample_command.modulation
             )
         except HomeAssistantError:
             return self.async_abort(reason="no_transmitters")
