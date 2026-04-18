@@ -54,7 +54,7 @@ NUMBERS = [
         native_step=1,
         native_min_value=0,
         native_max_value=255,
-        value_fn=lambda segment: segment.speed,
+        value_fn=lambda segment: int(segment.speed),
     ),
     WLEDNumberEntityDescription(
         key=ATTR_INTENSITY,
