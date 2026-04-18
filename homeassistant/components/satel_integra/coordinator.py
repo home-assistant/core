@@ -58,11 +58,8 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     @callback
     def _async_handle_connection_state_update(self) -> None:
-        """Handle connection state changes from the client."""
-        connected = self.client.controller.connected
-        if self.last_update_success != connected:
-            self.last_update_success = connected
-            self.async_update_listeners()
+        """Notify listeners on connection state changes from the client."""
+        self.async_update_listeners()
 
 
 class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
