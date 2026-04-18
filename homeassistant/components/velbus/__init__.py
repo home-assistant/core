@@ -140,10 +140,11 @@ async def async_remove_config_entry_device(
     config_entry: VelbusConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
-    """Allow removal of a Velbus device.
+    """Allow removing this config entry from a Velbus device.
 
-    When a device is removed, its sub-devices are detached from this config entry
-    as well. If the device is still on the bus, it will be recreated on the next scan.
+    When the config entry is removed from a device, its sub-devices are detached
+    from this config entry as well. If the device is still on the bus, it will be
+    recreated on the next scan.
     """
     # Remove sub-devices that belong to this parent device
     dev_reg = dr.async_get(hass)
