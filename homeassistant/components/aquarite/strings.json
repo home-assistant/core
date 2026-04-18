@@ -1,39 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "auth_error": "Authorization failed, check username and password.",
       "unknown_error": "Unexpected error. Please try again."
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "[%key:component::aquarite::config::step::user::data_description::password%]",
-          "username": "[%key:component::aquarite::config::step::user::data_description::username%]"
-        },
-        "description": "Re-authenticate your Hayward account to continue.",
-        "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "reconfigure": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "[%key:component::aquarite::config::step::user::data_description::password%]",
-          "username": "[%key:component::aquarite::config::step::user::data_description::username%]"
-        },
-        "description": "Update your Hayward credentials.",
-        "title": "Reconfigure"
-      },
       "user": {
         "data": {
           "password": "Password",

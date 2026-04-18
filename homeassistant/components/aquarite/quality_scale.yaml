@@ -15,7 +15,7 @@ rules:
   config-flow: done
   config-flow-test-coverage:
     status: done
-    comment: Tests cover user, reauth, reconfigure, errors, and duplicate entries
+    comment: Tests cover user step, errors, and duplicate account abort
   dependency-transparency:
     status: done
     comment: aioaquarite published on PyPI
@@ -79,7 +79,7 @@ rules:
   parallel-updates:
     status: done
     comment: PARALLEL_UPDATES set on sensor platform
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage:
     status: done
     comment: Config flow, coordinator, data navigation, value conversions all tested
@@ -115,7 +115,7 @@ rules:
   icon-translations:
     status: done
     comment: icons.json with per-entity icons
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No known repair scenarios
