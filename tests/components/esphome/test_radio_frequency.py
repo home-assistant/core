@@ -8,7 +8,7 @@ from aioesphomeapi import (
     RadioFrequencyModulation,
 )
 import pytest
-from rf_protocols import ModulationType, OOKCommand, Timing
+from rf_protocols import ModulationType, OOKCommand
 
 from homeassistant.components import radio_frequency
 from homeassistant.const import STATE_UNAVAILABLE
@@ -120,10 +120,7 @@ async def test_radio_frequency_send_command_success(
 
     command = OOKCommand(
         frequency=433_920_000,
-        timings=[
-            Timing(high_us=350, low_us=1050),
-            Timing(high_us=350, low_us=350),
-        ],
+        timings=[350, -1050, 350, -350],
     )
     await radio_frequency.async_send_command(hass, ENTITY_ID, command)
 
@@ -151,7 +148,7 @@ async def test_radio_frequency_send_command_failure(
 
     command = OOKCommand(
         frequency=433_920_000,
-        timings=[Timing(high_us=350, low_us=1050)],
+        timings=[350, -1050],
     )
 
     with pytest.raises(HomeAssistantError) as exc_info:

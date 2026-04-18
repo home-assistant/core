@@ -51,11 +51,7 @@ class EsphomeRadioFrequencyEntity(
     @convert_api_error_ha_error
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Send an RF command."""
-        timings = [
-            interval
-            for timing in command.get_raw_timings()
-            for interval in (timing.high_us, -timing.low_us)
-        ]
+        timings = command.get_raw_timings()
         _LOGGER.debug("Sending RF command: %s", timings)
 
         self._client.radio_frequency_transmit_raw_timings(
