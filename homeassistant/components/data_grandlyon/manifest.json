@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/data_grandlyon",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
+  "quality_scale": "bronze",
   "requirements": ["data-grand-lyon-ha==0.5.0"]
 }

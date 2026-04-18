@@ -3,24 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 
-from data_grand_lyon_ha import DataGrandLyonClient, TclPassage, VelovStation
+from data_grand_lyon_ha import DataGrandLyonClient, TclPassage
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_LINE,
-    CONF_STATION_ID,
-    CONF_STOP_ID,
-    DOMAIN,
-    LOGGER,
-    SUBENTRY_TYPE_STOP,
-    SUBENTRY_TYPE_VELOV,
-)
+from .const import CONF_LINE, CONF_STOP_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_STOP
 
 type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonCoordinator]
 
@@ -29,8 +21,7 @@ type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonCoordinator]
 class DataGrandLyonData:
     """Aggregated data from the Data Grand Lyon coordinator."""
 
-    stops: dict[str, list[TclPassage]] = field(default_factory=dict)
-    velov: dict[str, VelovStation | None] = field(default_factory=dict)
+    stops: dict[str, list[TclPassage]]
 
 
 class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonData]):
@@ -55,12 +46,9 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonData]):
         )
 
     async def _async_update_data(self) -> DataGrandLyonData:
-        """Fetch data for all monitored stops and stations."""
+        """Fetch data for all monitored stops."""
         stop_subentries = list(
             self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_STOP)
-        )
-        velov_subentries = list(
-            self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_VELOV)
         )
 
         stop_tasks = [
@@ -70,16 +58,9 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonData]):
             )
             for subentry in stop_subentries
         ]
-        velov_tasks = [
-            self.client.get_velov_station(subentry.data[CONF_STATION_ID])
-            for subentry in velov_subentries
-        ]
 
         stop_results: list[list[TclPassage] | BaseException] = await asyncio.gather(
             *stop_tasks, return_exceptions=True
-        )
-        velov_results: list[VelovStation | None | BaseException] = await asyncio.gather(
-            *velov_tasks, return_exceptions=True
         )
 
         stops: dict[str, list[TclPassage]] = {}
@@ -94,18 +75,6 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonData]):
                 continue
             stops[subentry.subentry_id] = result
 
-        velov: dict[str, VelovStation | None] = {}
-        for i, subentry in enumerate(velov_subentries):
-            velov_result = velov_results[i]
-            if isinstance(velov_result, BaseException):
-                LOGGER.warning(
-                    "Error fetching Vélo'v station %s: %s",
-                    subentry.subentry_id,
-                    velov_result,
-                )
-                continue
-            velov[subentry.subentry_id] = velov_result
-
-        if (stop_subentries or velov_subentries) and not stops and not velov:
+        if stop_subentries and not stops:
             raise UpdateFailed("Error fetching DataGrandLyon data: all requests failed")
-        return DataGrandLyonData(stops=stops, velov=velov)
+        return DataGrandLyonData(stops=stops)

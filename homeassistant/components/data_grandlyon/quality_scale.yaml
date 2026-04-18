@@ -36,7 +36,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
@@ -44,10 +44,10 @@ rules:
   diagnostics: todo
   discovery-update-info:
     status: exempt
-    comment: Devices can't be discovered.
+    comment: This is a service integration; there are no discoverable devices.
   discovery:
     status: exempt
-    comment: Devices can't be discovered.
+    comment: This is a service integration; there are no discoverable devices.
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
@@ -62,7 +62,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: done
 
