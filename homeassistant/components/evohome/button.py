@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import EVOHOME_DATA
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoEntity, is_valid_zone
+from .entity import EvoEntity, is_valid_zone, unique_zone_id
 
 
 async def async_setup_platform(
@@ -45,27 +45,10 @@ async def async_setup_platform(
 
 
 class EvoResetButtonBase(EvoEntity, ButtonEntity):
-    """Button entity for system reset."""
+    """Base for reset button entities."""
 
     _attr_entity_category = EntityCategory.CONFIG
-
     _evo_state_attr_names = ()
-
-    def __init__(
-        self,
-        coordinator: EvoDataUpdateCoordinator,
-        evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
-    ) -> None:
-        """Initialize the system reset button."""
-        super().__init__(coordinator, evo_device)
-
-        # zones can be renamed, so set name in their property method
-        if isinstance(evo_device, evo.ControlSystem):
-            self._attr_name = f"Reset {evo_device.location.name}"
-        elif not isinstance(evo_device, evo.Zone):
-            self._attr_name = f"Reset {evo_device.name}"
-
-        self._attr_unique_id = f"{evo_device.id}_reset"
 
     async def async_press(self) -> None:
         """Reset the Evohome entity to its base operating mode."""
@@ -80,6 +63,17 @@ class EvoResetSystemButton(EvoResetButtonBase):
     _evo_device: evo.ControlSystem
     _evo_id_attr = "system_id"
 
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.ControlSystem,
+    ) -> None:
+        """Initialize the system reset button."""
+        super().__init__(coordinator, evo_device)
+
+        self._attr_unique_id = f"{evo_device.id}_reset"
+        self._attr_name = f"Reset {evo_device.location.name}"
+
 
 class EvoResetDhwButton(EvoResetButtonBase):
     """Button entity for DHW override reset."""
@@ -88,6 +82,17 @@ class EvoResetDhwButton(EvoResetButtonBase):
 
     _evo_device: evo.HotWater
     _evo_id_attr = "dhw_id"
+
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.HotWater,
+    ) -> None:
+        """Initialize the DHW reset button."""
+        super().__init__(coordinator, evo_device)
+
+        self._attr_unique_id = f"{evo_device.id}_reset"
+        self._attr_name = f"Reset {evo_device.name}"
 
 
 class EvoResetZoneButton(EvoResetButtonBase):
@@ -105,12 +110,9 @@ class EvoResetZoneButton(EvoResetButtonBase):
     ) -> None:
         """Initialize the zone reset button."""
         super().__init__(coordinator, evo_device)
-
-        if evo_device.id == evo_device.tcs.id:
-            # this system does not have a distinct ID for the zone
-            self._attr_unique_id = f"{evo_device.id}z_reset"
+        self._attr_unique_id = f"{unique_zone_id(evo_device)}_reset"
 
     @property
     def name(self) -> str:
-        """Return the name of the evohome entity."""
+        """Return the name, dynamically following any zone rename."""
         return f"Reset {self._evo_device.name}"
