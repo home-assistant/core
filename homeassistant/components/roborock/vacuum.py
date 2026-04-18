@@ -603,6 +603,12 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                 translation_key="map_failure",
             ) from err
 
+        if map_content_trait.map_data is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
+
         map_flag = int(getattr(map_content_trait.map_data, "map_flag", 0))
         return {
             "maps": [
