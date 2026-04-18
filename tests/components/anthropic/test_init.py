@@ -21,7 +21,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
@@ -82,6 +86,25 @@ async def test_init_auth_error(
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_init_repair_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that repair issue is created on deprecated model."""
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            "chat_model": "claude-3-opus-20240229",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated")
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

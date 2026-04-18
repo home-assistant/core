@@ -21,11 +21,35 @@
       }
     },
     "sensor": {
+      "daily_cooling_energy_consumed": {
+        "default": "mdi:snowflake"
+      },
+      "daily_cooling_energy_produced": {
+        "default": "mdi:snowflake"
+      },
+      "daily_heating_energy_consumed": {
+        "default": "mdi:fire"
+      },
+      "daily_heating_energy_produced": {
+        "default": "mdi:fire"
+      },
+      "daily_hot_water_energy_consumed": {
+        "default": "mdi:water-boiler"
+      },
+      "daily_hot_water_energy_produced": {
+        "default": "mdi:water-boiler"
+      },
+      "demand_percentage": {
+        "default": "mdi:gauge"
+      },
       "energy_consumed": {
         "default": "mdi:factory"
       },
       "fan_frequency": {
         "default": "mdi:fan"
+      },
+      "mixing_tank_temperature": {
+        "default": "mdi:water-thermometer"
       }
     }
   },
