@@ -219,7 +219,7 @@
             "data_description": {
               "chat_model": "Select the new model to use."
             },
-            "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is deprecated. Select a supported model to continue.",
+            "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is deprecated and will reach end-of-life on {retirement_date}. Select a supported model to continue.",
             "title": "Update model"
           }
         }

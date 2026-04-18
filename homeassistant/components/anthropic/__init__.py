@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from anthropic.resources.messages.messages import DEPRECATED_MODELS
+
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
@@ -13,13 +15,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CHAT_MODEL,
-    DEFAULT_CONVERSATION_NAME,
-    DEPRECATED_MODELS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
@@ -44,9 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     for subentry in entry.subentries.values():
-        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model.startswith(
-            tuple(DEPRECATED_MODELS)
-        ):
+        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model in DEPRECATED_MODELS:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
