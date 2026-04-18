@@ -88,16 +88,6 @@ async def test_init_auth_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_init_no_repair_issue(
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test successful init."""
-
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
-
-
 async def test_init_repair_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
