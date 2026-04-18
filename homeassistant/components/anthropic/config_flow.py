@@ -66,8 +66,6 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     MIN_THINKING_BUDGET,
-    NON_ADAPTIVE_THINKING_MODELS,
-    NON_THINKING_MODELS,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
@@ -398,8 +396,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         model = self.options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(NON_THINKING_MODELS)) and model.startswith(
-            tuple(NON_ADAPTIVE_THINKING_MODELS)
+        if (
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.supported
+            and not self.model_info.capabilities.thinking.types.adaptive.supported
         ):
             step_schema[
                 vol.Optional(
@@ -418,7 +418,21 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
 
-        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+        if (
+            self.model_info.capabilities
+            and (effort_capability := self.model_info.capabilities.effort).supported
+        ):
+            effort_options: list[str] = []
+            if self.model_info.capabilities.thinking.types.adaptive.supported:
+                effort_options.append("none")
+            if effort_capability.low.supported:
+                effort_options.append("low")
+            if effort_capability.medium.supported:
+                effort_options.append("medium")
+            if effort_capability.high.supported:
+                effort_options.append("high")
+            if effort_capability.max.supported:
+                effort_options.append("max")
             step_schema[
                 vol.Optional(
                     CONF_THINKING_EFFORT,
@@ -426,7 +440,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             ] = SelectSelector(
                 SelectSelectorConfig(
-                    options=["none", "low", "medium", "high", "max"],
+                    options=effort_options,
                     translation_key=CONF_THINKING_EFFORT,
                     mode=SelectSelectorMode.DROPDOWN,
                 )

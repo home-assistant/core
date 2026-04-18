@@ -63,38 +63,11 @@
   },
   "entity": {
     "binary_sensor": {
-      "digitalinput_settings_invert_translation": {
-        "name": "Invert digital input"
-      },
-      "evcharger_charge": {
-        "name": "EV charging"
-      },
       "evcharger_connected": {
-        "name": "Connected"
-      },
-      "generator_autorun": {
-        "name": "Auto-start enabled"
-      },
-      "generator_gen_id_quiet_hours_enabled": {
-        "name": "Generator quiet hours enabled"
-      },
-      "generator_gen_id_start_on_soc_enabled": {
-        "name": "Generator start on SOC enabled"
-      },
-      "generator_gen_id_start_on_temp_enabled": {
-        "name": "Generator start on high temp enabled"
-      },
-      "generator_gen_id_start_on_voltage_enabled": {
-        "name": "Generator start on voltage enabled"
-      },
-      "generator_manual_start": {
-        "name": "Manual start"
+        "name": "[%key:common::state::connected%]"
       },
       "gps_connected": {
-        "name": "Connected"
-      },
-      "gps_fix": {
-        "name": "Fix"
+        "name": "[%key:common::state::connected%]"
       },
       "inverter_alarm_high_temperature": {
         "name": "High temperature alarm"
@@ -120,26 +93,8 @@
       "inverter_alarm_ripple": {
         "name": "Ripple alarm"
       },
-      "multi_disable_charge": {
-        "name": "ESS disable charge"
-      },
-      "multi_disable_feed_in": {
-        "name": "ESS disable feed-in"
-      },
-      "multi_relay0_state": {
-        "name": "Relay on Multi RS state"
-      },
       "solarcharger_load_state": {
         "name": "Load state"
-      },
-      "solarcharger_relay_state": {
-        "name": "Relay state"
-      },
-      "switch_output_state": {
-        "name": "Switch {output} state"
-      },
-      "switchable_output_output_state": {
-        "name": "Switchable output {output} state"
       },
       "system_dynamicess_active": {
         "name": "Dynamic ESS active"
@@ -150,29 +105,8 @@
       "system_dynamicess_available": {
         "name": "Dynamic ESS available"
       },
-      "system_ess_battery_use": {
-        "name": "ESS only critical loads from battery"
-      },
-      "system_ess_schedule_charge_slot_enabled": {
-        "name": "ESS BatteryLife schedule charge {slot} enabled"
-      },
-      "system_relay_relay": {
-        "name": "Relay {relay} state"
-      },
-      "system_settings_overvoltage_feedin": {
-        "name": "PV DC overvoltage feed-in"
-      },
-      "vebus_device_device_number_power_assist_enabled": {
-        "name": "{device_number} PowerAssist enabled"
-      },
       "vebus_inverter_connected": {
-        "name": "Connected"
-      },
-      "vebus_inverter_ignoreacin1_onoff_control": {
-        "name": "Control ignore AC-in-1"
-      },
-      "vebus_inverter_setting_alarm_grid_lost": {
-        "name": "Grid lost alarm setting"
+        "name": "[%key:common::state::connected%]"
       }
     },
     "number": {
@@ -252,7 +186,7 @@
         "name": "Assist current boost factor"
       },
       "switch_output_dimming": {
-        "name": "{output} dimming"
+        "name": "Dimming"
       },
       "system_ac_export_limit": {
         "name": "AC export limit"
@@ -314,7 +248,7 @@
         }
       },
       "evcharger_mode": {
-        "name": "Mode",
+        "name": "[%key:common::config_flow::data::mode%]",
         "state": {
           "auto": "[%key:common::state::auto%]",
           "manual": "[%key:common::state::manual%]",
@@ -447,27 +381,27 @@
         "name": "State",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       },
       "auxiliary_battery_voltage": {
@@ -491,7 +425,7 @@
         "name": "Cell imbalance",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -522,7 +456,7 @@
         "name": "High charge current",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -530,7 +464,7 @@
         "name": "High charge temperature",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -538,7 +472,7 @@
         "name": "High discharge current",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -550,7 +484,7 @@
         "name": "Internal failure",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -561,7 +495,7 @@
         "name": "Low cell voltage",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -569,7 +503,7 @@
         "name": "Low charge temperature",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -663,11 +597,14 @@
       "charge_mode": {
         "name": "Charge mode"
       },
-      "charger_dc_current": {
-        "name": "DC output current"
+      "charger_ac_in_current_phase": {
+        "name": "AC input current {phase}"
       },
-      "charger_dc_voltage": {
-        "name": "DC output voltage"
+      "charger_dc_current_output": {
+        "name": "DC output {output} current"
+      },
+      "charger_dc_voltage_output": {
+        "name": "DC output {output} voltage"
       },
       "charger_error_code": {
         "name": "Error code",
@@ -702,27 +639,27 @@
         "name": "State",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       },
       "dcdc_dc_current": {
@@ -747,27 +684,27 @@
         "name": "State",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       },
       "dcload_current": {
@@ -795,15 +732,15 @@
         "name": "Alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
       "digitalinput_input_state_raw": {
         "name": "Raw state",
         "state": {
-          "high_open": "High/Open",
-          "low_closed": "Low/Closed"
+          "high_open": "High/open",
+          "low_closed": "Low/closed"
         }
       },
       "digitalinput_state": {
@@ -851,8 +788,8 @@
       "evcharger_position": {
         "name": "Position",
         "state": {
-          "ac_input": "AC Input",
-          "ac_out": "AC Out"
+          "ac_input": "AC input",
+          "ac_out": "AC out"
         }
       },
       "evcharger_power": {
@@ -888,7 +825,7 @@
           "reserved16": "Reserved",
           "reserved17": "Reserved",
           "reserved18": "Reserved",
-          "reserved19": "reserved",
+          "reserved19": "Reserved",
           "residual_current_detected": "Residual current detected",
           "start_charging": "Start charging",
           "switching_to_1_phase": "Switching to 1 phase",
@@ -906,17 +843,17 @@
       "generator_run_state": {
         "name": "Run state",
         "state": {
-          "ac_load": "AC Load",
-          "battery_current": "Battery Current",
-          "battery_volts": "Battery Volts",
-          "inv_overload": "Inv Overload",
-          "inv_temp": "Inv Temp",
-          "lost_comms": "Lost Comms",
+          "ac_load": "AC load",
+          "battery_current": "Battery current",
+          "battery_volts": "Battery volts",
+          "inv_overload": "Inverter overload",
+          "inv_temp": "Inverter temperature",
+          "lost_comms": "Lost comms",
           "manual": "[%key:common::state::manual%]",
           "soc": "SoC",
-          "stop_on_ac1": "Stop On AC1",
+          "stop_on_ac1": "Stop on AC1",
           "stopped": "[%key:common::state::stopped%]",
-          "test_run": "Test Run"
+          "test_run": "Test run"
         }
       },
       "generator_service_counter": {
@@ -928,28 +865,9 @@
       "generator_total_runtime": {
         "name": "Total runtime"
       },
-      "gps_altitude": {
-        "name": "Altitude",
-        "unit_of_measurement": "m"
-      },
-      "gps_course": {
-        "name": "Course",
-        "unit_of_measurement": "°"
-      },
-      "gps_latitude": {
-        "name": "Latitude",
-        "unit_of_measurement": "lat"
-      },
-      "gps_longitude": {
-        "name": "Longitude",
-        "unit_of_measurement": "long"
-      },
       "gps_nrofsatellites": {
         "name": "Number of satellites",
         "unit_of_measurement": "satellites"
-      },
-      "gps_speed": {
-        "name": "Speed"
       },
       "grid_current": {
         "name": "Current"
@@ -979,12 +897,10 @@
         "name": "Power"
       },
       "grid_power_factor": {
-        "name": "Power factor",
-        "unit_of_measurement": "factor"
+        "name": "Power factor"
       },
       "grid_power_factor_phase": {
-        "name": "Power factor on {phase}",
-        "unit_of_measurement": "factor"
+        "name": "Power factor on {phase}"
       },
       "grid_power_phase": {
         "name": "Power on {phase}"
@@ -1050,27 +966,27 @@
         "name": "State",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       },
       "inverter_total_pv_yield_system": {
@@ -1112,18 +1028,21 @@
       "multi_active_input": {
         "name": "Active AC input",
         "state": {
-          "ac_input_1": "AC Input 1",
-          "ac_input_2": "AC Input 2",
+          "ac_input_1": "AC input 1",
+          "ac_input_2": "AC input 2",
           "disconnected": "[%key:common::state::disconnected%]"
         }
+      },
+      "multi_dc_temperature": {
+        "name": "DC temperature"
       },
       "multi_ess_mode": {
         "name": "ESS mode",
         "state": {
           "external_control": "External control",
-          "keep_charged": "keep charged",
+          "keep_charged": "Keep charged",
           "self_consumption": "Self-consumption",
-          "self_consumption_batterylife": "Self-consumption (batterylife)"
+          "self_consumption_batterylife": "Self-consumption (BatteryLife)"
         }
       },
       "multi_inverter_power_setpoint": {
@@ -1181,27 +1100,27 @@
         "name": "State",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       },
       "multi_total_pv_yield": {
@@ -1254,9 +1173,9 @@
           "engine_shutdown": "Engine shutdown on low input voltage",
           "low_temperature": "Low temperature",
           "need_token": "Need token for operation",
-          "no_battery_power": "No/Low battery power",
-          "no_input_power": "No/Low input power",
-          "no_panel_power": "No/Low panel power",
+          "no_battery_power": "No/low battery power",
+          "no_input_power": "No/low input power",
+          "no_panel_power": "No/low panel power",
           "none": "-",
           "protective_action": "Protection active",
           "remote_input": "Remote input",
@@ -1318,27 +1237,27 @@
         "name": "State",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       },
       "solarcharger_time_in_absorption_today": {
@@ -1391,12 +1310,6 @@
       },
       "solarcharger_yield_yesterday": {
         "name": "Yield yesterday"
-      },
-      "switch_output_custom_name": {
-        "name": "{output} custom name"
-      },
-      "switchable_output_output_custom_name": {
-        "name": "Switchable output {output} custom name"
       },
       "system_ac_active_input_source": {
         "name": "AC active input source",
@@ -1481,11 +1394,11 @@
       "system_dynamicess_error": {
         "name": "Dynamic ESS error",
         "state": {
-          "battry_capacity_not_configured": "Battery Capacity Not Configured",
-          "ess_mode": "ESS Mode",
-          "no_error": "No Error",
+          "battry_capacity_not_configured": "Battery capacity not configured",
+          "ess_mode": "ESS mode",
+          "no_error": "No error",
           "no_ess": "No ESS",
-          "no_schedule": "No Matching Schedule",
+          "no_schedule": "No matching schedule",
           "soc_low": "SoC low"
         }
       },
@@ -1501,33 +1414,33 @@
       "system_dynamicess_reactive_strategy": {
         "name": "Dynamic ESS reactive strategy",
         "state": {
-          "dess_disabled": "DESS Disabled",
-          "ess_low_soc": "ESS Low SoC",
-          "idle_maintain_surplus": "Idle Maintain Surplus",
-          "idle_maintain_targetsoc": "Idle Maintain Target SoC",
-          "idle_no_opportunity": "Idle No Opportunity",
-          "idle_scheduled_feedin": "Idle Scheduled Feed-In",
-          "keep_battery_charged": "Keep Battery Charged",
-          "no_window": "No Window",
-          "scheduled_charge_allow_grid": "Scheduled Charge Allow Grid",
-          "scheduled_charge_enhanced": "Scheduled Charge Enhanced",
-          "scheduled_charge_feedin": "Scheduled Charge Feed-In",
-          "scheduled_charge_no_grid": "Scheduled Charge No Grid",
-          "scheduled_charge_smooth_transition": "Scheduled Charge Smooth Transition",
-          "scheduled_discharge": "Scheduled Discharge",
-          "scheduled_discharge_smooth_transition": "Scheduled Discharge Smooth Transition",
-          "scheduled_minimum_discharge": "Scheduled Minimum Discharge",
-          "scheduled_selfconsume": "Scheduled Self-Consume",
-          "selfconsume_accept_charge": "Self-Consume Accept Charge",
-          "selfconsume_accept_discharge": "Self-Consume Accept Discharge",
-          "selfconsume_faulty_chargerate": "Self-Consume Faulty Charge Rate",
-          "selfconsume_increased_discharge": "Self-Consume Increased Discharge",
-          "selfconsume_no_grid": "Self-Consume No Grid",
-          "selfconsume_unexpected_exception": "Self-Consume Unexpected Exception",
-          "selfconsume_unmapped_state": "Self-Consume Unmapped State",
-          "selfconsume_unpredicted": "Self-Consume Unpredicted",
-          "unknown_operating_mode": "Unknown Operating Mode",
-          "unscheduled_charge_catchup_targetsoc": "Unscheduled Charge Catch-Up Target SoC"
+          "dess_disabled": "DESS disabled",
+          "ess_low_soc": "ESS low SoC",
+          "idle_maintain_surplus": "Idle maintain surplus",
+          "idle_maintain_targetsoc": "Idle maintain target SoC",
+          "idle_no_opportunity": "Idle no opportunity",
+          "idle_scheduled_feedin": "Idle scheduled feed-in",
+          "keep_battery_charged": "Keep battery charged",
+          "no_window": "No window",
+          "scheduled_charge_allow_grid": "Scheduled charge allow grid",
+          "scheduled_charge_enhanced": "Scheduled charge enhanced",
+          "scheduled_charge_feedin": "Scheduled charge feed-in",
+          "scheduled_charge_no_grid": "Scheduled charge no grid",
+          "scheduled_charge_smooth_transition": "Scheduled charge smooth transition",
+          "scheduled_discharge": "Scheduled discharge",
+          "scheduled_discharge_smooth_transition": "Scheduled discharge smooth transition",
+          "scheduled_minimum_discharge": "Scheduled minimum discharge",
+          "scheduled_selfconsume": "Scheduled self-consume",
+          "selfconsume_accept_charge": "Self-consume accept charge",
+          "selfconsume_accept_discharge": "Self-consume accept discharge",
+          "selfconsume_faulty_chargerate": "Self-consume faulty charge rate",
+          "selfconsume_increased_discharge": "Self-consume increased discharge",
+          "selfconsume_no_grid": "Self-consume no grid",
+          "selfconsume_unexpected_exception": "Self-consume unexpected exception",
+          "selfconsume_unmapped_state": "Self-consume unmapped state",
+          "selfconsume_unpredicted": "Self-consume unpredicted",
+          "unknown_operating_mode": "Unknown operating mode",
+          "unscheduled_charge_catchup_targetsoc": "Unscheduled charge catch-up target SoC"
         }
       },
       "system_dynamicess_restrictions": {
@@ -1536,7 +1449,7 @@
           "battery_to_grid_restricted": "Battery to grid energy flow restricted",
           "grid_to_battery_restricted": "Grid to battery energy flow restricted",
           "no_flow": "No energy flow between battery and grid",
-          "no_restrictions": "No Restrictions between battery and the grid"
+          "no_restrictions": "No restrictions between battery and the grid"
         }
       },
       "system_dynamicess_schedule_count": {
@@ -1546,9 +1459,9 @@
       "system_dynamicess_strategy": {
         "name": "Dynamic ESS strategy",
         "state": {
-          "probattery": "Pro Battery",
-          "progrid": "Pro Grid",
-          "selfconsume": "Self-Consume",
+          "probattery": "Pro battery",
+          "progrid": "Pro grid",
+          "selfconsume": "Self-consume",
           "targetsoc": "Target SoC"
         }
       },
@@ -1588,27 +1501,27 @@
         "name": "System state",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       },
       "tank_battery_voltage": {
@@ -1619,16 +1532,16 @@
         "state": {
           "black_water": "Black water (sewage)",
           "diesel": "Diesel",
-          "fresh_water": "Fresh Water",
+          "fresh_water": "Fresh water",
           "fuel": "Fuel",
           "gasoline": "Gasoline",
           "hydraulic_oil": "Hydraulic oil",
-          "live_well": "Live Well",
-          "lng": "Liquid Natural Gas (LNG)",
-          "lpg": "Liquid  Petroleum Gas (LPG)",
+          "live_well": "Live well",
+          "lng": "Liquid natural gas (LNG)",
+          "lpg": "Liquid petroleum gas (LPG)",
           "oil": "Oil",
           "raw_water": "Raw water",
-          "waste_water": "Waste Water"
+          "waste_water": "Waste water"
         }
       },
       "tank_level": {
@@ -1647,8 +1560,7 @@
         "name": "Humidity"
       },
       "temperature_pressure": {
-        "name": "Pressure",
-        "unit_of_measurement": "hPa"
+        "name": "Pressure"
       },
       "temperature_status": {
         "name": "Sensor status",
@@ -1672,7 +1584,7 @@
           "generic": "Generic",
           "outdoor": "Outdoor",
           "room": "Room",
-          "water_heater": "Water Heater"
+          "water_heater": "Water heater"
         }
       },
       "vebus_device_device_number_input_power_l1": {
@@ -1734,7 +1646,7 @@
         "name": "Grid lost alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1742,7 +1654,7 @@
         "name": "High DC current alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1750,7 +1662,7 @@
         "name": "High DC voltage alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1758,7 +1670,7 @@
         "name": "High temperature alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1766,7 +1678,7 @@
         "name": "Low battery alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1774,7 +1686,7 @@
         "name": "Overload alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1782,7 +1694,7 @@
         "name": "Phase rotation alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1790,7 +1702,7 @@
         "name": "Ripple alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1798,7 +1710,7 @@
         "name": "Temperature sensor alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1806,7 +1718,7 @@
         "name": "Voltage sensor alarm",
         "state": {
           "alarm": "Alarm",
-          "no_alarm": "No Alarm",
+          "no_alarm": "No alarm",
           "warning": "Warning"
         }
       },
@@ -1866,33 +1778,36 @@
         "name": "State",
         "state": {
           "absorption": "Absorption",
-          "auto_equalize": "Auto Equalize / Recondition",
+          "auto_equalize": "Auto equalize / recondition",
           "battery_safe": "Battery Safe",
           "bulk": "Bulk",
           "discharging": "[%key:common::state::discharging%]",
           "equalize": "Equalize",
-          "external_control": "External Control",
+          "external_control": "External control",
           "fault": "[%key:common::state::fault%]",
           "float": "Float",
           "inverting": "Inverting",
-          "low_power": "Low Power",
+          "low_power": "Low power",
           "off": "[%key:common::state::off%]",
           "passthrough": "Passthrough",
           "power_assist": "Power Assist",
-          "power_supply": "Power Supply",
+          "power_supply": "Power supply",
           "recharging": "Recharging",
-          "repeated_absorption": "Repeated Absorption",
-          "scheduled_recharging": "Scheduled Recharging",
-          "starting_up": "Starting Up",
+          "repeated_absorption": "Repeated absorption",
+          "scheduled_recharging": "Scheduled recharging",
+          "starting_up": "Starting up",
           "storage": "Storage",
           "sustain": "Sustain",
-          "sustain_alt": "Sustain Alt"
+          "sustain_alt": "Sustain alt"
         }
       }
     },
     "switch": {
       "digitalinput_settings_invert_translation": {
         "name": "Invert digital input"
+      },
+      "evcharger_auto_start": {
+        "name": "Auto start"
       },
       "evcharger_charge": {
         "name": "EV charging"
@@ -1928,10 +1843,10 @@
         "name": "Relay state"
       },
       "switch_output_state": {
-        "name": "Switch {output} state"
+        "name": "State"
       },
       "switchable_output_output_state": {
-        "name": "Switchable output {output} state"
+        "name": "State"
       },
       "system_ess_battery_use": {
         "name": "ESS only critical loads from battery"
