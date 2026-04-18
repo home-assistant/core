@@ -822,8 +822,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 not self.model_info.capabilities
                 or not self.model_info.capabilities.code_execution.supported
                 or (
-                    not options.get(CONF_WEB_SEARCH)
-                    and not options.get(CONF_WEB_FETCH)
+                    not options.get(CONF_WEB_SEARCH) and not options.get(CONF_WEB_FETCH)
                 )
             ):
                 tools.append(
