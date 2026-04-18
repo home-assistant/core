@@ -69,7 +69,7 @@ def mock_controller(
             2: mock_module_no_subdevices,
             3: mock_module_no_subdevices,
             4: mock_module_no_subdevices,
-            99: mock_module_subdevices,
+            88: mock_module_subdevices,
         }
         cont.get_module.return_value = mock_module_subdevices
         yield controller
@@ -82,6 +82,7 @@ def mock_module_no_subdevices(
     """Mock a velbus module."""
     module = AsyncMock(spec=Module)
     module.get_type_name.return_value = "VMB4RYLD"
+    module.get_type.return_value = "65"
     module.get_addresses.return_value = [1, 2, 3, 4]
     module.get_name.return_value = "BedRoom"
     module.get_serial.return_value = "a1b2c3d4e5f6"
