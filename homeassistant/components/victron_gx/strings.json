@@ -109,6 +109,11 @@
         "name": "[%key:common::state::connected%]"
       }
     },
+    "device_tracker": {
+      "gps_location": {
+        "name": "[%key:common::config_flow::data::location%]"
+      }
+    },
     "number": {
       "alternator_charge_current_limit": {
         "name": "Charge current limit"
@@ -235,11 +240,6 @@
       },
       "vebus_inverter_current_limit": {
         "name": "Current limit"
-      }
-    },
-    "device_tracker": {
-      "gps_location": {
-        "name": "[%key:common::config_flow::data::location%]"
       }
     },
     "select": {
