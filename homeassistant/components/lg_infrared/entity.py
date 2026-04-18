@@ -2,7 +2,7 @@
 
 import logging
 
-from infrared_protocols.codes.lg.tv import LGTVCode, make_command as make_lg_tv_command
+from infrared_protocols import get_codes
 
 from homeassistant.components.infrared import async_send_command
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +15,8 @@ from homeassistant.helpers.event import async_track_state_change_event
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+LG_TV_CODES = get_codes("lg/tv")
 
 
 class LgIrEntity(Entity):
@@ -66,11 +68,12 @@ class LgIrEntity(Entity):
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
 
-    async def _send_command(self, code: LGTVCode) -> None:
+    async def _send_command(self, code_name: str) -> None:
         """Send an IR command using the LG protocol."""
+        command = await LG_TV_CODES.load_command(code_name)
         await async_send_command(
             self.hass,
             self._infrared_entity_id,
-            make_lg_tv_command(code),
+            command,
             context=self._context,
         )

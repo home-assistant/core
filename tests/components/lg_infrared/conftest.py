@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from infrared_protocols import Command as InfraredCommand
 import pytest
@@ -38,7 +39,7 @@ class MockInfraredEntity(InfraredEntity):
     def __init__(self, unique_id: str) -> None:
         """Initialize mock entity."""
         self._attr_unique_id = unique_id
-        self.send_command_calls: list[InfraredCommand] = []
+        self.send_command_calls: list[Any] = []
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Mock send command."""
@@ -73,15 +74,18 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def mock_make_lg_tv_command() -> Generator[None]:
-    """Patch make_command to return the LGTVCode directly.
+def mock_lg_tv_load_command() -> Generator[None]:
+    """Replace LG_TV_CODES with a stub whose load_command returns the name.
 
-    This allows tests to assert on the high-level code enum value
-    rather than the raw NEC timings.
+    This lets tests assert on the high-level command name rather than the
+    resolved NEC command object.
     """
+    stub_codes = AsyncMock()
+    stub_codes.load_command.side_effect = lambda name: name
+
     with patch(
-        "homeassistant.components.lg_infrared.entity.make_lg_tv_command",
-        side_effect=lambda code, **kwargs: code,
+        "homeassistant.components.lg_infrared.entity.LG_TV_CODES",
+        stub_codes,
     ):
         yield
 
@@ -91,7 +95,7 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_entity: MockInfraredEntity,
-    mock_make_lg_tv_command: None,
+    mock_lg_tv_load_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the LG Infrared integration for testing."""

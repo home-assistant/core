@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -63,16 +62,16 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_code"),
     [
-        (SERVICE_TURN_ON, {}, LGTVCode.POWER),
-        (SERVICE_TURN_OFF, {}, LGTVCode.POWER),
-        (SERVICE_VOLUME_UP, {}, LGTVCode.VOLUME_UP),
-        (SERVICE_VOLUME_DOWN, {}, LGTVCode.VOLUME_DOWN),
-        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, LGTVCode.MUTE),
-        (SERVICE_MEDIA_NEXT_TRACK, {}, LGTVCode.CHANNEL_UP),
-        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, LGTVCode.CHANNEL_DOWN),
-        (SERVICE_MEDIA_PLAY, {}, LGTVCode.PLAY),
-        (SERVICE_MEDIA_PAUSE, {}, LGTVCode.PAUSE),
-        (SERVICE_MEDIA_STOP, {}, LGTVCode.STOP),
+        (SERVICE_TURN_ON, {}, "POWER"),
+        (SERVICE_TURN_OFF, {}, "POWER"),
+        (SERVICE_VOLUME_UP, {}, "VOLUME_UP"),
+        (SERVICE_VOLUME_DOWN, {}, "VOLUME_DOWN"),
+        (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, "MUTE"),
+        (SERVICE_MEDIA_NEXT_TRACK, {}, "CHANNEL_UP"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, {}, "CHANNEL_DOWN"),
+        (SERVICE_MEDIA_PLAY, {}, "PLAY"),
+        (SERVICE_MEDIA_PAUSE, {}, "PAUSE"),
+        (SERVICE_MEDIA_STOP, {}, "STOP"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -81,7 +80,7 @@ async def test_media_player_action_sends_correct_code(
     mock_infrared_entity: MockInfraredEntity,
     service: str,
     service_data: dict[str, bool],
-    expected_code: LGTVCode,
+    expected_code: str,
 ) -> None:
     """Test each media player action sends the correct IR code."""
     await hass.services.async_call(

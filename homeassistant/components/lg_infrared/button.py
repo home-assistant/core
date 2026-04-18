@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from infrared_protocols.codes.lg.tv import LGTVCode
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,93 +19,89 @@ PARALLEL_UPDATES = 1
 class LgIrButtonEntityDescription(ButtonEntityDescription):
     """Describes LG IR button entity."""
 
-    command_code: LGTVCode
+    command_code: str
 
 
 TV_BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     LgIrButtonEntityDescription(
-        key="power_on", translation_key="power_on", command_code=LGTVCode.POWER_ON
+        key="power_on", translation_key="power_on", command_code="POWER_ON"
     ),
     LgIrButtonEntityDescription(
-        key="power_off", translation_key="power_off", command_code=LGTVCode.POWER_OFF
+        key="power_off", translation_key="power_off", command_code="POWER_OFF"
     ),
     LgIrButtonEntityDescription(
-        key="hdmi_1", translation_key="hdmi_1", command_code=LGTVCode.HDMI_1
+        key="hdmi_1", translation_key="hdmi_1", command_code="HDMI_1"
     ),
     LgIrButtonEntityDescription(
-        key="hdmi_2", translation_key="hdmi_2", command_code=LGTVCode.HDMI_2
+        key="hdmi_2", translation_key="hdmi_2", command_code="HDMI_2"
     ),
     LgIrButtonEntityDescription(
-        key="hdmi_3", translation_key="hdmi_3", command_code=LGTVCode.HDMI_3
+        key="hdmi_3", translation_key="hdmi_3", command_code="HDMI_3"
     ),
     LgIrButtonEntityDescription(
-        key="hdmi_4", translation_key="hdmi_4", command_code=LGTVCode.HDMI_4
+        key="hdmi_4", translation_key="hdmi_4", command_code="HDMI_4"
     ),
     LgIrButtonEntityDescription(
-        key="exit", translation_key="exit", command_code=LGTVCode.EXIT
+        key="exit", translation_key="exit", command_code="EXIT"
     ),
     LgIrButtonEntityDescription(
-        key="info", translation_key="info", command_code=LGTVCode.INFO
+        key="info", translation_key="info", command_code="INFO"
     ),
     LgIrButtonEntityDescription(
-        key="guide", translation_key="guide", command_code=LGTVCode.GUIDE
+        key="guide", translation_key="guide", command_code="GUIDE"
+    ),
+    LgIrButtonEntityDescription(key="up", translation_key="up", command_code="NAV_UP"),
+    LgIrButtonEntityDescription(
+        key="down", translation_key="down", command_code="NAV_DOWN"
     ),
     LgIrButtonEntityDescription(
-        key="up", translation_key="up", command_code=LGTVCode.NAV_UP
+        key="left", translation_key="left", command_code="NAV_LEFT"
     ),
     LgIrButtonEntityDescription(
-        key="down", translation_key="down", command_code=LGTVCode.NAV_DOWN
+        key="right", translation_key="right", command_code="NAV_RIGHT"
+    ),
+    LgIrButtonEntityDescription(key="ok", translation_key="ok", command_code="OK"),
+    LgIrButtonEntityDescription(
+        key="back", translation_key="back", command_code="BACK"
     ),
     LgIrButtonEntityDescription(
-        key="left", translation_key="left", command_code=LGTVCode.NAV_LEFT
+        key="home", translation_key="home", command_code="HOME"
     ),
     LgIrButtonEntityDescription(
-        key="right", translation_key="right", command_code=LGTVCode.NAV_RIGHT
+        key="menu", translation_key="menu", command_code="MENU"
     ),
     LgIrButtonEntityDescription(
-        key="ok", translation_key="ok", command_code=LGTVCode.OK
+        key="input", translation_key="input", command_code="INPUT"
     ),
     LgIrButtonEntityDescription(
-        key="back", translation_key="back", command_code=LGTVCode.BACK
+        key="num_0", translation_key="num_0", command_code="NUM_0"
     ),
     LgIrButtonEntityDescription(
-        key="home", translation_key="home", command_code=LGTVCode.HOME
+        key="num_1", translation_key="num_1", command_code="NUM_1"
     ),
     LgIrButtonEntityDescription(
-        key="menu", translation_key="menu", command_code=LGTVCode.MENU
+        key="num_2", translation_key="num_2", command_code="NUM_2"
     ),
     LgIrButtonEntityDescription(
-        key="input", translation_key="input", command_code=LGTVCode.INPUT
+        key="num_3", translation_key="num_3", command_code="NUM_3"
     ),
     LgIrButtonEntityDescription(
-        key="num_0", translation_key="num_0", command_code=LGTVCode.NUM_0
+        key="num_4", translation_key="num_4", command_code="NUM_4"
     ),
     LgIrButtonEntityDescription(
-        key="num_1", translation_key="num_1", command_code=LGTVCode.NUM_1
+        key="num_5", translation_key="num_5", command_code="NUM_5"
     ),
     LgIrButtonEntityDescription(
-        key="num_2", translation_key="num_2", command_code=LGTVCode.NUM_2
+        key="num_6", translation_key="num_6", command_code="NUM_6"
     ),
     LgIrButtonEntityDescription(
-        key="num_3", translation_key="num_3", command_code=LGTVCode.NUM_3
+        key="num_7", translation_key="num_7", command_code="NUM_7"
     ),
     LgIrButtonEntityDescription(
-        key="num_4", translation_key="num_4", command_code=LGTVCode.NUM_4
+        key="num_8", translation_key="num_8", command_code="NUM_8"
     ),
     LgIrButtonEntityDescription(
-        key="num_5", translation_key="num_5", command_code=LGTVCode.NUM_5
-    ),
-    LgIrButtonEntityDescription(
-        key="num_6", translation_key="num_6", command_code=LGTVCode.NUM_6
-    ),
-    LgIrButtonEntityDescription(
-        key="num_7", translation_key="num_7", command_code=LGTVCode.NUM_7
-    ),
-    LgIrButtonEntityDescription(
-        key="num_8", translation_key="num_8", command_code=LGTVCode.NUM_8
-    ),
-    LgIrButtonEntityDescription(
-        key="num_9", translation_key="num_9", command_code=LGTVCode.NUM_9
+        key="num_9", translation_key="num_9", command_code="NUM_9"
     ),
 )
 

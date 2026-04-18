@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -49,34 +48,34 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
-        ("button.lg_tv_power_on", LGTVCode.POWER_ON),
-        ("button.lg_tv_power_off", LGTVCode.POWER_OFF),
-        ("button.lg_tv_hdmi_1", LGTVCode.HDMI_1),
-        ("button.lg_tv_hdmi_2", LGTVCode.HDMI_2),
-        ("button.lg_tv_hdmi_3", LGTVCode.HDMI_3),
-        ("button.lg_tv_hdmi_4", LGTVCode.HDMI_4),
-        ("button.lg_tv_exit", LGTVCode.EXIT),
-        ("button.lg_tv_info", LGTVCode.INFO),
-        ("button.lg_tv_guide", LGTVCode.GUIDE),
-        ("button.lg_tv_up", LGTVCode.NAV_UP),
-        ("button.lg_tv_down", LGTVCode.NAV_DOWN),
-        ("button.lg_tv_left", LGTVCode.NAV_LEFT),
-        ("button.lg_tv_right", LGTVCode.NAV_RIGHT),
-        ("button.lg_tv_ok", LGTVCode.OK),
-        ("button.lg_tv_back", LGTVCode.BACK),
-        ("button.lg_tv_home", LGTVCode.HOME),
-        ("button.lg_tv_menu", LGTVCode.MENU),
-        ("button.lg_tv_input", LGTVCode.INPUT),
-        ("button.lg_tv_number_0", LGTVCode.NUM_0),
-        ("button.lg_tv_number_1", LGTVCode.NUM_1),
-        ("button.lg_tv_number_2", LGTVCode.NUM_2),
-        ("button.lg_tv_number_3", LGTVCode.NUM_3),
-        ("button.lg_tv_number_4", LGTVCode.NUM_4),
-        ("button.lg_tv_number_5", LGTVCode.NUM_5),
-        ("button.lg_tv_number_6", LGTVCode.NUM_6),
-        ("button.lg_tv_number_7", LGTVCode.NUM_7),
-        ("button.lg_tv_number_8", LGTVCode.NUM_8),
-        ("button.lg_tv_number_9", LGTVCode.NUM_9),
+        ("button.lg_tv_power_on", "POWER_ON"),
+        ("button.lg_tv_power_off", "POWER_OFF"),
+        ("button.lg_tv_hdmi_1", "HDMI_1"),
+        ("button.lg_tv_hdmi_2", "HDMI_2"),
+        ("button.lg_tv_hdmi_3", "HDMI_3"),
+        ("button.lg_tv_hdmi_4", "HDMI_4"),
+        ("button.lg_tv_exit", "EXIT"),
+        ("button.lg_tv_info", "INFO"),
+        ("button.lg_tv_guide", "GUIDE"),
+        ("button.lg_tv_up", "NAV_UP"),
+        ("button.lg_tv_down", "NAV_DOWN"),
+        ("button.lg_tv_left", "NAV_LEFT"),
+        ("button.lg_tv_right", "NAV_RIGHT"),
+        ("button.lg_tv_ok", "OK"),
+        ("button.lg_tv_back", "BACK"),
+        ("button.lg_tv_home", "HOME"),
+        ("button.lg_tv_menu", "MENU"),
+        ("button.lg_tv_input", "INPUT"),
+        ("button.lg_tv_number_0", "NUM_0"),
+        ("button.lg_tv_number_1", "NUM_1"),
+        ("button.lg_tv_number_2", "NUM_2"),
+        ("button.lg_tv_number_3", "NUM_3"),
+        ("button.lg_tv_number_4", "NUM_4"),
+        ("button.lg_tv_number_5", "NUM_5"),
+        ("button.lg_tv_number_6", "NUM_6"),
+        ("button.lg_tv_number_7", "NUM_7"),
+        ("button.lg_tv_number_8", "NUM_8"),
+        ("button.lg_tv_number_9", "NUM_9"),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -84,7 +83,7 @@ async def test_button_press_sends_correct_code(
     hass: HomeAssistant,
     mock_infrared_entity: MockInfraredEntity,
     entity_id: str,
-    expected_code: LGTVCode,
+    expected_code: str,
 ) -> None:
     """Test pressing a button sends the correct IR code."""
     await hass.services.async_call(

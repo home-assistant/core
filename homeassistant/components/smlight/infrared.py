@@ -41,11 +41,9 @@ class SmInfraredEntity(SmEntity, InfraredEntity):
 
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
-        timings = [
-            interval
-            for timing in command.get_raw_timings()
-            for interval in (timing.high_us, timing.low_us)
-        ]
+        # smlight expects unsigned alternating mark/space µs, while the library
+        # emits signed values (negative = space). Drop the sign on the wire.
+        timings = [abs(t) for t in command.get_raw_timings()]
 
         freq = command.modulation
 
