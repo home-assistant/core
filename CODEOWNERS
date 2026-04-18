@@ -1960,6 +1960,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/whirlpool/ @abmantis @mkmer
 /homeassistant/components/whois/ @frenck
 /tests/components/whois/ @frenck
+/homeassistant/components/wibeee/ @fquinto
+/tests/components/wibeee/ @fquinto
 /homeassistant/components/wiffi/ @mampfes
 /tests/components/wiffi/ @mampfes
 /homeassistant/components/wiim/ @Linkplay2020
