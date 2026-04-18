@@ -28,7 +28,6 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 TEST_FILENAME = "doorbell_snapshot.jpg"
-TEST_LOCAL_FILENAME = "/media/snapshots/image.jpg"
 TEST_DESTINATION_PATH = "photos/snapshots/image.jpg"
 DESINATION_FOLDER = "TestFolder"
 
@@ -337,37 +336,6 @@ async def test_delete_service_delete_permanently(
     assert call_args.args[1] is True
 
 
-async def test_delete_service_with_local_file(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_onedrive_client: MagicMock,
-) -> None:
-    """Test delete service call removes both the remote and local file."""
-    await setup_integration(hass, mock_config_entry)
-
-    with (
-        patch(
-            "homeassistant.components.onedrive.services.Path.exists",
-            return_value=True,
-        ),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("homeassistant.components.onedrive.services.Path.unlink") as mock_unlink,
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            DELETE_SERVICE,
-            {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
-                CONF_FILENAME: [TEST_LOCAL_FILENAME],
-            },
-            blocking=True,
-        )
-
-    mock_onedrive_client.delete_drive_item.assert_called_once()
-    mock_unlink.assert_called_once()
-
-
 async def test_delete_service_multiple_files(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -418,32 +386,6 @@ async def test_delete_service_fails(
         )
 
 
-async def test_delete_local_path_not_allowed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_onedrive_client: MagicMock,
-) -> None:
-    """Test delete service raises HomeAssistantError when local path is not allowed."""
-    await setup_integration(hass, mock_config_entry)
-
-    with (
-        patch.object(hass.config, "is_allowed_path", return_value=False),
-        pytest.raises(HomeAssistantError, match="allowlist_external_dirs"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            DELETE_SERVICE,
-            {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
-                CONF_FILENAME: [TEST_LOCAL_FILENAME],
-            },
-            blocking=True,
-        )
-
-    mock_onedrive_client.delete_drive_item.assert_not_called()
-
-
 async def test_delete_empty_destination_path(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -492,71 +434,3 @@ async def test_delete_invalid_destination_path(
             },
             blocking=True,
         )
-
-
-async def test_delete_local_file_not_found(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_onedrive_client: MagicMock,
-) -> None:
-    """Test delete service raises HomeAssistantError when local file does not exist."""
-    await setup_integration(hass, mock_config_entry)
-
-    with (
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch(
-            "homeassistant.components.onedrive.services.Path.exists",
-            return_value=False,
-        ),
-        pytest.raises(HomeAssistantError, match="does not exist"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            DELETE_SERVICE,
-            {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
-                CONF_FILENAME: [TEST_LOCAL_FILENAME],
-            },
-            blocking=True,
-        )
-
-    mock_onedrive_client.delete_drive_item.assert_not_called()
-
-
-async def test_delete_local_file_vanishes_after_validation(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_onedrive_client: MagicMock,
-) -> None:
-    """Test that FileNotFoundError during unlink is silently ignored.
-
-    A file may disappear between pre-validation and the actual unlink call
-    (e.g. removed by another process). Since the remote deletion already
-    succeeded, this should not raise an error.
-    """
-    await setup_integration(hass, mock_config_entry)
-
-    with (
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch(
-            "homeassistant.components.onedrive.services.Path.exists",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.onedrive.services.Path.unlink",
-            side_effect=FileNotFoundError,
-        ),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            DELETE_SERVICE,
-            {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
-                CONF_FILENAME: [TEST_LOCAL_FILENAME],
-            },
-            blocking=True,
-        )
-
-    mock_onedrive_client.delete_drive_item.assert_called_once()

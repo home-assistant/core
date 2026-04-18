@@ -26,8 +26,3 @@ delete:
       selector:
         text:
           multiple: true
-    filename:
-      required: false
-      selector:
-        text:
-          multiple: true

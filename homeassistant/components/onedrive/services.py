@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 from typing import cast
@@ -45,7 +44,6 @@ DELETE_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONF_DESTINATION_PATH): vol.All(
             cv.ensure_list, vol.Length(min=1), [cv.string]
         ),
-        vol.Optional(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -108,45 +106,6 @@ def _validate_destination_path(destination_path: str) -> str:
     return str(PurePosixPath(normalized))
 
 
-def _check_local_files_allowed(
-    is_allowed_path: Callable[[str], bool], filenames: list[str]
-) -> None:
-    """Raise HomeAssistantError if any filename is not in the allowlist."""
-    for filename in filenames:
-        if not is_allowed_path(filename):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_delete_access_to_path",
-                translation_placeholders={"filename": filename},
-            )
-
-
-def _check_local_files_exist(filenames: list[str]) -> None:
-    """Raise HomeAssistantError if any filename does not exist."""
-    for filename in filenames:
-        if not Path(filename).exists():
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="filename_does_not_exist",
-                translation_placeholders={"filename": filename},
-            )
-
-
-def _delete_local_files(filenames: list[str]) -> None:
-    """Delete local files, ignoring files that no longer exist."""
-    for filename in filenames:
-        try:
-            Path(filename).unlink()
-        except FileNotFoundError:
-            pass
-        except OSError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="delete_local_file_error",
-                translation_placeholders={"filename": filename, "message": str(err)},
-            ) from err
-
-
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register OneDrive services."""
@@ -194,7 +153,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         return None
 
     async def async_handle_delete(call: ServiceCall) -> None:
-        """Delete a file from OneDrive and optionally from the local filesystem."""
+        """Delete one or more files from OneDrive."""
         config_entry: OneDriveConfigEntry = service.async_get_config_entry(
             hass, DOMAIN, call.data[CONF_CONFIG_ENTRY_ID]
         )
@@ -204,13 +163,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
             _validate_destination_path(p)
             for p in cast(list[str], call.data[CONF_DESTINATION_PATH])
         ]
-        local_filenames = cast(list[str], call.data.get(CONF_FILENAME, []))
-
-        # allowlist check runs on the event loop (thread-safe); existence check
-        # is offloaded to an executor because it performs blocking I/O
-        if local_filenames:
-            _check_local_files_allowed(hass.config.is_allowed_path, local_filenames)
-            await hass.async_add_executor_job(_check_local_files_exist, local_filenames)
 
         approot_id = (await client.get_approot()).id
         results = await asyncio.gather(
@@ -229,9 +181,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="delete_error",
                 translation_placeholders={"message": "; ".join(str(e) for e in errors)},
             ) from errors[0]
-
-        if local_filenames:
-            await hass.async_add_executor_job(_delete_local_files, local_filenames)
 
     hass.services.async_register(
         DOMAIN,

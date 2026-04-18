@@ -96,9 +96,6 @@
     "delete_error": {
       "message": "Failed to delete file from OneDrive: {message}"
     },
-    "delete_local_file_error": {
-      "message": "Failed to delete local file `{filename}`: {message}"
-    },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
@@ -116,9 +113,6 @@
     },
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
-    },
-    "no_delete_access_to_path": {
-      "message": "Cannot access {filename}; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
@@ -155,7 +149,7 @@
   },
   "services": {
     "delete": {
-      "description": "Deletes one or more files from OneDrive and optionally from the local filesystem.",
+      "description": "Deletes one or more files from OneDrive.",
       "fields": {
         "config_entry_id": {
           "description": "The config entry representing the OneDrive you want to delete from.",
@@ -165,11 +159,6 @@
           "description": "One or more paths to files inside the OneDrive app folder (Apps/Home Assistant) to delete.",
           "example": "[\"photos/snapshots/image.jpg\", \"photos/snapshots/image2.jpg\"]",
           "name": "Destination paths"
-        },
-        "filename": {
-          "description": "One or more local file paths to also delete. If omitted, only the OneDrive copies are removed.",
-          "example": "[\"/media/snapshots/image.jpg\"]",
-          "name": "Local filenames"
         }
       },
       "name": "Delete files"
