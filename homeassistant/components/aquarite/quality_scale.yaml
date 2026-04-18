@@ -88,9 +88,7 @@ rules:
   devices:
     status: done
     comment: DeviceInfo with identifiers, name, manufacturer, model, sw_version
-  diagnostics:
-    status: done
-    comment: Full diagnostics with PII redaction (credentials, location, email)
+  diagnostics: todo
   discovery:
     status: exempt
     comment: Cloud API only, no local discovery possible
