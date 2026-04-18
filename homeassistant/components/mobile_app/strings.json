@@ -18,5 +18,16 @@
       "title": "Title"
     }
   },
+  "exceptions": {
+    "error_sending_notification": {
+      "message": "Error sending notification to {device_name}"
+    },
+    "rate_limit_exceeded_sending_notification": {
+      "message": "Rate limit exceeded sending notification to {device_name}"
+    },
+    "timeout_sending_notification": {
+      "message": "Timeout sending notification to {device_name}"
+    }
+  },
   "title": "Mobile App"
 }
