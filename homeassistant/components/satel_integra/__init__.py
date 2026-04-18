@@ -25,12 +25,18 @@ from .coordinator import (
     SatelIntegraData,
     SatelIntegraOutputsCoordinator,
     SatelIntegraPartitionsCoordinator,
+    SatelIntegraTemperaturesCoordinator,
     SatelIntegraZonesCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -43,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     coordinator_zones = SatelIntegraZonesCoordinator(hass, entry, client)
     coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
     coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
+    coordinator_temperatures = SatelIntegraTemperaturesCoordinator(hass, entry, client)
 
     for coordinator in (
         coordinator_zones,
@@ -62,7 +69,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
         coordinator_zones=coordinator_zones,
         coordinator_outputs=coordinator_outputs,
         coordinator_partitions=coordinator_partitions,
+        coordinator_temperatures=coordinator_temperatures,
     )
+
+    await coordinator_temperatures.async_refresh()
 
     async def async_close_connection(event: Event) -> None:
         """Close Satel Integra connection on HA Stop."""
