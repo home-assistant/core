@@ -112,7 +112,10 @@ async def async_send_command(
     """Send an RF command to the specified radio_frequency entity.
 
     Raises:
-        HomeAssistantError: If the radio_frequency entity is not found.
+        vol.Invalid: If `entity_id_or_uuid` is not a valid entity ID or known entity
+            registry UUID.
+        HomeAssistantError: If the radio_frequency component is not loaded or the
+            resolved entity is not found.
     """
     component = hass.data.get(DATA_COMPONENT)
     if component is None:
