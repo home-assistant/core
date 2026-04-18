@@ -164,7 +164,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
             for p in cast(list[str], call.data[CONF_DESTINATION_PATH])
         ]
 
-        approot_id = (await client.get_approot()).id
+        try:
+            approot_id = (await client.get_approot()).id
+        except OneDriveException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="delete_error",
+                translation_placeholders={"message": str(err)},
+            ) from err
+
         results = await asyncio.gather(
             *[
                 client.delete_drive_item(
@@ -174,7 +182,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ],
             return_exceptions=True,
         )
-        errors = [r for r in results if isinstance(r, OneDriveException)]
+        errors: list[OneDriveException] = []
+        for result in results:
+            if isinstance(result, OneDriveException):
+                errors.append(result)
+            elif isinstance(result, BaseException):
+                raise result
         if errors:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
