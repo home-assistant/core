@@ -668,16 +668,6 @@
     }
   },
   "services": {
-    "set_vicare_mode": {
-      "description": "Sets the mode of the climate device as defined by Viessmann.",
-      "fields": {
-        "vicare_mode": {
-          "description": "For supported values, see the `vicare_modes` attribute of the climate entity.",
-          "name": "ViCare mode"
-        }
-      },
-      "name": "Set ViCare mode"
-    },
     "set_domestic_hot_water_circulation_schedule": {
       "description": "Sets the domestic hot water circulation pump schedule.",
       "fields": {
@@ -687,6 +677,16 @@
         }
       },
       "name": "Set domestic hot water circulation schedule"
+    },
+    "set_vicare_mode": {
+      "description": "Sets the mode of the climate device as defined by Viessmann.",
+      "fields": {
+        "vicare_mode": {
+          "description": "For supported values, see the `vicare_modes` attribute of the climate entity.",
+          "name": "ViCare mode"
+        }
+      },
+      "name": "Set ViCare mode"
     }
   }
 }

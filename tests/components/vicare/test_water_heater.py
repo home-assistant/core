@@ -20,9 +20,6 @@ from .conftest import Fixture, MockPyViCare
 from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_WATER_HEATER = "water_heater.model0_domestic_hot_water"
-...
-    state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.state == "on"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -38,13 +35,16 @@ async def test_dhw_circulation_schedule(
     mock_device.getDomesticHotWaterCirculationSchedule.return_value = mock_schedule
 
     with (
-        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)) as mock_login,
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
         patch(
             "PyViCare.PyViCareDeviceConfig.PyViCareDeviceConfig.asAutoDetectDevice",
             return_value=mock_device,
         ),
     ):
+        state = hass.states.get(ENTITY_WATER_HEATER)
+        assert state.state == "on"
+
         await setup_integration(hass, mock_config_entry)
         await async_update_entity(hass, ENTITY_WATER_HEATER)
 
@@ -62,6 +62,7 @@ async def test_dhw_circulation_schedule(
         mock_device.setDomesticHotWaterCirculationSchedule.assert_called_once_with(
             mock_schedule
         )
+
 
 async def test_all_entities(
     hass: HomeAssistant,
