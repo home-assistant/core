@@ -28,6 +28,22 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_upload_speed").state == "unknown"
     assert hass.states.get("sensor.mock_name_packet_download_speed").state == "unknown"
     assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "unknown"
+    assert (
+        hass.states.get("sensor.mock_name_download_speed_without_rollover").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_name_upload_speed_without_rollover").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_name_packet_download_speed_without_rollover").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_name_packet_upload_speed_without_rollover").state
+        == "unknown"
+    )
 
     # Second poll.
     mock_igd_device: IgdDevice = mock_config_entry.igd_device
@@ -45,6 +61,10 @@ async def test_upnp_sensors(
         kibibytes_per_sec_sent=20.0,
         packets_per_sec_received=30.0,
         packets_per_sec_sent=40.0,
+        kibibytes_per_sec_received_no_rollover=10.0,
+        kibibytes_per_sec_sent_no_rollover=20.0,
+        packets_per_sec_received_no_rollover=30.0,
+        packets_per_sec_sent_no_rollover=40.0,
         port_mapping_number_of_entries=0,
     )
 
@@ -62,3 +82,19 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_upload_speed").state == "20.0"
     assert hass.states.get("sensor.mock_name_packet_download_speed").state == "30.0"
     assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "40.0"
+    assert (
+        hass.states.get("sensor.mock_name_download_speed_without_rollover").state
+        == "10.0"
+    )
+    assert (
+        hass.states.get("sensor.mock_name_upload_speed_without_rollover").state
+        == "20.0"
+    )
+    assert (
+        hass.states.get("sensor.mock_name_packet_download_speed_without_rollover").state
+        == "30.0"
+    )
+    assert (
+        hass.states.get("sensor.mock_name_packet_upload_speed_without_rollover").state
+        == "40.0"
+    )
