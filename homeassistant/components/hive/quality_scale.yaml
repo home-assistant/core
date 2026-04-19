@@ -11,12 +11,11 @@ rules:
   appropriate-polling:
     status: done
     comment: >
-      Home Assistant polls the entities every 15 seconds via
-      `SCAN_INTERVAL`, but those updates read from the local cache maintained
-      by the `pyhive-integration` library. The library's configurable
-      `scan_interval` defaults to 120 seconds, and actual cloud API calls are
-      limited by that refresh interval, so no excessive API requests are
-      made.
+      A single `HiveDataUpdateCoordinator` per config entry polls all devices
+      every 15 seconds by reading from the local cache maintained by the
+      `pyhive-integration` library. Actual cloud API calls are gated by the
+      library's own `scan_interval` (default 120 seconds, configurable via the
+      options flow), so no excessive external requests are made.
   brands: done
   common-modules: done
   config-flow: done
