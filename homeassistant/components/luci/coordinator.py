@@ -55,13 +55,6 @@ class LuciCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
 
         devices: dict[str, dict[str, Any]] = {}
         for device in result:
-            if (
-                hasattr(self.router.router.owrt_version, "release")
-                and self.router.router.owrt_version.release
-                and self.router.router.owrt_version.release[0] >= 19
-                and not device.reachable
-            ):
-                continue
             devices[device.mac] = device._asdict()
 
         return devices
