@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data as _bl_pulses_to_data
-import infrared_protocols
 
 from homeassistant.components.infrared import InfraredCommand, InfraredEntity
 from homeassistant.config_entries import ConfigEntry
@@ -35,9 +34,9 @@ class BroadlinkIRCommand(InfraredCommand):
     IR code databases like SmartIR) and want to use it with the new
     infrared platform.
 
-    Protocol-aware commands (infrared_protocols.NECCommand, LgTVCommand,
-    etc.) manage repeats *inside* get_raw_timings() and should use the
-    default repeat=0. Only BroadlinkIRCommand should set hardware repeat.
+    Protocol-aware commands (infrared_protocols.NECCommand, etc.) manage
+    repeats *inside* get_raw_timings() and should use the default
+    repeat=0. Only BroadlinkIRCommand should set hardware repeat.
 
     Example: Migrating IR code database base64 codes to the infrared platform:
 
@@ -50,11 +49,10 @@ class BroadlinkIRCommand(InfraredCommand):
         packet_data = base64.b64decode(b64_code)
         repeat_count = packet_data[IR_PACKET_REPEAT_INDEX]
 
-        # Parse Broadlink packet to microsecond timings
+        # Parse Broadlink packet to alternating µs pulses, then convert to
+        # the signed-alternating convention (positive mark, negative space).
         pulses = data_to_pulses(packet_data)
-        timings = list(zip(pulses[::2], pulses[1::2]))
-        if len(pulses) % 2:
-            timings.append((pulses[-1], 0))
+        timings = [p if i % 2 == 0 else -p for i, p in enumerate(pulses)]
 
         # Create command
         cmd = BroadlinkIRCommand(timings, repeat_count=repeat_count)
@@ -67,13 +65,13 @@ class BroadlinkIRCommand(InfraredCommand):
 
     def __init__(
         self,
-        timings: list[tuple[int, int]],
+        timings: list[int],
         repeat_count: int = 0,
     ) -> None:
-        """Initialize with timing pairs and optional repeat count.
+        """Initialize with signed-alternating timings and optional repeat count.
 
         Args:
-            timings: List of (mark_us, space_us) pairs in microseconds.
+            timings: Signed-alternating µs pulses (positive mark, negative space).
             repeat_count: Broadlink hardware repeat count (0 = send once).
                 Must be 0–255 (the hardware repeat byte is a single unsigned byte).
 
@@ -83,23 +81,21 @@ class BroadlinkIRCommand(InfraredCommand):
         if not 0 <= repeat_count <= 255:
             raise ValueError(f"repeat_count must be 0–255, got {repeat_count}")
         super().__init__(modulation=self.MODULATION, repeat_count=repeat_count)
-        self._timings = [
-            infrared_protocols.Timing(high_us=high, low_us=low) for high, low in timings
-        ]
+        self._timings = list(timings)
 
-    def get_raw_timings(self) -> list[infrared_protocols.Timing]:
-        """Return timing pairs for transmission."""
+    def get_raw_timings(self) -> list[int]:
+        """Return signed-alternating timings for transmission."""
         return self._timings
 
 
 def timings_to_broadlink_packet(
-    timings: list[tuple[int, int]],
+    timings: list[int],
     repeat: int = 0,
 ) -> bytes:
-    """Convert raw timing pairs (high_us, low_us) to a Broadlink IR packet.
+    """Convert signed-alternating timings to a Broadlink IR packet.
 
     Args:
-        timings: List of (mark_us, space_us) pairs in microseconds.
+        timings: Signed-alternating µs pulses (positive mark, negative space).
         repeat: Number of extra repeats (0 = send once).
 
     Returns:
@@ -109,12 +105,9 @@ def timings_to_broadlink_packet(
     if not 0 <= repeat <= 255:
         raise ValueError(f"repeat must be 0–255, got {repeat}")
 
-    # Flatten (mark, space) pairs into a pulse list, omitting any zero-length spaces
-    pulses: list[int] = []
-    for high_us, low_us in timings:
-        pulses.append(high_us)
-        if low_us:
-            pulses.append(low_us)
+    # Broadlink hardware wants unsigned alternating pulses; drop the sign
+    # used by the signed-alternating convention.
+    pulses = [abs(t) for t in timings]
 
     # Use broadlink library's encoder (tick=32.84 µs)
     packet = bytearray(_bl_pulses_to_data(pulses))
@@ -160,10 +153,6 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEntity):
         Using isinstance check ensures protocol-level repeats (already in
         timing data) don't get conflated with hardware repeats.
         """
-        timings = [
-            (timing.high_us, timing.low_us) for timing in command.get_raw_timings()
-        ]
-
         # Only BroadlinkIRCommand uses Broadlink hardware repeat. Protocol-aware
         # commands (NECCommand, etc.) encode repeats inside get_raw_timings()
         # and must use hardware repeat=0 to avoid double-repeating.
@@ -172,7 +161,7 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEntity):
         else:
             repeat = 0
 
-        packet = timings_to_broadlink_packet(timings, repeat=repeat)
+        packet = timings_to_broadlink_packet(command.get_raw_timings(), repeat=repeat)
 
         try:
             await self._device.async_request(self._device.api.send_data, packet)

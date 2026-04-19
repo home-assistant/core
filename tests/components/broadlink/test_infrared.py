@@ -22,7 +22,7 @@ NEC_ZERO_SPACE_US = 562
 
 def test_packet_header() -> None:
     """Test IR type byte, repeat, and length fields."""
-    timings = [(NEC_HEADER_MARK_US, NEC_HEADER_SPACE_US)]
+    timings = [NEC_HEADER_MARK_US, -NEC_HEADER_SPACE_US]
     packet = timings_to_broadlink_packet(timings, repeat=0)
 
     assert packet[0] == IR_PACKET_TYPE
@@ -34,7 +34,7 @@ def test_packet_header() -> None:
 
 def test_packet_ends_with_silence() -> None:
     """Test packet structure is well-formed."""
-    timings = [(NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
+    timings = [NEC_BIT_MARK_US, -NEC_ZERO_SPACE_US]
     packet = timings_to_broadlink_packet(timings)
     assert packet[0] == IR_PACKET_TYPE
     assert len(packet) >= IR_PACKET_PAYLOAD_OFFSET  # header + minimum payload
@@ -42,14 +42,14 @@ def test_packet_ends_with_silence() -> None:
 
 def test_packet_repeat_count() -> None:
     """Test repeat count is set."""
-    timings = [(NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
+    timings = [NEC_BIT_MARK_US, -NEC_ZERO_SPACE_US]
     packet = timings_to_broadlink_packet(timings, repeat=2)
     assert packet[IR_PACKET_REPEAT_INDEX] == 2
 
 
 def test_packet_repeat_out_of_range() -> None:
     """Test that out-of-range repeat raises ValueError."""
-    timings = [(NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
+    timings = [NEC_BIT_MARK_US, -NEC_ZERO_SPACE_US]
     with pytest.raises(ValueError, match="repeat must be 0"):
         timings_to_broadlink_packet(timings, repeat=-1)
     with pytest.raises(ValueError, match="repeat must be 0"):
@@ -58,7 +58,7 @@ def test_packet_repeat_out_of_range() -> None:
 
 def test_packet_nec_header_encoding() -> None:
     """Test that a NEC header encodes correctly."""
-    timings = [(NEC_HEADER_MARK_US, NEC_HEADER_SPACE_US)]
+    timings = [NEC_HEADER_MARK_US, -NEC_HEADER_SPACE_US]
     packet = timings_to_broadlink_packet(timings)
 
     # Skip packet header to get encoded payload
@@ -75,7 +75,7 @@ def test_packet_nec_header_encoding() -> None:
 
 def test_packet_known_nec_command() -> None:
     """Encode a full NEC power command and verify it's well-formed."""
-    nec_timings: list[tuple[int, int]] = [(NEC_HEADER_MARK_US, NEC_HEADER_SPACE_US)]
+    nec_timings: list[int] = [NEC_HEADER_MARK_US, -NEC_HEADER_SPACE_US]
     for bit in (
         0,
         0,
@@ -110,11 +110,9 @@ def test_packet_known_nec_command() -> None:
         1,
         1,  # ~command
     ):
-        if bit:
-            nec_timings.append((NEC_BIT_MARK_US, NEC_ONE_SPACE_US))
-        else:
-            nec_timings.append((NEC_BIT_MARK_US, NEC_ZERO_SPACE_US))
-    nec_timings.append((NEC_BIT_MARK_US, 0))  # stop bit
+        nec_timings.append(NEC_BIT_MARK_US)
+        nec_timings.append(-NEC_ONE_SPACE_US if bit else -NEC_ZERO_SPACE_US)
+    nec_timings.append(NEC_BIT_MARK_US)  # stop bit
 
     packet = timings_to_broadlink_packet(nec_timings)
 
@@ -124,21 +122,17 @@ def test_packet_known_nec_command() -> None:
 
 def test_broadlink_ir_command_basic() -> None:
     """Test BroadlinkIRCommand initialization and interface."""
-    timings = [(500, 500), (500, 1000), (NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
+    timings = [500, -500, 500, -1000, NEC_BIT_MARK_US, -NEC_ZERO_SPACE_US]
     cmd = BroadlinkIRCommand(timings, repeat_count=3)
 
     assert cmd.repeat_count == 3
     raw_timings = cmd.get_raw_timings()
-    assert len(raw_timings) == 3
-    assert raw_timings[0].high_us == 500
-    assert raw_timings[0].low_us == 500
-    assert raw_timings[2].high_us == NEC_BIT_MARK_US
-    assert raw_timings[2].low_us == NEC_ZERO_SPACE_US
+    assert raw_timings == timings
 
 
 def test_broadlink_ir_command_default_repeat() -> None:
     """Test BroadlinkIRCommand defaults to repeat=0."""
-    timings = [(500, 500)]
+    timings = [500, -500]
     cmd = BroadlinkIRCommand(timings)
 
     assert cmd.repeat_count == 0
@@ -146,7 +140,7 @@ def test_broadlink_ir_command_default_repeat() -> None:
 
 def test_broadlink_ir_command_invalid_repeat() -> None:
     """Test that BroadlinkIRCommand raises ValueError for out-of-range repeat_count."""
-    timings = [(500, 500)]
+    timings = [500, -500]
 
     # Test negative repeat count
     with pytest.raises(ValueError, match="repeat_count must be 0–255"):
