@@ -60,6 +60,14 @@ ENDPOINT_BUTTONS: tuple[PortainerButtonDescription, ...] = (
             )
         ),
     ),
+    PortainerButtonDescription(
+        key="volumes_prune",
+        translation_key="volumes_prune",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, _: portainer.prune_volumes(endpoint_id)
+        ),
+    ),
 )
 
 CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
@@ -104,6 +112,12 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
                 container_id=container_id,
                 timeout=timedelta(minutes=10),
                 pull_image=True,
+        key="kill",
+        translation_key="kill_container",
+        entity_category=EntityCategory.CONFIG,
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.kill_container(
+                endpoint_id, container_id
             )
         ),
     ),
@@ -193,6 +207,8 @@ class PortainerBaseButton(ButtonEntity):
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect_no_details",
             ) from err
+
+        await self.coordinator.async_request_refresh()
 
 
 class PortainerEndpointButton(PortainerEndpointEntity, PortainerBaseButton):

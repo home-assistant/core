@@ -23,14 +23,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SwitchBeeCoordinator
+from .coordinator import SwitchBeeConfigEntry, SwitchBeeCoordinator
 from .entity import SwitchBeeDeviceEntity
 
 FAN_SB_TO_HASS = {
@@ -75,11 +73,11 @@ SUPPORTED_FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchBeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBee climate."""
-    coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         SwitchBeeClimateEntity(switchbee_device, coordinator)
         for switchbee_device in coordinator.data.values()

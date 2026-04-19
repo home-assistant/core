@@ -11,12 +11,7 @@ from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -31,6 +26,7 @@ from .const import (
     DOMAIN,
     ROOMBA_SESSION,
 )
+from .models import RoombaConfigEntry
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 ALL_ATTEMPTS = 2
@@ -90,7 +86,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RoombaConfigEntry,
     ) -> RoombaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return RoombaOptionsFlowHandler()
