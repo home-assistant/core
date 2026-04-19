@@ -88,37 +88,23 @@ async def test_fan_set_state(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "exception",
-    [DucoConnectionError("Connection refused"), DucoError("Unexpected error")],
+    ("exception", "match"),
+    [
+        (DucoConnectionError("Connection refused"), "Failed to set ventilation state"),
+        (DucoError("Unexpected error"), "Failed to set ventilation state"),
+        (DucoRateLimitError(), "daily write limit"),
+    ],
 )
 async def test_fan_set_state_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     exception: Exception,
+    match: str,
 ) -> None:
     """Test that a HomeAssistantError is raised on API failure."""
     mock_duco_client.async_set_ventilation_state = AsyncMock(side_effect=exception)
 
-    with pytest.raises(HomeAssistantError, match="Failed to set ventilation state"):
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
-            blocking=True,
-        )
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_fan_set_state_rate_limit_error(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test that a HomeAssistantError is raised when the rate limit is exceeded."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock(
-        side_effect=DucoRateLimitError()
-    )
-
-    with pytest.raises(HomeAssistantError, match="daily write limit"):
+    with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
