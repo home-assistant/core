@@ -626,7 +626,7 @@
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.unifi_network_block_media_streaming',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,

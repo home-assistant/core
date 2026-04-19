@@ -584,6 +584,10 @@ ZEROCONF = {
             "name": "bsb-lan*",
         },
         {
+            "domain": "duco",
+            "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+        },
+        {
             "domain": "eheimdigital",
             "name": "eheimdigital._http._tcp.local.",
         },

@@ -72,7 +72,12 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      The unique ID provided by the service is tied to the address.
+      Changing the address would result in a different unique ID and
+      different waste collection properties.
   dynamic-devices:
     status: exempt
     comment: |

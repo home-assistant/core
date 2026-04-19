@@ -148,6 +148,7 @@
       'VDEPhaseImbalanceEnable': False,
       'VDEPhaseImbalanceLimit': 20,
       'WebIfUpdateHelper': True,
+      'led_brightness': 0,
       'smart_charging': 'pure_solar',
     }),
     'versions': dict({
