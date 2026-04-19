@@ -55,9 +55,24 @@ async def test_unload_entry(hass: HomeAssistant, mock_asyncsleepiq) -> None:
 
 async def test_entry_setup_login_error(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     """Test when sleepiq client is unable to login."""
-    mock_asyncsleepiq.login.side_effect = SleepIQLoginException
+    mock_asyncsleepiq.login.side_effect = SleepIQLoginException(
+        "Incorrect username or password"
+    )
     entry = await setup_platform(hass, None)
     assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_entry_setup_retryable_login_error(
+    hass: HomeAssistant, mock_asyncsleepiq
+) -> None:
+    """Test when sleepiq client cannot connect during login."""
+    mock_asyncsleepiq.login.side_effect = SleepIQLoginException(
+        "Connection failure: Cannot connect to host"
+    )
+    entry = await setup_platform(hass, None)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_entry_setup_timeout_error(
@@ -67,6 +82,7 @@ async def test_entry_setup_timeout_error(
     mock_asyncsleepiq.login.side_effect = SleepIQTimeoutException
     entry = await setup_platform(hass, None)
     assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_update_interval(hass: HomeAssistant, mock_asyncsleepiq) -> None:

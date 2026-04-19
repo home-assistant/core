@@ -19,6 +19,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def _is_invalid_auth(err: SleepIQLoginException) -> bool:
+    """Return if a SleepIQ login exception indicates invalid credentials."""
+    return "incorrect username or password" in str(err).lower()
+
+
 class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a SleepIQ config flow."""
 
@@ -117,8 +122,10 @@ async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str
     gateway = AsyncSleepIQ(client_session=client_session)
     try:
         await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-    except SleepIQLoginException:
-        return "invalid_auth"
+    except SleepIQLoginException as err:
+        if _is_invalid_auth(err):
+            return "invalid_auth"
+        return "cannot_connect"
     except SleepIQTimeoutException:
         return "cannot_connect"
 
