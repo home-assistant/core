@@ -56,14 +56,6 @@ async def add_button_entities(
     )
 
 
-def get_homeegram_buttons(config_entry: HomeeConfigEntry) -> list[HomeegramButton]:
-    """Get buttons for homeegrams."""
-    return [
-        HomeegramButton(homeegram, config_entry)
-        for homeegram in config_entry.runtime_data.homeegrams
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
@@ -72,7 +64,10 @@ async def async_setup_entry(
     """Add the homee platform for the button component."""
 
     await setup_homee_platform(add_button_entities, async_add_entities, config_entry)
-    async_add_entities(get_homeegram_buttons(config_entry))
+    async_add_entities(
+        HomeegramButton(homeegram, config_entry)
+        for homeegram in config_entry.runtime_data.homeegrams
+    )
 
 
 class HomeeButton(HomeeEntity, ButtonEntity):
