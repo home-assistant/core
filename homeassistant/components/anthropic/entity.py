@@ -126,8 +126,7 @@ def _format_tool(
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
     schema = convert(tool.parameters, custom_serializer=custom_serializer)
-    if unsupported_keys.intersection(schema):
-        schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+    schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     return ToolParam(
         name=tool.name,
