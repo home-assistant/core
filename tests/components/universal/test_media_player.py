@@ -75,6 +75,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
         self._shuffle = False
         self._sound_mode = None
         self._repeat = None
+        self._entity_picture_local = None
         self.platform = MockEntityPlatform(hass)
 
         self.service_calls = {
@@ -169,6 +170,11 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
     def media_image_url(self):
         """Image url of current playing media."""
         return self._media_image_url
+
+    @property
+    def entity_picture_local(self):
+        """Return the entity picture local URL."""
+        return self._entity_picture_local
 
     @property
     def shuffle(self):
@@ -268,6 +274,11 @@ async def mock_states(hass: HomeAssistant) -> Mock:
 
     result.mock_media_image_url_id = f"{input_select.DOMAIN}.entity_picture"
     hass.states.async_set(result.mock_media_image_url_id, "/local/picture.png")
+
+    result.mock_entity_picture_local_id = f"{input_select.DOMAIN}.entity_picture_local"
+    hass.states.async_set(
+        result.mock_entity_picture_local_id, "/local/picture_local.png"
+    )
     return result
 
 
@@ -292,6 +303,7 @@ def config_children_and_attr(mock_states):
             "sound_mode_list": mock_states.mock_sound_mode_list_id,
             "sound_mode": mock_states.mock_sound_mode_id,
             "entity_picture": mock_states.mock_media_image_url_id,
+            "entity_picture_local": mock_states.mock_entity_picture_local_id,
         },
     }
 
@@ -615,6 +627,22 @@ async def test_entity_picture_children_and_attr(
         mock_states.mock_sound_mode_list_id, "/local/other_picture.png"
     )
     assert ump.sound_mode_list == "/local/other_picture.png"
+
+
+async def test_entity_picture_local_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test entity picture local property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.entity_picture_local == "/local/picture_local.png"
+
+    hass.states.async_set(
+        mock_states.mock_entity_picture_local_id, "/local/other_picture_local.png"
+    )
+    assert ump.entity_picture_local == "/local/other_picture_local.png"
 
 
 async def test_source_list_children_and_attr(
