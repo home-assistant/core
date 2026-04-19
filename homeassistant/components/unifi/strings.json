@@ -80,7 +80,7 @@
         "data": {
           "block_client": "Network access controlled clients",
           "dpi_restrictions": "Allow control of DPI restriction groups",
-          "poe_clients": "Allow POE control of clients"
+          "poe_clients": "Allow PoE control of clients"
         },
         "data_description": {
           "block_client": "Select clients whose network access you want to control via switches.",
