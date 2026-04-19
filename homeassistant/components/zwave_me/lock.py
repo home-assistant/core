@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeConfigEntry
 from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry
 from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.LOCK

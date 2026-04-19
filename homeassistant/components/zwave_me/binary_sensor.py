@@ -13,8 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeConfigEntry, ZWaveMeController
 from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 BINARY_SENSORS_MAP: dict[str, BinarySensorEntityDescription] = {
