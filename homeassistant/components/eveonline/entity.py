@@ -22,5 +22,7 @@ class EveOnlineCharacterEntity(CoordinatorEntity[EveOnlineCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, str(coordinator.character_id))},
             manufacturer="CCP Games",
+            model="Character",
             name=coordinator.character_name,
+            configuration_url=f"https://evewho.com/character/{coordinator.character_id}",
         )
