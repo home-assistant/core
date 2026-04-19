@@ -35,8 +35,9 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            mac = user_input[CONF_MAC].replace(":", "").replace("-", "").upper()
             fumis = Fumis(
-                mac=user_input[CONF_MAC],
+                mac=mac,
                 password=user_input[CONF_PIN],
                 session=async_get_clientsession(self.hass),
             )
@@ -52,13 +53,14 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    format_mac(user_input[CONF_MAC]), raise_on_progress=False
-                )
+                await self.async_set_unique_id(format_mac(mac), raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info.controller.model_name or "Fumis",
-                    data=user_input,
+                    data={
+                        CONF_MAC: mac,
+                        CONF_PIN: user_input[CONF_PIN],
+                    },
                 )
 
         return self.async_show_form(
