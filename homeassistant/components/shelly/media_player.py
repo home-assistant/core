@@ -255,12 +255,12 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse radio stations and audio files."""
-        if not media_content_id:
+        if not media_content_type:
             return await self._async_browse_media_root()
 
-        if media_content_id == CONTENT_TYPE_LOCAL_RADIO:
+        if media_content_type == CONTENT_TYPE_LOCAL_RADIO:
             return await self._async_browse_radio_stations(expanded=True)
-        if media_content_id == CONTENT_TYPE_LOCAL_AUDIO:
+        if media_content_type == CONTENT_TYPE_LOCAL_AUDIO:
             return await self._async_browse_local_audio(expanded=True)
 
         raise HomeAssistantError(
@@ -310,7 +310,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             title="Audio files",
             media_class=MediaClass.DIRECTORY,
             media_content_type=CONTENT_TYPE_LOCAL_AUDIO,
-            media_content_id=CONTENT_TYPE_LOCAL_AUDIO,
+            media_content_id="",
             children_media_class=MediaClass.MUSIC,
             children=children,
             can_play=False,
@@ -342,7 +342,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             title="Radio stations",
             media_class=MediaClass.DIRECTORY,
             media_content_type=CONTENT_TYPE_LOCAL_RADIO,
-            media_content_id=CONTENT_TYPE_LOCAL_RADIO,
+            media_content_id="",
             children_media_class=MediaClass.MUSIC,
             children=children,
             can_play=False,
