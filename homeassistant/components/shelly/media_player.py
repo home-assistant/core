@@ -142,6 +142,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Return the artist of current playing media."""
+        if self.status["playback"].get("media_type") == "RADIO":
+            return None
+
         if artist := self._media_meta.get("artist"):
             return cast(str, artist)
 
