@@ -1,7 +1,9 @@
 """Tests for the Fumis climate entity."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from fumis import (
     FumisAuthenticationError,
     FumisConnectionError,
@@ -22,10 +24,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.fumis.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -151,3 +155,38 @@ async def test_climate_error_handling(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == expected_translation_key
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        FumisAuthenticationError,
+        FumisStoveOfflineError,
+        FumisConnectionError,
+        FumisError,
+    ],
+)
+async def test_climate_unavailable_on_update_error(
+    hass: HomeAssistant,
+    mock_fumis: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    side_effect: type[Exception],
+) -> None:
+    """Test climate entity becomes unavailable on update error and recovers."""
+    mock_fumis.update_info.side_effect = side_effect
+
+    freezer.tick(timedelta(seconds=35))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("climate.clou_duo"))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_fumis.update_info.side_effect = None
+
+    freezer.tick(timedelta(seconds=35))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("climate.clou_duo"))
+    assert state.state != STATE_UNAVAILABLE
