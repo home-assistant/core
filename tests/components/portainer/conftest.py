@@ -51,6 +51,7 @@ def mock_portainer_watcher() -> Generator[MagicMock]:
         "homeassistant.components.portainer.PortainerImageWatcher", autospec=True
     ) as mock_watcher_class:
         watcher = mock_watcher_class.return_value
+        watcher.last_check = None
         watcher.results = {
             (
                 1,
