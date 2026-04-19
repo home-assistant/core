@@ -122,6 +122,14 @@ def mock_wibeee_api() -> Generator[MagicMock]:
                 ip_addr=MOCK_HOST,
             )
         )
+        api.async_fetch_sensors_data = AsyncMock(
+            return_value={
+                "fase1": {
+                    "vrms": "230.5",
+                    "p_activa": "277",
+                }
+            }
+        )
         api.async_fetch_status = AsyncMock(
             return_value={
                 "fase1_vrms": "230.50",
