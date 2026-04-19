@@ -59,7 +59,8 @@ async def async_setup_entry(
 
     # Discover phases from initial data (hardware-dependent).
     # Single-phase: fase1 + fase4. Three-phase: fase1-3 + fase4.
-    if coordinator.data is None:
+    data = coordinator.data
+    if data is None:
         _LOGGER.warning(
             "No data available for Wibeee %s (%s); no sensors created",
             device_info.mac_addr_short,
@@ -67,7 +68,7 @@ async def async_setup_entry(
         )
         return
 
-    discovered_phases = list(coordinator.data.keys())
+    discovered_phases = list(data.keys())
     if not discovered_phases:
         _LOGGER.warning(
             "No phases found for Wibeee %s (%s)",
@@ -174,9 +175,10 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the sensor value."""
-        if self.coordinator.data is None:
+        data = self.coordinator.data
+        if data is None:
             return None
-        phase_data = self.coordinator.data.get(self._phase_key)
+        phase_data = data.get(self._phase_key)
         if phase_data is None:
             return None
         value = phase_data.get(self.entity_description.key)
