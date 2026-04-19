@@ -81,10 +81,14 @@ async def async_validate_country_and_province(
 
 
 def validate_dates(holiday_list: list[str]) -> list[str]:
-    """Validate and add to list of dates to add or remove."""
+    """Parse a list of dates or date ranges into a flat list of ISO date strings.
+
+    Each entry may be a single date (``YYYY-MM-DD``) or a comma-separated
+    range (``YYYY-MM-DD,YYYY-MM-DD``). Invalid entries are logged and skipped.
+    """
     calc_holidays: list[str] = []
     for add_date in holiday_list:
-        if add_date.find(",") > 0:
+        if add_date.find(",") != -1:
             dates = add_date.split(",", maxsplit=1)
             d1 = dt_util.parse_date(dates[0])
             d2 = dt_util.parse_date(dates[1])
