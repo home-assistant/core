@@ -228,12 +228,7 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Tessie returned no energy history time_series for coordinator %s; skipping update",
                 self.config_entry.entry_id,
             )
-            # Return last good data if we have it, otherwise zeros
-            if self.data:
-                return self.data.copy()
-            fallback: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
-            fallback["_period_start"] = None
-            return fallback
+            return self.data
 
         time_series = data["time_series"]
         output: dict[str, Any] = {}
