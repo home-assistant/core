@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError, DucoError
+from duco.exceptions import DucoConnectionError, DucoError, DucoRateLimitError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -105,6 +106,50 @@ async def test_fan_set_state_error(
             {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fan_set_state_rate_limit_error(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test that a HomeAssistantError is raised when the rate limit is exceeded."""
+    mock_duco_client.async_set_ventilation_state = AsyncMock(
+        side_effect=DucoRateLimitError()
+    )
+
+    with pytest.raises(HomeAssistantError, match="daily write limit"):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fan_set_state_rate_limit_logs_warning(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a warning is logged when the write rate limit is exceeded."""
+    mock_duco_client.async_set_ventilation_state = AsyncMock(
+        side_effect=DucoRateLimitError()
+    )
+
+    with (
+        pytest.raises(HomeAssistantError),
+        caplog.at_level(logging.WARNING, logger="homeassistant.components.duco.fan"),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
+            blocking=True,
+        )
+
+    assert "write rate limit exceeded" in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")
