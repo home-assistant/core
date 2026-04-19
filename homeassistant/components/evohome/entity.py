@@ -43,7 +43,6 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     """Base for Evohome's Climate & WaterHeater entities."""
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
-    _evo_id_attr: str
     _evo_state_attr_names: tuple[str, ...]
 
     def __init__(
@@ -65,8 +64,6 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-
-        self._device_state_attrs[self._evo_id_attr] = self._evo_device.id
 
         for attr in self._evo_state_attr_names:
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)

@@ -201,7 +201,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432579',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -248,7 +247,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432579',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -294,7 +292,6 @@
         'temperature_status': dict({
           'is_available': False,
         }),
-        'zone_id': '3432521',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -340,7 +337,6 @@
         'temperature_status': dict({
           'is_available': False,
         }),
-        'zone_id': '3432521',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -388,7 +384,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432577',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 21.0,
@@ -436,7 +431,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432577',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 21.0,
@@ -483,7 +477,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '3449703',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -530,7 +523,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '3449703',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -577,7 +569,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432578',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -624,7 +615,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432578',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -671,7 +661,6 @@
           'is_available': True,
           'temperature': 21.0,
         }),
-        'zone_id': '3432580',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -718,7 +707,6 @@
           'is_available': True,
           'temperature': 21.0,
         }),
-        'zone_id': '3432580',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -765,7 +753,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432576',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -812,7 +799,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432576',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -848,7 +834,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'AutoWithEco',
@@ -887,7 +872,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'AutoWithEco',
@@ -937,7 +921,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '3450733',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 14.0,
@@ -984,7 +967,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '3450733',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 14.0,
@@ -1031,7 +1013,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432579',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -1077,7 +1058,6 @@
         'temperature_status': dict({
           'is_available': False,
         }),
-        'zone_id': '3432521',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1129,7 +1109,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432577',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 21.0,
@@ -1176,7 +1155,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '3449703',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1223,7 +1201,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432578',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1270,7 +1247,6 @@
           'is_available': True,
           'temperature': 21.0,
         }),
-        'zone_id': '3432580',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -1321,7 +1297,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432576',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1357,7 +1332,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'AutoWithEco',
@@ -1407,7 +1381,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432579',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -1453,7 +1426,6 @@
         'temperature_status': dict({
           'is_available': False,
         }),
-        'zone_id': '3432521',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1501,7 +1473,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432577',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 21.0,
@@ -1548,7 +1519,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '3449703',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1595,7 +1565,6 @@
           'is_available': True,
           'temperature': 20.0,
         }),
-        'zone_id': '3432578',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1642,7 +1611,6 @@
           'is_available': True,
           'temperature': 21.0,
         }),
-        'zone_id': '3432580',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 16.0,
@@ -1689,7 +1657,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432576',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -1725,7 +1692,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'AutoWithEco',
@@ -1775,7 +1741,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '3450733',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 14.0,
@@ -1803,7 +1768,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '416856',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'Heat',
@@ -1853,7 +1817,6 @@
           'is_available': True,
           'temperature': 21.5,
         }),
-        'zone_id': '416856',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 21.5,
@@ -1886,7 +1849,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '8557535',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'Auto',
@@ -1936,7 +1898,6 @@
           'is_available': True,
           'temperature': 21.5,
         }),
-        'zone_id': '8557539',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 21.5,
@@ -1983,7 +1944,6 @@
           'is_available': True,
           'temperature': 21.5,
         }),
-        'zone_id': '8557541',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 21.5,
@@ -2030,7 +1990,6 @@
           'is_available': True,
           'temperature': 22.0,
         }),
-        'zone_id': '3454854',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 5.0,
@@ -2077,7 +2036,6 @@
           'is_available': True,
           'temperature': 22.0,
         }),
-        'zone_id': '3454855',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 20.0,
@@ -2110,7 +2068,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '3454856',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'Auto',
@@ -2160,7 +2117,6 @@
           'is_available': True,
           'temperature': 15.5,
         }),
-        'zone_id': '10090505',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 5.0,
@@ -2207,7 +2163,6 @@
           'is_available': True,
           'temperature': 16.0,
         }),
-        'zone_id': '10090507',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 15.0,
@@ -2254,7 +2209,6 @@
           'is_available': True,
           'temperature': 17.0,
         }),
-        'zone_id': '10090508',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 15.0,
@@ -2290,7 +2244,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '10090510',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'Auto',
@@ -2340,7 +2293,6 @@
           'is_available': True,
           'temperature': 18.0,
         }),
-        'zone_id': '10090506',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 18.0,
@@ -2387,7 +2339,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '10090509',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 19.0,
@@ -2434,7 +2385,6 @@
           'is_available': True,
           'temperature': 19.0,
         }),
-        'zone_id': '3432576',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 17.0,
@@ -2470,7 +2420,6 @@
       'status': dict({
         'activeSystemFaults': tuple(
         ),
-        'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'AutoWithEco',
@@ -2510,7 +2459,6 @@
             'since': '2023-05-04T18:47:36.772704+02:00',
           }),
         ),
-        'system_id': '4187769',
         'system_mode_status': dict({
           'is_permanent': True,
           'mode': 'Auto',
@@ -2560,7 +2508,6 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '4187768',
       }),
       'supported_features': <ClimateEntityFeature: 401>,
       'temperature': 15.0,

@@ -36,7 +36,6 @@
       'status': dict({
         'activeFaults': tuple(
         ),
-        'dhw_id': '3933910',
         'setpoints': dict({
           'next_sp_from': HAFakeDatetime(2024, 7, 10, 8, 30, tzinfo=zoneinfo.ZoneInfo(key='America/Santiago')),
           'next_sp_state': 'Off',
@@ -82,7 +81,6 @@
       'status': dict({
         'activeFaults': tuple(
         ),
-        'dhw_id': '3933910',
         'setpoints': dict({
           'next_sp_from': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_state': 'Off',
