@@ -42,7 +42,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'entity_picture': 'https://www.radio_station.pl/icon.png',
-      'entity_picture_local': '/api/media_player_proxy/media_player.test_name?token=59756f8cce7970421068fb9793d8853c54cb77be84cd8dbef99f13be681b44f9&cache=b6d7aeb798d44ccc',
       'friendly_name': 'Test name',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'media_title': 'Radio Station',

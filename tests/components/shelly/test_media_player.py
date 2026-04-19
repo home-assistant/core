@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_WALL_DISPLAY
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import Platform
@@ -68,7 +69,9 @@ async def test_rpc_media_player(
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     assert (state := hass.states.get(ENTITY_ID))
-    assert state == snapshot(name=f"{ENTITY_ID}-state")
+    assert state == snapshot(
+        name=f"{ENTITY_ID}-state", exclude=props("entity_picture_local")
+    )
 
     assert (entry := entity_registry.async_get(ENTITY_ID))
     assert entry == snapshot(name=f"{ENTITY_ID}-entry")
