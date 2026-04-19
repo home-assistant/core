@@ -2,15 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
-from urllib.parse import parse_qs, urlunparse
 
 import pytest
-from aiohttp import web
-from aiohttp.test_utils import AioHTTPTestCase, TestClient, TestServer
-from aiohttp.web import Request
 
 from homeassistant.components.wibeee.push_receiver import (
     PushReceiver,
@@ -18,7 +12,6 @@ from homeassistant.components.wibeee.push_receiver import (
     _handle_push_request,
     parse_push_data,
 )
-
 
 # ---------------------------------------------------------------------------
 # Test fixtures
