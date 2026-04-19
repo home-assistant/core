@@ -128,6 +128,7 @@ def _dispatch_push_data(receiver: PushReceiver, query: dict[str, str]) -> str:
 
     listener = receiver.get_listener(mac_addr)
     if listener is None:
+        _LOGGER.warning("Push from unknown device ignored: %s", mac_addr)
         return f"unregistered device {mac_addr}"
 
     parsed = parse_push_data(query)
@@ -138,6 +139,33 @@ def _dispatch_push_data(receiver: PushReceiver, query: dict[str, str]) -> str:
             f"{sum(len(v) for v in parsed.values())} values"
         )
     return f"device {mac_addr}: no recognized sensors"
+
+
+async def _handle_push_request(
+    receiver: PushReceiver, request: Request, response_text: str
+) -> Response:
+    """Handle a push request from a WiBeee device.
+
+    Validates the MAC before processing to prevent spoofing.
+    """
+    query = dict(request.query)
+
+    # Require MAC in push data
+    mac_addr = query.get("mac", "").replace(":", "").lower()
+    if not mac_addr:
+        _LOGGER.debug("Push request missing MAC ignored")
+        return Response(status=400, text="missing MAC")
+
+    # Validate device is registered (prevent spoofing)
+    listener = receiver.get_listener(mac_addr)
+    if listener is None:
+        _LOGGER.warning("Push from unknown device rejected: %s", mac_addr)
+        return Response(status=403, text="unknown device")
+
+    # Process the push data
+    result = _dispatch_push_data(receiver, query)
+    _LOGGER.debug("push: %s", result)
+    return Response(status=200, text=response_text)
 
 
 class WibeeeReceiverAvgView(HomeAssistantView):
@@ -157,10 +185,7 @@ class WibeeeReceiverAvgView(HomeAssistantView):
 
     async def get(self, request: Request) -> Response:
         """Handle incoming averaged push data from a WiBeee device."""
-        query = dict(request.query)
-        result = _dispatch_push_data(self._receiver, query)
-        _LOGGER.debug("receiverAvg: %s", result)
-        return Response(status=200, text="<<<WBAVG ")
+        return await _handle_push_request(self._receiver, request, "<<<WBAVG ")
 
 
 class WibeeeReceiverView(HomeAssistantView):
@@ -179,10 +204,7 @@ class WibeeeReceiverView(HomeAssistantView):
 
     async def get(self, request: Request) -> Response:
         """Handle incoming instantaneous push data."""
-        query = dict(request.query)
-        result = _dispatch_push_data(self._receiver, query)
-        _LOGGER.debug("receiver: %s", result)
-        return Response(status=200, text="<<<WBAVG ")
+        return await _handle_push_request(self._receiver, request, "<<<WBAVG ")
 
 
 class WibeeeReceiverLeapView(HomeAssistantView):
@@ -201,10 +223,7 @@ class WibeeeReceiverLeapView(HomeAssistantView):
 
     async def get(self, request: Request) -> Response:
         """Handle incoming gradient push data."""
-        query = dict(request.query)
-        result = _dispatch_push_data(self._receiver, query)
-        _LOGGER.debug("receiverLeap: %s", result)
-        return Response(status=200, text="<<<WGRADIENT=007 ")
+        return await _handle_push_request(self._receiver, request, "<<<WGRADIENT=007 ")
 
 
 def async_setup_push_receiver(hass: HomeAssistant) -> PushReceiver:
