@@ -1,10 +1,8 @@
 """Support for the Hive climate devices."""
 
-from datetime import timedelta
 import logging
 from typing import Any
 
-from apyhiveapi import Hive
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -16,12 +14,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HiveConfigEntry, refresh_system
 from .const import ATTR_TIME_PERIOD, SERVICE_BOOST_HEATING_OFF, SERVICE_BOOST_HEATING_ON
+from .coordinator import HiveDataUpdateCoordinator
 from .entity import HiveEntity
 
 HIVE_TO_HASS_STATE = {
@@ -46,8 +45,6 @@ TEMP_UNIT = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
 }
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -58,10 +55,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
 
-    hive = entry.runtime_data
-    devices = hive.session.deviceList.get("climate")
+    coordinator = entry.runtime_data
+    devices = coordinator.hive.session.deviceList.get("climate")
     if devices:
-        async_add_entities((HiveClimateEntity(hive, dev) for dev in devices), True)
+        async_add_entities(
+            (HiveClimateEntity(coordinator, dev) for dev in devices), True
+        )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -97,9 +96,11 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+    def __init__(
+        self, coordinator: HiveDataUpdateCoordinator, hive_device: dict[str, Any]
+    ) -> None:
         """Initialize the Climate device."""
-        super().__init__(hive, hive_device)
+        super().__init__(coordinator, hive_device)
         self.thermostat_node_id = hive_device["device_id"]
         self._attr_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
 
@@ -127,7 +128,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             await self.hive.heating.setBoostOn(self.device, 30, temperature)
 
     @refresh_system
-    async def async_heating_boost_on(self, time_period, temperature):
+    async def async_heating_boost_on(self, time_period: int, temperature: float) -> None:
         """Handle boost heating service call."""
         await self.hive.heating.setBoostOn(self.device, time_period, temperature)
 
@@ -136,24 +137,21 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         """Handle boost heating service call."""
         await self.hive.heating.setBoostOff(self.device)
 
-    async def async_update(self) -> None:
-        """Update all Node data from Hive."""
-        await self.hive.session.updateData(self.device)
-        self.device = await self.hive.heating.getClimate(self.device)
-        self._attr_available = self.device["deviceData"].get("online")
-        if self._attr_available:
-            self._attr_hvac_mode = HIVE_TO_HASS_STATE.get(self.device["status"]["mode"])
-            self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION.get(
-                self.device["status"]["action"]
-            )
-            self._attr_current_temperature = self.device["status"][
-                "current_temperature"
-            ]
-            self._attr_target_temperature = self.device["status"]["target_temperature"]
-            self._attr_min_temp = self.device["min_temp"]
-            self._attr_max_temp = self.device["max_temp"]
-            if self.device["status"]["boost"] == "ON":
-                self._attr_preset_mode = PRESET_BOOST
-                self._attr_hvac_mode = HVACMode.HEAT
-            else:
-                self._attr_preset_mode = PRESET_NONE
+    @callback
+    def _update_state_from_device(self) -> None:
+        """Update climate attributes from device data."""
+        if not self.available:
+            return
+        self._attr_hvac_mode = HIVE_TO_HASS_STATE.get(self.device["status"]["mode"])
+        self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION.get(
+            self.device["status"]["action"]
+        )
+        self._attr_current_temperature = self.device["status"]["current_temperature"]
+        self._attr_target_temperature = self.device["status"]["target_temperature"]
+        self._attr_min_temp = self.device["min_temp"]
+        self._attr_max_temp = self.device["max_temp"]
+        if self.device["status"]["boost"] == "ON":
+            self._attr_preset_mode = PRESET_BOOST
+            self._attr_hvac_mode = HVACMode.HEAT
+        else:
+            self._attr_preset_mode = PRESET_NONE

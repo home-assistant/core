@@ -1,6 +1,5 @@
 """Support for hive water heaters."""
 
-from datetime import timedelta
 from typing import Any
 
 import voluptuous as vol
@@ -11,7 +10,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,11 +21,10 @@ from .const import (
     SERVICE_BOOST_HOT_WATER,
     WATER_HEATER_MODES,
 )
+from .coordinator import HiveDataUpdateCoordinator
 from .entity import HiveEntity
 
 HOTWATER_NAME = "Hot Water"
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(seconds=15)
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": STATE_ECO,
     "ON": STATE_ON,
@@ -49,10 +47,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
 
-    hive = entry.runtime_data
-    devices = hive.session.deviceList.get("water_heater")
+    coordinator = entry.runtime_data
+    devices = coordinator.hive.session.deviceList.get("water_heater")
     if devices:
-        async_add_entities((HiveWaterHeater(hive, dev) for dev in devices), True)
+        async_add_entities(
+            (HiveWaterHeater(coordinator, dev) for dev in devices), True
+        )
 
     platform = entity_platform.async_get_current_platform()
 
@@ -79,6 +79,12 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_operation_list = SUPPORT_WATER_HEATER
 
+    def __init__(
+        self, coordinator: HiveDataUpdateCoordinator, hive_device: dict[str, Any]
+    ) -> None:
+        """Initialize the water heater device."""
+        super().__init__(coordinator, hive_device)
+
     @refresh_system
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on hotwater."""
@@ -103,12 +109,10 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         elif on_off == "off":
             await self.hive.hotwater.setBoostOff(self.device)
 
-    async def async_update(self) -> None:
-        """Update all Node data from Hive."""
-        await self.hive.session.updateData(self.device)
-        self.device = await self.hive.hotwater.getWaterHeater(self.device)
-        self._attr_available = self.device["deviceData"].get("online")
-        if self._attr_available:
+    @callback
+    def _update_state_from_device(self) -> None:
+        """Update water heater attributes from device data."""
+        if self.available:
             self._attr_current_operation = HIVE_TO_HASS_STATE[
                 self.device["status"]["current_operation"]
             ]

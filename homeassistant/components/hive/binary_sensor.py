@@ -1,23 +1,18 @@
 """Support for the Hive binary sensors."""
 
-from datetime import timedelta
 from typing import Any
-
-from apyhiveapi import Hive
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HiveConfigEntry
+from .coordinator import HiveDataUpdateCoordinator
 from .entity import HiveEntity
-
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(seconds=15)
 
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
@@ -73,21 +68,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
 
-    hive = entry.runtime_data
+    coordinator = entry.runtime_data
 
     sensors: list[BinarySensorEntity] = []
 
-    devices = hive.session.deviceList.get("binary_sensor")
+    devices = coordinator.hive.session.deviceList.get("binary_sensor")
     sensors.extend(
-        HiveBinarySensorEntity(hive, dev, description)
+        HiveBinarySensorEntity(coordinator, dev, description)
         for dev in devices
         for description in BINARY_SENSOR_TYPES
         if dev["hiveType"] == description.key
     )
 
-    devices = hive.session.deviceList.get("sensor")
+    devices = coordinator.hive.session.deviceList.get("sensor")
     sensors.extend(
-        HiveSensorEntity(hive, dev, description)
+        HiveSensorEntity(coordinator, dev, description)
         for dev in devices
         for description in SENSOR_TYPES
         if dev["hiveType"] == description.key
@@ -101,28 +96,30 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        hive: Hive,
+        coordinator: HiveDataUpdateCoordinator,
         hive_device: dict[str, Any],
         entity_description: BinarySensorEntityDescription,
     ) -> None:
         """Initialise hive binary sensor."""
-        super().__init__(hive, hive_device)
+        super().__init__(coordinator, hive_device)
         self.entity_description = entity_description
 
-    async def async_update(self) -> None:
-        """Update all Node data from Hive."""
-        await self.hive.session.updateData(self.device)
-        self.device = await self.hive.sensor.getSensor(self.device)
-        self.attributes = self.device.get("attributes", {})
-
+    @property
+    def available(self) -> bool:
+        """Return True if the entity is available."""
         if self.device["hiveType"] != "Connectivity":
-            self._attr_available = (
-                self.device["deviceData"].get("online") and "status" in self.device
+            return (
+                self.coordinator.last_update_success
+                and bool(self.device["deviceData"].get("online"))
+                and "status" in self.device
             )
-        else:
-            self._attr_available = True
+        return self.coordinator.last_update_success
 
-        if self._attr_available:
+    @callback
+    def _update_state_from_device(self) -> None:
+        """Update binary sensor attributes from device data."""
+        self.attributes = self.device.get("attributes", {})
+        if self.available:
             self._attr_is_on = self.device["status"].get("state")
 
 
@@ -131,17 +128,16 @@ class HiveSensorEntity(HiveEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        hive: Hive,
+        coordinator: HiveDataUpdateCoordinator,
         hive_device: dict[str, Any],
         entity_description: BinarySensorEntityDescription,
     ) -> None:
         """Initialise hive sensor."""
-        super().__init__(hive, hive_device)
+        super().__init__(coordinator, hive_device)
         self.entity_description = entity_description
 
-    async def async_update(self) -> None:
-        """Update all Node data from Hive."""
-        await self.hive.session.updateData(self.device)
-        self.device = await self.hive.sensor.getSensor(self.device)
-        self._attr_is_on = self.device["status"]["state"] == "ON"
-        self._attr_available = self.device["deviceData"].get("online")
+    @callback
+    def _update_state_from_device(self) -> None:
+        """Update sensor attributes from device data."""
+        if self.available:
+            self._attr_is_on = self.device["status"]["state"] == "ON"
