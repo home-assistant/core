@@ -52,19 +52,21 @@ async def test_reconnect_client(
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_reconnect_non_existant_device(
+async def test_reconnect_non_existent_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Verify ServiceValidationError is raised if device does not exist."""
     aioclient_mock.clear_requests()
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECONNECT_CLIENT,
             service_data={ATTR_DEVICE_ID: "device_entry.id"},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "reconnect_client_device_not_found"
     assert aioclient_mock.call_count == 0
 
 
@@ -82,13 +84,15 @@ async def test_reconnect_device_without_mac(
         connections={("other connection", "not mac")},
     )
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RECONNECT_CLIENT,
             service_data={ATTR_DEVICE_ID: device_entry.id},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "reconnect_client_no_mac"
     assert aioclient_mock.call_count == 0
 
 
@@ -324,7 +328,7 @@ async def test_reconnect_client_request_failed(
             "request",
             side_effect=aiounifi.AiounifiException,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -332,6 +336,8 @@ async def test_reconnect_client_request_failed(
             service_data={ATTR_DEVICE_ID: device_entry.id},
             blocking=True,
         )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "reconnect_client_request_failed"
 
 
 @pytest.mark.parametrize(
@@ -357,6 +363,8 @@ async def test_remove_clients_request_failed(
             "request",
             side_effect=aiounifi.AiounifiException,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "remove_clients_request_failed"
