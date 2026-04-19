@@ -15,7 +15,7 @@ from homeassistant.components.tessie.coordinator import (
     TESSIE_SYNC_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -226,10 +226,8 @@ async def test_coordinator_energy_history_cold_start_invalid_data(
     assert coordinator.last_exception is None
     assert coordinator.data == {}
 
-    # Sensor should be unavailable until the first successful fetch
-    assert (
-        hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNAVAILABLE
-    )
+    # Sensor should be unknown until the first successful fetch
+    assert hass.states.get("sensor.energy_site_grid_imported").state == STATE_UNKNOWN
 
     # Now recover: restore valid energy history data and trigger an update
     mock_energy_history.side_effect = lambda *a, **kw: deepcopy(ENERGY_HISTORY)
