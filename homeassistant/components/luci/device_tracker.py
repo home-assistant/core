@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -52,21 +53,23 @@ async def async_get_scanner(
     """Import legacy YAML configuration."""
     scanner_config = config["device_tracker"]
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: scanner_config[CONF_HOST],
-                CONF_USERNAME: scanner_config[CONF_USERNAME],
-                CONF_PASSWORD: scanner_config[CONF_PASSWORD],
-                CONF_SSL: scanner_config.get(CONF_SSL, DEFAULT_SSL),
-                CONF_VERIFY_SSL: scanner_config.get(
-                    CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
-                ),
-            },
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: scanner_config[CONF_HOST],
+            CONF_USERNAME: scanner_config[CONF_USERNAME],
+            CONF_PASSWORD: scanner_config[CONF_PASSWORD],
+            CONF_SSL: scanner_config.get(CONF_SSL, DEFAULT_SSL),
+            CONF_VERIFY_SSL: scanner_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        },
     )
+
+    if (
+        result["type"] == FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        return
 
     async_create_issue(
         hass,
