@@ -65,6 +65,24 @@ async def test_async_setup_entry_scan_failure(
         mock_forward.assert_called_once()
 
 
+async def test_async_setup_entry_forward_failure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
+) -> None:
+    """Test setup exception during forward setups."""
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            side_effect=Exception("Forward failed"),
+        ),
+        pytest.raises(Exception, match="Forward failed"),
+    ):
+        await async_setup_entry(hass, mock_config_entry)
+
+    mock_tis_api.disconnect.assert_called_once()
+    assert mock_config_entry.runtime_data.listener_task is None
+
+
 async def test_async_setup_entry_event_listener(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:

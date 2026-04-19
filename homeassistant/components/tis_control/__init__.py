@@ -76,22 +76,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
             # if the generator returns immediately or finishes normally.
             await asyncio.sleep(1)
 
-    # Add this listener to the HA loop as a background task.
-    # async_create_background_task automatically tracks the task and ensures it is cancelled on unload.
-    entry.runtime_data.listener_task = entry.async_create_background_task(
-        hass, listen_for_events(), "tis_event_listener"
-    )
-
     try:
-        await tis_api.scan_devices()
-    except (ConnectionError, OSError) as e:
-        _LOGGER.error(
-            "Connection error occurred while scanning for devices on port %d: %s",
-            entry.data[CONF_PORT],
-            e,
+        # Add this listener to the HA loop as a background task.
+        # async_create_background_task automatically tracks the task and ensures it is cancelled on unload.
+        entry.runtime_data.listener_task = entry.async_create_background_task(
+            hass, listen_for_events(), "tis_event_listener"
         )
+        try:
+            await tis_api.scan_devices()
+        except (ConnectionError, OSError) as e:
+            _LOGGER.error(
+                "Connection error occurred while scanning for devices on port %d: %s",
+                entry.data[CONF_PORT],
+                e,
+            )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        if (task := entry.runtime_data.listener_task) is not None:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+            entry.runtime_data.listener_task = None
+        tis_api.disconnect()
+        raise
+
     return True
 
 
