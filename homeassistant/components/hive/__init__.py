@@ -16,14 +16,14 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+from .coordinator import HiveDataUpdateCoordinator
 from .entity import HiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-type HiveConfigEntry = ConfigEntry[Hive]
+type HiveConfigEntry = ConfigEntry[HiveDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool:
@@ -36,7 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     hive_config["options"].update(
         {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
     )
-    entry.runtime_data = hive
 
     try:
         devices = await hive.session.startSession(hive_config)
@@ -45,6 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
         raise ConfigEntryNotReady from error
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
+
+    coordinator = HiveDataUpdateCoordinator(hass, hive)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -92,11 +95,11 @@ async def async_remove_config_entry_device(
 def refresh_system[_HiveEntityT: HiveEntity, **_P](
     func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
-    """Force update all entities after state change."""
+    """Force a full data refresh after a state-changing action."""
 
     @wraps(func)
     async def wrapper(self: _HiveEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         await func(self, *args, **kwargs)
-        async_dispatcher_send(self.hass, DOMAIN)
+        await self.coordinator.async_refresh()
 
     return wrapper

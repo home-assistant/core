@@ -209,7 +209,7 @@ class HiveOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self.hive = self.config_entry.runtime_data
+        self.hive = self.config_entry.runtime_data.hive
         errors: dict[str, str] = {}
         if user_input is not None:
             new_interval = user_input.get(CONF_SCAN_INTERVAL)

@@ -4,23 +4,27 @@ from __future__ import annotations
 
 from typing import Any
 
-from apyhiveapi import Hive
-
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import HiveDataUpdateCoordinator
 
 
-class HiveEntity(Entity):
+class HiveEntity(CoordinatorEntity[HiveDataUpdateCoordinator]):
     """Initiate Hive Base Class."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        coordinator: HiveDataUpdateCoordinator,
+        hive_device: dict[str, Any],
+    ) -> None:
         """Initialize the instance."""
-        self.hive = hive
+        super().__init__(coordinator)
+        self.hive = coordinator.hive
         self.device = hive_device
         self._attr_name = self._derive_entity_name(
             hive_device.get("haName"), hive_device.get("device_name")
@@ -53,8 +57,22 @@ class HiveEntity(Entity):
             return suffix or None
         return ha_name
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )
+    @property
+    def available(self) -> bool:
+        """Return True if the coordinator succeeded and the device is online."""
+        return super().available and bool(self.device["deviceData"].get("online"))
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update entity state when coordinator data changes."""
+        if self.coordinator.data is not None:
+            self.device = self.coordinator.data.get(self.device["hiveID"], self.device)
+        self._update_state_from_device()
+        self.async_write_ha_state()
+
+    def _update_state_from_device(self) -> None:
+        """Update entity-specific attributes from self.device.
+
+        Override in subclasses to set ``_attr_*`` fields after each
+        coordinator refresh.
+        """
