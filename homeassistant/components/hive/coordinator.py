@@ -10,7 +10,7 @@ from typing import Any
 from apyhiveapi import Hive
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -22,6 +22,7 @@ type HiveDeviceData = dict[str, dict[str, Any]]
 _PLATFORM_GETTERS: dict[
     str, Callable[[Hive, dict[str, Any]], Awaitable[dict[str, Any]]]
 ] = {
+    # Both binary_sensor and sensor device types use the same library getter.
     "binary_sensor": lambda hive, dev: hive.sensor.getSensor(dev),
     "climate": lambda hive, dev: hive.heating.getClimate(dev),
     "light": lambda hive, dev: hive.light.getLight(dev),
@@ -36,6 +37,9 @@ class HiveDataUpdateCoordinator(DataUpdateCoordinator[HiveDeviceData]):
 
     def __init__(self, hass: HomeAssistant, hive: Hive) -> None:
         """Initialize the coordinator."""
+        # The coordinator reads from the library's local cache every 15 seconds.
+        # Actual cloud API calls are gated by the library's own scan_interval
+        # (default 120 s, configurable via CONF_SCAN_INTERVAL in the options flow).
         super().__init__(
             hass,
             _LOGGER,
@@ -51,5 +55,10 @@ class HiveDataUpdateCoordinator(DataUpdateCoordinator[HiveDeviceData]):
             for device in self.hive.session.deviceList.get(platform) or []:
                 await self.hive.session.updateData(device)
                 updated = await getter(self.hive, device)
-                data[updated["hiveID"]] = updated
+                hive_id = updated.get("hiveID")
+                if hive_id is None:
+                    raise UpdateFailed(
+                        f"Device data for platform '{platform}' is missing 'hiveID': {updated!r}"
+                    )
+                data[hive_id] = updated
         return data
