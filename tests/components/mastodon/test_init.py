@@ -85,6 +85,27 @@ async def test_setup_integration_fallback_to_instance_v1(
     mock_mastodon_client.instance_v1.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("version"),
+    [("v1.0.0-RC2"), ("v0.1.0"), ("v1.9.0"), ("4.1.0"), ("4.1.0-nightly.2026-04-17")],
+)
+async def test_setup_failed_too_old(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    version: str,
+) -> None:
+    """Test setup of Mastodon entry with too old version of Mastodon."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_mastodon_client.instance_v1.return_value.version = version
+    mock_mastodon_client.instance_v2.return_value.version = version
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_migrate(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,

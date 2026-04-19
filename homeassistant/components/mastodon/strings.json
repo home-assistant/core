@@ -8,6 +8,7 @@
       "wrong_account": "You have to use the same account that was used to configure the integration."
     },
     "error": {
+      "mastodon_version": "Minimum required Mastodon instance version is 4.2.0",
       "network_error": "The Mastodon instance was not found.",
       "unauthorized_error": "The credentials are incorrect.",
       "unknown": "Unknown error occurred when connecting to the Mastodon instance."
@@ -130,6 +131,9 @@
     },
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
+    },
+    "version_error": {
+      "message": "Your instance is running verison {mastodon_version} of Mastodon. Minimum required version is {min_version}."
     }
   },
   "selector": {

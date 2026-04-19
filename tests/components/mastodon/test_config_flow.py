@@ -176,6 +176,54 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("version"),
+    [("v1.0.0-RC2"), ("v0.1.0"), ("v1.9.0"), ("4.1.0"), ("4.1.0-nightly.2026-04-17")],
+)
+async def test_flow_version_error(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    version: str,
+) -> None:
+    """Test flow version error."""
+    mock_mastodon_client.instance_v1.return_value.version = version
+    mock_mastodon_client.instance_v2.return_value.version = version
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BASE_URL: "https://mastodon.social",
+            CONF_CLIENT_ID: "client_id",
+            CONF_CLIENT_SECRET: "client_secret",
+            CONF_ACCESS_TOKEN: "access_token",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "mastodon_version"}
+
+    mock_mastodon_client.instance_v1.return_value.version = "4.4.0-nightly.2025-02-07"
+    mock_mastodon_client.instance_v2.return_value.version = "4.4.0-nightly.2025-02-07"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BASE_URL: "https://mastodon.social",
+            CONF_CLIENT_ID: "client_id",
+            CONF_CLIENT_SECRET: "client_secret",
+            CONF_ACCESS_TOKEN: "access_token",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_duplicate(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
@@ -294,6 +342,48 @@ async def test_reauth_flow_exceptions(
         result["flow_id"],
         {CONF_ACCESS_TOKEN: "token"},
     )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("version"),
+    [
+        ("v1.0.0-RC2"),
+        ("v0.1.0"),
+        ("v1.9.0"),
+        ("4.1.0"),
+        ("4.1.0-nightly.2026-04-17"),
+    ],
+)
+async def test_reauth_version_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mastodon_client: AsyncMock,
+    version: str,
+) -> None:
+    """Test reauth version error."""
+    mock_mastodon_client.instance_v1.return_value.version = version
+    mock_mastodon_client.instance_v2.return_value.version = version
+
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "mastodon_version"}
+
+    mock_mastodon_client.instance_v1.return_value.version = "4.4.0-nightly.2025-02-07"
+    mock_mastodon_client.instance_v2.return_value.version = "4.4.0-nightly.2025-02-07"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_TOKEN: "token"},
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
