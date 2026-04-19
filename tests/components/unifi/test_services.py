@@ -355,6 +355,7 @@ async def test_reconnect_client_request_failed(
 async def test_remove_clients_request_failed(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
+    clients_all_payload: list[dict[str, Any]],
 ) -> None:
     """Verify HomeAssistantError is raised when API request fails."""
     with (
