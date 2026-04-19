@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
 from .controller import ZWaveMeConfigEntry
 from .entity import ZWaveMeEntity
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
 
     @callback
     def add_new_device(new_device):
-        controller = hass.data[DOMAIN][config_entry.entry_id]
+        controller = config_entry.runtime_data
         fan = ZWaveMeFan(controller, new_device)
 
         async_add_entities(
