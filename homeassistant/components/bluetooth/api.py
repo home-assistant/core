@@ -11,6 +11,7 @@ from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
 from bleak import BleakScanner
+from bleak.backends.scanner import AdvertisementDataCallback
 from habluetooth import (
     BaseHaScanner,
     BluetoothScannerDevice,
@@ -39,7 +40,10 @@ def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
+def async_get_scanner(
+    hass: HomeAssistant,
+    detection_callback: AdvertisementDataCallback | None = None,
+) -> BleakScanner:
     """Return a HaBleakScannerWrapper cast to BleakScanner.
 
     This is a wrapper around our BleakScanner singleton that allows
@@ -48,7 +52,9 @@ def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
     The wrapper is cast to BleakScanner for type compatibility with
     libraries expecting a BleakScanner instance.
     """
-    return cast(BleakScanner, HaBleakScannerWrapper())
+    return cast(
+        BleakScanner, HaBleakScannerWrapper(detection_callback=detection_callback)
+    )
 
 
 @hass_callback
