@@ -16,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_sensors(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -29,7 +29,7 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_sensor(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -50,7 +50,7 @@ async def test_sensor(
     assert state.state == "2000"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 @pytest.mark.parametrize(
     "side_effect",
     [

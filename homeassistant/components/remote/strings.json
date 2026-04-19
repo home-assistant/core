@@ -1,6 +1,28 @@
 {
   "common": {
-    "trigger_behavior_name": "Trigger when"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more remotes are off.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Remote is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more remotes are on.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::remote::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Remote is on"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -31,6 +53,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
@@ -132,6 +160,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::remote::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::remote::common::trigger_for_name%]"
         }
       },
       "name": "Remote turned off"
@@ -141,6 +172,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::remote::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::remote::common::trigger_for_name%]"
         }
       },
       "name": "Remote turned on"

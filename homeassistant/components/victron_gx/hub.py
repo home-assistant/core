@@ -74,7 +74,7 @@ class Hub:
             installation_id=config.get(CONF_INSTALLATION_ID) or None,
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
-            operation_mode=OperationMode.READ_ONLY,
+            operation_mode=OperationMode.FULL,
             update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
         )
         self._hub.on_new_metric = self._on_new_metric
