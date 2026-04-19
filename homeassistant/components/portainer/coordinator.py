@@ -184,16 +184,13 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     docker_version,
                     docker_info,
                     docker_system_df,
-                    stacks,
                     volumes,
                 ) = await asyncio.gather(
                     self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
                     self.portainer.docker_system_df(endpoint.id, verbose=True),
-                    self.portainer.get_stacks(endpoint.id),
                     self.portainer.get_volumes(endpoint.id),
-                    self.portainer.docker_system_df(endpoint.id),
                 )
 
                 stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
