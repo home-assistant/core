@@ -9,12 +9,12 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
-    create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -22,17 +22,7 @@ from tests.components.common import (
 @pytest.fixture
 async def target_sirens(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple siren entities associated with different targets."""
-    return await target_entities(hass, "siren")
-
-
-@pytest.fixture
-async def target_switches(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple switch entities associated with different targets.
-
-    Note: The switches are used to ensure that only siren entities are considered
-    in the condition evaluation and not other toggle entities.
-    """
-    return await target_entities(hass, "switch")
+    return await target_entities(hass, "siren", domain_excluded="switch")
 
 
 @pytest.mark.parametrize(
@@ -61,18 +51,19 @@ async def test_siren_conditions_gated_by_labs_flag(
             condition="siren.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_any(
             condition="siren.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
 async def test_siren_state_condition_behavior_any(
     hass: HomeAssistant,
     target_sirens: dict[str, list[str]],
-    target_switches: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -81,38 +72,16 @@ async def test_siren_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the siren state condition with the 'any' behavior."""
-    other_entity_ids = set(target_sirens["included_entities"]) - {entity_id}
-
-    # Set all sirens, including the tested siren, to the initial state
-    for eid in target_sirens["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_any(
         hass,
+        target_entities=target_sirens,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="any",
+        condition_options=condition_options,
+        states=states,
     )
-
-    # Set state for switches to ensure that they don't impact the condition
-    for state in states:
-        for eid in target_switches["included_entities"]:
-            set_or_remove_state(hass, eid, state["included_state"])
-            await hass.async_block_till_done()
-            assert condition(hass) is False
-
-    for state in states:
-        included_state = state["included_state"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
-
-        # Check if changing other sirens also passes the condition
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -127,11 +96,13 @@ async def test_siren_state_condition_behavior_any(
             condition="siren.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            excluded_entities_from_other_domain=True,
         ),
         *parametrize_condition_states_all(
             condition="siren.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
+            excluded_entities_from_other_domain=True,
         ),
     ],
 )
@@ -146,32 +117,13 @@ async def test_siren_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the siren state condition with the 'all' behavior."""
-    # Set state for two switches to ensure that they don't impact the condition
-    hass.states.async_set("switch.label_switch_1", STATE_OFF)
-    hass.states.async_set("switch.label_switch_2", STATE_ON)
-    other_entity_ids = set(target_sirens["included_entities"]) - {entity_id}
-
-    # Set all sirens, including the tested siren, to the initial state
-    for eid in target_sirens["included_entities"]:
-        set_or_remove_state(hass, eid, states[0]["included_state"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_all(
         hass,
+        target_entities=target_sirens,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="all",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included_state"]
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true_first_entity"]
-
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-
-        assert condition(hass) == state["condition_true"]

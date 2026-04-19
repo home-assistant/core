@@ -11,8 +11,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import ADDONS_COORDINATOR
-from .coordinator import HassioDataUpdateCoordinator
+from .const import ADDONS_COORDINATOR, MAIN_COORDINATOR, STATS_COORDINATOR
+from .coordinator import (
+    HassioAddOnDataUpdateCoordinator,
+    HassioMainDataUpdateCoordinator,
+    HassioStatsDataUpdateCoordinator,
+)
 
 
 async def async_get_config_entry_diagnostics(
@@ -20,7 +24,9 @@ async def async_get_config_entry_diagnostics(
     config_entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
+    addons_coordinator: HassioAddOnDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    stats_coordinator: HassioStatsDataUpdateCoordinator = hass.data[STATS_COORDINATOR]
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
@@ -53,5 +59,7 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "coordinator_data": coordinator.data,
+        "addons_coordinator_data": addons_coordinator.data,
+        "stats_coordinator_data": stats_coordinator.data,
         "devices": devices,
     }
