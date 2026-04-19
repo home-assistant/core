@@ -49,7 +49,7 @@ from .const import (
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoChild, EvoEntity, is_valid_zone
+from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
 from .helpers import async_create_deprecation_issue_once
 
 _LOGGER = logging.getLogger(__name__)
@@ -170,13 +170,8 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """Initialize an evohome-compatible heating zone."""
 
         super().__init__(coordinator, evo_device)
-        self._evo_id = evo_device.id
 
-        if evo_device.id == evo_device.tcs.id:
-            # this system does not have a distinct ID for the zone
-            self._attr_unique_id = f"{evo_device.id}z"
-        else:
-            self._attr_unique_id = evo_device.id
+        self._attr_unique_id = unique_zone_id(evo_device)
 
         if coordinator.client_v1:
             self._attr_precision = PRECISION_TENTHS
@@ -352,7 +347,6 @@ class EvoController(EvoClimateEntity):
         """Initialize an evohome-compatible controller."""
 
         super().__init__(coordinator, evo_device)
-        self._evo_id = evo_device.id
 
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
