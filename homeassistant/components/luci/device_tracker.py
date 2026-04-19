@@ -93,21 +93,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for OpenWrt (luci) component."""
     coordinator = entry.runtime_data
-    tracked: set[str] = set()
 
-    @callback
-    def _async_add_new_entities() -> None:
-        """Add new tracker entities from the router."""
-        new_entities: list[LuciScannerEntity] = []
-        for mac, device in coordinator.data.items():
-            if mac not in tracked:
-                tracked.add(mac)
-                new_entities.append(LuciScannerEntity(coordinator, mac, device))
-        if new_entities:
-            async_add_entities(new_entities)
-
-    _async_add_new_entities()
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
+    async_add_entities(
+        LuciScannerEntity(coordinator, mac, device)
+        for mac, device in coordinator.data.items()
+    )
 
 
 class LuciScannerEntity(CoordinatorEntity[LuciCoordinator], ScannerEntity):
