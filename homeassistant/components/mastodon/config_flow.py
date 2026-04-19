@@ -110,6 +110,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 instance = client.instance_v2()
             except MastodonNotFoundError:
+                # For instances prior to 4, can be removed in 2026.11
                 instance = client.instance_v1()
             account = client.account_verify_credentials()
 
