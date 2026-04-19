@@ -33,8 +33,14 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        heater = Heater(discovery_info.ip)
-        data = await self.hass.async_add_executor_job(heater.parse_data)
+        try:
+            heater = Heater(discovery_info.ip)
+            data = await self.hass.async_add_executor_job(heater.parse_data)
+        except requests.exceptions.RequestException:
+            return self.async_abort(reason="cannot_connect")
+        except NoSerialException:
+            return self.async_abort(reason="bad_data")
+
         # set serial as unique id for deduplication, ip isn't a good match
         serial = data["serial"][0]
         await self.async_set_unique_id(serial)
