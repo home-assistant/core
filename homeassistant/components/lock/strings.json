@@ -1,7 +1,8 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_jammed": {
@@ -146,6 +147,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::lock::common::trigger_for_name%]"
         }
       },
       "name": "Lock jammed"
@@ -155,6 +159,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::lock::common::trigger_for_name%]"
         }
       },
       "name": "Lock locked"
@@ -164,6 +171,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::lock::common::trigger_for_name%]"
         }
       },
       "name": "Lock opened"
@@ -173,6 +183,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::lock::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::lock::common::trigger_for_name%]"
         }
       },
       "name": "Lock unlocked"

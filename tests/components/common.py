@@ -8,6 +8,7 @@ import logging
 from typing import Any, TypedDict
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -1093,6 +1094,66 @@ async def assert_trigger_gated_by_labs_flag(
         "feature to be enabled in Home Assistant Labs settings (feature flag: "
         "'new_triggers_conditions')"
     ) in caplog.text
+
+
+async def _validate_trigger_options(
+    hass: HomeAssistant,
+    trigger: str,
+    options: dict[str, Any] | None,
+    *,
+    valid: bool,
+) -> None:
+    """Assert that a trigger accepts or rejects the given options during validation."""
+    trigger_config: dict[str, Any] = {
+        CONF_PLATFORM: trigger,
+        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+    }
+    if options is not None:
+        trigger_config[CONF_OPTIONS] = options
+    if valid:
+        await async_validate_trigger_config(hass, [trigger_config])
+    else:
+        with pytest.raises(vol.Invalid):
+            await async_validate_trigger_config(hass, [trigger_config])
+
+
+async def assert_trigger_options_supported(
+    hass: HomeAssistant,
+    trigger: str,
+    base_options: dict[str, Any] | None,
+    *,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Assert which options a trigger supports.
+
+    Tests that the trigger:
+    - Accepts the minimal config (base_options)
+    - Accepts/rejects behavior depending on supports_behavior
+    - Accepts/rejects duration depending on supports_duration
+    - Rejects unknown options
+    """
+    # Minimal config should always be valid
+    await _validate_trigger_options(hass, trigger, base_options, valid=True)
+
+    def _merge(extra: dict[str, Any]) -> dict[str, Any]:
+        return {**(base_options or {}), **extra}
+
+    # Behavior
+    for behavior in ("any", "first", "last"):
+        await _validate_trigger_options(
+            hass, trigger, _merge({"behavior": behavior}), valid=supports_behavior
+        )
+
+    # Duration
+    await _validate_trigger_options(
+        hass, trigger, _merge({"for": {"seconds": 5}}), valid=supports_duration
+    )
+
+    # Unknown option should always be rejected
+    await _validate_trigger_options(
+        hass, trigger, _merge({"unknown_option": True}), valid=False
+    )
 
 
 async def assert_condition_behavior_any(
