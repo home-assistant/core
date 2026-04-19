@@ -58,8 +58,6 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             else:
-                await self.async_set_unique_id(user_input[CONF_HOST])
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data=user_input,
@@ -86,9 +84,6 @@ class LuciConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except InvalidAuth:
             return self.async_abort(reason="invalid_auth")
-
-        await self.async_set_unique_id(import_data[CONF_HOST])
-        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=import_data[CONF_HOST],
