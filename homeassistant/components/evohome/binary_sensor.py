@@ -53,7 +53,7 @@ async def async_setup_platform(
 def _normalize_fault(fault: dict[str, Any]) -> dict[str, Any]:
     """Until library is updated to return snake_case, convert from PascalCase.
 
-    Doing this conversion here allows adding this feature without needing to wait for
+    Doing this conversion here allows adding this platform without needing to wait for
     a new client library release, whilst avoiding a breaking change in the future.
     """
 
@@ -106,17 +106,31 @@ class EvoFaultSensorBase(
 class EvoGatewayFaultSensor(EvoFaultSensorBase):
     """Fault sensor for a gateway."""
 
-    _attr_name = "Gateway faults"
-
     _evo_device: evo.Gateway
+
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.Gateway,
+    ) -> None:
+        """Initialize the gateway faults binary sensor."""
+        super().__init__(coordinator, evo_device)
+        self._attr_name = f"{evo_device.location.name} gateway faults"
 
 
 class EvoControllerFaultSensor(EvoFaultSensorBase):
     """Fault sensor for a temperature control system."""
 
-    _attr_name = "Controller faults"
-
     _evo_device: evo.ControlSystem
+
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.ControlSystem,
+    ) -> None:
+        """Initialize the controller faults binary sensor."""
+        super().__init__(coordinator, evo_device)
+        self._attr_name = f"{evo_device.location.name} system faults"
 
 
 class EvoDhwFaultSensor(EvoFaultSensorBase):
@@ -125,6 +139,15 @@ class EvoDhwFaultSensor(EvoFaultSensorBase):
     _attr_name = "DHW faults"
 
     _evo_device: evo.HotWater
+
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.HotWater,
+    ) -> None:
+        """Initialize the DHW faults binary sensor."""
+        super().__init__(coordinator, evo_device)
+        self._attr_name = f"{self._evo_device.location.name} DHW faults"
 
 
 class EvoZoneFaultSensor(EvoFaultSensorBase):
@@ -144,4 +167,4 @@ class EvoZoneFaultSensor(EvoFaultSensorBase):
     @property
     def name(self) -> str:
         """Return the name, dynamically following any zone rename."""
-        return f"{self._evo_device.name} faults"
+        return f"{self._evo_device.name} zone faults"

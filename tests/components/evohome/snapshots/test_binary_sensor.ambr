@@ -1,73 +1,39 @@
 # serializer version: 1
-# name: test_setup_platform[botched][binary_sensor.bathroom_dn_faults-state]
+# name: test_setup_platform[botched][binary_sensor.bathroom_dn_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Bathroom Dn faults',
+      'friendly_name': 'Bathroom Dn zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bathroom_dn_faults',
+    'entity_id': 'binary_sensor.bathroom_dn_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.controller_faults-state]
+# name: test_setup_platform[botched][binary_sensor.dead_zone_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'Dead Zone zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.dead_zone_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.dead_zone_faults-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
-      'friendly_name': 'Dead Zone faults',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dead_zone_faults',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_setup_platform[botched][binary_sensor.dhw_faults-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
-      'friendly_name': 'DHW faults',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dhw_faults',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_setup_platform[botched][binary_sensor.front_room_faults-state]
+# name: test_setup_platform[botched][binary_sensor.front_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -78,85 +44,68 @@
           'since': datetime.datetime(2022, 3, 2, 4, 50, 20, tzinfo=UTC-03:00),
         }),
       ),
-      'friendly_name': 'Front Room faults',
+      'friendly_name': 'Front Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_room_faults',
+    'entity_id': 'binary_sensor.front_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[botched][binary_sensor.kids_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'Kids Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.kids_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.kids_room_faults-state]
+# name: test_setup_platform[botched][binary_sensor.kitchen_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Kids Room faults',
+      'friendly_name': 'Kitchen zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kids_room_faults',
+    'entity_id': 'binary_sensor.kitchen_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.kitchen_faults-state]
+# name: test_setup_platform[botched][binary_sensor.main_bedroom_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Kitchen faults',
+      'friendly_name': 'Main Bedroom zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kitchen_faults',
+    'entity_id': 'binary_sensor.main_bedroom_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.main_bedroom_faults-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
-      'friendly_name': 'Main Bedroom faults',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.main_bedroom_faults',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_setup_platform[botched][binary_sensor.main_room_faults-state]
+# name: test_setup_platform[botched][binary_sensor.main_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -167,391 +116,408 @@
           'since': datetime.datetime(2022, 3, 2, 15, 56, 1, tzinfo=UTC-03:00),
         }),
       ),
-      'friendly_name': 'Main Room faults',
+      'friendly_name': 'Main Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_room_faults',
+    'entity_id': 'binary_sensor.main_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_platform[botched][binary_sensor.spare_room_faults-state]
+# name: test_setup_platform[botched][binary_sensor.my_home_dhw_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Spare Room faults',
+      'friendly_name': 'My Home DHW faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.spare_room_faults',
+    'entity_id': 'binary_sensor.my_home_dhw_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.bathroom_dn_faults-state]
+# name: test_setup_platform[botched][binary_sensor.my_home_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Bathroom Dn faults',
+      'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bathroom_dn_faults',
+    'entity_id': 'binary_sensor.my_home_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.controller_faults-state]
+# name: test_setup_platform[botched][binary_sensor.my_home_system_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.my_home_system_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.dead_zone_faults-state]
+# name: test_setup_platform[botched][binary_sensor.spare_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Dead Zone faults',
+      'friendly_name': 'Spare Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dead_zone_faults',
+    'entity_id': 'binary_sensor.spare_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.dhw_faults-state]
+# name: test_setup_platform[default][binary_sensor.bathroom_dn_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'DHW faults',
+      'friendly_name': 'Bathroom Dn zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dhw_faults',
+    'entity_id': 'binary_sensor.bathroom_dn_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.front_room_faults-state]
+# name: test_setup_platform[default][binary_sensor.dead_zone_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Front Room faults',
+      'friendly_name': 'Dead Zone zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_room_faults',
+    'entity_id': 'binary_sensor.dead_zone_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[default][binary_sensor.front_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'Front Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.front_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.kids_room_faults-state]
+# name: test_setup_platform[default][binary_sensor.kids_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Kids Room faults',
+      'friendly_name': 'Kids Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kids_room_faults',
+    'entity_id': 'binary_sensor.kids_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.kitchen_faults-state]
+# name: test_setup_platform[default][binary_sensor.kitchen_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Kitchen faults',
+      'friendly_name': 'Kitchen zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kitchen_faults',
+    'entity_id': 'binary_sensor.kitchen_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.main_bedroom_faults-state]
+# name: test_setup_platform[default][binary_sensor.main_bedroom_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Main Bedroom faults',
+      'friendly_name': 'Main Bedroom zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_bedroom_faults',
+    'entity_id': 'binary_sensor.main_bedroom_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.main_room_faults-state]
+# name: test_setup_platform[default][binary_sensor.main_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Main Room faults',
+      'friendly_name': 'Main Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_room_faults',
+    'entity_id': 'binary_sensor.main_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[default][binary_sensor.spare_room_faults-state]
+# name: test_setup_platform[default][binary_sensor.my_home_dhw_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Spare Room faults',
+      'friendly_name': 'My Home DHW faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.spare_room_faults',
+    'entity_id': 'binary_sensor.my_home_dhw_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h032585][binary_sensor.controller_faults-state]
+# name: test_setup_platform[default][binary_sensor.my_home_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.my_home_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h032585][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[default][binary_sensor.my_home_system_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.my_home_system_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h032585][binary_sensor.thermostat_faults-state]
+# name: test_setup_platform[default][binary_sensor.spare_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'THERMOSTAT faults',
+      'friendly_name': 'Spare Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_faults',
+    'entity_id': 'binary_sensor.spare_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.controller_faults-state]
+# name: test_setup_platform[h032585][binary_sensor.my_home_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.my_home_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[h032585][binary_sensor.my_home_system_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.my_home_system_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.thermostat_faults-state]
+# name: test_setup_platform[h032585][binary_sensor.thermostat_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'THERMOSTAT faults',
+      'friendly_name': 'THERMOSTAT zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_faults',
+    'entity_id': 'binary_sensor.thermostat_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h099625][binary_sensor.thermostat_faults_2-state]
+# name: test_setup_platform[h099625][binary_sensor.my_home_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'THERMOSTAT faults',
+      'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_faults_2',
+    'entity_id': 'binary_sensor.my_home_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.controller_faults-state]
+# name: test_setup_platform[h099625][binary_sensor.my_home_system_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.my_home_system_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[h099625][binary_sensor.thermostat_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'THERMOSTAT zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.thermostat_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.thermostat_2_faults-state]
+# name: test_setup_platform[h099625][binary_sensor.thermostat_zone_faults_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Thermostat 2 faults',
+      'friendly_name': 'THERMOSTAT zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_2_faults',
+    'entity_id': 'binary_sensor.thermostat_zone_faults_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h139906][binary_sensor.thermostat_faults-state]
+# name: test_setup_platform[h139906][binary_sensor.thermostat_2_zone_faults-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'fault_count': 0,
+      'faults': tuple(
+      ),
+      'friendly_name': 'Thermostat 2 zone faults',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_2_zone_faults',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h139906][binary_sensor.thermostat_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -562,204 +528,221 @@
           'since': datetime.datetime(2025, 2, 6, 11, 20, 29, tzinfo=UTC+01:00),
         }),
       ),
-      'friendly_name': 'Thermostat faults',
+      'friendly_name': 'Thermostat zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_faults',
+    'entity_id': 'binary_sensor.thermostat_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.ba_faults-state]
+# name: test_setup_platform[h139906][binary_sensor.vr_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Ba****** faults',
+      'friendly_name': 'Vr********** gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ba_faults',
+    'entity_id': 'binary_sensor.vr_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.controller_faults-state]
+# name: test_setup_platform[h139906][binary_sensor.vr_system_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'Vr********** system faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.vr_system_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.ba_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'Ba****** zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.ba_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.ka_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.ka_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Ka********* faults',
+      'friendly_name': 'Ka********* zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ka_faults',
+    'entity_id': 'binary_sensor.ka_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.ka_faults_2-state]
+# name: test_setup_platform[h157546][binary_sensor.ka_zone_faults_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Ka***** faults',
+      'friendly_name': 'Ka***** zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.ka_faults_2',
+    'entity_id': 'binary_sensor.ka_zone_faults_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.sl_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.kl_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Sl******** faults',
+      'friendly_name': 'Kl******** gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.sl_faults',
+    'entity_id': 'binary_sensor.kl_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[h157546][binary_sensor.wo_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.kl_system_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Wo******* faults',
+      'friendly_name': 'Kl******** system faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.wo_faults',
+    'entity_id': 'binary_sensor.kl_system_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[minimal][binary_sensor.controller_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.sl_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'Sl******** zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.sl_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[minimal][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[h157546][binary_sensor.wo_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'Wo******* zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.wo_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[minimal][binary_sensor.main_room_faults-state]
+# name: test_setup_platform[minimal][binary_sensor.main_room_zone_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Main Room faults',
+      'friendly_name': 'Main Room zone faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.main_room_faults',
+    'entity_id': 'binary_sensor.main_room_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[sys_004][binary_sensor.controller_faults-state]
+# name: test_setup_platform[minimal][binary_sensor.my_home_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Controller faults',
+      'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.controller_faults',
+    'entity_id': 'binary_sensor.my_home_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_setup_platform[sys_004][binary_sensor.gateway_faults-state]
+# name: test_setup_platform[minimal][binary_sensor.my_home_system_faults-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'fault_count': 0,
+      'faults': tuple(
+      ),
+      'friendly_name': 'My Home system faults',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_system_faults',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.living_room_gateway_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -770,27 +753,44 @@
           'since': datetime.datetime(2023, 5, 4, 18, 47, 36, 772704, tzinfo=UTC+02:00),
         }),
       ),
-      'friendly_name': 'Gateway faults',
+      'friendly_name': 'Living room gateway faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway_faults',
+    'entity_id': 'binary_sensor.living_room_gateway_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup_platform[sys_004][binary_sensor.thermostat_faults-state]
+# name: test_setup_platform[sys_004][binary_sensor.living_room_system_faults-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'fault_count': 0,
       'faults': tuple(
       ),
-      'friendly_name': 'Thermostat faults',
+      'friendly_name': 'Living room system faults',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat_faults',
+    'entity_id': 'binary_sensor.living_room_system_faults',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[sys_004][binary_sensor.thermostat_zone_faults-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'fault_count': 0,
+      'faults': tuple(
+      ),
+      'friendly_name': 'Thermostat zone faults',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostat_zone_faults',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
