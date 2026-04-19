@@ -11,4 +11,3 @@ CONF_MAC = "mac"
 CONF_FW_VERSION = "fw_version"
 
 MANUFACTURER = "SmartCircuits GmbH"
-DEVICE_NAME = "WattWächter Plus"

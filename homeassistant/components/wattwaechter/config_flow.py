@@ -157,7 +157,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._device_name = await self._async_fetch_device_name()
 
                 await self.async_set_unique_id(self._device_id)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
                 return self._create_entry()
 
@@ -195,7 +195,7 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if self.unique_id is None:
                     await self.async_set_unique_id(self._device_id)
-                    self._abort_if_unique_id_configured()
+                    self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
                 return self._create_entry(token)
 

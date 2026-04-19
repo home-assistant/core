@@ -25,7 +25,6 @@ from .const import (
     CONF_MAC,
     CONF_MODEL,
     DEFAULT_SCAN_INTERVAL,
-    DEVICE_NAME,
     DOMAIN,
 )
 
@@ -52,7 +51,9 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
         self.model: str | None = config_entry.data.get(CONF_MODEL)
         self.mac: str | None = config_entry.data.get(CONF_MAC)
         self.fw_version: str | None = config_entry.data.get(CONF_FW_VERSION)
-        self.device_name: str = config_entry.data.get(CONF_DEVICE_NAME) or DEVICE_NAME
+        self.device_name: str = (
+            config_entry.data.get(CONF_DEVICE_NAME) or config_entry.title
+        )
 
         super().__init__(
             hass,
