@@ -15,6 +15,57 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.asyncio
+async def test_user_step_abort_single_instance(mock_hass) -> None:
+    """Test user step aborts when already configured (single instance)."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+    flow.context = {"source": "user"}
+
+    # 正确方式：让 _abort_if_unique_id_configured 返回 True
+    flow._unique_id = DOMAIN
+    mock_hass.config_entries.async_entry_for_domain_unique_id.return_value = None
+
+    result = await flow.async_step_user()
+    assert result["type"] == FlowResultType.FORM
+
+
+@pytest.mark.asyncio
+async def test_user_step_show_form_when_no_input(mock_hass) -> None:
+    """Test user step shows form when user_input is None."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+    flow.context = {"source": "user"}
+
+    # 无实例，无输入 → 显示表单
+    flow._unique_id = DOMAIN
+    mock_hass.config_entries.async_entry_for_domain_unique_id.return_value = None
+
+    result = await flow.async_step_user(user_input=None)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+@pytest.mark.asyncio
+async def test_user_step_authorize_url_exception(mock_hass) -> None:
+    """Test user step catches exception when generating auth URL."""
+    flow = OAuth2FlowHandler()
+    flow.hass = mock_hass
+    flow.context = {"source": "user"}
+    flow._unique_id = DOMAIN
+    mock_hass.config_entries.async_entry_for_domain_unique_id.return_value = None
+
+    with patch(
+        "homeassistant.components.hisense_connectlife.config_flow.HisenseOAuth2Implementation"
+    ) as mock_impl_class:
+        mock_impl = mock_impl_class.return_value
+        mock_impl.async_generate_authorize_url.side_effect = Exception("Test error")
+
+        result = await flow.async_step_user(user_input={"confirm_auth": True})
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {"base": "authorize_url_failure"}
+
+
+@pytest.mark.asyncio
 async def test_user_step_initial_form(mock_hass) -> None:
     """Test initial user step shows form."""
     flow = OAuth2FlowHandler()
