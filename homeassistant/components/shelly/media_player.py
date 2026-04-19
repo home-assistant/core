@@ -31,6 +31,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import get_device_entry_gen
 
@@ -218,26 +219,32 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
         return await super().async_get_media_image()
 
+    @rpc_call
     async def async_media_play(self) -> None:
         """Send play command."""
         await self.coordinator.device.media_play_or_pause()
 
+    @rpc_call
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.coordinator.device.media_play_or_pause()
 
+    @rpc_call
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.coordinator.device.media_stop()
 
+    @rpc_call
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.device.media_next()
 
+    @rpc_call
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.device.media_previous()
 
+    @rpc_call
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.device.media_set_volume(round(volume * 10))
