@@ -184,7 +184,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==13.4.1
+aioamazondevices==13.4.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -386,7 +386,7 @@ aiorussound==5.0.1
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.23.1
+aioshelly==13.24.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1174,7 +1174,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==2.1.0
+imgw_pib==2.1.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.7.0

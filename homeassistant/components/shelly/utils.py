@@ -122,7 +122,7 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
 
 def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get custom name from device settings."""
-    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+    if block and (key := block.type + "s") and key in device.settings:
         assert block.channel
 
         if name := device.settings[key][int(block.channel)].get("name"):
