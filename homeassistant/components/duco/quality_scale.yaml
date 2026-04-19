@@ -46,18 +46,8 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: todo
-    comment: >-
-      DHCP host updating to be implemented in a follow-up PR.
-      The device hostname follows the pattern duco_<last 6 chars of MAC>
-      (e.g. duco_061293), which can be used for DHCP hostname matching.
-  discovery:
-    status: todo
-    comment: >-
-      Device can be discovered via DHCP. The hostname follows the pattern
-      duco_<last 6 chars of MAC> (e.g. duco_061293). To be implemented
-      in a follow-up PR together with discovery-update-info.
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
