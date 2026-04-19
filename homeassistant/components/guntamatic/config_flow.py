@@ -33,16 +33,27 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        # we don't have access to serial yet here without doing a network call to the device
-        # so dedupe on MAC address here, we will overwrite with serial in the next step
-        await self.async_set_unique_id(discovery_info.macaddress)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, {CONF_HOST: discovery_info.ip}
-            ),
-        )
+        heater = Heater(discovery_info.ip)
+        data = await self.hass.async_add_executor_job(heater.parse_data)
+        # set serial as unique id for deduplication, ip isn't a good match
+        serial = data["serial"][0]
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured()
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="Gunamatic Heater",
+                data={CONF_HOST: user_input[CONF_HOST]},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(step_id="discovery_confirm")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,7 +75,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # set serial as unique id for deduplication, ip isn't a good match
-                serial = data["Serial"][0]
+                serial = data["serial"][0]
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured()
 
