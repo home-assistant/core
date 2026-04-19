@@ -70,7 +70,7 @@
     'state': 'rapid_water_level_rise',
   })
 # ---
-# name: test_sensor[sensor.river_name_station_name_ice_phenomenon-entry]
+# name: test_sensor[sensor.river_name_station_name_ice_phenomena-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -86,7 +86,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.river_name_station_name_ice_phenomenon',
+    'entity_id': 'sensor.river_name_station_name_ice_phenomena',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -94,7 +94,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Ice phenomenon',
+    'object_id_base': 'Ice phenomena',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -102,26 +102,26 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ice phenomenon',
+    'original_name': 'Ice phenomena',
     'platform': 'imgw_pib',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ice_phenomenon',
-    'unique_id': '123_ice_phenomenon',
+    'translation_key': 'ice_phenomena',
+    'unique_id': '123_ice_phenomena',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[sensor.river_name_station_name_ice_phenomenon-state]
+# name: test_sensor[sensor.river_name_station_name_ice_phenomena-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by IMGW-PIB',
-      'friendly_name': 'River Name (Station Name) Ice phenomenon',
+      'friendly_name': 'River Name (Station Name) Ice phenomena',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.river_name_station_name_ice_phenomenon',
+    'entity_id': 'sensor.river_name_station_name_ice_phenomena',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

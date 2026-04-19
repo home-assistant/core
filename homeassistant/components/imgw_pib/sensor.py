@@ -66,11 +66,11 @@ SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
         attrs=gen_alert_attributes,
     ),
     ImgwPibSensorEntityDescription(
-        key="ice_phenomenon",
-        translation_key="ice_phenomenon",
+        key="ice_phenomena",
+        translation_key="ice_phenomena",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.ice_phenomenon.value,
+        value=lambda data: data.ice_phenomena.value,
         suggested_display_precision=0,
     ),
     ImgwPibSensorEntityDescription(

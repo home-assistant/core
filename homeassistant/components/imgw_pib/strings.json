@@ -59,8 +59,8 @@
           }
         }
       },
-      "ice_phenomenon": {
-        "name": "Ice phenomenon"
+      "ice_phenomena": {
+        "name": "Ice phenomena"
       },
       "water_flow": {
         "name": "Water flow"
