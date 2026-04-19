@@ -161,8 +161,11 @@ class TISSwitch(SwitchEntity):
         # Register the HASS update method as the callback
         self.device_api.register_callback(self._handle_update)
 
-        # Request an initial state update from the device.
+    async def async_update(self) -> None:
+        """Update the entity state."""
         await self.device_api.request_update()
+        self._attr_is_on = self.device_api.is_on
+        self._attr_available = self.device_api.available
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
