@@ -6,4 +6,4 @@ from homeassistant.const import Platform
 
 DOMAIN = "systemnexa2"
 MANUFACTURER = "NEXA"
-PLATFORMS: Final = [Platform.SWITCH]
+PLATFORMS: Final = [Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]

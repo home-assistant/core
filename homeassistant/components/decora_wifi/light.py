@@ -6,13 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from decora_wifi import DecoraWiFiSession
-from decora_wifi.models.person import Person
-from decora_wifi.models.residence import Residence
-from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
@@ -21,12 +16,20 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
+
+from . import DecoraWifiConfigEntry
+from .const import DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,63 +38,65 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
-NOTIFICATION_ID = "leviton_notification"
-NOTIFICATION_TITLE = "myLeviton Decora Setup"
 
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Decora WiFi platform."""
+    """Set up the Decora WiFi platform from YAML (deprecated)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
 
-    email = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    session = DecoraWiFiSession()
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and (reason := result.get("reason")) != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2026.10.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
 
-    try:
-        success = session.login(email, password)
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.10.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
-        # If login failed, notify user.
-        if success is None:
-            msg = "Failed to log into myLeviton Services. Check credentials."
-            _LOGGER.error(msg)
-            persistent_notification.create(
-                hass, msg, title=NOTIFICATION_TITLE, notification_id=NOTIFICATION_ID
-            )
-            return
 
-        # Gather all the available devices...
-        perms = session.user.get_residential_permissions()
-        all_switches: list = []
-        for permission in perms:
-            if permission.residentialAccountId is not None:
-                acct = ResidentialAccount(session, permission.residentialAccountId)
-                all_switches.extend(
-                    switch
-                    for residence in acct.get_residences()
-                    for switch in residence.get_iot_switches()
-                )
-            elif permission.residenceId is not None:
-                residence = Residence(session, permission.residenceId)
-                all_switches.extend(residence.get_iot_switches())
-
-        add_entities(DecoraWifiLight(sw) for sw in all_switches)
-    except ValueError:
-        _LOGGER.error("Failed to communicate with myLeviton Service")
-
-    # Listen for the stop event and log out.
-    def logout(event):
-        """Log out..."""
-        try:
-            if session is not None:
-                Person.logout(session)
-        except ValueError:
-            _LOGGER.error("Failed to log out of myLeviton Service")
-
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: DecoraWifiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Decora WiFi lights from a config entry."""
+    async_add_entities(
+        DecoraWifiLight(switch) for switch in entry.runtime_data.switches
+    )
 
 
 class DecoraWifiLight(LightEntity):

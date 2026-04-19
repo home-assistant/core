@@ -566,6 +566,12 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "airq",
+            "properties": {
+                "device": "air-q",
+            },
+        },
+        {
             "domain": "awair",
             "name": "awair*",
         },
@@ -608,6 +614,14 @@ ZEROCONF = {
         {
             "domain": "loqed",
             "name": "loqed*",
+        },
+        {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-*",
+                "uid": "*",
+            },
         },
         {
             "domain": "nam",
@@ -689,6 +703,11 @@ ZEROCONF = {
             "domain": "ipp",
         },
     ],
+    "_kiosker._tcp.local.": [
+        {
+            "domain": "kiosker",
+        },
+    ],
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",
@@ -704,6 +723,9 @@ ZEROCONF = {
     "_linkplay._tcp.local.": [
         {
             "domain": "linkplay",
+        },
+        {
+            "domain": "wiim",
         },
     ],
     "_lookin._tcp.local.": [
@@ -921,6 +943,11 @@ ZEROCONF = {
     "_smoip._tcp.local.": [
         {
             "domain": "cambridge_audio",
+        },
+    ],
+    "_solarman._tcp.local.": [
+        {
+            "domain": "solarman",
         },
     ],
     "_sonos._tcp.local.": [

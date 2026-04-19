@@ -57,7 +57,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("show_advanced_options", "user_input", "expected_config"),
+    ("show_advanced_options", "user_input", "expected_config", "expected_options"),
     [
         (
             True,
@@ -68,6 +68,11 @@ from tests.common import MockConfigEntry
                 CONF_USERNAME: "fake_user",
                 CONF_PORT: 1234,
                 CONF_SSL: False,
+            },
+            {
+                CONF_OLD_DISCOVERY: False,
+                CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_FEATURE_DEVICE_TRACKING: True,
             },
         ),
         (
@@ -80,16 +85,30 @@ from tests.common import MockConfigEntry
                 CONF_PORT: 49000,
                 CONF_SSL: False,
             },
+            {
+                CONF_OLD_DISCOVERY: False,
+                CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_FEATURE_DEVICE_TRACKING: True,
+            },
         ),
         (
             False,
-            {**MOCK_USER_INPUT_SIMPLE, CONF_SSL: True},
+            {
+                **MOCK_USER_INPUT_SIMPLE,
+                CONF_SSL: True,
+                CONF_FEATURE_DEVICE_TRACKING: False,
+            },
             {
                 CONF_HOST: "fake_host",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
                 CONF_PORT: 49443,
                 CONF_SSL: True,
+            },
+            {
+                CONF_OLD_DISCOVERY: False,
+                CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_FEATURE_DEVICE_TRACKING: False,
             },
         ),
     ],
@@ -100,6 +119,7 @@ async def test_user(
     show_advanced_options: bool,
     user_input: dict,
     expected_config: dict,
+    expected_options: dict,
 ) -> None:
     """Test starting a flow by user."""
     with (
@@ -143,10 +163,7 @@ async def test_user(
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == expected_config
-        assert (
-            result["options"][CONF_CONSIDER_HOME]
-            == DEFAULT_CONSIDER_HOME.total_seconds()
-        )
+        assert result["options"] == expected_options
         assert not result["result"].unique_id
 
     assert mock_setup_entry.called
@@ -641,9 +658,15 @@ async def test_ssdp_already_in_progress_host(
     hass: HomeAssistant, fc_class_mock
 ) -> None:
     """Test starting a flow from discovery twice."""
-    with patch(
-        "homeassistant.components.fritz.config_flow.FritzConnection",
-        side_effect=fc_class_mock,
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA
@@ -671,6 +694,10 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock) -> None:
         patch(
             "homeassistant.components.fritz.coordinator.FritzBoxTools._update_device_info",
             return_value=MOCK_FIRMWARE_INFO,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
         ),
         patch("homeassistant.components.fritz.async_setup_entry") as mock_setup_entry,
         patch("requests.get") as mock_request_get,
@@ -705,9 +732,15 @@ async def test_ssdp(hass: HomeAssistant, fc_class_mock) -> None:
 
 async def test_ssdp_exception(hass: HomeAssistant) -> None:
     """Test starting a flow from discovery but no device found."""
-    with patch(
-        "homeassistant.components.fritz.config_flow.FritzConnection",
-        side_effect=FritzConnectionException,
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=FritzConnectionException,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA

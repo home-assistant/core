@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[climate.model0_heating-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -87,8 +88,9 @@
 # ---
 # name: test_all_entities[climate.model0_heating_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([

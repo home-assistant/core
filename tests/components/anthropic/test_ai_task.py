@@ -1,15 +1,20 @@
 """Tests for the Anthropic integration."""
 
 from pathlib import Path
+import re
 from unittest.mock import AsyncMock, patch
 
+from anthropic.types import Message, TextBlock, Usage
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
-from homeassistant.components.anthropic.const import CONF_CHAT_MODEL
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_THINKING_BUDGET,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
@@ -54,12 +59,23 @@ async def test_generate_data(
     assert result.data == "The test data"
 
 
+async def test_translation_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity translation key."""
+    entry = entity_registry.async_get("ai_task.claude_ai_task")
+    assert entry is not None
+    assert entry.translation_key == "ai_task_data"
+
+
 async def test_empty_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test AI Task data generation but the data returned is empty."""
     mock_create_stream.return_value = [create_content_block(0, [""])]
@@ -67,6 +83,31 @@ async def test_empty_data(
     with pytest.raises(
         HomeAssistantError, match="Last content in chat log is not an AssistantContent"
     ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.claude_ai_task",
+            instructions="Generate test data",
+        )
+
+
+async def test_stream_wrong_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test error if the response is not a stream."""
+    mock_create_stream.return_value = Message(
+        type="message",
+        id="message_id",
+        model="claude-opus-4-6",
+        role="assistant",
+        content=[TextBlock(type="text", text="This is not a stream")],
+        usage=Usage(input_tokens=42, output_tokens=42),
+    )
+
+    with pytest.raises(HomeAssistantError, match="Expected a stream of messages"):
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
@@ -90,6 +131,7 @@ async def test_generate_structured_data_legacy(
             subentry,
             data={
                 CONF_CHAT_MODEL: "claude-sonnet-4-0",
+                CONF_THINKING_BUDGET: 0,
             },
         )
 
@@ -146,7 +188,11 @@ async def test_generate_structured_data_legacy_tools(
         hass.config_entries.async_update_subentry(
             mock_config_entry,
             subentry,
-            data={"chat_model": "claude-sonnet-4-0", "web_search": True},
+            data={
+                "chat_model": "claude-sonnet-4-0",
+                "web_search": True,
+                "thinking_budget": 0,
+            },
         )
 
     result = await ai_task.async_generate_data(
@@ -506,7 +552,9 @@ async def test_generate_data_invalid_attachments(
         ),
         pytest.raises(
             HomeAssistantError,
-            match="Only images and PDF are supported by the Anthropic API",
+            match=re.escape(
+                "The Claude Haiku 4.5 model does not support text/plain file types (for `doorbell_snapshot.txt`)"
+            ),
         ),
     ):
         await ai_task.async_generate_data(

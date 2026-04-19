@@ -156,6 +156,12 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
         """Toggle the device."""
         await self._async_sn2_call_with_error_handling(self.device.toggle())
 
+    async def async_set_brightness(self, value: float) -> None:
+        """Set the brightness of the device (0.0 to 1.0)."""
+        await self._async_sn2_call_with_error_handling(
+            self.device.set_brightness(value)
+        )
+
     async def async_setting_enable(self, setting: OnOffSetting) -> None:
         """Enable a device setting."""
         await self._async_sn2_call_with_error_handling(setting.enable(self.device))

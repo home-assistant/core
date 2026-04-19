@@ -2,33 +2,24 @@
 
 from __future__ import annotations
 
-import anthropic
+from anthropic.resources.messages.messages import DEPRECATED_MODELS
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CHAT_MODEL,
-    DEFAULT_CONVERSATION_NAME,
-    DEPRECATED_MODELS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -39,26 +30,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Set up Anthropic from a config entry."""
-    client = anthropic.AsyncAnthropic(
-        api_key=entry.data[CONF_API_KEY], http_client=get_async_client(hass)
-    )
-    try:
-        await client.models.list(timeout=10.0)
-    except anthropic.AuthenticationError as err:
-        raise ConfigEntryAuthFailed(err) from err
-    except anthropic.AnthropicError as err:
-        raise ConfigEntryNotReady(err) from err
-
-    entry.runtime_data = client
+    coordinator = AnthropicCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    LOGGER.debug("Available models: %s", coordinator.data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     for subentry in entry.subentries.values():
-        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model.startswith(
-            tuple(DEPRECATED_MODELS)
-        ):
+        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model in DEPRECATED_MODELS:
             ir.async_create_issue(
                 hass,
                 DOMAIN,

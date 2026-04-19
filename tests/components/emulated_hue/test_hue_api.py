@@ -8,7 +8,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_address
 import json
-from unittest.mock import AsyncMock, _patch, patch
+from unittest.mock import _patch, patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 from aiohttp.test_utils import TestClient
@@ -109,7 +109,7 @@ ENTITY_IDS_BY_NUMBER = {
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
 
 
-def patch_upnp() -> _patch[AsyncMock]:
+def patch_upnp() -> _patch:
     """Patch async_create_upnp_datagram_endpoint."""
     return patch(
         "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"

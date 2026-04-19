@@ -1,17 +1,28 @@
 """Test Roborock Select platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from roborock import CleanTypeMapping, RoborockCommand
-from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
+from roborock.data import (
+    RoborockDockDustCollectionModeCode,
+    WaterLevelMapping,
+    ZeoProgram,
+)
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockZeoProtocol
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.components.roborock.select import (
+    A01_SELECT_DESCRIPTIONS,
+    RoborockSelectEntityA01,
+)
 from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
@@ -278,3 +289,193 @@ async def test_update_success_q7_cleaning_mode(
     assert q7_device.b01_q7_properties.set_mode.call_count == 1
 
     q7_device.b01_q7_properties.set_mode.assert_called_with(CleanTypeMapping.VACUUM)
+
+
+@pytest.fixture
+def zeo_device(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Zeo washing machine device."""
+    return next(device for device in fake_devices if getattr(device, "zeo", None))
+
+
+async def test_update_success_zeo_program(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    zeo_device: FakeDevice,
+) -> None:
+    """Test changing values for A01 Zeo select entities."""
+    option = ZeoProgram.keys()[0]
+    entity_id = entity_registry.async_get_entity_id(
+        "select", DOMAIN, "program_zeo_duid"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": option},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert zeo_device.zeo
+    zeo_device.zeo.set_value.assert_awaited_once_with(
+        RoborockZeoProtocol.PROGRAM,
+        ZeoProgram.as_dict()[option],
+    )
+
+
+async def test_current_option_zeo_program() -> None:
+    """Test current option retrieval for A01 Zeo select entities."""
+    coordinator = Mock(
+        duid_slug="zeo_duid",
+        device_info=Mock(),
+        data={RoborockZeoProtocol.PROGRAM: 1},
+        api=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entity = RoborockSelectEntityA01(coordinator, A01_SELECT_DESCRIPTIONS[0])
+
+    assert entity.current_option == "1"
+    coordinator.data = {}
+    assert entity.current_option is None
+    coordinator.data = {RoborockZeoProtocol.PROGRAM: None}
+    assert entity.current_option is None
+
+
+async def test_update_failure_zeo_program(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    zeo_device: FakeDevice,
+) -> None:
+    """Test failure while setting an A01 Zeo select option."""
+    assert zeo_device.zeo
+    zeo_device.zeo.set_value.side_effect = RoborockException
+    option = ZeoProgram.keys()[0]
+    entity_id = entity_registry.async_get_entity_id(
+        "select", DOMAIN, "program_zeo_duid"
+    )
+    assert entity_id is not None
+
+    with pytest.raises(HomeAssistantError, match="Error while calling program"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": option},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+
+
+async def test_update_failure_zeo_invalid_option() -> None:
+    """Test invalid option handling in A01 select entity."""
+    coordinator = Mock(
+        duid_slug="zeo_duid",
+        device_info=Mock(),
+        data={},
+        api=AsyncMock(),
+        async_request_refresh=AsyncMock(),
+    )
+    entity = RoborockSelectEntityA01(coordinator, A01_SELECT_DESCRIPTIONS[0])
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_select_option("invalid_option")
+
+    coordinator.api.set_value.assert_not_called()
+
+
+async def test_q10_cleaning_mode_select_current_option(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test Q10 cleaning mode select entity current option."""
+    entity_id = "select.roborock_q10_s5_cleaning_mode"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    options = state.attributes.get("options")
+    assert options is not None
+    assert set(options) == {"vac_and_mop", "vacuum", "mop"}
+
+    assert fake_q10_vacuum.b01_q10_properties
+    fake_q10_vacuum.b01_q10_properties.status.update_from_dps(
+        {B01_Q10_DP.CLEAN_MODE: YXCleanType.VAC_AND_MOP.code}
+    )
+    await hass.async_block_till_done()
+
+    updated_state = hass.states.get(entity_id)
+    assert updated_state is not None
+    assert updated_state.state == "vac_and_mop"
+
+
+async def test_q10_cleaning_mode_select_update_success(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test setting Q10 cleaning mode select option."""
+    entity_id = "select.roborock_q10_s5_cleaning_mode"
+    assert hass.states.get(entity_id) is not None
+
+    # Test setting value
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "vac_and_mop"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert fake_q10_vacuum.b01_q10_properties
+    assert fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.call_count == 1
+    fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.assert_called_once_with(
+        YXCleanType.VAC_AND_MOP
+    )
+
+
+async def test_q10_cleaning_mode_select_update_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test failure when setting Q10 cleaning mode."""
+    assert fake_q10_vacuum.b01_q10_properties
+    fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.side_effect = (
+        RoborockException
+    )
+    entity_id = "select.roborock_q10_s5_cleaning_mode"
+    assert hass.states.get(entity_id) is not None
+
+    with pytest.raises(HomeAssistantError, match="cleaning_mode"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "vac_and_mop"},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+
+
+async def test_q10_cleaning_mode_select_invalid_option(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test that an invalid option raises ServiceValidationError and does not call set_clean_mode."""
+    entity_id = "select.roborock_q10_s5_cleaning_mode"
+    assert hass.states.get(entity_id) is not None
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "invalid_option"},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+
+    assert fake_q10_vacuum.b01_q10_properties
+    fake_q10_vacuum.b01_q10_properties.vacuum.set_clean_mode.assert_not_called()

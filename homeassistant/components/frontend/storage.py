@@ -45,6 +45,10 @@ async def async_user_store(hass: HomeAssistant, user_id: str) -> UserStore:
         except BaseException as ex:
             del stores[user_id]
             future.set_exception(ex)
+            # Ensure the future is marked as retrieved
+            # since if there is no concurrent call it
+            # will otherwise never be retrieved.
+            future.exception()
             raise
         future.set_result(store)
 

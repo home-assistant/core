@@ -34,7 +34,7 @@ from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import async_get_integration
 from homeassistant.util.hass_dict import HassKey
 
 from .pr_download import download_pr_artifact
@@ -297,6 +297,9 @@ class Panel:
     # If the panel should only be visible to admins
     require_admin = False
 
+    # If the panel should be shown in the sidebar
+    show_in_sidebar = True
+
     # If the panel is a configuration panel for a integration
     config_panel_domain: str | None = None
 
@@ -310,6 +313,7 @@ class Panel:
         config: dict[str, Any] | None,
         require_admin: bool,
         config_panel_domain: str | None,
+        show_in_sidebar: bool,
     ) -> None:
         """Initialize a built-in panel."""
         self.component_name = component_name
@@ -319,6 +323,7 @@ class Panel:
         self.config = config
         self.require_admin = require_admin
         self.config_panel_domain = config_panel_domain
+        self.show_in_sidebar = show_in_sidebar
         self.sidebar_default_visible = sidebar_default_visible
 
     @callback
@@ -335,22 +340,20 @@ class Panel:
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
             "config_panel_domain": self.config_panel_domain,
+            "show_in_sidebar": self.show_in_sidebar,
         }
         if config_override:
             if "require_admin" in config_override:
                 response["require_admin"] = config_override["require_admin"]
-            if config_override.get("show_in_sidebar") is False:
-                response["title"] = None
-                response["icon"] = None
-            else:
-                if "icon" in config_override:
-                    response["icon"] = config_override["icon"]
-                if "title" in config_override:
-                    response["title"] = config_override["title"]
+            if "show_in_sidebar" in config_override:
+                response["show_in_sidebar"] = config_override["show_in_sidebar"]
+            if "icon" in config_override:
+                response["icon"] = config_override["icon"]
+            if "title" in config_override:
+                response["title"] = config_override["title"]
         return response
 
 
-@bind_hass
 @callback
 def async_register_built_in_panel(
     hass: HomeAssistant,
@@ -364,6 +367,7 @@ def async_register_built_in_panel(
     *,
     update: bool = False,
     config_panel_domain: str | None = None,
+    show_in_sidebar: bool = True,
 ) -> None:
     """Register a built-in panel."""
     panel = Panel(
@@ -375,6 +379,7 @@ def async_register_built_in_panel(
         config,
         require_admin,
         config_panel_domain,
+        show_in_sidebar,
     )
 
     panels = hass.data.setdefault(DATA_PANELS, {})
@@ -387,7 +392,6 @@ def async_register_built_in_panel(
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
-@bind_hass
 @callback
 def async_remove_panel(
     hass: HomeAssistant, frontend_url_path: str, *, warn_if_unknown: bool = True
@@ -570,28 +574,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "light",
         sidebar_icon="mdi:lamps",
         sidebar_title="light",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
     )
     async_register_built_in_panel(
         hass,
         "security",
         sidebar_icon="mdi:security",
         sidebar_title="security",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
     )
     async_register_built_in_panel(
         hass,
         "climate",
         sidebar_icon="mdi:home-thermometer",
         sidebar_title="climate",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
     )
     async_register_built_in_panel(
         hass,
         "home",
         sidebar_icon="mdi:home",
         sidebar_title="home",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "maintenance",
+        sidebar_icon="mdi:wrench",
+        sidebar_title="maintenance",
+        show_in_sidebar=False,
     )
 
     async_register_built_in_panel(hass, "profile")
@@ -1085,3 +1096,4 @@ class PanelResponse(TypedDict):
     url_path: str
     require_admin: bool
     config_panel_domain: str | None
+    show_in_sidebar: bool

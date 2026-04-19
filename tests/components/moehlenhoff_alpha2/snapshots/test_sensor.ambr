@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.buro_heat_control_1_valve_opening-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

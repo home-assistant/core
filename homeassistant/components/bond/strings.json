@@ -37,8 +37,8 @@
           "name": "Entity"
         },
         "speed": {
-          "description": "Fan Speed as %.",
-          "name": "Fan Speed"
+          "description": "The fan speed as a percentage.",
+          "name": "Fan speed"
         }
       },
       "name": "Set fan speed tracked state"
@@ -47,7 +47,7 @@
       "description": "Sets the tracked brightness state of a Bond light.",
       "fields": {
         "brightness": {
-          "description": "Brightness.",
+          "description": "The tracked brightness of the light.",
           "name": "Brightness"
         },
         "entity_id": {
@@ -79,22 +79,22 @@
           "name": "Entity"
         },
         "power_state": {
-          "description": "Power state.",
+          "description": "The tracked power state.",
           "name": "Power state"
         }
       },
       "name": "Set switch power tracked state"
     },
     "start_decreasing_brightness": {
-      "description": "Starts decreasing the brightness of the light (deprecated).",
+      "description": "Starts decreasing the brightness of a light (deprecated).",
       "name": "Start decreasing brightness"
     },
     "start_increasing_brightness": {
-      "description": "Starts increasing the brightness of the light (deprecated).",
+      "description": "Starts increasing the brightness of a light (deprecated).",
       "name": "Start increasing brightness"
     },
     "stop": {
-      "description": "Stops any in-progress action and empty the queue (deprecated).",
+      "description": "Stops any in-progress action and empties the queue (deprecated).",
       "name": "[%key:common::action::stop%]"
     }
   }
