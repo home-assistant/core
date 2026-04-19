@@ -10,6 +10,8 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
+    ATTR_ENTITY_PICTURE,
+    ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -51,7 +53,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -368,12 +369,19 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._override_or_child_attr(ATTR_ENTITY_PICTURE)
 
     @property
-    def media_image_remotely_accessible(self) -> bool:
-        """If the image url is remotely accessible."""
-        active_child = self._child_state
-        if active_child is None:
-            return False
-        return active_child.attributes.get("media_image_remotely_accessible", False)
+    def entity_picture(self):
+        """Return image of the media playing.
+
+        The universal media player doesn't use the parent class logic, since
+        the url is coming from child entity pictures which have already been
+        sent through the API proxy.
+        """
+        return self.media_image_url
+
+    @property
+    def entity_picture_local(self):
+        """Return the entity picture URL."""
+        return self._override_or_child_attr(ATTR_ENTITY_PICTURE_LOCAL)
 
     @property
     def media_title(self):
@@ -534,7 +542,13 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         active_child = self._child_state
-        return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}
+        attrs = {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}
+
+        if self.entity_picture_local:
+            attrs[ATTR_ENTITY_PICTURE_LOCAL] = self.entity_picture_local
+            attrs[ATTR_ENTITY_PICTURE] = self._child_attr(ATTR_ENTITY_PICTURE)
+
+        return attrs
 
     @property
     def media_position(self):
