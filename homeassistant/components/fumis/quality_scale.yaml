@@ -43,11 +43,11 @@ rules:
   devices: done
   diagnostics: todo
   discovery:
-    status: exempt
-    comment: Cloud-only API, no local discovery mechanism available.
+    status: todo
+    comment: DHCP discovery can be added.
   discovery-update-info:
-    status: exempt
-    comment: Cloud-only API, no local discovery mechanism available.
+    status: todo
+    comment: DHCP discovery based update can be added.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
