@@ -367,5 +367,5 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unsupported_media_type",
-            translation_placeholders={"media_type": media_type},
+            translation_placeholders={"media_type": str(media_type)},
         )
