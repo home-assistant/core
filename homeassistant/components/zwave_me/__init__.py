@@ -13,10 +13,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> b
     """Set up Z-Wave-Me from a config entry."""
     controller = ZWaveMeController(hass, entry)
     if await controller.async_establish_connection():
+        entry.runtime_data = controller
         await async_setup_platforms(hass, entry, controller)
         registry = dr.async_get(hass)
         controller.remove_stale_devices(registry)
-        entry.runtime_data = controller
         return True
     raise ConfigEntryNotReady
 
