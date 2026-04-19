@@ -83,6 +83,46 @@ async def test_yaml_import_creates_entries_for_discovered_bulbs(
     assert issue is not None
 
 
+async def test_yaml_import_skips_bulbs_that_fail_validation(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import skips bulbs that fail validation."""
+    failing_bulb = MagicMock()
+    failing_bulb.addr = "AA:BB:CC:DD:EE:FF"
+    failing_bulb.get_name.side_effect = RuntimeError
+
+    valid_bulb = MagicMock()
+    valid_bulb.addr = "11:22:33:44:55:66"
+    valid_bulb.get_name.return_value = "Desk"
+    valid_bulb.get_brightness.return_value = 0
+
+    with (
+        patch(
+            "homeassistant.components.avea.light.avea.discover_avea_bulbs",
+            return_value=[failing_bulb, valid_bulb],
+        ),
+        patch(
+            "homeassistant.components.avea.async_setup_entry",
+            new=AsyncMock(return_value=True),
+        ),
+    ):
+        assert await async_setup_component(
+            hass, "light", {"light": {"platform": DOMAIN}}
+        )
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].unique_id == "11:22:33:44:55:66"
+    assert entries[0].title == "Desk"
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+
+
 async def test_yaml_import_raises_when_no_bulbs_are_discovered(
     hass: HomeAssistant,
 ) -> None:
@@ -91,6 +131,24 @@ async def test_yaml_import_raises_when_no_bulbs_are_discovered(
         patch(
             "homeassistant.components.avea.light.avea.discover_avea_bulbs",
             return_value=[],
+        ),
+        pytest.raises(PlatformNotReady),
+    ):
+        await avea_light.async_setup_platform(hass, {"platform": DOMAIN}, MagicMock())
+
+
+async def test_yaml_import_raises_when_all_bulbs_fail_validation(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML import raises when all bulbs fail validation."""
+    failing_bulb = MagicMock()
+    failing_bulb.addr = "AA:BB:CC:DD:EE:FF"
+    failing_bulb.get_name.side_effect = RuntimeError
+
+    with (
+        patch(
+            "homeassistant.components.avea.light.avea.discover_avea_bulbs",
+            return_value=[failing_bulb],
         ),
         pytest.raises(PlatformNotReady),
     ):
