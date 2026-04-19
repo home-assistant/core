@@ -8,7 +8,7 @@ from awesomeversion import AwesomeVersion
 LOGGER = logging.getLogger(__name__)
 
 DOMAIN: Final = "mastodon"
-MIN_REQUIRED_MASTODON_VERSION = AwesomeVersion("4.2.0")
+MIN_REQUIRED_MASTODON_VERSION: Final = AwesomeVersion("4.2.0")
 
 CONF_BASE_URL: Final = "base_url"
 DATA_HASS_CONFIG = "mastodon_hass_config"

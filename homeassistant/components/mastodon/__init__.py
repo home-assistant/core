@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
             translation_key="version_error",
             translation_placeholders={
                 "mastodon_version": instance.version,
-                "min_version": MIN_REQUIRED_MASTODON_VERSION,
+                "min_version": str(MIN_REQUIRED_MASTODON_VERSION),
             },
         )
 

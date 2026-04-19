@@ -133,7 +133,7 @@
       "message": "Unable to upload image {media_path}."
     },
     "version_error": {
-      "message": "Your instance is running verison {mastodon_version} of Mastodon. Minimum required version is {min_version}."
+      "message": "Your instance is running version {mastodon_version} of Mastodon. Minimum required version is {min_version}."
     }
   },
   "selector": {
