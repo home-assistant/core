@@ -106,7 +106,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await self.hass.async_add_executor_job(api.validate_auth_key)
-        except (ConnectionError, TimeoutError, OSError):
+        except ConnectionError, TimeoutError, OSError:
             errors["base"] = "cannot_connect"
         else:
             if not result:
@@ -160,7 +160,7 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
             return self.async_create_entry(
                 title=name,
                 data={
-                    CONF_STOP_ID: stop_id,
+                    CONF_STOP_ID: int(stop_id),
                     CONF_NAME: name,
                     CONF_DEPARTURE_TYPE: departure_types,
                     CONF_DIRECTION: user_input.get(CONF_DIRECTION, []),

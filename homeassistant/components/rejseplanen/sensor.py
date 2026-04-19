@@ -8,9 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date as Date, datetime, time as Time, timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any
 import zoneinfo
 
 from py_rejseplan.dataclasses.departure import Departure
@@ -35,6 +34,7 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_DEPARTURE_TYPE, CONF_DIRECTION, CONF_STOP_ID, DOMAIN
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
 from .entity import RejseplanenEntity, RejseplanenEntityContext
+from .helpers import cph_to_tz
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,6 @@ PARALLEL_UPDATES = 0
 
 # Buffer time after departure for cleanup
 DEPARTURE_CLEANUP_BUFFER = timedelta(seconds=15)
-COPENHAGEN_TZ = zoneinfo.ZoneInfo("Europe/Copenhagen")
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -52,13 +51,6 @@ class RejseplanenSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[
         [list[Departure], zoneinfo.ZoneInfo], StateType | datetime | None
     ]
-
-
-def cph_to_tz(dt_date: Date, dt_time: Time, target_tz: zoneinfo.ZoneInfo) -> datetime:
-    """Return a datetime in the target_tz, assuming input is Copenhagen local time."""
-    cph_naive = datetime.combine(dt_date, dt_time)
-    cph_aware = cph_naive.replace(tzinfo=COPENHAGEN_TZ)
-    return cph_aware.astimezone(target_tz)
 
 
 def _get_current_departures(
@@ -175,9 +167,8 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         key="track",
         translation_key="track",
         value_fn=lambda departures, tz: (
-            _get_current_departures(departures, tz)[0].rtTrack
-            or _get_current_departures(departures, tz)[0].track
-            if _get_current_departures(departures, tz)
+            (current[0].rtTrack or current[0].track)
+            if (current := _get_current_departures(departures, tz))
             else None
         ),
     ),
@@ -331,11 +322,10 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         )
         return self.entity_description.value_fn(departures, tz)
 
-
     def _get_filtered_departures(self) -> list[Departure]:
         """Get filtered departures based on the configured parameters."""
         return self.coordinator.get_filtered_departures(
             stop_id=self._stop_id,
-            direction_filter=self._direction if self._direction else None,
+            direction_filter=self._direction or None,
             departure_type_filter=self._departure_type_bitflag,
         )

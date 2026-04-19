@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_API_KEY, DOMAIN, SCAN_INTERVAL_MINUTES
+from .helpers import cph_to_tz
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +47,9 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     async def _async_update_data(self) -> DepartureBoard:
         """Update data via library."""
         try:
-            board = await self.hass.async_add_executor_job(self._fetch_data)
-        except (
-            APIError,
-            HTTPError,
-        ) as error:  # runtime errors from the API
+            stop_ids = {context.stop_id for context in self.async_contexts()}
+            board = await self.hass.async_add_executor_job(self._fetch_data, stop_ids)
+        except (APIError, HTTPError) as error:  # runtime errors from the API
             raise UpdateFailed(error) from error
         except ConnectionError as error:  # network errors
             raise UpdateFailed(
@@ -65,9 +64,9 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         self.last_update_success_time = dt_util.now()
         return board
 
-    def _fetch_data(self) -> DepartureBoard:
+    def _fetch_data(self, stop_ids: set[int]) -> DepartureBoard:
         """Fetch data from Rejseplanen API."""
-        if not self.async_contexts():
+        if not stop_ids:
             _LOGGER.warning(
                 "No stops registered, Please add a stop through the UI configuration. Data not fetched"
             )
@@ -80,7 +79,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
                 departures=[],
             )
         # Get all departures for this stop
-        stop_ids = {context.stop_id for context in self.async_contexts()}
         _LOGGER.debug("Fetching data for stop IDs: %s", stop_ids)
         departure_board, _ = self.api.get_departures(list(stop_ids))
         return departure_board
@@ -118,18 +116,18 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         # Sort by due_in time
         filtered_data.sort(
             key=lambda x: (
-                x.rtDate if x.rtDate else x.date,
-                x.rtTime if x.rtTime else x.time,
+                x.rtDate or x.date,
+                x.rtTime or x.time,
             ),
         )
-        now = dt_util.now().replace(tzinfo=None)
+        now = dt_util.utcnow()
 
         # Find the index where the departure time is not in the past
         def departure_datetime(d: Departure) -> datetime:
-            return datetime.strptime(
-                f"{d.rtDate if d.rtDate else d.date} {d.rtTime if d.rtTime else d.time}",
-                "%Y-%m-%d %H:%M:%S",
-            )
+            date_str = d.rtDate or d.date
+            time_str = d.rtTime or d.time
+            naive_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M:%S")
+            return cph_to_tz(naive_dt.date(), naive_dt.time(), dt_util.UTC)
 
         idx = next(
             (
