@@ -349,4 +349,3 @@ async def test_full_reconfigure_flow_connection_error_and_success(
     assert result.get("reason") == "reconfigure_successful"
 
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
-

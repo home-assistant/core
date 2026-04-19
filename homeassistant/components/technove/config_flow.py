@@ -31,9 +31,8 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
             try:
-                station = await self._async_get_station(host)
+                station = await self._async_get_station(user_input[CONF_HOST])
             except TechnoVEConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -53,13 +52,15 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(),
-                        data_updates={CONF_HOST: host},
+                        data_updates={CONF_HOST: user_input[CONF_HOST]},
                     )
-                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: user_input[CONF_HOST]}
+                )
                 return self.async_create_entry(
                     title=station.info.name,
                     data={
-                        CONF_HOST: host,
+                        CONF_HOST: user_input[CONF_HOST],
                     },
                 )
 
