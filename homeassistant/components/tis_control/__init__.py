@@ -67,6 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
                             _LOGGER.exception(
                                 "Unexpected error while processing TIS event"
                             )
+                except asyncio.CancelledError:
+                    raise
                 except Exception:
                     _LOGGER.exception(
                         "Unexpected error in TIS event listener, restarting in 1s"
