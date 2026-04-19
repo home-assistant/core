@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 from .entity import WattwaechterEntity
 
+PARALLEL_UPDATES = 0
+
 KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
     # Energy meters (kWh) - total_increasing
     "1.8.0": SensorEntityDescription(
