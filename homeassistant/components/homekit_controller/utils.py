@@ -1,6 +1,6 @@
 """Helper functions for the homekit_controller component."""
 
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import cast
 
 from aiohomekit import Controller
@@ -59,11 +59,9 @@ async def async_get_controller(hass: HomeAssistant) -> Controller:
     if existing := hass.data.get(CONTROLLER):
         return cast(Controller, existing)
 
-    bleak_scanner_instance = bluetooth.async_get_scanner(hass)
-
     controller = Controller(
         async_zeroconf_instance=async_zeroconf_instance,
-        bleak_scanner_instance=bleak_scanner_instance,
+        bleak_scanner_factory=partial(bluetooth.async_get_scanner, hass),
         char_cache=char_cache,
     )
 
