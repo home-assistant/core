@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
 
     try:
         hub = await _connect(stored_ip)
-    except Exception as err:
+    except OSError as err:
         if not auto_discovered:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
         new_ip, _ = next(iter(discovered))
         try:
             hub = await _connect(new_ip)
-        except Exception as err2:
+        except OSError as err2:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect_rediscovered",

@@ -112,6 +112,19 @@ async def test_setup_manual_entry_connection_fails(hass: HomeAssistant) -> None:
     mock_cls.async_discover_hubs.assert_not_called()
 
 
+async def test_setup_manual_entry_connection_times_out(hass: HomeAssistant) -> None:
+    """Manual entry raises ConfigEntryNotReady when connect() times out."""
+    entry = _make_entry(hass, auto_discovered=False)
+    hub = _make_hub_mock(connect_exc=TimeoutError("Handshake timed out"))
+    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
+        mock_cls.return_value = hub
+        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
+        with pytest.raises(ConfigEntryNotReady) as exc_info:
+            await async_setup_entry(hass, entry)
+
+    assert exc_info.value.translation_key == "cannot_connect_manual"
+
+
 async def test_setup_autodiscovered_rediscovery_updates_ip(hass: HomeAssistant) -> None:
     """Auto-discovered entry recovers via rediscovery and persists the new IP."""
     entry = _make_entry(hass, auto_discovered=True)
