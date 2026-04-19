@@ -34,7 +34,7 @@ dependencies = [
   "aiohttp-asyncmdnsresolver==0.1.1",
   "aiozoneinfo==0.2.3",
   "annotatedyaml==1.0.2",
-  "astral==2.2",
+  "astral==3.2",
   "async-interrupt==1.2.2",
   "attrs==26.1.0",
   "atomicwrites-homeassistant==1.4.1",
