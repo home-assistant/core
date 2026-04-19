@@ -112,6 +112,10 @@ CONTAINER_BUTTONS: tuple[PortainerButtonDescription, ...] = (
                 container_id=container_id,
                 timeout=timedelta(minutes=10),
                 pull_image=True,
+            )
+        ),
+    ),
+    PortainerButtonDescription(
         key="kill",
         translation_key="kill_container",
         entity_category=EntityCategory.CONFIG,
