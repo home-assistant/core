@@ -21,6 +21,16 @@ MOCK_DATA = {
     "Version": ["32a", ""],
 }
 
+MOCK_PARSE_DATA = {
+    "boiler_temperature": ["14.09", "°C"],
+    "outdoor_temperature": ["15.95", "°C"],
+    "buffer_load": ["22", "%"],
+    "program": ["heat", ""],
+    "status": ["Service Ign.", ""],
+    "serial": ["959103", ""],
+    "version": ["32a", ""],
+}
+
 
 @pytest.fixture
 def mock_heater() -> Generator[MagicMock]:
@@ -30,7 +40,7 @@ def mock_heater() -> Generator[MagicMock]:
         autospec=True,
     ) as mock:
         mock.return_value.get_data = MagicMock(return_value=MOCK_DATA)
-        mock.return_value.parse_data = MagicMock(return_value=MOCK_DATA)
+        mock.return_value.parse_data = MagicMock(return_value=MOCK_PARSE_DATA)
         mock.return_value.host = "1.1.1.1"
         yield mock
 

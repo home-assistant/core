@@ -20,72 +20,90 @@ PARALLEL_UPDATES = 0
 
 GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
-        key="Status",
+        key="status",
+        translation_key="status",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key="Program",
+        key="program",
+        translation_key="program",
         device_class=SensorDeviceClass.ENUM,
         options=[
-            "OFF",
-            "TIMER",
-            "DHW",
-            "HEAT",
-            "HIBERNAT",
-            "HIBERNATE TO",
-            "DHW BOOST",
+            "off",
+            "timer",
+            "dhw",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+            "dhw_boost",
         ],
     ),
     SensorEntityDescription(
-        key="Boiler Temperature",
+        key="boiler_temperature",
+        translation_key="boiler_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Outdoor Temperature",
+        key="outdoor_temperature",
+        translation_key="outdoor_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Buffer Top Temperature",
+        key="buffer_top_temperature",
+        translation_key="buffer_top_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Buffer Center Temperature",
+        key="buffer_center_temperature",
+        translation_key="buffer_center_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Buffer Bottom Temperature",
+        key="buffer_bottom_temperature",
+        translation_key="buffer_bottom_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Domestic Home Water Temperature",
+        key="domestic_home_water_temperature",
+        translation_key="domestic_home_water_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Room 1 Temperature",
+        key="room_0_temperature",
+        translation_key="room_0_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Room 2 Temperature",
+        key="room_1_temperature",
+        translation_key="room_1_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="Buffer Load",
+        key="room_2_temperature",
+        translation_key="room_2_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    SensorEntityDescription(
+        key="buffer_load",
+        translation_key="buffer_load",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
@@ -127,7 +145,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         self._name = entity_description.key
         self._attr_name = entity_description.key
 
-        serial = coordinator.data["Serial"][0]
+        serial = coordinator.data["serial"][0]
 
         self._attr_unique_id = (
             f"{serial.replace('.', '_')}_{entity_description.key.replace(' ', '_')}"
@@ -138,7 +156,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
             name="Guntamatic Heater",
             manufacturer="Guntamatic",
             serial_number=serial,
-            sw_version=coordinator.data["Version"][0],
+            sw_version=coordinator.data["version"][0],
         )
 
     @property

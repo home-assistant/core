@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_DATA
+from .conftest import MOCK_PARSE_DATA
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +44,7 @@ async def test_coordinator_update_failed(
 
     # Recovery
     mock_heater.return_value.parse_data.side_effect = None
-    mock_heater.return_value.parse_data.return_value = MOCK_DATA
+    mock_heater.return_value.parse_data.return_value = MOCK_PARSE_DATA
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")

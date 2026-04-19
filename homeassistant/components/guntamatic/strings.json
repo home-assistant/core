@@ -18,5 +18,54 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "boiler_temperature": {
+        "name": "Boiler Temperature"
+      },
+      "buffer_bottem_temperature": {
+        "name": "Buffer Bottem Temperature"
+      },
+      "buffer_center_temperature": {
+        "name": "Buffer Center Temperature"
+      },
+      "buffer_load": {
+        "name": "Buffer Load"
+      },
+      "buffer_top_temperature": {
+        "name": "Buffer Top Temperature"
+      },
+      "domestic_home_water_temperature": {
+        "name": "Domestic Home Water Temperature"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor Temperature"
+      },
+      "program": {
+        "name": "Program",
+        "state": {
+          "dhw": "Domestic Hot Water",
+          "dhw_boost": "Domestic Hot Water Boost",
+          "heat": "Heat",
+          "hibernate": "Hibernate",
+          "hibernate_to": "Hibernate To",
+          "off": "[%key:common::state::off%]",
+          "timer": "Timer"
+        }
+      },
+      "room_0_temperature": {
+        "name": "Room 0 Temperature"
+      },
+      "room_1_temperature": {
+        "name": "Room 1 Temperature"
+      },
+      "room_2_temperature": {
+        "name": "Room 2 Temperature"
+      },
+      "status": {
+        "name": "Status"
+      }
+    }
   }
 }
