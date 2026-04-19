@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aio_wattwaechter import (
     WattwaechterAuthenticationError,
     WattwaechterConnectionError,
 )
-from aio_wattwaechter.models import InfoEntry, SystemInfo
 import pytest
 
 from homeassistant import config_entries
@@ -25,443 +23,321 @@ from homeassistant.components.wattwaechter.const import (
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import (
-    MOCK_ALIVE_RESPONSE,
     MOCK_DEVICE_ID,
     MOCK_DEVICE_NAME,
     MOCK_FW_VERSION,
     MOCK_HOST,
     MOCK_MAC,
     MOCK_MODEL,
-    MOCK_SETTINGS,
     MOCK_SYSTEM_INFO,
     MOCK_TOKEN,
 )
 
 from tests.common import MockConfigEntry
 
-MOCK_ZEROCONF_DISCOVERY = type(
-    "ZeroconfServiceInfo",
-    (),
-    {
-        "host": ip_address(MOCK_HOST),
-        "port": 80,
-        "hostname": "wattwaechter.local.",
-        "type": "_wattwaechter._tcp.local.",
-        "name": f"WWP-{MOCK_DEVICE_ID}._wattwaechter._tcp.local.",
-        "properties": {
-            "id": f"WWP-{MOCK_DEVICE_ID}",
-            "model": MOCK_MODEL,
-            "ver": MOCK_FW_VERSION,
-            "mac": MOCK_MAC,
-        },
+MOCK_ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
+    ip_address=ip_address(MOCK_HOST),
+    ip_addresses=[ip_address(MOCK_HOST)],
+    hostname="wattwaechter.local.",
+    port=80,
+    type="_wattwaechter._tcp.local.",
+    name=f"WWP-{MOCK_DEVICE_ID}._wattwaechter._tcp.local.",
+    properties={
+        "id": f"WWP-{MOCK_DEVICE_ID}",
+        "model": MOCK_MODEL,
+        "ver": MOCK_FW_VERSION,
+        "mac": MOCK_MAC,
     },
-)()
+)
 
 
-@pytest.fixture(autouse=True)
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Mock the integration setup and unload to avoid full platform loading."""
-    with (
-        patch(
-            "homeassistant.components.wattwaechter.async_setup_entry",
-            return_value=True,
-        ) as mock,
-        patch(
-            "homeassistant.components.wattwaechter.async_unload_entry",
-            return_value=True,
-        ),
-    ):
-        yield mock
+# --- User Flow ---
 
 
-# --- User Flow (manual configuration) ---
-
-
-async def test_user_flow_success(hass: HomeAssistant) -> None:
-    """Test successful manual configuration."""
+async def test_user_flow_success(hass: HomeAssistant, mock_client: AsyncMock) -> None:
+    """Test successful manual configuration without auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
-        client.settings = AsyncMock(return_value=MOCK_SETTINGS)
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: MOCK_HOST, CONF_TOKEN: MOCK_TOKEN},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
-    assert result["data"][CONF_HOST] == MOCK_HOST
-    assert result["data"][CONF_TOKEN] == MOCK_TOKEN
-    assert result["data"][CONF_DEVICE_ID] == MOCK_DEVICE_ID
-    assert result["data"][CONF_DEVICE_NAME] == MOCK_DEVICE_NAME
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_TOKEN: None,
+        CONF_DEVICE_ID: MOCK_DEVICE_ID,
+        CONF_DEVICE_NAME: MOCK_DEVICE_NAME,
+        CONF_MODEL: "WW-Plus",
+        CONF_FW_VERSION: MOCK_FW_VERSION,
+        CONF_MAC: MOCK_MAC,
+    }
 
 
-async def test_user_flow_no_token(hass: HomeAssistant) -> None:
-    """Test manual configuration without API token."""
+async def test_user_flow_auth_required(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test user flow redirects to auth step when device requires a token."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
-        client.settings = AsyncMock(return_value=MOCK_SETTINGS)
+    # system_info raises auth error → redirect to auth step
+    mock_client.system_info.side_effect = WattwaechterAuthenticationError(
+        "Auth required"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: MOCK_HOST},
-        )
+    # Submit token → success
+    mock_client.system_info.side_effect = None
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: MOCK_TOKEN},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_TOKEN] is None
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_TOKEN: MOCK_TOKEN,
+        CONF_DEVICE_ID: MOCK_DEVICE_ID,
+        CONF_DEVICE_NAME: MOCK_DEVICE_NAME,
+        CONF_MODEL: "WW-Plus",
+        CONF_FW_VERSION: MOCK_FW_VERSION,
+        CONF_MAC: MOCK_MAC,
+    }
 
 
-async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test manual configuration with connection error."""
+async def test_user_flow_cannot_connect(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test user flow shows error on connection failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(
-            side_effect=WattwaechterConnectionError("Connection refused")
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: MOCK_HOST},
-        )
+    mock_client.system_info.side_effect = WattwaechterConnectionError(
+        "Connection refused"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
-    """Test manual configuration with invalid token."""
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test user flow aborts when device is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(
-            side_effect=WattwaechterAuthenticationError("Invalid token")
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: MOCK_HOST, CONF_TOKEN: "bad-token"},
-        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+# --- Auth Step Errors (parametrized) ---
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (WattwaechterAuthenticationError("Invalid token"), "invalid_auth"),
+        (WattwaechterConnectionError("Connection lost"), "cannot_connect"),
+    ],
+)
+async def test_auth_step_errors(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test auth step shows errors for invalid token and connection failure."""
+    # Trigger auth step via user flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_client.system_info.side_effect = WattwaechterAuthenticationError(
+        "Auth required"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
+    )
+    assert result["step_id"] == "auth"
+
+    # Submit token with error
+    mock_client.system_info.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "bad-token"},
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
+    assert result["step_id"] == "auth"
+    assert result["errors"]["base"] == expected_error
 
 
 # --- Zeroconf Flow ---
 
 
-async def test_zeroconf_flow_no_token_needed(hass: HomeAssistant) -> None:
+async def test_zeroconf_flow_no_token_needed(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
     """Test zeroconf discovery when device doesn't require a token."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
-        client.settings = AsyncMock(return_value=MOCK_SETTINGS)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_DEVICE_NAME
-    assert result["data"][CONF_HOST] == MOCK_HOST
-    assert result["data"][CONF_TOKEN] is None
-    assert result["data"][CONF_DEVICE_ID] == MOCK_DEVICE_ID
-    assert result["data"][CONF_MODEL] == MOCK_MODEL
-    assert result["data"][CONF_FW_VERSION] == MOCK_FW_VERSION
-    assert result["data"][CONF_MAC] == MOCK_MAC
-
-
-async def test_zeroconf_flow_token_required(hass: HomeAssistant) -> None:
-    """Test zeroconf discovery when device requires a token."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        # First call without token fails with auth error
-        client.system_info = AsyncMock(
-            side_effect=WattwaechterAuthenticationError("Auth required")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
-
-    # Should show token form
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
-        client.settings = AsyncMock(return_value=MOCK_SETTINGS)
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_TOKEN: MOCK_TOKEN},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
-    assert result["data"][CONF_HOST] == MOCK_HOST
-    assert result["data"][CONF_TOKEN] == MOCK_TOKEN
-    assert result["data"][CONF_DEVICE_ID] == MOCK_DEVICE_ID
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_TOKEN: None,
+        CONF_DEVICE_ID: MOCK_DEVICE_ID,
+        CONF_DEVICE_NAME: MOCK_DEVICE_NAME,
+        CONF_MODEL: MOCK_MODEL,
+        CONF_FW_VERSION: MOCK_FW_VERSION,
+        CONF_MAC: MOCK_MAC,
+    }
 
 
-async def test_zeroconf_flow_invalid_auth_on_confirm(hass: HomeAssistant) -> None:
-    """Test zeroconf confirm shows error on invalid token."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(
-            side_effect=WattwaechterAuthenticationError("Auth required")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.system_info = AsyncMock(
-            side_effect=WattwaechterAuthenticationError("Invalid token")
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_TOKEN: "bad-token"},
-        )
+async def test_zeroconf_flow_token_required(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test zeroconf discovery when device requires a token."""
+    mock_client.system_info.side_effect = WattwaechterAuthenticationError(
+        "Auth required"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
+    assert result["step_id"] == "auth"
+
+    # Submit token → success
+    mock_client.system_info.side_effect = None
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: MOCK_TOKEN},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_DEVICE_NAME
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_TOKEN: MOCK_TOKEN,
+        CONF_DEVICE_ID: MOCK_DEVICE_ID,
+        CONF_DEVICE_NAME: MOCK_DEVICE_NAME,
+        CONF_MODEL: MOCK_MODEL,
+        CONF_FW_VERSION: MOCK_FW_VERSION,
+        CONF_MAC: MOCK_MAC,
+    }
 
 
-async def test_zeroconf_flow_cannot_connect(hass: HomeAssistant) -> None:
+async def test_zeroconf_flow_cannot_connect(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
     """Test zeroconf aborts when device is unreachable."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(
-            side_effect=WattwaechterConnectionError("Connection refused")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
+    mock_client.system_info.side_effect = WattwaechterConnectionError(
+        "Connection refused"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test zeroconf aborts when device is already configured."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DISCOVERY,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_missing_device_id(hass: HomeAssistant) -> None:
-    """Test manual configuration when device returns no esp_id."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_system_info_no_id = SystemInfo(
-        uptime=[],
-        wifi=[],
-        ap=[],
-        esp=[InfoEntry(name="esp_id", value="", unit="")],
-        heap=[],
-    )
-
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(return_value=mock_system_info_no_id)
-        client.settings = AsyncMock(return_value=MOCK_SETTINGS)
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: MOCK_HOST},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "unknown"
-
-
-async def test_zeroconf_confirm_connection_error(hass: HomeAssistant) -> None:
-    """Test zeroconf confirm aborts on connection error during token check."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(
-            side_effect=WattwaechterConnectionError("Connection lost")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_zeroconf_confirm_connection_error_on_token_submit(
-    hass: HomeAssistant,
+async def test_zeroconf_flow_device_name_fetch_fails(
+    hass: HomeAssistant, mock_client: AsyncMock
 ) -> None:
-    """Test zeroconf confirm shows error when connection fails during token submit."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(
-            side_effect=WattwaechterAuthenticationError("Auth required")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.system_info = AsyncMock(
-            side_effect=WattwaechterConnectionError("Connection lost")
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_TOKEN: MOCK_TOKEN},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_zeroconf_flow_device_name_fetch_fails(hass: HomeAssistant) -> None:
     """Test zeroconf uses fallback title when device_name fetch fails."""
-    with patch(
-        "homeassistant.components.wattwaechter.config_flow.Wattwaechter"
-    ) as mock_cls:
-        client = mock_cls.return_value
-        client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
-        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
-        client.settings = AsyncMock(
-            side_effect=WattwaechterConnectionError("Connection lost")
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"WattWächter {MOCK_DEVICE_ID}"
-    assert result["data"][CONF_DEVICE_NAME] == ""
-
-
-async def test_zeroconf_flow_no_device_id(hass: HomeAssistant) -> None:
-    """Test zeroconf aborts when no device ID in TXT record."""
-    discovery_no_id = type(
-        "ZeroconfServiceInfo",
-        (),
-        {
-            "host": ip_address(MOCK_HOST),
-            "port": 80,
-            "hostname": "wattwaechter.local.",
-            "type": "_wattwaechter._tcp.local.",
-            "name": "wattwaechter._wattwaechter._tcp.local.",
-            "properties": {
-                "id": "",
-                "model": MOCK_MODEL,
-                "ver": MOCK_FW_VERSION,
-                "mac": MOCK_MAC,
-            },
-        },
-    )()
+    mock_client.settings.side_effect = WattwaechterConnectionError("Connection lost")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=discovery_no_id,
+        data=MOCK_ZEROCONF_DISCOVERY,
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_device_id"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"WattWächter {MOCK_DEVICE_ID}"
+    assert result["result"].unique_id == MOCK_DEVICE_ID
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_TOKEN: None,
+        CONF_DEVICE_ID: MOCK_DEVICE_ID,
+        CONF_DEVICE_NAME: None,
+        CONF_MODEL: MOCK_MODEL,
+        CONF_FW_VERSION: MOCK_FW_VERSION,
+        CONF_MAC: MOCK_MAC,
+    }

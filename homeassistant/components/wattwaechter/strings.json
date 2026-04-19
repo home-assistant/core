@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_device_id": "Could not identify the device."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,24 +9,25 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "token": "[%key:common::config_flow::data::api_token%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your WattWächter Plus device.",
-          "token": "Optional API token for authenticated access."
-        },
-        "title": "Add WattWächter Plus"
-      },
-      "zeroconf_confirm": {
+      "auth": {
         "data": {
           "token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
           "token": "The API token for your WattWächter Plus device."
         },
+        "title": "Authentication required"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your WattWächter Plus device."
+        },
+        "title": "Add WattWächter Plus"
+      },
+      "zeroconf_confirm": {
         "description": "A WattWächter device was found on your network.\n\nModel: {model}\nFirmware: {firmware}\nHost: {host}\nDevice ID: {device_id}",
         "title": "WattWächter Plus discovered"
       }

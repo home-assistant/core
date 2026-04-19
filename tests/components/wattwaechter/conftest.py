@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aio_wattwaechter import Wattwaechter
 from aio_wattwaechter.models import (
     AliveResponse,
     InfoEntry,
@@ -91,22 +90,24 @@ MOCK_METER_DATA_MINIMAL = MeterData(
 )
 
 
-@pytest.fixture(autouse=True)
-def mock_zeroconf(hass: HomeAssistant) -> None:
-    """Mock zeroconf dependency to avoid socket access in tests."""
-    hass.config.components.add("zeroconf")
-
-
 @pytest.fixture
-def mock_client() -> Generator[Wattwaechter]:
+def mock_client() -> Generator[AsyncMock]:
     """Create a mock Wattwaechter client."""
-    with patch(
-        "homeassistant.components.wattwaechter.Wattwaechter",
-        autospec=True,
-    ) as mock_cls:
+    with (
+        patch(
+            "homeassistant.components.wattwaechter.Wattwaechter",
+            autospec=True,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.wattwaechter.config_flow.Wattwaechter",
+            new=mock_cls,
+        ),
+    ):
         client = mock_cls.return_value
         client.host = MOCK_HOST
         client.alive = AsyncMock(return_value=MOCK_ALIVE_RESPONSE)
+        client.system_info = AsyncMock(return_value=MOCK_SYSTEM_INFO)
+        client.settings = AsyncMock(return_value=MOCK_SETTINGS)
         client.meter_data = AsyncMock(return_value=MOCK_METER_DATA)
         yield client
 

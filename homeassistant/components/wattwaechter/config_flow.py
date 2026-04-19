@@ -10,6 +10,7 @@ from aio_wattwaechter import (
     WattwaechterAuthenticationError,
     WattwaechterConnectionError,
 )
+from aio_wattwaechter.models import SystemInfo
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -38,9 +39,50 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._host: str = ""
         self._device_id: str = ""
-        self._model: str = ""
-        self._fw_version: str = ""
-        self._mac: str = ""
+        self._model: str | None = None
+        self._fw_version: str | None = None
+        self._mac: str | None = None
+        self._device_name: str | None = None
+
+    async def _async_test_connection(
+        self, host: str, token: str | None = None
+    ) -> tuple[dict[str, str], SystemInfo | None]:
+        """Test connection and fetch system info."""
+        session = async_get_clientsession(self.hass)
+        client = Wattwaechter(host, token=token, session=session)
+        try:
+            system_info = await client.system_info()
+        except WattwaechterAuthenticationError:
+            return {"base": "invalid_auth"}, None
+        except WattwaechterConnectionError:
+            return {"base": "cannot_connect"}, None
+        return {}, system_info
+
+    async def _async_fetch_device_name(self, token: str | None = None) -> str | None:
+        """Fetch device name from settings."""
+        session = async_get_clientsession(self.hass)
+        client = Wattwaechter(self._host, token=token, session=session)
+        try:
+            settings = await client.settings()
+        except (WattwaechterConnectionError, WattwaechterAuthenticationError):
+            return None
+        return settings.device_name
+
+    def _create_entry(self, token: str | None = None) -> ConfigFlowResult:
+        """Create a config entry with the collected device info."""
+        title = self._device_name or f"WattWächter {self._device_id}"
+        return self.async_create_entry(
+            title=title,
+            data={
+                CONF_HOST: self._host,
+                CONF_TOKEN: token,
+                CONF_DEVICE_ID: self._device_id,
+                CONF_DEVICE_NAME: self._device_name,
+                CONF_MODEL: self._model,
+                CONF_FW_VERSION: self._fw_version,
+                CONF_MAC: self._mac,
+            },
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -52,25 +94,25 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         properties = discovery_info.properties
         device_id_raw = properties.get("id", "")
-        self._model = properties.get("model", "WW-Plus")
-        self._fw_version = properties.get("ver", "")
-        self._mac = properties.get("mac", "")
+        self._model = properties.get("model")
+        self._fw_version = properties.get("ver")
+        self._mac = properties.get("mac")
 
         self._device_id = device_id_raw.removeprefix("WWP-")
-
-        if not self._device_id:
-            return self.async_abort(reason="no_device_id")
 
         await self.async_set_unique_id(self._device_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        session = async_get_clientsession(self.hass)
-        client = Wattwaechter(self._host, session=session)
-        try:
-            await client.alive()
-        except WattwaechterConnectionError:
+        errors, _ = await self._async_test_connection(self._host)
+        if errors:
+            if errors["base"] == "invalid_auth":
+                self.context["title_placeholders"] = {
+                    "name": f"WattWächter {self._device_id}"
+                }
+                return await self.async_step_auth()
             return self.async_abort(reason="cannot_connect")
 
+        self._device_name = await self._async_fetch_device_name()
         self.context["title_placeholders"] = {"name": f"WattWächter {self._device_id}"}
         return await self.async_step_zeroconf_confirm()
 
@@ -79,90 +121,18 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm zeroconf discovery."""
         if user_input is None:
-            # First visit: check if device needs a token
-            session = async_get_clientsession(self.hass)
-            client = Wattwaechter(self._host, session=session)
-            try:
-                await client.system_info()
-            except WattwaechterAuthenticationError:
-                # Device requires a token, show form
-                return self.async_show_form(
-                    step_id="zeroconf_confirm",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(CONF_TOKEN): str,
-                        }
-                    ),
-                    description_placeholders={
-                        "model": self._model or "WattWächter Plus",
-                        "firmware": self._fw_version or "unknown",
-                        "host": self._host or "",
-                        "device_id": self._device_id or "",
-                    },
-                )
-            except WattwaechterConnectionError:
-                return self.async_abort(reason="cannot_connect")
-            else:
-                # No token needed, create entry directly
-                device_name = await self._async_fetch_device_name()
-                title = device_name or f"WattWächter {self._device_id}"
-                return self.async_create_entry(
-                    title=title,
-                    data={
-                        CONF_HOST: self._host,
-                        CONF_TOKEN: None,
-                        CONF_DEVICE_ID: self._device_id,
-                        CONF_DEVICE_NAME: device_name or "",
-                        CONF_MODEL: self._model,
-                        CONF_FW_VERSION: self._fw_version,
-                        CONF_MAC: self._mac,
-                    },
-                )
-
-        # User submitted token
-        errors: dict[str, str] = {}
-        token = user_input.get(CONF_TOKEN)
-
-        session = async_get_clientsession(self.hass)
-        client = Wattwaechter(self._host, token=token, session=session)
-        try:
-            await client.system_info()
-        except WattwaechterAuthenticationError:
-            errors["base"] = "invalid_auth"
-        except WattwaechterConnectionError:
-            errors["base"] = "cannot_connect"
-
-        if errors:
+            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_TOKEN): str,
-                    }
-                ),
                 description_placeholders={
                     "model": self._model or "WattWächter Plus",
                     "firmware": self._fw_version or "unknown",
-                    "host": self._host or "",
-                    "device_id": self._device_id or "",
+                    "host": self._host,
+                    "device_id": self._device_id,
                 },
-                errors=errors,
             )
 
-        device_name = await self._async_fetch_device_name(token)
-        title = device_name or f"WattWächter {self._device_id}"
-        return self.async_create_entry(
-            title=title,
-            data={
-                CONF_HOST: self._host,
-                CONF_TOKEN: token,
-                CONF_DEVICE_ID: self._device_id,
-                CONF_DEVICE_NAME: device_name or "",
-                CONF_MODEL: self._model,
-                CONF_FW_VERSION: self._fw_version,
-                CONF_MAC: self._mac,
-            },
-        )
+        return self._create_entry()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -171,70 +141,70 @@ class WattwaechterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            token = user_input.get(CONF_TOKEN) or None
+            self._host = user_input[CONF_HOST]
 
-            session = async_get_clientsession(self.hass)
-            client = Wattwaechter(host, token=token, session=session)
+            errors, system_info = await self._async_test_connection(self._host)
 
-            try:
-                alive = await client.alive()
-                system_info = await client.system_info()
-                settings = await client.settings()
-            except WattwaechterAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except WattwaechterConnectionError:
-                errors["base"] = "cannot_connect"
+            if errors.get("base") == "invalid_auth":
+                return await self.async_step_auth()
 
             if not errors:
-                device_id = system_info.get_value("esp", "esp_id") or ""
-                fw_version = system_info.get_value("esp", "os_version") or alive.version
-                mac = system_info.get_value("wifi", "mac_address") or ""
-                device_name = settings.device_name or ""
+                assert system_info is not None
+                self._device_id = system_info.get_value("esp", "esp_id") or ""
+                self._fw_version = system_info.get_value("esp", "os_version")
+                self._mac = system_info.get_value("wifi", "mac_address")
+                self._model = "WW-Plus"
+                self._device_name = await self._async_fetch_device_name()
 
-                if not device_id:
-                    errors["base"] = "unknown"
-
-            if not errors:
-                await self.async_set_unique_id(device_id)
+                await self.async_set_unique_id(self._device_id)
                 self._abort_if_unique_id_configured()
 
-                title = device_name or f"WattWächter {device_id}"
-
-                return self.async_create_entry(
-                    title=title,
-                    data={
-                        CONF_HOST: host,
-                        CONF_TOKEN: token,
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DEVICE_NAME: device_name or "",
-                        CONF_MODEL: "WW-Plus",
-                        CONF_FW_VERSION: fw_version,
-                        CONF_MAC: mac,
-                    },
-                )
+                return self._create_entry()
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_TOKEN): str,
                 }
             ),
             errors=errors,
         )
 
-    async def _async_fetch_device_name(self, token: str | None = None) -> str | None:
-        """Try to fetch device_name from settings, return None on failure."""
-        session = async_get_clientsession(self.hass)
-        client = Wattwaechter(self._host, token=token, session=session)
-        try:
-            settings = await client.settings()
-        except (
-            WattwaechterConnectionError,
-            WattwaechterAuthenticationError,
-        ):
-            return None
-        else:
-            return settings.device_name
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle token authentication."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            token = user_input[CONF_TOKEN]
+
+            errors, system_info = await self._async_test_connection(self._host, token)
+
+            if not errors:
+                assert system_info is not None
+                # For user flow, populate device info from system_info
+                if not self._device_id:
+                    self._device_id = system_info.get_value("esp", "esp_id") or ""
+                    self._fw_version = system_info.get_value("esp", "os_version")
+                    self._mac = system_info.get_value("wifi", "mac_address")
+                    self._model = "WW-Plus"
+
+                self._device_name = await self._async_fetch_device_name(token)
+
+                if self.unique_id is None:
+                    await self.async_set_unique_id(self._device_id)
+                    self._abort_if_unique_id_configured()
+
+                return self._create_entry(token)
+
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_TOKEN): str,
+                }
+            ),
+            errors=errors,
+        )

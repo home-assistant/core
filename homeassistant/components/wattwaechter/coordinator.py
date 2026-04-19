@@ -50,12 +50,10 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
         self.client = client
         self.device_id: str = config_entry.data[CONF_DEVICE_ID]
         self.host: str = config_entry.data[CONF_HOST]
-        self.model: str = config_entry.data.get(CONF_MODEL, "WW-Plus")
-        self.mac: str = config_entry.data.get(CONF_MAC, "")
-        self.fw_version: str = config_entry.data.get(CONF_FW_VERSION, "")
-        self.device_name: str = (
-            config_entry.data.get(CONF_DEVICE_NAME, "") or DEVICE_NAME
-        )
+        self.model: str | None = config_entry.data.get(CONF_MODEL)
+        self.mac: str | None = config_entry.data.get(CONF_MAC)
+        self.fw_version: str | None = config_entry.data.get(CONF_FW_VERSION)
+        self.device_name: str = config_entry.data.get(CONF_DEVICE_NAME) or DEVICE_NAME
 
         super().__init__(
             hass,
