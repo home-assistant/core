@@ -237,11 +237,16 @@ async def test_async_setup_entry_event_listener_generator_failure(
 
     mock_tis_api.consume_events.side_effect = _mock_event_generator
 
+    original_sleep = asyncio.sleep
+
+    async def mock_sleep(_) -> None:
+        await original_sleep(0)
+
     with (
         patch.object(hass.config_entries, "async_forward_entry_setups"),
         patch(
             "homeassistant.components.tis_control.asyncio.sleep",
-            side_effect=lambda _: asyncio.sleep(0),
+            side_effect=mock_sleep,
         ),
     ):
         await async_setup_entry(hass, mock_config_entry)
