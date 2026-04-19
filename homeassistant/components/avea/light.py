@@ -284,8 +284,27 @@ class AveaLight(LightEntity):
             self._attr_available = False
             return
 
+        if brightness is None:
+            _LOGGER.warning(
+                "Avea device %s returned invalid brightness data during update",
+                self._address,
+            )
+            self._attr_available = False
+            return
+
+        try:
+            hs_color = color_util.color_RGB_to_hs(*rgb)
+        except TypeError, ValueError:
+            _LOGGER.warning(
+                "Avea device %s returned invalid color data during update",
+                self._address,
+                exc_info=True,
+            )
+            self._attr_available = False
+            return
+
         self._attr_available = True
         self._attr_is_on = brightness != 0
         self._attr_brightness = round(255 * (brightness / 4095))
         self._attr_color_mode = ColorMode.HS if self._attr_is_on else None
-        self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
+        self._attr_hs_color = hs_color

@@ -42,7 +42,10 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
                 exc_info=True,
             )
             name = None
-        bulb.get_brightness()
+        try:
+            bulb.get_brightness()
+        except NAME_EXCEPTIONS as err:
+            raise CannotConnect from err
     finally:
         bulb.close()
 

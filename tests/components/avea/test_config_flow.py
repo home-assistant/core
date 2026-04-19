@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.avea.config_flow import CannotConnect, _validate_device
 from homeassistant.components.avea.const import DOMAIN
@@ -26,6 +28,20 @@ def test_validate_device_falls_back_to_discovery_name() -> None:
         "homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb
     ):
         assert _validate_device(AVEA_DISCOVERY_INFO) == AVEA_DISCOVERY_INFO.name
+
+
+def test_validate_device_raises_cannot_connect_on_brightness_error() -> None:
+    """Test the validator maps brightness errors to cannot connect."""
+    bulb = MagicMock()
+    bulb.connect.return_value = True
+    bulb.get_name.return_value = "Bedroom"
+    bulb.get_brightness.side_effect = RuntimeError
+
+    with (
+        patch("homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb),
+        pytest.raises(CannotConnect),
+    ):
+        _validate_device(AVEA_DISCOVERY_INFO)
 
 
 async def test_user_step_success(hass: HomeAssistant) -> None:

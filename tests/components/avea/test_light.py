@@ -177,6 +177,35 @@ async def test_update_unavailable(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_update_unavailable_on_invalid_brightness(
+    hass: HomeAssistant, setup_integration: MagicMock
+) -> None:
+    """Test the entity becomes unavailable on invalid brightness data."""
+    bulb = setup_integration
+    bulb.get_brightness.return_value = None
+
+    await async_update_entity(hass, "light.bedroom")
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_update_unavailable_on_invalid_rgb(
+    hass: HomeAssistant, setup_integration: MagicMock
+) -> None:
+    """Test the entity becomes unavailable on invalid RGB data."""
+    bulb = setup_integration
+    bulb.get_brightness.return_value = 2048
+    bulb.get_rgb.return_value = (255, 0)
+
+    await async_update_entity(hass, "light.bedroom")
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [("turn_on", STATE_ON), ("turn_off", STATE_OFF)],
