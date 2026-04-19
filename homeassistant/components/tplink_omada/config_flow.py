@@ -93,13 +93,14 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
 class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TP-Link Omada."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Create the config flow for a new integration."""
         self._omada_opts: dict[str, Any] = {}
         self._sites: list[OmadaSite] = []
         self._controller_name = ""
+        self._controller_id = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -116,12 +117,10 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
-        await self.async_set_unique_id(info.controller_id)
-        self._abort_if_unique_id_configured()
-
         self._omada_opts.update(user_input)
         self._sites = info.sites
         self._controller_name = info.name
+        self._controller_id = info.controller_id
         if len(self._sites) > 1:
             return await self.async_step_site()
         return await self.async_step_site({CONF_SITE: self._sites[0].id})
@@ -148,6 +147,9 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             return self.async_show_form(step_id="site", data_schema=schema)
+
+        await self.async_set_unique_id(f"{self._controller_id}_{user_input[CONF_SITE]}")
+        self._abort_if_unique_id_configured()
 
         self._omada_opts.update(user_input)
         site_name = next(
@@ -177,7 +179,9 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if info is not None:
                 # Check the controller ID is the same as before
-                await self.async_set_unique_id(info.controller_id)
+                reauth_entry = self._get_reauth_entry()
+                site_id = reauth_entry.data[CONF_SITE]
+                await self.async_set_unique_id(f"{info.controller_id}_{site_id}")
                 self._abort_if_unique_id_mismatch(reason="device_mismatch")
 
                 # Auth successful - update the config entry with the new credentials
