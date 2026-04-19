@@ -15,8 +15,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
 from .entity import ActronAirAcEntity, ActronAirZoneEntity, actron_air_command
 
@@ -151,9 +153,12 @@ class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
     @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        await self._status.user_aircon_settings.set_temperature(
-            temperature=kwargs[ATTR_TEMPERATURE]
-        )
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_missing",
+            )
+        await self._status.user_aircon_settings.set_temperature(temperature=temperature)
 
 
 class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
@@ -222,4 +227,9 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
     @actron_air_command
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        await self._zone.set_temperature(temperature=kwargs[ATTR_TEMPERATURE])
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="temperature_missing",
+            )
+        await self._zone.set_temperature(temperature=temperature)
