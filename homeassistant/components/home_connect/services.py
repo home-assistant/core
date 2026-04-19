@@ -309,16 +309,24 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
         )
 
     program = program_obj.key
-    options_dict = {option.key: option for option in program_obj.options or []}
-    for option, value in data.items():
-        option_key = PROGRAM_OPTIONS[option][0]
-        options_dict[option_key] = Option(option_key, value)
+    # Only forward options that the user explicitly provided to the service call.
+    # The ``GET /programs/selected`` response includes read-only values such as
+    # ``BSH.Common.Option.EnergyForecast`` / ``WaterForecast`` and options that
+    # are valid for the program but not writable in the current appliance state.
+    # Forwarding them to ``PUT /programs/active`` triggers
+    # ``SDK.Error.UnsupportedOption`` from the cloud API (see issue #167619).
+    # ``constraints.access`` is not exposed on the selected-program response, so
+    # the integration cannot filter by writability locally and must rely on the
+    # user's explicit intent instead.
+    options = [
+        Option(PROGRAM_OPTIONS[option][0], value) for option, value in data.items()
+    ]
 
     try:
         await client.start_program(
             ha_id,
             program_key=program,
-            options=list(options_dict.values()) if options_dict else None,
+            options=options or None,
         )
     except HomeConnectError as err:
         raise HomeAssistantError(

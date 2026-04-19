@@ -296,7 +296,13 @@ async def test_start_selected_program(
     get_selected_program_call_count: int,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test starting the selected program with optional parameter overrides."""
+    """Test starting the selected program with optional parameter overrides.
+
+    Only the options passed explicitly to the service call should be forwarded
+    to ``client.start_program``; any options already attached to the selected
+    program (``options_already_set``) must be dropped, because they may be
+    read-only or not writable in the current appliance state. See #167619.
+    """
     client.get_active_program = AsyncMock(
         return_value=Program(
             key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
@@ -336,6 +342,126 @@ async def test_start_selected_program(
         assert call_args[0][0] == appliance.ha_id
     assert client.start_program.call_count == 1
     assert client.start_program.call_args == snapshot
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_start_selected_program_drops_non_writable_options(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Regression test for #167619.
+
+    ``GET /programs/selected`` returns read-only forecast options (e.g.
+    ``BSH.Common.Option.EnergyForecast``) and options that are valid for the
+    program but not writable in the current state (e.g. ``Prewash``,
+    ``LessIroning``). Forwarding them to ``PUT /programs/active`` triggers
+    ``SDK.Error.UnsupportedOption`` on the Home Connect cloud, because the
+    selected-program response does not expose ``constraints.access`` and
+    therefore the integration cannot filter by writability locally.
+
+    The service must only forward the options that the user passed explicitly
+    to the service call.
+    """
+    non_writable_options = [
+        Option(key=OptionKey.BSH_COMMON_ENERGY_FORECAST, value=60, unit="%"),
+        Option(key=OptionKey.BSH_COMMON_WATER_FORECAST, value=60, unit="%"),
+        Option(
+            key=OptionKey.LAUNDRY_CARE_COMMON_LOAD_RECOMMENDATION,
+            value=9000,
+            unit="gram",
+        ),
+        Option(key=OptionKey.LAUNDRY_CARE_WASHER_PREWASH, value=False),
+        Option(key=OptionKey.LAUNDRY_CARE_WASHER_LESS_IRONING, value=False),
+    ]
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+            options=non_writable_options,
+        ),
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service="start_selected_program",
+        service_data={"device_id": device_entry.id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    client.start_program.assert_awaited_once_with(
+        appliance.ha_id,
+        program_key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+        options=None,
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_start_selected_program_keeps_user_options_only(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Only user-provided options are forwarded, cloud options are dropped.
+
+    Companion to #167619: when the user passes explicit options to
+    ``start_selected_program``, those options must be forwarded unchanged
+    while the cloud-reported options (which may include read-only or
+    not-writable entries) must be dropped.
+    """
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+            options=[
+                Option(key=OptionKey.BSH_COMMON_ENERGY_FORECAST, value=60, unit="%"),
+                Option(key=OptionKey.LAUNDRY_CARE_WASHER_PREWASH, value=False),
+            ],
+        ),
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service="start_selected_program",
+        service_data={
+            "device_id": device_entry.id,
+            "b_s_h_common_option_start_in_relative": 1800,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    client.start_program.assert_awaited_once_with(
+        appliance.ha_id,
+        program_key=ProgramKey.LAUNDRY_CARE_WASHER_COTTON,
+        options=[
+            Option(
+                key=OptionKey.BSH_COMMON_START_IN_RELATIVE,
+                value=1800,
+            )
+        ],
+    )
 
 
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)

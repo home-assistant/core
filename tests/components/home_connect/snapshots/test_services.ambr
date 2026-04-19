@@ -158,15 +158,7 @@
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
     ),
     dict({
-      'options': list([
-        dict({
-          'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
-      ]),
+      'options': None,
       'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
     }),
   )
@@ -178,13 +170,6 @@
     ),
     dict({
       'options': list([
-        dict({
-          'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
         dict({
           'display_value': None,
           'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
@@ -213,13 +198,6 @@
       'options': list([
         dict({
           'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
-        dict({
-          'display_value': None,
           'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
           'name': None,
           'unit': None,
@@ -237,13 +215,6 @@
     ),
     dict({
       'options': list([
-        dict({
-          'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
         dict({
           'display_value': None,
           'key': <OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: 'BSH.Common.Option.FinishInRelative'>,
@@ -337,15 +308,7 @@
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
     ),
     dict({
-      'options': list([
-        dict({
-          'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
-      ]),
+      'options': None,
       'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
     }),
   )
@@ -357,13 +320,6 @@
     ),
     dict({
       'options': list([
-        dict({
-          'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
         dict({
           'display_value': None,
           'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
@@ -392,13 +348,6 @@
       'options': list([
         dict({
           'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
-        dict({
-          'display_value': None,
           'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
           'name': None,
           'unit': None,
@@ -416,13 +365,6 @@
     ),
     dict({
       'options': list([
-        dict({
-          'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
         dict({
           'display_value': None,
           'key': <OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: 'BSH.Common.Option.FinishInRelative'>,
