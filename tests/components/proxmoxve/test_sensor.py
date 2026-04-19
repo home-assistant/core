@@ -71,7 +71,10 @@ async def test_storage_missing_used_fraction(
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "1234_pve1_local_storage_used_percentage"
     )
-    assert entity_id is None
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_sensors_missing_data(
@@ -183,6 +186,7 @@ async def test_sensors_missing_data(
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_UNKNOWN
 
     # Backup sensors (Node backup last backup) - SHOULD exist
@@ -191,27 +195,35 @@ async def test_sensors_missing_data(
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    # Storage sensors (Local storage usage percentage) - Should be None (static missing capability)
+    # Storage sensors (Local storage usage percentage) - SHOULD exist, reports unknown
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "1234_pve1_local_storage_used_percentage"
     )
-    assert entity_id is None
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
-    # Zero pool storage (Zero pool used storage) - SHOULD exist because 'used' is 0 (present)
+    # Zero pool storage (Zero pool used storage) - SHOULD exist, reports 0
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "1234_pve1_zero_pool_storage_used"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
+    assert state is not None
     assert float(state.state) == 0.0
 
-    # Zero pool usage percentage - Should be None because 'used_fraction' is missing
+    # Zero pool usage percentage - SHOULD exist, reports unknown (no used_fraction)
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "1234_pve1_zero_pool_storage_used_percentage"
     )
-    assert entity_id is None
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
     # VM sensors (VM Web memory percentage) - SHOULD exist
     entity_id = entity_registry.async_get_entity_id(
@@ -219,6 +231,7 @@ async def test_sensors_missing_data(
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_UNKNOWN
 
     # Container sensors (CT Nginx memory percentage) - SHOULD exist
@@ -227,4 +240,5 @@ async def test_sensors_missing_data(
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == STATE_UNKNOWN

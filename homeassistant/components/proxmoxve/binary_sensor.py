@@ -70,7 +70,11 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
     ProxmoxNodeBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.node.get("status") == NODE_ONLINE,
+        state_fn=lambda data: (
+            status == NODE_ONLINE
+            if (status := data.node.get("status")) is not None
+            else None
+        ),
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -78,8 +82,10 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
         key="node_backup_status",
         translation_key="node_backup_status",
         state_fn=lambda data: (
-            status != STATUS_OK
-            if data.backups and (status := data.backups[0].get("status")) is not None
+            False
+            if not data.backups
+            else status != STATUS_OK
+            if (status := data.backups[0].get("status")) is not None
             else None
         ),
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -111,22 +117,31 @@ STORAGE_SENSORS: tuple[ProxmoxStorageBinarySensorEntityDescription, ...] = (
     ProxmoxStorageBinarySensorEntityDescription(
         key="storage_active",
         translation_key="storage_active",
-        state_fn=lambda data: data.get("active") == STORAGE_ACTIVE,
-        exists_fn=lambda data: "active" in data,
+        state_fn=lambda data: (
+            value == STORAGE_ACTIVE
+            if (value := data.get("active")) is not None
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ProxmoxStorageBinarySensorEntityDescription(
         key="storage_enabled",
         translation_key="storage_enabled",
-        state_fn=lambda data: data.get("enabled") == STORAGE_ENABLED,
-        exists_fn=lambda data: "enabled" in data,
+        state_fn=lambda data: (
+            value == STORAGE_ENABLED
+            if (value := data.get("enabled")) is not None
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ProxmoxStorageBinarySensorEntityDescription(
         key="storage_shared",
         translation_key="storage_shared",
-        state_fn=lambda data: data.get("shared") == STORAGE_SHARED,
-        exists_fn=lambda data: "shared" in data,
+        state_fn=lambda data: (
+            value == STORAGE_SHARED
+            if (value := data.get("shared")) is not None
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
