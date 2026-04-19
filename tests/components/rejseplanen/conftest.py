@@ -163,7 +163,7 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
     return [
         ConfigSubentryDataWithId(
             data={
-                CONF_STOP_ID: "123456",
+                CONF_STOP_ID: 123456,
                 CONF_NAME: "Work",
                 CONF_DIRECTION: [],
                 CONF_DEPARTURE_TYPE: [],
@@ -175,7 +175,7 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
         ),
         ConfigSubentryDataWithId(
             data={
-                CONF_STOP_ID: "456789",
+                CONF_STOP_ID: 456789,
                 CONF_NAME: "Gym",
                 CONF_DIRECTION: ["North"],
                 CONF_DEPARTURE_TYPE: [],
@@ -187,7 +187,7 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
         ),
         ConfigSubentryDataWithId(
             data={
-                CONF_STOP_ID: "123789",
+                CONF_STOP_ID: 123789,
                 CONF_NAME: "Home Location",
                 CONF_DIRECTION: [],
                 CONF_DEPARTURE_TYPE: [TransportClass.IC, TransportClass.BUS],
@@ -227,6 +227,17 @@ def mock_rejseplanen_coordinator(hass: HomeAssistant) -> Generator[Mock]:
             return make_mock_departures(int(stop_id))
 
         mock_api.get_filtered_departures = Mock(side_effect=get_filtered_departures)
+
+        def get_departures(stop_ids, *args, **kwargs):
+            all_departures = []
+            for stop_id in stop_ids:
+                all_departures.extend(make_mock_departures(int(stop_id)))
+            mock_board = MagicMock()
+            mock_board.departures = all_departures
+            return (mock_board, None)
+
+        mock_api.get_departures = Mock(side_effect=get_departures)
+        mock_api.calculate_departure_type_bitflag = Mock(return_value=0)
         yield mock_api
 
 

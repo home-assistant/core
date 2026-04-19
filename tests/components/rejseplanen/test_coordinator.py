@@ -12,6 +12,7 @@ import pytest
 from homeassistant.components.rejseplanen.helpers import COPENHAGEN_TZ
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import make_mock_departures
@@ -30,7 +31,7 @@ async def test_setup_entry_first_refresh_fails(
     with patch(
         "homeassistant.components.rejseplanen.RejseplanenDataUpdateCoordinator"
         ".async_config_entry_first_refresh",
-        side_effect=Exception("API unavailable"),
+        side_effect=ConfigEntryNotReady("API unavailable"),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

@@ -127,8 +127,8 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         key="line",
         translation_key="line",
         value_fn=lambda departures, tz: (
-            _get_current_departures(departures, tz)[0].name
-            if _get_current_departures(departures, tz)
+            current[0].name
+            if (current := _get_current_departures(departures, tz))
             else None
         ),
     ),
@@ -137,8 +137,8 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         translation_key="departure_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda departures, tz: (
-            _get_departure_timestamp(_get_current_departures(departures, tz)[0], tz)
-            if _get_current_departures(departures, tz)
+            _get_departure_timestamp(current[0], tz)
+            if (current := _get_current_departures(departures, tz))
             else None
         ),
     ),
@@ -148,8 +148,8 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda departures, tz: (
-            _get_delay_minutes(_get_current_departures(departures, tz)[0], tz)
-            if _get_current_departures(departures, tz)
+            _get_delay_minutes(current[0], tz)
+            if (current := _get_current_departures(departures, tz))
             else None
         ),
     ),
@@ -157,8 +157,8 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         key="direction",
         translation_key="direction",
         value_fn=lambda departures, tz: (
-            _get_current_departures(departures, tz)[0].direction
-            if _get_current_departures(departures, tz)
+            current[0].direction
+            if (current := _get_current_departures(departures, tz))
             else None
         ),
     ),
@@ -240,8 +240,9 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         entity_description: RejseplanenSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        stop_id = int(config.data[CONF_STOP_ID])
         context = RejseplanenEntityContext(
-            stop_id=config.data[CONF_STOP_ID],
+            stop_id=stop_id,
             name=config.title,
             subentry_id=config.subentry_id,
         )
