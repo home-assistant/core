@@ -512,7 +512,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.92.0
+anthropic==0.96.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
@@ -2067,7 +2067,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2026.3.0
+pydrawise==2026.4.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==3.0.0
@@ -2167,7 +2167,7 @@ pyhaversion==22.8.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.8
+pyhive-integration==1.0.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -2574,7 +2574,7 @@ python-digitalocean==1.13.2
 python-dropbox-api==0.1.3
 
 # homeassistant.components.duco
-python-duco-client==0.3.1
+python-duco-client==0.3.2
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
