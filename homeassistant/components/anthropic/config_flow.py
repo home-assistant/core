@@ -50,7 +50,6 @@ from .const import (
     CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
@@ -109,7 +108,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthropic."""
 
     VERSION = 2
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -324,10 +323,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             ): SelectSelector(
                 SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
             ),
-            vol.Optional(
-                CONF_TEMPERATURE,
-                default=DEFAULT[CONF_TEMPERATURE],
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
             vol.Optional(
                 CONF_PROMPT_CACHING,
                 default=DEFAULT[CONF_PROMPT_CACHING],

@@ -98,7 +98,6 @@ from .const import (
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT_CACHING,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
@@ -768,9 +767,6 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
             else:
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-                model_args["temperature"] = options.get(
-                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
-                )
         else:
             thinking_budget = options.get(
                 CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
@@ -785,9 +781,6 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
             else:
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-                model_args["temperature"] = options.get(
-                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
-                )
 
             if (
                 self.model_info.capabilities

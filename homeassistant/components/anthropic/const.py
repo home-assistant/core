@@ -15,7 +15,6 @@ CONF_CHAT_MODEL = "chat_model"
 CONF_CODE_EXECUTION = "code_execution"
 CONF_MAX_TOKENS = "max_tokens"
 CONF_PROMPT_CACHING = "prompt_caching"
-CONF_TEMPERATURE = "temperature"
 CONF_THINKING_BUDGET = "thinking_budget"
 CONF_THINKING_EFFORT = "thinking_effort"
 CONF_TOOL_SEARCH = "tool_search"
@@ -43,7 +42,6 @@ DEFAULT = {
     CONF_CODE_EXECUTION: False,
     CONF_MAX_TOKENS: 3000,
     CONF_PROMPT_CACHING: PromptCaching.PROMPT.value,
-    CONF_TEMPERATURE: 1.0,
     CONF_THINKING_BUDGET: MIN_THINKING_BUDGET,
     CONF_THINKING_EFFORT: "low",
     CONF_TOOL_SEARCH: False,

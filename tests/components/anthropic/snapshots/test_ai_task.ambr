@@ -82,7 +82,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),
@@ -288,7 +287,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),
