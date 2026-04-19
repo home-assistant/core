@@ -21,6 +21,7 @@ from . import (
     TEST_NO_READINGS_SENSOR,
     TEST_OTHER_ERROR_SENSOR,
     TEST_SENSOR,
+    TEST_STALE_SENSOR,
     TEST_STRING_SENSOR,
     TEST_UNITS_OVERRIDE_SENSOR,
     TEST_UNSUPPORTED_SENSOR,
@@ -276,6 +277,33 @@ async def test_mixed_readings(hass: HomeAssistant) -> None:
     assert entries[0].state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.working_temperature").state == "2"
     assert hass.states.get("sensor.no_readings_temperature").state == "unavailable"
+
+
+async def test_stale_reading(hass: HomeAssistant) -> None:
+    """Test that a stale spot reading is ignored and sensor reports unknown."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+
+    sensor = TEST_STALE_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
+        ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.test_temperature").state == "unknown"
 
 
 async def test_other_error(hass: HomeAssistant) -> None:
