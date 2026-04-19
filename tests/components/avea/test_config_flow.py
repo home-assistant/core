@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 from homeassistant import config_entries
 from homeassistant.components.avea.config_flow import CannotConnect, _validate_device
 from homeassistant.components.avea.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -158,6 +158,25 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result2["title"] == "Avea Bulb"
     assert result2["data"] == {CONF_ADDRESS: AVEA_DISCOVERY_INFO.address}
     assert result2["result"].unique_id == AVEA_DISCOVERY_INFO.address
+
+
+async def test_import_step_success(hass: HomeAssistant) -> None:
+    """Test the YAML import step."""
+    with patch("homeassistant.components.avea.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_ADDRESS: AVEA_DISCOVERY_INFO.address,
+                CONF_NAME: "Bedroom",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Bedroom"
+    assert result["data"] == {CONF_ADDRESS: AVEA_DISCOVERY_INFO.address}
+    assert result["result"].unique_id == AVEA_DISCOVERY_INFO.address
 
 
 async def test_user_step_replaces_ignored_device(hass: HomeAssistant) -> None:

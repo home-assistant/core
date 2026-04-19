@@ -188,3 +188,15 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML."""
+        address = import_data[CONF_ADDRESS]
+
+        await self.async_set_unique_id(address)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=import_data.get(CONF_NAME, address),
+            data={CONF_ADDRESS: address},
+        )

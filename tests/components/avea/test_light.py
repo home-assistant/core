@@ -124,6 +124,26 @@ async def test_turn_on_and_off(
     bulb.set_brightness.assert_called_with(0)
 
 
+async def test_turn_on_with_zero_brightness(
+    hass: HomeAssistant, setup_integration: MagicMock
+) -> None:
+    """Test turning the light on with zero brightness keeps it off."""
+    bulb = setup_integration
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {ATTR_ENTITY_ID: "light.bedroom", ATTR_BRIGHTNESS: 0},
+        blocking=True,
+    )
+
+    bulb.set_brightness.assert_called_with(0)
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_COLOR_MODE] is None
+
+
 async def test_update_state(hass: HomeAssistant, setup_integration: MagicMock) -> None:
     """Test updating the entity state."""
     bulb = setup_integration

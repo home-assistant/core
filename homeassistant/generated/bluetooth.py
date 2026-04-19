@@ -67,11 +67,8 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "avea",
-        "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
-    },
-    {
-        "domain": "avea",
         "local_name": "Avea*",
+        "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
     },
     {
         "connectable": False,

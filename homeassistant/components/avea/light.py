@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 import threading
 from typing import Any
 
+import avea
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
 
@@ -16,14 +18,22 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.const import CONF_ADDRESS
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import AveaConfigEntry
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, INTEGRATION_TITLE, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_EXCEPTIONS = (BleakError, OSError, RuntimeError)
@@ -36,6 +46,80 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Avea light platform."""
     async_add_entities([AveaLight(hass, entry)], update_before_add=True)
+
+
+def _discover_bulbs_for_import() -> list[dict[str, str]]:
+    """Discover and validate Avea bulbs for YAML import."""
+    discovered_bulbs: list[dict[str, str]] = []
+
+    for bulb in avea.discover_avea_bulbs():
+        address = getattr(bulb.addr, "address", bulb.addr)
+        try:
+            name = bulb.get_name()
+            bulb.get_brightness()
+        finally:
+            with suppress(*UPDATE_EXCEPTIONS):
+                bulb.close()
+
+        discovered_bulbs.append(
+            {
+                CONF_ADDRESS: address,
+                CONF_NAME: name or getattr(bulb, "name", None) or address,
+            }
+        )
+
+    return discovered_bulbs
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Import the Avea YAML platform into config entries."""
+    try:
+        bulbs = await hass.async_add_executor_job(_discover_bulbs_for_import)
+    except UPDATE_EXCEPTIONS as err:
+        raise PlatformNotReady("Could not discover Avea bulbs for YAML import") from err
+
+    if not bulbs:
+        raise PlatformNotReady("Could not discover any Avea bulbs for YAML import")
+
+    for bulb in bulbs:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=bulb,
+        )
+
+        if result.get("type") is FlowResultType.ABORT:
+            if result.get("reason") == "already_configured":
+                continue
+            raise PlatformNotReady(
+                f"Could not import Avea bulb {bulb[CONF_ADDRESS]}: {result.get('reason')}"
+            )
+
+        if result.get("type") is not FlowResultType.CREATE_ENTRY:
+            raise PlatformNotReady(
+                f"Unexpected result while importing Avea bulb {bulb[CONF_ADDRESS]}"
+            )
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.10.0",
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
 
 class AveaLight(LightEntity):
@@ -75,7 +159,6 @@ class AveaLight(LightEntity):
                 )
 
             try:
-                self._light.get_name()
                 brightness = self._light.get_brightness()
                 rgb = self._light.get_rgb()
             finally:
@@ -88,6 +171,7 @@ class AveaLight(LightEntity):
         ble_device: BLEDevice | None,
         brightness: int | None,
         hs_color: tuple[float, float] | None,
+        was_on: bool,
     ) -> None:
         """Instruct the light to turn on."""
         with self._operation_lock:
@@ -110,7 +194,7 @@ class AveaLight(LightEntity):
                 if hs_color is not None:
                     rgb = color_util.color_hs_to_RGB(*hs_color)
                     self._light.set_rgb(rgb[0], rgb[1], rgb[2])
-                    if brightness is None and not self._attr_is_on:
+                    if brightness is None and not was_on:
                         self._light.set_brightness(4095)
             finally:
                 self._light.close()
@@ -135,30 +219,31 @@ class AveaLight(LightEntity):
         """Instruct the light to turn on."""
         brightness: int | None = kwargs.get(ATTR_BRIGHTNESS)
         hs_color: tuple[float, float] | None = kwargs.get(ATTR_HS_COLOR)
+        was_on = self._attr_is_on is True
         ble_device = bluetooth.async_ble_device_from_address(
             self.hass, self._address, connectable=True
         )
 
         await self.hass.async_add_executor_job(
-            self._sync_turn_on, ble_device, brightness, hs_color
+            self._sync_turn_on, ble_device, brightness, hs_color, was_on
         )
         self._attr_available = True
-        self._attr_color_mode = ColorMode.HS
 
         if not kwargs:
             self._attr_brightness = 255
             self._attr_is_on = True
-            return
+        else:
+            if hs_color is not None:
+                self._attr_hs_color = hs_color
 
-        if hs_color is not None:
-            self._attr_hs_color = hs_color
+            if brightness is not None:
+                self._attr_brightness = brightness
+                self._attr_is_on = brightness > 0
+            elif hs_color is not None and not was_on:
+                self._attr_brightness = 255
+                self._attr_is_on = True
 
-        if brightness is not None:
-            self._attr_brightness = brightness
-            self._attr_is_on = brightness > 0
-        elif hs_color is not None and not self._attr_is_on:
-            self._attr_brightness = 255
-            self._attr_is_on = True
+        self._attr_color_mode = ColorMode.HS if self._attr_is_on else None
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
