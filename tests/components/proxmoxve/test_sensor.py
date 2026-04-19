@@ -195,14 +195,14 @@ async def test_sensors_missing_data(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    # Photo storage (offline NFS, used=0) - SHOULD exist, reports 0
+    # Photo storage (offline NFS, used field stripped) - SHOULD exist, reports unknown
     entity_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "1234_pve1_photo_storage_used"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.state) == 0.0
+    assert state.state == STATE_UNKNOWN
 
     # Photo storage usage percentage - SHOULD exist, reports unknown (no used_fraction)
     entity_id = entity_registry.async_get_entity_id(
