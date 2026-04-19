@@ -70,7 +70,7 @@ from homeassistant.core import HomeAssistant
         pytest.param(
             dt.datetime(2025, 5, 20, 6, 0),
             {ATTR_NUSACH: "sfarad"},
-            "היום שמונה ושלושים יום שהם חמישה שבועות ושלושה ימים לעומר",
+            "היום שבעה ושלושים יום שהם חמישה שבועות ושני ימים לעומר",
             id="sefarad-english-before-sunset-without-date",
         ),
     ],
