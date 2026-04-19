@@ -330,15 +330,12 @@
   },
   "issues": {
     "mean_type_changed": {
-      "description": "",
       "title": "The mean type of {statistic_id} has changed"
     },
     "state_class_removed": {
-      "description": "",
       "title": "{statistic_id} no longer has a state class"
     },
     "units_changed": {
-      "description": "",
       "title": "The unit of {statistic_id} has changed"
     }
   },

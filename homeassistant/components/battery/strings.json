@@ -3,6 +3,7 @@
     "condition_behavior_name": "Condition passes if",
     "condition_threshold_name": "Threshold type",
     "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
@@ -87,6 +88,9 @@
         "behavior": {
           "name": "[%key:component::battery::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::battery::common::trigger_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::battery::common::trigger_threshold_name%]"
         }
@@ -98,6 +102,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::battery::common::trigger_for_name%]"
         }
       },
       "name": "Battery low"
@@ -107,6 +114,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::battery::common::trigger_for_name%]"
         }
       },
       "name": "Battery not low"
@@ -116,6 +126,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::battery::common::trigger_for_name%]"
         }
       },
       "name": "Battery started charging"
@@ -125,6 +138,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::battery::common::trigger_for_name%]"
         }
       },
       "name": "Battery stopped charging"
