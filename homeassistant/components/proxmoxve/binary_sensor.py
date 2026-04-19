@@ -39,7 +39,6 @@ class ProxmoxContainerBinarySensorEntityDescription(BinarySensorEntityDescriptio
     """Class to hold Proxmox container binary sensor description."""
 
     state_fn: Callable[[dict[str, Any]], bool | None]
-    exists_fn: Callable[[dict[str, Any]], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,7 +46,6 @@ class ProxmoxVMBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Proxmox endpoint binary sensor description."""
 
     state_fn: Callable[[dict[str, Any]], bool | None]
-    exists_fn: Callable[[dict[str, Any]], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,7 +53,6 @@ class ProxmoxNodeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Proxmox node binary sensor description."""
 
     state_fn: Callable[[ProxmoxNodeData], bool | None]
-    exists_fn: Callable[[ProxmoxNodeData], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,7 +60,6 @@ class ProxmoxStorageBinarySensorEntityDescription(BinarySensorEntityDescription)
     """Class to hold Proxmox storage binary sensor description."""
 
     state_fn: Callable[[dict[str, Any]], bool | None]
-    exists_fn: Callable[[dict[str, Any]], bool] = lambda _: True
 
 
 NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
@@ -161,7 +157,6 @@ async def async_setup_entry(
             ProxmoxNodeBinarySensor(coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_SENSORS
-            if entity_description.exists_fn(node)
         )
 
     def _async_add_new_vms(
@@ -172,7 +167,6 @@ async def async_setup_entry(
             ProxmoxVMBinarySensor(coordinator, entity_description, vm, node_data)
             for (node_data, vm) in vms
             for entity_description in VM_SENSORS
-            if entity_description.exists_fn(vm)
         )
 
     def _async_add_new_containers(
@@ -185,7 +179,6 @@ async def async_setup_entry(
             )
             for (node_data, container) in containers
             for entity_description in CONTAINER_SENSORS
-            if entity_description.exists_fn(container)
         )
 
     def _async_add_new_storages(
@@ -198,7 +191,6 @@ async def async_setup_entry(
             )
             for (node_data, storage) in storages
             for entity_description in STORAGE_SENSORS
-            if entity_description.exists_fn(storage)
         )
 
     coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
