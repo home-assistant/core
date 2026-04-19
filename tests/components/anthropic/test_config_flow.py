@@ -30,7 +30,6 @@ from homeassistant.components.anthropic.const import (
     CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
@@ -276,10 +275,7 @@ async def test_subentry_options_thinking_budget_more_than_max(
     # Configure advanced step
     options = await hass.config_entries.subentries.async_configure(
         options["flow_id"],
-        {
-            "chat_model": "claude-sonnet-4-5",
-            "temperature": 1,
-        },
+        {"chat_model": "claude-sonnet-4-5"},
     )
     assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "model"
@@ -390,7 +386,6 @@ async def test_subentry_web_search_user_location(
         "prompt_caching": "prompt",
         "recommended": False,
         "region": "California",
-        "temperature": 1.0,
         "thinking_budget": 1024,
         "timezone": "America/Los_Angeles",
         "tool_search": False,
@@ -574,7 +569,6 @@ async def test_invalid_model(
                 },
                 {
                     CONF_CHAT_MODEL: "claude-haiku-4-5",
-                    CONF_TEMPERATURE: 1.0,
                     CONF_PROMPT_CACHING: "off",
                 },
                 {
@@ -588,7 +582,6 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "off",
-                CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-haiku-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
@@ -619,7 +612,6 @@ async def test_invalid_model(
                 },
                 {
                     CONF_CHAT_MODEL: "claude-sonnet-4-5",
-                    CONF_TEMPERATURE: 1.0,
                     CONF_PROMPT_CACHING: "automatic",
                 },
                 {
@@ -635,7 +627,6 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "automatic",
-                CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
@@ -667,7 +658,6 @@ async def test_invalid_model(
                 },
                 {
                     CONF_CHAT_MODEL: "claude-opus-4-7",
-                    CONF_TEMPERATURE: 1.0,
                     CONF_PROMPT_CACHING: "prompt",
                 },
                 {
@@ -683,7 +673,6 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "prompt",
-                CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-opus-4-7",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_EFFORT: "xhigh",
@@ -707,7 +696,6 @@ async def test_invalid_model(
                 },
                 {
                     CONF_CHAT_MODEL: "claude-3-haiku-20240307",
-                    CONF_TEMPERATURE: 0.3,
                     CONF_PROMPT_CACHING: "automatic",
                 },
                 {},
@@ -716,7 +704,6 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "automatic",
-                CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: "claude-3-haiku-20240307",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
             },
@@ -726,7 +713,6 @@ async def test_invalid_model(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_PROMPT_CACHING: "off",
-                CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
@@ -888,7 +874,6 @@ async def test_creating_ai_task_subentry_advanced(
         result["flow_id"],
         {
             CONF_CHAT_MODEL: "claude-sonnet-4-5",
-            CONF_TEMPERATURE: 0.5,
         },
     )
 
@@ -910,7 +895,6 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "claude-sonnet-4-5",
         CONF_MAX_TOKENS: 1200,
-        CONF_TEMPERATURE: 0.5,
         CONF_TOOL_SEARCH: False,
         CONF_WEB_SEARCH: False,
         CONF_WEB_SEARCH_MAX_USES: 5,
