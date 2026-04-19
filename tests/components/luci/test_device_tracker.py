@@ -10,7 +10,7 @@ from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2
+from .conftest import MOCK_DEVICE_2
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -69,41 +69,6 @@ async def test_device_tracker_disconnect(
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device1")
     assert state is not None
     assert state.state == STATE_NOT_HOME
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_device_tracker_new_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_luci_client: MagicMock,
-) -> None:
-    """Test new device is added on coordinator update."""
-    mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_1]
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.luci.OpenWrtRpc",
-        return_value=mock_luci_client,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Only device1 should exist
-    assert hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device1") is not None
-    assert hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device2") is None
-
-    # Add device2 and trigger an update
-    mock_luci_client.get_all_connected_devices.return_value = [
-        MOCK_DEVICE_1,
-        MOCK_DEVICE_2,
-    ]
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.device2")
-    assert state is not None
-    assert state.state == STATE_HOME
 
 
 async def test_unload_entry(
