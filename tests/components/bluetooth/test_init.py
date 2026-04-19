@@ -3122,6 +3122,31 @@ async def test_getting_the_scanner_returns_the_wrapped_instance(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
+async def test_getting_the_scanner_with_detection_callback(
+    hass: HomeAssistant,
+) -> None:
+    """Test detection_callback is invoked for advertisements."""
+    detected: list[tuple[BLEDevice, AdvertisementData]] = []
+
+    def _detected(device: BLEDevice, advertisement_data: AdvertisementData) -> None:
+        detected.append((device, advertisement_data))
+
+    scanner = bluetooth.async_get_scanner(hass, detection_callback=_detected)
+    assert isinstance(scanner, HaBleakScannerWrapper)
+
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand")
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand",
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+    )
+    inject_advertisement(hass, switchbot_device, switchbot_adv)
+    await hass.async_block_till_done()
+
+    assert len(detected) == 1
+    assert detected[0][0].address == switchbot_device.address
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_scanner_count_connectable(hass: HomeAssistant) -> None:
     """Test getting the connectable scanner count."""
     scanner = FakeScanner("any", "any")
