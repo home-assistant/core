@@ -11,7 +11,6 @@ from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
 from bleak import BleakScanner
-from bleak.backends.scanner import AdvertisementDataCallback
 from habluetooth import (
     BaseHaScanner,
     BluetoothScannerDevice,
@@ -31,6 +30,7 @@ from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCall
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
+    from bleak.backends.scanner import AdvertisementDataCallback
 
 
 @singleton(DATA_MANAGER)
