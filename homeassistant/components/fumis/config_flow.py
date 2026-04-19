@@ -28,13 +28,11 @@ from .const import DOMAIN, LOGGER
 class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Fumis config flow."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             fumis = Fumis(
@@ -62,20 +60,21 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=info.controller.model_name or "Fumis",
                     data=user_input,
                 )
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_MAC, default=user_input.get(CONF_MAC)
-                    ): TextSelector(TextSelectorConfig(autocomplete="off")),
-                    vol.Required(CONF_PIN): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_MAC): TextSelector(
+                            TextSelectorConfig(autocomplete="off")
+                        ),
+                        vol.Required(CONF_PIN): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                        ),
+                    }
+                ),
+                user_input,
             ),
             errors=errors,
         )
