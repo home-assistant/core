@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry
 
 SERIAL = "102000013098"
 STORED_IP = "192.168.1.122"
+NEW_IP = "192.168.1.55"
 
 
 def _make_entry(
@@ -94,10 +95,17 @@ async def test_setup_autodiscovered_entry_uses_stored_ip(hass: HomeAssistant) ->
     mock_cls.async_discover_hubs.assert_not_called()
 
 
-async def test_setup_manual_entry_connection_fails(hass: HomeAssistant) -> None:
-    """Manual entry raises ConfigEntryNotReady when the stored IP is unreachable."""
+@pytest.mark.parametrize(
+    "connect_exc",
+    [OSError("Unreachable"), TimeoutError("Handshake timed out")],
+)
+async def test_setup_manual_entry_connection_fails(
+    hass: HomeAssistant,
+    connect_exc: BaseException,
+) -> None:
+    """Manual entry raises ConfigEntryNotReady on socket errors or timeouts."""
     entry = _make_entry(hass, auto_discovered=False)
-    hub = _make_hub_mock(connect_exc=OSError("Unreachable"))
+    hub = _make_hub_mock(connect_exc=connect_exc)
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
@@ -112,63 +120,55 @@ async def test_setup_manual_entry_connection_fails(hass: HomeAssistant) -> None:
     mock_cls.async_discover_hubs.assert_not_called()
 
 
-async def test_setup_manual_entry_connection_times_out(hass: HomeAssistant) -> None:
-    """Manual entry raises ConfigEntryNotReady when connect() times out."""
-    entry = _make_entry(hass, auto_discovered=False)
-    hub = _make_hub_mock(connect_exc=TimeoutError("Handshake timed out"))
-    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
-        mock_cls.return_value = hub
-        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
-        with pytest.raises(ConfigEntryNotReady) as exc_info:
-            await async_setup_entry(hass, entry)
-
-    assert exc_info.value.translation_key == "cannot_connect_manual"
-
-
 async def test_setup_autodiscovered_rediscovery_updates_ip(hass: HomeAssistant) -> None:
     """Auto-discovered entry recovers via rediscovery and persists the new IP."""
     entry = _make_entry(hass, auto_discovered=True)
-    new_ip = "192.168.1.55"
     hub_fail = _make_hub_mock(connect_exc=OSError("Unreachable"))
     hub_ok = _make_hub_mock()
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.side_effect = [hub_fail, hub_ok]
-        mock_cls.async_discover_hubs = AsyncMock(return_value={(new_ip, SERIAL)})
+        mock_cls.async_discover_hubs = AsyncMock(return_value={(NEW_IP, SERIAL)})
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.data[CONF_IP_ADDRESS] == new_ip
+    assert entry.data[CONF_IP_ADDRESS] == NEW_IP
     assert mock_cls.call_count == 2
     assert mock_cls.call_args_list[0].kwargs["ip"] == STORED_IP
-    assert mock_cls.call_args_list[1].kwargs["ip"] == new_ip
+    assert mock_cls.call_args_list[1].kwargs["ip"] == NEW_IP
 
 
-async def test_setup_autodiscovered_rediscovery_empty(hass: HomeAssistant) -> None:
-    """Auto-discovered entry raises hub_not_found when rediscovery finds nothing."""
+@pytest.mark.parametrize(
+    (
+        "discovered_hubs",
+        "rediscovered_connect_fails",
+        "expected_key",
+        "expected_placeholders",
+    ),
+    [
+        (set(), False, "hub_not_found", {"serial": SERIAL}),
+        ({(NEW_IP, SERIAL)}, True, "cannot_connect_rediscovered", {"ip": NEW_IP}),
+    ],
+    ids=["rediscovery_empty", "rediscovered_ip_fails"],
+)
+async def test_setup_autodiscovered_rediscovery_failure(
+    hass: HomeAssistant,
+    discovered_hubs: set[tuple[str, str]],
+    rediscovered_connect_fails: bool,
+    expected_key: str,
+    expected_placeholders: dict[str, str],
+) -> None:
+    """Auto-discovered entry raises the right error when rediscovery can't recover."""
     entry = _make_entry(hass, auto_discovered=True)
-    hub_fail = _make_hub_mock(connect_exc=OSError("Unreachable"))
+    hub_first = _make_hub_mock(connect_exc=OSError("Unreachable"))
+    hub_second = _make_hub_mock(
+        connect_exc=OSError("Unreachable") if rediscovered_connect_fails else None
+    )
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
-        mock_cls.return_value = hub_fail
-        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
+        mock_cls.side_effect = [hub_first, hub_second]
+        mock_cls.async_discover_hubs = AsyncMock(return_value=discovered_hubs)
         with pytest.raises(ConfigEntryNotReady) as exc_info:
             await async_setup_entry(hass, entry)
 
-    assert exc_info.value.translation_key == "hub_not_found"
-    assert exc_info.value.translation_placeholders == {"serial": SERIAL}
-
-
-async def test_setup_autodiscovered_rediscovered_ip_fails(hass: HomeAssistant) -> None:
-    """Auto-discovered entry raises cannot_connect_rediscovered when the new IP also fails."""
-    entry = _make_entry(hass, auto_discovered=True)
-    new_ip = "192.168.1.55"
-    hub_fail_first = _make_hub_mock(connect_exc=OSError("Unreachable"))
-    hub_fail_second = _make_hub_mock(connect_exc=OSError("Unreachable"))
-    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
-        mock_cls.side_effect = [hub_fail_first, hub_fail_second]
-        mock_cls.async_discover_hubs = AsyncMock(return_value={(new_ip, SERIAL)})
-        with pytest.raises(ConfigEntryNotReady) as exc_info:
-            await async_setup_entry(hass, entry)
-
-    assert exc_info.value.translation_key == "cannot_connect_rediscovered"
-    assert exc_info.value.translation_placeholders == {"ip": new_ip}
+    assert exc_info.value.translation_key == expected_key
+    assert exc_info.value.translation_placeholders == expected_placeholders
