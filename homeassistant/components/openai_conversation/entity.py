@@ -154,6 +154,17 @@ def _format_structured_output(
     return result
 
 
+def _adjust_tool_parameters(parameters: dict[str, Any]) -> dict[str, Any]:
+    """Adjust tool parameters to be compatible with OpenAI API.
+
+    OpenAI requires the top-level parameters schema to have type 'object'
+    and not contain 'oneOf'/'anyOf'/'allOf'/'enum'/'not'.
+    """
+    for key in ("oneOf", "anyOf", "allOf", "enum", "not"):
+        parameters.pop(key, None)
+    return parameters
+
+
 def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> FunctionToolParam:
@@ -161,7 +172,9 @@ def _format_tool(
     return FunctionToolParam(
         type="function",
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=_adjust_tool_parameters(
+            convert(tool.parameters, custom_serializer=custom_serializer)
+        ),
         description=tool.description,
         strict=False,
     )
