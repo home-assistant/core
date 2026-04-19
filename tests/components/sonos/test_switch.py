@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from soco.exceptions import SoCoException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
@@ -21,6 +22,7 @@ from homeassistant.components.sonos.switch import (
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
     ATTR_VOLUME,
 )
+from homeassistant.components.ssdp import SsdpChange
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
@@ -33,6 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -337,3 +340,61 @@ async def test_alarm_change_device(
     alarm_14 = entity_registry.async_get(entity_id)
     device = device_registry.async_get(alarm_14.device_id)
     assert device.name == soco_br.get_speaker_info()["zone_name"]
+
+
+async def test_alarm_update_exception_logs_warning(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    entity_registry: er.EntityRegistry,
+    soco: MockSoCo,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test household mismatch logs warning and alarm update/setup is skipped."""
+    with patch(
+        "homeassistant.components.sonos.alarms.Alarms.update",
+        side_effect=SoCoException(
+            "Alarm list UID RINCON_0001234567890:31 does not match RINCON_000E987654321:0"
+        ),
+    ):
+        await async_setup_sonos()
+        await hass.async_block_till_done()
+
+    # Alarm should not be set up due to household mismatch
+    assert "switch.sonos_alarm_14" not in entity_registry.entities
+    assert "cannot be updated due to a household mismatch" in caplog.text
+
+
+async def test_alarm_setup_for_undiscovered_speaker(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    alarm_clock,
+    entity_registry: er.EntityRegistry,
+    soco_factory: SoCoMockFactory,
+    discover,
+) -> None:
+    """Test for creation of alarm on a speaker that is discovered after the integration is setup."""
+
+    soco_bedroom = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    one_alarm = copy(alarm_clock.ListAlarms.return_value)
+    one_alarm["CurrentAlarmList"] = one_alarm["CurrentAlarmList"].replace(
+        "RINCON_test", soco_bedroom.uid
+    )
+    alarm_clock.ListAlarms.return_value = one_alarm
+    await async_setup_sonos()
+
+    # Switch should not be created since the speaker isn't discovered yet
+    assert "switch.sonos_alarm_14" not in entity_registry.entities
+
+    # Simulate discovery of the bedroom speaker
+    discover.call_args.args[1](
+        SsdpServiceInfo(
+            ssdp_location=f"http://{soco_bedroom.ip_address}/",
+            ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+            ssdp_usn=f"uuid:{soco_bedroom.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+            upnp={ATTR_UPNP_UDN: f"uuid:{soco_bedroom.uid}"},
+        ),
+        SsdpChange.ALIVE,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "switch.sonos_alarm_14" in entity_registry.entities

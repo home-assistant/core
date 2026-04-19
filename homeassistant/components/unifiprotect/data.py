@@ -86,6 +86,7 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
+        self.auth_retries = 0
         self.last_update_success = False
         self.api = protect
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
