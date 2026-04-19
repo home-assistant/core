@@ -19,11 +19,21 @@ from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, PLATFORMS
 from .coordinator import LuciConfigEntry, LuciCoordinator
 
 
+def _connect(
+    host: str, username: str, password: str, ssl: bool, verify_ssl: bool
+) -> OpenWrtRpc:
+    """Connect to the router and verify login."""
+    router = OpenWrtRpc(host, username, password, ssl, verify_ssl)
+    if not router.is_logged_in():
+        raise ConfigEntryAuthFailed("Invalid credentials for router")
+    return router
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool:
     """Set up OpenWrt (luci) from a config entry."""
     try:
         router = await hass.async_add_executor_job(
-            OpenWrtRpc,
+            _connect,
             entry.data[CONF_HOST],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
@@ -34,9 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuciConfigEntry) -> bool
         raise ConfigEntryNotReady(
             f"Cannot connect to router at {entry.data[CONF_HOST]}"
         ) from err
-
-    if not await hass.async_add_executor_job(router.is_logged_in):
-        raise ConfigEntryAuthFailed("Invalid credentials for router")
 
     coordinator = LuciCoordinator(hass, entry, router)
 
