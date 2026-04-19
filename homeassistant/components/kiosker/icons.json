@@ -8,7 +8,7 @@
           "on": "mdi:monitor-off"
         }
       },
-      "screensaver_visibility": {
+      "screensaver_state": {
         "default": "mdi:power-sleep",
         "state": {
           "off": "mdi:monitor-shimmer",

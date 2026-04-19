@@ -98,7 +98,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[binary_sensor.kiosker_a98be1ce_screensaver-entry]
@@ -133,8 +133,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'screensaver_visibility',
-    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_screensaverVisibility',
+    'translation_key': 'screensaver_state',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_screensaverState',
     'unit_of_measurement': None,
   })
 # ---

@@ -18,7 +18,7 @@ from . import KioskerConfigEntry
 from .coordinator import KioskerData, KioskerDataUpdateCoordinator
 from .entity import KioskerEntity
 
-# Limit concurrent updates to prevent overwhelming the API
+# These entities rely on the shared data coordinator instead of per-entity polling.
 PARALLEL_UPDATES = 0
 
 
@@ -38,14 +38,16 @@ BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
         extra_attributes_fn=lambda x: x.blackout.__dict__ if x.blackout else None,
     ),
     KioskerBinarySensorEntityDescription(
-        key="screensaverVisibility",
-        translation_key="screensaver_visibility",
+        key="screensaverState",
+        translation_key="screensaver_state",
         value_fn=lambda x: x.screensaver.visible if x.screensaver else False,
     ),
     KioskerBinarySensorEntityDescription(
         key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_fn=lambda x: x.status.battery_state in ("Charging", "Fully Charged"),
+        value_fn=lambda x: (
+            (x.status.battery_state or "").casefold() in ("charging", "fully charged")
+        ),
     ),
 )
 

@@ -52,7 +52,7 @@
       "blackout_state": {
         "name": "Blackout"
       },
-      "screensaver_visibility": {
+      "screensaver_state": {
         "name": "Screensaver"
       }
     },
