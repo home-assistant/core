@@ -116,6 +116,17 @@
             'used': 85734563840,
             'used_fraction': 0.85,
           }),
+          'photo': dict({
+            'active': 0,
+            'avail': 0,
+            'content': 'import',
+            'enabled': 1,
+            'shared': 1,
+            'storage': 'photo',
+            'total': 0,
+            'type': 'nfs',
+            'used': 0,
+          }),
           'synology': dict({
             'active': 1,
             'avail': 523769479168,
