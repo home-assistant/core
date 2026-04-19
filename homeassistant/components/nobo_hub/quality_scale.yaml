@@ -1,0 +1,80 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: The hub's serial number is used as the unique ID and is immutable. IP address changes are handled by the reconfigure flow.
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: The Nobø Ecohub announces itself via a proprietary UDP broadcast. pynobo listens for this in async_discover_hubs(), which is called from the config flow user step. Home Assistant has no generic UDP-broadcast discovery platform, and the hub has no reliable DHCP hostname or confirmed exclusive MAC OUI to match on.
+  discovery-update-info:
+    status: exempt
+    comment: Integration does not use an automatic discovery channel, so there is no re-discovery path to update stored connection info. IP-address recovery is handled by the reconfigure flow.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Zones and components are static configuration on the hub and are enumerated at setup.
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: Integration has no repair scenarios.
+  stale-devices:
+    status: exempt
+    comment: Zones and components are static configuration on the hub and are enumerated at setup.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: Integration uses a local TCP socket (via pynobo); no HTTP client is used.
+  strict-typing: todo
