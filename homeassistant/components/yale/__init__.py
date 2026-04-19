@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import cast
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError
 from yalexs.const import Brand
 from yalexs.exceptions import YaleApiError
 from yalexs.manager.const import CONF_BRAND
@@ -15,7 +15,12 @@ from yalexs.manager.gateway import Config as YaleXSConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -42,11 +47,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
     yale_gateway = YaleGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_yale(hass, entry, yale_gateway)
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to yale api") from err
-    except (YaleApiError, ClientResponseError, CannotConnect) as err:
+    except (
+        YaleApiError,
+        OAuth2TokenRequestError,
+        ClientError,
+        CannotConnect,
+    ) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

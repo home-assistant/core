@@ -309,9 +309,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         site = async_get_energy_site_for_entry(hass, device, config)
 
-        resp = await handle_command(
-            site.api.time_of_use_settings(call.data[ATTR_TOU_SETTINGS])
-        )
+        tou_settings = call.data[ATTR_TOU_SETTINGS]
+        # Unwrap tariff_content_v2 if user included it, since the SDK adds this wrapper
+        if "tariff_content_v2" in tou_settings:
+            tou_settings = tou_settings["tariff_content_v2"]
+
+        resp = await handle_command(site.api.time_of_use_settings(tou_settings))
         if "error" in resp:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

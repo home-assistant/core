@@ -73,8 +73,10 @@ from .const import (
 from .error import (
     DuplicateWakeUpDetectedError,
     IntentRecognitionError,
+    InvalidPipelineStagesError,
     PipelineError,
     PipelineNotFound,
+    PipelineRunValidationError,
     SpeechToTextError,
     TextToSpeechError,
     WakeWordDetectionAborted,
@@ -492,24 +494,6 @@ PIPELINE_STAGE_ORDER = [
 ]
 
 
-class PipelineRunValidationError(Exception):
-    """Error when a pipeline run is not valid."""
-
-
-class InvalidPipelineStagesError(PipelineRunValidationError):
-    """Error when given an invalid combination of start/end stages."""
-
-    def __init__(
-        self,
-        start_stage: PipelineStage,
-        end_stage: PipelineStage,
-    ) -> None:
-        """Set error message."""
-        super().__init__(
-            f"Invalid stage combination: start={start_stage}, end={end_stage}"
-        )
-
-
 @dataclass(frozen=True)
 class WakeWordSettings:
     """Settings for wake word detection."""
@@ -662,7 +646,8 @@ class PipelineRun:
         """Emit run start event."""
         self._device_id = device_id
         self._satellite_id = satellite_id
-        self._start_debug_recording_thread()
+        if self.start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
+            self._start_debug_recording_thread()
 
         data: dict[str, Any] = {
             "pipeline": self.pipeline.id,
@@ -1504,9 +1489,7 @@ class PipelineRun:
 
     def _start_debug_recording_thread(self) -> None:
         """Start thread to record wake/stt audio if debug_recording_dir is set."""
-        if self.debug_recording_thread is not None:
-            # Already started
-            return
+        assert self.debug_recording_thread is None
 
         # Directory to save audio for each pipeline run.
         # Configured in YAML for assist_pipeline.
@@ -1681,26 +1664,39 @@ class PipelineInput:
     satellite_id: str | None = None
     """Identifier of the satellite that is processing the input/output of the pipeline."""
 
-    async def execute(self) -> None:
+    async def execute(self, validate: bool = False) -> None:
         """Run pipeline."""
+        validation_error: PipelineError | None = None
+        if validate:
+            try:
+                await self.validate()
+            except PipelineError as err:
+                validation_error = err
+
         self.run.start(
             conversation_id=self.session.conversation_id,
             device_id=self.device_id,
             satellite_id=self.satellite_id,
         )
         current_stage: PipelineStage | None = self.run.start_stage
-        stt_audio_buffer: list[EnhancedAudioChunk] = []
-        stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
-
-        if self.stt_stream is not None:
-            if self.run.audio_settings.needs_processor:
-                # VAD/noise suppression/auto gain/volume
-                stt_processed_stream = self.run.process_enhance_audio(self.stt_stream)
-            else:
-                # Volume multiplier only
-                stt_processed_stream = self.run.process_volume_only(self.stt_stream)
 
         try:
+            if validation_error is not None:
+                raise validation_error
+
+            stt_audio_buffer: list[EnhancedAudioChunk] = []
+            stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
+
+            if self.stt_stream is not None:
+                if self.run.audio_settings.needs_processor:
+                    # VAD/noise suppression/auto gain/volume
+                    stt_processed_stream = self.run.process_enhance_audio(
+                        self.stt_stream
+                    )
+                else:
+                    # Volume multiplier only
+                    stt_processed_stream = self.run.process_volume_only(self.stt_stream)
+
             if current_stage == PipelineStage.WAKE_WORD:
                 # wake-word-detection
                 assert stt_processed_stream is not None

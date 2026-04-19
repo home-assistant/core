@@ -14,7 +14,10 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import FIXTURES, setup_integration_with_node_fixture
+from .common import (
+    setup_integration_with_node_fixture,
+    setup_integration_with_node_fixtures,
+)
 
 from tests.common import MockConfigEntry
 
@@ -72,12 +75,10 @@ async def integration_fixture(
     return entry
 
 
-@pytest.fixture(params=FIXTURES)
-async def matter_devices(
-    hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
-) -> MatterNode:
-    """Fixture for a Matter device."""
-    return await setup_integration_with_node_fixture(hass, request.param, matter_client)
+@pytest.fixture
+async def matter_devices(hass: HomeAssistant, matter_client: MagicMock) -> None:
+    """Fixture for all Matter devices."""
+    await setup_integration_with_node_fixtures(hass, matter_client)
 
 
 @pytest.fixture

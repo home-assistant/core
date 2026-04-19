@@ -169,4 +169,7 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=CONFIG_STOP_SCHEMA,
+            description_placeholders={
+                "documentation_url": "https://www.home-assistant.io/integrations/rejseplanen/"
+            },
         )

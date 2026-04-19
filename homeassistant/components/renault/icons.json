@@ -52,6 +52,13 @@
       "charging_remaining_time": {
         "default": "mdi:timer"
       },
+      "charging_settings_mode": {
+        "default": "mdi:calendar-remove",
+        "state": {
+          "delayed": "mdi:calendar-clock",
+          "scheduled": "mdi:calendar-month"
+        }
+      },
       "fuel_autonomy": {
         "default": "mdi:gas-station"
       },
@@ -81,6 +88,9 @@
     },
     "charge_set_schedules": {
       "service": "mdi:calendar-clock"
+    },
+    "charge_start": {
+      "service": "mdi:ev-station"
     }
   }
 }

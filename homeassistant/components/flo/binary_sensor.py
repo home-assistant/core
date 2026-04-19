@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -49,12 +51,12 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
         super().__init__("pending_system_alerts", device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the Flo device has pending alerts."""
         return self._device.has_alerts
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if not self._device.has_alerts:
             return {}
@@ -76,6 +78,6 @@ class FloWaterDetectedBinarySensor(FloEntity, BinarySensorEntity):
         super().__init__("water_detected", device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the Flo device is detecting water."""
         return self._device.water_detected

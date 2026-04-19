@@ -59,6 +59,7 @@
       "endpoint": 0,
       "property": "targetValue",
       "propertyName": "targetValue",
+      "ccVersion": 4,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -74,6 +75,7 @@
       "endpoint": 0,
       "property": "duration",
       "propertyName": "duration",
+      "ccVersion": 4,
       "metadata": {
         "type": "duration",
         "readable": true,
@@ -87,6 +89,7 @@
       "endpoint": 0,
       "property": "currentValue",
       "propertyName": "currentValue",
+      "ccVersion": 4,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -103,6 +106,7 @@
       "endpoint": 0,
       "property": "Open",
       "propertyName": "Open",
+      "ccVersion": 4,
       "metadata": {
         "type": "boolean",
         "readable": true,
@@ -117,6 +121,7 @@
       "endpoint": 0,
       "property": "Close",
       "propertyName": "Close",
+      "ccVersion": 4,
       "metadata": {
         "type": "boolean",
         "readable": true,
@@ -131,6 +136,7 @@
       "endpoint": 0,
       "property": "currentValue",
       "propertyName": "currentValue",
+      "ccVersion": 1,
       "metadata": {
         "type": "boolean",
         "readable": true,
@@ -145,6 +151,7 @@
       "endpoint": 0,
       "property": "targetValue",
       "propertyName": "targetValue",
+      "ccVersion": 1,
       "metadata": {
         "type": "boolean",
         "readable": true,
@@ -158,6 +165,7 @@
       "endpoint": 0,
       "property": "manufacturerId",
       "propertyName": "manufacturerId",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -174,6 +182,7 @@
       "endpoint": 0,
       "property": "productType",
       "propertyName": "productType",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -190,6 +199,7 @@
       "endpoint": 0,
       "property": "productId",
       "propertyName": "productId",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -206,6 +216,7 @@
       "endpoint": 0,
       "property": "libraryType",
       "propertyName": "libraryType",
+      "ccVersion": 1,
       "metadata": {
         "type": "any",
         "readable": true,
@@ -220,6 +231,7 @@
       "endpoint": 0,
       "property": "protocolVersion",
       "propertyName": "protocolVersion",
+      "ccVersion": 1,
       "metadata": {
         "type": "any",
         "readable": true,
@@ -234,6 +246,7 @@
       "endpoint": 0,
       "property": "firmwareVersions",
       "propertyName": "firmwareVersions",
+      "ccVersion": 1,
       "metadata": {
         "type": "any",
         "readable": true,
@@ -248,6 +261,7 @@
       "endpoint": 0,
       "property": "hardwareVersion",
       "propertyName": "hardwareVersion",
+      "ccVersion": 1,
       "metadata": {
         "type": "any",
         "readable": true,
@@ -261,6 +275,7 @@
       "endpoint": 0,
       "property": 13,
       "propertyName": "Last saved position",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -283,6 +298,7 @@
       "endpoint": 0,
       "property": 15,
       "propertyName": "Close after time",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -305,6 +321,7 @@
       "endpoint": 0,
       "property": 7,
       "propertyName": "Motor speed I",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -326,6 +343,7 @@
       "endpoint": 0,
       "property": 8,
       "propertyName": "1 Motor speed II (rain sensor)",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -347,6 +365,7 @@
       "endpoint": 0,
       "property": 12,
       "propertyName": "Callibrate",
+      "ccVersion": 1,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -370,6 +389,7 @@
       "propertyKey": "Sensor status",
       "propertyName": "Water Alarm",
       "propertyKeyName": "Sensor status",
+      "ccVersion": 8,
       "metadata": {
         "type": "number",
         "readable": true,
@@ -390,6 +410,7 @@
       "propertyKey": "Over-load status",
       "propertyName": "Power Management",
       "propertyKeyName": "Over-load status",
+      "ccVersion": 8,
       "metadata": {
         "type": "number",
         "readable": true,

@@ -1752,15 +1752,15 @@ class FanSpeedTrait(_Trait):
         """Initialize a trait for a state."""
         super().__init__(hass, state, config)
         if state.domain == fan.DOMAIN:
-            speed_count = min(
-                FAN_SPEED_MAX_SPEED_COUNT,
-                round(
-                    100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
-                ),
+            speed_count = round(
+                100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
             )
-            self._ordered_speed = [
-                f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
-            ]
+            if speed_count <= FAN_SPEED_MAX_SPEED_COUNT:
+                self._ordered_speed = [
+                    f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
+                ]
+            else:
+                self._ordered_speed = []
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1786,7 +1786,11 @@ class FanSpeedTrait(_Trait):
             result.update(
                 {
                     "reversible": reversible,
-                    "supportsFanSpeedPercent": True,
+                    # supportsFanSpeedPercent is mutually exclusive with
+                    # availableFanSpeeds, where supportsFanSpeedPercent takes
+                    # precedence. Report it only when step speeds are not
+                    # supported so Google renders a percent slider (1-100%).
+                    "supportsFanSpeedPercent": not self._ordered_speed,
                 }
             )
 
@@ -1832,10 +1836,12 @@ class FanSpeedTrait(_Trait):
 
         if domain == fan.DOMAIN:
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
-            response["currentFanSpeedPercent"] = percent
-            response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
-                self._ordered_speed, percent
-            )
+            if self._ordered_speed:
+                response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
+                    self._ordered_speed, percent
+                )
+            else:
+                response["currentFanSpeedPercent"] = percent
 
         return response
 
@@ -1855,7 +1861,7 @@ class FanSpeedTrait(_Trait):
             )
 
         if domain == fan.DOMAIN:
-            if fan_speed := params.get("fanSpeed"):
+            if self._ordered_speed and (fan_speed := params.get("fanSpeed")):
                 fan_speed_percent = ordered_list_item_to_percentage(
                     self._ordered_speed, fan_speed
                 )

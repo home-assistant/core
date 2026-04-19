@@ -243,7 +243,9 @@ async def test_waiting_for_client_not_loaded(
         hass.async_create_task(_async_just_in_time_subscribe())
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert len(unsubs) == 0
     assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     assert len(unsubs) == 4
     for unsub in unsubs:
         unsub()

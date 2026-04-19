@@ -55,6 +55,12 @@
       "alarm_interval": {
         "name": "Alarm interval"
       },
+      "ambient_temperature_maximum": {
+        "name": "Ambient maximum temperature"
+      },
+      "ambient_temperature_minimum": {
+        "name": "Ambient minimum temperature"
+      },
       "temperature_maximum": {
         "name": "Maximum temperature"
       },

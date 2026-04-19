@@ -5,6 +5,13 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "description": "*usb 300*",
+        "domain": "enocean",
+        "manufacturer": "*enocean*",
+        "pid": "6001",
+        "vid": "0403",
+    },
+    {
         "description": "*zbt-2*",
         "domain": "homeassistant_connect_zbt2",
         "pid": "4001",
@@ -50,6 +57,16 @@ USB = [
         "manufacturer": "*rainforest*",
         "pid": "0003",
         "vid": "04B4",
+    },
+    {
+        "domain": "teleinfo",
+        "pid": "6015",
+        "vid": "0403",
+    },
+    {
+        "domain": "teleinfo",
+        "pid": "EA60",
+        "vid": "10C4",
     },
     {
         "domain": "velbus",

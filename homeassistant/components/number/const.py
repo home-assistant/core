@@ -60,6 +60,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -168,7 +169,7 @@ class NumberDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`,  `mA`
+    Unit of measurement: `A`,  `mA`, `μA`
     """
 
     DATA_RATE = "data_rate"
@@ -224,7 +225,7 @@ class NumberDeviceClass(StrEnum):
     FREQUENCY = "frequency"
     """Frequency.
 
-    Unit of measurement: `Hz`, `kHz`, `MHz`, `GHz`
+    Unit of measurement: `mHz`, `Hz`, `kHz`, `MHz`, `GHz`
     """
 
     GAS = "gas"
@@ -272,7 +273,7 @@ class NumberDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -290,7 +291,7 @@ class NumberDeviceClass(StrEnum):
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     PH = "ph"
@@ -544,6 +545,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.MOISTURE: {PERCENTAGE},
     NumberDeviceClass.NITROGEN_DIOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.NITROGEN_MONOXIDE: {
@@ -553,6 +555,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.PH: {None},
@@ -627,6 +630,7 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.ENERGY: EnergyConverter,
     NumberDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     NumberDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    NumberDeviceClass.FREQUENCY: FrequencyConverter,
     NumberDeviceClass.GAS: VolumeConverter,
     NumberDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     NumberDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,

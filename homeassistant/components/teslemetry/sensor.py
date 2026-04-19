@@ -115,6 +115,13 @@ POWER_SHARE_TYPES = {
     "Home": "home",
 }
 
+CHARGE_CABLE_TYPES = {
+    "IEC": "iec",
+    "SAE": "sae",
+    "GB_AC": "gb_ac",
+    "GB_DC": "gb_dc",
+}
+
 FORWARD_COLLISION_SENSITIVITIES = {
     "Off": "off",
     "Late": "late",
@@ -287,9 +294,14 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="charge_state_conn_charge_cable",
         polling=True,
+        polling_value_fn=lambda value: CHARGE_CABLE_TYPES.get(str(value)),
         streaming_listener=lambda vehicle, callback: vehicle.listen_ChargingCableType(
-            callback
+            lambda value: callback(
+                None if value is None else CHARGE_CABLE_TYPES.get(value)
+            )
         ),
+        options=list(CHARGE_CABLE_TYPES.values()),
+        device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

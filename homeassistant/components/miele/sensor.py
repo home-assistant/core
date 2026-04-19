@@ -59,6 +59,7 @@ DEFAULT_PLATE_COUNT = 4
 
 PLATE_COUNT = {
     "KM7575": 6,
+    "KM7576": 6,
     "KM7678": 6,
     "KM7697": 6,
     "KM7699": 5,
@@ -93,7 +94,14 @@ def _convert_temperature(
     """Convert temperature object to readable value."""
     if index >= len(value_list):
         return None
-    raw_value = cast(int, value_list[index].temperature) / 100.0
+    raw = value_list[index].temperature
+    if raw is None:
+        return None
+    try:
+        raw_centi = int(raw)
+    except TypeError, ValueError:
+        return None
+    raw_value = raw_centi / 100.0
     if raw_value in DISABLED_TEMP_ENTITIES:
         return None
     return raw_value
@@ -639,6 +647,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
             MieleAppliance.OVEN,
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MK2,
         ),
         description=MieleSensorDescription(
             key="state_core_temperature",
@@ -704,7 +713,10 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleDevice], ...]] = (
 
 POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]] = (
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_1_level",
             translation_key="twin_dos_1_level",
@@ -714,7 +726,10 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
         ),
     ),
     MieleSensorDefinition(
-        types=(MieleAppliance.WASHING_MACHINE,),
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHER_DRYER,
+        ),
         description=MieleSensorDescription[MieleFillingLevel](
             key="twin_dos_2_level",
             translation_key="twin_dos_2_level",
@@ -750,6 +765,36 @@ POLLED_SENSOR_TYPES: Final[tuple[MieleSensorDefinition[MieleFillingLevel], ...]]
             translation_key="rinse_aid_level",
             value_fn=lambda value: value.rinse_aid_filling_level,
             native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="descaling_counter",
+            translation_key="descaling_counter",
+            value_fn=lambda value: value.descaling_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="degreasing_counter",
+            translation_key="degreasing_counter",
+            value_fn=lambda value: value.degreasing_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription[MieleFillingLevel](
+            key="milk_cleaning_counter",
+            translation_key="milk_cleaning_counter",
+            value_fn=lambda value: value.milk_cleaning_counter,
+            state_class=SensorStateClass.TOTAL_INCREASING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -804,9 +849,9 @@ async def async_setup_entry(
             and definition.description.value_fn(device) is None
             and definition.description.zone != 1
         ):
-            # all appliances supporting temperature have at least zone 1, for other zones
-            # don't create entity if API signals that datapoint is disabled, unless the sensor
-            # already appeared in the past (= it provided a valid value)
+            # Optional temperature datapoints (extra fridge zones, oven food probe): only
+            # create the entity after the API first reports a valid reading, then keep it
+            # so state can return to unknown when the datapoint is inactive.
             return _is_entity_registered(unique_id)
         if (
             definition.description.key == "state_plate_step"

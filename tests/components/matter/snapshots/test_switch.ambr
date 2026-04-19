@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_bottom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_top-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_switches[eve_energy_plug][switch.eve_energy_plug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -130,8 +133,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-MatterPlug-6-0',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -151,8 +154,9 @@
 # ---
 # name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -180,7 +184,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
@@ -201,8 +205,9 @@
 # ---
 # name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -250,8 +255,9 @@
 # ---
 # name: test_switches[eve_thermo_v5][switch.eve_thermo_20ecd1701_child_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -299,8 +305,9 @@
 # ---
 # name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -328,7 +335,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
@@ -349,8 +356,9 @@
 # ---
 # name: test_switches[inovelli_vtm30][switch.white_series_onoff_switch_switch_load_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -399,8 +407,9 @@
 # ---
 # name: test_switches[longan_link_thermostat][switch.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -428,7 +437,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'switch',
     'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
@@ -449,8 +458,9 @@
 # ---
 # name: test_switches[mock_cooktop][switch.mock_cooktop_power_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -479,7 +489,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'unique_id': '00000000000004D2-000000000000002B-MatterNodeDevice-1-MatterPowerToggle-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -499,8 +509,9 @@
 # ---
 # name: test_switches[mock_cooktop][switch.mock_cooktop_power_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -529,7 +540,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-MatterPowerToggle-6-0',
+    'unique_id': '00000000000004D2-000000000000002B-MatterNodeDevice-2-MatterPowerToggle-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -549,8 +560,9 @@
 # ---
 # name: test_switches[mock_door_lock][switch.mock_door_lock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -578,8 +590,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -599,8 +611,9 @@
 # ---
 # name: test_switches[mock_door_lock][switch.mock_door_lock_privacy_mode_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -629,7 +642,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'privacy_mode_button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
     'unit_of_measurement': None,
   })
 # ---
@@ -648,8 +661,9 @@
 # ---
 # name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -677,8 +691,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -698,8 +712,9 @@
 # ---
 # name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -728,7 +743,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'privacy_mode_button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
     'unit_of_measurement': None,
   })
 # ---
@@ -747,8 +762,9 @@
 # ---
 # name: test_switches[mock_laundry_dryer][switch.mock_laundrydryer_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -797,8 +813,9 @@
 # ---
 # name: test_switches[mock_lock][switch.mock_lock_privacy_mode_button-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -846,8 +863,9 @@
 # ---
 # name: test_switches[mock_on_off_plugin_unit][switch.mock_onoffpluginunit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -875,8 +893,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterPlug-6-0',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -896,8 +914,9 @@
 # ---
 # name: test_switches[mock_oven][switch.mock_oven_power_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -926,7 +945,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-3-MatterPowerToggle-6-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-3-MatterPowerToggle-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -946,8 +965,9 @@
 # ---
 # name: test_switches[mock_oven][switch.mock_oven_power_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -976,7 +996,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-MatterPowerToggle-6-0',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-4-MatterPowerToggle-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -996,8 +1016,9 @@
 # ---
 # name: test_switches[mock_pump][switch.mock_pump_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1026,7 +1047,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-MatterPowerToggle-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -1046,8 +1067,9 @@
 # ---
 # name: test_switches[mock_room_airconditioner][switch.room_airconditioner_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1076,7 +1098,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'unique_id': '00000000000004D2-000000000000003B-MatterNodeDevice-1-MatterPowerToggle-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -1096,8 +1118,9 @@
 # ---
 # name: test_switches[mock_speaker][switch.mock_speaker_mute-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1145,8 +1168,9 @@
 # ---
 # name: test_switches[mock_switch_unit][switch.mock_switchunit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1174,8 +1198,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -1195,8 +1219,9 @@
 # ---
 # name: test_switches[silabs_evse_charging][switch.evse_enable_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1244,8 +1269,9 @@
 # ---
 # name: test_switches[silabs_refrigerator][switch.refrigerator_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1294,8 +1320,9 @@
 # ---
 # name: test_switches[yandex_smart_socket][switch.yndx_00540-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1323,8 +1350,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterPlug-6-0',
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-MatterPlug-6-0',
     'unit_of_measurement': None,
   })
 # ---

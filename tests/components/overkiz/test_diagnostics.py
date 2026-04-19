@@ -24,7 +24,7 @@ async def test_diagnostics(
 ) -> None:
     """Test diagnostics."""
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup_tahoma_switch.json", DOMAIN
+        hass, "setup/setup_tahoma_switch.json", DOMAIN
     )
 
     with patch.multiple(
@@ -47,11 +47,11 @@ async def test_device_diagnostics(
 ) -> None:
     """Test device diagnostics."""
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup_tahoma_switch.json", DOMAIN
+        hass, "setup/setup_tahoma_switch.json", DOMAIN
     )
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://****-****-6867/16756006")}
+        identifiers={(DOMAIN, "rts://1234-5678-6867/16756006")}
     )
     assert device is not None
 
@@ -77,11 +77,11 @@ async def test_device_diagnostics_execution_history_subsystem(
     """Test execution history matching ignores subsystem suffix."""
 
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup_tahoma_switch.json", DOMAIN
+        hass, "setup/setup_tahoma_switch.json", DOMAIN
     )
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://****-****-6867/16756006")}
+        identifiers={(DOMAIN, "rts://1234-5678-6867/16756006")}
     )
     assert device is not None
 
@@ -98,8 +98,8 @@ async def test_device_diagnostics_execution_history_subsystem(
             return f"Execution({self.name})"
 
     execution_history = [
-        _FakeExecution("matching", ["rts://****-****-6867/16756006#2"]),
-        _FakeExecution("other", ["rts://****-****-6867/other_device"]),
+        _FakeExecution("matching", ["rts://1234-5678-6867/16756006#2"]),
+        _FakeExecution("other", ["rts://1234-5678-6867/other_device"]),
     ]
 
     with patch.multiple(

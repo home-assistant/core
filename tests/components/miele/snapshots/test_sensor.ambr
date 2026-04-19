@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -93,10 +94,170 @@
     'state': 'in_use',
   })
 # ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_degreasing_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_degreasing_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Degreasing cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Degreasing cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_degreasing_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Coffee system Degreasing cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_degreasing_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_descaling_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_descaling_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Descaling cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_descaling_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Coffee system Descaling cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_descaling_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_milk_pipework_cleaning_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_milk_pipework_cleaning_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Milk pipework cleaning cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk pipework cleaning cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_milk_pipework_cleaning_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Coffee system Milk pipework cleaning cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_milk_pipework_cleaning_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -217,8 +378,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -296,8 +458,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -359,8 +522,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -409,8 +573,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -459,8 +624,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -509,8 +675,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -559,8 +726,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -609,8 +777,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -659,8 +828,9 @@
 # ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -707,10 +877,117 @@
     'state': '20',
   })
 # ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.degreasing_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Degreasing cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Degreasing cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.degreasing_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Degreasing cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.descaling_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.descaling_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Descaling cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.descaling_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Descaling cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.descaling_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -803,8 +1080,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -897,8 +1175,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -996,8 +1275,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1095,8 +1375,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1194,8 +1475,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_2_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1293,8 +1575,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1392,8 +1675,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_3_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1491,8 +1775,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1590,8 +1875,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_4_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1689,8 +1975,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction_plate_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1788,8 +2075,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1880,10 +2168,64 @@
     'state': 'off',
   })
 # ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.milk_pipework_cleaning_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Milk pipework cleaning cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk pipework cleaning cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.milk_pipework_cleaning_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Milk pipework cleaning cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1932,8 +2274,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1982,8 +2325,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2032,8 +2376,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2082,8 +2427,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2132,8 +2478,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2182,8 +2529,9 @@
 # ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2230,10 +2578,117 @@
     'state': '20',
   })
 # ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.degreasing_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Degreasing cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Degreasing cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.degreasing_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Degreasing cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.descaling_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.descaling_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Descaling cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.descaling_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Descaling cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.descaling_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2326,8 +2781,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2420,8 +2876,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2477,8 +2934,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2534,8 +2992,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_zone_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2589,10 +3048,64 @@
     'state': '-18.0',
   })
 # ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.milk_pipework_cleaning_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Milk pipework cleaning cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk pipework cleaning cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.milk_pipework_cleaning_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Milk pipework cleaning cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2641,8 +3154,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2691,8 +3205,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2741,8 +3256,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2791,8 +3307,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2841,8 +3358,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2891,8 +3409,9 @@
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2939,10 +3458,117 @@
     'state': '20',
   })
 # ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.degreasing_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Degreasing cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Degreasing cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.degreasing_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Degreasing cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.descaling_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.descaling_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Descaling cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.descaling_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Descaling cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.descaling_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3035,8 +3661,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3134,8 +3761,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3233,8 +3861,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3332,8 +3961,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3431,8 +4061,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3528,10 +4159,64 @@
     'state': 'plate_step_boost',
   })
 # ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.milk_pipework_cleaning_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Milk pipework cleaning cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk pipework cleaning cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.milk_pipework_cleaning_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Milk pipework cleaning cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3580,8 +4265,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3630,8 +4316,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3680,8 +4367,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3730,8 +4418,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3780,8 +4469,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3830,8 +4520,9 @@
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3878,10 +4569,117 @@
     'state': '20',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.degreasing_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Degreasing cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Degreasing cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.degreasing_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Degreasing cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.descaling_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.descaling_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Descaling cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.descaling_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Descaling cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.descaling_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -3974,8 +4772,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4031,8 +4830,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4123,10 +4923,64 @@
     'state': 'off',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.milk_pipework_cleaning_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Milk pipework cleaning cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk pipework cleaning cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.milk_pipework_cleaning_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Milk pipework cleaning cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.oven-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4219,8 +5073,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_core_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4276,8 +5131,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4330,8 +5186,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4380,39 +5237,148 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
+        'amaranth',
         'apple_pie',
         'apple_sponge',
+        'apples_diced',
+        'apples_halved',
+        'apples_quartered',
+        'apples_sliced',
+        'apples_whole',
+        'apricots_halved_skinning',
+        'apricots_halved_steam_cooking',
+        'apricots_quartered',
+        'apricots_wedges',
+        'artichokes_large',
+        'artichokes_medium',
+        'artichokes_small',
+        'atlantic_catfish_fillet_1_cm',
+        'atlantic_catfish_fillet_2_cm',
         'auto_roast',
         'baguettes',
         'baiser_one_large',
         'baiser_several_small',
+        'basmati_rice_rapid_steam_cooking',
+        'basmati_rice_steam_cooking',
+        'beef_casserole',
         'beef_fillet_low_temperature_cooking',
         'beef_fillet_roast',
         'beef_hash',
+        'beef_tenderloin',
+        'beef_tenderloin_medaillons_1_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_1_cm_steam_cooking',
+        'beef_tenderloin_medaillons_2_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_2_cm_steam_cooking',
+        'beef_tenderloin_medaillons_3_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_3_cm_steam_cooking',
         'beef_wellington',
+        'beetroot_whole_large',
+        'beetroot_whole_medium',
+        'beetroot_whole_small',
         'belgian_sponge_cake',
+        'beluga_lentils',
         'biscuits_short_crust_pastry_1_tray',
         'biscuits_short_crust_pastry_2_trays',
+        'black_beans',
+        'black_salsify_medium',
+        'black_salsify_thick',
+        'black_salsify_thin',
+        'blanching',
         'blueberry_muffins',
+        'bologna_sausage',
+        'booster',
+        'bottling',
+        'bottling_hard',
+        'bottling_medium',
+        'bottling_soft',
         'bottom_heat',
         'braised_beef',
         'braised_veal',
+        'bread_dumplings_boil_in_the_bag',
+        'bread_dumplings_fresh',
+        'broad_beans',
+        'broccoli_florets_large',
+        'broccoli_florets_medium',
+        'broccoli_florets_small',
+        'broccoli_whole_large',
+        'broccoli_whole_medium',
+        'broccoli_whole_small',
+        'brown_lentils',
+        'bruehwurst_sausages',
+        'brussels_sprout',
+        'bulgur',
+        'bunched_carrots_cut_into_batons',
+        'bunched_carrots_diced',
+        'bunched_carrots_halved',
+        'bunched_carrots_quartered',
+        'bunched_carrots_sliced',
+        'bunched_carrots_whole_large',
+        'bunched_carrots_whole_medium',
+        'bunched_carrots_whole_small',
         'butter_cake',
         'carp',
+        'carrots_cut_into_batons',
+        'carrots_diced',
+        'carrots_halved',
+        'carrots_quartered',
+        'carrots_sliced',
+        'carrots_whole_large',
+        'carrots_whole_medium',
+        'carrots_whole_small',
+        'cauliflower_florets_large',
+        'cauliflower_florets_medium',
+        'cauliflower_florets_small',
+        'cauliflower_whole_large',
+        'cauliflower_whole_medium',
+        'cauliflower_whole_small',
+        'celeriac_cut_into_batons',
+        'celeriac_diced',
+        'celeriac_sliced',
+        'celery_pieces',
+        'celery_sliced',
+        'cep',
+        'chanterelle',
+        'char',
         'cheese_souffle',
+        'cheesecake_one_large',
+        'cheesecake_several_small',
+        'chick_peas',
         'chicken_thighs',
+        'chicken_tikka_masala_with_rice',
         'chicken_whole',
+        'chinese_cabbage_cut',
         'chocolate_hazlenut_cake_one_large',
         'chocolate_hazlenut_cake_several_small',
+        'chongming_rapid_steam_cooking',
+        'chongming_steam_cooking',
         'choux_buns',
+        'christmas_pudding_cooking',
+        'christmas_pudding_heating',
+        'coalfish_fillet_2_cm',
+        'coalfish_fillet_3_cm',
+        'coalfish_piece',
+        'cockles',
+        'codfish_fillet',
+        'codfish_piece',
+        'common_beans',
+        'common_sole_fillet_1_cm',
+        'common_sole_fillet_2_cm',
         'conventional_heat',
+        'cook_bacon',
+        'corn_on_the_cob',
+        'courgette_diced',
+        'courgette_sliced',
+        'cranberries',
+        'crevettes',
         'custom_program_1',
         'custom_program_10',
         'custom_program_11',
@@ -4434,83 +5400,302 @@
         'custom_program_8',
         'custom_program_9',
         'dark_mixed_grain_bread',
+        'decrystallise_honey',
         'defrost',
         'defrost_meat',
         'defrost_vegetables',
+        'defrosting_with_microwave',
+        'defrosting_with_steam',
         'descale',
+        'dissolve_gelatine',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
         'drying',
         'duck',
+        'dutch_hash',
         'eco_fan_heat',
+        'eco_steam_cooking',
         'economy_grill',
+        'eggplant_diced',
+        'eggplant_sliced',
+        'endive_halved',
+        'endive_quartered',
+        'endive_strips',
         'evaporate_water',
         'fan_grill',
         'fan_plus',
+        'fennel_halved',
+        'fennel_quartered',
+        'fennel_strips',
         'flat_bread',
         'fruit_flan_puff_pastry',
         'fruit_flan_short_crust_pastry',
         'fruit_streusel_cake',
         'full_grill',
+        'german_turnip_cut_into_batons',
+        'german_turnip_diced',
+        'german_turnip_sliced',
+        'gilt_head_bream_fillet',
+        'gilt_head_bream_whole',
         'ginger_loaf',
+        'gnocchi_fresh',
+        'goose_barnacles',
         'goose_stuffed',
         'goose_unstuffed',
+        'gooseberries',
+        'goulash_soup',
+        'green_asparagus_medium',
+        'green_asparagus_thick',
+        'green_asparagus_thin',
+        'green_beans_cut',
+        'green_beans_whole',
+        'green_cabbage_cut',
+        'green_spelt_cracked',
+        'green_spelt_whole',
+        'green_split_peas',
+        'greenage_plums',
         'grill',
+        'halibut_fillet_2_cm',
+        'halibut_fillet_3_cm',
         'ham_roast',
         'heat_crockery',
         'heating_bakes_gratins',
+        'heating_damp_flannels',
         'heating_vegetables',
+        'hens_eggs_size_l_hard',
+        'hens_eggs_size_l_medium',
+        'hens_eggs_size_l_soft',
+        'hens_eggs_size_m_hard',
+        'hens_eggs_size_m_medium',
+        'hens_eggs_size_m_soft',
+        'hens_eggs_size_s_hard',
+        'hens_eggs_size_s_medium',
+        'hens_eggs_size_s_soft',
+        'hens_eggs_size_xl_hard',
+        'hens_eggs_size_xl_medium',
+        'hens_eggs_size_xl_soft',
+        'huanghuanian_rapid_steam_cooking',
+        'huanghuanian_steam_cooking',
+        'hydroclean',
         'intensive_bake',
+        'iridescent_shark_fillet',
+        'jasmine_rice_rapid_steam_cooking',
+        'jasmine_rice_steam_cooking',
+        'jerusalem_artichoke_diced',
+        'jerusalem_artichoke_sliced',
+        'kale_cut',
+        'kasseler_piece',
+        'kasseler_slice',
         'keeping_warm',
+        'king_prawns',
+        'knuckle_of_pork_cured',
+        'knuckle_of_pork_fresh',
+        'large_shrimps',
+        'leek_pieces',
+        'leek_rings',
         'leg_of_lamb',
         'lemon_meringue_pie',
         'linzer_augen_1_tray',
         'linzer_augen_2_trays',
+        'long_grain_rice_general_rapid_steam_cooking',
+        'long_grain_rice_general_steam_cooking',
         'low_temperature_cooking',
         'madeira_cake',
+        'make_yoghurt',
+        'mangel_cut',
         'marble_cake',
+        'meat_for_soup_back_or_top_rib',
+        'meat_for_soup_brisket',
+        'meat_for_soup_leg_steak',
         'meat_loaf',
+        'meat_with_rice',
+        'melt_chocolate',
+        'menu_cooking',
         'microwave',
         'microwave_auto_roast',
         'microwave_fan_grill',
         'microwave_fan_plus',
         'microwave_grill',
+        'millet',
+        'mirabelles',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
         'moisture_plus_fan_plus',
         'moisture_plus_intensive_bake',
         'multigrain_rolls',
+        'mushrooms_diced',
+        'mushrooms_halved',
+        'mushrooms_quartered',
+        'mushrooms_sliced',
+        'mushrooms_whole',
+        'mussels',
+        'mussels_in_sauce',
+        'nectarines_peaches_halved_skinning',
+        'nectarines_peaches_halved_steam_cooking',
+        'nectarines_peaches_quartered',
+        'nectarines_peaches_wedges',
+        'nile_perch_fillet_2_cm',
+        'nile_perch_fillet_3_cm',
         'no_program',
+        'oats_cracked',
+        'oats_whole',
         'osso_buco',
+        'oyster_mushroom_diced',
+        'oyster_mushroom_strips',
+        'oyster_mushroom_whole',
+        'parboiled_rice_rapid_steam_cooking',
+        'parboiled_rice_steam_cooking',
+        'parisian_carrots_large',
+        'parisian_carrots_medium',
+        'parisian_carrots_small',
+        'parsley_root_cut_into_batons',
+        'parsley_root_diced',
+        'parsley_root_sliced',
+        'parsnip_cut_into_batons',
+        'parsnip_diced',
+        'parsnip_sliced',
+        'pears_halved',
+        'pears_quartered',
+        'pears_to_cook_large_halved',
+        'pears_to_cook_large_quartered',
+        'pears_to_cook_large_whole',
+        'pears_to_cook_medium_halved',
+        'pears_to_cook_medium_quartered',
+        'pears_to_cook_medium_whole',
+        'pears_to_cook_small_halved',
+        'pears_to_cook_small_quartered',
+        'pears_to_cook_small_whole',
+        'pears_wedges',
+        'peas',
+        'pepper_diced',
+        'pepper_halved',
+        'pepper_quartered',
+        'pepper_strips',
+        'perch_fillet_2_cm',
+        'perch_fillet_3_cm',
+        'perch_whole',
+        'pike_fillet',
+        'pike_piece',
         'pikeperch_fillet_with_vegetables',
+        'pinto_beans',
         'pizza_oil_cheese_dough_baking_tray',
         'pizza_oil_cheese_dough_round_baking_tine',
         'pizza_yeast_dough_baking_tray',
         'pizza_yeast_dough_round_baking_tine',
+        'plaice_fillet_1_cm',
+        'plaice_fillet_2_cm',
+        'plaice_whole_2_cm',
+        'plaice_whole_3_cm',
+        'plaice_whole_4_cm',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'plums_halved',
+        'plums_whole',
+        'pointed_cabbage_cut',
+        'polenta',
+        'polenta_swiss_style_coarse_polenta',
+        'polenta_swiss_style_fine_polenta',
+        'polenta_swiss_style_medium_polenta',
         'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
         'pork_smoked_ribs_low_temperature_cooking',
         'pork_smoked_ribs_roast',
+        'pork_tenderloin_medaillons_3_cm',
+        'pork_tenderloin_medaillons_4_cm',
+        'pork_tenderloin_medaillons_5_cm',
         'pork_with_crackling',
         'potato_cheese_gratin',
+        'potato_dumplings_half_half_boil_in_bag',
+        'potato_dumplings_half_half_deep_frozen',
+        'potato_dumplings_raw_boil_in_bag',
+        'potato_dumplings_raw_deep_frozen',
         'potato_gratin',
+        'potatoes_floury_diced',
+        'potatoes_floury_halved',
+        'potatoes_floury_quartered',
+        'potatoes_floury_whole_large',
+        'potatoes_floury_whole_medium',
+        'potatoes_floury_whole_small',
+        'potatoes_in_the_skin_floury_large',
+        'potatoes_in_the_skin_floury_medium',
+        'potatoes_in_the_skin_floury_small',
+        'potatoes_in_the_skin_mainly_waxy_large',
+        'potatoes_in_the_skin_mainly_waxy_medium',
+        'potatoes_in_the_skin_mainly_waxy_small',
+        'potatoes_in_the_skin_waxy_large_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_large_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_steam_cooking',
+        'potatoes_mainly_waxy_diced',
+        'potatoes_mainly_waxy_halved',
+        'potatoes_mainly_waxy_large',
+        'potatoes_mainly_waxy_medium',
+        'potatoes_mainly_waxy_quartered',
+        'potatoes_mainly_waxy_small',
+        'potatoes_waxy_diced',
+        'potatoes_waxy_halved',
+        'potatoes_waxy_quartered',
+        'potatoes_waxy_whole_large',
+        'potatoes_waxy_whole_medium',
+        'potatoes_waxy_whole_small',
+        'poularde_breast',
+        'poularde_whole',
+        'prawns',
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
         'prove_dough',
+        'pumpkin_diced',
+        'pumpkin_risotto',
+        'pumpkin_soup',
         'pyrolytic',
         'quiche_lorraine',
         'quick_microwave',
+        'quinces_diced',
+        'quinoa',
         'rabbit',
         'rack_of_lamb_with_vegetables',
+        'rapid_steam_cooking',
+        'ravioli_fresh',
+        'razor_clams_large',
+        'razor_clams_medium',
+        'razor_clams_small',
+        'red_beans',
+        'red_cabbage_cut',
+        'red_lentils',
+        'red_snapper_fillet_2_cm',
+        'red_snapper_fillet_3_cm',
+        'redfish_fillet_2_cm',
+        'redfish_fillet_3_cm',
+        'redfish_piece',
+        'reheating_with_microwave',
+        'reheating_with_steam',
+        'rhubarb_chunks',
+        'rice_pudding_rapid_steam_cooking',
+        'rice_pudding_steam_cooking',
+        'rinse',
+        'risotto',
         'roast_beef_low_temperature_cooking',
         'roast_beef_roast',
+        'romanesco_florets_large',
+        'romanesco_florets_medium',
+        'romanesco_florets_small',
+        'romanesco_whole_large',
+        'romanesco_whole_medium',
+        'romanesco_whole_small',
+        'round_grain_rice_general_rapid_steam_cooking',
+        'round_grain_rice_general_steam_cooking',
+        'runner_beans_pieces',
+        'runner_beans_sliced',
+        'runner_beans_whole',
+        'rye_cracked',
         'rye_rolls',
+        'rye_whole',
         'sachertorte',
         'saddle_of_lamb_low_temperature_cooking',
         'saddle_of_lamb_roast',
@@ -4519,40 +5704,122 @@
         'saddle_of_veal_roast',
         'saddle_of_venison',
         'salmon_fillet',
+        'salmon_fillet_2_cm',
+        'salmon_fillet_3_cm',
+        'salmon_piece',
+        'salmon_steak_2_cm',
+        'salmon_steak_3_cm',
         'salmon_trout',
+        'saucisson',
         'savoury_flan_puff_pastry',
         'savoury_flan_short_crust_pastry',
+        'savoy_cabbage_cut',
+        'scallops',
+        'schupfnudeln_potato_noodels',
+        'sea_devil_fillet_3_cm',
+        'sea_devil_fillet_4_cm',
         'seeded_loaf',
         'shabbat_program',
+        'sheyang_rapid_steam_cooking',
+        'sheyang_steam_cooking',
+        'silverside_10_cm',
+        'silverside_5_cm',
+        'silverside_7_5_cm',
+        'simiao_rapid_steam_cooking',
+        'simiao_steam_cooking',
+        'small_shrimps',
+        'snow_pea',
+        'soak',
+        'soup_hen',
+        'sour_cherries',
+        'sous_vide',
+        'spaetzle_fresh',
         'spelt_bread',
+        'spelt_cracked',
+        'spelt_whole',
+        'spinach',
         'sponge_base',
         'springform_tin_15cm',
         'springform_tin_20cm',
         'springform_tin_25cm',
         'steam_bake',
         'steam_cooking',
+        'sterilize_crockery',
         'stollen',
+        'stuffed_cabbage',
+        'sweat_onions',
+        'swede_cut_into_batons',
+        'swede_diced',
+        'sweet_cheese_dumplings',
+        'sweet_cherries',
         'swiss_farmhouse_bread',
         'swiss_roll',
+        'swiss_toffee_cream_100_ml',
+        'swiss_toffee_cream_150_ml',
+        'tagliatelli_fresh',
         'tart_flambe',
+        'teltow_turnip_diced',
+        'teltow_turnip_sliced',
         'tiger_bread',
+        'tilapia_fillet_1_cm',
+        'tilapia_fillet_2_cm',
+        'toffee_date_dessert_one_large',
+        'toffee_date_dessert_several_small',
         'top_heat',
+        'tortellini_fresh',
+        'treacle_sponge_pudding_one_large',
+        'treacle_sponge_pudding_several_small',
         'trout',
+        'tuna_fillet_2_cm',
+        'tuna_fillet_3_cm',
+        'tuna_steak',
+        'turbot_fillet_2_cm',
+        'turbot_fillet_3_cm',
+        'turkey_breast',
         'turkey_drumsticks',
         'turkey_whole',
+        'uonumma_koshihikari_rapid_steam_cooking',
+        'uonumma_koshihikari_steam_cooking',
         'vanilla_biscuits_1_tray',
         'vanilla_biscuits_2_trays',
         'veal_fillet_low_temperature_cooking',
+        'veal_fillet_medaillons_1_cm',
+        'veal_fillet_medaillons_2_cm',
+        'veal_fillet_medaillons_3_cm',
         'veal_fillet_roast',
+        'veal_fillet_whole',
         'veal_knuckle',
+        'veal_sausages',
+        'venus_clams',
         'viennese_apple_strudel',
+        'viennese_silverside',
         'walnut_bread',
         'walnut_muffins',
+        'wheat_cracked',
+        'wheat_whole',
+        'white_asparagus_medium',
+        'white_asparagus_thick',
+        'white_asparagus_thin',
+        'white_beans',
         'white_bread_baking_tin',
         'white_bread_on_tray',
         'white_rolls',
+        'whole_ham_reheating',
+        'whole_ham_steam_cooking',
+        'wholegrain_rice',
+        'wild_rice',
+        'wuchang_rapid_steam_cooking',
+        'wuchang_steam_cooking',
+        'yam_halved',
+        'yam_quartered',
+        'yam_strips',
+        'yeast_dumplings_fresh',
+        'yellow_beans_cut',
+        'yellow_beans_whole',
+        'yellow_split_peas',
         'yom_tov',
         'yorkshire_pudding',
+        'zander_fillet',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -4591,34 +5858,142 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program',
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
+        'amaranth',
         'apple_pie',
         'apple_sponge',
+        'apples_diced',
+        'apples_halved',
+        'apples_quartered',
+        'apples_sliced',
+        'apples_whole',
+        'apricots_halved_skinning',
+        'apricots_halved_steam_cooking',
+        'apricots_quartered',
+        'apricots_wedges',
+        'artichokes_large',
+        'artichokes_medium',
+        'artichokes_small',
+        'atlantic_catfish_fillet_1_cm',
+        'atlantic_catfish_fillet_2_cm',
         'auto_roast',
         'baguettes',
         'baiser_one_large',
         'baiser_several_small',
+        'basmati_rice_rapid_steam_cooking',
+        'basmati_rice_steam_cooking',
+        'beef_casserole',
         'beef_fillet_low_temperature_cooking',
         'beef_fillet_roast',
         'beef_hash',
+        'beef_tenderloin',
+        'beef_tenderloin_medaillons_1_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_1_cm_steam_cooking',
+        'beef_tenderloin_medaillons_2_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_2_cm_steam_cooking',
+        'beef_tenderloin_medaillons_3_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_3_cm_steam_cooking',
         'beef_wellington',
+        'beetroot_whole_large',
+        'beetroot_whole_medium',
+        'beetroot_whole_small',
         'belgian_sponge_cake',
+        'beluga_lentils',
         'biscuits_short_crust_pastry_1_tray',
         'biscuits_short_crust_pastry_2_trays',
+        'black_beans',
+        'black_salsify_medium',
+        'black_salsify_thick',
+        'black_salsify_thin',
+        'blanching',
         'blueberry_muffins',
+        'bologna_sausage',
+        'booster',
+        'bottling',
+        'bottling_hard',
+        'bottling_medium',
+        'bottling_soft',
         'bottom_heat',
         'braised_beef',
         'braised_veal',
+        'bread_dumplings_boil_in_the_bag',
+        'bread_dumplings_fresh',
+        'broad_beans',
+        'broccoli_florets_large',
+        'broccoli_florets_medium',
+        'broccoli_florets_small',
+        'broccoli_whole_large',
+        'broccoli_whole_medium',
+        'broccoli_whole_small',
+        'brown_lentils',
+        'bruehwurst_sausages',
+        'brussels_sprout',
+        'bulgur',
+        'bunched_carrots_cut_into_batons',
+        'bunched_carrots_diced',
+        'bunched_carrots_halved',
+        'bunched_carrots_quartered',
+        'bunched_carrots_sliced',
+        'bunched_carrots_whole_large',
+        'bunched_carrots_whole_medium',
+        'bunched_carrots_whole_small',
         'butter_cake',
         'carp',
+        'carrots_cut_into_batons',
+        'carrots_diced',
+        'carrots_halved',
+        'carrots_quartered',
+        'carrots_sliced',
+        'carrots_whole_large',
+        'carrots_whole_medium',
+        'carrots_whole_small',
+        'cauliflower_florets_large',
+        'cauliflower_florets_medium',
+        'cauliflower_florets_small',
+        'cauliflower_whole_large',
+        'cauliflower_whole_medium',
+        'cauliflower_whole_small',
+        'celeriac_cut_into_batons',
+        'celeriac_diced',
+        'celeriac_sliced',
+        'celery_pieces',
+        'celery_sliced',
+        'cep',
+        'chanterelle',
+        'char',
         'cheese_souffle',
+        'cheesecake_one_large',
+        'cheesecake_several_small',
+        'chick_peas',
         'chicken_thighs',
+        'chicken_tikka_masala_with_rice',
         'chicken_whole',
+        'chinese_cabbage_cut',
         'chocolate_hazlenut_cake_one_large',
         'chocolate_hazlenut_cake_several_small',
+        'chongming_rapid_steam_cooking',
+        'chongming_steam_cooking',
         'choux_buns',
+        'christmas_pudding_cooking',
+        'christmas_pudding_heating',
+        'coalfish_fillet_2_cm',
+        'coalfish_fillet_3_cm',
+        'coalfish_piece',
+        'cockles',
+        'codfish_fillet',
+        'codfish_piece',
+        'common_beans',
+        'common_sole_fillet_1_cm',
+        'common_sole_fillet_2_cm',
         'conventional_heat',
+        'cook_bacon',
+        'corn_on_the_cob',
+        'courgette_diced',
+        'courgette_sliced',
+        'cranberries',
+        'crevettes',
         'custom_program_1',
         'custom_program_10',
         'custom_program_11',
@@ -4640,83 +6015,302 @@
         'custom_program_8',
         'custom_program_9',
         'dark_mixed_grain_bread',
+        'decrystallise_honey',
         'defrost',
         'defrost_meat',
         'defrost_vegetables',
+        'defrosting_with_microwave',
+        'defrosting_with_steam',
         'descale',
+        'dissolve_gelatine',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
         'drying',
         'duck',
+        'dutch_hash',
         'eco_fan_heat',
+        'eco_steam_cooking',
         'economy_grill',
+        'eggplant_diced',
+        'eggplant_sliced',
+        'endive_halved',
+        'endive_quartered',
+        'endive_strips',
         'evaporate_water',
         'fan_grill',
         'fan_plus',
+        'fennel_halved',
+        'fennel_quartered',
+        'fennel_strips',
         'flat_bread',
         'fruit_flan_puff_pastry',
         'fruit_flan_short_crust_pastry',
         'fruit_streusel_cake',
         'full_grill',
+        'german_turnip_cut_into_batons',
+        'german_turnip_diced',
+        'german_turnip_sliced',
+        'gilt_head_bream_fillet',
+        'gilt_head_bream_whole',
         'ginger_loaf',
+        'gnocchi_fresh',
+        'goose_barnacles',
         'goose_stuffed',
         'goose_unstuffed',
+        'gooseberries',
+        'goulash_soup',
+        'green_asparagus_medium',
+        'green_asparagus_thick',
+        'green_asparagus_thin',
+        'green_beans_cut',
+        'green_beans_whole',
+        'green_cabbage_cut',
+        'green_spelt_cracked',
+        'green_spelt_whole',
+        'green_split_peas',
+        'greenage_plums',
         'grill',
+        'halibut_fillet_2_cm',
+        'halibut_fillet_3_cm',
         'ham_roast',
         'heat_crockery',
         'heating_bakes_gratins',
+        'heating_damp_flannels',
         'heating_vegetables',
+        'hens_eggs_size_l_hard',
+        'hens_eggs_size_l_medium',
+        'hens_eggs_size_l_soft',
+        'hens_eggs_size_m_hard',
+        'hens_eggs_size_m_medium',
+        'hens_eggs_size_m_soft',
+        'hens_eggs_size_s_hard',
+        'hens_eggs_size_s_medium',
+        'hens_eggs_size_s_soft',
+        'hens_eggs_size_xl_hard',
+        'hens_eggs_size_xl_medium',
+        'hens_eggs_size_xl_soft',
+        'huanghuanian_rapid_steam_cooking',
+        'huanghuanian_steam_cooking',
+        'hydroclean',
         'intensive_bake',
+        'iridescent_shark_fillet',
+        'jasmine_rice_rapid_steam_cooking',
+        'jasmine_rice_steam_cooking',
+        'jerusalem_artichoke_diced',
+        'jerusalem_artichoke_sliced',
+        'kale_cut',
+        'kasseler_piece',
+        'kasseler_slice',
         'keeping_warm',
+        'king_prawns',
+        'knuckle_of_pork_cured',
+        'knuckle_of_pork_fresh',
+        'large_shrimps',
+        'leek_pieces',
+        'leek_rings',
         'leg_of_lamb',
         'lemon_meringue_pie',
         'linzer_augen_1_tray',
         'linzer_augen_2_trays',
+        'long_grain_rice_general_rapid_steam_cooking',
+        'long_grain_rice_general_steam_cooking',
         'low_temperature_cooking',
         'madeira_cake',
+        'make_yoghurt',
+        'mangel_cut',
         'marble_cake',
+        'meat_for_soup_back_or_top_rib',
+        'meat_for_soup_brisket',
+        'meat_for_soup_leg_steak',
         'meat_loaf',
+        'meat_with_rice',
+        'melt_chocolate',
+        'menu_cooking',
         'microwave',
         'microwave_auto_roast',
         'microwave_fan_grill',
         'microwave_fan_plus',
         'microwave_grill',
+        'millet',
+        'mirabelles',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
         'moisture_plus_fan_plus',
         'moisture_plus_intensive_bake',
         'multigrain_rolls',
+        'mushrooms_diced',
+        'mushrooms_halved',
+        'mushrooms_quartered',
+        'mushrooms_sliced',
+        'mushrooms_whole',
+        'mussels',
+        'mussels_in_sauce',
+        'nectarines_peaches_halved_skinning',
+        'nectarines_peaches_halved_steam_cooking',
+        'nectarines_peaches_quartered',
+        'nectarines_peaches_wedges',
+        'nile_perch_fillet_2_cm',
+        'nile_perch_fillet_3_cm',
         'no_program',
+        'oats_cracked',
+        'oats_whole',
         'osso_buco',
+        'oyster_mushroom_diced',
+        'oyster_mushroom_strips',
+        'oyster_mushroom_whole',
+        'parboiled_rice_rapid_steam_cooking',
+        'parboiled_rice_steam_cooking',
+        'parisian_carrots_large',
+        'parisian_carrots_medium',
+        'parisian_carrots_small',
+        'parsley_root_cut_into_batons',
+        'parsley_root_diced',
+        'parsley_root_sliced',
+        'parsnip_cut_into_batons',
+        'parsnip_diced',
+        'parsnip_sliced',
+        'pears_halved',
+        'pears_quartered',
+        'pears_to_cook_large_halved',
+        'pears_to_cook_large_quartered',
+        'pears_to_cook_large_whole',
+        'pears_to_cook_medium_halved',
+        'pears_to_cook_medium_quartered',
+        'pears_to_cook_medium_whole',
+        'pears_to_cook_small_halved',
+        'pears_to_cook_small_quartered',
+        'pears_to_cook_small_whole',
+        'pears_wedges',
+        'peas',
+        'pepper_diced',
+        'pepper_halved',
+        'pepper_quartered',
+        'pepper_strips',
+        'perch_fillet_2_cm',
+        'perch_fillet_3_cm',
+        'perch_whole',
+        'pike_fillet',
+        'pike_piece',
         'pikeperch_fillet_with_vegetables',
+        'pinto_beans',
         'pizza_oil_cheese_dough_baking_tray',
         'pizza_oil_cheese_dough_round_baking_tine',
         'pizza_yeast_dough_baking_tray',
         'pizza_yeast_dough_round_baking_tine',
+        'plaice_fillet_1_cm',
+        'plaice_fillet_2_cm',
+        'plaice_whole_2_cm',
+        'plaice_whole_3_cm',
+        'plaice_whole_4_cm',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'plums_halved',
+        'plums_whole',
+        'pointed_cabbage_cut',
+        'polenta',
+        'polenta_swiss_style_coarse_polenta',
+        'polenta_swiss_style_fine_polenta',
+        'polenta_swiss_style_medium_polenta',
         'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
         'pork_smoked_ribs_low_temperature_cooking',
         'pork_smoked_ribs_roast',
+        'pork_tenderloin_medaillons_3_cm',
+        'pork_tenderloin_medaillons_4_cm',
+        'pork_tenderloin_medaillons_5_cm',
         'pork_with_crackling',
         'potato_cheese_gratin',
+        'potato_dumplings_half_half_boil_in_bag',
+        'potato_dumplings_half_half_deep_frozen',
+        'potato_dumplings_raw_boil_in_bag',
+        'potato_dumplings_raw_deep_frozen',
         'potato_gratin',
+        'potatoes_floury_diced',
+        'potatoes_floury_halved',
+        'potatoes_floury_quartered',
+        'potatoes_floury_whole_large',
+        'potatoes_floury_whole_medium',
+        'potatoes_floury_whole_small',
+        'potatoes_in_the_skin_floury_large',
+        'potatoes_in_the_skin_floury_medium',
+        'potatoes_in_the_skin_floury_small',
+        'potatoes_in_the_skin_mainly_waxy_large',
+        'potatoes_in_the_skin_mainly_waxy_medium',
+        'potatoes_in_the_skin_mainly_waxy_small',
+        'potatoes_in_the_skin_waxy_large_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_large_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_steam_cooking',
+        'potatoes_mainly_waxy_diced',
+        'potatoes_mainly_waxy_halved',
+        'potatoes_mainly_waxy_large',
+        'potatoes_mainly_waxy_medium',
+        'potatoes_mainly_waxy_quartered',
+        'potatoes_mainly_waxy_small',
+        'potatoes_waxy_diced',
+        'potatoes_waxy_halved',
+        'potatoes_waxy_quartered',
+        'potatoes_waxy_whole_large',
+        'potatoes_waxy_whole_medium',
+        'potatoes_waxy_whole_small',
+        'poularde_breast',
+        'poularde_whole',
+        'prawns',
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
         'prove_dough',
+        'pumpkin_diced',
+        'pumpkin_risotto',
+        'pumpkin_soup',
         'pyrolytic',
         'quiche_lorraine',
         'quick_microwave',
+        'quinces_diced',
+        'quinoa',
         'rabbit',
         'rack_of_lamb_with_vegetables',
+        'rapid_steam_cooking',
+        'ravioli_fresh',
+        'razor_clams_large',
+        'razor_clams_medium',
+        'razor_clams_small',
+        'red_beans',
+        'red_cabbage_cut',
+        'red_lentils',
+        'red_snapper_fillet_2_cm',
+        'red_snapper_fillet_3_cm',
+        'redfish_fillet_2_cm',
+        'redfish_fillet_3_cm',
+        'redfish_piece',
+        'reheating_with_microwave',
+        'reheating_with_steam',
+        'rhubarb_chunks',
+        'rice_pudding_rapid_steam_cooking',
+        'rice_pudding_steam_cooking',
+        'rinse',
+        'risotto',
         'roast_beef_low_temperature_cooking',
         'roast_beef_roast',
+        'romanesco_florets_large',
+        'romanesco_florets_medium',
+        'romanesco_florets_small',
+        'romanesco_whole_large',
+        'romanesco_whole_medium',
+        'romanesco_whole_small',
+        'round_grain_rice_general_rapid_steam_cooking',
+        'round_grain_rice_general_steam_cooking',
+        'runner_beans_pieces',
+        'runner_beans_sliced',
+        'runner_beans_whole',
+        'rye_cracked',
         'rye_rolls',
+        'rye_whole',
         'sachertorte',
         'saddle_of_lamb_low_temperature_cooking',
         'saddle_of_lamb_roast',
@@ -4725,40 +6319,122 @@
         'saddle_of_veal_roast',
         'saddle_of_venison',
         'salmon_fillet',
+        'salmon_fillet_2_cm',
+        'salmon_fillet_3_cm',
+        'salmon_piece',
+        'salmon_steak_2_cm',
+        'salmon_steak_3_cm',
         'salmon_trout',
+        'saucisson',
         'savoury_flan_puff_pastry',
         'savoury_flan_short_crust_pastry',
+        'savoy_cabbage_cut',
+        'scallops',
+        'schupfnudeln_potato_noodels',
+        'sea_devil_fillet_3_cm',
+        'sea_devil_fillet_4_cm',
         'seeded_loaf',
         'shabbat_program',
+        'sheyang_rapid_steam_cooking',
+        'sheyang_steam_cooking',
+        'silverside_10_cm',
+        'silverside_5_cm',
+        'silverside_7_5_cm',
+        'simiao_rapid_steam_cooking',
+        'simiao_steam_cooking',
+        'small_shrimps',
+        'snow_pea',
+        'soak',
+        'soup_hen',
+        'sour_cherries',
+        'sous_vide',
+        'spaetzle_fresh',
         'spelt_bread',
+        'spelt_cracked',
+        'spelt_whole',
+        'spinach',
         'sponge_base',
         'springform_tin_15cm',
         'springform_tin_20cm',
         'springform_tin_25cm',
         'steam_bake',
         'steam_cooking',
+        'sterilize_crockery',
         'stollen',
+        'stuffed_cabbage',
+        'sweat_onions',
+        'swede_cut_into_batons',
+        'swede_diced',
+        'sweet_cheese_dumplings',
+        'sweet_cherries',
         'swiss_farmhouse_bread',
         'swiss_roll',
+        'swiss_toffee_cream_100_ml',
+        'swiss_toffee_cream_150_ml',
+        'tagliatelli_fresh',
         'tart_flambe',
+        'teltow_turnip_diced',
+        'teltow_turnip_sliced',
         'tiger_bread',
+        'tilapia_fillet_1_cm',
+        'tilapia_fillet_2_cm',
+        'toffee_date_dessert_one_large',
+        'toffee_date_dessert_several_small',
         'top_heat',
+        'tortellini_fresh',
+        'treacle_sponge_pudding_one_large',
+        'treacle_sponge_pudding_several_small',
         'trout',
+        'tuna_fillet_2_cm',
+        'tuna_fillet_3_cm',
+        'tuna_steak',
+        'turbot_fillet_2_cm',
+        'turbot_fillet_3_cm',
+        'turkey_breast',
         'turkey_drumsticks',
         'turkey_whole',
+        'uonumma_koshihikari_rapid_steam_cooking',
+        'uonumma_koshihikari_steam_cooking',
         'vanilla_biscuits_1_tray',
         'vanilla_biscuits_2_trays',
         'veal_fillet_low_temperature_cooking',
+        'veal_fillet_medaillons_1_cm',
+        'veal_fillet_medaillons_2_cm',
+        'veal_fillet_medaillons_3_cm',
         'veal_fillet_roast',
+        'veal_fillet_whole',
         'veal_knuckle',
+        'veal_sausages',
+        'venus_clams',
         'viennese_apple_strudel',
+        'viennese_silverside',
         'walnut_bread',
         'walnut_muffins',
+        'wheat_cracked',
+        'wheat_whole',
+        'white_asparagus_medium',
+        'white_asparagus_thick',
+        'white_asparagus_thin',
+        'white_beans',
         'white_bread_baking_tin',
         'white_bread_on_tray',
         'white_rolls',
+        'whole_ham_reheating',
+        'whole_ham_steam_cooking',
+        'wholegrain_rice',
+        'wild_rice',
+        'wuchang_rapid_steam_cooking',
+        'wuchang_steam_cooking',
+        'yam_halved',
+        'yam_quartered',
+        'yam_strips',
+        'yeast_dumplings_fresh',
+        'yellow_beans_cut',
+        'yellow_beans_whole',
+        'yellow_split_peas',
         'yom_tov',
         'yorkshire_pudding',
+        'zander_fillet',
       ]),
     }),
     'context': <ANY>,
@@ -4771,11 +6447,13 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -4822,6 +6500,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program phase',
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -4842,8 +6521,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -4905,8 +6585,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4959,8 +6640,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5009,8 +6691,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5066,8 +6749,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5123,8 +6807,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5180,8 +6865,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5230,8 +6916,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5324,8 +7011,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.refrigerator_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -5381,8 +7069,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5431,8 +7120,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5481,8 +7171,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5531,8 +7222,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5581,8 +7273,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5675,8 +7368,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5729,8 +7423,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -5786,8 +7481,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5836,8 +7532,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5886,8 +7583,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -5915,6 +7613,7 @@
         'game_pieces',
         'minimum_iron',
         'no_program',
+        'normal',
         'outdoor_garments',
         'outerwear',
         'pillows',
@@ -5932,6 +7631,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',
@@ -5998,6 +7698,7 @@
         'game_pieces',
         'minimum_iron',
         'no_program',
+        'normal',
         'outdoor_garments',
         'outerwear',
         'pillows',
@@ -6015,6 +7716,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',
@@ -6031,8 +7733,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6128,8 +7831,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6191,8 +7895,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6245,8 +7950,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6295,8 +8001,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6345,8 +8052,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6402,8 +8110,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6459,8 +8168,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6509,8 +8219,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6559,8 +8270,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -6616,8 +8328,9 @@
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6664,10 +8377,117 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.degreasing_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Degreasing cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Degreasing cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.degreasing_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Degreasing cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.descaling_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.descaling_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Descaling cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.descaling_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Descaling cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.descaling_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.freezer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6760,8 +8580,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -6817,8 +8638,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -6909,10 +8731,64 @@
     'state': 'off',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.milk_pipework_cleaning_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Milk pipework cleaning cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk pipework cleaning cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.milk_pipework_cleaning_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Milk pipework cleaning cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7005,8 +8881,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_core_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7062,8 +8939,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7116,8 +8994,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7166,39 +9045,148 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
+        'amaranth',
         'apple_pie',
         'apple_sponge',
+        'apples_diced',
+        'apples_halved',
+        'apples_quartered',
+        'apples_sliced',
+        'apples_whole',
+        'apricots_halved_skinning',
+        'apricots_halved_steam_cooking',
+        'apricots_quartered',
+        'apricots_wedges',
+        'artichokes_large',
+        'artichokes_medium',
+        'artichokes_small',
+        'atlantic_catfish_fillet_1_cm',
+        'atlantic_catfish_fillet_2_cm',
         'auto_roast',
         'baguettes',
         'baiser_one_large',
         'baiser_several_small',
+        'basmati_rice_rapid_steam_cooking',
+        'basmati_rice_steam_cooking',
+        'beef_casserole',
         'beef_fillet_low_temperature_cooking',
         'beef_fillet_roast',
         'beef_hash',
+        'beef_tenderloin',
+        'beef_tenderloin_medaillons_1_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_1_cm_steam_cooking',
+        'beef_tenderloin_medaillons_2_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_2_cm_steam_cooking',
+        'beef_tenderloin_medaillons_3_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_3_cm_steam_cooking',
         'beef_wellington',
+        'beetroot_whole_large',
+        'beetroot_whole_medium',
+        'beetroot_whole_small',
         'belgian_sponge_cake',
+        'beluga_lentils',
         'biscuits_short_crust_pastry_1_tray',
         'biscuits_short_crust_pastry_2_trays',
+        'black_beans',
+        'black_salsify_medium',
+        'black_salsify_thick',
+        'black_salsify_thin',
+        'blanching',
         'blueberry_muffins',
+        'bologna_sausage',
+        'booster',
+        'bottling',
+        'bottling_hard',
+        'bottling_medium',
+        'bottling_soft',
         'bottom_heat',
         'braised_beef',
         'braised_veal',
+        'bread_dumplings_boil_in_the_bag',
+        'bread_dumplings_fresh',
+        'broad_beans',
+        'broccoli_florets_large',
+        'broccoli_florets_medium',
+        'broccoli_florets_small',
+        'broccoli_whole_large',
+        'broccoli_whole_medium',
+        'broccoli_whole_small',
+        'brown_lentils',
+        'bruehwurst_sausages',
+        'brussels_sprout',
+        'bulgur',
+        'bunched_carrots_cut_into_batons',
+        'bunched_carrots_diced',
+        'bunched_carrots_halved',
+        'bunched_carrots_quartered',
+        'bunched_carrots_sliced',
+        'bunched_carrots_whole_large',
+        'bunched_carrots_whole_medium',
+        'bunched_carrots_whole_small',
         'butter_cake',
         'carp',
+        'carrots_cut_into_batons',
+        'carrots_diced',
+        'carrots_halved',
+        'carrots_quartered',
+        'carrots_sliced',
+        'carrots_whole_large',
+        'carrots_whole_medium',
+        'carrots_whole_small',
+        'cauliflower_florets_large',
+        'cauliflower_florets_medium',
+        'cauliflower_florets_small',
+        'cauliflower_whole_large',
+        'cauliflower_whole_medium',
+        'cauliflower_whole_small',
+        'celeriac_cut_into_batons',
+        'celeriac_diced',
+        'celeriac_sliced',
+        'celery_pieces',
+        'celery_sliced',
+        'cep',
+        'chanterelle',
+        'char',
         'cheese_souffle',
+        'cheesecake_one_large',
+        'cheesecake_several_small',
+        'chick_peas',
         'chicken_thighs',
+        'chicken_tikka_masala_with_rice',
         'chicken_whole',
+        'chinese_cabbage_cut',
         'chocolate_hazlenut_cake_one_large',
         'chocolate_hazlenut_cake_several_small',
+        'chongming_rapid_steam_cooking',
+        'chongming_steam_cooking',
         'choux_buns',
+        'christmas_pudding_cooking',
+        'christmas_pudding_heating',
+        'coalfish_fillet_2_cm',
+        'coalfish_fillet_3_cm',
+        'coalfish_piece',
+        'cockles',
+        'codfish_fillet',
+        'codfish_piece',
+        'common_beans',
+        'common_sole_fillet_1_cm',
+        'common_sole_fillet_2_cm',
         'conventional_heat',
+        'cook_bacon',
+        'corn_on_the_cob',
+        'courgette_diced',
+        'courgette_sliced',
+        'cranberries',
+        'crevettes',
         'custom_program_1',
         'custom_program_10',
         'custom_program_11',
@@ -7220,83 +9208,302 @@
         'custom_program_8',
         'custom_program_9',
         'dark_mixed_grain_bread',
+        'decrystallise_honey',
         'defrost',
         'defrost_meat',
         'defrost_vegetables',
+        'defrosting_with_microwave',
+        'defrosting_with_steam',
         'descale',
+        'dissolve_gelatine',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
         'drying',
         'duck',
+        'dutch_hash',
         'eco_fan_heat',
+        'eco_steam_cooking',
         'economy_grill',
+        'eggplant_diced',
+        'eggplant_sliced',
+        'endive_halved',
+        'endive_quartered',
+        'endive_strips',
         'evaporate_water',
         'fan_grill',
         'fan_plus',
+        'fennel_halved',
+        'fennel_quartered',
+        'fennel_strips',
         'flat_bread',
         'fruit_flan_puff_pastry',
         'fruit_flan_short_crust_pastry',
         'fruit_streusel_cake',
         'full_grill',
+        'german_turnip_cut_into_batons',
+        'german_turnip_diced',
+        'german_turnip_sliced',
+        'gilt_head_bream_fillet',
+        'gilt_head_bream_whole',
         'ginger_loaf',
+        'gnocchi_fresh',
+        'goose_barnacles',
         'goose_stuffed',
         'goose_unstuffed',
+        'gooseberries',
+        'goulash_soup',
+        'green_asparagus_medium',
+        'green_asparagus_thick',
+        'green_asparagus_thin',
+        'green_beans_cut',
+        'green_beans_whole',
+        'green_cabbage_cut',
+        'green_spelt_cracked',
+        'green_spelt_whole',
+        'green_split_peas',
+        'greenage_plums',
         'grill',
+        'halibut_fillet_2_cm',
+        'halibut_fillet_3_cm',
         'ham_roast',
         'heat_crockery',
         'heating_bakes_gratins',
+        'heating_damp_flannels',
         'heating_vegetables',
+        'hens_eggs_size_l_hard',
+        'hens_eggs_size_l_medium',
+        'hens_eggs_size_l_soft',
+        'hens_eggs_size_m_hard',
+        'hens_eggs_size_m_medium',
+        'hens_eggs_size_m_soft',
+        'hens_eggs_size_s_hard',
+        'hens_eggs_size_s_medium',
+        'hens_eggs_size_s_soft',
+        'hens_eggs_size_xl_hard',
+        'hens_eggs_size_xl_medium',
+        'hens_eggs_size_xl_soft',
+        'huanghuanian_rapid_steam_cooking',
+        'huanghuanian_steam_cooking',
+        'hydroclean',
         'intensive_bake',
+        'iridescent_shark_fillet',
+        'jasmine_rice_rapid_steam_cooking',
+        'jasmine_rice_steam_cooking',
+        'jerusalem_artichoke_diced',
+        'jerusalem_artichoke_sliced',
+        'kale_cut',
+        'kasseler_piece',
+        'kasseler_slice',
         'keeping_warm',
+        'king_prawns',
+        'knuckle_of_pork_cured',
+        'knuckle_of_pork_fresh',
+        'large_shrimps',
+        'leek_pieces',
+        'leek_rings',
         'leg_of_lamb',
         'lemon_meringue_pie',
         'linzer_augen_1_tray',
         'linzer_augen_2_trays',
+        'long_grain_rice_general_rapid_steam_cooking',
+        'long_grain_rice_general_steam_cooking',
         'low_temperature_cooking',
         'madeira_cake',
+        'make_yoghurt',
+        'mangel_cut',
         'marble_cake',
+        'meat_for_soup_back_or_top_rib',
+        'meat_for_soup_brisket',
+        'meat_for_soup_leg_steak',
         'meat_loaf',
+        'meat_with_rice',
+        'melt_chocolate',
+        'menu_cooking',
         'microwave',
         'microwave_auto_roast',
         'microwave_fan_grill',
         'microwave_fan_plus',
         'microwave_grill',
+        'millet',
+        'mirabelles',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
         'moisture_plus_fan_plus',
         'moisture_plus_intensive_bake',
         'multigrain_rolls',
+        'mushrooms_diced',
+        'mushrooms_halved',
+        'mushrooms_quartered',
+        'mushrooms_sliced',
+        'mushrooms_whole',
+        'mussels',
+        'mussels_in_sauce',
+        'nectarines_peaches_halved_skinning',
+        'nectarines_peaches_halved_steam_cooking',
+        'nectarines_peaches_quartered',
+        'nectarines_peaches_wedges',
+        'nile_perch_fillet_2_cm',
+        'nile_perch_fillet_3_cm',
         'no_program',
+        'oats_cracked',
+        'oats_whole',
         'osso_buco',
+        'oyster_mushroom_diced',
+        'oyster_mushroom_strips',
+        'oyster_mushroom_whole',
+        'parboiled_rice_rapid_steam_cooking',
+        'parboiled_rice_steam_cooking',
+        'parisian_carrots_large',
+        'parisian_carrots_medium',
+        'parisian_carrots_small',
+        'parsley_root_cut_into_batons',
+        'parsley_root_diced',
+        'parsley_root_sliced',
+        'parsnip_cut_into_batons',
+        'parsnip_diced',
+        'parsnip_sliced',
+        'pears_halved',
+        'pears_quartered',
+        'pears_to_cook_large_halved',
+        'pears_to_cook_large_quartered',
+        'pears_to_cook_large_whole',
+        'pears_to_cook_medium_halved',
+        'pears_to_cook_medium_quartered',
+        'pears_to_cook_medium_whole',
+        'pears_to_cook_small_halved',
+        'pears_to_cook_small_quartered',
+        'pears_to_cook_small_whole',
+        'pears_wedges',
+        'peas',
+        'pepper_diced',
+        'pepper_halved',
+        'pepper_quartered',
+        'pepper_strips',
+        'perch_fillet_2_cm',
+        'perch_fillet_3_cm',
+        'perch_whole',
+        'pike_fillet',
+        'pike_piece',
         'pikeperch_fillet_with_vegetables',
+        'pinto_beans',
         'pizza_oil_cheese_dough_baking_tray',
         'pizza_oil_cheese_dough_round_baking_tine',
         'pizza_yeast_dough_baking_tray',
         'pizza_yeast_dough_round_baking_tine',
+        'plaice_fillet_1_cm',
+        'plaice_fillet_2_cm',
+        'plaice_whole_2_cm',
+        'plaice_whole_3_cm',
+        'plaice_whole_4_cm',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'plums_halved',
+        'plums_whole',
+        'pointed_cabbage_cut',
+        'polenta',
+        'polenta_swiss_style_coarse_polenta',
+        'polenta_swiss_style_fine_polenta',
+        'polenta_swiss_style_medium_polenta',
         'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
         'pork_smoked_ribs_low_temperature_cooking',
         'pork_smoked_ribs_roast',
+        'pork_tenderloin_medaillons_3_cm',
+        'pork_tenderloin_medaillons_4_cm',
+        'pork_tenderloin_medaillons_5_cm',
         'pork_with_crackling',
         'potato_cheese_gratin',
+        'potato_dumplings_half_half_boil_in_bag',
+        'potato_dumplings_half_half_deep_frozen',
+        'potato_dumplings_raw_boil_in_bag',
+        'potato_dumplings_raw_deep_frozen',
         'potato_gratin',
+        'potatoes_floury_diced',
+        'potatoes_floury_halved',
+        'potatoes_floury_quartered',
+        'potatoes_floury_whole_large',
+        'potatoes_floury_whole_medium',
+        'potatoes_floury_whole_small',
+        'potatoes_in_the_skin_floury_large',
+        'potatoes_in_the_skin_floury_medium',
+        'potatoes_in_the_skin_floury_small',
+        'potatoes_in_the_skin_mainly_waxy_large',
+        'potatoes_in_the_skin_mainly_waxy_medium',
+        'potatoes_in_the_skin_mainly_waxy_small',
+        'potatoes_in_the_skin_waxy_large_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_large_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_steam_cooking',
+        'potatoes_mainly_waxy_diced',
+        'potatoes_mainly_waxy_halved',
+        'potatoes_mainly_waxy_large',
+        'potatoes_mainly_waxy_medium',
+        'potatoes_mainly_waxy_quartered',
+        'potatoes_mainly_waxy_small',
+        'potatoes_waxy_diced',
+        'potatoes_waxy_halved',
+        'potatoes_waxy_quartered',
+        'potatoes_waxy_whole_large',
+        'potatoes_waxy_whole_medium',
+        'potatoes_waxy_whole_small',
+        'poularde_breast',
+        'poularde_whole',
+        'prawns',
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
         'prove_dough',
+        'pumpkin_diced',
+        'pumpkin_risotto',
+        'pumpkin_soup',
         'pyrolytic',
         'quiche_lorraine',
         'quick_microwave',
+        'quinces_diced',
+        'quinoa',
         'rabbit',
         'rack_of_lamb_with_vegetables',
+        'rapid_steam_cooking',
+        'ravioli_fresh',
+        'razor_clams_large',
+        'razor_clams_medium',
+        'razor_clams_small',
+        'red_beans',
+        'red_cabbage_cut',
+        'red_lentils',
+        'red_snapper_fillet_2_cm',
+        'red_snapper_fillet_3_cm',
+        'redfish_fillet_2_cm',
+        'redfish_fillet_3_cm',
+        'redfish_piece',
+        'reheating_with_microwave',
+        'reheating_with_steam',
+        'rhubarb_chunks',
+        'rice_pudding_rapid_steam_cooking',
+        'rice_pudding_steam_cooking',
+        'rinse',
+        'risotto',
         'roast_beef_low_temperature_cooking',
         'roast_beef_roast',
+        'romanesco_florets_large',
+        'romanesco_florets_medium',
+        'romanesco_florets_small',
+        'romanesco_whole_large',
+        'romanesco_whole_medium',
+        'romanesco_whole_small',
+        'round_grain_rice_general_rapid_steam_cooking',
+        'round_grain_rice_general_steam_cooking',
+        'runner_beans_pieces',
+        'runner_beans_sliced',
+        'runner_beans_whole',
+        'rye_cracked',
         'rye_rolls',
+        'rye_whole',
         'sachertorte',
         'saddle_of_lamb_low_temperature_cooking',
         'saddle_of_lamb_roast',
@@ -7305,40 +9512,122 @@
         'saddle_of_veal_roast',
         'saddle_of_venison',
         'salmon_fillet',
+        'salmon_fillet_2_cm',
+        'salmon_fillet_3_cm',
+        'salmon_piece',
+        'salmon_steak_2_cm',
+        'salmon_steak_3_cm',
         'salmon_trout',
+        'saucisson',
         'savoury_flan_puff_pastry',
         'savoury_flan_short_crust_pastry',
+        'savoy_cabbage_cut',
+        'scallops',
+        'schupfnudeln_potato_noodels',
+        'sea_devil_fillet_3_cm',
+        'sea_devil_fillet_4_cm',
         'seeded_loaf',
         'shabbat_program',
+        'sheyang_rapid_steam_cooking',
+        'sheyang_steam_cooking',
+        'silverside_10_cm',
+        'silverside_5_cm',
+        'silverside_7_5_cm',
+        'simiao_rapid_steam_cooking',
+        'simiao_steam_cooking',
+        'small_shrimps',
+        'snow_pea',
+        'soak',
+        'soup_hen',
+        'sour_cherries',
+        'sous_vide',
+        'spaetzle_fresh',
         'spelt_bread',
+        'spelt_cracked',
+        'spelt_whole',
+        'spinach',
         'sponge_base',
         'springform_tin_15cm',
         'springform_tin_20cm',
         'springform_tin_25cm',
         'steam_bake',
         'steam_cooking',
+        'sterilize_crockery',
         'stollen',
+        'stuffed_cabbage',
+        'sweat_onions',
+        'swede_cut_into_batons',
+        'swede_diced',
+        'sweet_cheese_dumplings',
+        'sweet_cherries',
         'swiss_farmhouse_bread',
         'swiss_roll',
+        'swiss_toffee_cream_100_ml',
+        'swiss_toffee_cream_150_ml',
+        'tagliatelli_fresh',
         'tart_flambe',
+        'teltow_turnip_diced',
+        'teltow_turnip_sliced',
         'tiger_bread',
+        'tilapia_fillet_1_cm',
+        'tilapia_fillet_2_cm',
+        'toffee_date_dessert_one_large',
+        'toffee_date_dessert_several_small',
         'top_heat',
+        'tortellini_fresh',
+        'treacle_sponge_pudding_one_large',
+        'treacle_sponge_pudding_several_small',
         'trout',
+        'tuna_fillet_2_cm',
+        'tuna_fillet_3_cm',
+        'tuna_steak',
+        'turbot_fillet_2_cm',
+        'turbot_fillet_3_cm',
+        'turkey_breast',
         'turkey_drumsticks',
         'turkey_whole',
+        'uonumma_koshihikari_rapid_steam_cooking',
+        'uonumma_koshihikari_steam_cooking',
         'vanilla_biscuits_1_tray',
         'vanilla_biscuits_2_trays',
         'veal_fillet_low_temperature_cooking',
+        'veal_fillet_medaillons_1_cm',
+        'veal_fillet_medaillons_2_cm',
+        'veal_fillet_medaillons_3_cm',
         'veal_fillet_roast',
+        'veal_fillet_whole',
         'veal_knuckle',
+        'veal_sausages',
+        'venus_clams',
         'viennese_apple_strudel',
+        'viennese_silverside',
         'walnut_bread',
         'walnut_muffins',
+        'wheat_cracked',
+        'wheat_whole',
+        'white_asparagus_medium',
+        'white_asparagus_thick',
+        'white_asparagus_thin',
+        'white_beans',
         'white_bread_baking_tin',
         'white_bread_on_tray',
         'white_rolls',
+        'whole_ham_reheating',
+        'whole_ham_steam_cooking',
+        'wholegrain_rice',
+        'wild_rice',
+        'wuchang_rapid_steam_cooking',
+        'wuchang_steam_cooking',
+        'yam_halved',
+        'yam_quartered',
+        'yam_strips',
+        'yeast_dumplings_fresh',
+        'yellow_beans_cut',
+        'yellow_beans_whole',
+        'yellow_split_peas',
         'yom_tov',
         'yorkshire_pudding',
+        'zander_fillet',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -7377,34 +9666,142 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program',
       'options': list([
+        'airfry',
         'almond_macaroons_1_tray',
         'almond_macaroons_2_trays',
+        'amaranth',
         'apple_pie',
         'apple_sponge',
+        'apples_diced',
+        'apples_halved',
+        'apples_quartered',
+        'apples_sliced',
+        'apples_whole',
+        'apricots_halved_skinning',
+        'apricots_halved_steam_cooking',
+        'apricots_quartered',
+        'apricots_wedges',
+        'artichokes_large',
+        'artichokes_medium',
+        'artichokes_small',
+        'atlantic_catfish_fillet_1_cm',
+        'atlantic_catfish_fillet_2_cm',
         'auto_roast',
         'baguettes',
         'baiser_one_large',
         'baiser_several_small',
+        'basmati_rice_rapid_steam_cooking',
+        'basmati_rice_steam_cooking',
+        'beef_casserole',
         'beef_fillet_low_temperature_cooking',
         'beef_fillet_roast',
         'beef_hash',
+        'beef_tenderloin',
+        'beef_tenderloin_medaillons_1_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_1_cm_steam_cooking',
+        'beef_tenderloin_medaillons_2_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_2_cm_steam_cooking',
+        'beef_tenderloin_medaillons_3_cm_low_temperature_cooking',
+        'beef_tenderloin_medaillons_3_cm_steam_cooking',
         'beef_wellington',
+        'beetroot_whole_large',
+        'beetroot_whole_medium',
+        'beetroot_whole_small',
         'belgian_sponge_cake',
+        'beluga_lentils',
         'biscuits_short_crust_pastry_1_tray',
         'biscuits_short_crust_pastry_2_trays',
+        'black_beans',
+        'black_salsify_medium',
+        'black_salsify_thick',
+        'black_salsify_thin',
+        'blanching',
         'blueberry_muffins',
+        'bologna_sausage',
+        'booster',
+        'bottling',
+        'bottling_hard',
+        'bottling_medium',
+        'bottling_soft',
         'bottom_heat',
         'braised_beef',
         'braised_veal',
+        'bread_dumplings_boil_in_the_bag',
+        'bread_dumplings_fresh',
+        'broad_beans',
+        'broccoli_florets_large',
+        'broccoli_florets_medium',
+        'broccoli_florets_small',
+        'broccoli_whole_large',
+        'broccoli_whole_medium',
+        'broccoli_whole_small',
+        'brown_lentils',
+        'bruehwurst_sausages',
+        'brussels_sprout',
+        'bulgur',
+        'bunched_carrots_cut_into_batons',
+        'bunched_carrots_diced',
+        'bunched_carrots_halved',
+        'bunched_carrots_quartered',
+        'bunched_carrots_sliced',
+        'bunched_carrots_whole_large',
+        'bunched_carrots_whole_medium',
+        'bunched_carrots_whole_small',
         'butter_cake',
         'carp',
+        'carrots_cut_into_batons',
+        'carrots_diced',
+        'carrots_halved',
+        'carrots_quartered',
+        'carrots_sliced',
+        'carrots_whole_large',
+        'carrots_whole_medium',
+        'carrots_whole_small',
+        'cauliflower_florets_large',
+        'cauliflower_florets_medium',
+        'cauliflower_florets_small',
+        'cauliflower_whole_large',
+        'cauliflower_whole_medium',
+        'cauliflower_whole_small',
+        'celeriac_cut_into_batons',
+        'celeriac_diced',
+        'celeriac_sliced',
+        'celery_pieces',
+        'celery_sliced',
+        'cep',
+        'chanterelle',
+        'char',
         'cheese_souffle',
+        'cheesecake_one_large',
+        'cheesecake_several_small',
+        'chick_peas',
         'chicken_thighs',
+        'chicken_tikka_masala_with_rice',
         'chicken_whole',
+        'chinese_cabbage_cut',
         'chocolate_hazlenut_cake_one_large',
         'chocolate_hazlenut_cake_several_small',
+        'chongming_rapid_steam_cooking',
+        'chongming_steam_cooking',
         'choux_buns',
+        'christmas_pudding_cooking',
+        'christmas_pudding_heating',
+        'coalfish_fillet_2_cm',
+        'coalfish_fillet_3_cm',
+        'coalfish_piece',
+        'cockles',
+        'codfish_fillet',
+        'codfish_piece',
+        'common_beans',
+        'common_sole_fillet_1_cm',
+        'common_sole_fillet_2_cm',
         'conventional_heat',
+        'cook_bacon',
+        'corn_on_the_cob',
+        'courgette_diced',
+        'courgette_sliced',
+        'cranberries',
+        'crevettes',
         'custom_program_1',
         'custom_program_10',
         'custom_program_11',
@@ -7426,83 +9823,302 @@
         'custom_program_8',
         'custom_program_9',
         'dark_mixed_grain_bread',
+        'decrystallise_honey',
         'defrost',
         'defrost_meat',
         'defrost_vegetables',
+        'defrosting_with_microwave',
+        'defrosting_with_steam',
         'descale',
+        'dissolve_gelatine',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
         'drying',
         'duck',
+        'dutch_hash',
         'eco_fan_heat',
+        'eco_steam_cooking',
         'economy_grill',
+        'eggplant_diced',
+        'eggplant_sliced',
+        'endive_halved',
+        'endive_quartered',
+        'endive_strips',
         'evaporate_water',
         'fan_grill',
         'fan_plus',
+        'fennel_halved',
+        'fennel_quartered',
+        'fennel_strips',
         'flat_bread',
         'fruit_flan_puff_pastry',
         'fruit_flan_short_crust_pastry',
         'fruit_streusel_cake',
         'full_grill',
+        'german_turnip_cut_into_batons',
+        'german_turnip_diced',
+        'german_turnip_sliced',
+        'gilt_head_bream_fillet',
+        'gilt_head_bream_whole',
         'ginger_loaf',
+        'gnocchi_fresh',
+        'goose_barnacles',
         'goose_stuffed',
         'goose_unstuffed',
+        'gooseberries',
+        'goulash_soup',
+        'green_asparagus_medium',
+        'green_asparagus_thick',
+        'green_asparagus_thin',
+        'green_beans_cut',
+        'green_beans_whole',
+        'green_cabbage_cut',
+        'green_spelt_cracked',
+        'green_spelt_whole',
+        'green_split_peas',
+        'greenage_plums',
         'grill',
+        'halibut_fillet_2_cm',
+        'halibut_fillet_3_cm',
         'ham_roast',
         'heat_crockery',
         'heating_bakes_gratins',
+        'heating_damp_flannels',
         'heating_vegetables',
+        'hens_eggs_size_l_hard',
+        'hens_eggs_size_l_medium',
+        'hens_eggs_size_l_soft',
+        'hens_eggs_size_m_hard',
+        'hens_eggs_size_m_medium',
+        'hens_eggs_size_m_soft',
+        'hens_eggs_size_s_hard',
+        'hens_eggs_size_s_medium',
+        'hens_eggs_size_s_soft',
+        'hens_eggs_size_xl_hard',
+        'hens_eggs_size_xl_medium',
+        'hens_eggs_size_xl_soft',
+        'huanghuanian_rapid_steam_cooking',
+        'huanghuanian_steam_cooking',
+        'hydroclean',
         'intensive_bake',
+        'iridescent_shark_fillet',
+        'jasmine_rice_rapid_steam_cooking',
+        'jasmine_rice_steam_cooking',
+        'jerusalem_artichoke_diced',
+        'jerusalem_artichoke_sliced',
+        'kale_cut',
+        'kasseler_piece',
+        'kasseler_slice',
         'keeping_warm',
+        'king_prawns',
+        'knuckle_of_pork_cured',
+        'knuckle_of_pork_fresh',
+        'large_shrimps',
+        'leek_pieces',
+        'leek_rings',
         'leg_of_lamb',
         'lemon_meringue_pie',
         'linzer_augen_1_tray',
         'linzer_augen_2_trays',
+        'long_grain_rice_general_rapid_steam_cooking',
+        'long_grain_rice_general_steam_cooking',
         'low_temperature_cooking',
         'madeira_cake',
+        'make_yoghurt',
+        'mangel_cut',
         'marble_cake',
+        'meat_for_soup_back_or_top_rib',
+        'meat_for_soup_brisket',
+        'meat_for_soup_leg_steak',
         'meat_loaf',
+        'meat_with_rice',
+        'melt_chocolate',
+        'menu_cooking',
         'microwave',
         'microwave_auto_roast',
         'microwave_fan_grill',
         'microwave_fan_plus',
         'microwave_grill',
+        'millet',
+        'mirabelles',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
         'moisture_plus_fan_plus',
         'moisture_plus_intensive_bake',
         'multigrain_rolls',
+        'mushrooms_diced',
+        'mushrooms_halved',
+        'mushrooms_quartered',
+        'mushrooms_sliced',
+        'mushrooms_whole',
+        'mussels',
+        'mussels_in_sauce',
+        'nectarines_peaches_halved_skinning',
+        'nectarines_peaches_halved_steam_cooking',
+        'nectarines_peaches_quartered',
+        'nectarines_peaches_wedges',
+        'nile_perch_fillet_2_cm',
+        'nile_perch_fillet_3_cm',
         'no_program',
+        'oats_cracked',
+        'oats_whole',
         'osso_buco',
+        'oyster_mushroom_diced',
+        'oyster_mushroom_strips',
+        'oyster_mushroom_whole',
+        'parboiled_rice_rapid_steam_cooking',
+        'parboiled_rice_steam_cooking',
+        'parisian_carrots_large',
+        'parisian_carrots_medium',
+        'parisian_carrots_small',
+        'parsley_root_cut_into_batons',
+        'parsley_root_diced',
+        'parsley_root_sliced',
+        'parsnip_cut_into_batons',
+        'parsnip_diced',
+        'parsnip_sliced',
+        'pears_halved',
+        'pears_quartered',
+        'pears_to_cook_large_halved',
+        'pears_to_cook_large_quartered',
+        'pears_to_cook_large_whole',
+        'pears_to_cook_medium_halved',
+        'pears_to_cook_medium_quartered',
+        'pears_to_cook_medium_whole',
+        'pears_to_cook_small_halved',
+        'pears_to_cook_small_quartered',
+        'pears_to_cook_small_whole',
+        'pears_wedges',
+        'peas',
+        'pepper_diced',
+        'pepper_halved',
+        'pepper_quartered',
+        'pepper_strips',
+        'perch_fillet_2_cm',
+        'perch_fillet_3_cm',
+        'perch_whole',
+        'pike_fillet',
+        'pike_piece',
         'pikeperch_fillet_with_vegetables',
+        'pinto_beans',
         'pizza_oil_cheese_dough_baking_tray',
         'pizza_oil_cheese_dough_round_baking_tine',
         'pizza_yeast_dough_baking_tray',
         'pizza_yeast_dough_round_baking_tine',
+        'plaice_fillet_1_cm',
+        'plaice_fillet_2_cm',
+        'plaice_whole_2_cm',
+        'plaice_whole_3_cm',
+        'plaice_whole_4_cm',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'plums_halved',
+        'plums_whole',
+        'pointed_cabbage_cut',
+        'polenta',
+        'polenta_swiss_style_coarse_polenta',
+        'polenta_swiss_style_fine_polenta',
+        'polenta_swiss_style_medium_polenta',
         'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
         'pork_smoked_ribs_low_temperature_cooking',
         'pork_smoked_ribs_roast',
+        'pork_tenderloin_medaillons_3_cm',
+        'pork_tenderloin_medaillons_4_cm',
+        'pork_tenderloin_medaillons_5_cm',
         'pork_with_crackling',
         'potato_cheese_gratin',
+        'potato_dumplings_half_half_boil_in_bag',
+        'potato_dumplings_half_half_deep_frozen',
+        'potato_dumplings_raw_boil_in_bag',
+        'potato_dumplings_raw_deep_frozen',
         'potato_gratin',
+        'potatoes_floury_diced',
+        'potatoes_floury_halved',
+        'potatoes_floury_quartered',
+        'potatoes_floury_whole_large',
+        'potatoes_floury_whole_medium',
+        'potatoes_floury_whole_small',
+        'potatoes_in_the_skin_floury_large',
+        'potatoes_in_the_skin_floury_medium',
+        'potatoes_in_the_skin_floury_small',
+        'potatoes_in_the_skin_mainly_waxy_large',
+        'potatoes_in_the_skin_mainly_waxy_medium',
+        'potatoes_in_the_skin_mainly_waxy_small',
+        'potatoes_in_the_skin_waxy_large_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_large_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_medium_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_rapid_steam_cooking',
+        'potatoes_in_the_skin_waxy_small_steam_cooking',
+        'potatoes_mainly_waxy_diced',
+        'potatoes_mainly_waxy_halved',
+        'potatoes_mainly_waxy_large',
+        'potatoes_mainly_waxy_medium',
+        'potatoes_mainly_waxy_quartered',
+        'potatoes_mainly_waxy_small',
+        'potatoes_waxy_diced',
+        'potatoes_waxy_halved',
+        'potatoes_waxy_quartered',
+        'potatoes_waxy_whole_large',
+        'potatoes_waxy_whole_medium',
+        'potatoes_waxy_whole_small',
+        'poularde_breast',
+        'poularde_whole',
+        'prawns',
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
         'prove_dough',
+        'pumpkin_diced',
+        'pumpkin_risotto',
+        'pumpkin_soup',
         'pyrolytic',
         'quiche_lorraine',
         'quick_microwave',
+        'quinces_diced',
+        'quinoa',
         'rabbit',
         'rack_of_lamb_with_vegetables',
+        'rapid_steam_cooking',
+        'ravioli_fresh',
+        'razor_clams_large',
+        'razor_clams_medium',
+        'razor_clams_small',
+        'red_beans',
+        'red_cabbage_cut',
+        'red_lentils',
+        'red_snapper_fillet_2_cm',
+        'red_snapper_fillet_3_cm',
+        'redfish_fillet_2_cm',
+        'redfish_fillet_3_cm',
+        'redfish_piece',
+        'reheating_with_microwave',
+        'reheating_with_steam',
+        'rhubarb_chunks',
+        'rice_pudding_rapid_steam_cooking',
+        'rice_pudding_steam_cooking',
+        'rinse',
+        'risotto',
         'roast_beef_low_temperature_cooking',
         'roast_beef_roast',
+        'romanesco_florets_large',
+        'romanesco_florets_medium',
+        'romanesco_florets_small',
+        'romanesco_whole_large',
+        'romanesco_whole_medium',
+        'romanesco_whole_small',
+        'round_grain_rice_general_rapid_steam_cooking',
+        'round_grain_rice_general_steam_cooking',
+        'runner_beans_pieces',
+        'runner_beans_sliced',
+        'runner_beans_whole',
+        'rye_cracked',
         'rye_rolls',
+        'rye_whole',
         'sachertorte',
         'saddle_of_lamb_low_temperature_cooking',
         'saddle_of_lamb_roast',
@@ -7511,40 +10127,122 @@
         'saddle_of_veal_roast',
         'saddle_of_venison',
         'salmon_fillet',
+        'salmon_fillet_2_cm',
+        'salmon_fillet_3_cm',
+        'salmon_piece',
+        'salmon_steak_2_cm',
+        'salmon_steak_3_cm',
         'salmon_trout',
+        'saucisson',
         'savoury_flan_puff_pastry',
         'savoury_flan_short_crust_pastry',
+        'savoy_cabbage_cut',
+        'scallops',
+        'schupfnudeln_potato_noodels',
+        'sea_devil_fillet_3_cm',
+        'sea_devil_fillet_4_cm',
         'seeded_loaf',
         'shabbat_program',
+        'sheyang_rapid_steam_cooking',
+        'sheyang_steam_cooking',
+        'silverside_10_cm',
+        'silverside_5_cm',
+        'silverside_7_5_cm',
+        'simiao_rapid_steam_cooking',
+        'simiao_steam_cooking',
+        'small_shrimps',
+        'snow_pea',
+        'soak',
+        'soup_hen',
+        'sour_cherries',
+        'sous_vide',
+        'spaetzle_fresh',
         'spelt_bread',
+        'spelt_cracked',
+        'spelt_whole',
+        'spinach',
         'sponge_base',
         'springform_tin_15cm',
         'springform_tin_20cm',
         'springform_tin_25cm',
         'steam_bake',
         'steam_cooking',
+        'sterilize_crockery',
         'stollen',
+        'stuffed_cabbage',
+        'sweat_onions',
+        'swede_cut_into_batons',
+        'swede_diced',
+        'sweet_cheese_dumplings',
+        'sweet_cherries',
         'swiss_farmhouse_bread',
         'swiss_roll',
+        'swiss_toffee_cream_100_ml',
+        'swiss_toffee_cream_150_ml',
+        'tagliatelli_fresh',
         'tart_flambe',
+        'teltow_turnip_diced',
+        'teltow_turnip_sliced',
         'tiger_bread',
+        'tilapia_fillet_1_cm',
+        'tilapia_fillet_2_cm',
+        'toffee_date_dessert_one_large',
+        'toffee_date_dessert_several_small',
         'top_heat',
+        'tortellini_fresh',
+        'treacle_sponge_pudding_one_large',
+        'treacle_sponge_pudding_several_small',
         'trout',
+        'tuna_fillet_2_cm',
+        'tuna_fillet_3_cm',
+        'tuna_steak',
+        'turbot_fillet_2_cm',
+        'turbot_fillet_3_cm',
+        'turkey_breast',
         'turkey_drumsticks',
         'turkey_whole',
+        'uonumma_koshihikari_rapid_steam_cooking',
+        'uonumma_koshihikari_steam_cooking',
         'vanilla_biscuits_1_tray',
         'vanilla_biscuits_2_trays',
         'veal_fillet_low_temperature_cooking',
+        'veal_fillet_medaillons_1_cm',
+        'veal_fillet_medaillons_2_cm',
+        'veal_fillet_medaillons_3_cm',
         'veal_fillet_roast',
+        'veal_fillet_whole',
         'veal_knuckle',
+        'veal_sausages',
+        'venus_clams',
         'viennese_apple_strudel',
+        'viennese_silverside',
         'walnut_bread',
         'walnut_muffins',
+        'wheat_cracked',
+        'wheat_whole',
+        'white_asparagus_medium',
+        'white_asparagus_thick',
+        'white_asparagus_thin',
+        'white_beans',
         'white_bread_baking_tin',
         'white_bread_on_tray',
         'white_rolls',
+        'whole_ham_reheating',
+        'whole_ham_steam_cooking',
+        'wholegrain_rice',
+        'wild_rice',
+        'wuchang_rapid_steam_cooking',
+        'wuchang_steam_cooking',
+        'yam_halved',
+        'yam_quartered',
+        'yam_strips',
+        'yeast_dumplings_fresh',
+        'yellow_beans_cut',
+        'yellow_beans_whole',
+        'yellow_split_peas',
         'yom_tov',
         'yorkshire_pudding',
+        'zander_fillet',
       ]),
     }),
     'context': <ANY>,
@@ -7557,11 +10255,13 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -7608,6 +10308,7 @@
       'device_class': 'enum',
       'friendly_name': 'Oven Program phase',
       'options': list([
+        'cooling_down',
         'energy_save',
         'heating_up',
         'not_running',
@@ -7628,8 +10329,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -7691,8 +10393,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7745,8 +10448,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7795,8 +10499,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7852,8 +10557,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7909,8 +10615,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -7966,8 +10673,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8016,8 +10724,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.refrigerator-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8110,8 +10819,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.refrigerator_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -8167,8 +10877,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8217,8 +10928,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8267,8 +10979,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8317,8 +11030,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8367,8 +11081,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8461,8 +11176,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8515,8 +11231,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -8572,8 +11289,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8622,8 +11340,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8672,8 +11391,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8701,6 +11421,7 @@
         'game_pieces',
         'minimum_iron',
         'no_program',
+        'normal',
         'outdoor_garments',
         'outerwear',
         'pillows',
@@ -8718,6 +11439,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',
@@ -8784,6 +11506,7 @@
         'game_pieces',
         'minimum_iron',
         'no_program',
+        'normal',
         'outdoor_garments',
         'outerwear',
         'pillows',
@@ -8801,6 +11524,7 @@
         'starch',
         'steam_care',
         'stuffed_toys',
+        'table_linen',
         'trainers',
         'trainers_refresh',
         'warm_air',
@@ -8817,8 +11541,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8914,8 +11639,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -8977,8 +11703,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9031,8 +11758,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_spin_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9081,8 +11809,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9131,8 +11860,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9188,8 +11918,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -9245,8 +11976,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9295,8 +12027,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9345,8 +12078,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -9402,8 +12136,9 @@
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_forecast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9450,10 +12185,170 @@
     'state': '0.0',
   })
 # ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.degreasing_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Degreasing cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Degreasing cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.degreasing_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Degreasing cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.degreasing_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.descaling_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.descaling_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Descaling cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Descaling cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.descaling_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Descaling cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.descaling_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.milk_pipework_cleaning_cycles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Milk pipework cleaning cycles',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Milk pipework cleaning cycles',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.milk_pipework_cleaning_cycles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Milk pipework cleaning cycles',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.milk_pipework_cleaning_cycles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9502,8 +12397,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9552,8 +12448,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -9646,8 +12543,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9697,8 +12595,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_elapsed_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9751,8 +12650,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_finish-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9801,8 +12701,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_program-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -9866,8 +12767,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_program_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -9929,8 +12831,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_remaining_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -9983,8 +12886,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10033,8 +12937,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10083,8 +12988,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10133,8 +13039,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10183,8 +13090,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -10233,8 +13141,9 @@
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

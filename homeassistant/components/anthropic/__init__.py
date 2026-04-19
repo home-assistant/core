@@ -2,66 +2,45 @@
 
 from __future__ import annotations
 
-import anthropic
+from anthropic.resources.messages.messages import DEPRECATED_MODELS
 
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CHAT_MODEL,
-    DATA_REPAIR_DEFER_RELOAD,
-    DEFAULT_CONVERSATION_NAME,
-    DEPRECATED_MODELS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
+from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Anthropic."""
-    hass.data.setdefault(DOMAIN, {}).setdefault(DATA_REPAIR_DEFER_RELOAD, set())
     await async_migrate_integration(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Set up Anthropic from a config entry."""
-    client = anthropic.AsyncAnthropic(
-        api_key=entry.data[CONF_API_KEY], http_client=get_async_client(hass)
-    )
-    try:
-        await client.models.list(timeout=10.0)
-    except anthropic.AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
-        return False
-    except anthropic.AnthropicError as err:
-        raise ConfigEntryNotReady(err) from err
-
-    entry.runtime_data = client
+    coordinator = AnthropicCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    LOGGER.debug("Available models: %s", coordinator.data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     for subentry in entry.subentries.values():
-        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model.startswith(
-            tuple(DEPRECATED_MODELS)
-        ):
+        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model in DEPRECATED_MODELS:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -77,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Unload Anthropic."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -86,11 +65,6 @@ async def async_update_options(
     hass: HomeAssistant, entry: AnthropicConfigEntry
 ) -> None:
     """Update options."""
-    defer_reload_entries: set[str] = hass.data.setdefault(DOMAIN, {}).setdefault(
-        DATA_REPAIR_DEFER_RELOAD, set()
-    )
-    if entry.entry_id in defer_reload_entries:
-        return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -105,7 +79,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    api_keys_entries: dict[str, tuple[AnthropicConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
@@ -255,6 +229,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) 
                     disabled_by=er.RegistryEntryDisabler.DEVICE,
                 )
         hass.config_entries.async_update_entry(entry, minor_version=3)
+
+    if entry.version == 2 and entry.minor_version == 3:
+        # Remove Temperature parameter
+        CONF_TEMPERATURE = "temperature"
+
+        for subentry in entry.subentries.values():
+            data = subentry.data.copy()
+            if CONF_TEMPERATURE not in data:
+                continue
+            data.pop(CONF_TEMPERATURE, None)
+            hass.config_entries.async_update_subentry(entry, subentry, data=data)
+
+        hass.config_entries.async_update_entry(entry, minor_version=4)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

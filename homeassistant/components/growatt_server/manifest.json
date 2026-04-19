@@ -7,5 +7,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["growattServer"],
+  "quality_scale": "silver",
   "requirements": ["growattServer==1.9.0"]
 }

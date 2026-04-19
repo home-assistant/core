@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
-from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -19,10 +18,9 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize("install", ["minimal"])
+@pytest.mark.usefixtures("evohome")
 async def test_setup_platform(
     hass: HomeAssistant,
-    config: dict[str, str],
-    evohome: EvohomeClient,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entities and their states after setup of evohome."""

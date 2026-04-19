@@ -431,6 +431,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
         for source_id, source_stats in existing_stats.items():
             _LOGGER.debug("Found %d statistics for %s", len(source_stats), source_id)
             if not source_stats:
+                need_migration_source_ids.remove(source_id)
                 continue
             target_id = migration_map[source_id]
 

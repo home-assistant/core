@@ -39,7 +39,7 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Panasonic Blu-ray platform."""
+    """Set up the Panasonic Blu-ray media player platform."""
     conf = discovery_info or config
 
     # Register configured device with Home Assistant.
@@ -59,7 +59,7 @@ class PanasonicBluRay(MediaPlayerEntity):
     )
 
     def __init__(self, ip, name):
-        """Initialize the Panasonic Blue-ray device."""
+        """Initialize the Panasonic Blu-ray device."""
         self._device = PanasonicBD(ip)
         self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
