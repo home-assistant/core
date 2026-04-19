@@ -2296,74 +2296,71 @@ async def test_reload(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with (
-        patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit,
-        patch(
-            "homeassistant.components.network.async_get_source_ip",
-            return_value="1.2.3.4",
-        ),
-    ):
-        mock_homekit.return_value = homekit = Mock()
-        type(homekit).async_start = AsyncMock()
-        assert await async_setup_component(
-            hass, "homekit", {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
-        )
-        await hass.async_block_till_done()
-
-    mock_homekit.assert_any_call(
-        hass,
-        "reloadable",
-        12345,
-        DEFAULT_LISTEN,
-        ANY,
-        False,
-        {},
-        HOMEKIT_MODE_BRIDGE,
-        ["1.2.3.4", "10.10.10.10"],
-        entry.entry_id,
-        entry.title,
-        devices=[],
-    )
-    yaml_path = get_fixture_path("configuration.yaml", "homekit")
-    with (
-        patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
-        patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit2,
-        patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
-        patch(
-            f"{PATH_HOMEKIT}.get_accessory",
-        ),
         patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True),
         patch(
-            "pyhap.accessory_driver.AccessoryDriver.async_start",
-        ),
-        patch(
             "homeassistant.components.network.async_get_source_ip",
             return_value="1.2.3.4",
         ),
     ):
-        mock_homekit2.return_value = homekit = Mock()
-        type(homekit).async_start = AsyncMock()
-        await hass.services.async_call(
-            "homekit",
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+        with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
+            mock_homekit.return_value = homekit = Mock()
+            type(homekit).async_start = AsyncMock()
+            assert await async_setup_component(
+                hass,
+                "homekit",
+                {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}},
+            )
+            await hass.async_block_till_done()
 
-    mock_homekit2.assert_any_call(
-        hass,
-        "reloadable",
-        45678,
-        DEFAULT_LISTEN,
-        ANY,
-        False,
-        {},
-        HOMEKIT_MODE_BRIDGE,
-        ["1.2.3.4", "10.10.10.10"],
-        entry.entry_id,
-        entry.title,
-        devices=[],
-    )
+        mock_homekit.assert_any_call(
+            hass,
+            "reloadable",
+            12345,
+            DEFAULT_LISTEN,
+            ANY,
+            False,
+            {},
+            HOMEKIT_MODE_BRIDGE,
+            ["1.2.3.4", "10.10.10.10"],
+            entry.entry_id,
+            entry.title,
+            devices=[],
+        )
+        yaml_path = get_fixture_path("configuration.yaml", "homekit")
+        with (
+            patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
+            patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit2,
+            patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
+            patch(f"{PATH_HOMEKIT}.get_accessory"),
+            patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        ):
+            mock_homekit2.return_value = homekit = Mock()
+            type(homekit).async_start = AsyncMock()
+            await hass.services.async_call(
+                "homekit",
+                SERVICE_RELOAD,
+                {},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
+
+        mock_homekit2.assert_any_call(
+            hass,
+            "reloadable",
+            45678,
+            DEFAULT_LISTEN,
+            ANY,
+            False,
+            {},
+            HOMEKIT_MODE_BRIDGE,
+            ["1.2.3.4", "10.10.10.10"],
+            entry.entry_id,
+            entry.title,
+            devices=[],
+        )
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
