@@ -76,6 +76,9 @@
     },
     "failed_to_set_state": {
       "message": "Failed to set ventilation state: {error}"
+    },
+    "rate_limit_exceeded": {
+      "message": "The Duco device has reached its daily write limit. Try again tomorrow."
     }
   }
 }
