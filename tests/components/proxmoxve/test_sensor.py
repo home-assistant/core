@@ -109,18 +109,6 @@ async def test_sensors_missing_data(
         }
         for s in storage_data
     ]
-    # Add a zero-capacity storage pool
-    storage_incomplete.append(
-        {
-            "storage": "zero_pool",
-            "total": 0,
-            "used": 0,
-            "avail": 0,
-            "active": 1,
-            "enabled": 1,
-            "type": "nfs",
-        }
-    )
     mock_proxmox_client._node_mock.storage.get.return_value = storage_incomplete
 
     # Malformed backup (missing starttime/endtime but entry exists)
@@ -207,18 +195,18 @@ async def test_sensors_missing_data(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    # Zero pool storage (Zero pool used storage) - SHOULD exist, reports 0
+    # Photo storage (offline NFS, used=0) - SHOULD exist, reports 0
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "1234_pve1_zero_pool_storage_used"
+        "sensor", DOMAIN, "1234_pve1_photo_storage_used"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == 0.0
 
-    # Zero pool usage percentage - SHOULD exist, reports unknown (no used_fraction)
+    # Photo storage usage percentage - SHOULD exist, reports unknown (no used_fraction)
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "1234_pve1_zero_pool_storage_used_percentage"
+        "sensor", DOMAIN, "1234_pve1_photo_storage_used_percentage"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)

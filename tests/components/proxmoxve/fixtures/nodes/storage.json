@@ -22,5 +22,16 @@
     "active": 1,
     "content": "backup,images",
     "used": 1391442395136
+  },
+  {
+    "active": 0,
+    "avail": 0,
+    "enabled": 1,
+    "type": "nfs",
+    "content": "import",
+    "shared": 1,
+    "total": 0,
+    "storage": "photo",
+    "used": 0
   }
 ]
