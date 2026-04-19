@@ -76,7 +76,6 @@ class EvoFaultSensorBase(
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone | evo.Gateway
-    _evo_id_attr: str
 
     def __init__(
         self,
@@ -95,11 +94,10 @@ class EvoFaultSensorBase(
         return bool(self._evo_device.active_faults)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, str | int | tuple]:
         """Return diagnostic details for all current faults."""
         faults = tuple(_normalize_fault(f) for f in self._evo_device.active_faults)  # type: ignore[arg-type]
         return {
-            self._evo_id_attr: self._evo_device.id,
             "fault_count": len(faults),
             "faults": faults,
         }
@@ -111,7 +109,6 @@ class EvoGatewayFaultSensor(EvoFaultSensorBase):
     _attr_name = "Gateway faults"
 
     _evo_device: evo.Gateway
-    _evo_id_attr = "gateway_id"
 
 
 class EvoControllerFaultSensor(EvoFaultSensorBase):
@@ -120,7 +117,6 @@ class EvoControllerFaultSensor(EvoFaultSensorBase):
     _attr_name = "Controller faults"
 
     _evo_device: evo.ControlSystem
-    _evo_id_attr = "system_id"
 
 
 class EvoDhwFaultSensor(EvoFaultSensorBase):
@@ -129,14 +125,12 @@ class EvoDhwFaultSensor(EvoFaultSensorBase):
     _attr_name = "DHW faults"
 
     _evo_device: evo.HotWater
-    _evo_id_attr = "dhw_id"
 
 
 class EvoZoneFaultSensor(EvoFaultSensorBase):
     """Fault sensor for a zone."""
 
     _evo_device: evo.Zone
-    _evo_id_attr = "zone_id"
 
     def __init__(
         self,
