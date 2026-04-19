@@ -29,7 +29,6 @@
       'discovery_keys': dict({
       }),
       'domain': 'twentemilieu',
-      'entry_id': '01JWHZD0JS7ACCE0JA3ABCDEF1',
       'minor_version': 1,
       'options': dict({
       }),
@@ -38,9 +37,9 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': '1234AB 1',
-      'unique_id': '12345',
-      'version': 2,
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
     }),
   })
 # ---
