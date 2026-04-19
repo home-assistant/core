@@ -13,6 +13,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -40,6 +41,33 @@ async def test_assist_satellite_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the Assist satellite triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("assist_satellite.idle", {}, True, True),
+        ("assist_satellite.listening", {}, True, True),
+        ("assist_satellite.processing", {}, True, True),
+        ("assist_satellite.responding", {}, True, True),
+    ],
+)
+async def test_assist_satellite_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that assist_satellite triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")

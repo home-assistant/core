@@ -9,8 +9,8 @@ from uuid import uuid4
 from aiohasupervisor.models import Job, JobsInfo
 import pytest
 
-from homeassistant.components.hassio.const import ADDONS_COORDINATOR
-from homeassistant.components.hassio.coordinator import HassioDataUpdateCoordinator
+from homeassistant.components.hassio.const import MAIN_COORDINATOR
+from homeassistant.components.hassio.coordinator import HassioMainDataUpdateCoordinator
 from homeassistant.components.hassio.jobs import JobSubscription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -65,7 +65,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
     assert result
     jobs_info.assert_called_once()
 
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     assert len(data_coordinator.jobs.current_jobs) == 2
     assert data_coordinator.jobs.current_jobs[0].name == "test_job"
     assert data_coordinator.jobs.current_jobs[1].name == "test_inner_job"
@@ -81,7 +81,7 @@ async def test_disconnect_on_config_entry_reload(
     jobs_info.assert_called_once()
 
     jobs_info.reset_mock()
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     await hass.config_entries.async_reload(data_coordinator.entry_id)
     await hass.async_block_till_done()
     jobs_info.assert_called_once()
@@ -98,7 +98,7 @@ async def test_job_manager_ws_updates(
 
     jobs_info.reset_mock()
     client = await hass_ws_client(hass)
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     assert not data_coordinator.jobs.current_jobs
 
     # Make an example listener
@@ -302,7 +302,7 @@ async def test_job_manager_reload_on_supervisor_restart(
     assert result
     jobs_info.assert_called_once()
 
-    data_coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
     assert len(data_coordinator.jobs.current_jobs) == 1
     assert data_coordinator.jobs.current_jobs[0].name == "test_job"
 

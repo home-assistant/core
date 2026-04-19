@@ -204,6 +204,7 @@
     'online': True,
     'product_id': 'gyitctrjj1kefxp2',
     'product_name': 'Multifunction alarm',
+    'quirk': None,
     'set_up': True,
     'status': dict({
       'alarm_delay_time': 20,
@@ -393,6 +394,7 @@
     'online': True,
     'product_id': '4iqe2hsfyd86kwwc',
     'product_name': 'Gas sensor',
+    'quirk': None,
     'set_up': True,
     'status': dict({
       'alarm_time': 300,
@@ -543,6 +545,7 @@
     'online': True,
     'product_id': '9htyiowaf5rtdhrv',
     'product_name': '1-433',
+    'quirk': None,
     'set_up': True,
     'status': dict({
       'countdown_1': 0,
@@ -684,6 +687,7 @@
         'online': True,
         'product_id': '4iqe2hsfyd86kwwc',
         'product_name': 'Gas sensor',
+        'quirk': None,
         'set_up': True,
         'status': dict({
           'alarm_time': 300,
