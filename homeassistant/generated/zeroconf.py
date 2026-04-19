@@ -616,6 +616,14 @@ ZEROCONF = {
             "name": "loqed*",
         },
         {
+            "domain": "lunatone",
+            "properties": {
+                "manufacturer": "lunatone industrielle elektronik gmbh",
+                "type": "dali-2-*",
+                "uid": "*",
+            },
+        },
+        {
             "domain": "nam",
             "name": "nam-*",
         },
@@ -693,6 +701,11 @@ ZEROCONF = {
     "_ipps._tcp.local.": [
         {
             "domain": "ipp",
+        },
+    ],
+    "_kiosker._tcp.local.": [
+        {
+            "domain": "kiosker",
         },
     ],
     "_kizbox._tcp.local.": [

@@ -1,11 +1,10 @@
 """Define a base ReCollect Waste entity."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN
-from .coordinator import ReCollectWasteDataUpdateCoordinator
+from .coordinator import RecollectWasteConfigEntry, ReCollectWasteDataUpdateCoordinator
 
 
 class ReCollectWasteEntity(CoordinatorEntity[ReCollectWasteDataUpdateCoordinator]):
@@ -16,7 +15,7 @@ class ReCollectWasteEntity(CoordinatorEntity[ReCollectWasteDataUpdateCoordinator
     def __init__(
         self,
         coordinator: ReCollectWasteDataUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: RecollectWasteConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

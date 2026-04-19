@@ -23,6 +23,7 @@ from homeassistant.components.shelly.const import (
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
     UPTIME_DEVIATION,
+    WALL_DISPLAY_RELEASE_URL,
 )
 from homeassistant.components.shelly.utils import (
     ShellyReceiver,
@@ -265,7 +266,7 @@ async def test_get_rpc_input_triggers(
         (1, MODEL_MOTION, False, None),
         (1, MODEL_1, False, GEN1_RELEASE_URL),
         (1, MODEL_1, True, None),
-        (2, MODEL_WALL_DISPLAY, False, None),
+        (2, MODEL_WALL_DISPLAY, False, WALL_DISPLAY_RELEASE_URL),
         (2, MODEL_PLUS_2PM_V2, False, GEN2_RELEASE_URL),
         (2, MODEL_PLUS_2PM_V2, True, GEN2_BETA_RELEASE_URL),
     ],

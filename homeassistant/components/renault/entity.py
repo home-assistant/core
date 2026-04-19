@@ -3,28 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 
 from renault_api.kamereon.models import KamereonVehicleDataAttributes
 
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import RenaultDataUpdateCoordinator
 from .renault_vehicle import RenaultVehicleProxy
 
 
-@dataclass(frozen=True)
-class RenaultDataRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RenaultDataEntityDescription(EntityDescription):
+    """Class describing Renault data entities."""
 
     coordinator: str
-
-
-@dataclass(frozen=True)
-class RenaultDataEntityDescription(EntityDescription, RenaultDataRequiredKeysMixin):
-    """Class describing Renault data entities."""
 
 
 class RenaultEntity(Entity):
@@ -58,10 +51,6 @@ class RenaultDataEntity[T: KamereonVehicleDataAttributes](
         """Initialise entity."""
         super().__init__(vehicle.coordinators[description.coordinator])
         RenaultEntity.__init__(self, vehicle, description)
-
-    def _get_data_attr(self, key: str) -> StateType:
-        """Return the attribute value from the coordinator data."""
-        return cast(StateType, getattr(self.coordinator.data, key))
 
     @property
     def assumed_state(self) -> bool:

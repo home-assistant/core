@@ -13,13 +13,12 @@ from switchbot_api import (
 )
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
-from .const import AFTER_COMMAND_REFRESH, DOMAIN, AirPurifierMode
+from . import SwitchbotCloudConfigEntry
+from .const import AFTER_COMMAND_REFRESH, AirPurifierMode
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,11 +27,11 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     for device, coordinator in data.devices.fans:
         if device.device_type.startswith("Air Purifier"):
             async_add_entities(
