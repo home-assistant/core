@@ -455,6 +455,10 @@ filterwarnings = [
   "error::sqlalchemy.exc.SAWarning",
   "error:usefixtures\\(\\) in .* without arguments has no effect:UserWarning", # pytest
 
+  # -- SyntaxWarning emitted by the rich library on Python 3.14+
+  # https://github.com/Textualize/rich/ - `return` inside a `finally` block
+  "ignore:'return' in a 'finally' block:SyntaxWarning",
+
   # -- HomeAssistant - aiohttp
   # Overwrite web.Application to pass a custom default argument to _make_request
   "ignore:Inheritance class HomeAssistantApplication from web.Application is discouraged:DeprecationWarning",

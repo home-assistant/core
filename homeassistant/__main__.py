@@ -8,9 +8,18 @@ import faulthandler
 import os
 import sys
 import threading
+import warnings
 
-from .backup_restore import restore_backup
-from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
+# Silence SyntaxWarning from the rich library's ``segment.py`` on Python 3.14+,
+# which flags a ``return`` inside a ``finally`` block in the upstream source.
+warnings.filterwarnings(
+    "ignore",
+    message="'return' in a 'finally' block",
+    category=SyntaxWarning,
+)
+
+from .backup_restore import restore_backup  # noqa: E402
+from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__  # noqa: E402
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
