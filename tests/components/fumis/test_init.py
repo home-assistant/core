@@ -35,19 +35,21 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "expected_log"),
     [
-        FumisAuthenticationError,
-        FumisConnectionError,
-        FumisStoveOfflineError,
-        FumisError,
+        (FumisAuthenticationError, "Authentication with the Fumis online service"),
+        (FumisConnectionError, "communicating with the Fumis online service"),
+        (FumisStoveOfflineError, "not connected to the internet"),
+        (FumisError, "communicating with the Fumis online service"),
     ],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_fumis: MagicMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
     side_effect: type[Exception],
+    expected_log: str,
 ) -> None:
     """Test the config entry not ready."""
     mock_fumis.update_info.side_effect = side_effect
@@ -57,3 +59,4 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert expected_log in caplog.text

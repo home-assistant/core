@@ -21,6 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
+from homeassistant.components.fumis.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -123,26 +124,30 @@ async def test_turn_off(
 
 
 @pytest.mark.parametrize(
-    "side_effect",
+    ("side_effect", "expected_translation_key"),
     [
-        FumisAuthenticationError,
-        FumisStoveOfflineError,
-        FumisConnectionError,
-        FumisError,
+        (FumisAuthenticationError, "authentication_error"),
+        (FumisStoveOfflineError, "stove_offline"),
+        (FumisConnectionError, "communication_error"),
+        (FumisError, "unknown_error"),
     ],
 )
 async def test_climate_error_handling(
     hass: HomeAssistant,
     mock_fumis: MagicMock,
     side_effect: type[Exception],
+    expected_translation_key: str,
 ) -> None:
     """Test error handling for climate actions."""
     mock_fumis.turn_on.side_effect = side_effect
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: "climate.clou_duo"},
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == expected_translation_key
