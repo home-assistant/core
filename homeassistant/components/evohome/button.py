@@ -66,8 +66,6 @@ class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEnti
 class EvoResetSystemButton(EvoResetButtonBase):
     """Button entity for system reset."""
 
-    _attr_translation_key = "reset_system_mode"
-
     _evo_device: evo.ControlSystem
 
     def __init__(
@@ -85,8 +83,6 @@ class EvoResetSystemButton(EvoResetButtonBase):
 class EvoResetDhwButton(EvoResetButtonBase):
     """Button entity for DHW override reset."""
 
-    _attr_translation_key = "clear_dhw_override"
-
     _evo_device: evo.HotWater
 
     def __init__(
@@ -103,8 +99,6 @@ class EvoResetDhwButton(EvoResetButtonBase):
 
 class EvoResetZoneButton(EvoResetButtonBase):
     """Button entity for zone override reset."""
-
-    _attr_translation_key = "clear_zone_override"
 
     _evo_device: evo.Zone
 
