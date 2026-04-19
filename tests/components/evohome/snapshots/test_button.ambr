@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Bathroom Dn',
-      'zone_id': '3432579',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_bathroom_dn',
@@ -17,7 +16,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Dead Zone',
-      'zone_id': '3432521',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_dead_zone',
@@ -30,7 +28,6 @@
 # name: test_setup_platform[botched][button.reset_domestic_hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dhw_id': '3933910',
       'friendly_name': 'Reset Domestic Hot Water',
     }),
     'context': <ANY>,
@@ -45,7 +42,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Front Room',
-      'zone_id': '3432577',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_front_room',
@@ -59,7 +55,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Kids Room',
-      'zone_id': '3449703',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_kids_room',
@@ -73,7 +68,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Kitchen',
-      'zone_id': '3432578',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_kitchen',
@@ -87,7 +81,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Main Bedroom',
-      'zone_id': '3432580',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_main_bedroom',
@@ -101,7 +94,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Main Room',
-      'zone_id': '3432576',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_main_room',
@@ -115,7 +107,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset My Home',
-      'system_id': '3432522',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
@@ -129,7 +120,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Bathroom Dn',
-      'zone_id': '3432579',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_bathroom_dn',
@@ -143,7 +133,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Dead Zone',
-      'zone_id': '3432521',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_dead_zone',
@@ -156,7 +145,6 @@
 # name: test_setup_platform[default][button.reset_domestic_hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'dhw_id': '3933910',
       'friendly_name': 'Reset Domestic Hot Water',
     }),
     'context': <ANY>,
@@ -171,7 +159,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Front Room',
-      'zone_id': '3432577',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_front_room',
@@ -185,7 +172,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Kids Room',
-      'zone_id': '3449703',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_kids_room',
@@ -199,7 +185,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Kitchen',
-      'zone_id': '3432578',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_kitchen',
@@ -213,7 +198,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Main Bedroom',
-      'zone_id': '3432580',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_main_bedroom',
@@ -227,7 +211,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Main Room',
-      'zone_id': '3432576',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_main_room',
@@ -241,7 +224,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset My Home',
-      'system_id': '3432522',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
@@ -255,7 +237,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Spare Room',
-      'zone_id': '3450733',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_spare_room',
@@ -269,7 +250,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset My Home',
-      'system_id': '416856',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
@@ -283,7 +263,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset THERMOSTAT',
-      'zone_id': '416856',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_thermostat',
@@ -297,7 +276,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset My Home',
-      'system_id': '8557535',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
@@ -311,7 +289,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset THERMOSTAT',
-      'zone_id': '8557539',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_thermostat',
@@ -325,7 +302,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset THERMOSTAT',
-      'zone_id': '8557541',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_thermostat_2',
@@ -339,7 +315,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Thermostat',
-      'zone_id': '3454854',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_thermostat',
@@ -353,7 +328,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Thermostat 2',
-      'zone_id': '3454855',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_thermostat_2',
@@ -367,7 +341,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Vr**********',
-      'system_id': '3454856',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_vr',
@@ -381,7 +354,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Ba******',
-      'zone_id': '10090505',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_ba',
@@ -395,7 +367,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Ka*********',
-      'zone_id': '10090507',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_ka',
@@ -409,7 +380,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Ka*****',
-      'zone_id': '10090508',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_ka_2',
@@ -423,7 +393,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Kl********',
-      'system_id': '10090510',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_kl',
@@ -437,7 +406,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Sl********',
-      'zone_id': '10090506',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_sl',
@@ -451,7 +419,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Wo*******',
-      'zone_id': '10090509',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_wo',
@@ -465,7 +432,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Main Room',
-      'zone_id': '3432576',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_main_room',
@@ -479,7 +445,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset My Home',
-      'system_id': '3432522',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
@@ -493,7 +458,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Living room',
-      'system_id': '4187769',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_living_room',
@@ -507,7 +471,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Reset Thermostat',
-      'zone_id': '4187768',
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_thermostat',

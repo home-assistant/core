@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
 import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity
@@ -51,7 +48,6 @@ class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEnti
     _attr_entity_category = EntityCategory.CONFIG
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
-    _evo_id_attr: str
 
     def __init__(
         self,
@@ -66,11 +62,6 @@ class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEnti
         """Reset the Evohome entity to its base operating mode."""
         await self.coordinator.call_client_api(self._evo_device.reset())
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return the evohome-specific state attributes."""
-        return {self._evo_id_attr: self._evo_device.id}
-
 
 class EvoResetSystemButton(EvoResetButtonBase):
     """Button entity for system reset."""
@@ -78,7 +69,6 @@ class EvoResetSystemButton(EvoResetButtonBase):
     _attr_translation_key = "reset_system_mode"
 
     _evo_device: evo.ControlSystem
-    _evo_id_attr = "system_id"
 
     def __init__(
         self,
@@ -98,7 +88,6 @@ class EvoResetDhwButton(EvoResetButtonBase):
     _attr_translation_key = "clear_dhw_override"
 
     _evo_device: evo.HotWater
-    _evo_id_attr = "dhw_id"
 
     def __init__(
         self,
@@ -118,7 +107,6 @@ class EvoResetZoneButton(EvoResetButtonBase):
     _attr_translation_key = "clear_zone_override"
 
     _evo_device: evo.Zone
-    _evo_id_attr = "zone_id"
 
     def __init__(
         self,
