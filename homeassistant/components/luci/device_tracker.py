@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
+    AsyncSeeCallback,
     ScannerEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -45,23 +46,23 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_scanner(
+async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+) -> bool:
     """Import legacy YAML configuration."""
-    scanner_config = config["device_tracker"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_HOST: scanner_config[CONF_HOST],
-            CONF_USERNAME: scanner_config[CONF_USERNAME],
-            CONF_PASSWORD: scanner_config[CONF_PASSWORD],
-            CONF_SSL: scanner_config.get(CONF_SSL, DEFAULT_SSL),
-            CONF_VERIFY_SSL: scanner_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            CONF_HOST: config[CONF_HOST],
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+            CONF_SSL: config.get(CONF_SSL, DEFAULT_SSL),
+            CONF_VERIFY_SSL: config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         },
     )
 
@@ -69,7 +70,7 @@ async def async_get_scanner(
         result["type"] == FlowResultType.ABORT
         and result["reason"] != "already_configured"
     ):
-        return
+        return True
 
     async_create_issue(
         hass,
@@ -84,6 +85,8 @@ async def async_get_scanner(
             "integration_title": "OpenWrt (luci)",
         },
     )
+
+    return True
 
 
 async def async_setup_entry(
