@@ -8,8 +8,17 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_MEDIA_PAUSE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE, STATE_PLAYING, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -39,7 +48,7 @@ STATUS_AUDIO_FILE = {
             "artist": "Artist",
             "duration": 132415,
             "position": 64644,
-            "thumb": "data:image/webp;base64,UklGRoQCAABXRUJQVlA4IHgCAACwCgCdASowADAAPpU8mEgloyKhMdmaALASiWI7h6AqwxQigJWENs8WKuSoHSbVjdRTm5ZukgZf/wPRgezI3xOu+YDnyoCbLdHwaUY77je1cTxiGfO5fixiOGFTypQAAP7rJPSYxGEu8aCWwWPgEGga+TD3QYLSPQrmLGEXFc7n1glzPf+crngb69+L3ZQFbEu6TrhOyc4ZmP1KMQ/E25A6fQNT+9FS02EJmDwo4OS7T084Ly3inQn+UgvyQthhK+aeT40bwqS8rToHTi1+xMPkCirZGOaIljQ5LPFx3fRgjaaBShkMOBSSd0Vjtm5pJ74vz6Q+mLwePe5Uy6DfdtWHJhCSwDnyCfIZUuUZ/V7JUGjBMz6Jh8sF5PdYddZQ+sw42v3RC/+Gt4jKVA8wtXhADsAjdOw5WCe/m5KWTE+QC70z96rOu5RBtI/RLHoR8V/3avSFFNAX3p7Ik/IOh+Uhgn0pcbGam5CsL6Jb+giU43fj9p/HnZ0FmybY4rG7B5Z/Sz9KsjhdlkCt65/OJTs90YS+/UkT6uedW3w0DDdlTUlFYBm0PndMDaoqnQWWEd7XtZsdXEgULMFnB1S0dTHfNKHJiau18tIjudt/HP4qhRPD9LXHhKkysXy3SLzvWMQgaXtja6tyDBRnNpYunWrrbBCN/GyuNxod1s6evaCpo3YFDrmXb7INQICV1Oaql8ElYDhLZ3HhouVJlfmE4aYYhlYVfH/yfCf0I0cW3PtRgtrIxF2eP0EkA1Bpw2wYYKnpPQM8V3JcaptgqvO5Oxx3YCV4FjgUA+UiSqoql4VVg3LmqCKbymZMKJHJGkDnjxxSmD0F5BwAAA==",
+            "thumb": "data:image/webp;base64,UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFAJiWkAANwAP79NmgA",
             "title": "Title",
         },
         "media_type": "AUDIO",
@@ -75,3 +84,37 @@ async def test_rpc_media_player(
 
     assert (entry := entity_registry.async_get(ENTITY_ID))
     assert entry == snapshot(name=f"{ENTITY_ID}-entry")
+
+
+async def test_rpc_media_player_audio_file(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a Shelly RPC media player."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_PLAYING
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Title"
+    assert state.attributes[ATTR_MEDIA_ARTIST] == "Artist"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Album Name"
+    assert state.attributes[ATTR_MEDIA_DURATION] == 132
+    assert state.attributes[ATTR_MEDIA_POSITION] == 64
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
+
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_IDLE
