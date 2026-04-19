@@ -14,19 +14,18 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController
-from .const import DOMAIN, ZWaveMePlatform
+from . import ZWaveMeConfigEntry, ZWaveMeController
+from .const import ZWaveMePlatform
 from .entity import ZWaveMeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the rgb platform."""
@@ -34,7 +33,7 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
         """Add a new device."""
-        controller = hass.data[DOMAIN][config_entry.entry_id]
+        controller = config_entry.runtime_data
         rgb = ZWaveMeRGB(controller, new_device)
 
         async_add_entities(

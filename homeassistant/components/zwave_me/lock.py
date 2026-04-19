@@ -7,12 +7,12 @@ from typing import Any
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWaveMePlatform
+from . import ZWaveMeConfigEntry
+from .const import ZWaveMePlatform
 from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.LOCK
@@ -20,7 +20,7 @@ DEVICE_NAME = ZWaveMePlatform.LOCK
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the lock platform."""
@@ -28,7 +28,7 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
         """Add a new device."""
-        controller = hass.data[DOMAIN][config_entry.entry_id]
+        controller = config_entry.runtime_data
         lock = ZWaveMeLock(controller, new_device)
 
         async_add_entities(

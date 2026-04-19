@@ -5,11 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ZWaveMeConfigEntry
 from .const import DOMAIN, ZWaveMePlatform
 from .entity import ZWaveMeEntity
 
@@ -18,7 +18,7 @@ DEVICE_NAME = ZWaveMePlatform.FAN
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fan platform."""
