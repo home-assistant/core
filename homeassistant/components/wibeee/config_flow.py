@@ -14,6 +14,7 @@ from pywibeee import WibeeeAPI
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -33,7 +34,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from . import WibeeeConfigEntry
 from .const import (
     CONF_AUTO_CONFIGURE,
-    CONF_HOST,
     CONF_MAC_ADDRESS,
     CONF_SCAN_INTERVAL,
     CONF_UPDATE_MODE,
