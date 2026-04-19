@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
+import aiohttp
 from pywibeee import WibeeeAPI, WibeeeDeviceInfo
 
 from homeassistant.config_entries import ConfigEntry
@@ -116,7 +117,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
             update_interval=None,
         )
         # Do one initial poll to discover available sensors
-        initial_data = await api.async_fetch_sensors_data(retries=3)
+        try:
+            initial_data = await api.async_fetch_sensors_data(retries=3)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            raise ConfigEntryNotReady(f"Error connecting to Wibeee at {host}") from err
+
         if not initial_data:
             raise ConfigEntryNotReady(
                 f"Could not fetch initial sensor data from Wibeee at {host}"

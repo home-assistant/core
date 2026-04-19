@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.wibeee.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -19,4 +20,4 @@ async def test_flow_init(hass: HomeAssistant) -> None:
 
 async def test_config_entry_loaded(loaded_entry) -> None:
     """Test that config entry is loaded."""
-    assert loaded_entry.state.name == "loaded"
+    assert loaded_entry.state is ConfigEntryState.LOADED

@@ -27,10 +27,7 @@ from homeassistant.const import (
 # pylint: disable=hass-enforce-class-module
 @dataclass(frozen=True, kw_only=True)
 class WibeeeSensorEntityDescription(SensorEntityDescription):
-    """Describe a Wibeee sensor entity.
-
-    Extends SensorEntityDescription with the XML key used by the device.
-    """
+    """Describe a Wibeee sensor entity."""
 
 
 DOMAIN = "wibeee"

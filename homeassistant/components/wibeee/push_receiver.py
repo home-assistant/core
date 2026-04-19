@@ -146,7 +146,7 @@ async def _handle_push_request(
 ) -> Response:
     """Handle a push request from a WiBeee device.
 
-    Validates the MAC before processing to prevent spoofing.
+    Performs basic validation to ensure the data matches a configured device.
     """
     query = dict(request.query)
 
@@ -156,7 +156,7 @@ async def _handle_push_request(
         _LOGGER.debug("Push request missing MAC ignored")
         return Response(status=400, text="missing MAC")
 
-    # Validate device is registered (prevent spoofing)
+    # Validate device is registered
     listener = receiver.get_listener(mac_addr)
     if listener is None:
         _LOGGER.warning("Push from unknown device rejected: %s", mac_addr)
