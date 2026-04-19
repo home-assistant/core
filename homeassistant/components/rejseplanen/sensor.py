@@ -84,10 +84,8 @@ def _get_next_departure_cleanup_time(
     for departure in current_departures:
         # Use realtime if available, otherwise planned time
         departure_datetime = _get_departure_timestamp(departure, tz)
-        if not departure_datetime:
-            continue
 
-        if departure_datetime > now:
+        if departure_datetime and departure_datetime > now:
             # Schedule cleanup slightly after the departure time
             return departure_datetime + DEPARTURE_CLEANUP_BUFFER
     return None
@@ -113,6 +111,7 @@ def _get_delay_minutes(
 
     planned_datetime = cph_to_tz(departure.date, departure.time, tz)
     realtime_datetime = _get_departure_timestamp(departure, tz)
+
     if realtime_datetime is None:
         return None
 

@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import zoneinfo
 
 from py_rejseplan.api.departures import DeparturesAPIClient
-from py_rejseplan.dataclasses.departure import DepartureType
+from py_rejseplan.dataclasses.departure import Departure
+from py_rejseplan.dataclasses.product_type import ProductType
 from py_rejseplan.enums import TransportClass
 import pytest
 
@@ -25,19 +26,17 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-def make_mock_departures(stop_id: int) -> list[DepartureType]:
+def make_mock_departures(stop_id: int) -> list[Departure]:
     """Create mock departures for a specific stop."""
     # Use a fixed base time for deterministic test data
     base_time = datetime(2024, 1, 1, 12, 0, 0)
+    departures = []
     if stop_id == 123456:
         # Example: 2 departures for "Work"
-        departures = []
         for i, (name, line) in enumerate([("Bus 207", "207"), ("Bus 216", "216")]):
-            mock_departure = MagicMock(spec=DepartureType)
+            mock_departure = MagicMock(spec=Departure)
             mock_departure.name = name
             mock_departure.line = line
-            mock_departure.type = TransportClass.BUS
-            mock_departure.cls_id = 1
             mock_departure.direction = "End Point St."
             mock_departure.stop = "Test Stop"
             mock_departure.time = (
@@ -57,29 +56,93 @@ def make_mock_departures(stop_id: int) -> list[DepartureType]:
             )
             mock_departure.rtDate = base_time.date()
             mock_departure.stopExtId = 123456
+
+            mock_product = MagicMock(spec=ProductType)
+            mock_product.cls_id = TransportClass.BUS.value
+            mock_product.line = name
+            mock_product.operator = "Test Operator"
+            mock_product.name = name
+            mock_departure.product = mock_product
+
             departures.append(mock_departure)
         return departures
     if stop_id == 456789:
-        # Example: 1 departure for "Gym"
-        mock_departure = MagicMock(spec=DepartureType)
-        mock_departure.name = "A"
-        mock_departure.type = TransportClass.BUS
-        mock_departure.cls_id = 1
-        mock_departure.direction = "North"
-        mock_departure.stop = "Gym Stop"
-        mock_departure.time = (
+        # Past departure
+
+        past_product = MagicMock(spec=ProductType)
+        past_product.cls_id = TransportClass.BUS.value
+
+        past_dep = MagicMock(spec=Departure)
+        past_dep.name = "A"
+        past_dep.type = TransportClass.BUS
+        past_dep.product = past_product
+        past_dep.direction = "South"
+        past_dep.stop = "Gym Stop"
+        past_dep.time = (
+            (base_time - timedelta(minutes=10)).time().replace(second=0, microsecond=0)
+        )
+        past_dep.date = base_time.date()
+        past_dep.track = "2B"
+        past_dep.final_stop = "North Station"
+        past_dep.messages = ["Delayed"]
+        past_dep.rtTime = (
+            (base_time - timedelta(minutes=8)).time().replace(second=0, microsecond=0)
+        )
+        past_dep.rtDate = base_time.date()
+        past_dep.stopExtId = 456789
+        departures.append(past_dep)
+
+        # Buffer departure (just inside buffer)
+        buffer_dep = MagicMock(spec=Departure)
+        buffer_dep.name = "A"
+        buffer_dep.type = TransportClass.TOG
+
+        buffer_product = MagicMock(spec=ProductType)
+        buffer_product.cls_id = TransportClass.TOG.value
+        buffer_dep.product = buffer_product
+
+        buffer_dep.direction = "North"
+        buffer_dep.stop = "Gym Stop"
+        buffer_dep.time = (
+            (base_time - timedelta(minutes=1)).time().replace(second=0, microsecond=0)
+        )
+        buffer_dep.date = base_time.date()
+        buffer_dep.track = "2B"
+        buffer_dep.final_stop = "North Station"
+        buffer_dep.messages = ["Delayed"]
+        buffer_dep.rtTime = (
+            (base_time - timedelta(seconds=30)).time().replace(second=0, microsecond=0)
+        )
+        buffer_dep.rtDate = base_time.date()
+        buffer_dep.stopExtId = 456789
+        departures.append(buffer_dep)
+
+        # Future departure
+        future_dep = MagicMock(spec=Departure)
+        future_dep.name = "A"
+        future_dep.type = TransportClass.ICL
+
+        future_product = MagicMock(spec=ProductType)
+        future_product.cls_id = TransportClass.ICL.value
+        future_dep.product = future_product
+
+        future_dep.direction = "North"
+        future_dep.stop = "Gym Stop"
+        future_dep.time = (
             (base_time + timedelta(minutes=10)).time().replace(second=0, microsecond=0)
         )
-        mock_departure.date = base_time.date()
-        mock_departure.track = "2B"
-        mock_departure.final_stop = "North Station"
-        mock_departure.messages = ["Delayed"]
-        mock_departure.rtTime = (
+        future_dep.date = base_time.date()
+        future_dep.track = "2B"
+        future_dep.final_stop = "North Station"
+        future_dep.messages = ["Delayed"]
+        future_dep.rtTime = (
             (base_time + timedelta(minutes=12)).time().replace(second=0, microsecond=0)
         )
-        mock_departure.rtDate = base_time.date()
-        mock_departure.stopExtId = 456789
-        return [mock_departure]
+        future_dep.rtDate = base_time.date()
+        future_dep.stopExtId = 456789
+        departures.append(future_dep)
+
+        return departures
     # No departures for other stops
     return []
 

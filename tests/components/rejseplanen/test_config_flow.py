@@ -57,15 +57,6 @@ async def test_form_user_step(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-#         try:
-#             result = await self.hass.async_add_executor_job(api.validate_auth_key)
-#         except (ConnectionError, TimeoutError, OSError):
-#             errors["base"] = "cannot_connect"
-#         else:
-#             if not result:
-#                 errors["base"] = "invalid_auth"
-
-
 @pytest.mark.parametrize(
     ("patch_args", "expected_errors"),
     [
