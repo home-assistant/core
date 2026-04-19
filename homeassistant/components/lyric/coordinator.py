@@ -78,8 +78,7 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
                         and device.device_id.startswith("LCC")
                     )
                 )
-                if hasattr(self.lyric, "priorities_dict"):
-                    self.priorities_dict = self.lyric.priorities_dict
+                self.priorities_dict = self.lyric.priorities_dict
 
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
