@@ -30,6 +30,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
 ):
     """Template entity based on trigger data."""
 
+    skip_rendered_result: tuple[str, ...] | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -44,6 +46,10 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
         self._rendered_entity_variables: dict | None = None
         self._state_render_error = False
+
+        self._skip_rendered_result: list[str] = []
+        if self.skip_rendered_result is not None:
+            self._skip_rendered_result.extend(self.skip_rendered_result)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -204,6 +210,9 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             return True
 
         for option, entity_template in self._templates.items():
+            if option in self._skip_rendered_result:
+                continue
+
             # Capture templates that did not render a result due to an exception and
             # ensure the state object updates. _SENTINEL is used to differentiate
             # templates that render None.

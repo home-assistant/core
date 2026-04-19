@@ -230,19 +230,23 @@ async def _register_condition_platform(
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
+    conditions = hass.data[CONDITIONS]
 
     if hasattr(platform, "async_get_conditions"):
-        for condition_key in await platform.async_get_conditions(hass):
+        all_conditions = await platform.async_get_conditions(hass)
+        for condition_key in all_conditions:
             condition_key = get_absolute_description_key(
                 integration_domain, condition_key
             )
-            hass.data[CONDITIONS][condition_key] = integration_domain
-            new_conditions.add(condition_key)
+            if condition_key not in conditions:
+                conditions[condition_key] = integration_domain
+                new_conditions.add(condition_key)
         if not new_conditions:
-            _LOGGER.debug(
-                "Integration %s returned no conditions in async_get_conditions",
-                integration_domain,
-            )
+            if not all_conditions:
+                _LOGGER.debug(
+                    "Integration %s returned no conditions in async_get_conditions",
+                    integration_domain,
+                )
             return
     else:
         _LOGGER.debug(
@@ -341,6 +345,16 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
     }
 )
 
+ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR = (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
+                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+            },
+        }
+    )
+)
+
 
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
@@ -364,6 +378,7 @@ class EntityConditionBase(Condition):
             assert config.options
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
+        self._duration: timedelta | None = config.options.get(CONF_FOR)
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -386,11 +401,25 @@ class EntityConditionBase(Condition):
 
         def check_any_match_state(states: list[State]) -> bool:
             """Test if any entity matches the state."""
-            return any(self.is_valid_state(state) for state in states)
+            if not self._duration:
+                # Skip duration check if duration is not specified or 0
+                return any(self.is_valid_state(state) for state in states)
+            duration = dt_util.utcnow() - self._duration
+            return any(
+                self.is_valid_state(state) and duration > state.last_changed
+                for state in states
+            )
 
         def check_all_match_state(states: list[State]) -> bool:
             """Test if all entities match the state."""
-            return all(self.is_valid_state(state) for state in states)
+            if not self._duration:
+                # Skip duration check if duration is not specified or 0
+                return all(self.is_valid_state(state) for state in states)
+            duration = dt_util.utcnow() - self._duration
+            return all(
+                self.is_valid_state(state) and duration > state.last_changed
+                for state in states
+            )
 
         matcher: Callable[[list[State]], bool]
         if self._behavior == BEHAVIOR_ANY:
@@ -440,6 +469,8 @@ def _normalize_domain_specs(
 def make_entity_state_condition(
     domain_specs: Mapping[str, DomainSpec] | str,
     states: str | bool | set[str | bool],
+    *,
+    support_duration: bool = False,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s).
 
@@ -457,6 +488,11 @@ def make_entity_state_condition(
         """Condition for entity state."""
 
         _domain_specs = specs
+        _schema = (
+            ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL_FOR
+            if support_duration
+            else ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+        )
         _states = states_set
 
     return CustomCondition
@@ -821,11 +857,16 @@ async def _async_get_condition_platform(
             f'Invalid condition "{condition_key}" specified'
         ) from None
     try:
-        return platform, await integration.async_get_platform("condition")
+        platform_module = await integration.async_get_platform("condition")
     except ImportError:
         raise HomeAssistantError(
             f"Integration '{platform}' does not provide condition support"
         ) from None
+
+    # Ensure conditions are registered so descriptions can be loaded
+    await _register_condition_platform(hass, platform, platform_module)
+
+    return platform, platform_module
 
 
 async def _async_get_checker(condition: Condition) -> ConditionCheckerType:

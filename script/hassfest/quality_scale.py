@@ -212,6 +212,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -985,7 +986,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -1183,6 +1183,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -2149,6 +2150,7 @@ NO_QUALITY_SCALE = [
     "search",
     "system_health",
     "system_log",
+    "unifi_discovery",
     "tag",
     "temperature",
     "timer",
@@ -2170,7 +2172,7 @@ SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Optional("comment"): str,
+                            vol.Required("comment"): str,
                         }
                     ),
                     vol.Schema(
