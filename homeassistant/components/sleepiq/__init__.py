@@ -29,6 +29,7 @@ from .coordinator import (
     SleepIQPauseUpdateCoordinator,
     SleepIQSleepDataCoordinator,
 )
+from .helpers import is_invalid_auth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,13 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-
-def _is_invalid_auth(err: SleepIQLoginException) -> bool:
-    """Return if a SleepIQ login exception indicates invalid credentials."""
-    return "incorrect username or password" in str(err).lower()
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up sleepiq component."""
     if DOMAIN in config:
@@ -83,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> b
     try:
         await gateway.login(email, password)
     except SleepIQLoginException as err:
-        if _is_invalid_auth(err):
+        if is_invalid_auth(err):
             _LOGGER.error("Could not authenticate with SleepIQ server")
             raise ConfigEntryAuthFailed(err) from err
         raise ConfigEntryNotReady(

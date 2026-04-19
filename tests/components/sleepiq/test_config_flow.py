@@ -122,3 +122,38 @@ async def test_reauth_password(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (
+            SleepIQLoginException("Incorrect username or password"),
+            "invalid_auth",
+        ),
+        (
+            SleepIQLoginException("Connection failure: Cannot connect to host"),
+            "cannot_connect",
+        ),
+        (SleepIQTimeoutException, "cannot_connect"),
+    ],
+)
+async def test_reauth_failure(hass: HomeAssistant, side_effect, error) -> None:
+    """Test reauth form errors on login failure."""
+
+    entry = await setup_platform(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.sleepiq.config_flow.AsyncSleepIQ.login",
+        side_effect=side_effect,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"password": "password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {"base": error}

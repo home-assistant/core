@@ -15,13 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .helpers import is_invalid_auth
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _is_invalid_auth(err: SleepIQLoginException) -> bool:
-    """Return if a SleepIQ login exception indicates invalid credentials."""
-    return "incorrect username or password" in str(err).lower()
 
 
 class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -123,7 +119,7 @@ async def try_connection(hass: HomeAssistant, user_input: dict[str, Any]) -> str
     try:
         await gateway.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
     except SleepIQLoginException as err:
-        if _is_invalid_auth(err):
+        if is_invalid_auth(err):
             return "invalid_auth"
         return "cannot_connect"
     except SleepIQTimeoutException:
