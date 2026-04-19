@@ -56,25 +56,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
 
     async def listen_for_events() -> None:
         """Listen for events from TIS."""
-        while True:
-            try:
-                # This will run until the library's generator stops or crashes.
-                async for event in tis_api.consume_events():
-                    try:
-                        hass.bus.async_fire(f"{DOMAIN}_event", event)
-                    except Exception:
-                        _LOGGER.exception("Unexpected error while processing TIS event")
-            except asyncio.CancelledError:
-                _LOGGER.debug("TIS event listener task cancelled")
-                raise
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected error in TIS event listener, restarting in 1s"
-                )
+        try:
+            while True:
+                try:
+                    # This will run until the library's generator stops or crashes.
+                    async for event in tis_api.consume_events():
+                        try:
+                            hass.bus.async_fire(f"{DOMAIN}_event", event)
+                        except Exception:
+                            _LOGGER.exception(
+                                "Unexpected error while processing TIS event"
+                            )
+                except Exception:
+                    _LOGGER.exception(
+                        "Unexpected error in TIS event listener, restarting in 1s"
+                    )
 
-            # Always sleep before restarting the generator to avoid tight loops
-            # if the generator returns immediately or finishes normally.
-            await asyncio.sleep(1)
+                # Always sleep before restarting the generator to avoid tight loops
+                # if the generator returns immediately or finishes normally.
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            _LOGGER.debug("TIS event listener task cancelled")
+            raise
 
     try:
         # Add this listener to the HA loop as a background task.
