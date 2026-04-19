@@ -72,7 +72,7 @@ async def async_setup_entry(
 
     sensors: list[BinarySensorEntity] = []
 
-    devices = coordinator.hive.session.deviceList.get("binary_sensor")
+    devices = coordinator.hive.session.deviceList.get("binary_sensor") or []
     sensors.extend(
         HiveBinarySensorEntity(coordinator, dev, description)
         for dev in devices
@@ -80,7 +80,7 @@ async def async_setup_entry(
         if dev["hiveType"] == description.key
     )
 
-    devices = coordinator.hive.session.deviceList.get("sensor")
+    devices = coordinator.hive.session.deviceList.get("sensor") or []
     sensors.extend(
         HiveSensorEntity(coordinator, dev, description)
         for dev in devices

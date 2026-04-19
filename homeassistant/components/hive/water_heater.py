@@ -92,7 +92,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
 
     @refresh_system
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn on hotwater."""
+        """Turn off hotwater."""
         await self.hive.hotwater.setMode(self.device, "OFF")
 
     @refresh_system
