@@ -7,6 +7,8 @@ import logging
 from typing import Any
 
 from openwrt_luci_rpc import OpenWrtRpc
+from openwrt_luci_rpc.exceptions import LuciRpcUnknownError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -46,7 +48,7 @@ class LuciCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             result = await self.hass.async_add_executor_job(
                 lambda: self.router.get_all_connected_devices(only_reachable=True)
             )
-        except Exception as err:
+        except (ConnectionError, RequestsConnectionError, LuciRpcUnknownError) as err:
             raise UpdateFailed(f"Error communicating with router: {err}") from err
 
         _LOGGER.debug("Luci get_all_connected_devices returned: %s", result)
