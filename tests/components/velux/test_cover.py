@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -473,6 +474,61 @@ async def test_non_blind_has_no_tilt_position(
     state = hass.states.get(entity_id)
     assert state is not None
     assert "current_tilt_position" not in state.attributes
+
+
+# Unknown position tests
+
+
+async def test_window_unknown_position(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """When the device position is not known, state and position must be unknown."""
+
+    entity_id = "cover.test_window"
+
+    mock_window.position.known = False
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("current_position") is None
+
+
+async def test_dual_roller_shutter_unknown_position(
+    hass: HomeAssistant, mock_dual_roller_shutter: AsyncMock
+) -> None:
+    """Each part should fall back to unknown independently when its position is unknown."""
+
+    entity_id_dual = "cover.test_dual_roller_shutter"
+    entity_id_upper = "cover.test_dual_roller_shutter_upper_shutter"
+    entity_id_lower = "cover.test_dual_roller_shutter_lower_shutter"
+
+    mock_dual_roller_shutter.position.known = False
+    mock_dual_roller_shutter.position_upper_curtain.known = False
+    mock_dual_roller_shutter.position_lower_curtain.known = False
+    await update_callback_entity(hass, mock_dual_roller_shutter)
+
+    for entity_id in (entity_id_dual, entity_id_upper, entity_id_lower):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
+        assert state.attributes.get("current_position") is None
+
+
+async def test_blind_unknown_tilt_position(
+    hass: HomeAssistant, mock_blind: AsyncMock
+) -> None:
+    """Tilt position must be None when the orientation is not known."""
+
+    entity_id = "cover.test_blind"
+
+    mock_blind.orientation.known = False
+    await update_callback_entity(hass, mock_blind)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("current_tilt_position") is None
 
 
 # Exception handling tests
