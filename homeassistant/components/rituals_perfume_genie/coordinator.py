@@ -15,11 +15,13 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type RitualsConfigEntry = ConfigEntry[dict[str, RitualsDataUpdateCoordinator]]
+
 
 class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Rituals Perfume Genie device data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: RitualsConfigEntry
 
     def __init__(
         self,
