@@ -161,6 +161,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     _evo_device: evo.Zone
+    _evo_id_attr = "zone_id"
     _evo_state_attr_names = (SZ_SETPOINT_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
@@ -337,6 +338,7 @@ class EvoController(EvoClimateEntity):
     _attr_precision = PRECISION_TENTHS
 
     _evo_device: evo.ControlSystem
+    _evo_id_attr = "system_id"
     _evo_state_attr_names = (SZ_SYSTEM_MODE_STATUS,)
 
     def __init__(

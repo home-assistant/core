@@ -79,6 +79,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     _evo_device: evo.HotWater
+    _evo_id_attr = "dhw_id"
     _evo_state_attr_names = (SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
