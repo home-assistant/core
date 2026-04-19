@@ -8,12 +8,14 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand, VehicleOffline
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -126,6 +128,26 @@ async def test_climate_services(
     )
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.OFF
+
+    # Set Fan Mode (Bioweapon) On
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: "bioweapon"},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == "bioweapon"
+
+    # Set Fan Mode (Bioweapon) Off
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: "off"},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_FAN_MODE] == "off"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
