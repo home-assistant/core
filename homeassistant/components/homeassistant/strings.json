@@ -110,7 +110,7 @@
       "title": "Unsupported installation method"
     },
     "deprecated_method_architecture": {
-      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to a supported installation method.",
+      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to supported hardware and use a supported installation method.",
       "title": "Unsupported installation method and architecture"
     },
     "deprecated_os_aarch64": {
