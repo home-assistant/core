@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "ambient_light": {
+        "default": "mdi:brightness-6"
+      },
+      "blackout_state": {
+        "default": "mdi:monitor-off"
+      },
+      "last_interaction": {
+        "default": "mdi:gesture-tap"
+      },
+      "last_motion": {
+        "default": "mdi:motion-sensor"
+      }
+    }
+  }
+}
