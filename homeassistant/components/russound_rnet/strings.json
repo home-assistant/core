@@ -1,0 +1,86 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connection Type",
+        "description": "Select how to connect to your Russound RNET device.",
+        "data": {
+          "type": "Connection type"
+        }
+      },
+      "tcp": {
+        "title": "TCP Connection",
+        "description": "Enter the TCP connection details for your Russound RNET device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "serial": {
+        "title": "Serial Connection",
+        "description": "Enter the serial connection details for your Russound RNET device.",
+        "data": {
+          "device": "Serial device",
+          "baudrate": "Baud rate"
+        }
+      },
+      "model": {
+        "title": "Device Model",
+        "description": "Select your Russound RNET device model.",
+        "data": {
+          "model": "Model"
+        }
+      },
+      "sources": {
+        "title": "Source Names",
+        "description": "Enter names for the audio sources connected to your Russound system."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Source Names",
+        "description": "Edit names for the audio sources connected to your Russound system."
+      }
+    }
+  },
+  "exceptions": {
+    "command_error": {
+      "message": "Error executing {function_name} for {entity_id}"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_error": {
+      "title": "YAML import failed",
+      "description": "Configuring Russound RNET using YAML is being removed. Your existing YAML configuration could not be imported. Please set up the integration manually using the [UI]({url})."
+    }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "tcp": "TCP/IP",
+        "serial": "Serial"
+      }
+    },
+    "model": {
+      "options": {
+        "CAS44": "CAS44",
+        "CAA66": "CAA66",
+        "CAM6.6": "CAM6.6",
+        "CAV6.6": "CAV6.6",
+        "MCA-C3": "MCA-C3",
+        "MCA-C5": "MCA-C5",
+        "ACA-E5": "ACA-E5"
+      }
+    }
+  }
+}
