@@ -32,6 +32,8 @@ from .entity import (
 )
 from .hub import UnifiHub
 
+PARALLEL_UPDATES = 0
+
 
 def _wan_status_name_fn(wan_name: str, _device: Device) -> str:
     """Return the name for a WAN status sensor."""
