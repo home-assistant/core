@@ -1313,7 +1313,7 @@ lxml==6.0.1
 matrix-nio==0.25.2
 
 # homeassistant.components.matter
-matter-python-client==0.4.1
+matter-python-client==0.6.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
