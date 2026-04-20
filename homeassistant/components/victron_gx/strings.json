@@ -1,4 +1,101 @@
 {
+  "common": {
+    "absorption": "Absorption",
+    "active_ac_input": "Active AC input",
+    "alarm": "Alarm",
+    "auto_equalize_recondition": "Auto equalize / recondition",
+    "battery_safe": "Battery Safe",
+    "battery_voltage_too_high": "Battery voltage too high",
+    "bms_connection_lost": "BMS connection lost",
+    "bulk": "Bulk",
+    "bulk_time_limit_exceeded": "Bulk time limit exceeded",
+    "charger_current_reversed": "Charger current reversed",
+    "charger_only": "Charger only",
+    "charger_over_current": "Charger over current",
+    "charger_temperature_too_high": "Charger temperature too high",
+    "consumption": "Consumption",
+    "consumption_on_phase": "Consumption on {phase}",
+    "converter_issue": "Converter issue",
+    "current": "Current",
+    "current_limit": "Current limit",
+    "current_on_phase": "Current on {phase}",
+    "current_phase": "Current {phase}",
+    "current_sensor_issue": "Current sensor issue",
+    "dc_output_current": "DC output current",
+    "dc_output_power": "DC output power",
+    "dc_output_voltage": "DC output voltage",
+    "dc_temperature": "DC temperature",
+    "equalize": "Equalize",
+    "error_code": "Error code",
+    "ess_mode": "ESS mode",
+    "external_control": "External control",
+    "factory_calibration_data_lost": "Factory calibration data lost",
+    "float": "Float",
+    "frequency": "Frequency",
+    "generator": "Generator",
+    "grid": "Grid",
+    "high_temperature_alarm": "High temperature alarm",
+    "input_current": "Input current",
+    "input_current_too_high_solar_panel": "Input current too high (solar panel)",
+    "input_power": "Input power",
+    "input_shutdown_battery_voltage_too_high": "Input shutdown (battery voltage too high)",
+    "input_shutdown_reverse_current": "Input shutdown (reverse current)",
+    "input_voltage": "Input voltage",
+    "input_voltage_too_high_solar_panel": "Input voltage too high (solar panel)",
+    "invalid_incompatible_firmware": "Invalid/incompatible firmware",
+    "inverter_only": "Inverter only",
+    "inverting": "Inverting",
+    "lost_communication_with_device": "Lost communication with device",
+    "low_power": "Low power",
+    "max_power_today": "Max power today",
+    "max_power_yesterday": "Max power yesterday",
+    "mppt_active": "MPPT active",
+    "network_misconfigured": "Network misconfigured",
+    "no_alarm": "No alarm",
+    "no_error": "No error",
+    "not_available": "Not available",
+    "not_connected": "Not connected",
+    "ok": "Ok",
+    "output_apparent_power_phase": "Output apparent power {phase}",
+    "output_current_phase": "Output current {phase}",
+    "output_power_phase": "Output power {phase}",
+    "output_voltage_phase": "Output voltage {phase}",
+    "overload_alarm": "Overload alarm",
+    "passthrough": "Passthrough",
+    "power": "Power",
+    "power_assist": "Power Assist",
+    "power_on_phase": "Power on {phase}",
+    "power_phase": "Power {phase}",
+    "power_supply": "Power supply",
+    "pv_bus_voltage": "PV bus voltage",
+    "pv_power_total": "PV power total",
+    "recharging": "Recharging",
+    "repeated_absorption": "Repeated absorption",
+    "reserved": "Reserved",
+    "ripple_alarm": "Ripple alarm",
+    "scheduled_recharging": "Scheduled recharging",
+    "self_consumption": "Self-consumption",
+    "sensor_battery_voltage": "Sensor battery voltage",
+    "shore_power": "Shore power",
+    "starting_up": "Starting up",
+    "state": "State",
+    "storage": "Storage",
+    "sustain": "Sustain",
+    "sustain_alt": "Sustain alt",
+    "synchronized_charging_config_issue": "Synchronized charging config issue",
+    "temperature": "Temperature",
+    "terminals_overheated": "Terminals overheated",
+    "total_pv_yield_user": "Total PV yield user",
+    "total_yield": "Total yield",
+    "unknown": "Unknown",
+    "user_settings_invalid": "User settings invalid",
+    "voltage": "Voltage",
+    "voltage_current_limited": "Voltage/current limited",
+    "voltage_on_phase": "Voltage on {phase}",
+    "warning": "Warning",
+    "yield_today": "Yield today",
+    "yield_yesterday": "Yield yesterday"
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -70,7 +167,7 @@
         "name": "[%key:common::state::connected%]"
       },
       "inverter_alarm_high_temperature": {
-        "name": "High temperature alarm"
+        "name": "[%key:component::victron_gx::common::high_temperature_alarm%]"
       },
       "inverter_alarm_high_voltage": {
         "name": "High voltage alarm"
@@ -88,10 +185,10 @@
         "name": "Low voltage AC-out alarm"
       },
       "inverter_alarm_overload": {
-        "name": "Overload alarm"
+        "name": "[%key:component::victron_gx::common::overload_alarm%]"
       },
       "inverter_alarm_ripple": {
-        "name": "Ripple alarm"
+        "name": "[%key:component::victron_gx::common::ripple_alarm%]"
       },
       "solarcharger_load_state": {
         "name": "Load state"
@@ -234,17 +331,17 @@
         "name": "AC power setpoint {phase}"
       },
       "vebus_inverter_current_limit": {
-        "name": "Current limit"
+        "name": "[%key:component::victron_gx::common::current_limit%]"
       }
     },
     "select": {
       "acsystem_mode": {
         "state": {
-          "charger_only": "Charger only",
-          "inverter_only": "Inverter only",
+          "charger_only": "[%key:component::victron_gx::common::charger_only%]",
+          "inverter_only": "[%key:component::victron_gx::common::inverter_only%]",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "passthrough": "Passthrough"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]"
         }
       },
       "evcharger_mode": {
@@ -268,7 +365,7 @@
           "keep_batteries_charged": "'Keep batteries charged' mode enabled",
           "recharge": "Recharge, SoC dropped 5% or more below minimum SoC",
           "recharge_no_battery_life": "Recharge, SoC dropped 5% or more below minimum SoC (No BatteryLife)",
-          "self_consumption": "Self-consumption",
+          "self_consumption": "[%key:component::victron_gx::common::self_consumption%]",
           "self_consumption_soc_above_min": "Self-consumption, SoC at or above minimum SoC",
           "self_consumption_soc_at_100": "Self-consumption, SoC at 100%",
           "self_consumption_soc_below_min": "Self-consumption, SoC is below minimum SoC",
@@ -282,7 +379,7 @@
       "system_ess_mode": {
         "name": "ESS mode (Hub4)",
         "state": {
-          "external_control": "External control",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "phase_compensation_disabled": "Optimized mode or 'keep batteries charged' and phase compensation disabled",
           "phase_compensation_enabled": "Optimized mode or 'keep batteries charged' and phase compensation enabled"
         }
@@ -324,8 +421,8 @@
       },
       "vebus_inverter_mode": {
         "state": {
-          "charger_only": "Charger only",
-          "inverter_only": "Inverter only",
+          "charger_only": "[%key:component::victron_gx::common::charger_only%]",
+          "inverter_only": "[%key:component::victron_gx::common::inverter_only%]",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]"
         }
@@ -336,72 +433,72 @@
         "name": "Load current"
       },
       "acload_current_phase": {
-        "name": "Current on {phase}"
+        "name": "[%key:component::victron_gx::common::current_on_phase%]"
       },
       "acload_energy_forward": {
-        "name": "Consumption"
+        "name": "[%key:component::victron_gx::common::consumption%]"
       },
       "acload_energy_forward_phase": {
-        "name": "Consumption on {phase}"
+        "name": "[%key:component::victron_gx::common::consumption_on_phase%]"
       },
       "acload_frequency": {
-        "name": "Frequency"
+        "name": "[%key:component::victron_gx::common::frequency%]"
       },
       "acload_power": {
-        "name": "Power"
+        "name": "[%key:component::victron_gx::common::power%]"
       },
       "acload_power_phase": {
-        "name": "Power on {phase}"
+        "name": "[%key:component::victron_gx::common::power_on_phase%]"
       },
       "acload_voltage": {
-        "name": "Voltage"
+        "name": "[%key:component::victron_gx::common::voltage%]"
       },
       "acload_voltage_phase": {
-        "name": "Voltage on {phase}"
+        "name": "[%key:component::victron_gx::common::voltage_on_phase%]"
       },
       "alternator_dc_current": {
-        "name": "DC output current"
+        "name": "[%key:component::victron_gx::common::dc_output_current%]"
       },
       "alternator_dc_power": {
-        "name": "DC output power"
+        "name": "[%key:component::victron_gx::common::dc_output_power%]"
       },
       "alternator_dc_voltage": {
-        "name": "DC output voltage"
+        "name": "[%key:component::victron_gx::common::dc_output_voltage%]"
       },
       "alternator_input_current": {
-        "name": "Input current"
+        "name": "[%key:component::victron_gx::common::input_current%]"
       },
       "alternator_input_power": {
-        "name": "Input power"
+        "name": "[%key:component::victron_gx::common::input_power%]"
       },
       "alternator_input_voltage": {
-        "name": "Input voltage"
+        "name": "[%key:component::victron_gx::common::input_voltage%]"
       },
       "alternator_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
       "auxiliary_battery_voltage": {
@@ -424,9 +521,9 @@
       "battery_cell_imbalance": {
         "name": "Cell imbalance",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "battery_cell_voltage_deviation": {
@@ -455,25 +552,25 @@
       "battery_high_charge_current": {
         "name": "High charge current",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "battery_high_charge_temperature": {
         "name": "High charge temperature",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "battery_high_discharge_current": {
         "name": "High discharge current",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "battery_installed_capacity": {
@@ -483,9 +580,9 @@
       "battery_internal_failure": {
         "name": "Internal failure",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "battery_last_discharge": {
@@ -494,17 +591,17 @@
       "battery_low_cell_voltage": {
         "name": "Low cell voltage",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "battery_low_charge_temperature": {
         "name": "Low charge temperature",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "battery_max_cell_temperature": {
@@ -569,7 +666,7 @@
         "unit_of_measurement": "modules"
       },
       "battery_power": {
-        "name": "Power"
+        "name": "[%key:component::victron_gx::common::power%]"
       },
       "battery_soc": {
         "name": "Charge"
@@ -578,7 +675,7 @@
         "name": "State of health"
       },
       "battery_temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::victron_gx::common::temperature%]"
       },
       "battery_time_since_last_full_charge": {
         "name": "Time since last full charge",
@@ -607,28 +704,28 @@
         "name": "DC output {output} voltage"
       },
       "charger_error_code": {
-        "name": "Error code",
+        "name": "[%key:component::victron_gx::common::error_code%]",
         "state": {
-          "battery_voltage_too_high": "Battery voltage too high",
-          "bms_connection_lost": "BMS connection lost",
-          "bulk_time_limit_exceeded": "Bulk time limit exceeded",
-          "charger_current_reversed": "Charger current reversed",
-          "charger_over_current": "Charger over current",
-          "charger_temperature_too_high": "Charger temperature too high",
-          "converter_issue": "Converter issue",
-          "current_sensor_issue": "Current sensor issue",
-          "factory_calibration_data_lost": "Factory calibration data lost",
-          "input_current_too_high": "Input current too high (solar panel)",
-          "input_shutdown_battery_voltage_too_high": "Input shutdown (battery voltage too high)",
-          "input_shutdown_reverse_current": "Input shutdown (reverse current)",
-          "input_voltage_too_high": "Input voltage too high (solar panel)",
-          "invalid_incompatible_firmware": "Invalid/incompatible firmware",
-          "lost_communication_with_device": "Lost communication with device",
-          "network_misconfigured": "Network misconfigured",
-          "no_error": "No error",
-          "synchronized_charging_config_issue": "Synchronized charging config issue",
-          "terminals_overheated": "Terminals overheated",
-          "user_settings_invalid": "User settings invalid"
+          "battery_voltage_too_high": "[%key:component::victron_gx::common::battery_voltage_too_high%]",
+          "bms_connection_lost": "[%key:component::victron_gx::common::bms_connection_lost%]",
+          "bulk_time_limit_exceeded": "[%key:component::victron_gx::common::bulk_time_limit_exceeded%]",
+          "charger_current_reversed": "[%key:component::victron_gx::common::charger_current_reversed%]",
+          "charger_over_current": "[%key:component::victron_gx::common::charger_over_current%]",
+          "charger_temperature_too_high": "[%key:component::victron_gx::common::charger_temperature_too_high%]",
+          "converter_issue": "[%key:component::victron_gx::common::converter_issue%]",
+          "current_sensor_issue": "[%key:component::victron_gx::common::current_sensor_issue%]",
+          "factory_calibration_data_lost": "[%key:component::victron_gx::common::factory_calibration_data_lost%]",
+          "input_current_too_high": "[%key:component::victron_gx::common::input_current_too_high_solar_panel%]",
+          "input_shutdown_battery_voltage_too_high": "[%key:component::victron_gx::common::input_shutdown_battery_voltage_too_high%]",
+          "input_shutdown_reverse_current": "[%key:component::victron_gx::common::input_shutdown_reverse_current%]",
+          "input_voltage_too_high": "[%key:component::victron_gx::common::input_voltage_too_high_solar_panel%]",
+          "invalid_incompatible_firmware": "[%key:component::victron_gx::common::invalid_incompatible_firmware%]",
+          "lost_communication_with_device": "[%key:component::victron_gx::common::lost_communication_with_device%]",
+          "network_misconfigured": "[%key:component::victron_gx::common::network_misconfigured%]",
+          "no_error": "[%key:component::victron_gx::common::no_error%]",
+          "synchronized_charging_config_issue": "[%key:component::victron_gx::common::synchronized_charging_config_issue%]",
+          "terminals_overheated": "[%key:component::victron_gx::common::terminals_overheated%]",
+          "user_settings_invalid": "[%key:component::victron_gx::common::user_settings_invalid%]"
         }
       },
       "charger_nr_of_outputs": {
@@ -636,104 +733,104 @@
         "unit_of_measurement": "outputs"
       },
       "charger_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
       "dcdc_dc_current": {
-        "name": "DC output current"
+        "name": "[%key:component::victron_gx::common::dc_output_current%]"
       },
       "dcdc_dc_power": {
-        "name": "DC output power"
+        "name": "[%key:component::victron_gx::common::dc_output_power%]"
       },
       "dcdc_dc_voltage": {
-        "name": "DC output voltage"
+        "name": "[%key:component::victron_gx::common::dc_output_voltage%]"
       },
       "dcdc_input_current": {
-        "name": "Input current"
+        "name": "[%key:component::victron_gx::common::input_current%]"
       },
       "dcdc_input_power": {
-        "name": "Input power"
+        "name": "[%key:component::victron_gx::common::input_power%]"
       },
       "dcdc_input_voltage": {
-        "name": "Input voltage"
+        "name": "[%key:component::victron_gx::common::input_voltage%]"
       },
       "dcdc_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
       "dcload_current": {
-        "name": "Current"
+        "name": "[%key:component::victron_gx::common::current%]"
       },
       "dcload_power": {
-        "name": "Power"
+        "name": "[%key:component::victron_gx::common::power%]"
       },
       "dcload_voltage": {
-        "name": "Voltage"
+        "name": "[%key:component::victron_gx::common::voltage%]"
       },
       "dcsystem_aux_voltage": {
         "name": "Auxiliary voltage"
       },
       "dcsystem_current": {
-        "name": "Current"
+        "name": "[%key:component::victron_gx::common::current%]"
       },
       "dcsystem_power": {
-        "name": "Power"
+        "name": "[%key:component::victron_gx::common::power%]"
       },
       "dcsystem_voltage": {
-        "name": "Voltage"
+        "name": "[%key:component::victron_gx::common::voltage%]"
       },
       "digitalinput_alarm": {
-        "name": "Alarm",
+        "name": "[%key:component::victron_gx::common::alarm%]",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "digitalinput_input_state_raw": {
@@ -744,15 +841,15 @@
         }
       },
       "digitalinput_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "alarm": "Alarm",
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
           "closed": "[%key:common::state::closed%]",
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "no": "[%key:common::state::no%]",
           "off": "[%key:common::state::off%]",
-          "ok": "Ok",
+          "ok": "[%key:component::victron_gx::common::ok%]",
           "on": "[%key:common::state::on%]",
           "open": "[%key:common::state::open%]",
           "running": "Running",
@@ -770,14 +867,14 @@
           "disabled": "[%key:common::state::disabled%]",
           "door_alarm": "Door alarm",
           "fire_alarm": "Fire alarm",
-          "generator": "Generator",
+          "generator": "[%key:component::victron_gx::common::generator%]",
           "pulse_meter": "Pulse meter",
           "smoke_alarm": "Smoke alarm",
           "touch_input_control": "Touch input control"
         }
       },
       "evcharger_current": {
-        "name": "Current"
+        "name": "[%key:component::victron_gx::common::current%]"
       },
       "evcharger_max_set_current": {
         "name": "Maximum set current"
@@ -793,10 +890,10 @@
         }
       },
       "evcharger_power": {
-        "name": "Power"
+        "name": "[%key:component::victron_gx::common::power%]"
       },
       "evcharger_power_phase": {
-        "name": "Power {phase}"
+        "name": "[%key:component::victron_gx::common::power_phase%]"
       },
       "evcharger_session_cost": {
         "name": "Last session cost",
@@ -821,11 +918,11 @@
           "low_soc": "Low SoC",
           "overheating_detected": "Overheating detected",
           "overvoltage_detected": "Overvoltage detected",
-          "reserved15": "Reserved",
-          "reserved16": "Reserved",
-          "reserved17": "Reserved",
-          "reserved18": "Reserved",
-          "reserved19": "Reserved",
+          "reserved15": "[%key:component::victron_gx::common::reserved%]",
+          "reserved16": "[%key:component::victron_gx::common::reserved%]",
+          "reserved17": "[%key:component::victron_gx::common::reserved%]",
+          "reserved18": "[%key:component::victron_gx::common::reserved%]",
+          "reserved19": "[%key:component::victron_gx::common::reserved%]",
           "residual_current_detected": "Residual current detected",
           "start_charging": "Start charging",
           "switching_to_1_phase": "Switching to 1 phase",
@@ -870,16 +967,16 @@
         "unit_of_measurement": "satellites"
       },
       "grid_current": {
-        "name": "Current"
+        "name": "[%key:component::victron_gx::common::current%]"
       },
       "grid_current_n": {
         "name": "Current on N"
       },
       "grid_current_phase": {
-        "name": "Current on {phase}"
+        "name": "[%key:component::victron_gx::common::current_on_phase%]"
       },
       "grid_energy_forward": {
-        "name": "Consumption"
+        "name": "[%key:component::victron_gx::common::consumption%]"
       },
       "grid_energy_forward_phase": {
         "name": "Grid consumption on {phase}"
@@ -891,10 +988,10 @@
         "name": "Feed-in on {phase}"
       },
       "grid_frequency": {
-        "name": "Frequency"
+        "name": "[%key:component::victron_gx::common::frequency%]"
       },
       "grid_power": {
-        "name": "Power"
+        "name": "[%key:component::victron_gx::common::power%]"
       },
       "grid_power_factor": {
         "name": "Power factor"
@@ -903,97 +1000,97 @@
         "name": "Power factor on {phase}"
       },
       "grid_power_phase": {
-        "name": "Power on {phase}"
+        "name": "[%key:component::victron_gx::common::power_on_phase%]"
       },
       "grid_voltage": {
-        "name": "Voltage"
+        "name": "[%key:component::victron_gx::common::voltage%]"
       },
       "grid_voltage_pen": {
         "name": "Voltage on PEN"
       },
       "grid_voltage_phase": {
-        "name": "Voltage on {phase}"
+        "name": "[%key:component::victron_gx::common::voltage_on_phase%]"
       },
       "grid_voltage_phase_next_phase": {
         "name": "Voltage {phase} to {next_phase}"
       },
       "heatpump_current": {
-        "name": "Current"
+        "name": "[%key:component::victron_gx::common::current%]"
       },
       "heatpump_current_phase": {
-        "name": "Current on {phase}"
+        "name": "[%key:component::victron_gx::common::current_on_phase%]"
       },
       "heatpump_energy_forward": {
-        "name": "Consumption"
+        "name": "[%key:component::victron_gx::common::consumption%]"
       },
       "heatpump_energy_forward_phase": {
-        "name": "Consumption on {phase}"
+        "name": "[%key:component::victron_gx::common::consumption_on_phase%]"
       },
       "heatpump_frequency": {
-        "name": "Frequency"
+        "name": "[%key:component::victron_gx::common::frequency%]"
       },
       "heatpump_power": {
-        "name": "Power"
+        "name": "[%key:component::victron_gx::common::power%]"
       },
       "heatpump_power_phase": {
-        "name": "Power on {phase}"
+        "name": "[%key:component::victron_gx::common::power_on_phase%]"
       },
       "heatpump_voltage": {
-        "name": "Voltage"
+        "name": "[%key:component::victron_gx::common::voltage%]"
       },
       "heatpump_voltage_phase": {
-        "name": "Voltage on {phase}"
+        "name": "[%key:component::victron_gx::common::voltage_on_phase%]"
       },
       "inverter_output_apparent_power_phase": {
-        "name": "Output apparent power {phase}"
+        "name": "[%key:component::victron_gx::common::output_apparent_power_phase%]"
       },
       "inverter_output_current_phase": {
-        "name": "Output current {phase}"
+        "name": "[%key:component::victron_gx::common::output_current_phase%]"
       },
       "inverter_output_power_phase": {
-        "name": "Output power {phase}"
+        "name": "[%key:component::victron_gx::common::output_power_phase%]"
       },
       "inverter_output_voltage_phase": {
-        "name": "Output voltage {phase}"
+        "name": "[%key:component::victron_gx::common::output_voltage_phase%]"
       },
       "inverter_pv_power_total": {
-        "name": "PV power total"
+        "name": "[%key:component::victron_gx::common::pv_power_total%]"
       },
       "inverter_pv_voltage": {
-        "name": "PV bus voltage"
+        "name": "[%key:component::victron_gx::common::pv_bus_voltage%]"
       },
       "inverter_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
       "inverter_total_pv_yield_system": {
         "name": "Total PV yield system"
       },
       "inverter_total_pv_yield_user": {
-        "name": "Total PV yield user"
+        "name": "[%key:component::victron_gx::common::total_pv_yield_user%]"
       },
       "multi_acin1_to_acout": {
         "name": "AC-in-1 to AC-out"
@@ -1002,13 +1099,13 @@
         "name": "AC-in-1 to inverter"
       },
       "multi_acin_current_phase": {
-        "name": "Current {phase}"
+        "name": "[%key:component::victron_gx::common::current_phase%]"
       },
       "multi_acin_power_phase": {
-        "name": "Power on {phase}"
+        "name": "[%key:component::victron_gx::common::power_on_phase%]"
       },
       "multi_acin_voltage_phase": {
-        "name": "Voltage on {phase}"
+        "name": "[%key:component::victron_gx::common::voltage_on_phase%]"
       },
       "multi_acout_output_current_phase": {
         "name": "AC-out-{output} current on {phase}"
@@ -1026,7 +1123,7 @@
         "name": "AC-out to inverter"
       },
       "multi_active_input": {
-        "name": "Active AC input",
+        "name": "[%key:component::victron_gx::common::active_ac_input%]",
         "state": {
           "ac_input_1": "AC input 1",
           "ac_input_2": "AC input 2",
@@ -1034,14 +1131,14 @@
         }
       },
       "multi_dc_temperature": {
-        "name": "DC temperature"
+        "name": "[%key:component::victron_gx::common::dc_temperature%]"
       },
       "multi_ess_mode": {
-        "name": "ESS mode",
+        "name": "[%key:component::victron_gx::common::ess_mode%]",
         "state": {
-          "external_control": "External control",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "keep_charged": "Keep charged",
-          "self_consumption": "Self-consumption",
+          "self_consumption": "[%key:component::victron_gx::common::self_consumption%]",
           "self_consumption_batterylife": "Self-consumption (BatteryLife)"
         }
       },
@@ -1055,10 +1152,10 @@
         "name": "Inverter to AC-out"
       },
       "multi_max_power_today": {
-        "name": "Max power today"
+        "name": "[%key:component::victron_gx::common::max_power_today%]"
       },
       "multi_max_power_yesterday": {
-        "name": "Max power yesterday"
+        "name": "[%key:component::victron_gx::common::max_power_yesterday%]"
       },
       "multi_mppt_mppt_id_yield_today": {
         "name": "MPPT {mppt_id} yield today"
@@ -1071,10 +1168,10 @@
       },
       "multi_mppt_mpptnumber_state": {
         "state": {
-          "mppt_active": "MPPT active",
-          "not_available": "Not available",
+          "mppt_active": "[%key:component::victron_gx::common::mppt_active%]",
+          "not_available": "[%key:component::victron_gx::common::not_available%]",
           "off": "[%key:common::state::off%]",
-          "voltage_current_limited": "Voltage/current limited"
+          "voltage_current_limited": "[%key:component::victron_gx::common::voltage_current_limited%]"
         }
       },
       "multi_mppt_mpptnumber_voltage": {
@@ -1085,7 +1182,7 @@
         "unit_of_measurement": "phases"
       },
       "multi_pv_power_total": {
-        "name": "PV power total"
+        "name": "[%key:component::victron_gx::common::pv_power_total%]"
       },
       "multi_solar_to_acin1": {
         "name": "Solar to AC-in-1"
@@ -1097,40 +1194,40 @@
         "name": "Solar to battery"
       },
       "multi_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
       "multi_total_pv_yield": {
-        "name": "Total PV yield user"
+        "name": "[%key:component::victron_gx::common::total_pv_yield_user%]"
       },
       "multi_yield_today": {
-        "name": "Yield today"
+        "name": "[%key:component::victron_gx::common::yield_today%]"
       },
       "multi_yield_yesterday": {
-        "name": "Yield yesterday"
+        "name": "[%key:component::victron_gx::common::yield_yesterday%]"
       },
       "platform_venus_firmware_available_version": {
         "name": "Available version"
@@ -1139,10 +1236,10 @@
         "name": "Installed version"
       },
       "pvinverter_current_phase": {
-        "name": "Current {phase}"
+        "name": "[%key:component::victron_gx::common::current_phase%]"
       },
       "pvinverter_power_phase": {
-        "name": "Power {phase}"
+        "name": "[%key:component::victron_gx::common::power_phase%]"
       },
       "pvinverter_power_total": {
         "name": "Power total"
@@ -1154,7 +1251,7 @@
         "name": "Yield {phase}"
       },
       "pvinverter_yield_total": {
-        "name": "Total yield"
+        "name": "[%key:component::victron_gx::common::total_yield%]"
       },
       "solarcharger_current": {
         "name": "PV bus current"
@@ -1185,28 +1282,28 @@
         }
       },
       "solarcharger_error_code": {
-        "name": "Error code",
+        "name": "[%key:component::victron_gx::common::error_code%]",
         "state": {
-          "battery_voltage_too_high": "Battery voltage too high",
-          "bms_connection_lost": "BMS connection lost",
-          "bulk_time_limit_exceeded": "Bulk time limit exceeded",
-          "charger_current_reversed": "Charger current reversed",
-          "charger_over_current": "Charger over current",
-          "charger_temperature_too_high": "Charger temperature too high",
-          "converter_issue": "Converter issue",
-          "current_sensor_issue": "Current sensor issue",
-          "factory_calibration_data_lost": "Factory calibration data lost",
-          "input_current_too_high": "Input current too high (solar panel)",
-          "input_shutdown_battery_voltage_too_high": "Input shutdown (battery voltage too high)",
-          "input_shutdown_reverse_current": "Input shutdown (reverse current)",
-          "input_voltage_too_high": "Input voltage too high (solar panel)",
-          "invalid_incompatible_firmware": "Invalid/incompatible firmware",
-          "lost_communication_with_device": "Lost communication with device",
-          "network_misconfigured": "Network misconfigured",
-          "no_error": "No error",
-          "synchronized_charging_config_issue": "Synchronized charging config issue",
-          "terminals_overheated": "Terminals overheated",
-          "user_settings_invalid": "User settings invalid"
+          "battery_voltage_too_high": "[%key:component::victron_gx::common::battery_voltage_too_high%]",
+          "bms_connection_lost": "[%key:component::victron_gx::common::bms_connection_lost%]",
+          "bulk_time_limit_exceeded": "[%key:component::victron_gx::common::bulk_time_limit_exceeded%]",
+          "charger_current_reversed": "[%key:component::victron_gx::common::charger_current_reversed%]",
+          "charger_over_current": "[%key:component::victron_gx::common::charger_over_current%]",
+          "charger_temperature_too_high": "[%key:component::victron_gx::common::charger_temperature_too_high%]",
+          "converter_issue": "[%key:component::victron_gx::common::converter_issue%]",
+          "current_sensor_issue": "[%key:component::victron_gx::common::current_sensor_issue%]",
+          "factory_calibration_data_lost": "[%key:component::victron_gx::common::factory_calibration_data_lost%]",
+          "input_current_too_high": "[%key:component::victron_gx::common::input_current_too_high_solar_panel%]",
+          "input_shutdown_battery_voltage_too_high": "[%key:component::victron_gx::common::input_shutdown_battery_voltage_too_high%]",
+          "input_shutdown_reverse_current": "[%key:component::victron_gx::common::input_shutdown_reverse_current%]",
+          "input_voltage_too_high": "[%key:component::victron_gx::common::input_voltage_too_high_solar_panel%]",
+          "invalid_incompatible_firmware": "[%key:component::victron_gx::common::invalid_incompatible_firmware%]",
+          "lost_communication_with_device": "[%key:component::victron_gx::common::lost_communication_with_device%]",
+          "network_misconfigured": "[%key:component::victron_gx::common::network_misconfigured%]",
+          "no_error": "[%key:component::victron_gx::common::no_error%]",
+          "synchronized_charging_config_issue": "[%key:component::victron_gx::common::synchronized_charging_config_issue%]",
+          "terminals_overheated": "[%key:component::victron_gx::common::terminals_overheated%]",
+          "user_settings_invalid": "[%key:component::victron_gx::common::user_settings_invalid%]"
         }
       },
       "solarcharger_load_current": {
@@ -1216,10 +1313,10 @@
         "name": "Max battery voltage today"
       },
       "solarcharger_max_power_today": {
-        "name": "Max power today"
+        "name": "[%key:component::victron_gx::common::max_power_today%]"
       },
       "solarcharger_max_power_yesterday": {
-        "name": "Max power yesterday"
+        "name": "[%key:component::victron_gx::common::max_power_yesterday%]"
       },
       "solarcharger_min_battery_voltage_today": {
         "name": "Min battery voltage today"
@@ -1227,37 +1324,37 @@
       "solarcharger_mppt_operation_mode": {
         "name": "MPPT operation mode",
         "state": {
-          "mppt_active": "MPPT active",
-          "not_available": "Not available",
+          "mppt_active": "[%key:component::victron_gx::common::mppt_active%]",
+          "not_available": "[%key:component::victron_gx::common::not_available%]",
           "off": "[%key:common::state::off%]",
-          "voltage_current_limited": "Voltage/current limited"
+          "voltage_current_limited": "[%key:component::victron_gx::common::voltage_current_limited%]"
         }
       },
       "solarcharger_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
       "solarcharger_time_in_absorption_today": {
@@ -1281,10 +1378,10 @@
       "solarcharger_tracker_tracker_operation_mode": {
         "name": "PV tracker {tracker} operation mode",
         "state": {
-          "mppt_active": "MPPT active",
-          "not_available": "Not available",
+          "mppt_active": "[%key:component::victron_gx::common::mppt_active%]",
+          "not_available": "[%key:component::victron_gx::common::not_available%]",
           "off": "[%key:common::state::off%]",
-          "voltage_current_limited": "Voltage/current limited"
+          "voltage_current_limited": "[%key:component::victron_gx::common::voltage_current_limited%]"
         }
       },
       "solarcharger_tracker_tracker_power": {
@@ -1297,28 +1394,28 @@
         "name": "Tracker {tracker} yield today"
       },
       "solarcharger_voltage": {
-        "name": "PV bus voltage"
+        "name": "[%key:component::victron_gx::common::pv_bus_voltage%]"
       },
       "solarcharger_yield_power": {
         "name": "PV yield power"
       },
       "solarcharger_yield_today": {
-        "name": "Yield today"
+        "name": "[%key:component::victron_gx::common::yield_today%]"
       },
       "solarcharger_yield_total": {
-        "name": "Total yield"
+        "name": "[%key:component::victron_gx::common::total_yield%]"
       },
       "solarcharger_yield_yesterday": {
-        "name": "Yield yesterday"
+        "name": "[%key:component::victron_gx::common::yield_yesterday%]"
       },
       "system_ac_active_input_source": {
         "name": "AC active input source",
         "state": {
-          "generator": "Generator",
-          "grid": "Grid",
-          "not_connected": "Not connected",
-          "shore_power": "Shore power",
-          "unknown": "Unknown"
+          "generator": "[%key:component::victron_gx::common::generator%]",
+          "grid": "[%key:component::victron_gx::common::grid%]",
+          "not_connected": "[%key:component::victron_gx::common::not_connected%]",
+          "shore_power": "[%key:component::victron_gx::common::shore_power%]",
+          "unknown": "[%key:component::victron_gx::common::unknown%]"
         }
       },
       "system_ac_loads_phase": {
@@ -1395,8 +1492,8 @@
         "name": "Dynamic ESS error",
         "state": {
           "battry_capacity_not_configured": "Battery capacity not configured",
-          "ess_mode": "ESS mode",
-          "no_error": "No error",
+          "ess_mode": "[%key:component::victron_gx::common::ess_mode%]",
+          "no_error": "[%key:component::victron_gx::common::no_error%]",
           "no_ess": "No ESS",
           "no_schedule": "No matching schedule",
           "soc_low": "SoC low"
@@ -1500,32 +1597,32 @@
       "system_state": {
         "name": "System state",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       },
       "tank_battery_voltage": {
-        "name": "Sensor battery voltage"
+        "name": "[%key:component::victron_gx::common::sensor_battery_voltage%]"
       },
       "tank_fluid_type": {
         "name": "Fluid type",
@@ -1551,10 +1648,10 @@
         "name": "Remaining"
       },
       "tank_temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::victron_gx::common::temperature%]"
       },
       "temperature_battery_voltage": {
-        "name": "Sensor battery voltage"
+        "name": "[%key:component::victron_gx::common::sensor_battery_voltage%]"
       },
       "temperature_humidity": {
         "name": "Humidity"
@@ -1566,14 +1663,14 @@
         "name": "Sensor status",
         "state": {
           "disconnected": "[%key:common::state::disconnected%]",
-          "ok": "Ok",
+          "ok": "[%key:component::victron_gx::common::ok%]",
           "reverse_polarity": "Reverse polarity",
           "short_circuited": "Short circuited",
-          "unknown": "Unknown"
+          "unknown": "[%key:component::victron_gx::common::unknown%]"
         }
       },
       "temperature_temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::victron_gx::common::temperature%]"
       },
       "temperature_type": {
         "name": "Sensor type",
@@ -1633,97 +1730,97 @@
         "name": "Energy from out to inverter"
       },
       "vebus_inverter_active_input": {
-        "name": "Active AC input",
+        "name": "[%key:component::victron_gx::common::active_ac_input%]",
         "state": {
-          "generator": "Generator",
-          "grid": "Grid",
-          "not_connected": "Not connected",
-          "shore_power": "Shore power",
-          "unknown": "Unknown"
+          "generator": "[%key:component::victron_gx::common::generator%]",
+          "grid": "[%key:component::victron_gx::common::grid%]",
+          "not_connected": "[%key:component::victron_gx::common::not_connected%]",
+          "shore_power": "[%key:component::victron_gx::common::shore_power%]",
+          "unknown": "[%key:component::victron_gx::common::unknown%]"
         }
       },
       "vebus_inverter_alarm_grid_lost": {
         "name": "Grid lost alarm",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_high_dc_current": {
         "name": "High DC current alarm",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_high_dc_voltage": {
         "name": "High DC voltage alarm",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_high_temperature": {
-        "name": "High temperature alarm",
+        "name": "[%key:component::victron_gx::common::high_temperature_alarm%]",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_low_battery": {
         "name": "Low battery alarm",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_overload": {
-        "name": "Overload alarm",
+        "name": "[%key:component::victron_gx::common::overload_alarm%]",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_phase_rotation": {
         "name": "Phase rotation alarm",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_ripple": {
-        "name": "Ripple alarm",
+        "name": "[%key:component::victron_gx::common::ripple_alarm%]",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_temperature_sensor": {
         "name": "Temperature sensor alarm",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_alarm_voltage_sensor": {
         "name": "Voltage sensor alarm",
         "state": {
-          "alarm": "Alarm",
-          "no_alarm": "No alarm",
-          "warning": "Warning"
+          "alarm": "[%key:component::victron_gx::common::alarm%]",
+          "no_alarm": "[%key:component::victron_gx::common::no_alarm%]",
+          "warning": "[%key:component::victron_gx::common::warning%]"
         }
       },
       "vebus_inverter_current_limit": {
-        "name": "Current limit"
+        "name": "[%key:component::victron_gx::common::current_limit%]"
       },
       "vebus_inverter_dc_current": {
         "name": "DC current"
@@ -1732,7 +1829,7 @@
         "name": "DC power"
       },
       "vebus_inverter_dc_temperature": {
-        "name": "DC temperature"
+        "name": "[%key:component::victron_gx::common::dc_temperature%]"
       },
       "vebus_inverter_dc_voltage": {
         "name": "DC voltage"
@@ -1760,45 +1857,45 @@
         "name": "Input voltage {phase}"
       },
       "vebus_inverter_output_apparent_power_phase": {
-        "name": "Output apparent power {phase}"
+        "name": "[%key:component::victron_gx::common::output_apparent_power_phase%]"
       },
       "vebus_inverter_output_current_phase": {
-        "name": "Output current {phase}"
+        "name": "[%key:component::victron_gx::common::output_current_phase%]"
       },
       "vebus_inverter_output_frequency_phase": {
         "name": "Output frequency {phase}"
       },
       "vebus_inverter_output_power_phase": {
-        "name": "Output power {phase}"
+        "name": "[%key:component::victron_gx::common::output_power_phase%]"
       },
       "vebus_inverter_output_voltage_phase": {
-        "name": "Output voltage {phase}"
+        "name": "[%key:component::victron_gx::common::output_voltage_phase%]"
       },
       "vebus_inverter_state": {
-        "name": "State",
+        "name": "[%key:component::victron_gx::common::state%]",
         "state": {
-          "absorption": "Absorption",
-          "auto_equalize": "Auto equalize / recondition",
-          "battery_safe": "Battery Safe",
-          "bulk": "Bulk",
+          "absorption": "[%key:component::victron_gx::common::absorption%]",
+          "auto_equalize": "[%key:component::victron_gx::common::auto_equalize_recondition%]",
+          "battery_safe": "[%key:component::victron_gx::common::battery_safe%]",
+          "bulk": "[%key:component::victron_gx::common::bulk%]",
           "discharging": "[%key:common::state::discharging%]",
-          "equalize": "Equalize",
-          "external_control": "External control",
+          "equalize": "[%key:component::victron_gx::common::equalize%]",
+          "external_control": "[%key:component::victron_gx::common::external_control%]",
           "fault": "[%key:common::state::fault%]",
-          "float": "Float",
-          "inverting": "Inverting",
-          "low_power": "Low power",
+          "float": "[%key:component::victron_gx::common::float%]",
+          "inverting": "[%key:component::victron_gx::common::inverting%]",
+          "low_power": "[%key:component::victron_gx::common::low_power%]",
           "off": "[%key:common::state::off%]",
-          "passthrough": "Passthrough",
-          "power_assist": "Power Assist",
-          "power_supply": "Power supply",
-          "recharging": "Recharging",
-          "repeated_absorption": "Repeated absorption",
-          "scheduled_recharging": "Scheduled recharging",
-          "starting_up": "Starting up",
-          "storage": "Storage",
-          "sustain": "Sustain",
-          "sustain_alt": "Sustain alt"
+          "passthrough": "[%key:component::victron_gx::common::passthrough%]",
+          "power_assist": "[%key:component::victron_gx::common::power_assist%]",
+          "power_supply": "[%key:component::victron_gx::common::power_supply%]",
+          "recharging": "[%key:component::victron_gx::common::recharging%]",
+          "repeated_absorption": "[%key:component::victron_gx::common::repeated_absorption%]",
+          "scheduled_recharging": "[%key:component::victron_gx::common::scheduled_recharging%]",
+          "starting_up": "[%key:component::victron_gx::common::starting_up%]",
+          "storage": "[%key:component::victron_gx::common::storage%]",
+          "sustain": "[%key:component::victron_gx::common::sustain%]",
+          "sustain_alt": "[%key:component::victron_gx::common::sustain_alt%]"
         }
       }
     },
@@ -1843,10 +1940,10 @@
         "name": "Relay state"
       },
       "switch_output_state": {
-        "name": "State"
+        "name": "[%key:component::victron_gx::common::state%]"
       },
       "switchable_output_output_state": {
-        "name": "State"
+        "name": "[%key:component::victron_gx::common::state%]"
       },
       "system_ess_battery_use": {
         "name": "ESS only critical loads from battery"
