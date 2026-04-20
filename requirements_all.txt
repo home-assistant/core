@@ -2935,7 +2935,6 @@ sentence-stream==1.2.0
 sentry-sdk==2.48.0
 
 # homeassistant.components.acer_projector
-# homeassistant.components.homeassistant_hardware
 # homeassistant.components.serial
 # homeassistant.components.usb
 serialx==1.4.1
@@ -3204,7 +3203,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==1.0.3
+universal-silabs-flasher==1.1.0
 
 # homeassistant.components.upb
 upb-lib==0.6.1
