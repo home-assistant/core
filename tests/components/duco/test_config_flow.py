@@ -262,7 +262,7 @@ async def test_reconfigure_flow_wrong_device(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_device"
+    assert result["reason"] == "unique_id_mismatch"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

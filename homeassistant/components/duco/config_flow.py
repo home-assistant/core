@@ -89,7 +89,7 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(format_mac(mac))
-                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     title=box_name,
