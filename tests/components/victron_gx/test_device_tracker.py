@@ -100,12 +100,12 @@ async def test_victron_device_tracker(
         "source_type": SourceType.GPS,
         "latitude": 52.1,
         "longitude": 4.4,
-        "gps_accuracy": 0,
-        "friendly_name": "GPS Location",
-        "in_zones": [],
         "altitude": 11.0,
         "course": 180.0,
         "speed": 3.5,
+        "gps_accuracy": 0,
+        "friendly_name": "GPS Location",
+        "in_zones": [],
     }
 
     # Send GPS fix lost to exercise the non-GpsLocation reset branch.
