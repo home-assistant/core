@@ -18,16 +18,18 @@ from .const import DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
+type WattTimeConfigEntry = ConfigEntry[WattTimeCoordinator]
+
 
 class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
     """Coordinator for WattTime data updates."""
 
-    config_entry: ConfigEntry
+    config_entry: WattTimeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WattTimeConfigEntry,
         client: Client,
     ) -> None:
         """Initialize the coordinator."""
