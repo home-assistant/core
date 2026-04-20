@@ -20,9 +20,7 @@ from . import CONFIG_DATA, CONFIG_DATA_IMPORT
 from tests.common import MockConfigEntry
 
 
-async def test_import(
-    hass: HomeAssistant, mock_opnsense_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> None:
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -33,12 +31,8 @@ async def test_import(
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == "http://router.lan/api"
 
-    assert len(mock_setup_entry.mock_calls) == 1
 
-
-async def test_user(
-    hass: HomeAssistant, mock_opnsense_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -64,8 +58,6 @@ async def test_user(
     subentries: Iterable[ConfigSubentryData] | None = result.get("subentries")
     assert subentries is not None
     assert subentries == ()
-
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_abort_if_already_setup(

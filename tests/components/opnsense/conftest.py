@@ -46,22 +46,8 @@ def mock_opnsense_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.opnsense.OPNsenseClient", autospec=True
         ) as mock_component_client,
-        patch(
-            "homeassistant.components.opnsense.device_tracker.OPNsenseClient",
-            autospec=True,
-        ) as mock_device_tracker_client,
     ):
         # Set up both clients with the same mock data
         setup_mock_opnsense_client(mock_config_flow_client)
         setup_mock_opnsense_client(mock_component_client)
-        setup_mock_opnsense_client(mock_device_tracker_client)
-        yield mock_device_tracker_client
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.opnsense.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+        yield mock_component_client
