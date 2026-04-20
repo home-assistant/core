@@ -1696,6 +1696,7 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity
     """Base class for Teslemetry vehicle metric sensors."""
 
     entity_description: TeslemetryVehicleSensorEntityDescription
+    _previous_value: float | None = None
 
     def __init__(
         self,
@@ -1710,9 +1711,29 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity
         """Update the attributes of the sensor."""
         if self.entity_description.nullable or self._value is not None:
             self._attr_available = True
-            self._attr_native_value = self.entity_description.polling_value_fn(
-                self._value
-            )
+            new_value = self.entity_description.polling_value_fn(self._value)
+            # Tesla Fleet polling API occasionally returns a value slightly
+            # below the previous reading due to server-side jitter or
+            # recalculation. For TOTAL_INCREASING sensors this triggers
+            # Recorder warnings and resets the statistics baseline. Clamp
+            # the value to the last seen maximum to keep the series
+            # monotonically non-decreasing. A real meter reset (drop to
+            # zero) is passed through unchanged so statistics still handle
+            # meter cycles correctly. Closes home-assistant/core#159988.
+            if (
+                self.entity_description.state_class
+                == SensorStateClass.TOTAL_INCREASING
+                and isinstance(new_value, (float, int))
+            ):
+                if (
+                    self._previous_value is not None
+                    and new_value < self._previous_value
+                    and new_value != 0
+                ):
+                    new_value = self._previous_value
+                else:
+                    self._previous_value = float(new_value)
+            self._attr_native_value = new_value
         else:
             self._attr_available = False
             self._attr_native_value = None

@@ -1,5 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -9,12 +10,18 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfLength,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import ENERGY_HISTORY_EMPTY, VEHICLE_DATA_ALT
+from .const import ENERGY_HISTORY_EMPTY, VEHICLE_DATA, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
 
@@ -97,6 +104,76 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.test_time_to_full_charge").state == "unknown"
     assert hass.states.get("sensor.test_time_to_arrival").state == "unknown"
     assert hass.states.get("sensor.teslemetry_credits").state == "1980"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_total_increasing_clamp(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test that polling TOTAL_INCREASING sensors clamp small backwards jitter.
+
+    The Tesla Fleet API occasionally returns a value slightly below the
+    previous reading due to floating-point jitter or server-side
+    recalculation. Recorder emits a warning and resets the statistics
+    baseline in that case. The sensor platform must clamp such decreases
+    to the last seen maximum while still forwarding a real drop to zero
+    (meter cycle) so the statistics engine keeps working as expected.
+    Regression test for home-assistant/core#159988.
+    """
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    # Odometer native unit is miles; HA converts to km by default in tests.
+    def miles_to_km(miles: float) -> float:
+        return DistanceConverter.convert(
+            miles, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+        )
+
+    # Seed initial odometer value
+    initial_data = deepcopy(VEHICLE_DATA)
+    initial_data["response"]["vehicle_state"]["odometer"] = 6481.02
+    mock_vehicle_data.return_value = initial_data
+    await setup_platform(hass, [Platform.SENSOR])
+    entity_id = "sensor.test_odometer"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(miles_to_km(6481.02))
+
+    # Tiny backwards jitter must be clamped to the previous value
+    jitter_data = deepcopy(VEHICLE_DATA)
+    jitter_data["response"]["vehicle_state"]["odometer"] = 6481.01
+    mock_vehicle_data.return_value = jitter_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == pytest.approx(miles_to_km(6481.02))
+
+    # Strictly larger reading passes through and becomes the new baseline
+    forward_data = deepcopy(VEHICLE_DATA)
+    forward_data["response"]["vehicle_state"]["odometer"] = 6482.5
+    mock_vehicle_data.return_value = forward_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == pytest.approx(miles_to_km(6482.5))
+
+    # A real meter reset to zero must pass through so statistics detects cycles
+    reset_data = deepcopy(VEHICLE_DATA)
+    reset_data["response"]["vehicle_state"]["odometer"] = 0
+    mock_vehicle_data.return_value = reset_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0.0"
 
 
 async def test_energy_history_no_time_series(
