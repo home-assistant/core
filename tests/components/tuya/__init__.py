@@ -15,7 +15,8 @@ from tuya_sharing import (
     Manager,
 )
 
-from homeassistant.components.tuya import DOMAIN, DeviceListener
+from homeassistant.components.tuya.const import DOMAIN
+from homeassistant.components.tuya.coordinator import DeviceListener
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
