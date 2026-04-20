@@ -54,7 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
     except FailedConnectionException as e:
         raise ConfigEntryNotReady("Connection with client failed.") from e
 
-    appliances = await fetch_appliance_data(client)
+    appliances: list[ApplianceData]
+    try:
+        appliances = await fetch_appliance_data(client)
+    except ApplianceClientException as e:
+        raise ConfigEntryNotReady from e
 
     coordinators: dict[str, ElectroluxDataUpdateCoordinator] = {}
     on_livestream_opening_callback_list: list[Callable[[], Awaitable[None]]] = []
@@ -155,7 +159,8 @@ async def _check_for_new_devices(
     device_registry = dr.async_get(hass)
 
     coordinators = entry.runtime_data.coordinators
-    appliances = await fetch_appliance_data(client, Exception)
+    appliances: list[ApplianceData]
+    appliances = await fetch_appliance_data(client)
     entry.runtime_data.appliances = appliances
 
     existing_ids = set(coordinators.keys())
@@ -195,18 +200,18 @@ async def _check_for_new_devices(
         )
 
         if device_entry:
-            device_registry.async_remove_device(device_entry.id)
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=entry.entry_id
+            )
 
 
-async def fetch_appliance_data(
-    client: ApplianceClient, exception_type: type[Exception] = ConfigEntryNotReady
-) -> list[ApplianceData]:
+async def fetch_appliance_data(client: ApplianceClient) -> list[ApplianceData]:
     """Helper method to retrieve all the appliances data from the Electrolux APIs."""
     try:
         appliances = await client.get_appliance_data()
     except ApplianceClientException as e:
         _LOGGER.warning("Failed to get appliances: %s", e)
-        raise exception_type from e
+        raise
 
     # Filter out appliances where details or state is None
     return [

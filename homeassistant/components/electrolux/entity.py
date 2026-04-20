@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import logging
+from typing import TYPE_CHECKING
 
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
@@ -34,25 +35,17 @@ class ElectroluxBaseEntity[T: ApplianceData](
         appliance_name = appliance_data.appliance.applianceName
         appliance_id = appliance_data.appliance.applianceId
 
-        if appliance_data.details is None:
-            _LOGGER.error(
-                "Appliance details are missing for appliance with ID %s", appliance_id
-            )
-            raise ValueError("Appliance details are missing")
+        if TYPE_CHECKING:
+            assert appliance_data.details
+            assert appliance_data.state
 
         appliance_info = appliance_data.details.applianceInfo
 
-        # Set appliance info
         self._appliance_data = appliance_data
         self._attr_unique_id = f"{appliance_id}"
-        self.appliance_id = appliance_id
-        self.coordinator = coordinator
-        if appliance_data.details:
-            self._appliance_capabilities = appliance_data.details.capabilities
-        if appliance_data.state:
-            self._reported_appliance_state = appliance_data.state.properties.get(
-                "reported"
-            )
+        self._appliance_id = appliance_id
+        self._appliance_capabilities = appliance_data.details.capabilities
+        self._reported_appliance_state = appliance_data.state.properties.get("reported")
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, appliance_id)},
@@ -88,7 +81,7 @@ class ElectroluxBaseEntity[T: ApplianceData](
         """When the coordinator updates."""
         appliance_state = self.coordinator.data
         if not appliance_state:
-            _LOGGER.warning("Appliance %s not found in update", self.appliance_id)
+            _LOGGER.warning("Appliance %s not found in update", self._appliance_id)
             return
 
         # Update state
