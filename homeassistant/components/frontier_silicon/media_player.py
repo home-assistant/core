@@ -26,6 +26,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import FrontierSiliconConfigEntry
 from .browse_media import browse_node, browse_top_level
@@ -118,7 +119,8 @@ class AFSAPIDevice(MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.REPEAT_SET
         if self.__play_caps & PlayCaps.SHUFFLE:
             features |= MediaPlayerEntityFeature.SHUFFLE_SET
-
+        if self.__play_caps & PlayCaps.SEEK:
+            features |= MediaPlayerEntityFeature.SEEK
         if self._supports_sound_mode:
             features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
 
@@ -223,6 +225,21 @@ class AFSAPIDevice(MediaPlayerEntity):
             self._attr_is_volume_muted = await afsapi.get_mute()
             self._attr_media_image_url = await afsapi.get_play_graphic()
 
+            if self.__play_caps and self.__play_caps & PlayCaps.SEEK:
+                position_ms = await afsapi.get_play_position()
+                duration_ms = await afsapi.get_play_duration()
+                self._attr_media_position = (
+                    position_ms // 1000 if position_ms is not None else None
+                )
+                self._attr_media_duration = (
+                    duration_ms // 1000 if duration_ms is not None else None
+                )
+                self._attr_media_position_updated_at = dt_util.utcnow()
+            else:
+                self._attr_media_position = None
+                self._attr_media_duration = None
+                self._attr_media_position_updated_at = None
+
             if self._supports_sound_mode:
                 try:
                     eq_preset = await afsapi.get_eq_preset()
@@ -247,6 +264,9 @@ class AFSAPIDevice(MediaPlayerEntity):
             self._attr_is_volume_muted = None
             self._attr_media_image_url = None
             self._attr_sound_mode = None
+            self._attr_media_position = None
+            self._attr_media_duration = None
+            self._attr_media_position_updated_at = None
 
             self._attr_volume_level = None
 
@@ -333,6 +353,10 @@ class AFSAPIDevice(MediaPlayerEntity):
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
         await self.fs_device.set_play_shuffle(shuffle)
+
+    async def async_media_seek(self, position: float) -> None:
+        """Seek to a position in seconds."""
+        await self.fs_device.set_play_position(int(position * 1000))
 
     async def async_browse_media(
         self,

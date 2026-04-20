@@ -63,6 +63,8 @@ from .entity import (
 )
 from .hub import UnifiHub
 
+PARALLEL_UPDATES = 0
+
 
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
