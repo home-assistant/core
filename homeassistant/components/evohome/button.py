@@ -5,7 +5,6 @@ from __future__ import annotations
 import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -44,8 +43,6 @@ async def async_setup_platform(
 
 class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEntity):
     """Base for Evohome's Button entities."""
-
-    _attr_entity_category = EntityCategory.CONFIG
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
 
