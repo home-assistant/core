@@ -117,7 +117,7 @@ async def test_form_with_referrer(
 @pytest.mark.parametrize(
     ("api_exception", "expected_error"),
     [
-        (InvalidCustomLAQIConfigurationError(), "missmatch_country_and_laqi"),
+        (InvalidCustomLAQIConfigurationError(), "mismatch_country_and_laqi"),
         (GoogleAirQualityApiError(), "cannot_connect"),
         (ValueError(), "unknown"),
     ],
