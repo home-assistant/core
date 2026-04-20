@@ -19,7 +19,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DucoConfigEntry, DucoCoordinator
@@ -110,23 +110,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up Duco sensor entities."""
     coordinator = entry.runtime_data
+    known_nodes: set[int] = set()
 
-    async_add_entities(
-        [
-            *[
+    @callback
+    def _async_add_new_entities() -> None:
+        new_entities: list[SensorEntity] = []
+        for node in coordinator.data.nodes.values():
+            if node.node_id in known_nodes:
+                continue
+            known_nodes.add(node.node_id)
+            new_entities.extend(
                 DucoSensorEntity(coordinator, node, description)
-                for node in coordinator.data.nodes.values()
                 for description in SENSOR_DESCRIPTIONS
                 if node.general.node_type in description.node_types
-            ],
-            *[
+            )
+            new_entities.extend(
                 DucoBoxSensorEntity(coordinator, node, description)
-                for node in coordinator.data.nodes.values()
                 for description in BOX_SENSOR_DESCRIPTIONS
                 if node.general.node_type == NodeType.BOX
-            ],
-        ]
-    )
+            )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
+    _async_add_new_entities()
 
 
 class DucoSensorEntity(DucoEntity, SensorEntity):

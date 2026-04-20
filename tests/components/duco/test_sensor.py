@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
+from duco.models import Node, NodeGeneralInfo, NodeSensorInfo, NodeVentilationInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -125,3 +126,49 @@ async def test_lan_info_duco_error_marks_unavailable(
     state = hass.states.get("sensor.living_signal_strength")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_new_node_added_dynamically(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a new node appearing in coordinator data creates entities automatically."""
+    assert hass.states.get("sensor.new_rh_sensor_humidity") is None
+
+    new_node = Node(
+        node_id=200,
+        general=NodeGeneralInfo(
+            node_type="BSRH",
+            sub_type=0,
+            network_type="RF",
+            parent=1,
+            asso=1,
+            name="New RH sensor",
+            identify=0,
+        ),
+        ventilation=NodeVentilationInfo(
+            state="AUTO",
+            time_state_remain=0,
+            time_state_end=0,
+            mode="-",
+            flow_lvl_tgt=None,
+        ),
+        sensor=NodeSensorInfo(
+            co2=None,
+            iaq_co2=None,
+            rh=55.0,
+            iaq_rh=70,
+        ),
+    )
+    mock_duco_client.async_get_nodes.return_value = [*mock_nodes, new_node]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.new_rh_sensor_humidity")
+    assert state is not None
+    assert state.state == "55.0"

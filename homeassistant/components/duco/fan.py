@@ -64,6 +64,9 @@ async def async_setup_entry(
     """Set up Duco fan entities."""
     coordinator = entry.runtime_data
 
+    # A Duco installation always has exactly one BOX node, present from the
+    # first poll. Unlike sensor modules (UCCO2, BSRH), additional fan nodes
+    # cannot be added after setup, so a static entity list is sufficient here.
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
         for node in coordinator.data.nodes.values()
