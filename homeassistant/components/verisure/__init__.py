@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> 
     return True
 
 
-async def update_listener(hass: HomeAssistant, entry: VerisureConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Handle options update."""
     # Propagate configuration change.
     entry.runtime_data.async_update_listeners()
