@@ -21,6 +21,7 @@ from pyinsteon.events import (
     ON_FAST_EVENT,
     Event,
 )
+
 from homeassistant.components import usb
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
