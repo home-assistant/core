@@ -7,7 +7,10 @@ from typing import Any
 
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.auth import Auth
-from google_air_quality_api.exceptions import GoogleAirQualityApiError
+from google_air_quality_api.exceptions import (
+    GoogleAirQualityApiError,
+    InvalidCustomLAQIConfigurationError,
+)
 from google_air_quality_api.mapping import AQICategoryMapping
 import voluptuous as vol
 
@@ -94,6 +97,8 @@ async def _validate_input(
                 lat=user_input[CONF_LOCATION][CONF_LATITUDE],
                 lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
             )
+    except InvalidCustomLAQIConfigurationError:
+        errors["base"] = "missmatch_country_and_laqi"
     except GoogleAirQualityApiError as err:
         errors["base"] = "cannot_connect"
         description_placeholders["error_message"] = str(err)

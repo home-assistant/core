@@ -2,7 +2,10 @@
 
 from unittest.mock import AsyncMock
 
-from google_air_quality_api.exceptions import GoogleAirQualityApiError
+from google_air_quality_api.exceptions import (
+    GoogleAirQualityApiError,
+    InvalidCustomLAQIConfigurationError,
+)
 import pytest
 
 from homeassistant.components.google_air_quality.const import (
@@ -114,6 +117,7 @@ async def test_form_with_referrer(
 @pytest.mark.parametrize(
     ("api_exception", "expected_error"),
     [
+        (InvalidCustomLAQIConfigurationError(), "missmatch_country_and_laqi"),
         (GoogleAirQualityApiError(), "cannot_connect"),
         (ValueError(), "unknown"),
     ],
