@@ -16,7 +16,6 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEvent,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -60,7 +59,7 @@ from .const import (
     START,
     SUMMARY,
 )
-from .coordinator import TodoistCoordinator, flatten_async_pages
+from .coordinator import TodoistConfigEntry, TodoistCoordinator, flatten_async_pages
 from .types import CalData, CustomProject, ProjectData, TodoistEvent
 from .util import parse_due_date
 
@@ -116,11 +115,11 @@ SCAN_INTERVAL = timedelta(minutes=1)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TodoistConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Todoist calendar platform config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     projects = await coordinator.async_get_projects()
     labels = await coordinator.async_get_labels()
 
