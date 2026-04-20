@@ -48,19 +48,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         """Determine if the current time is after sunset."""
         now = dt_util.now()
         today = now.date()
-        event_date = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+        if (
+            event_date := get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
+        ) is not None:
+            if today > dt_util.as_local(event_date).date():
+                event_date = get_astral_event_date(
+                    hass, SUN_EVENT_SUNSET, today + datetime.timedelta(days=1)
+                )
         if event_date is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="sunset_event"
             )
-        if today > dt_util.as_local(event_date).date():
-            event_date = get_astral_event_date(
-                hass, SUN_EVENT_SUNSET, today + datetime.timedelta(days=1)
-            )
-            if event_date is None:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="sunset_event"
-                )
         sunset = dt_util.as_local(event_date)
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
         return now > sunset
