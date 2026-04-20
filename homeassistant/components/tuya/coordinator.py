@@ -1,7 +1,5 @@
 """Support for Tuya Smart devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_sharing import (
