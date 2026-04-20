@@ -160,14 +160,19 @@ class OTBRData:
         applies the current state and clears the pending migration.
         """
         # Try the spec-compliant DELETE first; if it succeeds, return early.
-        # If it fails (e.g. 405 on older firmware), fall through to the
+        # If it fails with 405 on older firmware, fall through to the
         # fallback which overwrites the pending dataset instead.
+        # Re-raise any other error (connectivity, server errors, etc.).
         try:
             await self.api.delete_pending_dataset()
-        except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
+        except python_otbr_api.OTBRError as exc:
+            if "405" not in str(exc):
+                raise HomeAssistantError("Failed to call OTBR API") from exc
             _LOGGER.debug(
                 "DELETE pending dataset not supported, using fallback: %s", exc
             )
+        except (aiohttp.ClientError, TimeoutError) as exc:
+            raise HomeAssistantError("Failed to call OTBR API") from exc
         else:
             return
 

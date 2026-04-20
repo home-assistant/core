@@ -912,6 +912,35 @@ async def test_delete_pending_dataset_fallback(
     assert pending_dataset.active_dataset.active_timestamp.seconds == 2
 
 
+async def test_delete_pending_dataset_non_405_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_thread,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test delete pending dataset raises on non-405 errors instead of falling back."""
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+        patch(
+            "python_otbr_api.OTBR.delete_pending_dataset",
+            side_effect=python_otbr_api.OTBRError("unexpected http status 500"),
+        ),
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/delete_pending_dataset",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "delete_pending_dataset_failed"
+
+
 async def test_delete_pending_dataset_fallback_fails(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

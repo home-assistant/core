@@ -305,7 +305,6 @@ async def websocket_set_channel(
         vol.Required("extended_address"): str,
     }
 )
-@websocket_api.require_admin
 @websocket_api.async_response
 @async_get_otbr_data
 async def websocket_get_pending_dataset(
