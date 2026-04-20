@@ -21,13 +21,15 @@ from homeassistant.util import Throttle
 
 from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
+type VerisureConfigEntry = ConfigEntry[VerisureDataUpdateCoordinator]
+
 
 class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     """A Verisure Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: VerisureConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
         """Initialize the Verisure hub."""
         self.imageseries: list[dict[str, str]] = []
         self._overview: list[dict] = []

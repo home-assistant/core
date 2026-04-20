@@ -14,8 +14,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import CONF_LOCK_DEFAULT_CODE, DOMAIN, LOGGER
-from .coordinator import VerisureDataUpdateCoordinator
+from .const import CONF_LOCK_DEFAULT_CODE, LOGGER
+from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -27,7 +27,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> bool:
     """Set up Verisure from a config entry."""
     await hass.async_add_executor_job(migrate_cookie_files, hass, entry)
 
@@ -38,8 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Migrate lock default code from config entry to lock entity
 
@@ -52,14 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: VerisureConfigEntry) -> None:
     """Handle options update."""
     # Propagate configuration change.
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    coordinator.async_update_listeners()
+    entry.runtime_data.async_update_listeners()
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> bool:
     """Unload Verisure config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
@@ -68,11 +66,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.data[CONF_EMAIL]}")
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.unlink, cookie_file)
-
-    del hass.data[DOMAIN][entry.entry_id]
-
-    if not hass.data[DOMAIN]:
-        del hass.data[DOMAIN]
 
     return True
 
