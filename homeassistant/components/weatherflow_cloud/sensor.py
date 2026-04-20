@@ -359,8 +359,8 @@ async def async_setup_entry(
 
     coordinators = entry.runtime_data
     rest_coordinator = coordinators.rest
-    wind_coordinator = coordinators.wind  # Now properly typed
-    observation_coordinator = coordinators.observation  # Now properly typed
+    wind_coordinator = coordinators.wind
+    observation_coordinator = coordinators.observation
 
     entities: list[SensorEntity] = [
         WeatherFlowCloudSensorREST(rest_coordinator, sensor_description, station_id)
