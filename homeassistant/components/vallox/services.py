@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from enum import StrEnum, auto
 import logging
 
 from vallox_websocket_api import Profile, Vallox, ValloxApiException
@@ -19,10 +20,15 @@ ATTR_PROFILE_FAN_SPEED = "fan_speed"
 ATTR_PROFILE = "profile"
 ATTR_DURATION = "duration"
 
-SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
-SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
-SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
-SERVICE_SET_PROFILE = "set_profile"
+
+class ValloxService(StrEnum):
+    """Vallox service names."""
+
+    SET_PROFILE_FAN_SPEED_HOME = auto()
+    SET_PROFILE_FAN_SPEED_AWAY = auto()
+    SET_PROFILE_FAN_SPEED_BOOST = auto()
+    SET_PROFILE = auto()
+
 
 SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     {
@@ -41,12 +47,6 @@ SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
     }
 )
 
-SERVICE_TO_PROFILE = {
-    SERVICE_SET_PROFILE_FAN_SPEED_HOME: Profile.HOME,
-    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: Profile.AWAY,
-    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: Profile.BOOST,
-}
-
 
 def _iter_loaded_clients(
     hass: HomeAssistant,
@@ -57,9 +57,8 @@ def _iter_loaded_clients(
         yield data["client"], data["coordinator"]
 
 
-async def _async_set_profile_fan_speed(call: ServiceCall) -> None:
+async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> None:
     """Set the fan speed in percent for the profile matching the called service."""
-    profile = SERVICE_TO_PROFILE[call.service]
     fan_speed: int = call.data[ATTR_PROFILE_FAN_SPEED]
     _LOGGER.debug("Setting %s fan speed to: %d%%", profile.name, fan_speed)
 
@@ -72,6 +71,21 @@ async def _async_set_profile_fan_speed(call: ServiceCall) -> None:
             )
             continue
         await coordinator.async_request_refresh()
+
+
+async def _async_set_profile_fan_speed_away(call: ServiceCall) -> None:
+    """Set the fan speed in percent for the Away profile."""
+    await _async_set_profile_fan_speed(call, Profile.AWAY)
+
+
+async def _async_set_profile_fan_speed_boost(call: ServiceCall) -> None:
+    """Set the fan speed in percent for the Boost profile."""
+    await _async_set_profile_fan_speed(call, Profile.BOOST)
+
+
+async def _async_set_profile_fan_speed_home(call: ServiceCall) -> None:
+    """Set the fan speed in percent for the Home profile."""
+    await _async_set_profile_fan_speed(call, Profile.HOME)
 
 
 async def _async_set_profile(call: ServiceCall) -> None:
@@ -97,16 +111,27 @@ async def _async_set_profile(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Vallox services."""
-    for service_name in SERVICE_TO_PROFILE:
-        hass.services.async_register(
-            DOMAIN,
-            service_name,
-            _async_set_profile_fan_speed,
-            schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-        )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_PROFILE,
+        ValloxService.SET_PROFILE_FAN_SPEED_AWAY,
+        _async_set_profile_fan_speed_away,
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        ValloxService.SET_PROFILE_FAN_SPEED_BOOST,
+        _async_set_profile_fan_speed_boost,
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        ValloxService.SET_PROFILE_FAN_SPEED_HOME,
+        _async_set_profile_fan_speed_home,
+        schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        ValloxService.SET_PROFILE,
         _async_set_profile,
         schema=SERVICE_SCHEMA_SET_PROFILE,
     )
