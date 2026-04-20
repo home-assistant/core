@@ -5,13 +5,13 @@ from __future__ import annotations
 from enum import StrEnum, auto
 import logging
 
-from vallox_websocket_api import Profile, Vallox, ValloxApiException
+from vallox_websocket_api import Profile, ValloxApiException
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 
 from .const import DOMAIN, I18N_KEY_TO_VALLOX_PROFILE
-from .coordinator import ValloxDataUpdateCoordinator
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,16 +47,15 @@ SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
 )
 
 
-def _get_client(
+def _get_coordinator(
     hass: HomeAssistant,
-) -> tuple[Vallox, ValloxDataUpdateCoordinator]:
-    """Return (client, coordinator) for Vallox config entry."""
-    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+) -> ValloxDataUpdateCoordinator:
+    """Return the coordinator for the Vallox config entry."""
+    entries: list[ValloxConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
     if len(entries) != 1:
         raise ValueError("Expected exactly one loaded Vallox config entry")
 
-    data = hass.data[DOMAIN][entries[0].entry_id]
-    return data["client"], data["coordinator"]
+    return entries[0].runtime_data
 
 
 async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> None:
@@ -64,9 +63,9 @@ async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> N
     fan_speed: int = call.data[ATTR_PROFILE_FAN_SPEED]
     _LOGGER.debug("Setting %s fan speed to: %d%%", profile.name, fan_speed)
 
-    client, coordinator = _get_client(call.hass)
+    coordinator = _get_coordinator(call.hass)
     try:
-        await client.set_fan_speed(profile, fan_speed)
+        await coordinator.client.set_fan_speed(profile, fan_speed)
     except ValloxApiException as err:
         _LOGGER.error("Error setting fan speed for %s profile: %s", profile.name, err)
     else:
@@ -94,9 +93,11 @@ async def _async_set_profile(call: ServiceCall) -> None:
     duration: int | None = call.data.get(ATTR_DURATION)
     _LOGGER.debug("Activating profile %s for %s min", profile_key, duration)
 
-    client, coordinator = _get_client(call.hass)
+    coordinator = _get_coordinator(call.hass)
     try:
-        await client.set_profile(I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration)
+        await coordinator.client.set_profile(
+            I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration
+        )
     except ValloxApiException as err:
         _LOGGER.error(
             "Error setting profile %s for duration %s: %s",
