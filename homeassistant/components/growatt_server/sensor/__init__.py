@@ -31,15 +31,15 @@ def _create_sensors_for_device(
 ) -> list[GrowattSensor]:
     """Create sensor entities for a device coordinator."""
     if coordinator.device_type == "inverter":
-        sensor_descriptions = list(INVERTER_SENSOR_TYPES)
+        sensor_descriptions = INVERTER_SENSOR_TYPES
     elif coordinator.device_type in ("tlx", "min"):
-        sensor_descriptions = list(TLX_SENSOR_TYPES)
+        sensor_descriptions = TLX_SENSOR_TYPES
     elif coordinator.device_type == "storage":
-        sensor_descriptions = list(STORAGE_SENSOR_TYPES)
+        sensor_descriptions = STORAGE_SENSOR_TYPES
     elif coordinator.device_type == "mix":
-        sensor_descriptions = list(MIX_SENSOR_TYPES)
+        sensor_descriptions = MIX_SENSOR_TYPES
     elif coordinator.device_type == "sph":
-        sensor_descriptions = list(SPH_SENSOR_TYPES)
+        sensor_descriptions = SPH_SENSOR_TYPES
     else:
         _LOGGER.debug(
             "Device type %s was found but is not supported right now",

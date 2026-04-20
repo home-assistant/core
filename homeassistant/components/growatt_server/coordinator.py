@@ -8,6 +8,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import growattServer
+from requests import RequestException
 
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -66,7 +67,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Populated during _sync_update_data when request_device_list_scan() was called.
         # Consumed by _async_scan_for_new_devices to avoid a separate executor job
         # and the extra login() call that would otherwise be required (Classic API).
+        # Thread safety: written in the executor thread, read on the event loop after
+        # async_refresh() awaits the executor job — ordering guarantees safe access.
         self.device_list: list[dict[str, str]] | None = None
+        # Flag set on the event loop (request_device_list_scan) and consumed in the
+        # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
 
         if self.api_version == "v1":
@@ -179,7 +184,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             }
                             for device in devices
                         ]
-                    except Exception as err:  # noqa: BLE001
+                    except (
+                        RequestException,
+                        json.JSONDecodeError,
+                        KeyError,
+                        TypeError,
+                    ) as err:
                         _LOGGER.debug(
                             "Failed to fetch Classic device list during scan: %s", err
                         )

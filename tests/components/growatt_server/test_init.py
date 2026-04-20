@@ -850,13 +850,12 @@ async def test_dynamic_device_added(
     assert hass.states.get("switch.new456789_charge_from_grid") is not None
     # Additional check: verify entities exist in the entity registry
     entity_registry = er.async_get(hass)
-    new_device_entities = [
-        entity
-        for entity in entity_registry.entities.values()
-        if entity.device_id == device_registry.async_get_device(
-            identifiers={(DOMAIN, "NEW456789")}
-        ).id
-    ]
+    new_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "NEW456789")}
+    )
+    new_device_entities = er.async_entries_for_device(
+        entity_registry, new_device_entry.id, include_disabled_entities=True
+    )
     assert len(new_device_entities) > 0, "No entities created for new device"
 
 

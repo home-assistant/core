@@ -35,11 +35,7 @@ from requests import RequestException
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -57,6 +53,7 @@ from .const import (
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
+    SUPPORTED_DEVICE_TYPES,
     V1_API_ERROR_NO_PRIVILEGE,
     V1_DEVICE_TYPES,
 )
@@ -356,7 +353,7 @@ async def async_setup_entry(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
         )
         for device in devices
-        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min", "sph"]
+        if device["deviceType"] in SUPPORTED_DEVICE_TYPES
     }
 
     # Perform the first refresh for the total coordinator
@@ -378,7 +375,7 @@ async def async_setup_entry(
     async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
         """Scan for new or removed devices and update HA accordingly."""
         # Fetch current config (in case it was updated via reauth or options)
-        current_plant_id = config_entry.data.get(CONF_PLANT_ID, DEFAULT_PLANT_ID)
+        current_plant_id = config_entry.data[CONF_PLANT_ID]
 
         total_coordinator = config_entry.runtime_data.total_coordinator
         # Signal the coordinator to also fetch the device list on its next
@@ -405,7 +402,6 @@ async def async_setup_entry(
 
         # Remove stale devices
         device_registry = dr.async_get(hass)
-        entity_registry = er.async_get(hass)
         for device_entry in dr.async_entries_for_config_entry(
             device_registry, config_entry.entry_id
         ):
@@ -423,14 +419,6 @@ async def async_setup_entry(
                 for device_sn in device_domain_ids:
                     if coordinator := runtime_data.devices.pop(device_sn, None):
                         await coordinator.async_shutdown()
-                # Remove orphaned entities from the entity registry so they don't
-                # linger in the state machine after the device is gone.
-                for entity_entry in er.async_entries_for_device(
-                    entity_registry,
-                    device_entry.id,
-                    include_disabled_entities=True,
-                ):
-                    entity_registry.async_remove(entity_entry.entity_id)
                 device_registry.async_update_device(
                     device_entry.id,
                     remove_config_entry_id=config_entry.entry_id,
@@ -443,7 +431,7 @@ async def async_setup_entry(
             device_type = device["deviceType"]
             if device_sn in runtime_data.devices:
                 continue
-            if device_type not in ["inverter", "tlx", "storage", "mix", "min", "sph"]:
+            if device_type not in SUPPORTED_DEVICE_TYPES:
                 _LOGGER.debug(
                     "New device %s with type %s is not supported, skipping",
                     device_sn,
