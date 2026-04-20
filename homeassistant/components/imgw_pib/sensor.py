@@ -16,7 +16,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfLength, UnitOfTemperature, UnitOfVolumeFlowRate
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -59,6 +64,14 @@ SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
         options=list(HYDROLOGICAL_ALERTS_MAP.values()),
         value=lambda data: data.hydrological_alert.value,
         attrs=gen_alert_attributes,
+    ),
+    ImgwPibSensorEntityDescription(
+        key="ice_phenomena",
+        translation_key="ice_phenomena",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.ice_phenomena.value,
+        suggested_display_precision=0,
     ),
     ImgwPibSensorEntityDescription(
         key="water_flow",
