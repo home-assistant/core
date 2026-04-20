@@ -109,7 +109,9 @@ def test_parse_push_data_empty() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_dispatch_push_data_valid(registered_receiver) -> None:
+def test_dispatch_push_data_valid(
+    registered_receiver: tuple[PushReceiver, list[dict[str, Any]]],
+) -> None:
     """Test dispatch with valid registered device."""
     receiver, calls = registered_receiver
 
@@ -124,7 +126,7 @@ def test_dispatch_push_data_valid(registered_receiver) -> None:
     assert len(calls) == 1
 
 
-def test_dispatch_unknown_mac(push_receiver) -> None:
+def test_dispatch_unknown_mac(push_receiver: PushReceiver) -> None:
     """Test dispatch with unknown MAC."""
     query = {
         "mac": "deadbeef",
@@ -136,7 +138,7 @@ def test_dispatch_unknown_mac(push_receiver) -> None:
     assert "unregistered device" in result
 
 
-def test_dispatch_missing_mac(push_receiver) -> None:
+def test_dispatch_missing_mac(push_receiver: PushReceiver) -> None:
     """Test dispatch with missing MAC."""
     result = _dispatch_push_data(push_receiver, {})
 

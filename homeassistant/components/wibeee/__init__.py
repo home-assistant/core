@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
     # Fetch device info
     try:
         device_info = await api.async_fetch_device_info(retries=3)
-    except Exception as err:
+    except (TimeoutError, aiohttp.ClientError) as err:
         raise ConfigEntryNotReady(f"Could not connect to Wibeee at {host}") from err
 
     if device_info is None:

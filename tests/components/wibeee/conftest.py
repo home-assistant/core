@@ -77,6 +77,7 @@ def get_config_options() -> dict:
 async def load_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_wibeee_api,
 ) -> MockConfigEntry:
     """Set up the Wibeee integration in Home Assistant."""
     mock_config_entry.add_to_hass(hass)
