@@ -6,12 +6,11 @@ import json
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_TAILNET, DOMAIN
-from .coordinator import TailscaleDataUpdateCoordinator
+from .const import CONF_TAILNET
+from .coordinator import TailscaleConfigEntry
 
 TO_REDACT = {
     CONF_API_KEY,
@@ -28,10 +27,11 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: TailscaleConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: TailscaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     # Round-trip via JSON to trigger serialization
-    devices = [json.loads(device.to_json()) for device in coordinator.data.values()]
+    devices = [
+        json.loads(device.to_json()) for device in entry.runtime_data.data.values()
+    ]
     return async_redact_data({"devices": devices}, TO_REDACT)
