@@ -120,3 +120,4 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         await self.coordinator.device_client.async_turn_off()
         self.coordinator.data.on = False
         self._attr_is_on = False
+        self.async_write_ha_state()
