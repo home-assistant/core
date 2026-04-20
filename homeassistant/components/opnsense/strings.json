@@ -47,6 +47,26 @@
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"
     },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an authentication error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_url": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the URL provided is invalid or unreachable. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_version": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the OPNsense firmware version is unsupported. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_privilege_missing": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an error occurred indicating the API key used does not have sufficient privileges. Please check the integration documentation for required permissions, correct your YAML configuration, and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_ssl_error": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an SSL error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
     "deprecated_yaml_import_issue_unknown": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unknown error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"
