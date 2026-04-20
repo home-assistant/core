@@ -4,21 +4,18 @@ from typing import Any
 
 from zeversolar import ZeverSolarData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN
-from .coordinator import ZeversolarCoordinator
+from .coordinator import ZeversolarConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ZeversolarConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    coordinator: ZeversolarCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    data: ZeverSolarData = coordinator.data
+    data: ZeverSolarData = config_entry.runtime_data.data
 
     payload: dict[str, Any] = {
         "wifi_enabled": data.wifi_enabled,
@@ -40,10 +37,10 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: ZeversolarConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    coordinator: ZeversolarCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     updateInterval = (
         None

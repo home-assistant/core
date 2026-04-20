@@ -114,7 +114,7 @@ MAX_TOOL_ITERATIONS = 10
 
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
-    """Adjust the schema to be compatible with OpenAI API."""
+    """Adjust the output schema to be compatible with OpenAI API."""
     if schema["type"] == "object":
         schema.setdefault("strict", True)
         schema.setdefault("additionalProperties", False)
@@ -158,10 +158,15 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> FunctionToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
+    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    if unsupported_keys.intersection(schema):
+        schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     return FunctionToolParam(
         type="function",
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=schema,
         description=tool.description,
         strict=False,
     )
