@@ -13,6 +13,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type Tami4ConfigEntry = ConfigEntry[Tami4Data]
+
+
+@dataclass
+class Tami4Data:
+    """Runtime data for Tami4Edge."""
+
+    api: Tami4EdgeAPI
+    coordinator: Tami4EdgeCoordinator
+
 
 @dataclass
 class FlattenedWaterQuality:
@@ -37,10 +47,10 @@ class FlattenedWaterQuality:
 class Tami4EdgeCoordinator(DataUpdateCoordinator[FlattenedWaterQuality]):
     """Tami4Edge water quality coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: Tami4ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: Tami4EdgeAPI
+        self, hass: HomeAssistant, config_entry: Tami4ConfigEntry, api: Tami4EdgeAPI
     ) -> None:
         """Initialize the water quality coordinator."""
         super().__init__(

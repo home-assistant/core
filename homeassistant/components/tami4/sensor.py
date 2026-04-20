@@ -10,14 +10,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import API, COORDINATOR, DOMAIN
-from .coordinator import Tami4EdgeCoordinator
+from .coordinator import Tami4ConfigEntry, Tami4EdgeCoordinator
 from .entity import Tami4EdgeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,13 +51,12 @@ ENTITY_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: Tami4ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Tami4Edge."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    api: Tami4EdgeAPI = data[API]
-    coordinator: Tami4EdgeCoordinator = data[COORDINATOR]
+    api = entry.runtime_data.api
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         Tami4EdgeSensorEntity(
