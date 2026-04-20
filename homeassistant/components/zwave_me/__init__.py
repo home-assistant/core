@@ -12,13 +12,15 @@ from .controller import ZWaveMeConfigEntry, ZWaveMeController
 async def async_setup_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> bool:
     """Set up Z-Wave-Me from a config entry."""
     controller = ZWaveMeController(hass, entry)
-    if await controller.async_establish_connection():
-        entry.runtime_data = controller
-        await async_setup_platforms(hass, entry, controller)
-        registry = dr.async_get(hass)
-        controller.remove_stale_devices(registry)
-        return True
-    raise ConfigEntryNotReady
+
+    if not await controller.async_establish_connection():
+        raise ConfigEntryNotReady
+
+    entry.runtime_data = controller
+    await async_setup_platforms(hass, entry, controller)
+    registry = dr.async_get(hass)
+    controller.remove_stale_devices(registry)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ZWaveMeConfigEntry) -> bool:
