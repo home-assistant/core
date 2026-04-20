@@ -51,7 +51,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.252829121875',
+    'state': '0.256940348958333',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_current_hour_price-entry]
@@ -265,7 +265,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2026-04-10T01:00:00+00:00',
+    'state': '2026-04-11T06:00:00+00:00',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_max_price-entry]
@@ -375,7 +375,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.19798625',
+    'state': '0.188351625',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_next_hour_price-entry]
@@ -540,7 +540,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.2736393201224',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_next_hour_price-entry]
@@ -595,6 +595,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.2736393201224',
+    'state': 'unknown',
   })
 # ---

@@ -2,13 +2,13 @@
 # name: test_diagnostics_no_gas_today
   dict({
     'energy': dict({
-      'average_price': 0.252829121875,
+      'average_price': 0.25694034895833334,
       'current_hour_price': 0.28275885,
       'highest_price_time': '2026-04-10T18:00:00+00:00',
       'hours_priced_equal_or_lower': 20,
-      'lowest_price_time': '2026-04-10T01:00:00+00:00',
+      'lowest_price_time': '2026-04-11T06:00:00+00:00',
       'max_price': 0.399000525,
-      'min_price': 0.19798625,
+      'min_price': 0.188351625,
       'next_hour_price': 0.2629693,
       'percentage_of_max': 70.87,
     }),
@@ -24,13 +24,13 @@
 # name: test_entry_diagnostics
   dict({
     'energy': dict({
-      'average_price': 0.252829121875,
+      'average_price': 0.25694034895833334,
       'current_hour_price': 0.28275885,
       'highest_price_time': '2026-04-10T18:00:00+00:00',
       'hours_priced_equal_or_lower': 20,
-      'lowest_price_time': '2026-04-10T01:00:00+00:00',
+      'lowest_price_time': '2026-04-11T06:00:00+00:00',
       'max_price': 0.399000525,
-      'min_price': 0.19798625,
+      'min_price': 0.188351625,
       'next_hour_price': 0.2629693,
       'percentage_of_max': 70.87,
     }),
@@ -38,8 +38,8 @@
       'title': 'energy',
     }),
     'gas': dict({
-      'current_hour_price': 1.2736393201224,
-      'next_hour_price': 1.2736393201224,
+      'current_hour_price': None,
+      'next_hour_price': None,
     }),
   })
 # ---
