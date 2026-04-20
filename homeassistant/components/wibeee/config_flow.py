@@ -127,7 +127,7 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
         ip = await async_get_source_ip(hass)
         if ip is not None:
             return ip
-    except (ImportError, HomeAssistantError, OSError):
+    except ImportError, HomeAssistantError, OSError:
         pass
 
     # 2. URL helper (lightweight, does not require network component)
@@ -144,7 +144,7 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
             except ValueError:
                 # Not an IP literal (e.g. hostname) -- usable as-is
                 return host
-    except (ImportError, HomeAssistantError, OSError):
+    except ImportError, HomeAssistantError, OSError:
         pass
 
     # 3. Fallback: raw socket probe (blocking, run in executor)
@@ -164,7 +164,7 @@ def _get_ha_port(hass: HomeAssistant) -> int:
         port = urlparse(url).port
         if port is not None:
             return port
-    except (ImportError, HomeAssistantError, OSError):
+    except ImportError, HomeAssistantError, OSError:
         pass
 
     return DEFAULT_HA_PORT
@@ -212,7 +212,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             is_wibeee = await api.async_check_connection()
             if not is_wibeee:
                 return self.async_abort(reason="not_wibeee_device")
-        except (TimeoutError, aiohttp.ClientError):
+        except TimeoutError, aiohttp.ClientError:
             return self.async_abort(reason="no_device_info")
 
         self._discovered_host = host
@@ -293,7 +293,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             local_ip,
                             ha_port,
                         )
-                except (TimeoutError, aiohttp.ClientError, OSError):
+                except TimeoutError, aiohttp.ClientError, OSError:
                     _LOGGER.debug(
                         "Failed to auto-configure WiBeee at %s",
                         self._user_data[CONF_HOST],
@@ -421,7 +421,7 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
                     success = await api.async_configure_push_server(local_ip, ha_port)
                     if not success:
                         errors["base"] = "auto_configure_failed"
-                except (TimeoutError, aiohttp.ClientError, OSError):
+                except TimeoutError, aiohttp.ClientError, OSError:
                     _LOGGER.debug(
                         "Failed to auto-configure WiBeee at %s",
                         self.config_entry.data[CONF_HOST],
