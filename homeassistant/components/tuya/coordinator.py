@@ -93,8 +93,8 @@ class DeviceListener(SharingDeviceListener):
         )
 
     def add_device(self, device: CustomerDevice) -> None:
-        """Add device added listener."""
-        # Ensure the device isn't present stale
+        """Handle device added event."""
+        # Ensure the (stale) device isn't present
         self.hass.add_job(self.async_remove_device, device.id)
 
         LOGGER.debug(
@@ -109,7 +109,7 @@ class DeviceListener(SharingDeviceListener):
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
     def remove_device(self, device_id: str) -> None:
-        """Add device removed listener."""
+        """Handle device removal event."""
         self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
