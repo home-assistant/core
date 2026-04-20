@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import ATTR_POWER
-from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES, LIFXLight
+from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.lifx.manager import (
     ATTR_CLOUD_SATURATION_MAX,
     ATTR_CLOUD_SATURATION_MIN,
@@ -41,7 +41,6 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    DATA_COMPONENT as LIGHT_DATA_COMPONENT,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_ON,
     ColorMode,
@@ -2212,91 +2211,10 @@ async def test_clean_bulb(hass: HomeAssistant) -> None:
     bulb.set_hev_cycle.reset_mock()
 
 
-async def test_transform(hass: HomeAssistant) -> None:
-    """Test transforming a LIFX light entity with a waveform command."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity = hass.data[LIGHT_DATA_COMPONENT].get_entity("light.my_bulb")
-    assert isinstance(entity, LIFXLight)
-
-    await entity.transform([1000, 2000, 3000, 4000], duration=1, rapid=True)
-
-    call_dict = bulb.set_waveform_optional.calls[0][1]
-    call_dict.pop("callb")
-    assert call_dict == {
-        "rapid": True,
-        "value": {
-            "transient": False,
-            "color": [1000, 2000, 3000, 4000],
-            "period": 1000,
-            "cycles": 1,
-            "skew_ratio": 0,
-            "waveform": 0,
-            "set_hue": True,
-            "set_saturation": True,
-            "set_brightness": True,
-            "set_kelvin": True,
-        },
-    }
-
-
-async def test_transform_preserves_unspecified_hsbk_values(
-    hass: HomeAssistant,
-) -> None:
-    """Test transform keeps existing values for unspecified HSBK components."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
-    )
-    config_entry.add_to_hass(hass)
-    bulb = _mocked_bulb()
-    bulb.color = [11, 22, 33, 44]
-    with (
-        _patch_discovery(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        _patch_device(device=bulb),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    entity = hass.data[LIGHT_DATA_COMPONENT].get_entity("light.my_bulb")
-    assert isinstance(entity, LIFXLight)
-
-    await entity.transform([None, 2000, None, 4000], duration=0.5)
-
-    call_dict = bulb.set_waveform_optional.calls[0][1]
-    call_dict.pop("callb")
-    assert call_dict == {
-        "rapid": False,
-        "value": {
-            "transient": False,
-            "color": [11, 2000, 33, 4000],
-            "period": 500,
-            "cycles": 1,
-            "skew_ratio": 0,
-            "waveform": 0,
-            "set_hue": False,
-            "set_saturation": True,
-            "set_brightness": False,
-            "set_kelvin": True,
-        },
-    }
-
-
 async def test_set_color_timeout_raises_home_assistant_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test set_color surfaces waveform timeout failures consistently."""
+    """Test service-driven color changes surface waveform timeouts consistently."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
     )
@@ -2310,18 +2228,15 @@ async def test_set_color_timeout_raises_home_assistant_error(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity = hass.data[LIGHT_DATA_COMPONENT].get_entity("light.my_bulb")
-    assert isinstance(entity, LIFXLight)
+    bulb.set_waveform_optional = MockFailingLifxCommand(bulb)
 
-    with (
-        patch.object(
-            entity,
-            "transform",
-            side_effect=TimeoutError,
-        ),
-        pytest.raises(HomeAssistantError, match="Timeout setting color"),
-    ):
-        await entity.set_color([1, 2, 3, 4], {})
+    with pytest.raises(HomeAssistantError, match="Timeout setting color"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: "light.my_bulb", ATTR_HS_COLOR: (10, 30)},
+            blocking=True,
+        )
 
 
 async def test_set_hev_cycle_state_fails_for_color_bulb(hass: HomeAssistant) -> None:

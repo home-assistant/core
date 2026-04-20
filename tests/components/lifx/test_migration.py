@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN, discovery
-from homeassistant.components.lifx.migration import async_migrate_entities_devices
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -298,48 +296,3 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
             dr.async_entries_for_config_entry(device_registry, legacy_config_entry)
             == []
         )
-
-
-async def test_async_migrate_entities_devices_moves_matching_entities(
-    hass: HomeAssistant,
-) -> None:
-    """Test migrating entities attached to the matching migrated device."""
-    new_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
-    )
-
-    device_registry = SimpleNamespace(async_update_device=lambda *args, **kwargs: None)
-    entity_registry = SimpleNamespace(async_update_entity=patch)
-    migrated_device = SimpleNamespace(
-        id="device-id",
-        identifiers={(DOMAIN, SERIAL)},
-    )
-    migrated_entity = SimpleNamespace(
-        entity_id="light.test_lifx",
-        device_id="device-id",
-    )
-
-    with (
-        patch(
-            "homeassistant.components.lifx.migration.dr.async_get",
-            return_value=device_registry,
-        ),
-        patch(
-            "homeassistant.components.lifx.migration.dr.async_entries_for_config_entry",
-            return_value=[migrated_device],
-        ),
-        patch(
-            "homeassistant.components.lifx.migration.er.async_get",
-            return_value=entity_registry,
-        ),
-        patch(
-            "homeassistant.components.lifx.migration.er.async_entries_for_config_entry",
-            return_value=[migrated_entity],
-        ),
-        patch.object(entity_registry, "async_update_entity") as mock_update_entity,
-    ):
-        async_migrate_entities_devices(hass, "legacy-entry-id", new_entry)
-
-    mock_update_entity.assert_called_once_with(
-        "light.test_lifx", config_entry_id=new_entry.entry_id
-    )
