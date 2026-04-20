@@ -154,6 +154,10 @@
     }
   },
   "config_panel": {
+    "common": {
+      "group_address": "Group address",
+      "group_addresses": "Group addresses"
+    },
     "dashboard": {
       "connection_flow": {
         "description": "Reconfigure KNX connection or import a new KNX keyring file",
@@ -960,6 +964,7 @@
           "description": "Minimum time between consecutive sends. This can be used to prevent high traffic on the KNX bus when values change very frequently. Only the most recent value during the cooldown period is sent.",
           "label": "Cooldown"
         },
+        "copy_info": "Copying options of {entity_name} ({entity_id}).",
         "default": {
           "description": "The value to send if the entity state is `unavailable` or `unknown`, or if the attribute is not set. If `default` is omitted, nothing is sent in these cases, but the last known value remains available for read requests.",
           "label": "Default value"
@@ -969,7 +974,7 @@
           "label": "Entity"
         },
         "ga": {
-          "label": "Group address"
+          "label": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "periodic_send": {
           "description": "Time interval to automatically resend the current value to the KNX bus, even if it hasn’t changed.",
@@ -1213,7 +1218,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) that shall be added or removed. Lists are allowed.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "remove": {
           "description": "Whether the group address(es) will be removed.",
@@ -1231,7 +1236,7 @@
       "fields": {
         "address": {
           "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "attribute": {
           "description": "Attribute of the entity that shall be sent to the KNX bus. If not set, the state will be sent. Eg. for a light the state is either “on” or “off” - with attribute you can expose its “brightness”.",
@@ -1261,7 +1266,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to send read request to. Lists will read multiple group addresses.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         }
       },
       "name": "Read from KNX bus"
@@ -1275,7 +1280,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to write to. Lists will send to multiple group addresses successively.",
-          "name": "Group address"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "payload": {
           "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length.",
