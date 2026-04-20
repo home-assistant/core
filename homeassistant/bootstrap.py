@@ -238,9 +238,12 @@ DEFAULT_INTEGRATIONS = {
     "timer",
     #
     # Base platforms:
-    # Note: Calendar and todo are not included to prevent them from registering
+    # Note:
+    # - AI task is not included to not give the perception that AI functionality
+    # is mandatory with Home Assistant.
+    # - Calendar and todo are not included to prevent them from registering
     # their frontend panels when there are no calendar or todo integrations.
-    *(BASE_PLATFORMS - {"calendar", "todo"}),
+    *(BASE_PLATFORMS - {"ai_task", "calendar", "todo"}),
     #
     # Integrations providing triggers and conditions for base platforms:
     "air_quality",
