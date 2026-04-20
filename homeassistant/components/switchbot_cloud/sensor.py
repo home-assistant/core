@@ -172,7 +172,13 @@ LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
 LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=LOCK_SENSOR_TYPE_LOCK_STATE,
     translation_key="lock_state",
-    value_fn=lambda value: value.title(),
+    value_fn=lambda value: (
+        value.title()
+        if isinstance(value, str)
+        else None
+        if value is None
+        else str(value).title()
+    ),
 )
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
