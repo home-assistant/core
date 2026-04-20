@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_SERIAL, DOMAIN
@@ -66,6 +67,16 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle DHCP discovery of an EARN-E P1 meter."""
         ip = discovery_info.ip
         raw_mac = discovery_info.macaddress
+        formatted_mac = format_mac(raw_mac)
+
+        for entry in self._async_current_entries(include_ignore=False):
+            entry_mac = entry.data.get(CONF_MAC)
+            if entry_mac and format_mac(entry_mac) == formatted_mac:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: ip, CONF_MAC: raw_mac},
+                    reason="already_configured",
+                )
 
         try:
             device = await self._async_validate_host(ip)
