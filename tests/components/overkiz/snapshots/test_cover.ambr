@@ -3089,6 +3089,60 @@
     'state': 'closed',
   })
 # ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-5678-3293/16757362',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'curtain',
+      'friendly_name': 'Living Room Curtain',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.office_screen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
