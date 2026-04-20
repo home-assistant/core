@@ -411,7 +411,14 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if is_closed_fn := self.entity_description.is_closed_fn:
-            return is_closed_fn(self.device)
+            if (closed := is_closed_fn(self.device)) is not None:
+                return closed
+
+        if (position := self.current_cover_position) is not None:
+            return position == 0
+
+        if (tilt_position := self.current_cover_tilt_position) is not None:
+            return tilt_position == 0
 
         return None
 
