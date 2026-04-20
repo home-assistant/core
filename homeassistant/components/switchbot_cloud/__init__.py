@@ -446,9 +446,6 @@ async def _initialize_webhook(
                     "Registered Switchbot cloud webhook at hass: %s", webhook_url
                 )
 
-            for coordinator in coordinators_by_id.values():
-                coordinator.webhook_subscription_listener(True)
-
             _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
         except SwitchBotDeviceOfflineError as e:
             _LOGGER.error("Failed to connect Switchbot cloud device: %s", e)
@@ -493,6 +490,8 @@ def _create_handle_webhook(
             )
             return
 
-        coordinators_by_id[deviceMac].async_set_updated_data(data["context"])
+        coordinator = coordinators_by_id[deviceMac]
+        coordinator.webhook_subscription_listener(True)
+        coordinator.async_set_updated_data(data["context"])
 
     return _internal_handle_webhook
