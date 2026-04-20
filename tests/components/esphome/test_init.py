@@ -206,16 +206,10 @@ async def test_serial_port_scanner(
     )
 
     # All three entries share the module-scoped `mock_client`, so give each its
-    # own lightweight client so auth variants do not bleed across entries.
-    open_entry.runtime_data.client = Mock(
-        connected_address="10.0.0.1", port=6053, noise_psk=None, password=None
-    )
-    noise_entry.runtime_data.client = Mock(
-        connected_address="10.0.0.2", port=6053, noise_psk=noise_psk, password=None
-    )
-    password_entry.runtime_data.client = Mock(
-        connected_address="10.0.0.3", port=6053, noise_psk=None, password="secret"
-    )
+    # own lightweight client so the URL host/port match the entry's config.
+    open_entry.runtime_data.client = Mock(connected_address="10.0.0.1", port=6053)
+    noise_entry.runtime_data.client = Mock(connected_address="10.0.0.2", port=6053)
+    password_entry.runtime_data.client = Mock(connected_address="10.0.0.3", port=6053)
 
     ports = await async_scan_serial_ports(hass)
     esphome_ports = [p for p in ports if p.device.startswith("esphome://")]
@@ -261,9 +255,7 @@ async def test_serial_port_scanner_unavailable(
             "serial_proxies": [SerialProxyInfo(name="uart0", port_type=0)],
         },
     )
-    device.entry.runtime_data.client = Mock(
-        connected_address="10.0.0.1", port=6053, noise_psk=None, password=None
-    )
+    device.entry.runtime_data.client = Mock(connected_address="10.0.0.1", port=6053)
 
     # The device normally shows up
     ports = await async_scan_serial_ports(hass)

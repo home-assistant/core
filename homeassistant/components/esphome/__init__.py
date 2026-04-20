@@ -56,15 +56,17 @@ def _async_scan_serial_ports(
             continue
 
         client = entry_data.client
+        password = entry.data[CONF_PASSWORD] or None
+        noise_psk = entry.data.get(CONF_NOISE_PSK) or None
 
         for index, proxy in enumerate(device_info.serial_proxies):
             query = {"port_name": proxy.name}
 
-            if client.noise_psk is not None:
-                query["key"] = client.noise_psk
+            if noise_psk is not None:
+                query["key"] = noise_psk
 
-            if client.password is not None:
-                query["password"] = client.password
+            if password is not None:
+                query["password"] = password
 
             ports.append(
                 SerialDevice(
