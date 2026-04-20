@@ -46,6 +46,7 @@ homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
 homeassistant.components.actiontec.*
+homeassistant.components.actron_air.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
@@ -178,6 +179,7 @@ homeassistant.components.dropbox.*
 homeassistant.components.droplet.*
 homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
+homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
