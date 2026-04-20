@@ -8,19 +8,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    ATTR_ADDRESS,
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_RATE,
-    DOMAIN,
-    EVENT_UPB_SCENE_CHANGED,
-)
+from .const import ATTR_ADDRESS, ATTR_BRIGHTNESS_PCT, ATTR_RATE, EVENT_UPB_SCENE_CHANGED
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.LIGHT, Platform.SCENE]
 
+type UpbConfigEntry = ConfigEntry[upb_lib.UpbPim]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> bool:
     """Set up a new config_entry for UPB PIM."""
 
     url = config_entry.data[CONF_HOST]
@@ -29,8 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file})
     await upb.load_upstart_file()
     await upb.async_connect()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
+    config_entry.runtime_data = upb
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -57,15 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> bool:
     """Unload the config_entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
     if unload_ok:
-        upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
-        upb.disconnect()
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        config_entry.runtime_data.disconnect()
     return unload_ok
 
 

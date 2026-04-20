@@ -10,13 +10,18 @@ from imgw_pib.const import HYDROLOGICAL_ALERTS_MAP, NO_ALERT
 from imgw_pib.model import HydrologicalData
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfLength, UnitOfTemperature, UnitOfVolumeFlowRate
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -61,6 +66,14 @@ SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
         attrs=gen_alert_attributes,
     ),
     ImgwPibSensorEntityDescription(
+        key="ice_phenomena",
+        translation_key="ice_phenomena",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.ice_phenomena.value,
+        suggested_display_precision=0,
+    ),
+    ImgwPibSensorEntityDescription(
         key="water_flow",
         translation_key="water_flow",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_SECOND,
@@ -102,7 +115,7 @@ async def async_setup_entry(
     entity_reg = er.async_get(hass)
     for key in ("flood_warning_level", "flood_alarm_level"):
         if entity_id := entity_reg.async_get_entity_id(
-            SENSOR_PLATFORM, DOMAIN, f"{coordinator.station_id}_{key}"
+            SENSOR_DOMAIN, DOMAIN, f"{coordinator.station_id}_{key}"
         ):
             entity_reg.async_remove(entity_id)
 

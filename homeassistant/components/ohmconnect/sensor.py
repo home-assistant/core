@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import defusedxml.ElementTree as ET
 import requests
@@ -70,7 +71,7 @@ class OhmconnectSensor(SensorEntity):
         return "Inactive"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"Address": self._data.get("address"), "ID": self._ohmid}
 

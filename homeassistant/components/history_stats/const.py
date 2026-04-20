@@ -8,6 +8,7 @@ PLATFORMS = [Platform.SENSOR]
 CONF_START = "start"
 CONF_END = "end"
 CONF_DURATION = "duration"
+CONF_MIN_STATE_DURATION = "min_state_duration"
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 
 CONF_TYPE_TIME = "time"
@@ -16,3 +17,5 @@ CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
+
+SECTION_ADVANCED_SETTINGS = "advanced_settings"

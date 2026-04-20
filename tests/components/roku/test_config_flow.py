@@ -264,7 +264,9 @@ async def test_ssdp_discovery(
 
 
 async def test_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_setup_entry: None,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test options config flow."""
     mock_config_entry.add_to_hass(hass)

@@ -30,6 +30,9 @@
           "pending": "mdi:lan-pending"
         }
       },
+      "tags": {
+        "default": "mdi:tag"
+      },
       "type": {
         "default": "mdi:protocol"
       },

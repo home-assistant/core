@@ -123,7 +123,7 @@ class ThinkingCleanerSwitch(SwitchEntity):
         return True
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         if self.entity_description.key == "clean":
             return (

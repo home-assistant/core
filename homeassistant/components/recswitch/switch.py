@@ -77,7 +77,7 @@ class RecSwitchSwitch(SwitchEntity):
         return self.device_name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.gpio_state
 

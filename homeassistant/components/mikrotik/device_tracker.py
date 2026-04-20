@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -33,7 +33,7 @@ async def async_setup_entry(
     for entity in registry.entities.get_entries_for_config_entry_id(
         config_entry.entry_id
     ):
-        if entity.domain == DEVICE_TRACKER:
+        if entity.domain == DEVICE_TRACKER_DOMAIN:
             if (
                 entity.unique_id in coordinator.api.devices
                 or entity.unique_id not in coordinator.api.all_devices

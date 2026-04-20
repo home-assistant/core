@@ -46,23 +46,39 @@ async def test_all_switch_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("service_call", "client_method"),
+    ("entity_id", "turn_on_method", "turn_off_method", "expected_args"),
     [
-        (SERVICE_TURN_ON, "start_container"),
-        (SERVICE_TURN_OFF, "stop_container"),
+        (
+            "switch.practical_morse_container",
+            "start_container",
+            "stop_container",
+            (1, "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"),
+        ),
+        (
+            "switch.webstack_stack",
+            "start_stack",
+            "stop_stack",
+            (1, 1),
+        ),
     ],
 )
+@pytest.mark.parametrize("service_call", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
 async def test_turn_off_on(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    turn_on_method: str,
+    turn_off_method: str,
+    expected_args: tuple,
     service_call: str,
-    client_method: str,
 ) -> None:
     """Test the switches. Have you tried to turn it off and on again?"""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.practical_morse_container"
+    client_method = (
+        turn_on_method if service_call == SERVICE_TURN_ON else turn_off_method
+    )
     method_mock = getattr(mock_portainer_client, client_method)
 
     await hass.services.async_call(
@@ -72,19 +88,25 @@ async def test_turn_off_on(
         blocking=True,
     )
 
-    # Matches the endpoint ID and container ID
-    method_mock.assert_called_once_with(
-        1, "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
-    )
+    method_mock.assert_called_once_with(*expected_args)
 
 
 @pytest.mark.parametrize(
-    ("service_call", "client_method"),
+    ("entity_id", "turn_on_method", "turn_off_method"),
     [
-        (SERVICE_TURN_ON, "start_container"),
-        (SERVICE_TURN_OFF, "stop_container"),
+        (
+            "switch.practical_morse_container",
+            "start_container",
+            "stop_container",
+        ),
+        (
+            "switch.webstack_stack",
+            "start_stack",
+            "stop_stack",
+        ),
     ],
 )
+@pytest.mark.parametrize("service_call", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
 @pytest.mark.parametrize(
     ("raise_exception", "expected_exception"),
     [
@@ -97,15 +119,19 @@ async def test_turn_off_on_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    turn_on_method: str,
+    turn_off_method: str,
     service_call: str,
-    client_method: str,
     raise_exception: Exception,
     expected_exception: Exception,
 ) -> None:
     """Test the switches. Have you tried to turn it off and on again? This time they will do boom!"""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.practical_morse_container"
+    client_method = (
+        turn_on_method if service_call == SERVICE_TURN_ON else turn_off_method
+    )
     method_mock = getattr(mock_portainer_client, client_method)
 
     method_mock.side_effect = raise_exception

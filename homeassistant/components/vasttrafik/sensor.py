@@ -93,14 +93,12 @@ class VasttrafikDepartureSensor(SensorEntity):
     def __init__(self, planner, name, departure, heading, lines, delay):
         """Initialize the sensor."""
         self._planner = planner
-        self._name = name or departure
+        self._attr_name = name or departure
         self._departure = self.get_station_id(departure)
         self._heading = self.get_station_id(heading) if heading else None
         self._lines = lines or None
         self._delay = timedelta(minutes=delay)
         self._departureboard = None
-        self._state = None
-        self._attributes = None
 
     def get_station_id(self, location):
         """Get the station ID."""
@@ -110,21 +108,6 @@ class VasttrafikDepartureSensor(SensorEntity):
             station_id = self._planner.location_name(location)[0]["gid"]
             station_info = {"station_name": location, "station_id": station_id}
         return station_info
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def native_value(self):
-        """Return the next departure time."""
-        return self._state
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
@@ -145,8 +128,8 @@ class VasttrafikDepartureSensor(SensorEntity):
                 self._departure["station_name"],
                 self._heading["station_name"] if self._heading else "ANY",
             )
-            self._state = None
-            self._attributes = {}
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
         else:
             for departure in self._departureboard:
                 service_journey = departure.get("serviceJourney", {})
@@ -157,13 +140,15 @@ class VasttrafikDepartureSensor(SensorEntity):
                 if not self._lines or line.get("shortName") in self._lines:
                     if "estimatedOtherwisePlannedTime" in departure:
                         try:
-                            self._state = datetime.fromisoformat(
+                            self._attr_native_value = datetime.fromisoformat(
                                 departure["estimatedOtherwisePlannedTime"]
                             ).strftime("%H:%M")
                         except ValueError:
-                            self._state = departure["estimatedOtherwisePlannedTime"]
+                            self._attr_native_value = departure[
+                                "estimatedOtherwisePlannedTime"
+                            ]
                     else:
-                        self._state = None
+                        self._attr_native_value = None
 
                     stop_point = departure.get("stopPoint", {})
 
@@ -181,5 +166,7 @@ class VasttrafikDepartureSensor(SensorEntity):
                         ATTR_DELAY: self._delay.seconds // 60 % 60,
                     }
 
-                    self._attributes = {k: v for k, v in params.items() if v}
+                    self._attr_extra_state_attributes = {
+                        k: v for k, v in params.items() if v
+                    }
                     break

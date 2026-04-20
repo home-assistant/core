@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 import logging
 from typing import cast
 
@@ -14,12 +13,12 @@ from onedrive_personal_sdk.exceptions import (
     OneDriveException,
 )
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -32,19 +31,15 @@ from .const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
+from .coordinator import (
+    OneDriveConfigEntry,
+    OneDriveForBusinessUpdateCoordinator,
+    OneDriveRuntimeData,
+)
+
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class OneDriveRuntimeData:
-    """Runtime data for the OneDrive integration."""
-
-    client: OneDriveClient
-    token_function: Callable[[], Awaitable[str]]
-
-
-type OneDriveConfigEntry = ConfigEntry[OneDriveRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
@@ -68,10 +63,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             entry, data={**entry.data, CONF_FOLDER_ID: backup_folder.id}
         )
 
+    coordinator = OneDriveForBusinessUpdateCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = OneDriveRuntimeData(
         client=client,
         token_function=get_access_token,
+        coordinator=coordinator,
     )
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     def async_notify_backup_listeners() -> None:
         for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
@@ -82,9 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, _: OneDriveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Unload a OneDrive config entry."""
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _get_onedrive_client(
@@ -92,7 +93,13 @@ async def _get_onedrive_client(
 ) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
     """Get OneDrive client."""
     with tenant_id_context(entry.data[CONF_TENANT_ID]):
-        implementation = await async_get_config_entry_implementation(hass, entry)
+        try:
+            implementation = await async_get_config_entry_implementation(hass, entry)
+        except ImplementationUnavailableError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="oauth2_implementation_unavailable",
+            ) from err
     session = OAuth2Session(hass, entry, implementation)
 
     async def get_access_token() -> str:

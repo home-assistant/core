@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 API_URL = "https://test.ghost.io"
 API_KEY = "650b7a9f8e8c1234567890ab:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 SITE_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-SITE_DATA = {"title": "Test Ghost", "url": API_URL, "uuid": SITE_UUID}
+SITE_DATA = {"title": "Test Ghost", "url": API_URL, "site_uuid": SITE_UUID}
 POSTS_DATA = {"published": 42, "drafts": 5, "scheduled": 2}
 MEMBERS_DATA = {"total": 1000, "paid": 100, "free": 850, "comped": 50}
 LATEST_POST_DATA = {

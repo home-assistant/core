@@ -67,3 +67,19 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
     assert hass.states.get("sensor.nrgkick_test_cellular_mode") is None
     assert hass.states.get("sensor.nrgkick_test_cellular_signal_strength") is None
     assert hass.states.get("sensor.nrgkick_test_cellular_operator") is None
+
+
+async def test_vehicle_connected_since_none_when_standby(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+) -> None:
+    """Test vehicle connected since is unknown when vehicle is not connected."""
+    mock_nrgkick_api.get_values.return_value["general"]["status"] = (
+        ChargingStatus.STANDBY
+    )
+
+    await setup_integration(hass, mock_config_entry, platforms=[Platform.SENSOR])
+
+    assert (state := hass.states.get("sensor.nrgkick_test_vehicle_connected_since"))
+    assert state.state == STATE_UNKNOWN

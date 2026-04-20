@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from functools import partial
 import logging
@@ -80,11 +81,22 @@ class EcovacsController:
         try:
             devices = await self._api_client.get_devices()
             credentials = await self._authenticator.authenticate()
-            for device_info in devices.mqtt:
-                device = Device(device_info, self._authenticator)
+
+            if devices.mqtt:
                 mqtt = await self._get_mqtt_client()
-                await device.initialize(mqtt)
-                self._devices.append(device)
+                mqtt_devices = [
+                    Device(info, self._authenticator) for info in devices.mqtt
+                ]
+                async with asyncio.TaskGroup() as tg:
+
+                    async def _init(device: Device) -> None:
+                        """Initialize MQTT device."""
+                        await device.initialize(mqtt)
+                        self._devices.append(device)
+
+                    for device in mqtt_devices:
+                        tg.create_task(_init(device))
+
             for device_config in devices.xmpp:
                 bot = VacBot(
                     credentials.user_id,

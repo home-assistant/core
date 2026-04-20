@@ -22,6 +22,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -145,6 +146,7 @@ class OneDriveBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
@@ -172,6 +174,9 @@ class OneDriveBackupAgent(BackupAgent):
                 upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
                 smart_chunk_size=True,
+                progress_callback=lambda bytes_uploaded: on_progress(
+                    bytes_uploaded=bytes_uploaded
+                ),
             )
         except HashMismatchError as err:
             raise BackupAgentError(
@@ -255,7 +260,7 @@ class OneDriveBackupAgent(BackupAgent):
         for item in items:
             if item.name and item.name.endswith(".metadata.json"):
                 # Check if corresponding backup file exists
-                backup_filename = item.name.replace(".metadata.json", ".tar")
+                backup_filename = f"{item.name[: -len('.metadata.json')]}.tar"
                 if backup_filename not in backup_filenames:
                     _LOGGER.warning(
                         "Backup file %s not found for metadata %s",

@@ -32,14 +32,6 @@ class TessieState(StrEnum):
     ONLINE = "online"
 
 
-class TessieStatus(StrEnum):
-    """Tessie status."""
-
-    ASLEEP = "asleep"
-    AWAKE = "awake"
-    WAITING = "waiting_for_sleep"
-
-
 class TessieSeatHeaterOptions(StrEnum):
     """Tessie seat heater options."""
 
@@ -98,6 +90,12 @@ TessieChargeStates = {
     "Complete": "complete",
     "Disconnected": "disconnected",
     "NoPower": "no_power",
+}
+
+TessieChargePortLatchStates = {
+    "Engaged": "engaged",
+    "Disengaged": "disengaged",
+    "Blocking": "blocking",
 }
 
 
