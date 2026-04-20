@@ -13,7 +13,16 @@ from homeassistant.components.recorder.models import (
     ulid_to_bytes_or_none,
     uuid_hex_to_bytes_or_none,
 )
-from homeassistant.core import Context
+from homeassistant.const import (
+    ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_SERVICE,
+    EVENT_CALL_SERVICE,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.util import dt as dt_util
@@ -65,6 +74,97 @@ class MockRow:
         return process_timestamp_to_utc_isoformat(self.time_fired)
 
 
+def setup_thermostat_context_test_entities(hass_: HomeAssistant) -> None:
+    """Set up initial states for the thermostat context chain test entities."""
+    hass_.states.async_set(
+        "climate.living_room",
+        "off",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+    )
+    hass_.states.async_set("switch.heater", STATE_OFF)
+
+
+def simulate_thermostat_context_chain(
+    hass_: HomeAssistant,
+    user_id: str = "b400facee45711eaa9308bfd3d19e474",
+) -> tuple[Context, Context]:
+    """Simulate the generic_thermostat context chain.
+
+    Fires events in the realistic order:
+    1. EVENT_CALL_SERVICE for set_hvac_mode (parent context)
+    2. EVENT_CALL_SERVICE for homeassistant.turn_on (child context)
+    3. Climate state changes off → heat (parent context)
+    4. Switch state changes off → on (child context)
+
+    Returns the (parent_context, child_context) tuple.
+    """
+    parent_context = Context(
+        id="01GTDGKBCH00GW0X476W5TVAAA",
+        user_id=user_id,
+    )
+    child_context = Context(
+        id="01GTDGKBCH00GW0X476W5TVDDD",
+        parent_id=parent_context.id,
+    )
+
+    hass_.bus.async_fire(
+        EVENT_CALL_SERVICE,
+        {
+            ATTR_DOMAIN: "climate",
+            ATTR_SERVICE: "set_hvac_mode",
+            "service_data": {ATTR_ENTITY_ID: "climate.living_room"},
+        },
+        context=parent_context,
+    )
+    hass_.bus.async_fire(
+        EVENT_CALL_SERVICE,
+        {
+            ATTR_DOMAIN: "homeassistant",
+            ATTR_SERVICE: "turn_on",
+            "service_data": {ATTR_ENTITY_ID: "switch.heater"},
+        },
+        context=child_context,
+    )
+    hass_.states.async_set(
+        "climate.living_room",
+        "heat",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+        context=parent_context,
+    )
+    hass_.states.async_set(
+        "switch.heater",
+        STATE_ON,
+        {ATTR_FRIENDLY_NAME: "Heater"},
+        context=child_context,
+    )
+    return parent_context, child_context
+
+
+def assert_thermostat_context_chain_events(
+    events: list[dict[str, Any]], parent_context: Context
+) -> None:
+    """Assert the logbook events for a thermostat context chain.
+
+    Verifies that climate and switch state changes have correct
+    state, user attribution, and service call context.
+    """
+    climate_entries = [e for e in events if e.get("entity_id") == "climate.living_room"]
+    assert len(climate_entries) == 1
+    assert climate_entries[0]["state"] == "heat"
+    assert climate_entries[0]["context_user_id"] == parent_context.user_id
+    assert climate_entries[0]["context_event_type"] == EVENT_CALL_SERVICE
+    assert climate_entries[0]["context_domain"] == "climate"
+    assert climate_entries[0]["context_service"] == "set_hvac_mode"
+
+    heater_entries = [e for e in events if e.get("entity_id") == "switch.heater"]
+    assert len(heater_entries) == 1
+    assert heater_entries[0]["state"] == "on"
+    assert heater_entries[0]["context_user_id"] == parent_context.user_id
+    assert heater_entries[0]["context_event_type"] == EVENT_CALL_SERVICE
+    assert heater_entries[0]["context_domain"] == "homeassistant"
+    assert heater_entries[0]["context_service"] == "turn_on"
+
+
 def mock_humanify(hass_, rows):
     """Wrap humanify with mocked logbook objects."""
     entity_name_cache = processor.EntityNameCache(hass_)
@@ -89,5 +189,6 @@ def mock_humanify(hass_, rows):
             ent_reg,
             logbook_run,
             context_augmenter,
+            None,
         ),
     )

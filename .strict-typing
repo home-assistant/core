@@ -46,6 +46,7 @@ homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
 homeassistant.components.actiontec.*
+homeassistant.components.actron_air.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
@@ -178,6 +179,7 @@ homeassistant.components.dropbox.*
 homeassistant.components.droplet.*
 homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
+homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
@@ -222,6 +224,7 @@ homeassistant.components.fronius.*
 homeassistant.components.frontend.*
 homeassistant.components.fujitsu_fglair.*
 homeassistant.components.fully_kiosk.*
+homeassistant.components.fumis.*
 homeassistant.components.fyta.*
 homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
@@ -332,6 +335,7 @@ homeassistant.components.letpot.*
 homeassistant.components.lg_infrared.*
 homeassistant.components.libre_hardware_monitor.*
 homeassistant.components.lidarr.*
+homeassistant.components.liebherr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
 homeassistant.components.linkplay.*
@@ -551,6 +555,7 @@ homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
+homeassistant.components.teleinfo.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
@@ -579,6 +584,7 @@ homeassistant.components.trmnl.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifi.*
+homeassistant.components.unifi_access.*
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*

@@ -96,7 +96,6 @@ async def build_item_response(
     hass: HomeAssistant,
     client: JellyfinClient,
     user_id: str,
-    media_content_type: str | None,
     media_content_id: str,
 ) -> BrowseMedia:
     """Create response payload for the provided media query."""
@@ -105,7 +104,7 @@ async def build_item_response(
     )
 
     if title is None or media is None:
-        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+        raise BrowseError(f"Media not found: {media_content_id}")
 
     children = await asyncio.gather(
         *(item_payload(hass, client, user_id, media_item) for media_item in media)

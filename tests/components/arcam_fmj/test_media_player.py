@@ -33,7 +33,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
     MediaType,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State as CoreState
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -60,6 +60,21 @@ async def test_setup(
 ) -> None:
     """Test setup creates expected entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_disconnect(hass: HomeAssistant, client: Mock) -> None:
+    """Test a disconnection is detected."""
+    data = hass.states.get(MOCK_ENTITY_ID)
+    assert data
+    assert data.state != STATE_UNAVAILABLE
+
+    client.notify_connection(ConnectionFailed())
+    await hass.async_block_till_done()
+
+    data = hass.states.get(MOCK_ENTITY_ID)
+    assert data
+    assert data.state == STATE_UNAVAILABLE
 
 
 async def update(hass: HomeAssistant, client: Mock, entity_id: str) -> CoreState:

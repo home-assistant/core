@@ -9,7 +9,7 @@ import aiohttp
 from pyoctoprintapi import OctoprintClient
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -34,7 +34,7 @@ from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import CONF_BAUDRATE, DOMAIN, SERVICE_CONNECT
-from .coordinator import OctoprintDataUpdateCoordinator
+from .coordinator import OctoprintConfigEntry, OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,12 +168,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
     """Set up OctoPrint from a config entry."""
-
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     if CONF_VERIFY_SSL not in entry.data:
         data = {**entry.data, CONF_VERIFY_SSL: True}
         hass.config_entries.async_update_entry(entry, data=data)
@@ -210,10 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "client": client,
-    }
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -237,14 +230,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OctoprintConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def async_get_client_for_service_call(
@@ -256,8 +244,9 @@ def async_get_client_for_service_call(
 
     if device_entry := device_registry.async_get(device_id):
         for entry_id in device_entry.config_entries:
-            if data := hass.data[DOMAIN].get(entry_id):
-                return cast(OctoprintClient, data["client"])
+            if entry := hass.config_entries.async_get_entry(entry_id):
+                if entry.domain == DOMAIN and entry.state == ConfigEntryState.LOADED:
+                    return cast(OctoprintConfigEntry, entry).runtime_data.octoprint
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,

@@ -83,7 +83,7 @@ class RoborockCoordinators:
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
 
 
-class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
+class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
     """Class to manage fetching data from the API."""
 
     config_entry: RoborockConfigEntry
@@ -229,7 +229,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         )
         _LOGGER.debug("Updated device properties")
 
-    async def _async_update_data(self) -> DeviceState:
+    async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
         await self._verify_api()
         try:
@@ -608,8 +608,9 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
 
-        This sends a fire-and-forget REQUEST_DPS command. The actual data
-        update will arrive asynchronously via the push listener.
+        This coordinator does not wait for any specific MQTT payload because
+        push messages are asynchronous and not guaranteed to contain every
+        field. Entities subscribe to trait updates and update as values arrive.
         """
         try:
             await self.api.refresh()

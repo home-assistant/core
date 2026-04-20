@@ -11,8 +11,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import DOMAIN, HASSIO_UPDATE_INTERVAL
-from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.components.hassio import DOMAIN
+from homeassistant.components.hassio.const import (
+    HASSIO_STATS_UPDATE_INTERVAL,
+    REQUEST_REFRESH_DELAY,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -23,14 +26,12 @@ from homeassistant.util import dt as dt_util
 from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
 def mock_all(
-    aioclient_mock: AiohttpClientMocker,
     addon_installed: AsyncMock,
     store_info: AsyncMock,
     addon_stats: AsyncMock,
@@ -46,14 +47,9 @@ def mock_all(
     os_info: AsyncMock,
     homeassistant_stats: AsyncMock,
     supervisor_stats: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-
     host_info.return_value = replace(host_info.return_value, agent_version="1.0.0")
     addons_list.return_value[1] = replace(
         addons_list.return_value[1], version_latest="3.2.0", update_available=True
@@ -114,9 +110,7 @@ async def test_sensor(
     hass: HomeAssistant,
     entity_id,
     expected,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test hassio OS and addons sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -165,7 +159,6 @@ async def test_stats_addon_sensor(
     hass: HomeAssistant,
     entity_id,
     expected,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
@@ -186,14 +179,14 @@ async def test_stats_addon_sensor(
     assert hass.states.get(entity_id) is None
 
     addon_stats.side_effect = SupervisorError
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Could not fetch stats" not in caplog.text
 
     addon_stats.side_effect = None
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -209,13 +202,13 @@ async def test_stats_addon_sensor(
     assert entity_registry.async_get(entity_id).disabled_by is None
 
     # The config entry just reloaded, so we need to wait for the next update
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id) is not None
 
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     # Verify that the entity have the expected state.
@@ -223,10 +216,29 @@ async def test_stats_addon_sensor(
     assert state.state == expected
 
     addon_stats.side_effect = SupervisorError
-    freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
     assert "Could not fetch stats" in caplog.text
+
+    # Disable the entity again and verify stats API calls stop
+    addon_stats.side_effect = None
+    addon_stats.reset_mock()
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    freezer.tick(config_entries.RELOAD_AFTER_UPDATE_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # After reload with entity disabled, stats should not be fetched
+    addon_stats.reset_mock()
+    freezer.tick(HASSIO_STATS_UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    addon_stats.assert_not_called()
