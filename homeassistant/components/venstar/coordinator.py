@@ -14,16 +14,18 @@ from homeassistant.helpers import update_coordinator
 
 from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP
 
+type VenstarConfigEntry = ConfigEntry[VenstarDataUpdateCoordinator]
+
 
 class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator[None]):
     """Class to manage fetching Venstar data."""
 
-    config_entry: ConfigEntry
+    config_entry: VenstarConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: VenstarConfigEntry,
         venstar_connection: VenstarColorTouch,
     ) -> None:
         """Initialize global Venstar data updater."""

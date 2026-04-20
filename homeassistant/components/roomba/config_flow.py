@@ -336,7 +336,7 @@ def _async_get_roomba_discovery() -> RoombaDiscovery:
 @callback
 def _async_blid_from_hostname(hostname: str) -> str:
     """Extract the blid from the hostname."""
-    return hostname.split("-")[1].split(".")[0].upper()
+    return hostname.split("-")[1].split(".", maxsplit=1)[0].upper()
 
 
 async def _async_discover_roombas(

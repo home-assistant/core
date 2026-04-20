@@ -25,17 +25,15 @@ from aiohasupervisor.models import (
     SupervisorOptions,
     YellowOptions,
 )
-import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import RefreshToken
-from homeassistant.components import frontend, panel_custom
+from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
-    StaticPathConfig,
 )
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
@@ -156,12 +154,7 @@ _LOGGER = logging.getLogger(__name__)
 # wait for the import of the platforms
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
-CONF_FRONTEND_REPO = "development_repo"
-
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.Schema({vol.Optional(CONF_FRONTEND_REPO): cv.isdir})},
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 DEPRECATION_URL = (
@@ -198,7 +191,7 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
     return addon_slug.replace("_", "-")
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Hass.io component."""
     # Check local setup
     for env in ("SUPERVISOR", "SUPERVISOR_TOKEN"):
@@ -250,29 +243,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         refresh_token = await hass.auth.async_create_refresh_token(user)
         config_store.update(hassio_user=user.id)
 
-    # This overrides the normal API call that would be forwarded
-    development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)
-    if development_repo is not None:
-        await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(
-                    "/api/hassio/app",
-                    os.path.join(development_repo, "hassio/build"),
-                    False,
-                )
-            ]
-        )
-
     hass.http.register_view(HassIOView(host, websession))
-
-    await panel_custom.async_register_panel(
-        hass,
-        frontend_url_path="hassio",
-        webcomponent_name="hassio-main",
-        js_url="/api/hassio/app/entrypoint.js",
-        embed_iframe=True,
-        require_admin=True,
-    )
 
     async def update_hass_api(http_config: dict[str, Any], refresh_token: RefreshToken):
         """Update Home Assistant API data on Hass.io."""

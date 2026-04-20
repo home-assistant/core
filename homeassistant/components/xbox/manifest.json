@@ -1,7 +1,7 @@
 {
   "domain": "xbox",
   "name": "Xbox",
-  "codeowners": ["@hunterjm", "@tr4nt0r"],
+  "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "dhcp": [

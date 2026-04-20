@@ -14,7 +14,6 @@ from aiohttp import web
 from aiohttp.client import ClientTimeout
 from aiohttp.hdrs import (
     AUTHORIZATION,
-    CACHE_CONTROL,
     CONTENT_ENCODING,
     CONTENT_LENGTH,
     CONTENT_TYPE,
@@ -81,17 +80,10 @@ PATHS_ADMIN = re.compile(
     r")$"
 )
 
-# Unauthenticated requests come in for Supervisor panel + add-on images
+# Unauthenticated requests come in for add-on images
 PATHS_NO_AUTH = re.compile(
     r"^(?:"
-    r"|app/.*"
     r"|(store/)?addons/[^/]+/(logo|icon)"
-    r")$"
-)
-
-NO_STORE = re.compile(
-    r"^(?:"
-    r"|app/entrypoint.js"
     r")$"
 )
 
@@ -218,7 +210,7 @@ class HassIOView(HomeAssistantView):
 
             # Stream response
             response = web.StreamResponse(
-                status=client.status, headers=_response_header(client, path)
+                status=client.status, headers=_response_header(client)
             )
             response.content_type = client.content_type
 
@@ -243,16 +235,13 @@ class HassIOView(HomeAssistantView):
     post = _handle
 
 
-def _response_header(response: aiohttp.ClientResponse, path: str) -> dict[str, str]:
+def _response_header(response: aiohttp.ClientResponse) -> dict[str, str]:
     """Create response header."""
-    headers = {
+    return {
         name: value
         for name, value in response.headers.items()
         if name not in RESPONSE_HEADERS_FILTER
     }
-    if NO_STORE.match(path):
-        headers[CACHE_CONTROL] = "no-store, max-age=0"
-    return headers
 
 
 def _get_timeout(path: str) -> ClientTimeout:

@@ -28,6 +28,8 @@ from .entity import (
 )
 from .hub import UnifiHub
 
+PARALLEL_UPDATES = 0
+
 
 @callback
 def async_wlan_qr_code_image_fn(hub: UnifiHub, wlan: Wlan) -> bytes:

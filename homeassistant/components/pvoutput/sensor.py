@@ -27,6 +27,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_SYSTEM_ID, DOMAIN
 from .coordinator import PvOutputConfigEntry, PVOutputDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class PVOutputSensorEntityDescription(SensorEntityDescription):
