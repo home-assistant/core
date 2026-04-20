@@ -266,12 +266,12 @@ def validate_segments(
                 return None
             try:
                 segments.append(Segment(**item))
-            except TypeError as err:
+            except TypeError:
                 template_validators.log_validation_result_error(
                     entity,
                     option,
                     item,
-                    str(err).replace("Segment.__init__() ", ""),
+                    f"expected dictionary with keys {Segment.__slots__}",
                 )
                 return None
         return segments
