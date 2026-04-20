@@ -227,7 +227,7 @@ async def test_reconfigure_flow_success(
         "Connection refused"
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.200"}
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
     )
 
     assert result["type"] is FlowResultType.FORM
