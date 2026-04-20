@@ -1,4 +1,4 @@
-"""Integration for humidity triggers."""
+"""Integration for humidity triggers and conditions."""
 
 from __future__ import annotations
 

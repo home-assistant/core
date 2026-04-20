@@ -10,12 +10,12 @@ from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from . import NightscoutConfigEntry
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -26,11 +26,11 @@ DEFAULT_NAME = "Blood Glucose"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NightscoutConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Glucose Sensor."""
-    api = hass.data[DOMAIN][entry.entry_id]
+    api = entry.runtime_data
     async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
 
 

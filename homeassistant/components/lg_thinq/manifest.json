@@ -12,5 +12,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["thinqconnect"],
-  "requirements": ["thinqconnect==1.0.9"]
+  "requirements": ["thinqconnect==1.0.11"]
 }

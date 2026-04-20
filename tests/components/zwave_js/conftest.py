@@ -346,6 +346,12 @@ def jasco_14314_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fan_jasco_14314_state.json", DOMAIN)
 
 
+@pytest.fixture(name="enbrighten_55258_zw4002_state", scope="package")
+def enbrighten_55258_zw4002_state_fixture() -> dict[str, Any]:
+    """Load the Enbrighten/GE 55258/ZW4002 node state fixture data."""
+    return load_json_object_fixture("enbrighten_55258_zw4002_state.json", DOMAIN)
+
+
 @pytest.fixture(name="enbrighten_58446_zwa4013_state", scope="package")
 def enbrighten_58446_zwa4013_state_fixture() -> dict[str, Any]:
     """Load the Enbrighten/GE 58446/zwa401 node state fixture data."""
@@ -1162,6 +1168,14 @@ def ge_12730_fixture(client, ge_12730_state) -> Node:
 def jasco_14314_fixture(client, jasco_14314_state) -> Node:
     """Mock a Jasco 14314 fan controller node."""
     node = Node(client, copy.deepcopy(jasco_14314_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="enbrighten_55258_zw4002")
+def enbrighten_55258_zw4002_fixture(client, enbrighten_55258_zw4002_state) -> Node:
+    """Mock a Enbrighten_55258/ZW4002 fan controller node."""
+    node = Node(client, copy.deepcopy(enbrighten_55258_zw4002_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "api_rate_limit_reached": "Tado API rate limit reached. Please wait and try again later.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "could_not_authenticate": "Could not authenticate with Tado.",
       "no_homes": "There are no homes linked to this Tado account.",

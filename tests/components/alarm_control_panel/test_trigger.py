@@ -9,7 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -17,6 +17,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -51,6 +52,36 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("alarm_control_panel.armed", {}, True, True),
+        ("alarm_control_panel.armed_away", {}, True, True),
+        ("alarm_control_panel.armed_home", {}, True, True),
+        ("alarm_control_panel.armed_night", {}, True, True),
+        ("alarm_control_panel.armed_vacation", {}, True, True),
+        ("alarm_control_panel.disarmed", {}, True, True),
+        ("alarm_control_panel.triggered", {}, True, True),
+    ],
+)
+async def test_alarm_control_panel_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that alarm_control_panel triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
 )
@@ -78,7 +109,7 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
@@ -87,7 +118,7 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
             trigger="alarm_control_panel.armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
@@ -96,7 +127,7 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
             trigger="alarm_control_panel.armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
@@ -105,7 +136,7 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
             trigger="alarm_control_panel.armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
@@ -124,7 +155,6 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
 )
 async def test_alarm_control_panel_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -136,7 +166,6 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_alarm_control_panels,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -176,7 +205,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
@@ -185,7 +214,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
@@ -194,7 +223,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
@@ -203,7 +232,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
             trigger="alarm_control_panel.armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
@@ -222,7 +251,6 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
 )
 async def test_alarm_control_panel_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -234,7 +262,6 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_alarm_control_panels,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -274,7 +301,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_away",
             target_states=[AlarmControlPanelState.ARMED_AWAY],
             other_states=other_states(AlarmControlPanelState.ARMED_AWAY),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_AWAY
             },
             trigger_from_none=False,
@@ -283,7 +310,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_home",
             target_states=[AlarmControlPanelState.ARMED_HOME],
             other_states=other_states(AlarmControlPanelState.ARMED_HOME),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
             },
             trigger_from_none=False,
@@ -292,7 +319,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_night",
             target_states=[AlarmControlPanelState.ARMED_NIGHT],
             other_states=other_states(AlarmControlPanelState.ARMED_NIGHT),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_NIGHT
             },
             trigger_from_none=False,
@@ -301,7 +328,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
             trigger="alarm_control_panel.armed_vacation",
             target_states=[AlarmControlPanelState.ARMED_VACATION],
             other_states=other_states(AlarmControlPanelState.ARMED_VACATION),
-            additional_attributes={
+            required_filter_attributes={
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_VACATION
             },
             trigger_from_none=False,
@@ -320,7 +347,6 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
 )
 async def test_alarm_control_panel_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -332,7 +358,6 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_alarm_control_panels,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
