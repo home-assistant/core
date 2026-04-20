@@ -93,7 +93,7 @@ class MyNeoClimate(ClimateEntity):
 
         state = device.get("state", {})
         self._is_sub_device = model in SUPPORTED_SUB_MODELS
-        self._parents = device.get("parents") or {}
+        self._parents = device.get("parents")
         if model in PRESET_MODE_MODELS:
             self._attr_preset_modes = PRESET_MODE_MODELS[model]
         else:
@@ -122,7 +122,7 @@ class MyNeoClimate(ClimateEntity):
             if self._attr_preset_mode and self._attr_preset_mode != "standby"
             else None
         )
-        if model == "NTD" and state.get("changeOverUser") == 1:
+        if model == "NTD" and state.get("comfTemp") < state.get("ecoTemp"):
             self._attr_hvac_modes = [HVACMode.COOL, HVACMode.OFF]
             self._attr_hvac_mode = (
                 HVACMode.OFF
@@ -315,7 +315,11 @@ class MyNeoClimate(ClimateEntity):
                 return False
 
             if self._is_sub_device:
-                gateway = self._parents.get("gateway")
+                gateway = (
+                    self._parents.split(",")[1]
+                    if isinstance(self._parents, str)
+                    else None
+                )
                 rfid = self._device.get("rfid")
                 if not gateway or not rfid:
                     _LOGGER.error(
@@ -336,7 +340,11 @@ class MyNeoClimate(ClimateEntity):
         """Set the device temperature via API."""
         try:
             if self._is_sub_device:
-                gateway = self._parents.get("gateway")
+                gateway = (
+                    self._parents.split(",")[1]
+                    if isinstance(self._parents, str)
+                    else None
+                )
                 rfid = self._device.get("rfid")
                 if not gateway or not rfid:
                     _LOGGER.error(

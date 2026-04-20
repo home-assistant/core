@@ -33,6 +33,8 @@ UFH_DEVICE = {
     "name": "UFH Device",
     "model": "UFH",
     "state": {"changeOverUser": 0},
+    "parents": ",gw-ufh,",
+    "rfid": "rfid-ufh",
     "connected": True,
     "program": {"data": {}},
 }

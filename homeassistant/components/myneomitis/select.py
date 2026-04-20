@@ -9,10 +9,12 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+import aiohttp
 from pyaxencoapi import PyAxencoAPI
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -141,6 +143,7 @@ class MyNeoSelect(SelectEntity):
         self.entity_description = description
         self._api = api
         self._device = device
+        self._parents = device.get("parents")
         self._attr_unique_id = device["_id"]
         self._attr_available = device["connected"]
         self._attr_device_info = dr.DeviceInfo(
@@ -199,6 +202,29 @@ class MyNeoSelect(SelectEntity):
             _LOGGER.warning("Unknown mode selected: %s", option)
             return
 
-        await self._api.set_device_mode(self._device["_id"], mode_code)
+        try:
+            if self._device["model"] in SUPPORTED_MODELS:
+                await self._api.set_device_mode(self._device["_id"], mode_code)
+            else:  # UFH
+                gateway = (
+                    self._parents.split(",")[1]
+                    if isinstance(self._parents, str)
+                    else None
+                )
+                rfid = self._device.get("rfid")
+                if not gateway or not rfid:
+                    _LOGGER.error(
+                        "Missing gateway or rfid for sub-device %s, cannot set mode",
+                        self._attr_unique_id,
+                    )
+                    raise HomeAssistantError(f"Failed to set mode for {self.entity_id}")
+
+                await self._api.set_sub_device_mode_ufh(gateway, str(rfid), mode_code)
+        except (aiohttp.ClientError, TimeoutError, ConnectionError) as err:
+            _LOGGER.error("Error setting mode for %s: %s", self._device["_id"], err)
+            raise HomeAssistantError(
+                f"Failed to set mode for {self.entity_id}"
+            ) from err
+
         self._attr_current_option = option
         self.async_write_ha_state()
