@@ -284,7 +284,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                     self.entity_id,
                     len(current_segments),
                 )
-                _LOGGER.debug(
+                _LOGGER.info(
                     "Vacuum segments changed (details): last_seen=%s, current=%s",
                     last_seen_by_id,
                     current_segments,
