@@ -17,6 +17,8 @@ from homeassistant.exceptions import ServiceValidationError
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.freeze_time("2025-12-21 15:00:00")
+
 
 @pytest.mark.usefixtures("init_integration")
 async def test_has_services(

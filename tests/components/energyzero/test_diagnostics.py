@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-pytestmark = pytest.mark.freeze_time("2022-12-07 15:00:00")
+pytestmark = pytest.mark.freeze_time("2025-12-21 15:00:00")
 
 
 async def test_entry_diagnostics(
@@ -45,7 +45,7 @@ async def test_diagnostics_no_gas_today(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics, no gas sensors available."""
-    mock_energyzero.get_gas_prices_legacy.side_effect = EnergyZeroNoDataError
+    mock_energyzero.get_gas_prices.side_effect = EnergyZeroNoDataError
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

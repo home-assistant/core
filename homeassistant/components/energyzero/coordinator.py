@@ -4,11 +4,11 @@ from datetime import timedelta
 from typing import NamedTuple, override
 
 from energyzero import (
-    Electricity,
+    EnergyPrices,
     EnergyZero,
     EnergyZeroConnectionError,
     EnergyZeroNoDataError,
-    Gas,
+    Interval,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,9 +25,9 @@ type EnergyZeroConfigEntry = ConfigEntry[EnergyZeroDataUpdateCoordinator]
 class EnergyZeroData(NamedTuple):
     """Class for defining data in dict."""
 
-    energy_today: Electricity
-    energy_tomorrow: Electricity | None
-    gas_today: Gas | None
+    energy_today: EnergyPrices
+    energy_tomorrow: EnergyPrices | None
+    gas_today: EnergyPrices | None
 
 
 class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
@@ -55,12 +55,15 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         energy_tomorrow = None
 
         try:
-            energy_today = await self.energyzero.get_electricity_prices_legacy(
-                start_date=today, end_date=today
+            energy_today = await self.energyzero.get_electricity_prices(
+                start_date=today,
+                end_date=today,
+                interval=Interval.HOUR,
             )
             try:
-                gas_today = await self.energyzero.get_gas_prices_legacy(
-                    start_date=today, end_date=today
+                gas_today = await self.energyzero.get_gas_prices(
+                    start_date=today,
+                    end_date=today,
                 )
             except EnergyZeroNoDataError:
                 LOGGER.debug("No data for gas prices for EnergyZero integration")
@@ -68,10 +71,10 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
             if dt_util.utcnow().hour >= THRESHOLD_HOUR:
                 tomorrow = today + timedelta(days=1)
                 try:
-                    energy_tomorrow = (
-                        await self.energyzero.get_electricity_prices_legacy(
-                            start_date=tomorrow, end_date=tomorrow
-                        )
+                    energy_tomorrow = await self.energyzero.get_electricity_prices(
+                        start_date=tomorrow,
+                        end_date=tomorrow,
+                        interval=Interval.HOUR,
                     )
                 except EnergyZeroNoDataError:
                     LOGGER.debug("No data for tomorrow for EnergyZero integration")
