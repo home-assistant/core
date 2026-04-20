@@ -107,7 +107,8 @@ STATES_ORDER = [
     STATE_UNAVAILABLE,
     MediaPlayerState.OFF,
     MediaPlayerState.IDLE,
-    MediaPlayerState.STANDBY,
+    # Not using MediaPlayerState.STANDBY to avoid deprecation warning
+    "standby",
     MediaPlayerState.ON,
     MediaPlayerState.PAUSED,
     MediaPlayerState.BUFFERING,
