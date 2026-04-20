@@ -2935,7 +2935,6 @@ sentence-stream==1.2.0
 sentry-sdk==2.48.0
 
 # homeassistant.components.acer_projector
-# homeassistant.components.homeassistant_hardware
 # homeassistant.components.serial
 # homeassistant.components.usb
 serialx==1.4.1
