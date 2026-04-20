@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from aiopnsense import OPNsenseClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
@@ -61,21 +61,6 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator):
                 f"Error communicating with OPNsense router: {err}"
             ) from err
 
-    @callback
-    def async_update_listeners(self) -> None:
-        """Update all registered listeners."""
-        super().async_update_listeners()
-
-        # Check for new devices
-        current_macs = set(self.data.keys())
-        tracked_macs = set(self.tracked_devices.keys())
-
-        # Add new devices
-        new_macs = current_macs - tracked_macs
-        if new_macs:
-            self.hass.async_create_task(self._async_add_new_devices(new_macs))
-
-    async def _async_add_new_devices(self, new_macs: set[str]) -> None:
-        """Add new device entities."""
-        # This would typically be handled by async_setup_entry
-        # For now, this is a placeholder for future dynamic device addition
+        # Note: Home Assistant device_tracker does not support dynamic entity addition.
+        # All device_tracker entities must be created during setup.
+        # This coordinator does not attempt to add new entities dynamically.
