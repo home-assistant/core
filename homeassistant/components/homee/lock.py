@@ -7,7 +7,7 @@ from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
@@ -80,9 +80,12 @@ class HomeeLock(HomeeEntity, LockEntity):
     @property
     def is_open(self) -> bool:
         """Return if lock is open (unlatched)."""
+        # Require target_value too, so mid-transition away from "open" resolves
+        # to is_locking/is_unlocking rather than OPEN (HA state precedence).
         return (
             self._lock_state_open is not None
             and self._attribute.current_value == self._lock_state_open
+            and self._attribute.target_value == self._lock_state_open
         )
 
     @property
@@ -139,7 +142,7 @@ class HomeeLock(HomeeEntity, LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open (unlatch) the lock."""
         if self._lock_state_open is None:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="open_not_supported",
             )
