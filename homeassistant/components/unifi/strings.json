@@ -65,6 +65,9 @@
     }
   },
   "exceptions": {
+    "action_request_failed": {
+      "message": "Failed to send action request to UniFi Network"
+    },
     "reconnect_client_device_not_found": {
       "message": "Unable to reconnect client: device not found"
     },
