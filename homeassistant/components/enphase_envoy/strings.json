@@ -50,14 +50,14 @@
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "token": "Envoy access token",
-          "use_manual_token": "I want to enter the Envoy access token manually",
+          "use_manual_token": "Enter the Envoy access token manually",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway.",
           "password": "Blank or Enphase Cloud password",
           "token": "Go to the [Enphase login]({enphase_url}) to get a new token. Current token lifetime: {token_life} days.",
-          "use_manual_token": "Check or uncheck this option and select **Submit** if you want to enable or disable entering a token manually. If your Enphase Cloud account has multi-factor authentication enabled, use this to add or update your token.",
+          "use_manual_token": "If your Enphase Cloud account has multi-factor authentication enabled, check this option to add or update your token manually.",
           "username": "Installer or Enphase Cloud username"
         },
         "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models, enter username `installer` without a password."
