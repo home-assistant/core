@@ -142,6 +142,7 @@ class AFSAPIDevice(MediaPlayerEntity):
                     PlayState.STOPPED: MediaPlayerState.IDLE,
                 }.get(self.__play_state, MediaPlayerState.IDLE)
             else:
+                self.__play_state = None
                 self._attr_state = MediaPlayerState.OFF
         except FSConnectionError:
             if self._attr_available:
