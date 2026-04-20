@@ -15,14 +15,46 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
+    CONF_ENDPOINT,
+    CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
+    CONF_USER_CODE,
     DOMAIN,
     LOGGER,
+    TUYA_CLIENT_ID,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 
 type TuyaConfigEntry = ConfigEntry[SharingDeviceListener]
+
+
+def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
+    """Create a Tuya Manager instance."""
+    return Manager(
+        TUYA_CLIENT_ID,
+        entry.data[CONF_USER_CODE],
+        entry.data[CONF_TERMINAL_ID],
+        entry.data[CONF_ENDPOINT],
+        entry.data[CONF_TOKEN_INFO],
+        token_listener,
+    )
+
+
+async def async_create_listener(
+    hass: HomeAssistant, entry: TuyaConfigEntry
+) -> DeviceListener:
+    """Create DeviceListener."""
+    token_listener = TokenListener(hass, entry)
+
+    # Move to executor as it makes blocking call to import_module
+    # with args ('.system', 'urllib3.contrib.resolver')
+    manager = await hass.async_add_executor_job(_create_manager, entry, token_listener)
+
+    listener = DeviceListener(hass, manager)
+    manager.add_device_listener(listener)
+
+    return listener
 
 
 class DeviceListener(SharingDeviceListener):

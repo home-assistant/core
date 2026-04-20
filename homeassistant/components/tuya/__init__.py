@@ -23,25 +23,13 @@ from .const import (
     PLATFORMS,
     TUYA_CLIENT_ID,
 )
-from .coordinator import DeviceListener, TokenListener, TuyaConfigEntry
+from .coordinator import TuyaConfigEntry, async_create_listener
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # Suppress logs from the library, it logs unneeded on error
 logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
-
-
-def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
-    """Create a Tuya Manager instance."""
-    return Manager(
-        TUYA_CLIENT_ID,
-        entry.data[CONF_USER_CODE],
-        entry.data[CONF_TERMINAL_ID],
-        entry.data[CONF_ENDPOINT],
-        entry.data[CONF_TOKEN_INFO],
-        token_listener,
-    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -57,16 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         register_tuya_quirks, str(Path(hass.config.config_dir, "tuya_quirks"))
     )
 
-    token_listener = TokenListener(hass, entry)
-
-    # Move to executor as it makes blocking call to import_module
-    # with args ('.system', 'urllib3.contrib.resolver')
-    manager = await hass.async_add_executor_job(_create_manager, entry, token_listener)
-
-    listener = DeviceListener(hass, manager)
-    manager.add_device_listener(listener)
-
-    # Get all devices from Tuya
+    # Get initial devices from Tuya
+    listener = await async_create_listener(hass, entry)
+    manager = listener.manager
     try:
         await hass.async_add_executor_job(manager.update_device_cache)
     except Exception as exc:
@@ -76,9 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             msg = "Authentication failed. Please re-authenticate"
             raise ConfigEntryAuthFailed(msg) from exc
         raise
-
-    # Connection is successful, store the listener
-    entry.runtime_data = listener
 
     # Cleanup device registry
     await cleanup_device_registry(hass, manager, entry)
@@ -106,7 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             model_id=device.product_id,
         )
 
+    # Connection is successful, store the listener and set up platforms
+    entry.runtime_data = listener
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     # If the device does not register any entities, the device does not need to subscribe
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
