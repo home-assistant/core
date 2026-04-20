@@ -46,6 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 _USB_DATA: HassKey[USBDiscovery] = HassKey(DOMAIN)
 
 PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
+SERIAL_PORT_SCANNER_TYPE = Callable[[HomeAssistant], Sequence[USBDevice | SerialDevice]]
 
 POLLING_MONITOR_SCAN_PERIOD = timedelta(seconds=5)
 REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
@@ -57,6 +58,7 @@ __all__ = [
     "USBDevice",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
+    "async_register_serial_port_scanner",
     "async_scan_serial_ports",
     "scan_serial_ports",
     "usb_device_from_path",
@@ -104,6 +106,14 @@ async def async_scan_serial_ports(
 ) -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return await hass.data[_USB_DATA].async_scan_serial_ports()
+
+
+@hass_callback
+def async_register_serial_port_scanner(
+    hass: HomeAssistant, scanner: SERIAL_PORT_SCANNER_TYPE
+) -> CALLBACK_TYPE:
+    """Register a scanner that contributes additional serial ports to scans."""
+    return hass.data[_USB_DATA].async_register_serial_port_scanner(scanner)
 
 
 @hass_callback
@@ -204,6 +214,7 @@ class USBDiscovery:
         self.initial_scan_done = False
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
         self._port_event_callbacks: set[PORT_EVENT_CALLBACK_TYPE] = set()
+        self._serial_port_scanners: set[SERIAL_PORT_SCANNER_TYPE] = set()
         self._last_processed_devices: set[USBDevice] = set()
         self._scan_lock = asyncio.Lock()
 
@@ -319,11 +330,29 @@ class USBDiscovery:
 
         return _async_remove_callback
 
+    @hass_callback
+    def async_register_serial_port_scanner(
+        self,
+        scanner: SERIAL_PORT_SCANNER_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register a scanner that contributes additional serial ports to scans."""
+        self._serial_port_scanners.add(scanner)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            self._serial_port_scanners.discard(scanner)
+
+        return _async_remove_callback
+
     async def async_scan_serial_ports(self) -> Sequence[USBDevice | SerialDevice]:
         """Scan serial ports and return USB and other serial devices."""
         ports: list[USBDevice | SerialDevice] = list(
             await self.hass.async_add_executor_job(scan_serial_ports)
         )
+
+        for scanner in self._serial_port_scanners:
+            ports.extend(scanner(self.hass))
+
         return ports
 
     @hass_callback
