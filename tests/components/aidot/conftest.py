@@ -112,9 +112,14 @@ def mocked_aidot_client(mocked_device_client: MagicMock) -> MagicMock:
 
     mock_aidot_client = MagicMock(spec=AidotClient)
     mock_aidot_client.get_device_client = get_device_client
-    mock_aidot_client.async_get_all_device.return_value = TEST_DEVICE_LIST
-    mock_aidot_client.async_post_login.return_value = TEST_LOGIN_RESP
+    mock_aidot_client.async_get_all_device = AsyncMock(return_value=TEST_DEVICE_LIST)
+    mock_aidot_client.async_post_login = AsyncMock(return_value=TEST_LOGIN_RESP)
     mock_aidot_client.get_identifier.return_value = f"{TEST_REGION}-{TEST_EMAIL}"
+    mock_aidot_client.login_info = {
+        CONF_ACCESS_TOKEN: "123456789",
+    }
+    mock_aidot_client.set_token_fresh_cb = MagicMock()
+    mock_aidot_client.async_cleanup = AsyncMock()
     return mock_aidot_client
 
 

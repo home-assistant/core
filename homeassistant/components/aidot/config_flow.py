@@ -65,3 +65,41 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            login_info = self._get_reauth_entry().data[CONF_LOGIN_INFO]
+            client = AidotClient(
+                session=async_get_clientsession(self.hass),
+                country_code=login_info.get(CONF_COUNTRY_CODE, DEFAULT_COUNTRY_CODE),
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+            )
+            try:
+                new_login_info = await client.async_post_login()
+            except AidotUserOrPassIncorrect:
+                errors["base"] = "invalid_auth"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data={CONF_LOGIN_INFO: new_login_info},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )

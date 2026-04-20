@@ -39,9 +39,11 @@ async def test_async_setup_entry_auth_failed(
     mocked_aidot_client.async_post_login.side_effect = AidotUserOrPassIncorrect()
     # Remove access token to trigger login
     mock_config_entry.data[CONF_LOGIN_INFO].pop(CONF_ACCESS_TOKEN, None)
+    mocked_aidot_client.login_info.pop(CONF_ACCESS_TOKEN, None)
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"}))

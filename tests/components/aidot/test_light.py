@@ -1,5 +1,6 @@
 """Test the aidot device."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aidot.const import CONF_DEVICE_LIST
@@ -193,7 +194,7 @@ async def test_coordinator_device_removal(
 
     # Return empty device list
     mocked_aidot_client.async_get_all_device.return_value = {CONF_DEVICE_LIST: []}
-    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL)
+    freezer.tick(UPDATE_DEVICE_LIST_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

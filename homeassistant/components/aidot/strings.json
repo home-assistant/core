@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "The account in the current region has already been configured"
+      "already_configured": "The account in the current region has already been configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "invalid_auth": "Authentication failed, please ensure that the network is functioning properly and the account password is correct."
@@ -18,6 +19,18 @@
           "password": "Password for logging in through Aidot app",
           "username": "Account logged in through Aidot app"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "description": "[%key:common::config_flow::description::reauth%]"
       }
     }
   }
