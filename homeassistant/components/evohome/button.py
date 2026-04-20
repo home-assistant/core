@@ -50,8 +50,6 @@ class EvoRefreshLocationButton(
 ):
     """Button entity to force a refresh of a Location's status."""
 
-    _attr_entity_category = EntityCategory.CONFIG
-
     _evo_device: evo.Location
 
     def __init__(
@@ -59,7 +57,7 @@ class EvoRefreshLocationButton(
         coordinator: EvoDataUpdateCoordinator,
         evo_device: evo.Location,
     ) -> None:
-        """Initialize the location refresh button."""
+        """Initialize a location refresh button entity."""
         super().__init__(coordinator, context=evo_device.id)
         self._evo_device = evo_device
 
@@ -67,7 +65,7 @@ class EvoRefreshLocationButton(
         self._attr_name = f"Refresh {evo_device.name}"
 
     async def async_press(self) -> None:
-        """Request the coordinator to refresh the location's status."""
+        """Request the coordinator to refresh its location's status."""
         await self.coordinator.async_request_refresh()
 
 
