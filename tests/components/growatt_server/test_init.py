@@ -1002,3 +1002,41 @@ async def test_classic_api_device_scan(
     # The scan reuses the coordinator's API session — device_list must have been
     # called exactly once (by the scan itself, not a fresh login+list cycle).
     mock_growatt_classic_api.device_list.assert_called_once()
+
+
+async def test_classic_api_stale_device_removed(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that stale devices are removed during a Classic API device scan."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    # Verify device exists after setup
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
+        is not None
+    )
+    assert "TLX123456" in mock_config_entry_classic.runtime_data.devices
+
+    # Mock the device disappearing from the API
+    mock_growatt_classic_api.device_list.return_value = []
+
+    # Trigger the periodic device scan
+    freezer.tick(DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The device should be removed from HA
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")}) is None
+    )
+    # The coordinator should be removed from runtime_data
+    assert "TLX123456" not in mock_config_entry_classic.runtime_data.devices
