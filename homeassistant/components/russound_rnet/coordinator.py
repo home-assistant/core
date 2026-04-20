@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from contextlib import suppress
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiorussound.rnet.client import RNETZoneInfo, RussoundRNETClient
 
@@ -46,8 +48,7 @@ class RussoundRNETCoordinator(
         zones_config = entry.data.get(CONF_ZONES, {})
         if zones_config:
             self._zone_keys: list[tuple[int, int]] = [
-                (int(key.split("_")[0]), int(key.split("_")[1]))
-                for key in zones_config
+                (int(key.split("_")[0]), int(key.split("_")[1])) for key in zones_config
             ]
         else:
             # No zones configured — poll all model zones
@@ -85,26 +86,39 @@ class RussoundRNETCoordinator(
             try:
                 await self.client.connect()
             except RNET_EXCEPTIONS as err:
-                raise UpdateFailed(
-                    f"Cannot reconnect to RNET device: {err}"
-                ) from err
+                raise UpdateFailed(f"Cannot reconnect to RNET device: {err}") from err
 
         try:
             for controller_id, zone_id in self._zone_keys:
-                info = await self.client.get_all_zone_info(
-                    controller_id, zone_id
-                )
+                info = await self.client.get_all_zone_info(controller_id, zone_id)
                 data[(controller_id, zone_id)] = info
                 await asyncio.sleep(_INTER_ZONE_DELAY)
         except RNET_EXCEPTIONS as err:
             # Disconnect on error so next poll reconnects cleanly
             with suppress(*RNET_EXCEPTIONS):
                 await self.client.disconnect()
-            raise UpdateFailed(
-                f"Error polling RNET zones: {err}"
-            ) from err
+            raise UpdateFailed(f"Error polling RNET zones: {err}") from err
 
         return data
+
+    async def async_send_command(
+        self,
+        controller_id: int,
+        zone_id: int,
+        func: Callable[..., Coroutine[Any, Any, Any]],
+        *args: Any,
+    ) -> None:
+        """Send a command, then poll only the affected zone for instant feedback."""
+        await func(*args)
+
+        # Poll just the affected zone and push updated state to entities
+        try:
+            info = await self.client.get_all_zone_info(controller_id, zone_id)
+        except RNET_EXCEPTIONS:
+            return
+        if self.data is not None:
+            self.data[(controller_id, zone_id)] = info
+            self.async_set_updated_data(self.data)
 
     async def async_shutdown(self) -> None:
         """Disconnect the client on shutdown."""
