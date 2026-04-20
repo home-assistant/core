@@ -182,6 +182,87 @@ async def test_charge_energy_restore_last_reset(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_total_increasing_clamp(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test that total_increasing sensors clamp small backwards jitter.
+
+    The Tesla Fleet API occasionally returns a value slightly below the
+    previous reading due to floating-point jitter or server-side
+    recalculation. Recorder emits a warning and resets the statistics
+    baseline in that case. The sensor platform must clamp such decreases
+    to the last seen maximum while still forwarding a real drop to zero
+    (meter cycle) so the statistics engine keeps working as expected.
+    """
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    # Seed initial odometer value
+    initial_data = deepcopy(VEHICLE_DATA)
+    initial_data["response"]["vehicle_state"]["odometer"] = 6481.02
+    mock_vehicle_data.return_value = initial_data
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+    entity_id = "sensor.test_odometer"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "6481.02"
+
+    # A tiny backwards jitter must be clamped to the previous value
+    jitter_data = deepcopy(VEHICLE_DATA)
+    jitter_data["response"]["vehicle_state"]["odometer"] = 6481.01
+    mock_vehicle_data.return_value = jitter_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "6481.02"
+
+    # A strictly larger reading must pass through unchanged and
+    # become the new baseline for subsequent updates
+    forward_data = deepcopy(VEHICLE_DATA)
+    forward_data["response"]["vehicle_state"]["odometer"] = 6482.5
+    mock_vehicle_data.return_value = forward_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "6482.5"
+
+    # Subsequent jitter below the new baseline must also be clamped
+    post_jitter_data = deepcopy(VEHICLE_DATA)
+    post_jitter_data["response"]["vehicle_state"]["odometer"] = 6482.45
+    mock_vehicle_data.return_value = post_jitter_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "6482.5"
+
+    # A real meter reset to zero must be forwarded so the statistics
+    # engine can detect the new cycle rather than being clamped forever.
+    reset_data = deepcopy(VEHICLE_DATA)
+    reset_data["response"]["vehicle_state"]["odometer"] = 0
+    mock_vehicle_data.return_value = reset_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_energy_history_last_reset(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,

@@ -527,6 +527,16 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         ):
             self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
+        # For TOTAL_INCREASING sensors, seed the cached monotonic value from the
+        # last restored state so jitter around a restart cannot produce a decrease.
+        if (
+            self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
+            and self._previous_value is None
+            and (sensor_data := await self.async_get_last_sensor_data()) is not None
+            and isinstance(sensor_data.native_value, float | int)
+        ):
+            self._previous_value = float(sensor_data.native_value)
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.has:
@@ -540,6 +550,26 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
                 ):
                     self._attr_last_reset = dt_util.utcnow()
                 self._previous_value = float(new_value)
+            elif (
+                self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
+                and isinstance(new_value, float | int)
+            ):
+                # Tesla Fleet occasionally returns values slightly below the
+                # previous reading due to floating-point jitter or server-side
+                # recalculations. For total_increasing sensors this triggers
+                # Recorder warnings and resets the statistics baseline. Clamp
+                # the value to the last seen maximum to keep the series
+                # monotonically non-decreasing. A real meter reset (a drop to
+                # zero) is passed through unchanged so statistics still handle
+                # meter cycles correctly.
+                if (
+                    self._previous_value is not None
+                    and new_value < self._previous_value
+                    and new_value != 0
+                ):
+                    new_value = self._previous_value
+                else:
+                    self._previous_value = float(new_value)
             self._attr_native_value = new_value
         else:
             self._attr_native_value = None
