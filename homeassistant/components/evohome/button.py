@@ -31,7 +31,7 @@ async def async_setup_platform(
     tcs = hass.data[EVOHOME_DATA].tcs
 
     entities: list[ButtonEntity] = [
-        EvoRefreshLocationButton(coordinator),
+        EvoRefreshLocationButton(coordinator, tcs.location),
         EvoResetSystemButton(coordinator, tcs),
     ]
 
@@ -52,15 +52,22 @@ class EvoRefreshLocationButton(
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, coordinator: EvoDataUpdateCoordinator) -> None:
-        """Initialize the Location refresh button."""
-        super().__init__(coordinator, context=coordinator.loc.id)
+    _evo_device: evo.Location
 
-        self._attr_unique_id = f"{coordinator.loc.id}_refresh"
-        self._attr_name = f"Refresh {coordinator.loc.name}"
+    def __init__(
+        self,
+        coordinator: EvoDataUpdateCoordinator,
+        evo_device: evo.Location,
+    ) -> None:
+        """Initialize the location refresh button."""
+        super().__init__(coordinator, context=evo_device.id)
+        self._evo_device = evo_device
+
+        self._attr_unique_id = f"{evo_device.id}_refresh"
+        self._attr_name = f"Refresh {evo_device.name}"
 
     async def async_press(self) -> None:
-        """Request the coordinator to refresh the Location's status."""
+        """Request the coordinator to refresh the location's status."""
         await self.coordinator.async_request_refresh()
 
 
