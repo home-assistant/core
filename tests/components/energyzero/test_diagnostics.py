@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-pytestmark = pytest.mark.freeze_time("2025-12-21 15:00:00")
+pytestmark = pytest.mark.freeze_time("2026-04-10 20:32:59")
 
 
 async def test_entry_diagnostics(
