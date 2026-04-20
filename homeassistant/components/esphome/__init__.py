@@ -57,7 +57,7 @@ def _async_scan_serial_ports(
 
         client = entry_data.client
 
-        for proxy in device_info.serial_proxies:
+        for index, proxy in enumerate(device_info.serial_proxies):
             query = {"port_name": proxy.name}
 
             if client.noise_psk is not None:
@@ -76,7 +76,7 @@ def _async_scan_serial_ports(
                             query=query,
                         )
                     ),
-                    serial_number=device_info.mac_address,
+                    serial_number=f"{device_info.mac_address}-{index}",
                     manufacturer=device_info.manufacturer,
                     description=f"{entry_data.title} ({proxy.name})",
                 )
