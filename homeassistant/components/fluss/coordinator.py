@@ -39,6 +39,14 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             update_interval=UPDATE_INTERVAL_TIMEDELTA,
         )
 
+    async def _async_get_connectivity(self, device_id: str) -> bool:
+        """Return connectivity for a device; False if the status call fails."""
+        try:
+            status = await self.api.async_get_device_status(device_id)
+        except FlussApiClientError:
+            return False
+        return status["status"]["internetConnected"]
+
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch Fluss+ devices and merge per-device connectivity status."""
         try:
@@ -53,20 +61,10 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             for device in devices["devices"]
             if device["userPermissions"]["canUseWiFi"]
         ]
-        statuses = await asyncio.gather(
-            *(self.api.async_get_device_status(d["deviceId"]) for d in device_list),
-            return_exceptions=True,
+        connectivity = await asyncio.gather(
+            *(self._async_get_connectivity(d["deviceId"]) for d in device_list)
         )
-
-        result: dict[str, dict[str, Any]] = {}
-        for device, status in zip(device_list, statuses, strict=True):
-            if isinstance(status, FlussApiClientError):
-                result[device["deviceId"]] = {**device, "internetConnected": False}
-                continue
-            if isinstance(status, BaseException):
-                raise status
-            result[device["deviceId"]] = {
-                **device,
-                "internetConnected": status["status"]["internetConnected"],
-            }
-        return result
+        return {
+            device["deviceId"]: {**device, "internetConnected": connected}
+            for device, connected in zip(device_list, connectivity, strict=False)
+        }
