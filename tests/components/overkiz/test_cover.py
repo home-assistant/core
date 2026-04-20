@@ -142,24 +142,10 @@ async def test_cover_entities_snapshot(
     ("device", "service", "command_name", "expected_state"),
     [
         (SHUTTER, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
-        pytest.param(
-            AWNING,
-            SERVICE_OPEN_COVER,
-            "deploy",
-            CoverState.OPENING,
-            marks=pytest.mark.xfail(reason="Awning deploy not mapped to opening state"),
-        ),
+        (AWNING, SERVICE_OPEN_COVER, "deploy", CoverState.OPENING),
         (GARAGE, SERVICE_OPEN_COVER, "open", CoverState.OPENING),
         (SHUTTER, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
-        pytest.param(
-            AWNING,
-            SERVICE_CLOSE_COVER,
-            "undeploy",
-            CoverState.CLOSING,
-            marks=pytest.mark.xfail(
-                reason="Awning undeploy not mapped to closing state"
-            ),
-        ),
+        (AWNING, SERVICE_CLOSE_COVER, "undeploy", CoverState.CLOSING),
         (GARAGE, SERVICE_CLOSE_COVER, "close", CoverState.CLOSING),
         (SHUTTER, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
         (AWNING, SERVICE_STOP_COVER, "stop", CoverState.CLOSED),
