@@ -93,7 +93,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==2.2.0
+PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
 PyViCare==2.59.0
@@ -377,6 +377,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
+# homeassistant.components.russound_rnet
 aiorussound==5.0.1
 
 # homeassistant.components.ruuvi_gateway
@@ -917,6 +918,9 @@ fressnapftracker==0.2.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.1
+
+# homeassistant.components.fumis
+fumis==0.2.1
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -2192,6 +2196,9 @@ python-awair==0.2.5
 
 # homeassistant.components.bsblan
 python-bsblan==5.1.4
+
+# homeassistant.components.citybikes
+python-citybikes==0.3.3
 
 # homeassistant.components.dropbox
 python-dropbox-api==0.1.3

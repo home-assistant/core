@@ -592,6 +592,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/fujitsu_fglair/ @crevetor
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
+/homeassistant/components/fumis/ @frenck
+/tests/components/fumis/ @frenck
 /homeassistant/components/fyta/ @dontinelli
 /tests/components/fyta/ @dontinelli
 /homeassistant/components/garage_door/ @home-assistant/core

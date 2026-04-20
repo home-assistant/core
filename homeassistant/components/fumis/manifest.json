@@ -1,0 +1,12 @@
+{
+  "domain": "fumis",
+  "name": "Fumis",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fumis",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "loggers": ["fumis"],
+  "quality_scale": "bronze",
+  "requirements": ["fumis==0.2.1"]
+}
