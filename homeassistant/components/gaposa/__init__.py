@@ -27,13 +27,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bo
         name=entry.title,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
-    # Assign runtime_data before the first refresh so that
-    # async_unload_entry can call async_shutdown even if setup
-    # fails with ConfigEntryNotReady (the coordinator may hold a
-    # live Gaposa client that needs closing).
-    entry.runtime_data = coordinator
-    await coordinator.async_config_entry_first_refresh()
+    # If the first refresh fails (ConfigEntryNotReady, auth error,
+    # etc.), HA enters SETUP_RETRY without calling async_unload_entry.
+    # Shut the coordinator down explicitly so the Gaposa client and
+    # any push-notification listeners don't leak across retries.
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:
+        await coordinator.async_shutdown()
+        raise
 
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
