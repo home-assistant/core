@@ -160,35 +160,6 @@ async def test_setup_api_ping(
     assert is_hassio(hass)
 
 
-async def test_setup_api_panel(hass: HomeAssistant) -> None:
-    """Test setup with API ping."""
-    assert await async_setup_component(hass, "frontend", {})
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, "hassio", {})
-        assert result
-
-    panels = hass.data[frontend.DATA_PANELS]
-
-    assert panels.get("hassio").to_response() == {
-        "component_name": "custom",
-        "icon": None,
-        "title": None,
-        "default_visible": True,
-        "config": {
-            "_panel_custom": {
-                "embed_iframe": True,
-                "js_url": "/api/hassio/app/entrypoint.js",
-                "name": "hassio-main",
-                "trust_external": False,
-            }
-        },
-        "url_path": "hassio",
-        "require_admin": True,
-        "show_in_sidebar": True,
-        "config_panel_domain": None,
-    }
-
-
 async def test_setup_app_panel(hass: HomeAssistant) -> None:
     """Test app panel is registered."""
     with patch.dict(os.environ, MOCK_ENVIRON):
