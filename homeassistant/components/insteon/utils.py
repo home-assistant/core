@@ -21,8 +21,6 @@ from pyinsteon.events import (
     ON_FAST_EVENT,
     Event,
 )
-from serial.tools import list_ports
-
 from homeassistant.components import usb
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -67,7 +65,7 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         group: int,
         button: str | None = None,
         low_battery: bool | None = None,
-        heartbeat: bool | None = None,
+        heartbeat_missed: bool | None = None,
         dry: bool | None = None,
     ):
         event = name
@@ -87,8 +85,8 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
             schema[EVENT_CONF_BATTERY] = "low" if low_battery else "ok"
 
         # Heartbeat missed
-        if name == HEARTBEAT_EVENT and heartbeat is not None:
-            schema[EVENT_CONF_HEARTBEAT] = "missed" if heartbeat else "received"
+        if name == HEARTBEAT_EVENT and heartbeat_missed is not None:
+            schema[EVENT_CONF_HEARTBEAT] = "missed" if heartbeat_missed else "received"
 
         # Wet / dry for leak sensors
         if name in (LEAK_WET_EVENT, LEAK_DRY_EVENT) and dry is not None:
@@ -106,12 +104,16 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
-        # For backward compatibility with custom automations that may be using the old event names, we will also fire an event with the old event name.
-        schema["deprecated"] = (
-            "Use the event name without the '_event' suffix instead, as the old event name will eventually be removed in a future release."
-        )
-        _LOGGER.debug("Firing event %s with %s", legacy_event, schema)
-        hass.bus.async_fire(legacy_event, schema)
+        if legacy_event != event:
+            # For backward compatibility with custom automations that may be using the old event names, we will also fire an event with the old event name.            
+            legacy_schema = {
+                **schema,
+                "deprecated": (
+                    "Use the event name without the '_event' suffix instead, as the old event name will eventually be removed in a future release."
+                ),
+            }
+            _LOGGER.debug("Firing event %s with %s", legacy_event, legacy_schema)
+            hass.bus.async_fire(legacy_event, legacy_schema)
 
     if str(device.address).startswith("X10"):
         return
