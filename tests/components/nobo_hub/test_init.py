@@ -205,12 +205,11 @@ async def test_setup_registers_hub_device_before_forwarding_platforms(
     hub = _make_hub_mock()
     forward_called_with_device = {}
 
-    async def _capture_forward(_entry, _platforms):
+    async def _capture_forward(_entry, _platforms) -> None:
         device_registry = dr.async_get(hass)
         forward_called_with_device["device"] = device_registry.async_get_device(
             identifiers={(DOMAIN, SERIAL)}
         )
-        return True
 
     with (
         patch("homeassistant.components.nobo_hub.nobo") as mock_cls,
@@ -225,4 +224,4 @@ async def test_setup_registers_hub_device_before_forwarding_platforms(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert forward_called_with_device["device"] is not None
+    assert forward_called_with_device.get("device") is not None
