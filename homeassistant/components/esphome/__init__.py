@@ -5,16 +5,21 @@ from __future__ import annotations
 import logging
 
 from aioesphomeapi import APIClient, APIConnectionError
+from yarl import URL
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
+from homeassistant.components.usb import (
+    SerialDevice,
+    async_register_serial_port_scanner,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     __version__ as ha_version,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
@@ -34,12 +39,59 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 CLIENT_INFO = f"Home Assistant {ha_version}"
 
 
+@callback
+def _async_scan_serial_ports(
+    hass: HomeAssistant,
+) -> list[SerialDevice]:
+    """Return serial proxy ports exposed by connected ESPHome devices."""
+    ports = []
+
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        entry_data = entry.runtime_data
+        if not entry_data.available:
+            continue
+
+        device_info = entry_data.device_info
+        if device_info is None:
+            continue
+
+        client = entry_data.client
+
+        for proxy in device_info.serial_proxies:
+            query = {"port_name": proxy.name}
+
+            if client.noise_psk is not None:
+                query["key"] = client.noise_psk
+
+            if client.password is not None:
+                query["password"] = client.password
+
+            ports.append(
+                SerialDevice(
+                    device=str(
+                        URL.build(
+                            scheme="esphome",
+                            host=client.connected_address,
+                            port=client.port,
+                            query=query,
+                        )
+                    ),
+                    serial_number=device_info.mac_address,
+                    manufacturer=device_info.manufacturer,
+                    description=f"{entry_data.title} ({proxy.name})",
+                )
+            )
+
+    return ports
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the esphome component."""
     ffmpeg_proxy.async_setup(hass)
     await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
     async_setup_websocket_api(hass)
+    async_register_serial_port_scanner(hass, _async_scan_serial_ports)
     return True
 
 
