@@ -86,9 +86,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._async_check_connection(client)
-
-            return self.async_create_entry(title=user_input[CONF_URL], data=user_input)
-
         except OPNsenseInvalidURL:
             errors["base"] = "invalid_url"
         except OPNsenseSSLError:
@@ -102,6 +99,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
+        else:
+            return self.async_create_entry(title=user_input[CONF_URL], data=user_input)
 
         return await self._show_setup_form(user_input, errors)
 
