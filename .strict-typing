@@ -178,6 +178,7 @@ homeassistant.components.dropbox.*
 homeassistant.components.droplet.*
 homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
+homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
