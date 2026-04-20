@@ -55,3 +55,33 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+async def init_integration_with_cover(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Set up the Overkiz integration with a cover device for testing.
+
+    Uses a dedicated fixture file so the cover device is not part of the
+    default switch fixture. Keeps the diagnostics snapshot (which uses the
+    switch fixture) stable.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        login=AsyncMock(return_value=True),
+        get_setup=AsyncMock(
+            return_value=load_setup_fixture(
+                "overkiz/setup/setup_tahoma_switch_with_cover.json"
+            )
+        ),
+        get_scenarios=AsyncMock(return_value=[]),
+        fetch_events=AsyncMock(return_value=[]),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry

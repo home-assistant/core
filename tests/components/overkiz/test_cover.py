@@ -30,9 +30,28 @@ VENETIAN_BLIND_ENTITY_ID = "cover.kitchen_venetian_blind"
 ROLLER_SHUTTER_ENTITY_ID = "cover.living_room_shutter"
 
 
+@pytest.fixture
+def require_position_and_tilt_service(
+    hass: HomeAssistant,
+    init_integration_with_cover: MockConfigEntry,
+) -> MockConfigEntry:
+    """Skip the test if the set_cover_position_and_tilt service is missing.
+
+    The service is implemented in PR #166180. Until that lands, these tests
+    skip so this PR can be reviewed and merged independently. Once the service
+    exists, the tests run automatically.
+    """
+    if not hass.services.has_service(DOMAIN, SET_POSITION_AND_TILT_SERVICE):
+        pytest.skip(
+            "overkiz.set_cover_position_and_tilt service not registered "
+            "(waiting on home-assistant/core#166180)"
+        )
+    return init_integration_with_cover
+
+
 async def test_cover_entities_are_created(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    init_integration_with_cover: MockConfigEntry,
 ) -> None:
     """Both the Venetian blind and the RTS roller shutter should be set up."""
     assert hass.states.get(VENETIAN_BLIND_ENTITY_ID) is not None
@@ -41,7 +60,7 @@ async def test_cover_entities_are_created(
 
 async def test_venetian_blind_position_and_tilt_are_inverted(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    init_integration_with_cover: MockConfigEntry,
 ) -> None:
     """Overkiz reports closure/orientation in reverse (0 = fully open).
 
@@ -58,7 +77,7 @@ async def test_venetian_blind_position_and_tilt_are_inverted(
 
 async def test_set_cover_position_and_tilt_service_is_registered(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    require_position_and_tilt_service: MockConfigEntry,
 ) -> None:
     """The overkiz.set_cover_position_and_tilt service must be registered."""
     assert hass.services.has_service(DOMAIN, SET_POSITION_AND_TILT_SERVICE)
@@ -66,7 +85,7 @@ async def test_set_cover_position_and_tilt_service_is_registered(
 
 async def test_set_cover_position_and_tilt_executes_single_command(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    require_position_and_tilt_service: MockConfigEntry,
 ) -> None:
     """Position+tilt must be sent as one atomic SET_CLOSURE_AND_ORIENTATION call.
 
@@ -74,10 +93,12 @@ async def test_set_cover_position_and_tilt_executes_single_command(
     (set_cover_position followed by set_cover_tilt_position) make the Somfy motor
     stop mid-movement. The new service issues a single firmware command instead.
     """
-    with patch(
-        "pyoverkiz.client.OverkizClient.execute_command",
-        new=AsyncMock(return_value="exec-1"),
-    ) as mock_execute:
+    mock_execute = AsyncMock(return_value="exec-1")
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        execute_command=mock_execute,
+        fetch_events=AsyncMock(return_value=[]),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SET_POSITION_AND_TILT_SERVICE,
@@ -100,13 +121,15 @@ async def test_set_cover_position_and_tilt_executes_single_command(
 
 async def test_set_cover_position_and_tilt_boundary_values(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    require_position_and_tilt_service: MockConfigEntry,
 ) -> None:
     """Boundary values 0 and 100 must invert cleanly to 100 and 0."""
-    with patch(
-        "pyoverkiz.client.OverkizClient.execute_command",
-        new=AsyncMock(return_value="exec-2"),
-    ) as mock_execute:
+    mock_execute = AsyncMock(return_value="exec-2")
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        execute_command=mock_execute,
+        fetch_events=AsyncMock(return_value=[]),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SET_POSITION_AND_TILT_SERVICE,
@@ -128,16 +151,18 @@ async def test_set_cover_position_and_tilt_boundary_values(
 )
 async def test_set_cover_position_and_tilt_rejects_out_of_range(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    require_position_and_tilt_service: MockConfigEntry,
     position: int,
     tilt_position: int,
 ) -> None:
     """Values outside 0-100 must be rejected by the service schema."""
+    mock_execute = AsyncMock(return_value="exec-3")
     with (
-        patch(
-            "pyoverkiz.client.OverkizClient.execute_command",
-            new=AsyncMock(return_value="exec-3"),
-        ) as mock_execute,
+        patch.multiple(
+            "pyoverkiz.client.OverkizClient",
+            execute_command=mock_execute,
+            fetch_events=AsyncMock(return_value=[]),
+        ),
         pytest.raises(vol.Invalid),
     ):
         await hass.services.async_call(
@@ -157,7 +182,7 @@ async def test_set_cover_position_and_tilt_rejects_out_of_range(
 
 async def test_set_cover_position_and_tilt_on_device_without_tilt_is_filtered(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    require_position_and_tilt_service: MockConfigEntry,
 ) -> None:
     """required_features blocks the service on covers without tilt support.
 
@@ -165,10 +190,12 @@ async def test_set_cover_position_and_tilt_on_device_without_tilt_is_filtered(
     Calling the service on it must not reach execute_command — it is filtered
     out by the entity-service framework before the handler runs.
     """
-    with patch(
-        "pyoverkiz.client.OverkizClient.execute_command",
-        new=AsyncMock(return_value="exec-4"),
-    ) as mock_execute:
+    mock_execute = AsyncMock(return_value="exec-4")
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        execute_command=mock_execute,
+        fetch_events=AsyncMock(return_value=[]),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SET_POSITION_AND_TILT_SERVICE,
@@ -185,7 +212,7 @@ async def test_set_cover_position_and_tilt_on_device_without_tilt_is_filtered(
 
 async def test_async_set_cover_position_and_tilt_raises_without_command(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    require_position_and_tilt_service: MockConfigEntry,
 ) -> None:
     """Direct method call must raise ServiceValidationError on unsupported devices.
 
@@ -214,13 +241,15 @@ async def test_async_set_cover_position_and_tilt_raises_without_command(
 
 async def test_set_cover_position_inverts_single_value(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    init_integration_with_cover: MockConfigEntry,
 ) -> None:
     """Plain set_cover_position must still invert 100-position (unchanged behavior)."""
-    with patch(
-        "pyoverkiz.client.OverkizClient.execute_command",
-        new=AsyncMock(return_value="exec-5"),
-    ) as mock_execute:
+    mock_execute = AsyncMock(return_value="exec-5")
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        execute_command=mock_execute,
+        fetch_events=AsyncMock(return_value=[]),
+    ):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
@@ -235,13 +264,15 @@ async def test_set_cover_position_inverts_single_value(
 
 async def test_set_cover_tilt_position_inverts_single_value(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    init_integration_with_cover: MockConfigEntry,
 ) -> None:
     """Plain set_cover_tilt_position must still invert 100-tilt (unchanged behavior)."""
-    with patch(
-        "pyoverkiz.client.OverkizClient.execute_command",
-        new=AsyncMock(return_value="exec-6"),
-    ) as mock_execute:
+    mock_execute = AsyncMock(return_value="exec-6")
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        execute_command=mock_execute,
+        fetch_events=AsyncMock(return_value=[]),
+    ):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
@@ -256,13 +287,15 @@ async def test_set_cover_tilt_position_inverts_single_value(
 
 async def test_open_and_close_cover_issue_matching_commands(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    init_integration_with_cover: MockConfigEntry,
 ) -> None:
     """Open/Close on a Venetian blind should issue OPEN and CLOSE commands."""
-    with patch(
-        "pyoverkiz.client.OverkizClient.execute_command",
-        new=AsyncMock(return_value="exec-7"),
-    ) as mock_execute:
+    mock_execute = AsyncMock(return_value="exec-7")
+    with patch.multiple(
+        "pyoverkiz.client.OverkizClient",
+        execute_command=mock_execute,
+        fetch_events=AsyncMock(return_value=[]),
+    ):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,

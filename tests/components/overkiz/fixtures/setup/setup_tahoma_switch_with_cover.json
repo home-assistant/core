@@ -835,6 +835,118 @@
       "uiClass": "RollerShutter"
     },
     {
+      "creationTime": 1667840384000,
+      "lastUpdateTime": 1667840384000,
+      "label": "Kitchen Venetian Blind",
+      "deviceURL": "io://1234-5678-6867/22222222",
+      "shortcut": false,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "closeSlats",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "openSlats",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setClosureAndOrientation",
+            "nparams": 2
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlatsOrientationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["open", "closed"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicExteriorVenetianBlind",
+        "uiProfiles": ["StatefulOrientedCloseable", "StatefulCloseable", "Closeable"],
+        "uiClass": "ExteriorVenetianBlind",
+        "qualifiedName": "io:DynamicExteriorVenetianBlindIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 40
+        },
+        {
+          "name": "core:SlatsOrientationState",
+          "type": 1,
+          "value": 70
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "9e3d6899-50bb-4869-9c5e-46c2b57f7c9e",
+      "type": 1,
+      "widget": "DynamicExteriorVenetianBlind",
+      "oid": "2b2c6f6f-9bc3-40f3-a33c-e383fd41d3f9",
+      "uiClass": "ExteriorVenetianBlind"
+    },
+    {
       "creationTime": 1665238630000,
       "lastUpdateTime": 1665238630000,
       "label": "** *(**)*",
