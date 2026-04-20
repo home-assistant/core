@@ -25,8 +25,12 @@
         "title": "Serial Connection"
       },
       "sources": {
-        "description": "Enter names for the audio sources connected to your Russound system.",
+        "description": "Enter names for the audio sources connected to your Russound system. Leave a source empty to exclude it.",
         "title": "Source Names"
+      },
+      "zones": {
+        "description": "Enter names for each zone. Leave a zone empty to exclude it.",
+        "title": "Zone Names"
       },
       "tcp": {
         "data": {

@@ -4,6 +4,7 @@ from homeassistant.components.russound_rnet.const import (
     CONF_BAUDRATE,
     CONF_MODEL,
     CONF_SOURCES,
+    CONF_ZONES,
     TYPE_SERIAL,
     TYPE_TCP,
 )
@@ -20,6 +21,15 @@ MOCK_SOURCES = {
     "6": "Tape",
 }
 
+MOCK_ZONES = {
+    "1_1": "Kitchen",
+    "1_2": "Living Room",
+    "1_3": "Bedroom",
+    "1_4": "Office",
+    "1_5": "Patio",
+    "1_6": "Garage",
+}
+
 MOCK_TCP_STEP_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 9999,
@@ -31,6 +41,7 @@ MOCK_TCP_CONFIG = {
     CONF_PORT: 9999,
     CONF_MODEL: MODEL,
     CONF_SOURCES: MOCK_SOURCES,
+    CONF_ZONES: MOCK_ZONES,
 }
 
 MOCK_SERIAL_STEP_INPUT = {
@@ -44,4 +55,5 @@ MOCK_SERIAL_CONFIG = {
     CONF_BAUDRATE: 19200,
     CONF_MODEL: MODEL,
     CONF_SOURCES: MOCK_SOURCES,
+    CONF_ZONES: MOCK_ZONES,
 }

@@ -12,7 +12,7 @@ from aiorussound.rnet.client import RussoundRNETClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -28,6 +28,7 @@ from .const import (
     CONF_BAUDRATE,
     CONF_MODEL,
     CONF_SOURCES,
+    CONF_ZONES,
     DEFAULT_BAUDRATE,
     DOMAIN,
     RNET_EXCEPTIONS,
@@ -207,28 +208,57 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_sources(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle source name configuration."""
+        """Handle source name configuration. Empty name = source excluded."""
         model = RNET_MODELS[self.data[CONF_MODEL]]
 
         if user_input is not None:
+            # Only store non-empty source names
             sources = {
-                str(i): user_input.get(f"source_{i}", f"Source {i}")
+                str(i): name
                 for i in range(1, model.max_sources + 1)
+                if (name := user_input.get(f"source_{i}", "").strip())
             }
             self.data[CONF_SOURCES] = sources
-            return self.async_create_entry(
-                title=model.name,
-                data=self.data,
-            )
+            return await self.async_step_zones()
 
         source_schema = vol.Schema(
             {
-                vol.Required(f"source_{i}", default=f"Source {i}"): TextSelector()
+                vol.Optional(f"source_{i}", default=""): TextSelector()
                 for i in range(1, model.max_sources + 1)
             }
         )
 
         return self.async_show_form(step_id="sources", data_schema=source_schema)
+
+    async def async_step_zones(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle zone name configuration. Empty name = zone excluded."""
+        model = RNET_MODELS[self.data[CONF_MODEL]]
+
+        if user_input is not None:
+            # Only store non-empty zone names; key = "controller_zone" e.g. "1_1"
+            zones = {
+                f"{c}_{z}": name
+                for c in range(1, model.max_controllers + 1)
+                for z in range(1, model.max_zones + 1)
+                if (name := user_input.get(f"zone_{c}_{z}", "").strip())
+            }
+            self.data[CONF_ZONES] = zones
+            return self.async_create_entry(
+                title=model.name,
+                data=self.data,
+            )
+
+        zone_schema = vol.Schema(
+            {
+                vol.Optional(f"zone_{c}_{z}", default=""): TextSelector()
+                for c in range(1, model.max_controllers + 1)
+                for z in range(1, model.max_zones + 1)
+            }
+        )
+
+        return self.async_show_form(step_id="zones", data_schema=zone_schema)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from YAML."""
@@ -239,11 +269,12 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             {CONF_TYPE: TYPE_TCP, CONF_HOST: host, CONF_PORT: port}
         )
 
-        # Build source names from YAML config
+        # Build source names from YAML config (only named sources)
         yaml_sources = import_data.get("sources", [])
         sources = {
-            str(i + 1): src.get("name", f"Source {i + 1}")
+            str(i + 1): src.get(CONF_NAME, "")
             for i, src in enumerate(yaml_sources)
+            if src.get(CONF_NAME, "").strip()
         }
 
         # Infer model from zone configuration
@@ -251,12 +282,23 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
         zone_ids = list(yaml_zones.keys()) if yaml_zones else []
         model_key = _infer_model_from_zones(zone_ids)
 
+        # Preserve zone names from YAML; old YAML used flat zone IDs
+        # mapped as controller = ceil(id/6), zone = ((id-1) % 6) + 1
+        zones = {}
+        for zone_id, zone_data in yaml_zones.items():
+            controller_id = (zone_id - 1) // 6 + 1
+            local_zone_id = (zone_id - 1) % 6 + 1
+            name = zone_data.get(CONF_NAME, "").strip()
+            if name:
+                zones[f"{controller_id}_{local_zone_id}"] = name
+
         data = {
             CONF_TYPE: TYPE_TCP,
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_MODEL: model_key,
             CONF_SOURCES: sources,
+            CONF_ZONES: zones,
         }
 
         # Validate connection
@@ -285,9 +327,11 @@ class RussoundRNETOptionsFlow(OptionsFlow):
         current_sources = entry.data.get(CONF_SOURCES, {})
 
         if user_input is not None:
+            # Only store non-empty source names
             new_sources = {
-                str(i): user_input.get(f"source_{i}", f"Source {i}")
+                str(i): name
                 for i in range(1, model.max_sources + 1)
+                if (name := user_input.get(f"source_{i}", "").strip())
             }
             new_data = {**entry.data, CONF_SOURCES: new_sources}
             self.hass.config_entries.async_update_entry(entry, data=new_data)
@@ -296,9 +340,9 @@ class RussoundRNETOptionsFlow(OptionsFlow):
 
         source_schema = vol.Schema(
             {
-                vol.Required(
+                vol.Optional(
                     f"source_{i}",
-                    default=current_sources.get(str(i), f"Source {i}"),
+                    default=current_sources.get(str(i), ""),
                 ): TextSelector()
                 for i in range(1, model.max_sources + 1)
             }

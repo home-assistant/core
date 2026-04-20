@@ -47,6 +47,7 @@ class RussoundRNETEntity(CoordinatorEntity[RussoundRNETCoordinator]):
         coordinator: RussoundRNETCoordinator,
         controller_id: int,
         zone_id: int,
+        zone_name: str | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
@@ -55,7 +56,7 @@ class RussoundRNETEntity(CoordinatorEntity[RussoundRNETCoordinator]):
         entry = coordinator.config_entry
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}_{controller_id}_{zone_id}")},
-            name=f"Zone {zone_id}",
+            name=zone_name or f"Zone {zone_id}",
             manufacturer="Russound",
             model=entry.data.get("model"),
             via_device=(DOMAIN, entry.entry_id) if controller_id > 1 else None,

@@ -19,7 +19,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_MODEL, CONF_SOURCES, DOMAIN, RNET_MODELS
+from .const import CONF_MODEL, CONF_SOURCES, CONF_ZONES, DOMAIN, RNET_MODELS
 from .coordinator import RussoundRNETConfigEntry, RussoundRNETCoordinator
 from .entity import RussoundRNETEntity, command
 
@@ -69,19 +69,44 @@ async def async_setup_entry(
     model_key = entry.data.get(CONF_MODEL, "caa66")
     model = RNET_MODELS[model_key]
     sources = entry.data.get(CONF_SOURCES, {})
+    zones_config = entry.data.get(CONF_ZONES, {})
+
+    # Build source list: only named sources, indexed by their slot number
+    # Sources dict: {"1": "Sonos", "3": "Radio"} → sparse mapping
+    source_list: list[tuple[int, str]] = sorted(
+        ((int(k), v) for k, v in sources.items()), key=lambda x: x[0]
+    )
 
     entities: list[RussoundRNETZone] = []
-    for controller_id in range(1, model.max_controllers + 1):
-        for zone_id in range(1, model.max_zones + 1):
+
+    if zones_config:
+        # Only create entities for explicitly configured zones
+        for zone_key, zone_name in zones_config.items():
+            controller_id, zone_id = (int(x) for x in zone_key.split("_"))
             if (controller_id, zone_id) in coordinator.data:
                 entities.append(
                     RussoundRNETZone(
                         coordinator,
                         controller_id,
                         zone_id,
-                        sources,
+                        zone_name,
+                        source_list,
                     )
                 )
+    else:
+        # No zones configured — create all zones from model
+        for controller_id in range(1, model.max_controllers + 1):
+            for zone_id in range(1, model.max_zones + 1):
+                if (controller_id, zone_id) in coordinator.data:
+                    entities.append(
+                        RussoundRNETZone(
+                            coordinator,
+                            controller_id,
+                            zone_id,
+                            f"Zone {zone_id}",
+                            source_list,
+                        )
+                    )
 
     async_add_entities(entities)
 
@@ -102,14 +127,16 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
         coordinator: RussoundRNETCoordinator,
         controller_id: int,
         zone_id: int,
-        sources: dict[str, str],
+        zone_name: str,
+        source_list: list[tuple[int, str]],
     ) -> None:
         """Initialize the zone entity."""
-        super().__init__(coordinator, controller_id, zone_id)
-        self._sources = sources
-        self._attr_source_list = [
-            sources.get(str(i), f"Source {i}") for i in range(1, len(sources) + 1)
-        ] or None
+        super().__init__(coordinator, controller_id, zone_id, zone_name)
+        # source_list: sorted list of (slot_number, name) for active sources
+        self._source_map = source_list
+        self._attr_source_list = [name for _, name in source_list] or None
+        # Reverse map: source name → slot number (1-based RNET index)
+        self._source_to_index = {name: slot for slot, name in source_list}
         entry = coordinator.config_entry
         self._attr_unique_id = f"{entry.entry_id}_{controller_id}_{zone_id}"
 
@@ -133,11 +160,12 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     def source(self) -> str | None:
         """Return the currently selected source."""
         data = self.coordinator.data.get((self._controller_id, self._zone_id))
-        if data is None or not self._attr_source_list:
+        if data is None:
             return None
-        index = data.source - 1
-        if 0 <= index < len(self._attr_source_list):
-            return self._attr_source_list[index]
+        # data.source is 1-based RNET slot; find matching name
+        for slot, name in self._source_map:
+            if slot == data.source:
+                return name
         return None
 
     @command
@@ -174,8 +202,8 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     @command
     async def async_select_source(self, source: str) -> None:
         """Select the input source."""
-        if self._attr_source_list and source in self._attr_source_list:
-            index = self._attr_source_list.index(source) + 1
+        if source in self._source_to_index:
+            index = self._source_to_index[source]
             await self.coordinator.client.select_source(
                 self._controller_id, self._zone_id, index
             )

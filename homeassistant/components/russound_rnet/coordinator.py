@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MODEL, DOMAIN, RNET_EXCEPTIONS, RNET_MODELS
+from .const import CONF_MODEL, CONF_ZONES, DOMAIN, RNET_EXCEPTIONS, RNET_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +41,22 @@ class RussoundRNETCoordinator(
         self._lock = asyncio.Lock()
         model_key = entry.data[CONF_MODEL]
         self._model = RNET_MODELS[model_key]
+
+        # Build list of (controller_id, zone_id) tuples to poll
+        zones_config = entry.data.get(CONF_ZONES, {})
+        if zones_config:
+            self._zone_keys: list[tuple[int, int]] = [
+                (int(key.split("_")[0]), int(key.split("_")[1]))
+                for key in zones_config
+            ]
+        else:
+            # No zones configured — poll all model zones
+            self._zone_keys = [
+                (c, z)
+                for c in range(1, self._model.max_controllers + 1)
+                for z in range(1, self._model.max_zones + 1)
+            ]
+
         super().__init__(
             hass,
             _LOGGER,
@@ -74,13 +90,12 @@ class RussoundRNETCoordinator(
                 ) from err
 
         try:
-            for controller_id in range(1, self._model.max_controllers + 1):
-                for zone_id in range(1, self._model.max_zones + 1):
-                    info = await self.client.get_all_zone_info(
-                        controller_id, zone_id
-                    )
-                    data[(controller_id, zone_id)] = info
-                    await asyncio.sleep(_INTER_ZONE_DELAY)
+            for controller_id, zone_id in self._zone_keys:
+                info = await self.client.get_all_zone_info(
+                    controller_id, zone_id
+                )
+                data[(controller_id, zone_id)] = info
+                await asyncio.sleep(_INTER_ZONE_DELAY)
         except RNET_EXCEPTIONS as err:
             # Disconnect on error so next poll reconnects cleanly
             with suppress(*RNET_EXCEPTIONS):
