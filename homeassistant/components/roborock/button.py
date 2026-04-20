@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 import itertools
 import logging
@@ -45,6 +46,12 @@ class RoborockButtonDescription(ButtonEntityDescription):
 
     attribute: ConsumableAttribute
     is_dock_entity: bool = False
+    is_supported: Callable[[RoborockDataUpdateCoordinator], bool] = lambda _: True
+
+
+def _supports_dock_consumables(coordinator: RoborockDataUpdateCoordinator) -> bool:
+    dock_type = coordinator.properties_api.status.dock_type
+    return dock_type is not None and is_wash_n_fill_dock(dock_type)
 
 
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
@@ -83,6 +90,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         is_dock_entity=True,
+        is_supported=_supports_dock_consumables,
     ),
     RoborockButtonDescription(
         key="reset_dock_cleaning_brush_consumable",
@@ -91,6 +99,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         is_dock_entity=True,
+        is_supported=_supports_dock_consumables,
     ),
 ]
 
@@ -129,11 +138,6 @@ Q10_BUTTON_DESCRIPTIONS = [
 ]
 
 
-def _supports_dock_consumables(coordinator: RoborockDataUpdateCoordinator) -> bool:
-    dock_type = coordinator.properties_api.status.dock_type
-    return dock_type is not None and is_wash_n_fill_dock(dock_type)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -153,8 +157,7 @@ async def async_setup_entry(
                 for coordinator in config_entry.runtime_data.v1
                 if isinstance(coordinator, RoborockDataUpdateCoordinator)
                 for description in CONSUMABLE_BUTTON_DESCRIPTIONS
-                if not description.is_dock_entity
-                or _supports_dock_consumables(coordinator)
+                if description.is_supported(coordinator)
             ),
             (
                 RoborockRoutineButtonEntity(
