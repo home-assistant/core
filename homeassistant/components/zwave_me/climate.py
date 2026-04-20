@@ -35,14 +35,7 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
         """Add a new device."""
-        controller = config_entry.runtime_data
-        climate = ZWaveMeClimate(controller, new_device)
-
-        async_add_entities(
-            [
-                climate,
-            ]
-        )
+        async_add_entities([ZWaveMeClimate(config_entry.runtime_data, new_device)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(

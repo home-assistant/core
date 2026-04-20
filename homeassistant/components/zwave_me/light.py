@@ -33,14 +33,7 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
         """Add a new device."""
-        controller = config_entry.runtime_data
-        rgb = ZWaveMeRGB(controller, new_device)
-
-        async_add_entities(
-            [
-                rgb,
-            ]
-        )
+        async_add_entities([ZWaveMeRGB(config_entry.runtime_data, new_device)])
 
     async_dispatcher_connect(
         hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device

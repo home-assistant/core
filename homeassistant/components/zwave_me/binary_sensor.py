@@ -38,15 +38,15 @@ async def async_setup_entry(
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
-        controller = config_entry.runtime_data
-        description = BINARY_SENSORS_MAP.get(
-            new_device.probeType, BINARY_SENSORS_MAP["generic"]
-        )
-        sensor = ZWaveMeBinarySensor(controller, new_device, description)
-
         async_add_entities(
             [
-                sensor,
+                ZWaveMeBinarySensor(
+                    config_entry.runtime_data,
+                    new_device,
+                    BINARY_SENSORS_MAP.get(
+                        new_device.probeType, BINARY_SENSORS_MAP["generic"]
+                    ),
+                )
             ]
         )
 

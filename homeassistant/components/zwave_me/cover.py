@@ -29,14 +29,7 @@ async def async_setup_entry(
 
     @callback
     def add_new_device(new_device):
-        controller = config_entry.runtime_data
-        cover = ZWaveMeCover(controller, new_device)
-
-        async_add_entities(
-            [
-                cover,
-            ]
-        )
+        async_add_entities([ZWaveMeCover(config_entry.runtime_data, new_device)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(

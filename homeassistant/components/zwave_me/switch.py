@@ -38,12 +38,11 @@ async def async_setup_entry(
 
     @callback
     def add_new_device(new_device):
-        controller = config_entry.runtime_data
-        switch = ZWaveMeSwitch(controller, new_device, SWITCH_MAP["generic"])
-
         async_add_entities(
             [
-                switch,
+                ZWaveMeSwitch(
+                    config_entry.runtime_data, new_device, SWITCH_MAP["generic"]
+                )
             ]
         )
 
