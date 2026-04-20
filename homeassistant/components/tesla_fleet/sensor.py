@@ -514,11 +514,14 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
-            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
-                self._attr_native_value = sensor_data.native_value
-                if isinstance(sensor_data.native_value, float | int):
-                    self._previous_value = float(sensor_data.native_value)
+
+        restored_sensor_data = await self.async_get_last_sensor_data()
+
+        if (
+            self.coordinator.data.get("state") != TeslaFleetState.ONLINE
+            and restored_sensor_data is not None
+        ):
+            self._attr_native_value = restored_sensor_data.native_value
 
         if (
             self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
@@ -527,15 +530,25 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         ):
             self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
-        # For TOTAL_INCREASING sensors, seed the cached monotonic value from the
-        # last restored state so jitter around a restart cannot produce a decrease.
+        # For TOTAL_INCREASING sensors, seed the cached monotonic baseline from
+        # the restored state. The parent TeslaFleetEntity.__init__ already set
+        # _previous_value from the current coordinator reading via
+        # _async_update_attrs, so take the maximum of that and the restored
+        # value — if the restored value is higher we clamp against it to
+        # survive jitter around a restart, then re-apply _async_update_attrs
+        # so _attr_native_value reflects the higher baseline.
         if (
             self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
-            and self._previous_value is None
-            and (sensor_data := await self.async_get_last_sensor_data()) is not None
-            and isinstance(sensor_data.native_value, float | int)
+            and restored_sensor_data is not None
+            and isinstance(restored_sensor_data.native_value, float | int)
         ):
-            self._previous_value = float(sensor_data.native_value)
+            restored = float(restored_sensor_data.native_value)
+            self._previous_value = (
+                max(self._previous_value, restored)
+                if self._previous_value is not None
+                else restored
+            )
+            self._async_update_attrs()
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""

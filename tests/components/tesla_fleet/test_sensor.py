@@ -9,9 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import ENERGY_HISTORY, VEHICLE_DATA, VEHICLE_DATA_ALT
@@ -200,6 +201,13 @@ async def test_total_increasing_clamp(
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
+    # The odometer is reported by the Fleet API in miles (native unit) but HA
+    # converts to the system length unit (kilometers by default in tests).
+    def miles_to_state(miles: float) -> float:
+        return DistanceConverter.convert(
+            miles, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+        )
+
     # Seed initial odometer value
     initial_data = deepcopy(VEHICLE_DATA)
     initial_data["response"]["vehicle_state"]["odometer"] = 6481.02
@@ -209,7 +217,7 @@ async def test_total_increasing_clamp(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "6481.02"
+    assert float(state.state) == pytest.approx(miles_to_state(6481.02))
 
     # A tiny backwards jitter must be clamped to the previous value
     jitter_data = deepcopy(VEHICLE_DATA)
@@ -221,7 +229,7 @@ async def test_total_increasing_clamp(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "6481.02"
+    assert float(state.state) == pytest.approx(miles_to_state(6481.02))
 
     # A strictly larger reading must pass through unchanged and
     # become the new baseline for subsequent updates
@@ -234,7 +242,7 @@ async def test_total_increasing_clamp(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "6482.5"
+    assert float(state.state) == pytest.approx(miles_to_state(6482.5))
 
     # Subsequent jitter below the new baseline must also be clamped
     post_jitter_data = deepcopy(VEHICLE_DATA)
@@ -246,7 +254,7 @@ async def test_total_increasing_clamp(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "6482.5"
+    assert float(state.state) == pytest.approx(miles_to_state(6482.5))
 
     # A real meter reset to zero must be forwarded so the statistics
     # engine can detect the new cycle rather than being clamped forever.
@@ -259,7 +267,55 @@ async def test_total_increasing_clamp(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "0"
+    assert state.state == "0.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_total_increasing_clamp_after_reload(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test that the clamp baseline survives a config entry reload.
+
+    Regression for the restore-seeding path: the parent
+    ``TeslaFleetEntity.__init__`` seeds ``_previous_value`` from the current
+    coordinator reading before ``async_added_to_hass`` runs. Without the max()
+    merge the restored state would be shadowed, so a slightly lower reading
+    right after a restart would be exported verbatim and reset the statistics
+    baseline. The fix seeds ``_previous_value`` to max(current, restored)
+    so a lower post-reload reading stays clamped to the restored value.
+    """
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    entity_id = "sensor.test_odometer"
+
+    # First setup: record a high odometer reading so RestoreSensor persists it.
+    initial_data = deepcopy(VEHICLE_DATA)
+    initial_data["response"]["vehicle_state"]["odometer"] = 9999.0
+    mock_vehicle_data.return_value = initial_data
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    expected_km = DistanceConverter.convert(
+        9999.0, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+    )
+    assert float(state.state) == pytest.approx(expected_km)
+
+    # Coordinator now returns a slightly lower reading, mimicking server-side
+    # jitter after a restart.
+    lower_data = deepcopy(VEHICLE_DATA)
+    lower_data["response"]["vehicle_state"]["odometer"] = 9998.5
+    mock_vehicle_data.return_value = lower_data
+
+    with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_reload(normal_config_entry.entry_id)
+
+    # The restored baseline must win — exported state does not regress.
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(expected_km)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
