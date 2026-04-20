@@ -365,12 +365,11 @@ async def ws_event_stream(
     # cache parent user_ids as they fire. Historical queries don't — the
     # context_only join fetches them by context_id regardless of type.
     # Unfiltered streams already include it via BUILT_IN_EVENTS.
-    event_types.add(EVENT_CALL_SERVICE)
     async_subscribe_events(
         hass,
         subscriptions,
         _queue_or_cancel,
-        event_types,
+        {*event_types, EVENT_CALL_SERVICE},
         entities_filter,
         entity_ids,
         device_ids,

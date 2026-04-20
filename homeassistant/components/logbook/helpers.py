@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from typing import Any
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, NON_NUMERIC_DEVICE_CLASSES
@@ -187,7 +187,7 @@ def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event[Any]], None],
-    event_types: Iterable[EventType[Any] | str],
+    event_types: Collection[EventType[Any] | str],
     entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
