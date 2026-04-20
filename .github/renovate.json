@@ -6,6 +6,7 @@
     "pep621",
     "pip_requirements",
     "pre-commit",
+    "regex",
     "homeassistant-manifest"
   ],
 
@@ -25,6 +26,16 @@
       "/^homeassistant/components/[^/]+/manifest\\.json$/"
     ]
   },
+
+  "regexManagers": [
+    {
+      "description": "Update ruff required-version in pyproject.toml",
+      "managerFilePatterns": ["/^pyproject\\.toml$/"],
+      "matchStrings": ["required-version = \">=(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ruff",
+      "datasourceTemplate": "pypi"
+    }
+  ],
 
   "minimumReleaseAge": "7 days",
   "prConcurrentLimit": 10,
