@@ -97,13 +97,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
         try:
-            _LOGGER.debug("Preloading home data")
-            tado_home_call = await self.hass.async_add_executor_job(self._tado.get_me)
-            _LOGGER.debug("Preloading zones and devices")
-            self.zones = await self.hass.async_add_executor_job(self._tado.get_zones)
-            self.devices = await self.hass.async_add_executor_job(
-                self._tado.get_devices
-            )
             (
                 tado_home_call,
                 self.zones,
