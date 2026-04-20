@@ -60,11 +60,15 @@
       "status": {
         "name": "Status",
         "state": {
+          "evse_fault": "EVSE fault",
+          "ground_fault": "Ground fault",
           "high_tariff_period": "High tariff period",
           "out_of_activation_period": "Out of activation period",
+          "pilot_fault": "Pilot fault",
           "plugged_charging": "Plugged, charging",
           "plugged_waiting": "Plugged, waiting",
-          "unplugged": "Unplugged"
+          "unplugged": "Unplugged",
+          "ventilation_required": "Ventilation required"
         }
       },
       "voltage_in": {
