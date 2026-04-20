@@ -40,11 +40,7 @@ def unique_zone_id(evo_device: evo.Zone) -> str:
 
 
 class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
-    """Base for any evohome-compatible entity (controller, DHW, zone).
-
-    This includes the controller, (1 to 12) heating zones and (optionally) a
-    DHW controller.
-    """
+    """Base for Evohome's Climate & WaterHeater entities."""
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
