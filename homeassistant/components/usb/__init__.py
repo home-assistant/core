@@ -35,7 +35,6 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN
 from .models import SerialDevice, USBDevice
 from .utils import (
-    async_scan_serial_ports,
     scan_serial_ports,
     usb_device_from_path,
     usb_device_matches_matcher,
@@ -98,6 +97,13 @@ def async_register_port_event_callback(
 ) -> CALLBACK_TYPE:
     """Register to receive a callback when a USB device is connected or disconnected."""
     return hass.data[_USB_DATA].async_register_port_event_callback(callback)
+
+
+async def async_scan_serial_ports(
+    hass: HomeAssistant,
+) -> Sequence[USBDevice | SerialDevice]:
+    """Scan serial ports and return USB and other serial devices."""
+    return await hass.data[_USB_DATA].async_scan_serial_ports()
 
 
 @hass_callback
@@ -313,6 +319,13 @@ class USBDiscovery:
 
         return _async_remove_callback
 
+    async def async_scan_serial_ports(self) -> Sequence[USBDevice | SerialDevice]:
+        """Scan serial ports and return USB and other serial devices."""
+        ports: list[USBDevice | SerialDevice] = list(
+            await self.hass.async_add_executor_job(scan_serial_ports)
+        )
+        return ports
+
     @hass_callback
     def async_get_usb_matchers_for_device(self, device: USBDevice) -> list[USBMatcher]:
         """Return a list of matchers that match the given device."""
@@ -440,7 +453,7 @@ class USBDiscovery:
             # Only consider USB-serial ports for discovery
             usb_ports = [
                 p
-                for p in await async_scan_serial_ports(self.hass)
+                for p in await self.async_scan_serial_ports()
                 if isinstance(p, USBDevice)
             ]
 

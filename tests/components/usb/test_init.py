@@ -11,12 +11,9 @@ from serialx import SerialPortInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.usb import DOMAIN
+from homeassistant.components.usb import DOMAIN, async_scan_serial_ports
 from homeassistant.components.usb.models import SerialDevice, USBDevice
-from homeassistant.components.usb.utils import (
-    async_scan_serial_ports,
-    usb_device_from_path,
-)
+from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -1297,6 +1294,7 @@ async def test_register_port_event_callback_failure(
 
 async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
     """Test async_scan_serial_ports parsing."""
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
     with patch(
         "homeassistant.components.usb.utils.list_serial_ports",
         return_value=[
