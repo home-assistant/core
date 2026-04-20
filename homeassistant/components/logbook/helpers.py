@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from typing import Any
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, NON_NUMERIC_DEVICE_CLASSES
@@ -75,12 +75,12 @@ def _async_config_entries_for_ids(
 
 def async_determine_event_types(
     hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
-) -> tuple[EventType[Any] | str, ...]:
+) -> set[EventType[Any] | str]:
     """Reduce the event types based on the entity ids and device ids."""
     logbook_config: LogbookConfig = hass.data[DOMAIN]
     external_events = logbook_config.external_events
     if not entity_ids and not device_ids:
-        return (*BUILT_IN_EVENTS, *external_events)
+        return {*BUILT_IN_EVENTS, *external_events}
 
     interested_domains: set[str] = set()
     for entry_id in _async_config_entries_for_ids(hass, entity_ids, device_ids):
@@ -93,16 +93,16 @@ def async_determine_event_types(
     # to add them since we have historically included
     # them when matching only on entities
     #
-    intrested_event_types: set[EventType[Any] | str] = {
+    interested_event_types: set[EventType[Any] | str] = {
         external_event
         for external_event, domain_call in external_events.items()
         if domain_call[0] in interested_domains
     } | AUTOMATION_EVENTS
     if entity_ids:
         # We also allow entity_ids to be recorded via manual logbook entries.
-        intrested_event_types.add(EVENT_LOGBOOK_ENTRY)
+        interested_event_types.add(EVENT_LOGBOOK_ENTRY)
 
-    return tuple(intrested_event_types)
+    return interested_event_types
 
 
 @callback
@@ -187,7 +187,7 @@ def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event[Any]], None],
-    event_types: tuple[EventType[Any] | str, ...],
+    event_types: Collection[EventType[Any] | str],
     entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
