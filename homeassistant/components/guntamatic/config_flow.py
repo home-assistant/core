@@ -28,6 +28,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for guntamatic."""
 
     VERSION = 1
+    _discovered_ip: str
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
@@ -45,6 +46,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         serial = data["serial"][0]
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
+        self._discovered_ip = discovery_info.ip
 
         return await self.async_step_discovery_confirm()
 
@@ -54,8 +56,8 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title="Gunamatic Heater",
-                data={CONF_HOST: user_input[CONF_HOST]},
+                title="Guntamatic Heater",
+                data={CONF_HOST: self._discovered_ip},
             )
 
         self._set_confirm_only()

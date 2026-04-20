@@ -142,18 +142,12 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
 
-        self._name = entity_description.key
-        self._attr_name = entity_description.key
-
         serial = coordinator.data["serial"][0]
 
-        self._attr_unique_id = (
-            f"{serial.replace('.', '_')}_{entity_description.key.replace(' ', '_')}"
-        )
+        self._attr_unique_id = f"{serial.replace('.', '_')}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
-            name="Guntamatic Heater",
             manufacturer="Guntamatic",
             serial_number=serial,
             sw_version=coordinator.data["version"][0],
@@ -162,4 +156,4 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
-        return self.coordinator.data[self._name][0]
+        return self.coordinator.data[self.entity_description.key][0]

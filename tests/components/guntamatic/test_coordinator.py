@@ -39,7 +39,7 @@ async def test_coordinator_update_failed(
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")
+    state = hass.states.get("sensor.mock_title_boiler_temperature")
     assert state.state == STATE_UNAVAILABLE
 
     # Recovery
@@ -47,5 +47,5 @@ async def test_coordinator_update_failed(
     mock_heater.return_value.parse_data.return_value = MOCK_PARSE_DATA
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.guntamatic_heater_boiler_temperature")
+    state = hass.states.get("sensor.mock_title_boiler_temperature")
     assert state.state != STATE_UNAVAILABLE

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.guntamatic_heater_boiler_temperature-entry]
+# name: test_all_entities[sensor.mock_title_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.guntamatic_heater_boiler_temperature',
+    'entity_id': 'sensor.mock_title_boiler_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,7 +23,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'boiler_temperature',
+    'object_id_base': 'Boiler Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -31,7 +31,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'boiler_temperature',
+    'original_name': 'Boiler Temperature',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -41,23 +41,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_boiler_temperature-state]
+# name: test_all_entities[sensor.mock_title_boiler_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Guntamatic Heater boiler_temperature',
+      'friendly_name': 'Mock Title Boiler Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.guntamatic_heater_boiler_temperature',
+    'entity_id': 'sensor.mock_title_boiler_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.09',
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_buffer_load-entry]
+# name: test_all_entities[sensor.mock_title_buffer_load-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.guntamatic_heater_buffer_load',
+    'entity_id': 'sensor.mock_title_buffer_load',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -81,12 +81,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'buffer_load',
+    'object_id_base': 'Buffer Load',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'buffer_load',
+    'original_name': 'Buffer Load',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -96,22 +96,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_buffer_load-state]
+# name: test_all_entities[sensor.mock_title_buffer_load-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Guntamatic Heater buffer_load',
+      'friendly_name': 'Mock Title Buffer Load',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.guntamatic_heater_buffer_load',
+    'entity_id': 'sensor.mock_title_buffer_load',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22',
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_outdoor_temperature-entry]
+# name: test_all_entities[sensor.mock_title_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -127,7 +127,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.guntamatic_heater_outdoor_temperature',
+    'entity_id': 'sensor.mock_title_outdoor_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -135,7 +135,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'outdoor_temperature',
+    'object_id_base': 'Outdoor Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -143,7 +143,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'outdoor_temperature',
+    'original_name': 'Outdoor Temperature',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -153,23 +153,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_outdoor_temperature-state]
+# name: test_all_entities[sensor.mock_title_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Guntamatic Heater outdoor_temperature',
+      'friendly_name': 'Mock Title Outdoor Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.guntamatic_heater_outdoor_temperature',
+    'entity_id': 'sensor.mock_title_outdoor_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.95',
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_program-entry]
+# name: test_all_entities[sensor.mock_title_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -193,7 +193,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.guntamatic_heater_program',
+    'entity_id': 'sensor.mock_title_program',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -201,12 +201,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'program',
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'program',
+    'original_name': 'Program',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -216,11 +216,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_program-state]
+# name: test_all_entities[sensor.mock_title_program-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Guntamatic Heater program',
+      'friendly_name': 'Mock Title Program',
       'options': list([
         'off',
         'timer',
@@ -232,14 +232,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.guntamatic_heater_program',
+    'entity_id': 'sensor.mock_title_program',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_status-entry]
+# name: test_all_entities[sensor.mock_title_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -253,7 +253,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.guntamatic_heater_status',
+    'entity_id': 'sensor.mock_title_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -261,12 +261,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'status',
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'status',
+    'original_name': 'Status',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -276,13 +276,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.guntamatic_heater_status-state]
+# name: test_all_entities[sensor.mock_title_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Guntamatic Heater status',
+      'friendly_name': 'Mock Title Status',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.guntamatic_heater_status',
+    'entity_id': 'sensor.mock_title_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

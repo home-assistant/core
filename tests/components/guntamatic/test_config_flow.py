@@ -134,6 +134,39 @@ async def test_dhcp_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result["step_id"] == "discovery_confirm"
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (requests.exceptions.ConnectionError, "cannot_connect"),
+        (NoSerialException, "bad_data"),
+    ],
+)
+async def test_dhcp_discovery_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+):
+    """Test DHCP discovery shows confirmation form."""
+    with patch(
+        "guntamatic.heater.Heater.parse_data",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.1.1.1",
+                hostname="kessel0001",
+                macaddress="0024bd123456",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_error
+
+
 async def test_dhcp_discovery_confirm(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:

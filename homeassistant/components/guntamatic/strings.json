@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "bad_data": "The heater did not provide the required identification information. Verify that the host points to a supported controller and the correct endpoint.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "bad_data": "The heater did not provide the required identification information. Verify that the host points to a supported controller and the correct endpoint.",
@@ -24,7 +26,7 @@
       "boiler_temperature": {
         "name": "Boiler Temperature"
       },
-      "buffer_bottem_temperature": {
+      "buffer_bottom_temperature": {
         "name": "Buffer Bottem Temperature"
       },
       "buffer_center_temperature": {
