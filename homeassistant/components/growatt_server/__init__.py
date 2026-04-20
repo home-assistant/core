@@ -451,7 +451,7 @@ async def async_setup_entry(
                 )
                 continue
             coordinator = GrowattCoordinator(
-                hass, config_entry, device_sn, device_type, plant_id
+                hass, config_entry, device_sn, device_type, current_plant_id
             )
             await coordinator.async_refresh()
             if not coordinator.last_update_success:
