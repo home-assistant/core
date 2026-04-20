@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_numbers[number.ohme_home_pro_preconditioning_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 60,
@@ -60,8 +61,9 @@
 # ---
 # name: test_numbers[number.ohme_home_pro_target_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,

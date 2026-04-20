@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "Please verify your credentials.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No devices found on your account.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "Unexpected error, please try again.",
       "wrong_account": "You must reauthenticate with the same WaterFurnace account that was originally configured."
@@ -11,6 +12,7 @@
     "error": {
       "cannot_connect": "Failed to connect to WaterFurnace service",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No devices found on your account.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -105,6 +107,10 @@
     },
     "deprecated_yaml_import_issue_invalid_auth": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, invalid authentication details were found. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "[%key:component::waterfurnace::issues::deprecated_yaml_import_issue_unknown::title%]"
+    },
+    "deprecated_yaml_import_issue_no_devices": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, no devices were found on your account. Please verify your account has devices and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
       "title": "[%key:component::waterfurnace::issues::deprecated_yaml_import_issue_unknown::title%]"
     },
     "deprecated_yaml_import_issue_unknown": {

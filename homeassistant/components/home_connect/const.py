@@ -42,6 +42,7 @@ BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confi
 BSH_EVENT_PRESENT_STATE_OFF = "BSH.Common.EnumType.EventPresentState.Off"
 
 
+BSH_OPERATION_STATE_DELAYED_START = "BSH.Common.EnumType.OperationState.DelayedStart"
 BSH_OPERATION_STATE_RUN = "BSH.Common.EnumType.OperationState.Run"
 BSH_OPERATION_STATE_PAUSE = "BSH.Common.EnumType.OperationState.Pause"
 BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"
@@ -63,6 +64,7 @@ BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
+SERVICE_START_SELECTED_PROGRAM = "start_selected_program"
 
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
@@ -76,7 +78,12 @@ AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 TRANSLATION_KEYS_PROGRAMS_MAP = {
     bsh_key_to_translation_key(program.value): program
     for program in ProgramKey
-    if program not in (ProgramKey.UNKNOWN, ProgramKey.BSH_COMMON_FAVORITE_001)
+    if program
+    not in (
+        ProgramKey.UNKNOWN,
+        ProgramKey.BSH_COMMON_FAVORITE_001,
+        ProgramKey.BSH_COMMON_FAVORITE_002,
+    )
 }
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {

@@ -608,6 +608,7 @@
       },
       "binary_sensor": {
         "data": {
+          "device_class": "[%key:component::template::common::device_class%]",
           "device_id": "[%key:common::config_flow::data::device%]",
           "state": "[%key:component::template::common::state%]"
         },
@@ -1212,7 +1213,7 @@
   "services": {
     "reload": {
       "description": "Reloads template entities from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload template entities"
     }
   }
 }

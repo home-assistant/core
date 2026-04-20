@@ -41,6 +41,7 @@ def mock_linkplay_factory_bridge() -> Generator[AsyncMock]:
         bridge.device = AsyncMock(spec=LinkPlayDevice)
         bridge.device.uuid = UUID
         bridge.device.name = NAME
+        bridge.device.manufacturer = "Linkplay"
         conf_factory.return_value = bridge
         yield conf_factory
 

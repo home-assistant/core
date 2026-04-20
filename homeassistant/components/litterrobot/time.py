@@ -55,15 +55,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        LitterRobotTimeEntity(
-            robot=robot,
-            coordinator=coordinator,
-            description=LITTER_ROBOT_3_SLEEP_START,
-        )
-        for robot in coordinator.litter_robots()
-        if isinstance(robot, LitterRobot3)
-    )
+    known_robots: set[str] = set()
+
+    def _check_robots() -> None:
+        all_robots = list(coordinator.litter_robots())
+        current_robots = {robot.serial for robot in all_robots}
+        new_robots = current_robots - known_robots
+        if new_robots:
+            known_robots.update(new_robots)
+            async_add_entities(
+                LitterRobotTimeEntity(
+                    robot=robot,
+                    coordinator=coordinator,
+                    description=LITTER_ROBOT_3_SLEEP_START,
+                )
+                for robot in all_robots
+                if robot.serial in new_robots
+                if isinstance(robot, LitterRobot3)
+            )
+
+    _check_robots()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
 class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):

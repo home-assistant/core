@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[fan.my_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,
@@ -57,8 +58,9 @@
 # ---
 # name: test_states[fan.my_device_my_fan_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,
@@ -113,8 +115,9 @@
 # ---
 # name: test_states[fan.my_device_my_fan_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,

@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from bleak.backends.device import BLEDevice
 from gardena_bluetooth.client import CachedConnection, Client
-from gardena_bluetooth.const import DeviceConfiguration, DeviceInformation
+from gardena_bluetooth.const import AquaContour, DeviceConfiguration, DeviceInformation
 from gardena_bluetooth.exceptions import (
     CharacteristicNoAccess,
     CharacteristicNotFound,
     CommunicationFailure,
 )
-from gardena_bluetooth.parse import CharacteristicTime
+from gardena_bluetooth.parse import CharacteristicTime, ProductType
+from gardena_bluetooth.scan import async_get_manufacturer_data
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, Platform
@@ -29,14 +29,15 @@ from .coordinator import (
     GardenaBluetoothConfigEntry,
     GardenaBluetoothCoordinator,
 )
-from .util import async_get_product_type
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.VALVE,
 ]
 LOGGER = logging.getLogger(__name__)
@@ -74,11 +75,10 @@ async def async_setup_entry(
 
     address = entry.data[CONF_ADDRESS]
 
-    try:
-        async with asyncio.timeout(TIMEOUT):
-            product_type = await async_get_product_type(hass, address)
-    except TimeoutError as exception:
-        raise ConfigEntryNotReady("Unable to find product type") from exception
+    mfg_data = await async_get_manufacturer_data({address})
+    product_type = mfg_data[address].product_type
+    if product_type == ProductType.UNKNOWN:
+        raise ConfigEntryNotReady("Unable to find product type")
 
     client = Client(get_connection(hass, address), product_type)
     try:
@@ -90,8 +90,10 @@ async def async_setup_entry(
 
         name = entry.title
         name = await client.read_char(DeviceConfiguration.custom_device_name, name)
+        name = await client.read_char(AquaContour.custom_device_name, name)
 
         await _update_timestamp(client, DeviceConfiguration.unix_timestamp)
+        await _update_timestamp(client, AquaContour.unix_timestamp)
 
     except (TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
         await client.disconnect()

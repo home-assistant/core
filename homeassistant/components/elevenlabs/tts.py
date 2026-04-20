@@ -273,7 +273,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
                     continue
 
                 # Build kwargs common to both modes
-                kwargs = base_stream_params | {
+                kwargs: dict[str, Any] = base_stream_params | {
                     "text": text,
                 }
 

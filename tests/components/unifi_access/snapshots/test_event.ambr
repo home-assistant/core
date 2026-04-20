@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_event_entities[event.back_door_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -60,12 +61,13 @@
 # ---
 # name: test_event_entities[event.back_door_doorbell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -104,7 +106,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Back Door Doorbell',
     }),
@@ -118,8 +120,9 @@
 # ---
 # name: test_event_entities[event.front_door_access-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -177,12 +180,13 @@
 # ---
 # name: test_event_entities[event.front_door_doorbell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -221,7 +225,7 @@
       'device_class': 'doorbell',
       'event_type': None,
       'event_types': list([
-        'ring',
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Front Door Doorbell',
     }),

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[event.sleep_as_android_alarm_clock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -68,8 +69,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_jet_lag_prevention-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -127,8 +129,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_lullaby-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -188,8 +191,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_sleep_health-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -247,8 +251,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_sleep_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -312,8 +317,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_sleep_tracking-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -376,8 +382,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_smart_wake_up-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -435,8 +442,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_sound_recognition-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -500,8 +508,9 @@
 # ---
 # name: test_setup[event.sleep_as_android_user_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
