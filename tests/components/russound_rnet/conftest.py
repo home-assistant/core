@@ -59,10 +59,17 @@ def mock_russound_client() -> Generator[AsyncMock]:
             new=mock_client_class,
         ),
         patch(
+            "homeassistant.components.russound_rnet.repairs.RussoundRNETClient",
+            new=mock_client_class,
+        ),
+        patch(
             "homeassistant.components.russound_rnet.RussoundTcpConnectionHandler",
         ),
         patch(
             "homeassistant.components.russound_rnet.config_flow.RussoundTcpConnectionHandler",
+        ),
+        patch(
+            "homeassistant.components.russound_rnet.repairs.RussoundTcpConnectionHandler",
         ),
         patch(
             "homeassistant.components.russound_rnet.RussoundSerialConnectionHandler",

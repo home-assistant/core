@@ -12,16 +12,16 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_MODEL, CONF_SOURCES, CONF_ZONES, DOMAIN, RNET_MODELS
+from .const import CONF_MODEL, CONF_SOURCES, CONF_ZONES, DOMAIN, RNET_MODELS, TYPE_TCP
 from .coordinator import RussoundRNETConfigEntry, RussoundRNETCoordinator
 from .entity import RussoundRNETEntity, command
+from .repairs import async_create_deprecated_yaml_issue, async_create_yaml_import_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,12 +51,22 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Russound RNET platform from YAML (triggers import)."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+    """Set up the Russound RNET platform from YAML (triggers repair-based import)."""
+    # Check if a config entry already exists for this host/port
+    host = config.get(CONF_HOST, "")
+    port = config.get(CONF_PORT, 0)
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if (
+            entry.data.get(CONF_TYPE) == TYPE_TCP
+            and entry.data.get(CONF_HOST) == host
+            and entry.data.get(CONF_PORT) == port
+        ):
+            # Config entry exists — tell user to remove YAML
+            async_create_deprecated_yaml_issue(hass)
+            return
+
+    # No config entry — create fixable repair to complete import
+    async_create_yaml_import_issue(hass, dict(config))
 
 
 async def async_setup_entry(

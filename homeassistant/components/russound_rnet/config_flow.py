@@ -12,7 +12,7 @@ from aiorussound.rnet.client import RussoundRNETClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -37,7 +37,6 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import RussoundRNETConfigEntry
-from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -261,7 +260,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="zones", data_schema=zone_schema)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import config from YAML."""
+        """Import config from YAML (called by repair flow with complete data)."""
         host = import_data.get(CONF_HOST, "")
         port = import_data.get(CONF_PORT, 0)
 
@@ -269,42 +268,12 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             {CONF_TYPE: TYPE_TCP, CONF_HOST: host, CONF_PORT: port}
         )
 
-        # Validate connection
-        client = RussoundRNETClient(RussoundTcpConnectionHandler(host, port))
-        if not await _async_validate_connection(client):
-            deprecate_yaml_issue(self.hass, import_success=False)
-            return self.async_abort(reason="cannot_connect")
-
-        # Build source names from YAML config (only named sources)
-        yaml_sources = import_data.get("sources", [])
-        sources = {
-            str(i + 1): src.get(CONF_NAME, "")
-            for i, src in enumerate(yaml_sources)
-            if src.get(CONF_NAME, "").strip()
-        }
-
-        # Preserve zone names from YAML; old YAML used flat zone IDs
-        # mapped as controller = ceil(id/6), zone = ((id-1) % 6) + 1
-        yaml_zones = import_data.get("zones", {})
-        zones: dict[str, str] = {}
-        for zone_id, zone_data in yaml_zones.items():
-            controller_id = (zone_id - 1) // 6 + 1
-            local_zone_id = (zone_id - 1) % 6 + 1
-            name = zone_data.get(CONF_NAME, "").strip()
-            if name:
-                zones[f"{controller_id}_{local_zone_id}"] = name
-
-        # Store partial data; prompt user for model selection
-        self.data = {
-            CONF_TYPE: TYPE_TCP,
-            CONF_HOST: host,
-            CONF_PORT: port,
-            CONF_SOURCES: sources,
-            CONF_ZONES: zones,
-        }
-
-        deprecate_yaml_issue(self.hass, import_success=True)
-        return await self.async_step_model()
+        model_key = import_data[CONF_MODEL]
+        model = RNET_MODELS[model_key]
+        return self.async_create_entry(
+            title=model.name,
+            data=import_data,
+        )
 
 
 class RussoundRNETOptionsFlow(OptionsFlow):

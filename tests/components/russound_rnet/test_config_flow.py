@@ -11,7 +11,7 @@ from homeassistant.components.russound_rnet.const import (
     TYPE_TCP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -281,99 +281,23 @@ async def test_import_yaml_creates_entry(
     mock_setup_entry: AsyncMock,
     mock_russound_client: AsyncMock,
 ) -> None:
-    """Test YAML import prompts for model and pre-fills sources/zones."""
-    yaml_config = {
+    """Test non-interactive YAML import creates entry with complete data."""
+    import_data = {
+        CONF_TYPE: TYPE_TCP,
         CONF_HOST: "192.168.1.100",
-        CONF_NAME: "Russound",
         CONF_PORT: 9999,
-        "zones": {1: {CONF_NAME: "Kitchen"}, 2: {CONF_NAME: "Living Room"}},
-        "sources": [
-            {CONF_NAME: "Sonos"},
-            {CONF_NAME: "TV"},
-            {CONF_NAME: "Radio"},
-        ],
+        CONF_MODEL: "caa66",
+        CONF_SOURCES: {"1": "Sonos", "2": "TV"},
+        CONF_ZONES: {"1_1": "Kitchen", "1_2": "Living Room"},
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config
-    )
-
-    # Import validates connection, then shows model selection
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "model"
-
-    # User selects model
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_MODEL: "cas44"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "sources"
-
-    # Sources are pre-filled from YAML — submit as-is
-    source_input = {
-        "source_1": "Sonos",
-        "source_2": "TV",
-        "source_3": "Radio",
-        "source_4": "",
-    }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        source_input,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "zones"
-
-    # Zones are pre-filled from YAML — submit as-is
-    zone_input = {
-        "zone_1_1": "Kitchen",
-        "zone_1_2": "Living Room",
-        "zone_1_3": "",
-        "zone_1_4": "",
-    }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        zone_input,
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_TYPE] == TYPE_TCP
-    assert result["data"][CONF_HOST] == "192.168.1.100"
-    assert result["data"][CONF_PORT] == 9999
-    assert result["data"][CONF_MODEL] == "cas44"
-    assert result["data"][CONF_SOURCES] == {
-        "1": "Sonos",
-        "2": "TV",
-        "3": "Radio",
-    }
-    assert result["data"][CONF_ZONES] == {
-        "1_1": "Kitchen",
-        "1_2": "Living Room",
-    }
-
-
-async def test_import_yaml_cannot_connect_aborts(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_russound_client: AsyncMock,
-) -> None:
-    """Test YAML import aborts when connection fails."""
-    mock_russound_client.connect.side_effect = TimeoutError
-
-    yaml_config = {
-        CONF_HOST: "192.168.1.100",
-        CONF_NAME: "Russound",
-        CONF_PORT: 9999,
-        "zones": {1: {CONF_NAME: "Kitchen"}},
-        "sources": [{CONF_NAME: "Sonos"}],
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["title"] == "CAA66"
+    assert result["data"] == import_data
 
 
 async def test_import_yaml_duplicate_aborts(
@@ -385,16 +309,17 @@ async def test_import_yaml_duplicate_aborts(
     """Test YAML import aborts when entry already exists."""
     mock_config_entry.add_to_hass(hass)
 
-    yaml_config = {
+    import_data = {
+        CONF_TYPE: TYPE_TCP,
         CONF_HOST: "192.168.1.100",
-        CONF_NAME: "Russound",
         CONF_PORT: 9999,
-        "zones": {1: {CONF_NAME: "Kitchen"}},
-        "sources": [{CONF_NAME: "Sonos"}],
+        CONF_MODEL: "caa66",
+        CONF_SOURCES: {"1": "Sonos"},
+        CONF_ZONES: {"1_1": "Kitchen"},
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_data
     )
 
     assert result["type"] is FlowResultType.ABORT
