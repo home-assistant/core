@@ -20,8 +20,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_API_SECRET, DOMAIN
+from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +36,27 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
+def tracker_interfaces_schema(
+    interfaces: list[str], selected: list[str] | None = None
+) -> vol.Schema:
+    """Schema to display available interfaces for device tracking selection."""
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_TRACKER_INTERFACES,
+                default=selected or [],
+            ): cv.multi_select(interfaces),
+        }
+    )
+
+
 class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     """OPNsense config flow."""
 
     def __init__(self) -> None:
         """Initialize OPNsense config flow."""
         self.available_interfaces: list[str] | None = None
+        self._step_user_input: dict[str, Any] | None = None
 
     async def _show_setup_form(
         self,
@@ -64,11 +80,31 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+    async def _show_interfaces_form(
+        self,
+        user_input: dict[Any, Any] | None = None,
+        errors: dict[Any, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Show the tracker interfaces selection form to the user."""
+        if user_input is None:
+            user_input = {}
+
+        return self.async_show_form(
+            step_id="interfaces",
+            data_schema=self.add_suggested_values_to_schema(
+                tracker_interfaces_schema(
+                    self.available_interfaces or [],
+                    user_input.get(CONF_TRACKER_INTERFACES),
+                ),
+                user_input,
+            ),
+            errors=errors or {},
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle user step."""
-
+        """Handle user step: credentials and connection test."""
         errors = {}
 
         if user_input is None:
@@ -88,6 +124,11 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._async_check_connection(client)
+            interfaces_resp = await client.get_interfaces()
+            known_interfaces = [
+                ifinfo.get("name", "") for ifinfo in interfaces_resp.values()
+            ]
+            self.available_interfaces = list(known_interfaces)
         except OPNsenseInvalidAuth:
             errors["base"] = "invalid_auth"
         except OPNsensePrivilegeMissing:
@@ -106,9 +147,24 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title=user_input[CONF_URL], data=user_input)
+            # Save credentials for next step
+            self._step_user_input = user_input
+            return await self.async_step_interfaces()
 
         return await self._show_setup_form(user_input, errors)
+
+    async def async_step_interfaces(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle tracker interface selection step."""
+        if user_input is None:
+            return await self._show_interfaces_form(user_input, None)
+
+        # Compose entry data from credentials and selected interfaces
+        entry_data: dict[str, Any] = dict(getattr(self, "_step_user_input", {}))
+        if user_input.get(CONF_TRACKER_INTERFACES):
+            entry_data[CONF_TRACKER_INTERFACES] = user_input[CONF_TRACKER_INTERFACES]
+        return self.async_create_entry(title=entry_data[CONF_URL], data=entry_data)
 
     async def async_step_import(
         self, import_data: (dict[str, Any])
@@ -147,7 +203,11 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during import")
             return self.async_abort(reason="unknown")
 
-        return self.async_create_entry(title=import_data[CONF_URL], data=import_data)
+        # Persist CONF_TRACKER_INTERFACES if present and not empty
+        data = dict(import_data)
+        if CONF_TRACKER_INTERFACES in data and not data[CONF_TRACKER_INTERFACES]:
+            data.pop(CONF_TRACKER_INTERFACES)
+        return self.async_create_entry(title=import_data[CONF_URL], data=data)
 
     async def _async_check_connection(self, client: OPNsenseClient) -> None:
         """Check connection to OPNsense."""

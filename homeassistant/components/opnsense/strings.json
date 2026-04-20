@@ -23,12 +23,11 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reconfigure": {
+      "interfaces": {
         "data": {
-          "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "tracker_interfaces": "Interface(s) to use for tracking devices"
         },
-        "description": "Update OPNsense connection settings and interface selection."
+        "description": "Select the OPNsense interfaces to use for tracking devices. If no interfaces are selected then all interfaces will be used for tracking."
       },
       "user": {
         "data": {
