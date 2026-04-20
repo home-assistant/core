@@ -15,9 +15,9 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "country_code": "The country selected by Aidot app when logging in",
-          "password": "Password for logging in through Aidot app",
-          "username": "Account logged in through Aidot app"
+          "country_code": "The country selected by AiDot app when logging in",
+          "password": "Password for logging in through AiDot app",
+          "username": "Account logged in through AiDot app"
         }
       },
       "reauth_confirm": {
