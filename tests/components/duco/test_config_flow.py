@@ -209,6 +209,7 @@ async def test_zeroconf_discovery_exceptions(
     assert result["reason"] == expected_reason
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_success(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
@@ -232,6 +233,7 @@ async def test_reconfigure_flow_success(
     assert mock_config_entry.data[CONF_HOST] == new_host
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_wrong_device(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
@@ -263,6 +265,7 @@ async def test_reconfigure_flow_wrong_device(
     assert result["reason"] == "wrong_device"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
