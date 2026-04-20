@@ -7,5 +7,4 @@ DEFAULT_USERNAME = "admin"
 
 DOMAIN = "sfr_box"
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-PLATFORMS_WITH_AUTH = [*PLATFORMS, Platform.BUTTON, Platform.EVENT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.EVENT]

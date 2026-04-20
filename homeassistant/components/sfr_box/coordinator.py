@@ -36,6 +36,7 @@ class SFRRuntimeData:
     """Runtime data for SFR Box."""
 
     box: SFRBox
+    has_authentication: bool
     dsl: SFRDataUpdateCoordinator[DslInfo]
     ftth: SFRDataUpdateCoordinator[FtthInfo]
     system: SFRDataUpdateCoordinator[SystemInfo]

@@ -30,6 +30,7 @@ from anthropic.types import (
     MessageDeltaUsage,
     MessageParam,
     MessageStreamEvent,
+    ModelInfo,
     OutputConfigParam,
     RawContentBlockDeltaEvent,
     RawContentBlockStartEvent,
@@ -97,7 +98,6 @@ from .const import (
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT_CACHING,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
@@ -112,10 +112,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
-    NON_ADAPTIVE_THINKING_MODELS,
-    NON_THINKING_MODELS,
-    PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS,
-    UNSUPPORTED_STRUCTURED_OUTPUT_MODELS,
     PromptCaching,
 )
 from .coordinator import AnthropicConfigEntry, AnthropicCoordinator
@@ -690,7 +686,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         self.entry = entry
         self.subentry = subentry
         coordinator = entry.runtime_data
-        self.model_info = coordinator.get_model_info(
+        self.model_info, _ = coordinator.get_model_info(
             subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
         )
         self._attr_unique_id = subentry.subentry_id
@@ -757,33 +753,43 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         ):
             model_args["cache_control"] = {"type": "ephemeral"}
 
-        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+        if (
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.types.adaptive.supported
+        ):
             thinking_effort = options.get(
                 CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
             )
             if thinking_effort != "none":
-                model_args["thinking"] = ThinkingConfigAdaptiveParam(type="adaptive")
+                model_args["thinking"] = ThinkingConfigAdaptiveParam(
+                    type="adaptive", display="summarized"
+                )
                 model_args["output_config"] = OutputConfigParam(effort=thinking_effort)
             else:
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-                model_args["temperature"] = options.get(
-                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
-                )
         else:
             thinking_budget = options.get(
                 CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
             )
             if (
-                not model.startswith(tuple(NON_THINKING_MODELS))
+                self.model_info.capabilities
+                and self.model_info.capabilities.thinking.types.enabled.supported
                 and thinking_budget >= MIN_THINKING_BUDGET
             ):
                 model_args["thinking"] = ThinkingConfigEnabledParam(
-                    type="enabled", budget_tokens=thinking_budget
+                    type="enabled", display="summarized", budget_tokens=thinking_budget
                 )
             else:
                 model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-                model_args["temperature"] = options.get(
-                    CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+
+            if (
+                self.model_info.capabilities
+                and self.model_info.capabilities.effort.supported
+            ):
+                model_args["output_config"] = OutputConfigParam(
+                    effort=options.get(
+                        CONF_THINKING_EFFORT, DEFAULT[CONF_THINKING_EFFORT]
+                    )
                 )
 
         tools: list[ToolUnionParam] = []
@@ -795,9 +801,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
         if options.get(CONF_CODE_EXECUTION):
             # The `web_search_20260209` tool automatically enables `code_execution_20260120` tool
-            if model.startswith(
-                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
-            ) or not options.get(CONF_WEB_SEARCH):
+            if (
+                not self.model_info.capabilities
+                or not self.model_info.capabilities.code_execution.supported
+                or not options.get(CONF_WEB_SEARCH)
+            ):
                 tools.append(
                     CodeExecutionTool20250825Param(
                         name="code_execution",
@@ -806,9 +814,11 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
 
         if options.get(CONF_WEB_SEARCH):
-            if model.startswith(
-                tuple(PROGRAMMATIC_TOOL_CALLING_UNSUPPORTED_MODELS)
-            ) or not options.get(CONF_CODE_EXECUTION):
+            if (
+                not self.model_info.capabilities
+                or not self.model_info.capabilities.code_execution.supported
+                or not options.get(CONF_CODE_EXECUTION)
+            ):
                 web_search: WebSearchTool20250305Param | WebSearchTool20260209Param = (
                     WebSearchTool20250305Param(
                         name="web_search",
@@ -846,12 +856,17 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ]
             last_message["content"].extend(  # type: ignore[union-attr]
                 await async_prepare_files_for_prompt(
-                    self.hass, [(a.path, a.mime_type) for a in last_content.attachments]
+                    self.hass,
+                    self.model_info,
+                    [(a.path, a.mime_type) for a in last_content.attachments],
                 )
             )
 
         if structure and structure_name:
-            if not model.startswith(tuple(UNSUPPORTED_STRUCTURED_OUTPUT_MODELS)):
+            if (
+                self.model_info.capabilities
+                and self.model_info.capabilities.structured_outputs.supported
+            ):
                 # Native structured output for those models who support it.
                 structure_name = None
                 model_args.setdefault("output_config", OutputConfigParam())[
@@ -992,7 +1007,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
 
 
 async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[tuple[Path, str | None]]
+    hass: HomeAssistant, model_info: ModelInfo, files: list[tuple[Path, str | None]]
 ) -> Iterable[ImageBlockParam | DocumentBlockParam]:
     """Append files to a prompt.
 
@@ -1013,13 +1028,26 @@ async def async_prepare_files_for_prompt(
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
+            if (
+                not mime_type
+                or not mime_type.startswith(("image/", "application/pdf"))
+                or not model_info.capabilities
+                or (
+                    mime_type.startswith("image/")
+                    and not model_info.capabilities.image_input.supported
+                )
+                or (
+                    mime_type.startswith("application/pdf")
+                    and not model_info.capabilities.pdf_input.supported
+                )
+            ):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="wrong_file_type",
                     translation_placeholders={
                         "file_path": file_path.as_posix(),
                         "mime_type": mime_type or "unknown",
+                        "model": model_info.display_name,
                     },
                 )
             if mime_type == "image/jpg":
