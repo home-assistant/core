@@ -28,7 +28,6 @@ rules:
       OMIE API is public data service that doesn't require authentication.
       Coordinators handle any connection issues gracefully during runtime.
   unique-config-entry: done
-
   # Silver
   action-exceptions:
     status: exempt
