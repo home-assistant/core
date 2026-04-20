@@ -5,6 +5,7 @@ from __future__ import annotations
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
+from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -53,9 +54,14 @@ async def test_victron_device_tracker(
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
-    assert state.attributes["source_type"] == "gps"
-    assert state.attributes["latitude"] == 52.1
-    assert state.attributes["longitude"] == 4.3
+    assert state.attributes == {
+        "source_type": SourceType.GPS,
+        "latitude": 52.1,
+        "longitude": 4.3,
+        "gps_accuracy": 0,
+        "friendly_name": "GPS Location",
+        "in_zones": [],
+    }
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_gps_0")}
@@ -90,8 +96,14 @@ async def test_victron_device_tracker(
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
-    assert state.attributes["latitude"] == 52.1
-    assert state.attributes["longitude"] == 4.4
+    assert state.attributes == {
+        "source_type": SourceType.GPS,
+        "latitude": 52.1,
+        "longitude": 4.4,
+        "gps_accuracy": 0,
+        "friendly_name": "GPS Location",
+        "in_zones": [],
+    }
 
     # Send GPS fix lost to exercise the non-GpsLocation reset branch.
     await inject_message(
@@ -104,5 +116,8 @@ async def test_victron_device_tracker(
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
-    assert "latitude" not in state.attributes
-    assert "longitude" not in state.attributes
+    assert state.attributes == {
+        "source_type": SourceType.GPS,
+        "friendly_name": "GPS Location",
+        "in_zones": [],
+    }
