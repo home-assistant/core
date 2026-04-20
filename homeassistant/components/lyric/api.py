@@ -46,6 +46,11 @@ class LyricLocalOAuth2Implementation(
 ):
     """Lyric Local OAuth2 implementation."""
 
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Prompt the user to choose between Resideo and First Alert apps."""
+        return {"appSelect": "1"}
+
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
         session = async_get_clientsession(self.hass)
