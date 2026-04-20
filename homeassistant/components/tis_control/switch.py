@@ -45,6 +45,9 @@ async def async_get_switches(tis_api: TISApi) -> list[SwitchDescription]:
 
     # Iterate through the raw data for each switch appliance returned by the API.
     for appliance in raw:
+        if not isinstance(appliance, dict):
+            continue
+
         # Extract the channel number from the nested data structure.
         # The raw data looks like: "channels": [{"Output": 1}].
         # 1. appliance["channels"][0]: Get the first dictionary in the list -> {"Output": 1}.
