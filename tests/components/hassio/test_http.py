@@ -56,12 +56,12 @@ async def test_forward_request_onboarded_user_get(
     assert aioclient_mock.mock_calls[0][3] == {"X-Hass-Source": "core.http"}
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_onboarded_user_unallowed_methods(
     hassio_user_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_user_client.post("/api/hassio/addons/bl_b392/icon")
+    resp = await hassio_user_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
@@ -124,12 +124,12 @@ async def test_forward_request_onboarded_noauth_get(
     assert aioclient_mock.mock_calls[0][3] == {"X-Hass-Source": "core.http"}
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_onboarded_noauth_unallowed_methods(
     hassio_noauth_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_noauth_client.post("/api/hassio/addons/bl_b392/icon")
+    resp = await hassio_noauth_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
@@ -235,12 +235,12 @@ async def test_forward_request_not_onboarded_post(
     }
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_not_onboarded_unallowed_methods(
     hassio_noauth_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_noauth_client.post("/api/hassio/addons/bl_b392/icon")
+    resp = await hassio_noauth_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
@@ -351,12 +351,12 @@ async def test_forward_request_admin_post(
     }
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_admin_unallowed_methods(
     hassio_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_client.post("/api/hassio/addons/bl_b392/icon")
+    resp = await hassio_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
