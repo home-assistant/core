@@ -201,6 +201,7 @@ async def _test_setup_and_signaling(
         "test_camera_unique_id",
         None,
     ],
+    indirect=True,
 )
 @pytest.mark.parametrize(
     ("config", "ui_enabled", "expected_username", "expected_password"),
@@ -299,6 +300,7 @@ async def test_setup_go_binary(
         "test_camera_unique_id",
         None,
     ],
+    indirect=True,
 )
 @pytest.mark.parametrize(
     ("go2rtc_binary", "is_docker_env"),
