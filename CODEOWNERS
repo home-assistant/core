@@ -362,6 +362,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/deluge/ @tkdrob
 /homeassistant/components/demo/ @home-assistant/core
 /tests/components/demo/ @home-assistant/core
+/homeassistant/components/denon_rs232/ @balloob
+/tests/components/denon_rs232/ @balloob
 /homeassistant/components/denonavr/ @ol-iver @starkillerOG
 /tests/components/denonavr/ @ol-iver @starkillerOG
 /homeassistant/components/derivative/ @afaucogney @karwosts
@@ -428,6 +430,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
 /tests/components/eafm/ @Jc2k
+/homeassistant/components/earn_e_p1/ @Miggets7
+/tests/components/earn_e_p1/ @Miggets7
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
 /homeassistant/components/easywave/ @eldateas
@@ -491,8 +495,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50 @roberty99
-/homeassistant/components/epic_games_store/ @hacf-fr @Quentame
-/tests/components/epic_games_store/ @hacf-fr @Quentame
+/homeassistant/components/epic_games_store/ @Quentame
+/tests/components/epic_games_store/ @Quentame
 /homeassistant/components/epion/ @lhgravendeel
 /tests/components/epion/ @lhgravendeel
 /homeassistant/components/epson/ @pszafer
@@ -507,6 +511,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/essent/ @jaapp
 /homeassistant/components/eufylife_ble/ @bdr99
 /tests/components/eufylife_ble/ @bdr99
+/homeassistant/components/eurotronic_cometblue/ @rikroe
+/tests/components/eurotronic_cometblue/ @rikroe
 /homeassistant/components/event/ @home-assistant/core
 /tests/components/event/ @home-assistant/core
 /homeassistant/components/evohome/ @zxdavb
@@ -566,8 +572,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/fortios/ @kimfrellsen
 /homeassistant/components/foscam/ @Foscam-wangzhengyu
 /tests/components/foscam/ @Foscam-wangzhengyu
-/homeassistant/components/freebox/ @hacf-fr @Quentame
-/tests/components/freebox/ @hacf-fr @Quentame
+/homeassistant/components/freebox/ @hacf-fr/reviewers @Quentame
+/tests/components/freebox/ @hacf-fr/reviewers @Quentame
 /homeassistant/components/freedompro/ @stefano055415
 /tests/components/freedompro/ @stefano055415
 /homeassistant/components/freshr/ @SierraNL
@@ -898,8 +904,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/jewish_calendar/ @tsvi
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
-/homeassistant/components/jvc_projector/ @SteveEasley @msavazzi
-/tests/components/jvc_projector/ @SteveEasley @msavazzi
+/homeassistant/components/jvc_projector/ @SteveEasley
+/tests/components/jvc_projector/ @SteveEasley
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -912,6 +918,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
+/homeassistant/components/kiosker/ @Claeysson
+/tests/components/kiosker/ @Claeysson
 /homeassistant/components/kitchen_sink/ @home-assistant/core
 /tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
@@ -1057,8 +1065,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/met/ @danielhiversen
 /homeassistant/components/met_eireann/ @DylanGore
 /tests/components/met_eireann/ @DylanGore
-/homeassistant/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
-/tests/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
+/homeassistant/components/meteo_france/ @hacf-fr/reviewers @oncleben31 @Quentame
+/tests/components/meteo_france/ @hacf-fr/reviewers @oncleben31 @Quentame
 /homeassistant/components/meteo_lt/ @xE1H
 /tests/components/meteo_lt/ @xE1H
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
@@ -1150,8 +1158,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/netatmo/ @cgtobi
 /tests/components/netatmo/ @cgtobi
 /homeassistant/components/netdata/ @fabaff
-/homeassistant/components/netgear/ @hacf-fr @Quentame @starkillerOG
-/tests/components/netgear/ @hacf-fr @Quentame @starkillerOG
+/homeassistant/components/netgear/ @Quentame @starkillerOG
+/tests/components/netgear/ @Quentame @starkillerOG
 /homeassistant/components/netgear_lte/ @tkdrob
 /tests/components/netgear_lte/ @tkdrob
 /homeassistant/components/network/ @home-assistant/core
@@ -1694,8 +1702,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/syncthing/ @zhulik
 /homeassistant/components/syncthru/ @nielstron
 /tests/components/syncthru/ @nielstron
-/homeassistant/components/synology_dsm/ @hacf-fr @Quentame @mib1185
-/tests/components/synology_dsm/ @hacf-fr @Quentame @mib1185
+/homeassistant/components/synology_dsm/ @Quentame @mib1185
+/tests/components/synology_dsm/ @Quentame @mib1185
 /homeassistant/components/synology_srm/ @aerialls
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
@@ -1726,6 +1734,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/telegram_bot/ @hanwg
 /tests/components/telegram_bot/ @hanwg
+/homeassistant/components/teleinfo/ @esciara
+/tests/components/teleinfo/ @esciara
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/teltonika/ @karlbeecken
@@ -1828,6 +1838,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/unifi_access/ @imhotep @RaHehl
 /tests/components/unifi_access/ @imhotep @RaHehl
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
+/homeassistant/components/unifi_discovery/ @RaHehl
+/tests/components/unifi_discovery/ @RaHehl
 /homeassistant/components/unifiled/ @florisvdk
 /homeassistant/components/unifiprotect/ @RaHehl
 /tests/components/unifiprotect/ @RaHehl
@@ -1875,8 +1887,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
 /tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak @sapuseven
-/homeassistant/components/vicare/ @CFenner
-/tests/components/vicare/ @CFenner
+/homeassistant/components/vicare/ @CFenner @lackas
+/tests/components/vicare/ @CFenner @lackas
 /homeassistant/components/victron_ble/ @rajlaud
 /tests/components/victron_ble/ @rajlaud
 /homeassistant/components/victron_gx/ @tomer-w
