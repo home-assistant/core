@@ -48,6 +48,8 @@ RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE = "Voltage"
 RELAY_SWITCH_2PM_SENSOR_TYPE_CURRENT = "ElectricCurrent"
 RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY = "UsedElectricity"
 
+LOCK_SENSOR_TYPE_LOCK_STATE = "lockState"
+
 
 @dataclass(frozen=True, kw_only=True)
 class SwitchbotCloudSensorEntityDescription(SensorEntityDescription):
@@ -166,6 +168,13 @@ LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
 )
 
+
+LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
+    key=LOCK_SENSOR_TYPE_LOCK_STATE,
+    translation_key="lock_state",
+    value_fn=lambda value: value.title(),
+)
+
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
@@ -223,14 +232,20 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CO2_DESCRIPTION,
     ),
     "Smart Lock": (BATTERY_DESCRIPTION,),
-    "Smart Lock Lite": (BATTERY_DESCRIPTION,),
-    "Smart Lock Pro": (BATTERY_DESCRIPTION,),
-    "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
-    "Smart Lock Vision": (BATTERY_DESCRIPTION,),
-    "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
-    "Lock Vision": (BATTERY_DESCRIPTION,),
-    "Lock Vision Pro": (BATTERY_DESCRIPTION,),
-    "Smart Lock Pro Wifi": (BATTERY_DESCRIPTION,),
+    "Smart Lock Lite": (BATTERY_DESCRIPTION, LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION),
+    "Smart Lock Pro": (BATTERY_DESCRIPTION, LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION),
+    "Smart Lock Ultra": (BATTERY_DESCRIPTION, LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION),
+    "Smart Lock Vision": (BATTERY_DESCRIPTION, LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION),
+    "Smart Lock Vision Pro": (
+        BATTERY_DESCRIPTION,
+        LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION,
+    ),
+    "Lock Vision": (BATTERY_DESCRIPTION, LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION),
+    "Lock Vision Pro": (BATTERY_DESCRIPTION, LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION),
+    "Smart Lock Pro Wifi": (
+        BATTERY_DESCRIPTION,
+        LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION,
+    ),
     "Relay Switch 2PM": (
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,
         RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION,

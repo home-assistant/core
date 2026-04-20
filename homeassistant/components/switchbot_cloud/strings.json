@@ -76,6 +76,9 @@
     "sensor": {
       "light_level": {
         "name": "Light level"
+      },
+      "lock_state": {
+        "name": "Lock State"
       }
     }
   }
