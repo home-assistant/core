@@ -7,10 +7,18 @@ from unittest.mock import AsyncMock, MagicMock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import DOMAIN, MOCK_SERIAL, trigger_callback
+from .conftest import (
+    CONF_SERIAL,
+    DOMAIN,
+    MOCK_HOST,
+    MOCK_MAC,
+    MOCK_SERIAL,
+    trigger_callback,
+)
 
 from tests.common import MockConfigEntry
 
@@ -73,6 +81,34 @@ async def test_device_info(
     device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
     assert device is not None
     assert device == snapshot
+
+
+async def test_device_info_with_mac(
+    hass: HomeAssistant,
+    mock_listener: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test MAC is added to device connections when stored in entry data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST})",
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_SERIAL: MOCK_SERIAL,
+            CONF_MAC: MOCK_MAC,
+        },
+        unique_id=MOCK_SERIAL,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    assert device is not None
+    assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
 
 
 async def test_device_registry_not_updated_on_identical_callback(
