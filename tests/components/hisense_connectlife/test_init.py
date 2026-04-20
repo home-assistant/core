@@ -28,9 +28,9 @@ async def test_async_setup_entry(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session"
         ) as mock_oauth2_session_class,
-        patch("aiohttp.ClientSession") as mock_client_session,
     ):
         mock_coordinator = AsyncMock()
+        mock_coordinator.async_setup = AsyncMock()
         mock_coordinator.async_config_entry_first_refresh = AsyncMock()
         mock_coord_class.return_value = mock_coordinator
 
@@ -46,14 +46,10 @@ async def test_async_setup_entry(
         )
         mock_oauth2_session_class.return_value = mock_ha_oauth2_session
 
-        mock_session = AsyncMock()
-        mock_session.close = AsyncMock()
-        mock_client_session.return_value = mock_session
-
         result = await async_setup_entry(hass, mock_config_entry)
 
         assert result is True
-        mock_coordinator.async_setup.assert_called_once()
+        mock_coordinator.async_setup.assert_awaited_once()
 
 
 @pytest.mark.asyncio

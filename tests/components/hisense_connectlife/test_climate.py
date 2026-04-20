@@ -1,6 +1,7 @@
 """Tests for the Hisense climate platform."""
 
-from unittest.mock import AsyncMock, MagicMock
+import time
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -12,7 +13,10 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.hisense_connectlife.climate import HisenseClimate
+from homeassistant.components.hisense_connectlife.climate import (
+    HisenseClimate,
+    async_setup_entry,
+)
 from homeassistant.components.hisense_connectlife.const import StatusKey
 from homeassistant.components.hisense_connectlife.models import DeviceInfo
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -106,7 +110,7 @@ async def entity(hass: HomeAssistant, mock_coordinator, mock_device):
     """Create a test climate entity."""
     entity = HisenseClimate(mock_coordinator, mock_device)
     entity.hass = hass
-    # 🔥 修复关键：手动设置 entity_id
+
     entity.entity_id = "climate.test_ac_device"
     return entity
 
@@ -193,3 +197,86 @@ async def test_async_turn_on_off(entity) -> None:
     entity.coordinator.async_control_device.assert_awaited_with(
         puid=PUID, properties={StatusKey.POWER: "0"}
     )
+
+
+async def test_async_setup_entry_no_devices(
+    hass: HomeAssistant, mock_coordinator
+) -> None:
+    """Test setup when no devices exist."""
+
+    mock_coordinator.data = {}
+    config_entry = MagicMock()
+    config_entry.runtime_data = mock_coordinator
+
+    async_add_entities = MagicMock()
+
+    await async_setup_entry(hass, config_entry, async_add_entities)
+    async_add_entities.assert_not_called()
+
+
+async def test_async_setup_entry_no_supported_devices(
+    hass: HomeAssistant, mock_coordinator, mock_device
+) -> None:
+    """Test setup when devices are not supported."""
+
+    mock_device.is_supported = MagicMock(return_value=False)
+    mock_coordinator.data = {"test": mock_device}
+
+    config_entry = MagicMock()
+    config_entry.runtime_data = mock_coordinator
+    async_add_entities = MagicMock()
+
+    await async_setup_entry(hass, config_entry, async_add_entities)
+    async_add_entities.assert_not_called()
+
+
+async def test_async_setup_entry_adds_entities(
+    hass: HomeAssistant, mock_coordinator, mock_device
+) -> None:
+    """Test setup adds supported climate entities."""
+
+    mock_device.is_supported = MagicMock(return_value=True)
+    mock_coordinator.data = {"test": mock_device}
+
+    config_entry = MagicMock()
+    config_entry.runtime_data = mock_coordinator
+    async_add_entities = MagicMock()
+
+    await async_setup_entry(hass, config_entry, async_add_entities)
+    async_add_entities.assert_called_once()
+
+
+async def test_handle_coordinator_update_no_device_id(entity) -> None:
+    """Test coordinator update does nothing when device_id is missing."""
+    entity._device_id = None
+    entity._handle_coordinator_update()
+
+
+async def test_handle_coordinator_update_under_cooldown(entity) -> None:
+    """Test update skipped when under cooldown (wait time)."""
+    entity._device_id = "test_id"
+    entity.coordinator.get_device.return_value = MagicMock()
+
+    entity._last_command_time = time.time()
+    entity.wait_time = 5
+
+    with patch(
+        "homeassistant.helpers.update_coordinator.CoordinatorEntity._handle_coordinator_update"
+    ) as mock_super:
+        entity._handle_coordinator_update()
+        mock_super.assert_not_called()
+
+
+async def test_handle_coordinator_update_after_cooldown(entity) -> None:
+    """Test update runs after cooldown."""
+    entity._device_id = "test_id"
+    entity.coordinator.get_device.return_value = MagicMock()
+
+    entity._last_command_time = 0
+    entity.wait_time = 5
+
+    with patch(
+        "homeassistant.helpers.update_coordinator.CoordinatorEntity._handle_coordinator_update"
+    ) as mock_super:
+        entity._handle_coordinator_update()
+        mock_super.assert_called_once()

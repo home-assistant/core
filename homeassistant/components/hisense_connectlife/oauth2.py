@@ -76,13 +76,6 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
 
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
-        _LOGGER.debug(
-            "Making token request with data: %s",
-            {
-                k: "***" if k in ("code", "client_secret", "refresh_token") else v
-                for k, v in data.items()
-            },
-        )
 
         session = async_get_clientsession(self.hass)
         data["client_id"] = self.client_id
@@ -96,14 +89,6 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
         # Add expires_at to the token response
         if "expires_in" in resp_json and "expires_at" not in resp_json:
             resp_json["expires_at"] = time.time() + resp_json["expires_in"]
-
-        _LOGGER.debug(
-            "Token request successful, response: %s",
-            {
-                k: "***" if k in ("access_token", "refresh_token") else v
-                for k, v in resp_json.items()
-            },
-        )
 
         return resp_json
 

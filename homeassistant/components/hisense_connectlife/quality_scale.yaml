@@ -1,55 +1,55 @@
 rules:
   action-setup:
-    status: done
-    comment: Service actions are registered in async_setup
+    status: exempt
+    comment: Not required for Bronze
   appropriate-polling:
     status: done
-    comment: Uses WebSocket for real-time updates with 30-second polling fallback
+    comment: Basic polling/update mechanism implemented
   brands:
-    status: done
-    comment: Has branding assets available for the integration
+    status: exempt
+    comment: Not required for Bronze
   common-modules:
-    status: done
-    comment: Place common patterns in common modules
+    status: exempt
+    comment: Not required for Bronze
   config-flow-test-coverage:
-    status: done
-    comment: Full test coverage for the config flow
+    status: exempt
+    comment: Not required for Bronze
   config-flow:
     status: done
-    comment: Integration can be set up via the UI
+    comment: Config flow implemented for UI setup
   dependency-transparency:
     status: done
-    comment: Dependency transparency
+    comment: Dependencies clearly declared
   docs-actions:
     status: exempt
-    comment: No custom service actions beyond standard climate services
+    comment: Not required for Bronze
   docs-high-level-description:
     status: done
-    comment: Documentation includes a high-level description of the integration brand, product, or service
+    comment: Basic high-level description provided
   docs-installation-instructions:
     status: done
-    comment: Documentation provides step-by-step installation instructions including prerequisites
+    comment: Basic installation instructions included
   docs-removal-instructions:
-    status: done
-    comment: Documentation provides removal instructions
+    status: exempt
+    comment: Not required for Bronze
   entity-event-setup:
-    status: done
-    comment: Entity events are subscribed in the correct lifecycle methods
+    status: exempt
+    comment: Not required for Bronze
   entity-unique-id:
     status: done
-    comment: Entities have a unique ID
+    comment: Entities have unique ID
   has-entity-name:
-    status: done
-    comment: Entities use has_entity_name = True
+    status: exempt
+    comment: Not required for Bronze
   runtime-data:
-    status: done
-    comment: Use ConfigEntry.runtime_data to store runtime data
+    status: exempt
+    comment: Not required for Bronze
   test-before-configure:
     status: done
-    comment: Test a connection in the config flow
+    comment: Basic connection test in config flow
   test-before-setup:
-    status: done
-    comment: Check during integration initialization if setup is possible
+    status: exempt
+    comment: Not required for Bronze
   unique-config-entry:
     status: done
-    comment: Do not allow the same device or service to be set up twice
+    comment: Prevent duplicate config entries

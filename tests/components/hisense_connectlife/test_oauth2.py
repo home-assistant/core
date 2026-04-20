@@ -1,6 +1,8 @@
 """Test Hisense OAuth2 implementation."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
+import pytest
 
 from homeassistant.components.hisense_connectlife.const import (
     DOMAIN,
@@ -139,3 +141,85 @@ async def test_close(hass: HomeAssistant) -> None:
     impl = HisenseOAuth2Implementation(hass)
     session = OAuth2Session(hass, impl, {})
     await session.close()
+
+
+@pytest.fixture
+def oauth_impl(hass: HomeAssistant):
+    """Create OAuth2 implementation fixture."""
+    return HisenseOAuth2Implementation(hass)
+
+
+async def test_token_request_with_expires(oauth_impl) -> None:
+    """Test token request with expires_in → auto add expires_at."""
+    test_data = {"grant_type": "authorization_code", "code": "test_code"}
+
+    mock_resp = AsyncMock()
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json = AsyncMock(
+        return_value={"access_token": "a", "refresh_token": "r", "expires_in": 3600}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.hisense_connectlife.oauth2.async_get_clientsession"
+        ) as mock_acs,
+        patch(
+            "homeassistant.components.hisense_connectlife.oauth2.time.time",
+            return_value=1000.0,
+        ),
+        patch.object(
+            type(oauth_impl),
+            "redirect_uri",
+            new_callable=PropertyMock,
+            return_value="https://example.com/callback",
+        ),
+    ):
+        mock_session = MagicMock()
+        mock_session.post = AsyncMock(return_value=mock_resp)
+        mock_acs.return_value = mock_session
+
+        result = await oauth_impl._token_request(test_data)
+
+    assert result["expires_at"] == 4600.0
+    mock_session.post.assert_awaited_once()
+    _, kwargs = mock_session.post.call_args
+    assert kwargs["data"]["grant_type"] == "authorization_code"
+    assert kwargs["data"]["code"] == "test_code"
+    assert "client_id" in kwargs["data"]
+    assert "client_secret" in kwargs["data"]
+    assert "redirect_uri" in kwargs["data"]
+
+
+async def test_token_request_no_expires(oauth_impl) -> None:
+    """Test token request without expires_in."""
+    test_data = {"grant_type": "refresh_token", "refresh_token": "test"}
+
+    mock_resp = AsyncMock()
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json = AsyncMock(return_value={"access_token": "a", "refresh_token": "r"})
+
+    with (
+        patch(
+            "homeassistant.components.hisense_connectlife.oauth2.async_get_clientsession"
+        ) as mock_acs,
+        patch.object(
+            type(oauth_impl),
+            "redirect_uri",
+            new_callable=PropertyMock,
+            return_value="https://example.com/callback",
+        ),
+    ):
+        mock_session = MagicMock()
+        mock_session.post = AsyncMock(return_value=mock_resp)
+        mock_acs.return_value = mock_session
+
+        result = await oauth_impl._token_request(test_data)
+
+    assert "expires_at" not in result
+    mock_session.post.assert_awaited_once()
+    _, kwargs = mock_session.post.call_args
+    assert kwargs["data"]["grant_type"] == "refresh_token"
+    assert kwargs["data"]["refresh_token"] == "test"
+    assert "client_id" in kwargs["data"]
+    assert "client_secret" in kwargs["data"]
+    assert "redirect_uri" in kwargs["data"]
