@@ -178,6 +178,7 @@ homeassistant.components.dropbox.*
 homeassistant.components.droplet.*
 homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
+homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
@@ -552,6 +553,7 @@ homeassistant.components.tcp.*
 homeassistant.components.technove.*
 homeassistant.components.tedee.*
 homeassistant.components.telegram_bot.*
+homeassistant.components.teleinfo.*
 homeassistant.components.teslemetry.*
 homeassistant.components.text.*
 homeassistant.components.thethingsnetwork.*
