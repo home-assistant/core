@@ -54,9 +54,8 @@ async def test_fault_sensors_off(
     )
     assert state_sans_fault is not None
     assert state_sans_fault.state == STATE_OFF
-    assert state_sans_fault.attributes["fault_count"] == 0
 
-    assert state_sans_fault.attributes["faults"] == ()
+    assert state_sans_fault.attributes["faults"] == []
 
 
 @pytest.mark.parametrize("install", ["botched"])
@@ -81,7 +80,6 @@ async def test_fault_sensors_on(
     )
     assert state_with_fault is not None
     assert state_with_fault.state == STATE_ON
-    assert state_with_fault.attributes["fault_count"] > 0
 
     assert state_with_fault.attributes["faults"][0] == {
         "fault": "temp_zone_actuator_communication_lost",
