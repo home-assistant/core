@@ -26,18 +26,6 @@
   },
   "entity": {
     "fan": {
-      "ventilation": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "auto": "Auto",
-              "auto_plus": "Auto plus",
-              "boost": "Boost",
-              "night": "Night"
-            }
-          }
-        }
-      },
       "extract": {
         "name": "Extract fan",
         "state_attributes": {
@@ -60,6 +48,18 @@
               "auto_plus": "[%key:component::prana::entity::fan::ventilation::state_attributes::preset_mode::state::auto_plus%]",
               "boost": "[%key:component::prana::entity::fan::ventilation::state_attributes::preset_mode::state::boost%]",
               "night": "[%key:component::prana::entity::fan::ventilation::state_attributes::preset_mode::state::night%]"
+            }
+          }
+        }
+      },
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto",
+              "auto_plus": "Auto plus",
+              "boost": "Boost",
+              "night": "Night"
             }
           }
         }

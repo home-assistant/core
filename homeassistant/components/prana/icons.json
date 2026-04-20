@@ -1,6 +1,12 @@
 {
   "entity": {
     "fan": {
+      "extract": {
+        "default": "mdi:arrow-expand-right"
+      },
+      "supply": {
+        "default": "mdi:arrow-expand-left"
+      },
       "ventilation": {
         "default": "mdi:fan",
         "state_attributes": {
@@ -14,12 +20,6 @@
             }
           }
         }
-      },
-      "extract": {
-        "default": "mdi:arrow-expand-right"
-      },
-      "supply": {
-        "default": "mdi:arrow-expand-left"
       }
     },
     "number": {
