@@ -62,10 +62,6 @@
         'presence': 'HOME',
         'presenceLocked': False,
       }),
-      'rate_limit': dict({
-        'per-day': 1000,
-        'remaining': 100,
-      }),
       'weather': dict({
         'outsideTemperature': dict({
           'celsius': 7.46,
