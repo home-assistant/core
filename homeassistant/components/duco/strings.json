@@ -18,7 +18,7 @@
       },
       "reconfigure": {
         "data": {
-          "host": "IP address or hostname"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "[%key:component::duco::config::step::user::data_description::host%]"
