@@ -27,8 +27,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "guntamatic.heater.Heater.get_data",
-        return_value=MOCK_DATA,
+        "guntamatic.heater.Heater.parse_data",
+        return_value=MOCK_PARSE_DATA,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

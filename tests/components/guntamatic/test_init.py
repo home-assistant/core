@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from guntamatic.heater import NoSerialException
 import pytest
 import requests
 
@@ -31,7 +30,6 @@ async def test_setup_entry(
             requests.exceptions.ConnectionError("Cannot connect"),
             ConfigEntryState.SETUP_RETRY,
         ),
-        (NoSerialException, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_setup_entry_fails(
