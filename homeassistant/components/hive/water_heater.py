@@ -73,6 +73,7 @@ async def async_setup_entry(
 class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     """Hive Water Heater Device."""
 
+    _attr_current_operation: str | None = None
     _attr_supported_features = (
         WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE
     )
@@ -113,6 +114,6 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     def _update_state_from_device(self) -> None:
         """Update water heater attributes from device data."""
         if self.available:
-            self._attr_current_operation = HIVE_TO_HASS_STATE[
-                self.device["status"]["current_operation"]
-            ]
+            self._attr_current_operation = HIVE_TO_HASS_STATE.get(
+                self.device.get("status", {}).get("current_operation")
+            )

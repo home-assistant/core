@@ -66,9 +66,10 @@ class HiveEntity(CoordinatorEntity[HiveDataUpdateCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Update entity state when coordinator data changes."""
         if self.coordinator.data is not None:
-            self.device = self.coordinator.data.get(self.device["hiveID"], self.device)
+            key = (self.device["hiveID"], self.device["hiveType"])
+            self.device = self.coordinator.data.get(key, self.device)
         self._update_state_from_device()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     def _update_state_from_device(self) -> None:
         """Update entity-specific attributes from self.device.

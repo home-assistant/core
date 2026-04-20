@@ -11,6 +11,8 @@ import pytest
 from homeassistant.components.hive.coordinator import HiveDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
 
 def _make_device(hive_id: str = "hive-id-1", platform: str = "climate") -> dict[str, Any]:
     return {
@@ -49,22 +51,24 @@ async def test_coordinator_returns_device_data_keyed_by_hive_id(
     mock_hive: MagicMock,
 ) -> None:
     """Coordinator._async_update_data returns a dict keyed by hiveID."""
-    coordinator = HiveDataUpdateCoordinator(hass, mock_hive)
+    entry = MockConfigEntry(domain="hive")
+    coordinator = HiveDataUpdateCoordinator(hass, entry, mock_hive)
 
     data = await coordinator._async_update_data()
 
-    assert "clim-1" in data
-    assert "light-1" in data
-    assert data["clim-1"]["hiveID"] == "clim-1"
-    assert data["light-1"]["hiveID"] == "light-1"
+    assert ("clim-1", "climate") in data
+    assert ("light-1", "light") in data
+    assert data[("clim-1", "climate")]["hiveID"] == "clim-1"
+    assert data[("light-1", "light")]["hiveID"] == "light-1"
 
 
 async def test_coordinator_calls_update_data_for_each_device(
     hass: HomeAssistant,
     mock_hive: MagicMock,
 ) -> None:
-    """updateData is called once per device."""
-    coordinator = HiveDataUpdateCoordinator(hass, mock_hive)
+    """UpdateData is called once per device."""
+    entry = MockConfigEntry(domain="hive")
+    coordinator = HiveDataUpdateCoordinator(hass, entry, mock_hive)
     await coordinator._async_update_data()
 
     assert mock_hive.session.updateData.call_count == 2  # climate + light
@@ -77,7 +81,8 @@ async def test_coordinator_skips_empty_platform_lists(
     mock_hive: MagicMock,
 ) -> None:
     """Getters for empty platform lists are never called."""
-    coordinator = HiveDataUpdateCoordinator(hass, mock_hive)
+    entry = MockConfigEntry(domain="hive")
+    coordinator = HiveDataUpdateCoordinator(hass, entry, mock_hive)
     await coordinator._async_update_data()
 
     mock_hive.sensor.getSensor.assert_not_called()
@@ -87,12 +92,14 @@ async def test_coordinator_skips_empty_platform_lists(
 
 def test_coordinator_update_interval_is_15_seconds(hass: HomeAssistant) -> None:
     """Coordinator polls every 15 seconds."""
-    coordinator = HiveDataUpdateCoordinator(hass, MagicMock())
+    entry = MockConfigEntry(domain="hive")
+    coordinator = HiveDataUpdateCoordinator(hass, entry, MagicMock())
     assert coordinator.update_interval == timedelta(seconds=15)
 
 
 def test_coordinator_stores_hive_object(hass: HomeAssistant) -> None:
     """Coordinator exposes the Hive instance for entity access."""
     hive = MagicMock()
-    coordinator = HiveDataUpdateCoordinator(hass, hive)
+    entry = MockConfigEntry(domain="hive")
+    coordinator = HiveDataUpdateCoordinator(hass, entry, hive)
     assert coordinator.hive is hive

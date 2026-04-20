@@ -9,6 +9,7 @@ from typing import Any
 
 from apyhiveapi import Hive
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -16,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type HiveDeviceData = dict[str, dict[str, Any]]
+type HiveDeviceData = dict[tuple[str, str], dict[str, Any]]
 
 # Maps hive.session.deviceList keys to the coroutine that returns formatted data.
 _PLATFORM_GETTERS: dict[
@@ -35,7 +36,9 @@ _PLATFORM_GETTERS: dict[
 class HiveDataUpdateCoordinator(DataUpdateCoordinator[HiveDeviceData]):
     """Manage fetching Hive device data from the apyhiveapi library."""
 
-    def __init__(self, hass: HomeAssistant, hive: Hive) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, hive: Hive
+    ) -> None:
         """Initialize the coordinator."""
         # The coordinator reads from the library's local cache every 15 seconds.
         # Actual cloud API calls are gated by the library's own scan_interval
@@ -43,6 +46,7 @@ class HiveDataUpdateCoordinator(DataUpdateCoordinator[HiveDeviceData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
         )
@@ -56,9 +60,15 @@ class HiveDataUpdateCoordinator(DataUpdateCoordinator[HiveDeviceData]):
                 await self.hive.session.updateData(device)
                 updated = await getter(self.hive, device)
                 hive_id = updated.get("hiveID")
-                if hive_id is None:
+                hive_type = updated.get("hiveType")
+                if hive_id is None or hive_type is None:
                     raise UpdateFailed(
-                        f"Device data for platform '{platform}' is missing 'hiveID': {updated!r}"
+                        f"Device data for platform '{platform}' is missing 'hiveID' or 'hiveType': {updated!r}"
                     )
-                data[hive_id] = updated
+                # Key by (hiveID, hiveType) rather than hiveID alone.
+                # Some devices (e.g. Heating_Heat_On_Demand switches) share a
+                # hiveID with the climate thermostat for the same zone, so a
+                # plain hiveID key would let the switch entry overwrite the
+                # climate entry and vice-versa.
+                data[(hive_id, hive_type)] = updated
         return data
