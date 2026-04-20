@@ -146,7 +146,7 @@ async def test_dhcp_discovery_errors(
     mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
-):
+) -> None:
     """Test DHCP discovery shows confirmation form."""
     with patch(
         "guntamatic.heater.Heater.parse_data",
