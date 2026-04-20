@@ -232,10 +232,7 @@ class LIFXLight(LIFXEntity, LightEntity):
             )
             bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
-        if ATTR_TRANSITION in kwargs:
-            fade = int(kwargs[ATTR_TRANSITION] * 1000)
-        else:
-            fade = 0
+        fade = int(kwargs.get(ATTR_TRANSITION, 0) * 1000)
 
         if ATTR_BRIGHTNESS_STEP in kwargs or ATTR_BRIGHTNESS_STEP_PCT in kwargs:
             brightness = self.brightness if self.is_on and self.brightness else 0
@@ -312,11 +309,40 @@ class LIFXLight(LIFXEntity, LightEntity):
         duration: int = 0,
     ) -> None:
         """Send a color change to the bulb."""
-        merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
         try:
-            await self.coordinator.async_set_color(merged_hsbk, duration)
+            await self.transform(hsbk, duration=duration / 1000)
         except TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
+
+    async def transform(
+        self, hsbk: list[float | int | None], duration: float = 0, rapid: bool = False
+    ) -> None:
+        """Transform the bulb using a waveform optional message."""
+        set_hue = hsbk[HSBK_HUE] is not None
+        set_saturation = hsbk[HSBK_SATURATION] is not None
+        set_brightness = hsbk[HSBK_BRIGHTNESS] is not None
+        set_kelvin = hsbk[HSBK_KELVIN] is not None
+        color = merge_hsbk(self.bulb.color, hsbk)
+
+        msg = {
+            "transient": False,
+            "color": color,
+            "cycles": 1,
+            "skew_ratio": 0,
+            "waveform": 0,
+            "period": round(duration * 1000),
+            "set_hue": set_hue,
+            "set_saturation": set_saturation,
+            "set_brightness": set_brightness,
+            "set_kelvin": set_kelvin,
+        }
+
+        try:
+            await self.coordinator.async_set_waveform_optional(msg, rapid)
+        except TimeoutError as ex:
+            raise HomeAssistantError(
+                f"Timeout setting waveform for {self.name}"
+            ) from ex
 
     async def get_color(
         self,
