@@ -4,15 +4,13 @@
       "blackout_state": {
         "default": "mdi:monitor",
         "state": {
-          "off": "mdi:monitor",
           "on": "mdi:monitor-off"
         }
       },
       "screensaver_state": {
         "default": "mdi:power-sleep",
         "state": {
-          "off": "mdi:monitor-shimmer",
-          "on": "mdi:power-sleep"
+          "off": "mdi:monitor-shimmer"
         }
       }
     },
