@@ -1,6 +1,12 @@
 {
   "domain": "national_grid_us",
   "name": "National Grid US",
-  "integration_type": "virtual",
-  "supported_by": "opower"
+  "codeowners": ["@masterkoppa", "@virtitnerd"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/national_grid_us",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["py_nationalgrid"],
+  "quality_scale": "bronze",
+  "requirements": ["py-nationalgrid==0.5.1"]
 }

@@ -15,6 +15,25 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bool:
     """Set up Opower from a config entry."""
     utility_name = entry.data[CONF_UTILITY]
+
+    # Check for National Grid and create an issue if the user needs
+    # to migrate to the new integration. Do this before validating
+    # the utility to recommend the new integration once support is
+    # removed from the opower library.
+    if utility_name.startswith("National Grid"):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"national_grid_migration_{entry.entry_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="national_grid_migration",
+            translation_placeholders={
+                "utility": utility_name,
+                "add_integration": "/config/integrations/dashboard/add?domain=national_grid_us",
+            },
+        )
+
     try:
         select_utility(utility_name)
     except ValueError:
