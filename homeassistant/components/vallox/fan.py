@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from vallox_websocket_api import Vallox, ValloxApiException, ValloxInvalidInputException
+from vallox_websocket_api import ValloxApiException, ValloxInvalidInputException
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_NAME
@@ -63,11 +63,7 @@ async def async_setup_entry(
     """Set up the fan device."""
     coordinator = entry.runtime_data
 
-    device = ValloxFanEntity(
-        entry.data[CONF_NAME],
-        coordinator.client,
-        coordinator,
-    )
+    device = ValloxFanEntity(entry.data[CONF_NAME], coordinator)
 
     async_add_entities([device])
 
@@ -86,13 +82,10 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     def __init__(
         self,
         name: str,
-        client: Vallox,
         coordinator: ValloxDataUpdateCoordinator,
     ) -> None:
         """Initialize the fan."""
         super().__init__(name, coordinator)
-
-        self._client = client
 
         self._attr_unique_id = str(self._device_uuid)
         self._attr_preset_modes = list(PRESET_MODE_TO_VALLOX_PROFILE)
@@ -185,7 +178,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
     async def _async_set_power(self, mode: bool) -> bool:
         try:
-            await self._client.set_values(
+            await self.coordinator.client.set_values(
                 {METRIC_KEY_MODE: MODE_ON if mode else MODE_OFF}
             )
         except ValloxApiException as err:
@@ -203,7 +196,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
         try:
             profile = PRESET_MODE_TO_VALLOX_PROFILE[preset_mode]
-            await self._client.set_profile(profile)
+            await self.coordinator.client.set_profile(profile)
 
         except ValloxApiException as err:
             raise HomeAssistantError(f"Failed to set profile: {preset_mode}") from err
@@ -224,7 +217,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         )
 
         try:
-            await self._client.set_fan_speed(vallox_profile, percentage)
+            await self.coordinator.client.set_fan_speed(vallox_profile, percentage)
         except ValloxInvalidInputException as err:
             # This can happen if current profile does not support setting the fan speed.
             raise ValueError(

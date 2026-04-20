@@ -14,6 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
+from .services import async_setup_services
 
 
 CONFIG_SCHEMA = vol.Schema(

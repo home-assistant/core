@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from vallox_websocket_api import Vallox
-
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -27,7 +25,6 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         name: str,
         coordinator: ValloxDataUpdateCoordinator,
         description: ValloxSwitchEntityDescription,
-        client: Vallox,
     ) -> None:
         """Initialize the Vallox switch."""
         super().__init__(name, coordinator)
@@ -35,7 +32,6 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
         self.entity_description = description
 
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
-        self._client = client
 
     @property
     def is_on(self) -> bool | None:
@@ -57,7 +53,7 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
     async def _set_value(self, value: bool) -> None:
         """Update the current value."""
         metric_key = self.entity_description.metric_key
-        await self._client.set_values({metric_key: 1 if value else 0})
+        await self.coordinator.client.set_values({metric_key: 1 if value else 0})
         await self.coordinator.async_request_refresh()
 
 
@@ -86,8 +82,6 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        ValloxSwitchEntity(
-            entry.data[CONF_NAME], coordinator, description, coordinator.client
-        )
+        ValloxSwitchEntity(entry.data[CONF_NAME], coordinator, description)
         for description in SWITCH_ENTITIES
     )

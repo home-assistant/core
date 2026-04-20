@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from vallox_websocket_api import Vallox
-
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
@@ -30,7 +28,6 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         name: str,
         coordinator: ValloxDataUpdateCoordinator,
         description: ValloxNumberEntityDescription,
-        client: Vallox,
     ) -> None:
         """Initialize the Vallox number entity."""
         super().__init__(name, coordinator)
@@ -38,7 +35,6 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         self.entity_description = description
 
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
-        self._client = client
 
     @property
     def native_value(self) -> float | None:
@@ -52,7 +48,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self._client.set_values(
+        await self.coordinator.client.set_values(
             {self.entity_description.metric_key: float(value)}
         )
         await self.coordinator.async_request_refresh()
@@ -108,8 +104,6 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        ValloxNumberEntity(
-            entry.data[CONF_NAME], coordinator, description, coordinator.client
-        )
+        ValloxNumberEntity(entry.data[CONF_NAME], coordinator, description)
         for description in NUMBER_ENTITIES
     )

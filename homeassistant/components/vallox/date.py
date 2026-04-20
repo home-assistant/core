@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 
-from vallox_websocket_api import Vallox
-
 from homeassistant.components.date import DateEntity
 from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -25,13 +23,11 @@ class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
         self,
         name: str,
         coordinator: ValloxDataUpdateCoordinator,
-        client: Vallox,
     ) -> None:
         """Initialize the Vallox date."""
         super().__init__(name, coordinator)
 
         self._attr_unique_id = f"{self._device_uuid}-filter_change_date"
-        self._client = client
 
     @property
     def native_value(self) -> date | None:
@@ -42,7 +38,7 @@ class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
     async def async_set_value(self, value: date) -> None:
         """Change the date."""
 
-        await self._client.set_filter_change_date(value)
+        await self.coordinator.client.set_filter_change_date(value)
         await self.coordinator.async_request_refresh()
 
 
@@ -55,9 +51,5 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        [
-            ValloxFilterChangeDateEntity(
-                entry.data[CONF_NAME], coordinator, coordinator.client
-            )
-        ]
+        [ValloxFilterChangeDateEntity(entry.data[CONF_NAME], coordinator)]
     )
