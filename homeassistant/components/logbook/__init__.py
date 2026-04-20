@@ -30,7 +30,6 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
 
 from . import rest_api, websocket_api
@@ -62,7 +61,6 @@ LOG_MESSAGE_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
 def log_entry(
     hass: HomeAssistant,
     name: str,
@@ -76,7 +74,6 @@ def log_entry(
 
 
 @callback
-@bind_hass
 def async_log_entry(
     hass: HomeAssistant,
     name: str,
