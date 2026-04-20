@@ -132,7 +132,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         except OPNsenseInvalidAuth:
             errors["base"] = "invalid_auth"
         except OPNsensePrivilegeMissing:
-            errors["base"] = "previlege_missing"
+            errors["base"] = "privilege_missing"
         except OPNsenseInvalidURL:
             errors["base"] = "invalid_url"
         except OPNsenseSSLError:
@@ -190,7 +190,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         except OPNsenseInvalidAuth:
             return self.async_abort(reason="invalid_auth")
         except OPNsensePrivilegeMissing:
-            return self.async_abort(reason="previlege_missing")
+            return self.async_abort(reason="privilege_missing")
         except OPNsenseSSLError:
             return self.async_abort(reason="ssl_error")
         except OPNsenseConnectionError, OPNsenseTimeoutError, requestsConnectionError:

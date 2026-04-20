@@ -7,7 +7,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_url": "URL is invalid or unreachable",
       "invalid_version": "Unsupported OPNsense firmware version",
-      "previlege_missing": "The API key used does not have sufficient privileges. Please check the integration documentation for required permissions",
+      "privilege_missing": "The API key used does not have sufficient privileges. Please check the integration documentation for required permissions",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "ssl_error": "SSL certificate verification failed",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -18,7 +18,7 @@
       "invalid_interface": "Interface(s) do not exist",
       "invalid_url": "URL is invalid or unreachable",
       "invalid_version": "Unsupported OPNsense firmware version",
-      "previlege_missing": "[%key:component::opnsense::config::abort::previlege_missing%]",
+      "privilege_missing": "[%key:component::opnsense::config::abort::privilege_missing%]",
       "ssl_error": "SSL certificate verification failed",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
