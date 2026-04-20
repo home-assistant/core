@@ -174,6 +174,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "dsp-w215",
     },
     {
+        "domain": "earn_e_p1",
+        "hostname": "energiemonitor-*",
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
