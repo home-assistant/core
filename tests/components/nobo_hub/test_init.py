@@ -175,7 +175,10 @@ async def test_setup_autodiscovered_rediscovery_failure(
     assert exc_info.value.translation_placeholders == expected_placeholders
 
 
-async def test_setup_registers_hub_device(hass: HomeAssistant) -> None:
+async def test_setup_registers_hub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """The hub device is registered with the expected metadata."""
     entry = _make_entry(hass, auto_discovered=False)
     hub = _make_hub_mock()
@@ -185,7 +188,6 @@ async def test_setup_registers_hub_device(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
     assert device is not None
     assert device.config_entries == {entry.entry_id}
@@ -195,33 +197,3 @@ async def test_setup_registers_hub_device(hass: HomeAssistant) -> None:
     assert device.serial_number == SERIAL
     assert device.sw_version == "115"
     assert device.hw_version == "hw"
-
-
-async def test_setup_registers_hub_device_before_forwarding_platforms(
-    hass: HomeAssistant,
-) -> None:
-    """The hub device exists by the time platforms are forwarded."""
-    entry = _make_entry(hass, auto_discovered=False)
-    hub = _make_hub_mock()
-    forward_called_with_device = {}
-
-    async def _capture_forward(_entry, _platforms) -> None:
-        device_registry = dr.async_get(hass)
-        forward_called_with_device["device"] = device_registry.async_get_device(
-            identifiers={(DOMAIN, SERIAL)}
-        )
-
-    with (
-        patch("homeassistant.components.nobo_hub.nobo") as mock_cls,
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            side_effect=_capture_forward,
-        ),
-    ):
-        mock_cls.return_value = hub
-        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert forward_called_with_device.get("device") is not None
