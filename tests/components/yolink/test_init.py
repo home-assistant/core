@@ -1,8 +1,9 @@
 """Tests for the yolink integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.components.yolink import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -60,3 +61,86 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("setup_credentials", "mock_auth_manager", "mock_yolink_home")
+async def test_oauth_setup_and_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test OAuth config entry setup and unload."""
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_yolink_home")
+async def test_uac_setup_and_unload(
+    hass: HomeAssistant,
+    mock_uac_config_entry: MockConfigEntry,
+) -> None:
+    """Test UAC config entry setup and unload."""
+    with patch("homeassistant.components.yolink.api.UACAuth", autospec=True):
+        assert await hass.config_entries.async_setup(mock_uac_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_uac_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_uac_config_entry.entry_id)
+    assert mock_uac_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_yolink_home")
+async def test_uac_setup_entry_auth_failure(
+    hass: HomeAssistant,
+    mock_uac_config_entry: MockConfigEntry,
+    mock_yolink_home: AsyncMock,
+) -> None:
+    """Test UAC setup entry with auth failure triggers reauth."""
+    mock_yolink_home.return_value.async_setup.side_effect = YoLinkAuthFailError(
+        "000103", "Invalid credentials"
+    )
+
+    with patch("homeassistant.components.yolink.api.UACAuth", autospec=True):
+        await hass.config_entries.async_setup(mock_uac_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_uac_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures("mock_yolink_home")
+async def test_uac_setup_entry_connection_failure(
+    hass: HomeAssistant,
+    mock_uac_config_entry: MockConfigEntry,
+    mock_yolink_home: AsyncMock,
+) -> None:
+    """Test UAC setup entry with connection failure retries."""
+    mock_yolink_home.return_value.async_setup.side_effect = YoLinkClientError(
+        "000201", "Connection failed"
+    )
+
+    with patch("homeassistant.components.yolink.api.UACAuth", autospec=True):
+        await hass.config_entries.async_setup(mock_uac_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_uac_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_yolink_home")
+async def test_uac_setup_entry_timeout(
+    hass: HomeAssistant,
+    mock_uac_config_entry: MockConfigEntry,
+    mock_yolink_home: AsyncMock,
+) -> None:
+    """Test UAC setup entry with timeout retries."""
+    mock_yolink_home.return_value.async_setup.side_effect = TimeoutError()
+
+    with patch("homeassistant.components.yolink.api.UACAuth", autospec=True):
+        await hass.config_entries.async_setup(mock_uac_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_uac_config_entry.state is ConfigEntryState.SETUP_RETRY
