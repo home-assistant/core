@@ -6,7 +6,7 @@ from jwt import encode
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import now
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +29,7 @@ def envoy_token(days_to_expiry: int = 365) -> str:
     return encode(
         payload={
             "name": "envoy",
-            "exp": (now() + timedelta(days=days_to_expiry)).timestamp(),
+            "exp": (dt_util.utcnow() + timedelta(days=days_to_expiry)).timestamp(),
         },
         key="secret",
         algorithm="HS256",
