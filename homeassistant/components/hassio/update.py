@@ -29,6 +29,7 @@ from .const import (
     DATA_KEY_CORE,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    MAIN_COORDINATOR,
 )
 from .entity import (
     HassioAddonEntity,
@@ -51,9 +52,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Supervisor update based on a config entry."""
-    coordinator = hass.data[ADDONS_COORDINATOR]
+    coordinator = hass.data[MAIN_COORDINATOR]
 
-    entities = [
+    entities: list[UpdateEntity] = [
         SupervisorSupervisorUpdateEntity(
             coordinator=coordinator,
             entity_description=ENTITY_DESCRIPTION,
@@ -64,15 +65,6 @@ async def async_setup_entry(
         ),
     ]
 
-    entities.extend(
-        SupervisorAddonUpdateEntity(
-            addon=addon,
-            coordinator=coordinator,
-            entity_description=ENTITY_DESCRIPTION,
-        )
-        for addon in coordinator.data[DATA_KEY_ADDONS].values()
-    )
-
     if coordinator.is_hass_os:
         entities.append(
             SupervisorOSUpdateEntity(
@@ -80,6 +72,16 @@ async def async_setup_entry(
                 entity_description=ENTITY_DESCRIPTION,
             )
         )
+
+    addons_coordinator = hass.data[ADDONS_COORDINATOR]
+    entities.extend(
+        SupervisorAddonUpdateEntity(
+            addon=addon,
+            coordinator=addons_coordinator,
+            entity_description=ENTITY_DESCRIPTION,
+        )
+        for addon in addons_coordinator.data[DATA_KEY_ADDONS].values()
+    )
 
     async_add_entities(entities)
 

@@ -9,6 +9,11 @@
           - first
           - last
           - any
+  for: &trigger_for
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
 
 .power_units: &power_units
   - "mW"
@@ -29,8 +34,6 @@
 
 .trigger_target: &trigger_target
   entity:
-    - domain: number
-      device_class: power
     - domain: sensor
       device_class: power
 
@@ -51,6 +54,7 @@ crossed_threshold:
   target: *trigger_target
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
     threshold:
       required: true
       selector:

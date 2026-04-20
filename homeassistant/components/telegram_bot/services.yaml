@@ -225,9 +225,9 @@ send_media_group:
           multiple: true
           label_field: url
           description_field: caption
+          translation_key: "media"
           fields:
             media_type:
-              label: Media type
               selector:
                 select:
                   options:
@@ -237,20 +237,16 @@ send_media_group:
                     - "video"
                   translation_key: "media_type"
             caption:
-              label: Caption
               selector:
                 text:
             url:
-              label: URL
               selector:
                 text:
                   type: url
             verify_ssl:
-              label: Verify SSL
               selector:
                 boolean:
             authentication:
-              label: Authentication
               selector:
                 select:
                   options:
@@ -259,16 +255,13 @@ send_media_group:
                     - "bearer_token"
                   translation_key: "authentication"
             username:
-              label: Username
               selector:
                 text:
             password:
-              label: Password
               selector:
                 text:
                   type: password
             file:
-              label: File
               selector:
                 text:
     parse_mode:
@@ -1205,3 +1198,50 @@ download_file:
       example: "my_downloaded_file"
       selector:
         text:
+
+send_message_draft:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+    draft_id:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 1
+    message:
+      example: The garage door has been o
+      required: true
+      selector:
+        text:
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    advanced:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from zwave_js_server.event import Event
-from zwave_js_server.model.node import Node, NodeDataType
+from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
 from homeassistant.components.binary_sensor import (
@@ -36,6 +36,7 @@ from .common import (
     NOTIFICATION_MOTION_BINARY_SENSOR,
     PROPERTY_DOOR_STATUS_BINARY_SENSOR,
     TAMPER_SENSOR,
+    NodeDataType,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -146,6 +147,22 @@ def _add_lock_state_notification_states(node_state: dict[str, Any]) -> dict[str,
                     "4": "RF unlock operation",
                 }
             )
+            break
+    return updated_state
+
+
+def _set_opening_state_metadata_states(
+    node_state: dict[str, Any], states: dict[str, str]
+) -> dict[str, Any]:
+    """Return a node state with updated Opening state metadata states."""
+    updated_state = copy.deepcopy(node_state)
+    for value_data in updated_state["values"]:
+        if (
+            value_data.get("commandClass") == 113
+            and value_data.get("property") == "Access Control"
+            and value_data.get("propertyKey") == "Opening state"
+        ):
+            value_data["metadata"]["states"] = states
             break
     return updated_state
 
@@ -424,12 +441,12 @@ async def test_property_sensor_door_status(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_opening_state_notification_does_not_create_binary_sensors(
+async def test_opening_state_creates_open_binary_sensor(
     hass: HomeAssistant,
     client,
     hoppe_ehandle_connectsense_state,
 ) -> None:
-    """Test Opening state does not fan out into per-state binary sensors."""
+    """Test Opening state creates the Open binary sensor."""
     # The eHandle fixture has a Binary Sensor CC value for tilt, which we
     # want to ignore in the assertion below
     state = copy.deepcopy(hoppe_ehandle_connectsense_state)
@@ -446,7 +463,12 @@ async def test_opening_state_notification_does_not_create_binary_sensors(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.states.async_all("binary_sensor")
+    open_state = hass.states.get("binary_sensor.ehandle_connectsense")
+    assert open_state is not None
+    assert open_state.state == STATE_OFF
+    assert open_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
+
+    assert hass.states.get("binary_sensor.ehandle_connectsense_tilt") is None
 
 
 async def test_opening_state_disables_legacy_window_door_notification_sensors(
@@ -482,7 +504,7 @@ async def test_opening_state_disables_legacy_window_door_notification_sensors(
             }
             or (
                 entry.original_name == "Window/door is tilted"
-                and entry.original_device_class != BinarySensorDeviceClass.WINDOW
+                and entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
             )
         )
     ]
@@ -493,6 +515,162 @@ async def test_opening_state_disables_legacy_window_door_notification_sensors(
         for entry in legacy_entries
     )
     assert all(hass.states.get(entry.entity_id) is None for entry in legacy_entries)
+
+    open_state = hass.states.get("binary_sensor.ehandle_connectsense")
+    assert open_state is not None
+    assert open_state.state == STATE_OFF
+    assert open_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
+
+
+async def test_opening_state_binary_sensors_with_tilted(
+    hass: HomeAssistant,
+    client,
+    hoppe_ehandle_connectsense_state,
+) -> None:
+    """Test Opening state creates Open and Tilt binary sensors when supported."""
+    node = Node(
+        client,
+        _set_opening_state_metadata_states(
+            hoppe_ehandle_connectsense_state,
+            {"0": "Closed", "1": "Open", "2": "Tilted"},
+        ),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    open_entity_id = "binary_sensor.ehandle_connectsense"
+    tilted_entity_id = "binary_sensor.ehandle_connectsense_tilt"
+
+    open_state = hass.states.get(open_entity_id)
+    tilted_state = hass.states.get(tilted_entity_id)
+    assert open_state is not None
+    assert tilted_state is not None
+    assert open_state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
+    assert ATTR_DEVICE_CLASS not in tilted_state.attributes
+    assert open_state.state == STATE_OFF
+    assert tilted_state.state == STATE_OFF
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Notification",
+                    "commandClass": 113,
+                    "endpoint": 0,
+                    "property": "Access Control",
+                    "propertyKey": "Opening state",
+                    "newValue": 1,
+                    "prevValue": 0,
+                    "propertyName": "Access Control",
+                    "propertyKeyName": "Opening state",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(open_entity_id).state == STATE_ON
+    assert hass.states.get(tilted_entity_id).state == STATE_OFF
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Notification",
+                    "commandClass": 113,
+                    "endpoint": 0,
+                    "property": "Access Control",
+                    "propertyKey": "Opening state",
+                    "newValue": 2,
+                    "prevValue": 1,
+                    "propertyName": "Access Control",
+                    "propertyKeyName": "Opening state",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(open_entity_id).state == STATE_ON
+    assert hass.states.get(tilted_entity_id).state == STATE_ON
+
+
+async def test_opening_state_tilted_appears_via_metadata_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    hoppe_ehandle_connectsense_state,
+) -> None:
+    """Test tilt binary sensor is added without recreating the main entity."""
+    node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    open_entity_id = "binary_sensor.ehandle_connectsense"
+    tilted_entity_id = "binary_sensor.ehandle_connectsense_tilt"
+    open_entry = entity_registry.async_get(open_entity_id)
+    assert open_entry is not None
+
+    assert hass.states.get(open_entity_id) is not None
+    assert hass.states.get(tilted_entity_id) is None
+
+    node.receive_event(
+        Event(
+            "metadata updated",
+            {
+                "source": "node",
+                "event": "metadata updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Notification",
+                    "commandClass": 113,
+                    "endpoint": 0,
+                    "property": "Access Control",
+                    "propertyKey": "Opening state",
+                    "propertyName": "Access Control",
+                    "propertyKeyName": "Opening state",
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "label": "Opening state",
+                        "ccSpecific": {"notificationType": 6},
+                        "min": 0,
+                        "max": 255,
+                        "states": {
+                            "0": "Closed",
+                            "1": "Open",
+                            "2": "Tilted",
+                        },
+                        "stateful": True,
+                        "secret": False,
+                    },
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(open_entity_id) is not None
+    tilted_state = hass.states.get(tilted_entity_id)
+    assert tilted_state is not None
+    assert entity_registry.async_get(open_entity_id) == open_entry
 
 
 async def test_reenabled_legacy_door_state_entity_follows_opening_state(
@@ -991,45 +1169,39 @@ async def test_hoppe_ehandle_connectsense(
     assert entry.disabled_by is None, "Entity should be enabled by default"
 
 
-async def test_legacy_door_state_repair_issue(
+async def test_legacy_door_open_state_repair_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     client: MagicMock,
     hoppe_ehandle_connectsense_state: NodeDataType,
 ) -> None:
-    """Test repair issue is created only when legacy door state entity is in automation."""
+    """Test an open-state legacy entity creates the open-state repair issue."""
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
     home_id = client.driver.controller.home_id
 
-    # Pre-register the legacy entity as enabled (simulating existing user entity).
-    unique_id = f"{home_id}.20-113-0-Access Control-Door state.22"
     entity_entry = entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
-        unique_id,
+        f"{home_id}.20-113-0-Access Control-Door state.22",
         suggested_object_id="ehandle_connectsense_window_door_is_open",
         original_name="Window/door is open",
     )
     entity_id = entity_entry.entity_id
 
-    # Load the integration without any automation referencing the entity.
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # No repair issues should exist without automations.
-    issues = [
-        issue
-        for issue in issue_registry.issues.values()
-        if issue.domain == DOMAIN
-        and issue.translation_key == "deprecated_legacy_door_state"
-    ]
-    assert len(issues) == 0
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
+        )
+        is None
+    )
 
-    # Now set up an automation referencing the legacy entity.
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1046,47 +1218,110 @@ async def test_legacy_door_state_repair_issue(
         },
     )
 
-    # Reload the integration so the repair check runs again.
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
+        DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
     )
     assert issue is not None
-    assert issue.translation_key == "deprecated_legacy_door_state"
+    assert issue.translation_key == "deprecated_legacy_door_open_state"
     assert issue.translation_placeholders["entity_id"] == entity_id
     assert issue.translation_placeholders["entity_name"] == "Window/door is open"
     assert (
-        issue.translation_placeholders["opening_state_entity_id"]
-        == "sensor.ehandle_connectsense_opening_state"
+        issue.translation_placeholders["replacement_entity_id"]
+        == "binary_sensor.ehandle_connectsense"
     )
     assert "test" in issue.translation_placeholders["items"]
 
 
-async def test_legacy_door_state_no_repair_issue_when_disabled(
+async def test_legacy_door_tilt_state_repair_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     client: MagicMock,
     hoppe_ehandle_connectsense_state: NodeDataType,
 ) -> None:
-    """Test no repair issue when legacy door state entity is disabled."""
+    """Test a tilt-state legacy entity creates the tilt-state repair issue."""
+    node = Node(
+        client,
+        _set_opening_state_metadata_states(
+            hoppe_ehandle_connectsense_state,
+            {"0": "Closed", "1": "Open", "2": "Tilted"},
+        ),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+    home_id = client.driver.controller.home_id
+
+    entity_entry = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        f"{home_id}.20-113-0-Access Control-Door state.5633",
+        suggested_object_id="ehandle_connectsense_window_door_is_open_in_tilt_position",
+        original_name="Window/door is open in tilt position",
+    )
+    entity_id = entity_entry.entity_id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {"entity_id": "automation.test_automation"},
+                },
+            }
+        },
+    )
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_legacy_door_tilt_state.{entity_id}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_legacy_door_tilt_state"
+    assert issue.translation_placeholders["entity_id"] == entity_id
+    assert (
+        issue.translation_placeholders["entity_name"]
+        == "Window/door is open in tilt position"
+    )
+    assert (
+        issue.translation_placeholders["replacement_entity_id"]
+        == "binary_sensor.ehandle_connectsense_tilt"
+    )
+    assert "test" in issue.translation_placeholders["items"]
+
+
+async def test_legacy_door_open_state_no_repair_issue_when_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    hoppe_ehandle_connectsense_state: NodeDataType,
+) -> None:
+    """Test no repair issue is created when the legacy entity is disabled."""
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
     home_id = client.driver.controller.home_id
 
-    # Pre-register the legacy entity as disabled.
-    unique_id = f"{home_id}.20-113-0-Access Control-Door state.22"
     entity_entry = entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
-        unique_id,
+        f"{home_id}.20-113-0-Access Control-Door state.22",
         suggested_object_id="ehandle_connectsense_window_door_is_open",
         original_name="Window/door is open",
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
     entity_id = entity_entry.entity_id
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1108,11 +1343,68 @@ async def test_legacy_door_state_no_repair_issue_when_disabled(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # No repair issue should be created since the entity is disabled.
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
+        )
+        is None
     )
-    assert issue is None
+
+
+async def test_legacy_closed_door_state_does_not_create_repair_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    hoppe_ehandle_connectsense_state: NodeDataType,
+) -> None:
+    """Test closed-state legacy entities are excluded from repair issues."""
+    node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+    home_id = client.driver.controller.home_id
+
+    entity_entry = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        f"{home_id}.20-113-0-Access Control-Door state.23",
+        suggested_object_id="ehandle_connectsense_window_door_is_closed",
+        original_name="Window/door is closed",
+    )
+    entity_id = entity_entry.entity_id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {"entity_id": "automation.test_automation"},
+                },
+            }
+        },
+    )
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
+        )
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_tilt_state.{entity_id}"
+        )
+        is None
+    )
 
 
 async def test_hoppe_custom_tilt_sensor_no_repair_issue(
@@ -1122,23 +1414,20 @@ async def test_hoppe_custom_tilt_sensor_no_repair_issue(
     client: MagicMock,
     hoppe_ehandle_connectsense_state: NodeDataType,
 ) -> None:
-    """Test no repair issue for Hoppe eHandle custom tilt sensor (Binary Sensor CC)."""
+    """Test no repair issue for the custom Binary Sensor CC tilt entity."""
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
-
-    # Pre-register the Hoppe tilt entity as enabled (simulating existing user entity).
     home_id = client.driver.controller.home_id
-    unique_id = f"{home_id}.20-48-0-Tilt"
+
     entity_entry = entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
-        unique_id,
+        f"{home_id}.20-48-0-Tilt",
         suggested_object_id="ehandle_connectsense_window_door_is_tilted",
         original_name="Window/door is tilted",
     )
     entity_id = entity_entry.entity_id
 
-    # Set up automation referencing the custom tilt entity.
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1160,70 +1449,65 @@ async def test_hoppe_custom_tilt_sensor_no_repair_issue(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # No repair issue should be created - this is a custom Binary Sensor CC entity,
-    # not a legacy Notification CC door state entity.
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_tilt_state.{entity_id}"
+        )
+        is None
     )
-    assert issue is None
 
 
-async def test_legacy_door_state_stale_repair_issue_cleaned_up(
+async def test_legacy_door_open_state_stale_repair_issue_cleaned_up(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     client: MagicMock,
     hoppe_ehandle_connectsense_state: NodeDataType,
 ) -> None:
-    """Test that a stale repair issue is deleted when there are no automations."""
+    """Test stale open-state repair issues are deleted when no references remain."""
     node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
     home_id = client.driver.controller.home_id
 
-    # Pre-register the legacy entity as enabled.
-    unique_id = f"{home_id}.20-113-0-Access Control-Door state.22"
     entity_entry = entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
-        unique_id,
+        f"{home_id}.20-113-0-Access Control-Door state.22",
         suggested_object_id="ehandle_connectsense_window_door_is_open",
         original_name="Window/door is open",
     )
     entity_id = entity_entry.entity_id
 
-    # Seed a stale repair issue as if it had been created in a previous run.
     async_create_issue(
         hass,
         DOMAIN,
-        f"deprecated_legacy_door_state.{entity_id}",
+        f"deprecated_legacy_door_open_state.{entity_id}",
         is_fixable=False,
         is_persistent=False,
         severity=IssueSeverity.WARNING,
-        translation_key="deprecated_legacy_door_state",
+        translation_key="deprecated_legacy_door_open_state",
         translation_placeholders={
             "entity_id": entity_id,
             "entity_name": "Window/door is open",
-            "opening_state_entity_id": "sensor.ehandle_connectsense_opening_state",
+            "replacement_entity_id": "binary_sensor.ehandle_connectsense",
             "items": "- [test](/config/automation/edit/test_automation)",
         },
     )
     assert (
         issue_registry.async_get_issue(
-            DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
         )
         is not None
     )
 
-    # Load the integration with no automation referencing the legacy entity.
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Stale issue should have been cleaned up.
     assert (
         issue_registry.async_get_issue(
-            DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
         )
         is None
     )

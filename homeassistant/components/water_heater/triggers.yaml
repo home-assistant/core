@@ -13,6 +13,11 @@
             - first
             - last
             - any
+    for: &trigger_for
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 .temperature_units: &temperature_units
   - "°C"
@@ -25,6 +30,23 @@
     device_class: temperature
   - domain: number
     device_class: temperature
+
+operation_mode_changed:
+  target: *trigger_water_heater_target
+  fields:
+    behavior: *trigger_behavior
+    for: *trigger_for
+    operation_mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: operation_mode
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
 
 turned_off: *trigger_common
 turned_on: *trigger_common
@@ -46,6 +68,7 @@ target_temperature_crossed_threshold:
   target: *trigger_water_heater_target
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
     threshold:
       required: true
       selector:

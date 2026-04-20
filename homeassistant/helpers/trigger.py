@@ -7,6 +7,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, field
+from datetime import timedelta
 import functools
 import inspect
 import logging
@@ -16,7 +17,6 @@ from typing import (
     Final,
     Literal,
     Protocol,
-    Self,
     TypedDict,
     cast,
     override,
@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_EVENT_DATA,
+    CONF_FOR,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -69,12 +70,13 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, selector
 from .automation import (
     DomainSpec,
-    NumericalDomainSpec,
+    ThresholdConfig,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
+from .event import async_track_same_state
 from .integration_platform import async_process_integration_platforms
 from .selector import (
     NumericThresholdMode,
@@ -203,22 +205,28 @@ async def _register_trigger_platform(
     from homeassistant.components import automation  # noqa: PLC0415
 
     new_triggers: set[str] = set()
+    triggers = hass.data[TRIGGERS]
 
     if hasattr(platform, "async_get_triggers"):
-        for trigger_key in await platform.async_get_triggers(hass):
+        all_triggers = await platform.async_get_triggers(hass)
+        for trigger_key in all_triggers:
             trigger_key = get_absolute_description_key(integration_domain, trigger_key)
-            hass.data[TRIGGERS][trigger_key] = integration_domain
-            new_triggers.add(trigger_key)
+            if trigger_key not in triggers:
+                triggers[trigger_key] = integration_domain
+                new_triggers.add(trigger_key)
         if not new_triggers:
-            _LOGGER.debug(
-                "Integration %s returned no triggers in async_get_triggers",
-                integration_domain,
-            )
+            if not all_triggers:
+                _LOGGER.debug(
+                    "Integration %s returned no triggers in async_get_triggers",
+                    integration_domain,
+                )
             return
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
         platform, "TRIGGER_SCHEMA"
     ):
-        hass.data[TRIGGERS][integration_domain] = integration_domain
+        if integration_domain in triggers:
+            return
+        triggers[integration_domain] = integration_domain
         new_triggers.add(integration_domain)
     else:
         _LOGGER.debug(
@@ -335,16 +343,19 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
+            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
         },
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
 
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
+class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
+    _domain_specs: Mapping[str, DomainSpec]
+    _excluded_states: Final[frozenset[str]] = frozenset(
+        {STATE_UNAVAILABLE, STATE_UNKNOWN}
+    )
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -361,6 +372,7 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
         if TYPE_CHECKING:
             assert config.target is not None
         self._options = config.options or {}
+        self._duration: timedelta | None = self._options.get(CONF_FOR)
         self._target = config.target
 
     def entity_filter(self, entities: set[str]) -> set[str]:
@@ -388,17 +400,16 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
             self.is_valid_state(state)
             for entity_id in entity_ids
             if (state := self._hass.states.get(entity_id)) is not None
+            and state.state not in self._excluded_states
         )
 
-    def check_one_match(self, entity_ids: set[str]) -> bool:
-        """Check that only one entity state matches."""
-        return (
-            sum(
-                self.is_valid_state(state)
-                for entity_id in entity_ids
-                if (state := self._hass.states.get(entity_id)) is not None
-            )
-            == 1
+    def count_matches(self, entity_ids: set[str]) -> int:
+        """Count the number of entity states that match."""
+        return sum(
+            self.is_valid_state(state)
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+            and state.state not in self._excluded_states
         )
 
     @override
@@ -407,7 +418,8 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
-        behavior = self._options.get(ATTR_BEHAVIOR)
+        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_ANY)
+        unsub_track_same: dict[str, Callable[[], None]] = {}
 
         @callback
         def state_change_listener(
@@ -418,6 +430,30 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
             entity_id = event.data["entity_id"]
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
+
+            def state_still_valid(
+                _: str, from_state: State | None, to_state: State | None
+            ) -> bool:
+                """Check if the state is still valid during the duration wait.
+
+                Called by async_track_same_state on each state change to
+                determine whether to cancel the timer.
+                For behavior any, checks the individual entity's state.
+                For behavior first/last, checks the combined state.
+                """
+                if behavior == BEHAVIOR_LAST:
+                    return self.check_all_match(
+                        target_state_change_data.targeted_entity_ids
+                    )
+                if behavior == BEHAVIOR_FIRST:
+                    return (
+                        self.count_matches(target_state_change_data.targeted_entity_ids)
+                        >= 1
+                    )
+                # Behavior any: check the individual entity's state
+                if not to_state:
+                    return False
+                return self.is_valid_state(to_state)
 
             if not from_state or not to_state:
                 return
@@ -436,24 +472,64 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
                 ):
                     return
             elif behavior == BEHAVIOR_FIRST:
-                if not self.check_one_match(
-                    target_state_change_data.targeted_entity_ids
+                # Note: It's enough to test for exactly 1 match here because if there
+                # were previously 2 matches the transition would not be valid and we
+                # would have returned already.
+                if (
+                    self.count_matches(target_state_change_data.targeted_entity_ids)
+                    != 1
                 ):
                     return
 
-            run_action(
-                {
-                    ATTR_ENTITY_ID: entity_id,
-                    "from_state": from_state,
-                    "to_state": to_state,
-                },
-                f"state of {entity_id}",
-                event.context,
+            @callback
+            def call_action() -> None:
+                """Call action with right context."""
+                # After a `for` delay, keep the original triggering event payload.
+                # `async_track_same_state` only verifies the state remained valid
+                # for the configured duration before firing the action.
+                run_action(
+                    {
+                        ATTR_ENTITY_ID: entity_id,
+                        "from_state": from_state,
+                        "to_state": to_state,
+                        "for": self._duration,
+                    },
+                    f"state of {entity_id}",
+                    event.context,
+                )
+
+            if not self._duration:
+                call_action()
+                return
+
+            subscription_key = entity_id if behavior == BEHAVIOR_ANY else behavior
+            if subscription_key in unsub_track_same:
+                unsub_track_same.pop(subscription_key)()
+            unsub_track_same[subscription_key] = async_track_same_state(
+                self._hass,
+                self._duration,
+                call_action,
+                state_still_valid,
+                entity_ids=(
+                    entity_id
+                    if behavior == BEHAVIOR_ANY
+                    else target_state_change_data.targeted_entity_ids
+                ),
             )
 
-        return async_track_target_selector_state_change_event(
+        unsub = async_track_target_selector_state_change_event(
             self._hass, self._target, state_change_listener, self.entity_filter
         )
+
+        @callback
+        def async_remove() -> None:
+            """Remove state listeners async."""
+            unsub()
+            for async_remove in unsub_track_same.values():
+                async_remove()
+            unsub_track_same.clear()
+
+        return async_remove
 
 
 class EntityTargetStateTriggerBase(EntityTriggerBase):
@@ -484,8 +560,8 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
 class EntityTransitionTriggerBase(EntityTriggerBase):
     """Trigger for entity state changes between specific states."""
 
-    _from_states: set[str]
-    _to_states: set[str]
+    _from_states: set[str | bool]
+    _to_states: set[str | bool]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
@@ -535,35 +611,7 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-@dataclass(frozen=True, kw_only=True)
-class ThresholdConfig:
-    """Configuration for threshold triggers."""
-
-    numerical: bool
-    entity: str | None
-    number: float | None
-    unit: str | None | UndefinedType
-
-    @classmethod
-    def from_config(cls, config: dict[str, Any] | None) -> Self | None:
-        """Create ThresholdConfig from config dict."""
-        if config is None:
-            return None
-
-        entity: str | None = None
-        number: float | None = None
-        unit: str | None | UndefinedType = UNDEFINED
-        numerical = "number" in config
-        if numerical:
-            number = config["number"]
-            unit = config.get("unit_of_measurement", UNDEFINED)
-        else:
-            entity = config["entity"]
-
-        return cls(numerical=numerical, number=number, entity=entity, unit=unit)
-
-
-class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
+class EntityNumericalStateTriggerBase(EntityTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
     _valid_unit: str | None | UndefinedType = UNDEFINED
@@ -624,20 +672,11 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
             # Entity state is not a valid number
             return None
 
-    def _get_converter(self, state: State) -> Callable[[float], float]:
-        """Get the value converter for an entity."""
-        domain_spec = self._domain_specs[state.domain]
-        if domain_spec.value_converter is not None:
-            return domain_spec.value_converter
-        return lambda x: x
-
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
-        if (_attribute_value := self._get_tracked_value(state)) is None:
+        if (current_value := self._get_tracked_value(state)) is None:
             return False
-
-        current_value = self._get_converter(state)(_attribute_value)
 
         if self._threshold_type == NumericThresholdType.ANY:
             # If the threshold type is "any" we always trigger on valid state
@@ -774,19 +813,16 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
         cls._schema = make_numerical_state_changed_with_unit_schema(cls._unit_converter)
 
 
-NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
-    {
-        vol.Required(CONF_OPTIONS): vol.All(
-            {
-                vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                    [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                ),
+NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
+    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+        {
+            vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(mode=NumericThresholdMode.CROSSED)
                 ),
             },
-        )
-    }
+        }
+    )
 )
 
 
@@ -815,21 +851,16 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
         {
-            vol.Required(CONF_OPTIONS, default={}): vol.All(
-                {
-                    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                        [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
-                    ),
-                    vol.Required("threshold"): NumericThresholdSelector(
-                        NumericThresholdSelectorConfig(
-                            mode=NumericThresholdMode.CROSSED,
-                            unit_of_measurement=list(unit_converter.VALID_UNITS),
-                        )
-                    ),
-                },
-            )
+            vol.Required(CONF_OPTIONS, default={}): {
+                vol.Required("threshold"): NumericThresholdSelector(
+                    NumericThresholdSelectorConfig(
+                        mode=NumericThresholdMode.CROSSED,
+                        unit_of_measurement=list(unit_converter.VALID_UNITS),
+                    )
+                ),
+            },
         }
     )
 
@@ -885,8 +916,8 @@ def make_entity_target_state_trigger(
 def make_entity_transition_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     *,
-    from_states: set[str],
-    to_states: set[str],
+    from_states: set[str | bool],
+    to_states: set[str | bool],
 ) -> type[EntityTransitionTriggerBase]:
     """Create a trigger for entity state changes between specific states.
 
@@ -927,7 +958,7 @@ def make_entity_origin_state_trigger(
 
 
 def make_entity_numerical_state_changed_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
@@ -942,7 +973,7 @@ def make_entity_numerical_state_changed_trigger(
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     valid_unit: str | None | UndefinedType = UNDEFINED,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
@@ -957,7 +988,7 @@ def make_entity_numerical_state_crossed_threshold_trigger(
 
 
 def make_entity_numerical_state_changed_with_unit_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     base_unit: str,
     unit_converter: type[BaseUnitConverter],
 ) -> type[EntityNumericalStateChangedTriggerWithUnitBase]:
@@ -974,7 +1005,7 @@ def make_entity_numerical_state_changed_with_unit_trigger(
 
 
 def make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-    domain_specs: Mapping[str, NumericalDomainSpec],
+    domain_specs: Mapping[str, DomainSpec],
     base_unit: str,
     unit_converter: type[BaseUnitConverter],
 ) -> type[EntityNumericalStateCrossedThresholdTriggerWithUnitBase]:
@@ -1231,11 +1262,16 @@ async def _async_get_trigger_platform(
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified") from None
     try:
-        return platform, await integration.async_get_platform("trigger")
+        platform_module = await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"
         ) from None
+
+    # Ensure triggers are registered so descriptions can be loaded
+    await _register_trigger_platform(hass, platform, platform_module)
+
+    return platform, platform_module
 
 
 async def async_validate_trigger_config(

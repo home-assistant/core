@@ -1,34 +1,20 @@
 {
   "common": {
-    "condition_above_description": "Require the value to be above this value.",
-    "condition_above_name": "Above",
-    "condition_behavior_description": "How the value should match on the targeted entities.",
-    "condition_behavior_name": "Behavior",
-    "condition_below_description": "Require the value to be below this value.",
-    "condition_below_name": "Below",
-    "condition_unit_description": "All values will be converted to this unit when evaluating the condition.",
-    "condition_unit_name": "Unit of measurement",
-    "trigger_behavior_description": "The behavior of the targeted entities to trigger on.",
-    "trigger_behavior_name": "Behavior",
-    "trigger_threshold_changed_description": "Which changes to trigger on and threshold values.",
-    "trigger_threshold_crossed_description": "Which threshold crossing to trigger on and threshold values.",
-    "trigger_threshold_name": "Threshold configuration"
+    "condition_behavior_name": "Condition passes if",
+    "condition_threshold_name": "Threshold type",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
+    "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
     "is_co2_value": {
       "description": "Tests the carbon dioxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Carbon dioxide value"
@@ -37,7 +23,6 @@
       "description": "Tests if one or more carbon monoxide sensors are cleared.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         }
       },
@@ -47,7 +32,6 @@
       "description": "Tests if one or more carbon monoxide sensors are detecting carbon monoxide.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         }
       },
@@ -56,21 +40,11 @@
     "is_co_value": {
       "description": "Tests the carbon monoxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Carbon monoxide value"
@@ -79,7 +53,6 @@
       "description": "Tests if one or more gas sensors are cleared.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         }
       },
@@ -89,7 +62,6 @@
       "description": "Tests if one or more gas sensors are detecting gas.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         }
       },
@@ -98,17 +70,11 @@
     "is_n2o_value": {
       "description": "Tests the nitrous oxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Nitrous oxide value"
@@ -116,21 +82,11 @@
     "is_no2_value": {
       "description": "Tests the nitrogen dioxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Nitrogen dioxide value"
@@ -138,21 +94,11 @@
     "is_no_value": {
       "description": "Tests the nitrogen monoxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Nitrogen monoxide value"
@@ -160,21 +106,11 @@
     "is_ozone_value": {
       "description": "Tests the ozone level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Ozone value"
@@ -182,17 +118,11 @@
     "is_pm10_value": {
       "description": "Tests the PM10 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM10 value"
@@ -200,17 +130,11 @@
     "is_pm1_value": {
       "description": "Tests the PM1 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM1 value"
@@ -218,17 +142,11 @@
     "is_pm25_value": {
       "description": "Tests the PM2.5 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM2.5 value"
@@ -236,17 +154,11 @@
     "is_pm4_value": {
       "description": "Tests the PM4 level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "PM4 value"
@@ -255,7 +167,6 @@
       "description": "Tests if one or more smoke sensors are cleared.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         }
       },
@@ -265,7 +176,6 @@
       "description": "Tests if one or more smoke sensors are detecting smoke.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         }
       },
@@ -274,21 +184,11 @@
     "is_so2_value": {
       "description": "Tests the sulphur dioxide level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Sulphur dioxide value"
@@ -296,21 +196,11 @@
     "is_voc_ratio_value": {
       "description": "Tests the volatile organic compounds ratio of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds ratio value"
@@ -318,21 +208,11 @@
     "is_voc_value": {
       "description": "Tests the volatile organic compounds level of one or more entities.",
       "fields": {
-        "above": {
-          "description": "[%key:component::air_quality::common::condition_above_description%]",
-          "name": "[%key:component::air_quality::common::condition_above_name%]"
-        },
         "behavior": {
-          "description": "[%key:component::air_quality::common::condition_behavior_description%]",
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
         },
-        "below": {
-          "description": "[%key:component::air_quality::common::condition_below_description%]",
-          "name": "[%key:component::air_quality::common::condition_below_name%]"
-        },
-        "unit": {
-          "description": "[%key:component::air_quality::common::condition_unit_description%]",
-          "name": "[%key:component::air_quality::common::condition_unit_name%]"
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
         }
       },
       "name": "Volatile organic compounds value"
@@ -343,12 +223,6 @@
       "options": {
         "all": "All",
         "any": "Any"
-      }
-    },
-    "number_or_entity": {
-      "choices": {
-        "entity": "Entity",
-        "number": "Number"
       }
     },
     "trigger_behavior": {
@@ -365,7 +239,6 @@
       "description": "Triggers after one or more carbon dioxide levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -375,11 +248,12 @@
       "description": "Triggers after one or more carbon dioxide levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -389,7 +263,6 @@
       "description": "Triggers after one or more carbon monoxide levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -399,8 +272,10 @@
       "description": "Triggers after one or more carbon monoxide sensors stop detecting carbon monoxide.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
         }
       },
       "name": "Carbon monoxide cleared"
@@ -409,11 +284,12 @@
       "description": "Triggers after one or more carbon monoxide levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -423,8 +299,10 @@
       "description": "Triggers after one or more carbon monoxide sensors start detecting carbon monoxide.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
         }
       },
       "name": "Carbon monoxide detected"
@@ -433,8 +311,10 @@
       "description": "Triggers after one or more gas sensors stop detecting gas.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
         }
       },
       "name": "Gas cleared"
@@ -443,8 +323,10 @@
       "description": "Triggers after one or more gas sensors start detecting gas.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
         }
       },
       "name": "Gas detected"
@@ -453,7 +335,6 @@
       "description": "Triggers after one or more nitrous oxide levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -463,11 +344,12 @@
       "description": "Triggers after one or more nitrous oxide levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -477,7 +359,6 @@
       "description": "Triggers after one or more nitrogen dioxide levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -487,11 +368,12 @@
       "description": "Triggers after one or more nitrogen dioxide levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -501,7 +383,6 @@
       "description": "Triggers after one or more nitrogen monoxide levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -511,11 +392,12 @@
       "description": "Triggers after one or more nitrogen monoxide levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -525,7 +407,6 @@
       "description": "Triggers after one or more ozone levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -535,11 +416,12 @@
       "description": "Triggers after one or more ozone levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -549,7 +431,6 @@
       "description": "Triggers after one or more PM10 levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -559,11 +440,12 @@
       "description": "Triggers after one or more PM10 levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -573,7 +455,6 @@
       "description": "Triggers after one or more PM1 levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -583,11 +464,12 @@
       "description": "Triggers after one or more PM1 levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -597,7 +479,6 @@
       "description": "Triggers after one or more PM2.5 levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -607,11 +488,12 @@
       "description": "Triggers after one or more PM2.5 levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -621,7 +503,6 @@
       "description": "Triggers after one or more PM4 levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -631,11 +512,12 @@
       "description": "Triggers after one or more PM4 levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -645,8 +527,10 @@
       "description": "Triggers after one or more smoke sensors stop detecting smoke.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
         }
       },
       "name": "Smoke cleared"
@@ -655,8 +539,10 @@
       "description": "Triggers after one or more smoke sensors start detecting smoke.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
         }
       },
       "name": "Smoke detected"
@@ -665,7 +551,6 @@
       "description": "Triggers after one or more sulphur dioxide levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -675,11 +560,12 @@
       "description": "Triggers after one or more sulphur dioxide levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -689,7 +575,6 @@
       "description": "Triggers after one or more volatile organic compound levels change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -699,11 +584,12 @@
       "description": "Triggers after one or more volatile organic compounds levels cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -713,7 +599,6 @@
       "description": "Triggers after one or more volatile organic compound ratios change.",
       "fields": {
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_changed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
@@ -723,11 +608,12 @@
       "description": "Triggers after one or more volatile organic compounds ratios cross a threshold.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::air_quality::common::trigger_behavior_description%]",
           "name": "[%key:component::air_quality::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::air_quality::common::trigger_for_name%]"
+        },
         "threshold": {
-          "description": "[%key:component::air_quality::common::trigger_threshold_crossed_description%]",
           "name": "[%key:component::air_quality::common::trigger_threshold_name%]"
         }
       },
