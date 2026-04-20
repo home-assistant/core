@@ -94,7 +94,7 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         super()._handle_coordinator_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Fix brightness state synchronization by updating the coordinator's `dimming` field."""
+        """Turn the light on, applying brightness, color temperature, RGBW, or plain on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
             await self.coordinator.device_client.async_set_brightness(brightness)
