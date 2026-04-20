@@ -43,6 +43,7 @@ from .const import (
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_METER_SENSOR,
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
+    NETATMO_CREATE_OPENING_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SWITCH,
@@ -379,6 +380,7 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.opening: [
                 NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
                 NETATMO_CREATE_OPENING_BINARY_SENSOR,
+                NETATMO_CREATE_OPENING_SENSOR,
             ],
         }
         for module in home.modules.values():
