@@ -1,10 +1,8 @@
 """The tests for the device tracker component."""
 
-from collections.abc import Generator
 from datetime import datetime, timedelta
 import json
 import logging
-import os
 from unittest.mock import call, patch
 
 import pytest
@@ -47,14 +45,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="yaml_devices")
-def mock_yaml_devices(hass: HomeAssistant) -> Generator[str]:
+def mock_yaml_devices(hass: HomeAssistant) -> str:
     """Get a path for storing yaml devices."""
-    yaml_devices = hass.config.path(legacy.YAML_DEVICES)
-    if os.path.isfile(yaml_devices):
-        os.remove(yaml_devices)
-    yield yaml_devices
-    if os.path.isfile(yaml_devices):
-        os.remove(yaml_devices)
+    return hass.config.path(legacy.YAML_DEVICES)
 
 
 @pytest.fixture(autouse=True)
