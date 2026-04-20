@@ -71,13 +71,6 @@ class KioskerBinarySensor(KioskerEntity, BinarySensorEntity):
 
     entity_description: KioskerBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: KioskerDataUpdateCoordinator,
-        description: KioskerBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor entity."""
-        super().__init__(coordinator, description)
 
     @property
     def is_on(self) -> bool | None:
