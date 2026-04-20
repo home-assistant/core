@@ -11,11 +11,7 @@ from aiorussound.connection import RussoundSerialConnectionHandler
 from aiorussound.rnet.client import RussoundRNETClient
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -107,10 +103,10 @@ def _infer_model_from_zones(zone_ids: list[int]) -> str:
     """Infer model key from YAML zone IDs."""
     max_zone = max(zone_ids) if zone_ids else 6
     if max_zone <= 4:
-        return "CAS44"
+        return "cas44"
     if max_zone <= 6:
-        return "CAA66"
-    return "MCA-C5"
+        return "caa66"
+    return "mca-c5"
 
 
 class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -158,9 +154,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_TYPE: TYPE_TCP, CONF_HOST: host, CONF_PORT: port}
             )
 
-            client = RussoundRNETClient(
-                RussoundTcpConnectionHandler(host, port)
-            )
+            client = RussoundRNETClient(RussoundTcpConnectionHandler(host, port))
             if not await _async_validate_connection(client):
                 errors["base"] = "cannot_connect"
             else:
@@ -208,9 +202,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_MODEL] = user_input[CONF_MODEL]
             return await self.async_step_sources()
 
-        return self.async_show_form(
-            step_id="model", data_schema=MODEL_SCHEMA
-        )
+        return self.async_show_form(step_id="model", data_schema=MODEL_SCHEMA)
 
     async def async_step_sources(
         self, user_input: dict[str, Any] | None = None
@@ -231,20 +223,14 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
 
         source_schema = vol.Schema(
             {
-                vol.Required(
-                    f"source_{i}", default=f"Source {i}"
-                ): TextSelector()
+                vol.Required(f"source_{i}", default=f"Source {i}"): TextSelector()
                 for i in range(1, model.max_sources + 1)
             }
         )
 
-        return self.async_show_form(
-            step_id="sources", data_schema=source_schema
-        )
+        return self.async_show_form(step_id="sources", data_schema=source_schema)
 
-    async def async_step_import(
-        self, import_data: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from YAML."""
         host = import_data.get(CONF_HOST, "")
         port = import_data.get(CONF_PORT, 0)
@@ -274,9 +260,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         # Validate connection
-        client = RussoundRNETClient(
-            RussoundTcpConnectionHandler(host, port)
-        )
+        client = RussoundRNETClient(RussoundTcpConnectionHandler(host, port))
         if not await _async_validate_connection(client):
             deprecate_yaml_issue(self.hass, import_success=False)
             return self.async_abort(reason="cannot_connect")
@@ -296,7 +280,7 @@ class RussoundRNETOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow init."""
         entry = self.config_entry
-        model_key = entry.data.get(CONF_MODEL, "CAA66")
+        model_key = entry.data.get(CONF_MODEL, "caa66")
         model = RNET_MODELS[model_key]
         current_sources = entry.data.get(CONF_SOURCES, {})
 
@@ -320,6 +304,4 @@ class RussoundRNETOptionsFlow(OptionsFlow):
             }
         )
 
-        return self.async_show_form(
-            step_id="init", data_schema=source_schema
-        )
+        return self.async_show_form(step_id="init", data_schema=source_schema)

@@ -38,11 +38,11 @@ class RussoundRNETModel:
 
 
 RNET_MODELS: dict[str, RussoundRNETModel] = {
-    "CAS44": RussoundRNETModel("CAS44", 4, 4, 1),
-    "CAA66": RussoundRNETModel("CAA66", 6, 6, 6),
-    "CAM6.6": RussoundRNETModel("CAM6.6", 6, 6, 6),
-    "CAV6.6": RussoundRNETModel("CAV6.6", 6, 6, 6),
-    "MCA-C3": RussoundRNETModel("MCA-C3", 6, 6, 6),
-    "MCA-C5": RussoundRNETModel("MCA-C5", 8, 8, 6),
-    "ACA-E5": RussoundRNETModel("ACA-E5", 6, 8, 8),
+    "cas44": RussoundRNETModel("CAS44", 4, 4, 1),
+    "caa66": RussoundRNETModel("CAA66", 6, 6, 6),
+    "cam6_6": RussoundRNETModel("CAM6.6", 6, 6, 6),
+    "cav6_6": RussoundRNETModel("CAV6.6", 6, 6, 6),
+    "mca-c3": RussoundRNETModel("MCA-C3", 6, 6, 6),
+    "mca-c5": RussoundRNETModel("MCA-C5", 8, 8, 6),
+    "aca-e5": RussoundRNETModel("ACA-E5", 6, 8, 8),
 }

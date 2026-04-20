@@ -10,7 +10,7 @@ from homeassistant.components.russound_rnet.const import (
     TYPE_TCP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -63,7 +63,9 @@ async def test_user_flow_tcp_creates_entry(
     assert result["step_id"] == "sources"
 
     # Enter source names
-    source_input = {f"source_{i}": name for i, name in enumerate(MOCK_SOURCES.values(), 1)}
+    source_input = {
+        f"source_{i}": name for i, name in enumerate(MOCK_SOURCES.values(), 1)
+    }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         source_input,
@@ -112,7 +114,9 @@ async def test_user_flow_serial_creates_entry(
     assert result["step_id"] == "sources"
 
     # Enter source names
-    source_input = {f"source_{i}": name for i, name in enumerate(MOCK_SOURCES.values(), 1)}
+    source_input = {
+        f"source_{i}": name for i, name in enumerate(MOCK_SOURCES.values(), 1)
+    }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         source_input,
@@ -274,7 +278,7 @@ async def test_import_yaml_creates_entry(
     assert result["data"][CONF_TYPE] == TYPE_TCP
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_PORT] == 9999
-    assert result["data"][CONF_MODEL] == "CAS44"
+    assert result["data"][CONF_MODEL] == "cas44"
     assert result["data"][CONF_SOURCES] == {
         "1": "Sonos",
         "2": "TV",
@@ -355,7 +359,7 @@ async def test_import_yaml_infers_cas44_model(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_MODEL] == "CAS44"
+    assert result["data"][CONF_MODEL] == "cas44"
 
 
 async def test_import_yaml_infers_mca_c5_model(
@@ -381,7 +385,7 @@ async def test_import_yaml_infers_mca_c5_model(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_MODEL] == "MCA-C5"
+    assert result["data"][CONF_MODEL] == "mca-c5"
 
 
 async def test_options_flow_updates_sources(
@@ -394,9 +398,7 @@ async def test_options_flow_updates_sources(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id
-    )
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
@@ -409,6 +411,4 @@ async def test_options_flow_updates_sources(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    assert entry.data[CONF_SOURCES] == {
-        str(i): f"New Source {i}" for i in range(1, 7)
-    }
+    assert entry.data[CONF_SOURCES] == {str(i): f"New Source {i}" for i in range(1, 7)}

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -67,7 +66,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Russound RNET media player from a config entry."""
     coordinator = entry.runtime_data
-    model_key = entry.data.get(CONF_MODEL, "CAA66")
+    model_key = entry.data.get(CONF_MODEL, "caa66")
     model = RNET_MODELS[model_key]
     sources = entry.data.get(CONF_SOURCES, {})
 
@@ -109,8 +108,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
         super().__init__(coordinator, controller_id, zone_id)
         self._sources = sources
         self._attr_source_list = [
-            sources.get(str(i), f"Source {i}")
-            for i in range(1, len(sources) + 1)
+            sources.get(str(i), f"Source {i}") for i in range(1, len(sources) + 1)
         ] or None
         entry = coordinator.config_entry
         self._attr_unique_id = f"{entry.entry_id}_{controller_id}_{zone_id}"
@@ -170,9 +168,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     @command
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute/unmute the zone."""
-        await self.coordinator.client.toggle_mute(
-            self._controller_id, self._zone_id
-        )
+        await self.coordinator.client.toggle_mute(self._controller_id, self._zone_id)
         await self.coordinator.async_request_refresh()
 
     @command
@@ -184,4 +180,3 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
                 self._controller_id, self._zone_id, index
             )
             await self.coordinator.async_request_refresh()
-

@@ -9,7 +9,7 @@ from homeassistant.components.russound_rnet.const import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
-MODEL = "CAA66"
+MODEL = "caa66"
 
 MOCK_SOURCES = {
     "1": "Sonos",
