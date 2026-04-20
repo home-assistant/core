@@ -553,8 +553,6 @@ async def test_lost_connection_with_imap_push(
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
-
-    await hass.async_block_till_done(wait_background_tasks=True)
     assert "Canceling IDLE wait for imap.server.com" in caplog.text
 
 
