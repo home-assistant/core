@@ -665,6 +665,9 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         client = self.supervisor_client
 
         try:
+            # Cast is required here because asyncio.gather only has overloads to
+            # maintain typing for 6 arguments. It falls back to list[<common parent>]
+            # after that which is what mypy sees here since we have 7 API calls.
             (
                 info,
                 core_info,
