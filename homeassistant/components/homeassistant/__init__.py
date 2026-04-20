@@ -462,8 +462,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 severity=IssueSeverity.WARNING,
                 translation_key="unsupported_local_deps",
                 translation_placeholders={
-                    "installation_type": installation_type,
-                    "arch": arch,
+                    "installation_type": info["installation_type"]
                 },
             )
 

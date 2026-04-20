@@ -648,32 +648,124 @@ async def test_reload_all(
             "i386",
             True,
             False,
-            ["deprecated_method_architecture", "unsupported_local_deps"],
+            [
+                (
+                    "deprecated_method_architecture",
+                    {"installation_type": "Core", "arch": "i386"},
+                ),
+                (
+                    "unsupported_local_deps",
+                    {"installation_type": "Home Assistant Core"},
+                ),
+            ],
         ),
         (
             "armhf",
             True,
             False,
-            ["deprecated_method_architecture", "unsupported_local_deps"],
+            [
+                (
+                    "deprecated_method_architecture",
+                    {"installation_type": "Core", "arch": "armhf"},
+                ),
+                (
+                    "unsupported_local_deps",
+                    {"installation_type": "Home Assistant Core"},
+                ),
+            ],
         ),
         (
             "armv7",
             True,
             False,
-            ["deprecated_method_architecture", "unsupported_local_deps"],
+            [
+                (
+                    "deprecated_method_architecture",
+                    {"installation_type": "Core", "arch": "armv7"},
+                ),
+                (
+                    "unsupported_local_deps",
+                    {"installation_type": "Home Assistant Core"},
+                ),
+            ],
         ),
-        ("aarch64", False, False, ["deprecated_method", "unsupported_local_deps"]),
+        (
+            "aarch64",
+            False,
+            False,
+            [
+                ("deprecated_method", {"installation_type": "Core", "arch": "aarch64"}),
+                (
+                    "unsupported_local_deps",
+                    {"installation_type": "Home Assistant Core"},
+                ),
+            ],
+        ),
         (
             "generic-x86-64",
             False,
             False,
-            ["deprecated_method", "unsupported_local_deps"],
+            [
+                (
+                    "deprecated_method",
+                    {"installation_type": "Core", "arch": "generic-x86-64"},
+                ),
+                (
+                    "unsupported_local_deps",
+                    {"installation_type": "Home Assistant Core"},
+                ),
+            ],
         ),
-        ("i386", True, True, ["deprecated_method_architecture"]),
-        ("armhf", True, True, ["deprecated_method_architecture"]),
-        ("armv7", True, True, ["deprecated_method_architecture"]),
-        ("aarch64", False, True, ["deprecated_method"]),
-        ("generic-x86-64", False, True, ["deprecated_method"]),
+        (
+            "i386",
+            True,
+            True,
+            [
+                (
+                    "deprecated_method_architecture",
+                    {"installation_type": "Core", "arch": "i386"},
+                )
+            ],
+        ),
+        (
+            "armhf",
+            True,
+            True,
+            [
+                (
+                    "deprecated_method_architecture",
+                    {"installation_type": "Core", "arch": "armhf"},
+                )
+            ],
+        ),
+        (
+            "armv7",
+            True,
+            True,
+            [
+                (
+                    "deprecated_method_architecture",
+                    {"installation_type": "Core", "arch": "armv7"},
+                )
+            ],
+        ),
+        (
+            "aarch64",
+            False,
+            True,
+            [("deprecated_method", {"installation_type": "Core", "arch": "aarch64"})],
+        ),
+        (
+            "generic-x86-64",
+            False,
+            True,
+            [
+                (
+                    "deprecated_method",
+                    {"installation_type": "Core", "arch": "generic-x86-64"},
+                )
+            ],
+        ),
     ],
 )
 async def test_deprecated_installation_issue_core(
@@ -682,7 +774,7 @@ async def test_deprecated_installation_issue_core(
     arch: str,
     bit_32: bool,
     venv: bool,
-    expected_issues: list[str],
+    expected_issues: list[tuple[str, dict[str, str]]],
 ) -> None:
     """Test deprecated installation issue."""
     with (
@@ -705,14 +797,11 @@ async def test_deprecated_installation_issue_core(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == len(expected_issues)
-    for expected_issue in expected_issues:
+    for expected_issue, expected_placeholders in expected_issues:
         issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
         assert issue.domain == DOMAIN
         assert issue.severity == ir.IssueSeverity.WARNING
-        assert issue.translation_placeholders == {
-            "installation_type": "Core",
-            "arch": arch,
-        }
+        assert issue.translation_placeholders == expected_placeholders
 
 
 @pytest.mark.parametrize(
@@ -736,6 +825,8 @@ async def test_deprecated_installation_issue_container_32bit(
                 "installation_type": "Home Assistant Container",
                 "container_arch": arch,
                 "arch": arch,
+                "docker": True,
+                "virtualenv": False,
             },
         ),
         patch(
