@@ -46,6 +46,20 @@ async def test_buttons(
     )
 
 
+async def test_buttons_no_auth(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for SFR Box buttons."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure auth-only entities are not registered
+    assert sorted(entity_registry.entities) == snapshot
+
+
 async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) -> None:
     """Test for SFR Box reboot button."""
     await hass.config_entries.async_setup(config_entry_with_auth.entry_id)

@@ -50,3 +50,7 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons_no_auth
+  list([
+  ])
+# ---
