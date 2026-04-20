@@ -223,6 +223,18 @@ async def test_reconfigure_flow_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
+    mock_duco_client.async_get_board_info.side_effect = DucoConnectionError(
+        "Connection refused"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.200"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_duco_client.async_get_board_info.side_effect = None
     new_host = "192.168.1.200"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: new_host}
