@@ -94,7 +94,7 @@ async def test_non_hassio_installation_type(
     is_venv: bool,
     expected_installation_type: str,
 ) -> None:
-    """Test container installation type."""
+    """Test non-Hass.io installation types."""
     assert is_hassio(hass) is False
     with (
         patch("platform.system", return_value="Linux"),
