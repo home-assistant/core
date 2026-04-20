@@ -430,12 +430,16 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
                     errors["base"] = "auto_configure_failed"
 
             if not errors:
-                new_options = {CONF_UPDATE_MODE: new_mode}
-                if new_mode == MODE_POLLING:
-                    new_options[CONF_SCAN_INTERVAL] = user_input.get(
+                new_options = {
+                    CONF_UPDATE_MODE: new_mode,
+                    CONF_SCAN_INTERVAL: user_input.get(
                         CONF_SCAN_INTERVAL,
-                        int(DEFAULT_SCAN_INTERVAL.total_seconds()),
-                    )
+                        options.get(
+                            CONF_SCAN_INTERVAL,
+                            int(DEFAULT_SCAN_INTERVAL.total_seconds()),
+                        ),
+                    ),
+                }
                 return self.async_create_entry(title="", data=new_options)
 
         # Build schema dynamically based on current mode
