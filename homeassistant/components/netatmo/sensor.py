@@ -135,10 +135,10 @@ class NetatmoSensorEntityDescription(SensorEntityDescription):
     # and netatmo_name should be used only to retrieve the value from the device.
     # If the netatmo_name is not set, the key is used to retrieve the value from the device.
     netatmo_name: str | None = None
-    # New attribute to mark sensors as sticky, meaning the native_value will be kept even if the device is not reachable,
-    # to avoid disappearing entities and losing historical data in Home Assistant. This should be used for sensors
-    # where the value is still relevant even if the device is not currently reachable, such as battery level or
-    # last known state.
+    # Mark sensors whose last known native_value may be retained when fresh data is unavailable.
+    # This is intended for sensors where the last reported value remains useful, such as battery
+    # level or a last known state. This flag does not by itself keep the entity available; the
+    # entity may still become unavailable when the device is unreachable.
     is_sticky: bool | None = None
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
@@ -712,9 +712,8 @@ class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state (the legacy way)."""
-        # Early return is the original design. Personally I would avoid stale data
-        # and agree with copilot suggestion to set native_value to None if device is not reachable,
-        # but this would be a breaking change for existing users, so we keep the original behavior for now.
+        # Keep the last known value for these legacy sensors when the device is
+        # unreachable to preserve the historical behavior expected by existing entities.
         if not self.device.reachable:
             if self.available:
                 self._attr_available = False
