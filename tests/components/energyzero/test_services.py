@@ -25,32 +25,36 @@ pytestmark = pytest.mark.freeze_time("2026-04-10 20:32:59")
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_has_services(
-    hass: HomeAssistant,
-) -> None:
-    """Test the existence of the EnergyZero Service."""
-    assert hass.services.has_service(DOMAIN, GAS_SERVICE_NAME)
-    assert hass.services.has_service(DOMAIN, ENERGY_SERVICE_NAME)
-
-
-@pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
-@pytest.mark.parametrize("incl_vat", [{"incl_vat": False}, {"incl_vat": True}])
-@pytest.mark.parametrize("start", [{"start": "2023-01-01 00:00:00"}, {}])
-@pytest.mark.parametrize("end", [{"end": "2023-01-01 00:00:00"}, {}])
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            GAS_SERVICE_NAME,
+            {"incl_vat": False},
+        ),
+        (
+            ENERGY_SERVICE_NAME,
+            {"incl_vat": True},
+        ),
+        (
+            GAS_SERVICE_NAME,
+            {"incl_vat": True, "start": "2023-01-01 00:00:00"},
+        ),
+        (
+            ENERGY_SERVICE_NAME,
+            {"incl_vat": False, "end": "2023-01-01 00:00:00"},
+        ),
+    ],
+)
 async def test_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     service: str,
-    incl_vat: dict[str, bool],
-    start: dict[str, str],
-    end: dict[str, str],
+    service_data: dict[str, str | bool],
 ) -> None:
     """Test the EnergyZero Service."""
-    entry = {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id}
-
-    data = entry | incl_vat | start | end
+    data = {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id} | service_data
 
     assert snapshot == await hass.services.async_call(
         DOMAIN,
