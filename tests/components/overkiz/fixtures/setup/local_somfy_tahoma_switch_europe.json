@@ -1,0 +1,6568 @@
+{
+  "devices": [
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "**",
+      "states": [
+        {
+          "name": "core:CountryCodeState",
+          "type": 3,
+          "value": "AT"
+        },
+        {
+          "name": "internal:LightingLedPodModeState",
+          "type": 1,
+          "value": 1
+        },
+        {
+          "name": "core:ConnectivityState",
+          "type": 3,
+          "value": "online"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "**"
+        }
+      ],
+      "attributes": [],
+      "controllableName": "internal:PodV3Component",
+      "deviceURL": "internal://1234-5678-6508/pod/0",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "attributes": [],
+        "type": "ACTUATOR",
+        "commands": [
+          {
+            "nparams": 0,
+            "commandName": "activateCalendar"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "setCalendar"
+          },
+          {
+            "nparams": 0,
+            "commandName": "refreshUpdateStatus"
+          },
+          {
+            "nparams": 0,
+            "commandName": "refreshPodMode"
+          },
+          {
+            "nparams": 0,
+            "commandName": "setPodLedOff"
+          },
+          {
+            "nparams": 0,
+            "commandName": "setPodLedOn"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "setCountryCode"
+          },
+          {
+            "nparams": 0,
+            "commandName": "deactivateCalendar"
+          },
+          {
+            "nparams": 0,
+            "commandName": "update"
+          },
+          {
+            "nparams": 0,
+            "commandName": "getName"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "setLightingLedPodMode"
+          }
+        ],
+        "uiClass": "Pod",
+        "states": [
+          {
+            "name": "internal:LightingLedPodModeState"
+          },
+          {
+            "name": "core:LocalIPv4AddressState"
+          },
+          {
+            "name": "internal:Button3State"
+          },
+          {
+            "name": "internal:Button2State"
+          },
+          {
+            "name": "internal:Button1State"
+          },
+          {
+            "name": "core:CountryCodeState"
+          },
+          {
+            "name": "core:ConnectivityState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "core:LocalAccessProofState"
+          }
+        ],
+        "widgetName": "Pod"
+      },
+      "available": true
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "** *(**/**)*",
+      "states": [
+        {
+          "name": "internal:WifiModeState",
+          "type": 3,
+          "value": "infrastructure"
+        },
+        {
+          "name": "internal:SignalStrengthState",
+          "type": 1,
+          "value": 66
+        },
+        {
+          "name": "internal:CurrentInfraConfigState",
+          "type": 3,
+          "value": "EMX IoT"
+        }
+      ],
+      "attributes": [],
+      "controllableName": "internal:WifiComponent",
+      "deviceURL": "internal://1234-5678-6508/wifi/0",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "attributes": [],
+        "type": "ACTUATOR",
+        "commands": [
+          {
+            "nparams": 2,
+            "paramsSig": "p1,p2",
+            "commandName": "setTargetInfraConfig"
+          },
+          {
+            "nparams": 1,
+            "paramsSig": "p1",
+            "commandName": "setWifiMode"
+          },
+          {
+            "nparams": 0,
+            "commandName": "clearCredentials"
+          }
+        ],
+        "uiClass": "Wifi",
+        "states": [
+          {
+            "name": "internal:WifiModeState"
+          },
+          {
+            "name": "internal:CurrentInfraConfigState"
+          },
+          {
+            "name": "internal:SignalStrengthState"
+          }
+        ],
+        "widgetName": "Wifi"
+      },
+      "available": true
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Living Room Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 20
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16547,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Living Room Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/6380765"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Office Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16547,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Office Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/4877511"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Bedroom Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 20
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16307,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Bedroom Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/16130150"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Kitchen Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 58
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16427,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Kitchen Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/3248049"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Dining Room Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 14
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 51153,
+            "current_tilt": 16067,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 31
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Dining Room Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/13662182"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Bathroom Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 64
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16307,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Bathroom Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/5456600"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "** *(**)*",
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "controllableName": "io:StackComponent",
+      "enabled": true,
+      "type": 5,
+      "definition": {
+        "attributes": [],
+        "type": "PROTOCOL_GATEWAY",
+        "commands": [
+          {
+            "commandName": "discoverSomfyUnsetActuators",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedSomfyDiscover",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetNetworkSecurity",
+            "nparams": 0
+          },
+          {
+            "commandName": "joinNetwork",
+            "nparams": 0
+          },
+          {
+            "commandName": "shareNetwork",
+            "nparams": 0
+          },
+          {
+            "nparams": 0,
+            "commandName": "discover1WayController",
+            "paramsSig": "*p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "discoverActuators",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "discoverSensors",
+            "paramsSig": "p1"
+          }
+        ],
+        "uiClass": "ProtocolGateway",
+        "states": [],
+        "widgetName": "IOStack"
+      },
+      "deviceURL": "io://1234-5678-6508/14057819"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Guest Room Blinds",
+      "states": [
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 82
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16187,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Guest Room Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/6553884"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Study Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 24
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 14389,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 28
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Study Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/6375755"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Master Bedroom Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 60
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16187,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Master Bedroom Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/12736675"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Nursery Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 68
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 15948,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 31
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Nursery Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/4803435"
+    },
+    {
+      "deviceURL": "zigbee://1234-5678-6508/65535",
+      "synced": true,
+      "label": "** *(**)*",
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "subsystemId": 0,
+      "enabled": true,
+      "type": 5,
+      "definition": {
+        "widgetName": "ZigbeeStack",
+        "uiClass": "ProtocolGateway",
+        "commands": [],
+        "type": "PROTOCOL_GATEWAY",
+        "states": [],
+        "attributes": []
+      },
+      "controllableName": "zigbee:TransceiverV3_0Component"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Hallway Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 70
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16307,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Hallway Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/10076003"
+    },
+    {
+      "subsystemId": 0,
+      "synced": true,
+      "label": "Garage Blinds",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 11,
+          "value": []
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 46
+        },
+        {
+          "name": "core:ManufacturerSettingsState",
+          "type": 11,
+          "value": {
+            "x_time": "disable",
+            "roll_end_limit_state": "Manual_validated",
+            "kinematics": "EVB_standard",
+            "current_position": 55296,
+            "current_tilt": 16067,
+            "setting_state": "User mode",
+            "unroll_end_limit_state": "Manual_validated"
+          }
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 31
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 108
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Garage Blinds"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:Memorized1OrientationState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:SecuredPositionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:KinematicsState",
+          "type": 3,
+          "value": "EVB Standard"
+        },
+        {
+          "name": "core:TiltLowerBoundState",
+          "type": 1,
+          "value": -90
+        },
+        {
+          "name": "core:TiltUpperBoundState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PriorityLockOriginatorState",
+          "type": 3,
+          "value": "unknown"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5147391A13"
+        },
+        {
+          "name": "core:SupportedManufacturerProcedures",
+          "type": 10,
+          "value": [
+            {
+              "procedureName": "dead_man_down",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "dead_man_impulse_down"
+            },
+            {
+              "procedureName": "dead_man_impulse_up"
+            },
+            {
+              "procedureName": "dead_man_stop"
+            },
+            {
+              "procedureName": "dead_man_up",
+              "params": {
+                "duration": {}
+              }
+            },
+            {
+              "procedureName": "delete_my_position"
+            },
+            {
+              "procedureName": "double_power_cut"
+            },
+            {
+              "procedureName": "eject_from_setting_mode"
+            },
+            {
+              "procedureName": "enter_auxiliary_parameter_settings_mode"
+            },
+            {
+              "procedureName": "enter_settings_mode"
+            },
+            {
+              "procedureName": "invert_rotation"
+            },
+            {
+              "procedureName": "remove_broken_local_sensors"
+            },
+            {
+              "procedureName": "reset_actuator"
+            },
+            {
+              "procedureName": "save_evb_tilting_travel"
+            },
+            {
+              "procedureName": "save_flat_slats_position"
+            },
+            {
+              "procedureName": "save_lower_end_limit"
+            },
+            {
+              "procedureName": "save_my_position"
+            },
+            {
+              "procedureName": "save_settings"
+            },
+            {
+              "procedureName": "save_upper_end_limit"
+            },
+            {
+              "procedureName": "stop_after_save_limit"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_down",
+            "dead_man_impulse_down",
+            "dead_man_impulse_up",
+            "dead_man_stop",
+            "dead_man_up",
+            "delete_my_position",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_auxiliary_parameter_settings_mode",
+            "enter_settings_mode",
+            "invert_rotation",
+            "reset_actuator",
+            "save_evb_tilting_travel",
+            "save_flat_slats_position",
+            "save_lower_end_limit",
+            "save_my_position",
+            "save_settings",
+            "save_upper_end_limit",
+            "set_choregraphy_disable_variator_down_move_min",
+            "set_choregraphy_disable_variator_up_move_min",
+            "set_choregraphy_enable_variator_down_move_min",
+            "set_choregraphy_enable_variator_up_move_min",
+            "set_evb_tilting_travel_pulse",
+            "set_kinematics",
+            "set_obstacle_detection",
+            "set_x_time",
+            "stop_after_save_limit"
+          ]
+        },
+        {
+          "name": "core:SupportedReadableManufacturerData",
+          "type": 10,
+          "value": [
+            "Prohibit_changes_of_Unroll_End_Limit",
+            "automatic_adjustment_allowed",
+            "battery_level",
+            "choregraphy_disable_variator_down_move_min",
+            "choregraphy_disable_variator_up_move_min",
+            "choregraphy_enable_variator_down_move_min",
+            "choregraphy_enable_variator_up_move_min",
+            "current_position",
+            "current_tilt",
+            "evb_tilting_travel_pulse",
+            "kinematics",
+            "motor_rotation_duration",
+            "nb_of_double_power_cut",
+            "nb_of_eld_tcs_in_roll_at_rel",
+            "nb_of_paired_1w_sensors_out_of_order",
+            "nb_of_power_shutdown",
+            "nb_of_rel_reached_in_counting_mode",
+            "nb_of_stops_caused_by_crown_stop",
+            "nb_of_stops_caused_by_thermal_protection",
+            "nb_of_uel_reached_in_counting_mode",
+            "nb_of_upward_stops_caused_by_mushroom",
+            "nb_overvoltage_detected",
+            "obstacle_detection",
+            "ods_learning_state",
+            "paired_1w_controllers",
+            "paired_1w_sensors",
+            "power_supply_max_rms_value",
+            "production_date",
+            "profil_id",
+            "roll_end_limit_state",
+            "rotation_direction",
+            "setting_state",
+            "status_of_intermediate_position",
+            "status_of_stop_mode",
+            "unroll_end_limit_state",
+            "x_time"
+          ]
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DynamicExteriorVenetianBlindIOComponent",
+      "enabled": true,
+      "type": 1,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "wink",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setOrientation",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setName",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "advancedRefresh",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Orientation",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "writeManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "tiltDown",
+            "nparams": 0
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setMemorized1Position",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "readManufacturerData",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "executeManufacturerProcedure",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "tiltUp",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "setClosureAndOrientation",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "nparams": 2,
+            "commandName": "runManufacturerSettingsCommand",
+            "paramsSig": "p1,p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setSecuredPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setPosition",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "removeLockLevel",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "addLockLevel",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "setClosure",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "nparams": 1,
+            "commandName": "delayedStopIdentify",
+            "paramsSig": "p1"
+          },
+          {
+            "nparams": 1,
+            "commandName": "unpairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "pairOneWayController",
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "nparams": 1,
+            "commandName": "setConfigState",
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "ExteriorVenetianBlind",
+        "states": [
+          {
+            "name": "core:AdditionalStatusState"
+          },
+          {
+            "name": "core:MovingState"
+          },
+          {
+            "name": "core:TargetClosureState"
+          },
+          {
+            "name": "core:ManufacturerSettingsState"
+          },
+          {
+            "name": "core:SlateOrientationState"
+          },
+          {
+            "name": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "name": "core:NameState"
+          },
+          {
+            "name": "io:KinematicsState"
+          },
+          {
+            "name": "core:TiltLowerBoundState"
+          },
+          {
+            "name": "core:TiltUpperBoundState"
+          },
+          {
+            "name": "core:Memorized1OrientationState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "core:SecuredPositionState"
+          },
+          {
+            "name": "core:ClosureState"
+          },
+          {
+            "name": "core:OpenClosedState"
+          },
+          {
+            "name": "core:Memorized1PositionState"
+          }
+        ],
+        "widgetName": "DynamicExteriorVenetianBlind"
+      },
+      "deviceURL": "io://1234-5678-6508/11292138"
+    }
+  ],
+  "gateways": [
+    {
+      "gatewayId": "1234-5678-6508",
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2025.6.4-4"
+      }
+    }
+  ]
+}
