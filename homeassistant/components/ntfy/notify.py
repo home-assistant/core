@@ -27,7 +27,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
-from .services import ATTR_ATTACH_FILE, ATTR_FILENAME, ATTR_SEQUENCE_ID
+from .services import (
+    ACTIONS_MAP,
+    ATTR_ACTION,
+    ATTR_ACTIONS,
+    ATTR_ATTACH_FILE,
+    ATTR_FILENAME,
+    ATTR_SEQUENCE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,6 +111,15 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 )
 
                 params.setdefault(ATTR_FILENAME, media.path.name)
+
+        actions: list[dict[str, Any]] | None = params.get(ATTR_ACTIONS)
+        if actions:
+            params["actions"] = [
+                ACTIONS_MAP[action[ATTR_ACTION]](
+                    **{k: v for k, v in action.items() if k != ATTR_ACTION}
+                )
+                for action in actions
+            ]
 
         msg = Message(topic=self.topic, **params)
         try:

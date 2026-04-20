@@ -239,6 +239,7 @@ async def test_redact_diagnostics(
                 "state": {
                     "attributes": {
                         "gps_accuracy": 1.5,
+                        "in_zones": ["zone.home"],
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
                         "source_type": "gps",

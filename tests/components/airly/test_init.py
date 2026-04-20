@@ -5,7 +5,7 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.components.airly.coordinator import set_update_interval
 from homeassistant.config_entries import ConfigEntryState
@@ -245,7 +245,7 @@ async def test_remove_air_quality_entities(
 ) -> None:
     """Test remove air_quality entities from registry."""
     entity_registry.async_get_or_create(
-        AIR_QUALITY_PLATFORM,
+        AIR_QUALITY_DOMAIN,
         DOMAIN,
         "123-456",
         suggested_object_id="home",

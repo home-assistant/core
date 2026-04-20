@@ -36,8 +36,9 @@
 # ---
 # name: test_states[vacuum.my_vacuum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_speed_list': list([

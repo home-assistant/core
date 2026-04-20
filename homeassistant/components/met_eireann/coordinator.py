@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(minutes=60)
 
+type MetEireannConfigEntry = ConfigEntry[MetEireannUpdateCoordinator]
+
 
 class MetEireannWeatherData:
     """Keep data for Met Éireann weather entities."""

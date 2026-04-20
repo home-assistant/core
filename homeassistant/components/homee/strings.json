@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "2nd_ip_address": "Your homee is already connected using another IP address",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",

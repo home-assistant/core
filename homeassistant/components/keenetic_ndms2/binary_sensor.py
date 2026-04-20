@@ -34,7 +34,7 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
         self._attr_device_info = router.device_info
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the UPS is online, else false."""
         return self._router.available
 

@@ -47,6 +47,8 @@ CONF_SELECT_OPTION = "select_option"
 
 DEFAULT_NAME = "Template Select"
 
+SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
+
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_OPTIONS): cv.template,
@@ -79,6 +81,7 @@ async def async_setup_platform(
         TriggerSelectEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -94,6 +97,7 @@ async def async_setup_entry(
         async_add_entities,
         TemplateSelect,
         SELECT_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -112,6 +116,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -120,7 +125,6 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
         self._attr_options = []
 
         self.setup_state_template(
-            CONF_STATE,
             "_attr_current_option",
             cv.string,
         )

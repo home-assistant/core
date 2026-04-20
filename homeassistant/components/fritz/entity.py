@@ -51,11 +51,6 @@ class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
         """Update device."""
         raise NotImplementedError
 
-    async def async_on_demand_update(self) -> None:
-        """Update state."""
-        await self.async_process_update()
-        self.async_write_ha_state()
-
 
 class FritzBoxBaseEntity:
     """Fritz host entity base class."""

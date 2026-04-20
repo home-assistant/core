@@ -60,6 +60,13 @@ DEFAULT_PASSWORD = "test-password"
 DEFAULT_API_KEY = "test-api-key"
 
 
+@pytest.fixture(autouse=True)
+def mock_discovery():
+    """Prevent real network scanning in all unifiprotect tests."""
+    with _patch_discovery(no_device=True):
+        yield
+
+
 @pytest.fixture(name="nvr")
 def mock_nvr():
     """Mock UniFi Protect Camera device."""
@@ -158,7 +165,6 @@ def mock_entry(
     """Mock ProtectApiClient for testing."""
 
     with (
-        _patch_discovery(no_device=True),
         patch(
             "homeassistant.components.unifiprotect.utils.ProtectApiClient"
         ) as mock_api,
@@ -281,6 +287,25 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.has_led_status = True
     doorbell.last_ring = fixed_now - timedelta(hours=1)
     return doorbell
+
+
+@pytest.fixture(name="ptz_camera")
+def ptz_camera_fixture(camera: Camera):
+    """Mock UniFi Protect PTZ Camera device."""
+    ptz_cam = camera.model_copy()
+    ptz_cam.channels = [c.model_copy() for c in ptz_cam.channels]
+    ptz_cam.name = "PTZ Camera"
+    ptz_cam.feature_flags.is_ptz = True
+    ptz_cam.active_patrol_slot = None
+
+    # Disable pydantic validation on this instance so we can mock methods
+    object.__setattr__(ptz_cam, "get_ptz_presets", AsyncMock(return_value=[]))
+    object.__setattr__(ptz_cam, "get_ptz_patrols", AsyncMock(return_value=[]))
+    object.__setattr__(ptz_cam, "ptz_goto_preset_public", AsyncMock())
+    object.__setattr__(ptz_cam, "ptz_patrol_start_public", AsyncMock())
+    object.__setattr__(ptz_cam, "ptz_patrol_stop_public", AsyncMock())
+
+    return ptz_cam
 
 
 @pytest.fixture

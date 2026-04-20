@@ -5,23 +5,21 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import modernforms_exception_handler
-from .const import DOMAIN
-from .coordinator import ModernFormsDataUpdateCoordinator
+from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ModernFormsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Modern Forms switch based on a config entry."""
-    coordinator: ModernFormsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     switches = [
         ModernFormsAwaySwitch(entry.entry_id, coordinator),

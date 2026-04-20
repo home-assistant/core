@@ -1,0 +1,34 @@
+.trigger_common_fields: &trigger_common_fields
+  behavior:
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+  for:
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
+
+closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: window
+      - domain: cover
+        device_class: window
+
+opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: window
+      - domain: cover
+        device_class: window

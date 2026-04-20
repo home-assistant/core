@@ -69,7 +69,13 @@ from .helpers.event import (
 )
 from .helpers.frame import ReportBehavior, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
-from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    NoEventData,
+    UndefinedType,
+)
 from .loader import async_suggest_report_issue
 from .setup import (
     SetupPhases,
@@ -310,11 +316,11 @@ class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
 
 
 class FlowType(StrEnum):
-    """Flow type."""
+    """Flow type supported in `next_flow` of ConfigFlowResult."""
 
     CONFIG_FLOW = "config_flow"
-    # Add other flow types here as needed in the future,
-    # if we want to support them in the `next_flow` parameter.
+    OPTIONS_FLOW = "options_flow"
+    CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
 
 
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
@@ -574,6 +580,13 @@ class ConfigEntry[_DataT = Any]:
         self.clear_storage_cache()
 
     @property
+    def logger(self) -> logging.Logger:
+        """Return logger for this config entry."""
+        if self._integration_for_domain:
+            return self._integration_for_domain.logger
+        return _LOGGER
+
+    @property
     def supports_options(self) -> bool:
         """Return if entry supports config options."""
         if self._supports_options is None and (handler := HANDLERS.get(self.domain)):
@@ -618,6 +631,14 @@ class ConfigEntry[_DataT = Any]:
                 },
             )
         return self._supported_subentry_types or {}
+
+    def get_subentries_of_type(self, subentry_type: str) -> list[ConfigSubentry]:
+        """Return subentries of a specified subentry type."""
+        return [
+            subentry
+            for subentry in self.subentries.values()
+            if subentry.subentry_type == subentry_type
+        ]
 
     def clear_state_cache(self) -> None:
         """Clear cached properties that are included in as_json_fragment."""
@@ -684,6 +705,9 @@ class ConfigEntry[_DataT = Any]:
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
 
+        # Log setup to the integration logger so it's visible when debug logs are enabled.
+        logger = self.logger
+
         # Only store setup result as state if it was not forwarded.
         if domain_is_integration := self.domain == integration.domain:
             if self.state in (
@@ -712,7 +736,7 @@ class ConfigEntry[_DataT = Any]:
         try:
             component = await integration.async_get_component()
         except ImportError as err:
-            _LOGGER.error(
+            logger.error(
                 "Error importing integration %s to set up %s configuration entry: %s",
                 integration.domain,
                 self.domain,
@@ -728,7 +752,7 @@ class ConfigEntry[_DataT = Any]:
             try:
                 await integration.async_get_platform("config_flow")
             except ImportError as err:
-                _LOGGER.error(
+                logger.error(
                     (
                         "Error importing platform config_flow from integration %s to"
                         " set up %s configuration entry: %s"
@@ -763,7 +787,7 @@ class ConfigEntry[_DataT = Any]:
                 result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
-                _LOGGER.error(  # type: ignore[unreachable]
+                logger.error(  # type: ignore[unreachable]
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
@@ -771,7 +795,7 @@ class ConfigEntry[_DataT = Any]:
             error_reason = str(exc) or "Unknown fatal config entry error"
             error_reason_translation_key = exc.translation_key
             error_reason_translation_placeholders = exc.translation_placeholders
-            _LOGGER.exception(
+            logger.exception(
                 "Error setting up entry %s for %s: %s",
                 self.title,
                 self.domain,
@@ -786,12 +810,13 @@ class ConfigEntry[_DataT = Any]:
             auth_message = (
                 f"{auth_base_message}: {message}" if message else auth_base_message
             )
-            _LOGGER.warning(
+            logger.warning(
                 "Config entry '%s' for %s integration %s",
                 self.title,
                 self.domain,
                 auth_message,
             )
+            logger.debug("Full exception", exc_info=True)
             self.async_start_reauth(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
@@ -809,13 +834,14 @@ class ConfigEntry[_DataT = Any]:
             )
             self._tries += 1
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            _LOGGER.debug(
+            logger.info(
                 "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
                 ready_message,
                 wait_time,
             )
+            logger.debug("Full exception", exc_info=True)
 
             if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
@@ -838,7 +864,7 @@ class ConfigEntry[_DataT = Any]:
         except asyncio.CancelledError:
             # We want to propagate CancelledError if we are being cancelled.
             if (task := asyncio.current_task()) and task.cancelling() > 0:
-                _LOGGER.exception(
+                logger.exception(
                     "Setup of config entry '%s' for %s integration cancelled",
                     self.title,
                     self.domain,
@@ -853,13 +879,13 @@ class ConfigEntry[_DataT = Any]:
                 raise
 
             # This was not a "real" cancellation, log it and treat as a normal error.
-            _LOGGER.exception(
+            logger.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
 
         # pylint: disable-next=broad-except
         except SystemExit, Exception:
-            _LOGGER.exception(
+            logger.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
 
@@ -1013,7 +1039,7 @@ class ConfigEntry[_DataT = Any]:
                     )
 
         except Exception as exc:
-            _LOGGER.exception(
+            self.logger.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if domain_is_integration:
@@ -1056,7 +1082,7 @@ class ConfigEntry[_DataT = Any]:
         try:
             await component.async_remove_entry(hass, self)
         except Exception:
-            _LOGGER.exception(
+            self.logger.exception(
                 "Error calling entry remove callback %s for %s",
                 self.title,
                 integration.domain,
@@ -1101,7 +1127,7 @@ class ConfigEntry[_DataT = Any]:
         Returns True if config entry is up-to-date or has been migrated.
         """
         if (handler := HANDLERS.get(self.domain)) is None:
-            _LOGGER.error(
+            self.logger.error(
                 "Flow handler not found for entry %s for %s", self.title, self.domain
             )
             return False
@@ -1122,7 +1148,7 @@ class ConfigEntry[_DataT = Any]:
         if not supports_migrate:
             if same_major_version:
                 return True
-            _LOGGER.error(
+            self.logger.error(
                 "Migration handler not found for entry %s for %s",
                 self.title,
                 self.domain,
@@ -1132,14 +1158,14 @@ class ConfigEntry[_DataT = Any]:
         try:
             result = await component.async_migrate_entry(hass, self)
             if not isinstance(result, bool):
-                _LOGGER.error(  # type: ignore[unreachable]
+                self.logger.error(  # type: ignore[unreachable]
                     "%s.async_migrate_entry did not return boolean", self.domain
                 )
                 return False
             if result:
                 hass.config_entries._async_schedule_save()  # noqa: SLF001
         except Exception:
-            _LOGGER.exception(
+            self.logger.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
             )
             return False
@@ -1202,7 +1228,7 @@ class ConfigEntry[_DataT = Any]:
         )
 
         for task in pending:
-            _LOGGER.warning(
+            self.logger.warning(
                 "Unloading %s (%s) config entry. Task %s did not complete in time",
                 self.title,
                 self.domain,
@@ -1231,7 +1257,7 @@ class ConfigEntry[_DataT = Any]:
             try:
                 func()
             except Exception:
-                _LOGGER.exception(
+                self.logger.exception(
                     "Error calling on_state_change callback for %s (%s)",
                     self.title,
                     self.domain,
@@ -1582,6 +1608,26 @@ class ConfigEntriesFlowManager(
                 issue_id = f"config_entry_reauth_{flow.handler}_{entry_id}"
                 ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
+    def _async_validate_next_flow(
+        self,
+        result: ConfigFlowResult,
+    ) -> None:
+        """Validate `next_flow` in result if provided."""
+        if (next_flow := result.get("next_flow")) is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type not in FlowType:
+            raise HomeAssistantError(f"Invalid flow type: {flow_type}")
+        if flow_type == FlowType.CONFIG_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.flow.async_get(flow_id)
+        if flow_type == FlowType.OPTIONS_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.options.async_get(flow_id)
+        if flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
+            # Raises UnknownFlow if the flow does not exist.
+            self.hass.config_entries.subentries.async_get(flow_id)
+
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[ConfigFlowContext, ConfigFlowResult],
@@ -1620,7 +1666,7 @@ class ConfigEntriesFlowManager(
                         )
                     }
                 )
-                _LOGGER.debug(
+                entry.logger.debug(
                     "Updating discovery keys for %s entry %s %s -> %s",
                     entry.domain,
                     unique_id,
@@ -1630,6 +1676,8 @@ class ConfigEntriesFlowManager(
                 self.config_entries.async_update_entry(
                     entry, discovery_keys=new_discovery_keys
                 )
+
+            self._async_validate_next_flow(result)
             return result
 
         # Mark the step as done.
@@ -1744,6 +1792,10 @@ class ConfigEntriesFlowManager(
             self.config_entries._async_clean_up(existing_entry)  # noqa: SLF001
 
         result["result"] = entry
+        if not existing_entry:
+            result = await flow.async_on_create_entry(result)
+            self._async_validate_next_flow(result)
+
         return result
 
     async def async_create_flow(
@@ -1853,7 +1905,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
-            _LOGGER.error("An entry with the id %s already exists", entry_id)
+            entry.logger.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
         data[entry_id] = entry
         self._index_entry(entry)
@@ -1876,7 +1928,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             report_issue = async_suggest_report_issue(
                 self._hass, integration_domain=entry.domain
             )
-            _LOGGER.error(
+            entry.logger.error(
                 (
                     "Config entry '%s' from integration %s has an invalid unique_id"
                     " '%s' of type %s when a string is expected, please %s"
@@ -2237,6 +2289,54 @@ class ConfigEntries:
         self._entries = entries
         self.async_update_issues()
 
+        if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
+            )
+
+    async def _async_scan_orphan_ignored_entries(
+        self, event: Event[NoEventData]
+    ) -> None:
+        """Scan for ignored entries that can be removed.
+
+        Orphaned ignored entries are entries that are in ignored state
+        for integrations that are no longer available.
+        """
+        remove_candidates = [
+            entry
+            for entry in self.async_entries(
+                include_ignore=True,
+                include_disabled=False,
+            )
+            if entry.source == SOURCE_IGNORE
+        ]
+
+        if not remove_candidates:
+            return
+
+        for entry in remove_candidates:
+            try:
+                await loader.async_get_integration(self.hass, entry.domain)
+            except loader.IntegrationNotFound:
+                entry.logger.info(
+                    "Integration for ignored config entry %s not found. Creating repair issue",
+                    entry,
+                )
+                ir.async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="orphaned_ignored_config_entry",
+                    translation_placeholders={"domain": entry.domain},
+                    data={
+                        "domain": entry.domain,
+                        "entry_id": entry.entry_id,
+                    },
+                )
+
     async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.
 
@@ -2450,7 +2550,7 @@ class ConfigEntries:
                 report_issue = async_suggest_report_issue(
                     self.hass, integration_domain=entry.domain
                 )
-                _LOGGER.error(
+                entry.logger.error(
                     (
                         "Unique id of config entry '%s' from integration %s changed to"
                         " '%s' which is already in use, please %s"
@@ -3217,7 +3317,10 @@ class ConfigFlow(ConfigEntryBaseFlow):
             return
         flow_type, flow_id = next_flow
         if flow_type != FlowType.CONFIG_FLOW:
-            raise HomeAssistantError("Invalid next_flow type")
+            raise HomeAssistantError(
+                "next_flow only supports FlowType.CONFIG_FLOW; "
+                "use async_on_create_entry for options or subentry flows"
+            )
         # Raises UnknownFlow if the flow does not exist.
         self.hass.config_entries.flow.async_get(flow_id)
         result["next_flow"] = next_flow
@@ -3236,6 +3339,15 @@ class ConfigFlow(ConfigEntryBaseFlow):
             description_placeholders=description_placeholders,
         )
         self._async_set_next_flow_if_valid(result, next_flow)
+        return result
+
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Runs after a config flow has created a config entry.
+
+        Can be overridden by integrations to add additional data to the result.
+        Example: creating next flow entries to the result which needs a
+        config entry created before it can start.
+        """
         return result
 
     @callback
@@ -3982,7 +4094,7 @@ async def _load_integration(
     try:
         await integration.async_get_platform("config_flow")
     except ImportError as err:
-        _LOGGER.error(
+        integration.logger.error(
             "Error occurred loading flow for integration %s: %s",
             domain,
             err,

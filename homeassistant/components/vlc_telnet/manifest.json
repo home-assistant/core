@@ -4,6 +4,7 @@
   "codeowners": ["@rodripf", "@MartinHjelmare"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vlc_telnet",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["aiovlc"],
   "requirements": ["aiovlc==0.5.1"]

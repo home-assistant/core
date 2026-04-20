@@ -61,6 +61,13 @@ DATASET_1_LARGER_TIMESTAMP = (
     "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
 )
 
+# Same as DATASET_1 but with WAKEUP_CHANNEL (type 0x4A) appended, same timestamp
+DATASET_1_WITH_WAKEUP_CHANNEL = (
+    "0E080000000000010000000300000F35060004001FFFE0020811111111222222220708FDAD70BF"
+    "E5AA15DD051000112233445566778899AABBCCDDEEFF030E4F70656E54687265616444656D6F01"
+    "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F84A0300000B"
+)
+
 
 async def test_add_invalid_dataset(hass: HomeAssistant) -> None:
     """Test adding an invalid dataset."""
@@ -255,6 +262,28 @@ async def test_update_dataset_older(
     )
 
 
+async def test_update_dataset_wakeup_channel(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that adding WAKEUP_CHANNEL with the same timestamp is silently accepted.
+
+    WAKEUP_CHANNEL was added to OpenThread but the wake-up protocol isn't
+    defined yet. We treat a dataset that only adds this key as equivalent,
+    updating the stored TLV without logging a warning.
+    """
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1)
+    await dataset_store.async_add_dataset(hass, "test", DATASET_1_WITH_WAKEUP_CHANNEL)
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].tlv == DATASET_1_WITH_WAKEUP_CHANNEL
+
+    assert (
+        "Got dataset with same extended PAN ID and same or older active timestamp"
+        not in caplog.text
+    )
+
+
 async def test_load_datasets(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
 
@@ -394,11 +423,8 @@ async def test_migrate_drop_bad_datasets(
     assert list(store.datasets.values())[0].tlv == DATASET_1
     assert store.preferred_dataset == "id1"
 
-    assert f"Dropped invalid Thread dataset '{DATASET_1_NO_EXTPANID}'" in caplog.text
-    assert (
-        f"Dropped invalid Thread dataset '{DATASET_1_NO_ACTIVETIMESTAMP}'"
-        in caplog.text
-    )
+    assert caplog.text.count("Dropped invalid Thread dataset") == 2
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_bad_datasets_preferred(
@@ -463,10 +489,8 @@ async def test_migrate_drop_duplicate_datasets(
     assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
     assert store.preferred_dataset is None
 
-    assert (
-        f"Dropped duplicated Thread dataset '{DATASET_1}' "
-        f"(duplicate of '{DATASET_1_LARGER_TIMESTAMP}')"
-    ) in caplog.text
+    assert "Dropped duplicated Thread dataset" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_duplicate_datasets_2(
@@ -500,10 +524,8 @@ async def test_migrate_drop_duplicate_datasets_2(
     assert list(store.datasets.values())[0].tlv == DATASET_1_LARGER_TIMESTAMP
     assert store.preferred_dataset is None
 
-    assert (
-        f"Dropped duplicated Thread dataset '{DATASET_1}' "
-        f"(duplicate of '{DATASET_1_LARGER_TIMESTAMP}')"
-    ) in caplog.text
+    assert "Dropped duplicated Thread dataset" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_drop_duplicate_datasets_preferred(
@@ -537,10 +559,9 @@ async def test_migrate_drop_duplicate_datasets_preferred(
     assert list(store.datasets.values())[0].tlv == DATASET_1
     assert store.preferred_dataset == "id1"
 
-    assert (
-        f"Dropped duplicated Thread dataset '{DATASET_1_LARGER_TIMESTAMP}' "
-        f"(duplicate of preferred dataset '{DATASET_1}')"
-    ) in caplog.text
+    assert "Dropped duplicated Thread dataset" in caplog.text
+    assert "duplicate of preferred dataset" in caplog.text
+    assert "'NETWORKKEY': '**REDACTED**'" in caplog.text
 
 
 async def test_migrate_set_default_border_agent_id(

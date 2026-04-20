@@ -160,6 +160,22 @@
       "tmin": {
         "name": "Minimum temperature"
       }
+    },
+    "switch": {
+      "local_mode": {
+        "name": "Local mode"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "communication_error": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "unknown_error": {
+      "message": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_snapshots[rgb][switch.wled_rgb_light_nightlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -52,8 +53,9 @@
 # ---
 # name: test_snapshots[rgb][switch.wled_rgb_light_reverse-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -101,8 +103,9 @@
 # ---
 # name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_reverse-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -150,8 +153,9 @@
 # ---
 # name: test_snapshots[rgb][switch.wled_rgb_light_sync_receive-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -200,8 +204,9 @@
 # ---
 # name: test_snapshots[rgb][switch.wled_rgb_light_sync_send-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -250,8 +255,9 @@
 # ---
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_nightlight-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -301,8 +307,9 @@
 # ---
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_reverse-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -350,8 +357,9 @@
 # ---
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_sync_receive-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -400,8 +408,9 @@
 # ---
 # name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_sync_send-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

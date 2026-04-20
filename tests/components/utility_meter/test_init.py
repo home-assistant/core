@@ -14,6 +14,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter import (
     select as um_select,
     sensor as um_sensor,
@@ -26,7 +27,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PLATFORM,
     EVENT_HOMEASSISTANT_START,
-    Platform,
     UnitOfEnergy,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
@@ -139,7 +139,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     )
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, Platform.SENSOR, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     # restore from cache
@@ -172,7 +172,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, Platform.SENSOR, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)

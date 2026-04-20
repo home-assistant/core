@@ -56,7 +56,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{config_entry_id}_relay{relay.id}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return entity state."""
         if self._reverse:
             return not self._relay.is_energised

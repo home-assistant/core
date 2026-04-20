@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from enocean.utils import combine_hex
+from enocean_async import EEP, EEP_SPECIFICATIONS, EEPHandler, EEPMessage, ERP1Telegram
+from enocean_async.esp3.packet import ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -18,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, LOGGER
-from .entity import EnOceanEntity
+from .entity import EnOceanEntity, combine_hex
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = "EnOcean Switch"
@@ -86,52 +87,68 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         """Initialize the EnOcean switch device."""
         super().__init__(dev_id)
         self._light = None
-        self.channel = channel
+        self.channel: int = channel
         self._attr_unique_id = generate_unique_id(dev_id, channel)
         self._attr_name = dev_name
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
+        if not self.address:
+            return
+
         optional = [0x03]
-        optional.extend(self.dev_id)
+        optional.extend(self.address.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00],
             optional=optional,
-            packet_type=0x01,
+            packet_type=ESP3PacketType(0x01),
         )
         self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
+        if not self.address:
+            return
         optional = [0x03]
-        optional.extend(self.dev_id)
+        optional.extend(self.address.to_bytelist())
         optional.extend([0xFF, 0x00])
         self.send_command(
             data=[0xD2, 0x01, self.channel & 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
             optional=optional,
-            packet_type=0x01,
+            packet_type=ESP3PacketType(0x01),
         )
         self._attr_is_on = False
 
-    def value_changed(self, packet):
+    def value_changed(self, telegram: ERP1Telegram) -> None:
         """Update the internal state of the switch."""
-        if packet.data[0] == 0xA5:
-            # power meter telegram, turn on if > 10 watts
-            packet.parse_eep(0x12, 0x01)
-            if packet.parsed["DT"]["raw_value"] == 1:
-                raw_val = packet.parsed["MR"]["raw_value"]
-                divisor = packet.parsed["DIV"]["raw_value"]
+        if telegram.rorg == 0xA5:
+            # power meter telegram, turn on if > 1 watts
+            if (eep := EEP_SPECIFICATIONS.get(EEP(0xA5, 0x12, 0x01))) is None:
+                LOGGER.warning("EEP A5-12-01 cannot be decoded")
+                return
+
+            msg: EEPMessage = EEPHandler(eep).decode(telegram)
+
+            if "DT" in msg.values and msg.values["DT"].raw == 1:
+                # this packet reports the current value
+                raw_val = msg.values["MR"].raw
+                divisor = msg.values["DIV"].raw
                 watts = raw_val / (10**divisor)
                 if watts > 1:
                     self._attr_is_on = True
                     self.schedule_update_ha_state()
-        elif packet.data[0] == 0xD2:
+
+        elif telegram.rorg == 0xD2:
             # actuator status telegram
-            packet.parse_eep(0x01, 0x01)
-            if packet.parsed["CMD"]["raw_value"] == 4:
-                channel = packet.parsed["IO"]["raw_value"]
-                output = packet.parsed["OV"]["raw_value"]
+            if (eep := EEP_SPECIFICATIONS.get(EEP(0xD2, 0x01, 0x01))) is None:
+                LOGGER.warning("EEP D2-01-01 cannot be decoded")
+                return
+
+            msg = EEPHandler(eep).decode(telegram)
+            if msg.values["CMD"].raw == 4:
+                channel = msg.values["I/O"].raw
+                output = msg.values["OV"].raw
                 if channel == self.channel:
                     self._attr_is_on = output > 0
                     self.schedule_update_ha_state()

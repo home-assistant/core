@@ -5,6 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from transmission_rpc.error import (
+    TransmissionAuthError,
+    TransmissionConnectError,
+    TransmissionError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -37,7 +42,6 @@ from .const import (
     DOMAIN,
     SUPPORTED_ORDER_MODES,
 )
-from .errors import AuthenticationError, CannotConnect, UnknownError
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -78,10 +82,10 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 await get_api(self.hass, user_input)
 
-            except AuthenticationError:
+            except TransmissionAuthError:
                 errors[CONF_USERNAME] = "invalid_auth"
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except CannotConnect, UnknownError:
+            except TransmissionConnectError, TransmissionError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -113,9 +117,9 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 await get_api(self.hass, user_input)
 
-            except AuthenticationError:
+            except TransmissionAuthError:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except CannotConnect, UnknownError:
+            except TransmissionConnectError, TransmissionError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)

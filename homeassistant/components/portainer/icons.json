@@ -1,5 +1,19 @@
 {
   "entity": {
+    "button": {
+      "kill_container": {
+        "default": "mdi:cog-stop"
+      },
+      "pause_container": {
+        "default": "mdi:pause-circle"
+      },
+      "resume_container": {
+        "default": "mdi:play"
+      },
+      "volumes_prune": {
+        "default": "mdi:delete-sweep"
+      }
+    },
     "sensor": {
       "api_version": {
         "default": "mdi:api"
@@ -70,12 +84,24 @@
       "operating_system_version": {
         "default": "mdi:alpha-v-box"
       },
+      "stack_containers_count": {
+        "default": "mdi:server"
+      },
+      "stack_type": {
+        "default": "mdi:server"
+      },
       "volume_disk_usage_total_size": {
         "default": "mdi:harddisk"
       }
     },
     "switch": {
       "container": {
+        "default": "mdi:arrow-down-box",
+        "state": {
+          "on": "mdi:arrow-up-box"
+        }
+      },
+      "stack": {
         "default": "mdi:arrow-down-box",
         "state": {
           "on": "mdi:arrow-up-box"

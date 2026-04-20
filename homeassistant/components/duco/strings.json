@@ -1,0 +1,84 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your Duco ventilation box."
+        }
+      }
+    }
+  },
+  "entity": {
+    "fan": {
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "iaq_co2": {
+        "name": "CO2 air quality index"
+      },
+      "iaq_rh": {
+        "name": "Humidity air quality index"
+      },
+      "ventilation_state": {
+        "name": "Ventilation state",
+        "state": {
+          "aut1": "Automatic boost (15 min)",
+          "aut2": "Automatic boost (30 min)",
+          "aut3": "Automatic boost (45 min)",
+          "auto": "Automatic",
+          "cnt1": "Continuous low speed",
+          "cnt2": "Continuous medium speed",
+          "cnt3": "Continuous high speed",
+          "empt": "Empty house",
+          "man1": "Manual low speed (15 min)",
+          "man1x2": "Manual low speed (30 min)",
+          "man1x3": "Manual low speed (45 min)",
+          "man2": "Manual medium speed (15 min)",
+          "man2x2": "Manual medium speed (30 min)",
+          "man2x3": "Manual medium speed (45 min)",
+          "man3": "Manual high speed (15 min)",
+          "man3x2": "Manual high speed (30 min)",
+          "man3x3": "Manual high speed (45 min)"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Unexpected error from the Duco API: {error}"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while trying to connect to the Duco instance: {error}"
+    },
+    "failed_to_set_state": {
+      "message": "Failed to set ventilation state: {error}"
+    },
+    "rate_limit_exceeded": {
+      "message": "The Duco device has reached its daily write limit. Try again tomorrow."
+    }
+  }
+}

@@ -24,9 +24,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import MOCK_CODE, MOCK_ENTRY_ID, setup_integration
+from . import MOCK_CODE, MOCK_ENTRY_ID, get_monitor_callbacks, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -59,7 +64,7 @@ async def test_alarm_control_panel(
     assert device_entry == snapshot(name="device")
 
 
-async def test_alarm_control_panel_initial_state_on(
+async def test_alarm_control_panel_initial_state(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
@@ -104,13 +109,59 @@ async def test_alarm_status_callback(
         == AlarmControlPanelState.DISARMED
     )
 
-    monitor_status_call = mock_satel.monitor_status.call_args_list[0][0]
-    alarm_panel_update_method = monitor_status_call[0]
+    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
 
     mock_satel.partition_states = {source_state: [1]}
 
     alarm_panel_update_method()
+
+    # Trigger coordinator debounce
+    async_fire_time_changed(hass)
+
     assert hass.states.get("alarm_control_panel.home").state == resulting_state
+
+
+async def test_alarm_status_callback_debounce(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test that rapid partition state callbacks are debounced."""
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    assert (
+        hass.states.get("alarm_control_panel.home").state
+        == AlarmControlPanelState.DISARMED
+    )
+
+    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+
+    # Simulate rapid state changes from the alarm panel
+    mock_satel.partition_states = {AlarmState.EXIT_COUNTDOWN_OVER_10: [1]}
+    alarm_panel_update_method()
+
+    mock_satel.partition_states = {AlarmState.EXIT_COUNTDOWN_UNDER_10: [1]}
+    alarm_panel_update_method()
+
+    mock_satel.partition_states = {AlarmState.ARMED_MODE0: [1]}
+    alarm_panel_update_method()
+
+    mock_satel.partition_states = {AlarmState.ARMED_MODE1: [1]}
+    alarm_panel_update_method()
+
+    # State should still be DISARMED because updates are debounced
+    assert (
+        hass.states.get("alarm_control_panel.home").state
+        == AlarmControlPanelState.DISARMED
+    )
+
+    # Trigger coordinator debounce
+    async_fire_time_changed(hass)
+
+    assert (
+        hass.states.get("alarm_control_panel.home").state
+        == AlarmControlPanelState.ARMED_HOME
+    )
 
 
 async def test_alarm_control_panel_arming(
@@ -164,3 +215,28 @@ async def test_alarm_control_panel_disarming(
     mock_satel.disarm.assert_awaited_once_with(MOCK_CODE, [1])
 
     mock_satel.clear_alarm.assert_awaited_once_with(MOCK_CODE, [1])
+
+
+async def test_alarm_panel_last_reported(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test alarm panels update last_reported if same state is reported."""
+    events = async_capture_events(hass, "state_changed")
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    first_reported = hass.states.get("alarm_control_panel.home").last_reported
+    assert first_reported is not None
+    # Initial state change event
+    assert len(events) == 1
+
+    # Run callbacks with same payload
+    alarm_panel_update_method, _, _ = get_monitor_callbacks(mock_satel)
+    alarm_panel_update_method()
+
+    # Trigger coordinator debounce
+    async_fire_time_changed(hass)
+
+    assert first_reported != hass.states.get("alarm_control_panel.home").last_reported
+    assert len(events) == 1  # last_reported shall not fire state_changed

@@ -9,7 +9,8 @@
     },
     "error": {
       "auth_failed": "Authentication failed: {error_detail}",
-      "encryption_key_invalid": "Key ID or encryption key is invalid"
+      "encryption_key_invalid": "Key ID or encryption key is invalid",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name} ({address})",
     "step": {
@@ -101,11 +102,17 @@
       }
     },
     "button": {
+      "light_sensor": {
+        "name": "Light sensor"
+      },
       "next_image": {
         "name": "Next image"
       },
       "previous_image": {
         "name": "Previous image"
+      },
+      "sync_datetime": {
+        "name": "Sync date and time"
       }
     },
     "climate": {
@@ -265,6 +272,15 @@
         }
       }
     },
+    "select": {
+      "time_format": {
+        "name": "Time format",
+        "state": {
+          "12h": "12-hour (AM/PM)",
+          "24h": "24-hour"
+        }
+      }
+    },
     "sensor": {
       "aqi_quality_level": {
         "name": "Air quality level",
@@ -273,6 +289,15 @@
           "good": "Good",
           "moderate": "Moderate",
           "unhealthy": "Unhealthy"
+        }
+      },
+      "battery_range": {
+        "name": "Battery range",
+        "state": {
+          "critical": "Critical",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
         }
       },
       "bluetooth_signal": {
@@ -310,6 +335,12 @@
             }
           }
         }
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "wireless_charging": {
+        "name": "Wireless charging"
       }
     },
     "vacuum": {

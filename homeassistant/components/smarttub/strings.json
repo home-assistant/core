@@ -34,6 +34,69 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "cover_sensor": {
+        "name": "Cover sensor"
+      },
+      "error": {
+        "name": "Error"
+      },
+      "online": {
+        "name": "Online"
+      },
+      "reminder": {
+        "name": "{reminder_name} reminder"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "light": {
+      "light_zone": {
+        "name": "Light {zone}"
+      }
+    },
+    "sensor": {
+      "blowout_cycle": {
+        "name": "Blowout cycle"
+      },
+      "cleanup_cycle": {
+        "name": "Cleanup cycle"
+      },
+      "flow_switch": {
+        "name": "Flow switch"
+      },
+      "ozone": {
+        "name": "Ozone"
+      },
+      "primary_filtration_cycle": {
+        "name": "Primary filtration cycle"
+      },
+      "secondary_filtration_cycle": {
+        "name": "Secondary filtration cycle"
+      },
+      "state": {
+        "name": "State"
+      },
+      "uv": {
+        "name": "UV"
+      }
+    },
+    "switch": {
+      "circulation_pump": {
+        "name": "Circulation pump"
+      },
+      "jet": {
+        "name": "Jet {pump_id}"
+      },
+      "pump": {
+        "name": "Pump {pump_id}"
+      }
+    }
+  },
   "services": {
     "reset_reminder": {
       "description": "Resets the maintenance reminder on a hot tub.",
