@@ -12,11 +12,14 @@ import pytest
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.100"
 MOCK_SERIAL = "E0012345678901234"
+MOCK_MAC = "aabbcc112233"
+MOCK_HOSTNAME = "energiemonitor-abc123"
 
 MOCK_DEVICE_DATA: dict[str, Any] = {
     "power_delivered": 2.5,
@@ -30,6 +33,12 @@ MOCK_DEVICE_DATA: dict[str, Any] = {
     "gas_delivered": 1234.567,
     "wifiRSSI": -65,
 }
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip=MOCK_HOST,
+    hostname=MOCK_HOSTNAME,
+    macaddress=MOCK_MAC,
+)
 
 
 def trigger_callback(
