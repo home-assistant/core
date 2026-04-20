@@ -203,6 +203,10 @@
         }
       },
       "title": "Storage corruption detected for {storage_key}"
+    },
+    "unsupported_local_deps": {
+      "description": "This system is running Home Assistant outside a virtual environment or a Docker container. This is not supported and will not work after the release of Home Assistant 2026.11.",
+      "title": "Deprecation notice: Installation method"
     }
   },
   "services": {
