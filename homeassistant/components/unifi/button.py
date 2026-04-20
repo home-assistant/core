@@ -46,6 +46,8 @@ from .entity import (
 if TYPE_CHECKING:
     from .hub import UnifiHub
 
+PARALLEL_UPDATES = 1
+
 
 @callback
 def async_port_power_cycle_available_fn(hub: UnifiHub, obj_id: str) -> bool:

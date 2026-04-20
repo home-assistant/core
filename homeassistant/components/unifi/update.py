@@ -30,6 +30,7 @@ from .entity import (
 )
 
 LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 
 async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None:
