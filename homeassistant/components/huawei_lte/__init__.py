@@ -13,6 +13,7 @@ from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
+from huawei_lte_api.enums.sms import BoxTypeEnum, SortTypeEnum
 from huawei_lte_api.exceptions import (
     LoginErrorInvalidCredentialsException,
     ResponseErrorException,
@@ -75,11 +76,13 @@ from .const import (
     KEY_NET_CURRENT_PLMN,
     KEY_NET_NET_MODE,
     KEY_SMS_SMS_COUNT,
+    KEY_SMS_SMS_LIST,
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     SERVICE_RESUME_INTEGRATION,
     SERVICE_SUSPEND_INTEGRATION,
+    SMS_EVENT_SIGNAL,
     UPDATE_SIGNAL,
 )
 from .utils import get_device_macs, non_verifying_requests_session
@@ -92,10 +95,43 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
+DEFAULT_SMS_LIST_COUNT = 20
+
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    """Safely convert a value to int, returning default on failure."""
+    try:
+        return int(value)
+    except Exception:  # noqa: BLE001
+        return default
+
+
+def parse_sms_list(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Parse get_sms_list response into a list of message dicts."""
+    messages_container = data.get("Messages")
+    if not messages_container:
+        return []
+    messages_raw = messages_container.get("Message", [])
+    # API returns dict instead of list when there is exactly one message
+    if isinstance(messages_raw, dict):
+        messages_raw = [messages_raw]
+    return [
+        {
+            "index": _safe_int(msg.get("Index"), 0),
+            "phone": msg.get("Phone", ""),
+            "content": msg.get("Content", ""),
+            "date": msg.get("Date", ""),
+            "read": _safe_int(msg.get("Smstat"), 0) == 1,
+        }
+        for msg in messages_raw
+    ]
+
+
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -123,6 +159,8 @@ class Router:
     inflight_gets: set[str] = field(default_factory=set, init=False)
     client: Client = field(init=False)
     suspended: bool = field(default=False, init=False)
+    _last_sms_index: int = field(default=0, init=False)
+    _initial_sms_scan_done: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         """Set up internal state on init."""
@@ -232,6 +270,18 @@ class Router:
         self._get_data(KEY_NET_CURRENT_PLMN, self.client.net.current_plmn)
         self._get_data(KEY_NET_NET_MODE, self.client.net.net_mode)
         self._get_data(KEY_SMS_SMS_COUNT, self.client.sms.sms_count)
+        self._get_data(
+            KEY_SMS_SMS_LIST,
+            lambda: self.client.sms.get_sms_list(
+                1,
+                BoxTypeEnum.LOCAL_INBOX,
+                DEFAULT_SMS_LIST_COUNT,
+                SortTypeEnum.DATE,
+                False,
+                True,
+            ),
+        )
+        self._check_new_sms()
         self._get_data(KEY_LAN_HOST_INFO, self.client.lan.host_info)
         if self.data.get(KEY_LAN_HOST_INFO):
             # LAN host info includes everything in WLAN host list
@@ -255,6 +305,36 @@ class Router:
         )
 
         dispatcher_send(self.hass, UPDATE_SIGNAL, self.config_entry.unique_id)
+
+    def _check_new_sms(self) -> None:
+        """Fire events for newly received SMS messages."""
+        sms_data = self.data.get(KEY_SMS_SMS_LIST)
+        if not sms_data:
+            return
+
+        messages = parse_sms_list(sms_data)
+        max_index = max((int(msg["index"]) for msg in messages), default=0)
+
+        if not self._initial_sms_scan_done:
+            self._initial_sms_scan_done = True
+            self._last_sms_index = max_index
+            return
+
+        for msg in messages:
+            if int(msg["index"]) > self._last_sms_index:
+                _LOGGER.debug("New SMS received (index %s)", msg["index"])
+                dispatcher_send(
+                    self.hass,
+                    f"{SMS_EVENT_SIGNAL}_{self.config_entry.unique_id}",
+                    {
+                        "phone": msg["phone"],
+                        "content": msg["content"],
+                        "date": msg["date"],
+                        "index": msg["index"],
+                    },
+                )
+
+        self._last_sms_index = max(self._last_sms_index, max_index)
 
     def logout(self) -> None:
         """Log out router session."""

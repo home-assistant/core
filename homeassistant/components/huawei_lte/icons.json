@@ -32,6 +32,11 @@
         }
       }
     },
+    "event": {
+      "sms_received": {
+        "default": "mdi:message-text-outline"
+      }
+    },
     "select": {
       "preferred_network_mode": {
         "default": "mdi:antenna"
@@ -76,6 +81,9 @@
       },
       "lac": {
         "default": "mdi:map-marker"
+      },
+      "last_sms": {
+        "default": "mdi:message-text-outline"
       },
       "nei_cellid": {
         "default": "mdi:antenna"

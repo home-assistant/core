@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import ipaddress
 import logging
 import re
+from typing import Any
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -19,6 +20,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    MAX_LENGTH_STATE_STATE,
     PERCENTAGE,
     EntityCategory,
     UnitOfDataRate,
@@ -31,8 +33,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import Router
+from . import Router, parse_sms_list
 from .const import (
+    CONF_UNAUTHENTICATED_MODE,
     DOMAIN,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
@@ -43,6 +46,7 @@ from .const import (
     KEY_NET_CURRENT_PLMN,
     KEY_NET_NET_MODE,
     KEY_SMS_SMS_COUNT,
+    KEY_SMS_SMS_LIST,
     SENSOR_KEYS,
 )
 from .entity import HuaweiLteBaseEntityWithDevice
@@ -834,6 +838,11 @@ async def async_setup_entry(
                 continue
             sensors.append(HuaweiLteSensor(router, key, item, desc))
 
+    # Only add Last SMS sensor in authenticated mode; unauthenticated mode
+    # does not have access to KEY_SMS_SMS_LIST and would trigger login warnings.
+    if not config_entry.options.get(CONF_UNAUTHENTICATED_MODE):
+        sensors.append(HuaweiLteLastSmsSensor(router))
+
     async_add_entities(sensors, True)
 
 
@@ -941,3 +950,63 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         self._state, self._unit = self.entity_description.format_fn(value)
         self._last_reset = last_reset
         self._available = value is not None
+
+
+class HuaweiLteLastSmsSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
+    """Sensor showing the content of the most recently received SMS."""
+
+    _attr_translation_key = "last_sms"
+    _attr_native_value: str | None = None
+    _attr_extra_state_attributes: dict[str, Any]
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, router: Router) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self.key = KEY_SMS_SMS_LIST
+        self._attr_extra_state_attributes = {}
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to needed data on add."""
+        await super().async_added_to_hass()
+        self.router.subscriptions[self.key].append(f"{SENSOR_DOMAIN}/last_sms")
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from needed data on remove."""
+        await super().async_will_remove_from_hass()
+        self.router.subscriptions[self.key].remove(f"{SENSOR_DOMAIN}/last_sms")
+
+    @property
+    def _device_unique_id(self) -> str:
+        return f"{self.key}.last_sms"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the content of the latest SMS message."""
+        return self._attr_native_value
+
+    async def async_update(self) -> None:
+        """Update state."""
+        try:
+            data = self.router.data[self.key]
+        except KeyError:
+            _LOGGER.debug("%s not in data", self.key)
+            self._available = False
+            return
+
+        messages = parse_sms_list(data)
+        if not messages:
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            self._available = True
+            return
+
+        latest = messages[0]
+        self._attr_native_value = latest["content"][:MAX_LENGTH_STATE_STATE]
+        self._attr_extra_state_attributes = {
+            "phone": latest["phone"],
+            "date": latest["date"],
+            "index": latest["index"],
+            "read": latest["read"],
+        }
+        self._available = True
