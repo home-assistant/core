@@ -58,7 +58,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except json.JSONDecodeError, AttributeError:
             return
 
-        serial = payload["id"]
+        serial = payload.get("id")
         if isinstance(serial, str) and serial.strip():
             self._discovered[serial] = payload
             if self._discovery_event:
@@ -79,9 +79,6 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
-
-        if self._async_in_progress():
-            return self.async_abort(reason="already_in_progress")
 
         self._discovered_serial = serial
         device_name = self._get_device_name(serial)
@@ -146,7 +143,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Grace period for additional devices
                 await asyncio.sleep(0.5)
             except TimeoutError:
-                pass
+                _LOGGER.debug("Discovery timed out waiting for device responses")
         finally:
             self._remove_listener()
 

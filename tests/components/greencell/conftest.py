@@ -1,6 +1,7 @@
 """Shared test fixtures and constants for Greencell integration tests."""
 
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -15,8 +16,8 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from tests.common import MockConfigEntry
 
 # Test constants
-TEST_SERIAL_NUMBER = "EVGC021A2275XXXXXXXXXX"
-TEST_SERIAL_NUMBER_2 = "EVGC021A2275YYYYYYYYYY"
+TEST_SERIAL_NUMBER = "EVGC021A22750001ZM0001"
+TEST_SERIAL_NUMBER_2 = "EVGC021A22750002ZM0002"
 
 # MQTT topics
 TEST_CURRENT_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/current"
@@ -59,6 +60,7 @@ def mock_config_entry():
         entry_id="test_entry",
         data={CONF_SERIAL_NUMBER: TEST_SERIAL_NUMBER},
         title=f"Greencell {TEST_SERIAL_NUMBER}",
+        unique_id=TEST_SERIAL_NUMBER,
     )
 
 
@@ -70,6 +72,7 @@ def mock_config_entry_2():
         entry_id="test_entry_2",
         data={CONF_SERIAL_NUMBER: TEST_SERIAL_NUMBER_2},
         title=f"Greencell {TEST_SERIAL_NUMBER_2}",
+        unique_id=TEST_SERIAL_NUMBER_2,
     )
 
 
@@ -88,3 +91,13 @@ def mqtt_service_info():
         )
 
     return _make
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Override async_setup_entry to prevent the integration from starting."""
+    with patch(
+        "homeassistant.components.greencell.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup

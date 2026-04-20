@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import time
 from unittest.mock import patch
 
@@ -16,70 +15,67 @@ from homeassistant.components.greencell.const import (
     GREENCELL_HABU_DEN,
     GREENCELL_OTHER_DEVICE,
 )
+from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message
+from .conftest import TEST_SERIAL_NUMBER, TEST_SERIAL_NUMBER_2
+
+from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient
 
-# Valid Habu Den serial: EVGC021[A-Z][0-9]{8}ZM[0-9]{4}
-HABU_DEN_SERIAL = "EVGC021A12345678ZM0001"
-HABU_DEN_SERIAL_2 = "EVGC021B87654321ZM0002"
-# Invalid serial (not matching Habu Den pattern)
 OTHER_DEVICE_SERIAL = "OTHER12345678"
-
-# Short timeout for fast tests
-FAST_DISCOVERY_TIMEOUT = 0.2
 
 
 @pytest.fixture(autouse=True)
 def fast_discovery():
-    """Patch discovery timeout and grace period sleep for all tests."""
+    """Patch discovery timeout and grace period to 0 for all tests."""
     with (
         patch(
             "homeassistant.components.greencell.const.DISCOVERY_TIMEOUT",
-            FAST_DISCOVERY_TIMEOUT,
+            0.01,
         ),
         patch(
             "homeassistant.components.greencell.DISCOVERY_TIMEOUT",
-            FAST_DISCOVERY_TIMEOUT,
+            0.01,
+        ),
+        patch(
+            "homeassistant.components.greencell.config_flow.asyncio.sleep",
+            return_value=None,
         ),
     ):
-        original_sleep = asyncio.sleep
-
-        async def patched_sleep(delay, *args, **kwargs):
-            if delay == 0.5:
-                return await original_sleep(0)
-            return await original_sleep(delay)
-
-        with patch(
-            "homeassistant.components.greencell.config_flow.asyncio.sleep",
-            side_effect=patched_sleep,
-        ):
-            yield
+        yield
 
 
 async def _init_flow_and_fire_discovery(
     hass: HomeAssistant,
     payloads: list[str],
-    delay: float = 0.05,
 ) -> config_entries.ConfigFlowResult:
-    """Initialize user flow and fire discovery messages concurrently."""
+    """Initialize user flow and fire discovery messages synchronously."""
 
-    async def fire_messages() -> None:
-        await asyncio.sleep(delay)
+    async def _mock_subscribe(hass_arg, topic, msg_callback, *args, **kwargs):
+        """Fire payloads immediately when subscription happens."""
         for payload in payloads:
-            async_fire_mqtt_message(hass, GREENCELL_DISC_TOPIC, payload)
+            msg_callback(
+                ReceiveMessage(
+                    topic=GREENCELL_DISC_TOPIC,
+                    payload=payload,
+                    qos=0,
+                    retain=False,
+                    subscribed_topic=GREENCELL_DISC_TOPIC,
+                    timestamp=time.time(),
+                )
+            )
+        return lambda: None
 
-    fire_task = hass.async_create_task(fire_messages())
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    await fire_task
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.greencell.config_flow.mqtt.async_subscribe",
+        side_effect=_mock_subscribe,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
 
     return result
 
@@ -91,12 +87,13 @@ async def test_user_setup_single_device(
     """Test user setup with single device creates entry."""
     result = await _init_flow_and_fire_discovery(
         hass,
-        [f'{{"id": "{HABU_DEN_SERIAL}"}}'],
+        [f'{{"id": "{TEST_SERIAL_NUMBER}"}}'],
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{GREENCELL_HABU_DEN} {HABU_DEN_SERIAL}"
-    assert result["data"] == {"serial_number": HABU_DEN_SERIAL}
+    assert result["title"] == f"{GREENCELL_HABU_DEN} {TEST_SERIAL_NUMBER}"
+    assert result["data"] == {"serial_number": TEST_SERIAL_NUMBER}
+    assert result["result"].unique_id == TEST_SERIAL_NUMBER
 
 
 async def test_user_setup_multiple_devices(
@@ -107,8 +104,8 @@ async def test_user_setup_multiple_devices(
     result = await _init_flow_and_fire_discovery(
         hass,
         [
-            f'{{"id": "{HABU_DEN_SERIAL}"}}',
-            f'{{"id": "{HABU_DEN_SERIAL_2}"}}',
+            f'{{"id": "{TEST_SERIAL_NUMBER}"}}',
+            f'{{"id": "{TEST_SERIAL_NUMBER_2}"}}',
             f'{{"id": "{OTHER_DEVICE_SERIAL}"}}',
         ],
     )
@@ -117,13 +114,14 @@ async def test_user_setup_multiple_devices(
     assert result["step_id"] == "select"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"serial_number": HABU_DEN_SERIAL_2}
+        result["flow_id"], user_input={"serial_number": TEST_SERIAL_NUMBER_2}
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{GREENCELL_HABU_DEN} {HABU_DEN_SERIAL_2}"
-    assert result["data"] == {"serial_number": HABU_DEN_SERIAL_2}
+    assert result["title"] == f"{GREENCELL_HABU_DEN} {TEST_SERIAL_NUMBER_2}"
+    assert result["data"] == {"serial_number": TEST_SERIAL_NUMBER_2}
+    assert result["result"].unique_id == TEST_SERIAL_NUMBER_2
 
 
 async def test_user_setup_no_devices(
@@ -170,18 +168,16 @@ async def test_user_setup_mqtt_not_connected(
 async def test_duplicate_device(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that configuring same device twice aborts."""
-    result = await _init_flow_and_fire_discovery(
-        hass,
-        [f'{{"id": "{HABU_DEN_SERIAL}"}}'],
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_config_entry.add_to_hass(hass)
 
     result = await _init_flow_and_fire_discovery(
         hass,
-        [f'{{"id": "{HABU_DEN_SERIAL}"}}'],
+        [f'{{"id": "{TEST_SERIAL_NUMBER}"}}'],
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -278,8 +274,8 @@ async def test_select_step_shows_all_discovered_devices(
     result = await _init_flow_and_fire_discovery(
         hass,
         [
-            f'{{"id": "{HABU_DEN_SERIAL}"}}',
-            f'{{"id": "{HABU_DEN_SERIAL_2}"}}',
+            f'{{"id": "{TEST_SERIAL_NUMBER}"}}',
+            f'{{"id": "{TEST_SERIAL_NUMBER_2}"}}',
         ],
     )
 
@@ -288,47 +284,20 @@ async def test_select_step_shows_all_discovered_devices(
 
     schema = result["data_schema"].schema
     serial_field = schema["serial_number"]
-    assert HABU_DEN_SERIAL in serial_field.container
-    assert HABU_DEN_SERIAL_2 in serial_field.container
-
-
-def _mqtt_service_info(payload: str) -> MqttServiceInfo:
-    """Create a MqttServiceInfo for testing."""
-    return MqttServiceInfo(
-        topic=GREENCELL_DISC_TOPIC,
-        payload=payload,
-        qos=0,
-        retain=False,
-        subscribed_topic=GREENCELL_BROADCAST_TOPIC,
-        timestamp=time.time(),
-    )
-
-
-async def test_mqtt_discovery_creates_confirm_step(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-    mqtt_service_info,
-) -> None:
-    """Test MQTT discovery triggers confirm step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_MQTT},
-        data=mqtt_service_info(f'{{"id": "{HABU_DEN_SERIAL}"}}'),
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert TEST_SERIAL_NUMBER in serial_field.container
+    assert TEST_SERIAL_NUMBER_2 in serial_field.container
 
 
 async def test_mqtt_discovery_confirm_creates_entry(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    mqtt_service_info,
 ) -> None:
-    """Test confirming MQTT discovery creates config entry."""
+    """Test MQTT discovery triggers confirm step and creates entry on confirm."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
-        data=_mqtt_service_info(f'{{"id": "{HABU_DEN_SERIAL}"}}'),
+        data=mqtt_service_info(f'{{"id": "{TEST_SERIAL_NUMBER}"}}'),
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -339,19 +308,21 @@ async def test_mqtt_discovery_confirm_creates_entry(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{GREENCELL_HABU_DEN} {HABU_DEN_SERIAL}"
-    assert result["data"] == {"serial_number": HABU_DEN_SERIAL}
+    assert result["title"] == f"{GREENCELL_HABU_DEN} {TEST_SERIAL_NUMBER}"
+    assert result["data"] == {"serial_number": TEST_SERIAL_NUMBER}
+    assert result["result"].unique_id == TEST_SERIAL_NUMBER
 
 
 async def test_mqtt_discovery_other_device(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    mqtt_service_info,
 ) -> None:
     """Test MQTT discovery with non-HabuDen device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
-        data=_mqtt_service_info(f'{{"id": "{OTHER_DEVICE_SERIAL}"}}'),
+        data=mqtt_service_info(f'{{"id": "{OTHER_DEVICE_SERIAL}"}}'),
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -367,18 +338,16 @@ async def test_mqtt_discovery_other_device(
 async def test_mqtt_discovery_duplicate_aborts(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    mock_config_entry: MockConfigEntry,
+    mqtt_service_info,
 ) -> None:
     """Test MQTT discovery aborts for already configured device."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=HABU_DEN_SERIAL,
-        data={"serial_number": HABU_DEN_SERIAL},
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
-        data=_mqtt_service_info(f'{{"id": "{HABU_DEN_SERIAL}"}}'),
+        data=mqtt_service_info(f'{{"id": "{TEST_SERIAL_NUMBER}"}}'),
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -405,13 +374,14 @@ async def test_mqtt_discovery_duplicate_aborts(
 async def test_mqtt_discovery_invalid_payload(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    mqtt_service_info,
     payload: str,
 ) -> None:
     """Test MQTT discovery aborts on invalid payloads."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
-        data=_mqtt_service_info(payload),
+        data=mqtt_service_info(payload),
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -421,6 +391,7 @@ async def test_mqtt_discovery_invalid_payload(
 async def test_mqtt_discovery_attribute_error(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
+    mqtt_service_info,
 ) -> None:
     """Test MQTT discovery aborts when json.loads raises AttributeError."""
     with patch(
@@ -430,7 +401,7 @@ async def test_mqtt_discovery_attribute_error(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_MQTT},
-            data=_mqtt_service_info('{"id": "anything"}'),
+            data=mqtt_service_info('{"id": "anything"}'),
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -453,3 +424,26 @@ async def test_user_setup_mqtt_subscription_value_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "mqtt_subscription_failed"
+
+
+async def test_mqtt_discovery_already_in_progress(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    mqtt_service_info,
+) -> None:
+    """Test MQTT discovery aborts when another flow for same serial is in progress."""
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_MQTT},
+        data=mqtt_service_info(f'{{"id": "{TEST_SERIAL_NUMBER}"}}'),
+    )
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "confirm"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_MQTT},
+        data=mqtt_service_info(f'{{"id": "{TEST_SERIAL_NUMBER}"}}'),
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_in_progress"

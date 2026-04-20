@@ -3,12 +3,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Greencell Device EVGC021A2275XXXXXXXXXX Current phase L1',
+      'friendly_name': 'Habu Den EVGC021A22750001ZM0001 Current phase L1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.greencell_device_evgc021a2275xxxxxxxxxx_current_phase_l1',
+    'entity_id': 'sensor.habu_den_evgc021a22750001zm0001_current_phase_l1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

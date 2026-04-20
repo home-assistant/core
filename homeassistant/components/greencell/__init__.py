@@ -22,83 +22,56 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-async def wait_for_device_ready(
-    hass: HomeAssistant,
-    serial: str,
-) -> tuple[Callable[[], None], asyncio.Event]:
-    """Subscribe to GREENCELL_DISC_TOPIC and device voltage topic.
-
-    Return (unsubscribe_all, event) where event is set on first message.
-    """
-    event = asyncio.Event()
-    unsub_disc: Callable[[], None] | None = None
-    unsub_volt: Callable[[], None] | None = None
+def make_ready_handler(
+    serial: str, event: asyncio.Event
+) -> Callable[[ReceiveMessage], None]:
+    """Create an MQTT message handler that sets event when device matches serial."""
 
     @callback
     def _on_message(message: ReceiveMessage) -> None:
-        """Handle readiness message."""
         if event.is_set():
             return
-
         try:
             data = json.loads(message.payload)
-            if message.topic == GREENCELL_DISC_TOPIC:
-                # On the discovery topic, require a matching id to avoid
-                # marking unrelated devices as ready.
-                if data.get("id") != serial:
-                    return
-            elif "id" in data and data["id"] != serial:
-                # For per-device topics, still reject explicit mismatched ids,
-                # but allow messages without an id.
-                return
         except ValueError, TypeError:
-            _LOGGER.debug("Received invalid JSON on readiness topic, ignoring")
+            return
+
+        if message.topic == GREENCELL_DISC_TOPIC:
+            if data.get("id") != serial:
+                return
+        elif data.get("id") and data["id"] != serial:
             return
 
         event.set()
-        _LOGGER.debug("Received initial valid message for device %s", serial)
 
-    try:
-        unsub_disc = await mqtt.async_subscribe(hass, GREENCELL_DISC_TOPIC, _on_message)
-        topic = f"/greencell/evse/{serial}/voltage"
-        unsub_volt = await mqtt.async_subscribe(hass, topic, _on_message)
-    except HomeAssistantError as err:
-        _LOGGER.error("Failed to subscribe for readiness check: %s", err)
-        if unsub_disc:
-            unsub_disc()
-        raise ConfigEntryNotReady(f"MQTT subscription failed: {err}") from err
-
-    def _unsubscribe_all() -> None:
-        """Safe cleanup of subscriptions."""
-        nonlocal unsub_disc, unsub_volt
-        if unsub_disc:
-            unsub_disc()
-            unsub_disc = None  # Prevent double unsubscription
-        if unsub_volt:
-            unsub_volt()
-            unsub_volt = None
-
-    return _unsubscribe_all, event
+    return _on_message
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) -> bool:
-    """Set up Greencell from a config entry with test-before-setup and runtime_data."""
+    """Set up Greencell from a config entry."""
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
         raise ConfigEntryNotReady("MQTT integration is not available")
 
     serial: str = entry.data[CONF_SERIAL_NUMBER]
-    unsub, device_ready_event = await wait_for_device_ready(hass, serial)
+    device_ready_event = asyncio.Event()
+    on_message = make_ready_handler(serial, device_ready_event)
+
     try:
-        async with asyncio.timeout(DISCOVERY_TIMEOUT):
-            await device_ready_event.wait()
+        unsub_disc = await mqtt.async_subscribe(hass, GREENCELL_DISC_TOPIC, on_message)
+        unsub_volt = await mqtt.async_subscribe(
+            hass, f"/greencell/evse/{serial}/voltage", on_message
+        )
+        try:
+            async with asyncio.timeout(DISCOVERY_TIMEOUT):
+                await device_ready_event.wait()
+        finally:
+            unsub_disc()
+            unsub_volt()
     except TimeoutError as err:
-        unsub()
-        raise ConfigEntryNotReady(
-            f"No initial data from device {serial} within {DISCOVERY_TIMEOUT}s"
-        ) from err
-    finally:
-        unsub()
+        raise ConfigEntryNotReady(f"No initial data from device {serial}") from err
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady(f"MQTT error: {err}") from err
 
     entry.runtime_data = GreencellRuntimeData(
         access=GreencellAccess(GreencellHaAccessLevel.EXECUTE),
