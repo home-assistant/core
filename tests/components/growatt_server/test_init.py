@@ -845,8 +845,19 @@ async def test_dynamic_device_added(
     )
     # New device should be in runtime_data
     assert "NEW456789" in mock_config_entry.runtime_data.devices
-    # Entities for the new device should have been created via the dispatcher
+    # Entities for the new device should have been created via the dispatcher.
+    # Verify multiple entity types to confirm end-to-end dynamic device support
     assert hass.states.get("switch.new456789_charge_from_grid") is not None
+    # Additional check: verify entities exist in the entity registry
+    entity_registry = er.async_get(hass)
+    new_device_entities = [
+        entity
+        for entity in entity_registry.entities.values()
+        if entity.device_id == device_registry.async_get_device(
+            identifiers={(DOMAIN, "NEW456789")}
+        ).id
+    ]
+    assert len(new_device_entities) > 0, "No entities created for new device"
 
 
 @pytest.mark.usefixtures("init_integration")

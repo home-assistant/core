@@ -377,6 +377,9 @@ async def async_setup_entry(
 
     async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
         """Scan for new or removed devices and update HA accordingly."""
+        # Fetch current config (in case it was updated via reauth or options)
+        current_plant_id = config_entry.data.get(CONF_PLANT_ID, DEFAULT_PLANT_ID)
+
         total_coordinator = config_entry.runtime_data.total_coordinator
         # Signal the coordinator to also fetch the device list on its next
         # _sync_update_data run, then force an immediate refresh.  This keeps
@@ -414,7 +417,7 @@ async def async_setup_entry(
             if not device_domain_ids:
                 continue
             # Skip the plant "total" device
-            if plant_id in device_domain_ids:
+            if current_plant_id in device_domain_ids:
                 continue
             if device_domain_ids.isdisjoint(current_device_sns):
                 for device_sn in device_domain_ids:

@@ -34,7 +34,6 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-<<<<<<< HEAD
   discovery-update-info:
     status: exempt
     comment: >-
