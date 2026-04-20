@@ -81,4 +81,9 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await asyncio.gather(
+            *(c.device.close() for c in entry.runtime_data.values()),
+            return_exceptions=True,
+        )
+    return unload_ok
