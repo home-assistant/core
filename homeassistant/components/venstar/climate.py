@@ -20,7 +20,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
@@ -50,7 +50,7 @@ from .const import (
     DOMAIN,
     HOLD_MODE_TEMPERATURE,
 )
-from .coordinator import VenstarDataUpdateCoordinator
+from .coordinator import VenstarConfigEntry, VenstarDataUpdateCoordinator
 from .entity import VenstarEntity
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
@@ -70,11 +70,11 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VenstarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Venstar thermostat."""
-    venstar_data_coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    venstar_data_coordinator = config_entry.runtime_data
     async_add_entities(
         [
             VenstarThermostat(
@@ -122,7 +122,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
     def __init__(
         self,
         venstar_data_coordinator: VenstarDataUpdateCoordinator,
-        config: ConfigEntry,
+        config: VenstarConfigEntry,
     ) -> None:
         """Initialize the thermostat."""
         super().__init__(venstar_data_coordinator, config)
