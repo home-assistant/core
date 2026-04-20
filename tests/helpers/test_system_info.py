@@ -111,6 +111,10 @@ async def test_non_hassio_installation_type(
             return_value=is_venv,
         ),
         patch("homeassistant.helpers.system_info.cached_get_user", return_value=user),
+        patch(
+            "homeassistant.helpers.system_info.async_get_container_arch",
+            return_value="aarch64",
+        ),
     ):
         info = await async_get_system_info(hass)
         assert info["installation_type"] == expected_installation_type
