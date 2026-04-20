@@ -21,9 +21,6 @@
     "mode_not_supported": {
       "message": "The mode `{mode}` is not supported by this controller"
     },
-    "refresh_too_recent": {
-      "message": "The location was refreshed less than {seconds} seconds ago; please wait before refreshing again"
-    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }

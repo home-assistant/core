@@ -6,19 +6,15 @@ All evohome systems have a controller and at least one zone.
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import TEST_INSTALLS
 
@@ -152,12 +148,8 @@ async def test_dhw_reset_button_press(
 async def test_location_refresh_button_press(
     hass: HomeAssistant,
     refresh_button_id: str,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test SERVICE_PRESS on the location refresh button."""
-
-    # move past the debouncer cooldown to avoid tripping the recency check
-    freezer.tick(timedelta(seconds=30))
 
     with patch("evohomeasync2.location.Location.update") as mock_fcn:
         await hass.services.async_call(
@@ -169,28 +161,3 @@ async def test_location_refresh_button_press(
         await hass.async_block_till_done()
 
         mock_fcn.assert_awaited_once_with()
-
-
-@pytest.mark.parametrize("install", ["default"])
-@pytest.mark.usefixtures("evohome")
-async def test_location_refresh_button_press_too_recent(
-    hass: HomeAssistant,
-    refresh_button_id: str,
-) -> None:
-    """Test SERVICE_PRESS on the refresh button raises when called too soon."""
-
-    # the initial refresh happened at setup, so a press now should be too recent
-    with (
-        patch("evohomeasync2.location.Location.update") as mock_fcn,
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: refresh_button_id},
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "refresh_too_recent"
-    mock_fcn.assert_not_awaited()
