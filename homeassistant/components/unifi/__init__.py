@@ -3,15 +3,23 @@
 from aiounifi.models.client import Client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .const import (
+    CONF_CLIENT_SOURCE,
+    CONF_SITE_ID,
+    CONF_TRACK_CLIENTS,
+    CONF_TRACK_WIRED_CLIENTS,
+    DOMAIN,
+    PLATFORMS,
+    UNIFI_WIRELESS_CLIENTS,
+)
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
@@ -33,6 +41,67 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await wireless_clients.async_load()
 
     return True
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: UnifiConfigEntry
+) -> bool:
+    """Migrate old config entry."""
+    options = dict(config_entry.options)
+
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        tracked_clients = _get_tracked_clients(hass, config_entry, options)
+        options[CONF_CLIENT_SOURCE] = sorted(tracked_clients)
+        options.pop(CONF_TRACK_CLIENTS, None)
+        options.pop(CONF_TRACK_WIRED_CLIENTS, None)
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=2
+        )
+
+    return True
+
+
+@callback
+def _async_get_tracked_clients_from_entity_registry(
+    hass: HomeAssistant, config_entry: UnifiConfigEntry
+) -> set[str]:
+    """Return client trackers already present in the entity registry."""
+    tracked_clients: set[str] = set()
+    entity_registry = er.async_get(hass)
+    site_id = config_entry.data[CONF_SITE_ID]
+
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if entry.domain != Platform.DEVICE_TRACKER:
+            continue
+
+        unique_id = entry.unique_id
+        mac: str | None = None
+
+        if unique_id.startswith(f"{site_id}-"):
+            mac = unique_id.removeprefix(f"{site_id}-")
+        elif unique_id.endswith(f"-{site_id}"):
+            mac = unique_id.removesuffix(f"-{site_id}")
+
+        if mac is not None and mac.count(":") == 5:
+            tracked_clients.add(mac)
+
+    return tracked_clients
+
+
+def _get_tracked_clients(
+    hass: HomeAssistant, config_entry: UnifiConfigEntry, options: dict[str, object]
+) -> set[str]:
+    """Build the client whitelist from explicit selection and entity registry."""
+    tracked_clients: set[str] = set()
+    if isinstance((client_source := options.get(CONF_CLIENT_SOURCE, [])), list):
+        tracked_clients.update(client_source)
+    tracked_clients.update(
+        _async_get_tracked_clients_from_entity_registry(hass, config_entry)
+    )
+
+    return tracked_clients
 
 
 async def async_setup_entry(

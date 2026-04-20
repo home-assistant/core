@@ -20,8 +20,8 @@ from homeassistant.components.sensor import (
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
-    CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
@@ -463,7 +463,7 @@ async def test_no_clients(hass: HomeAssistant) -> None:
         {
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: False,
-            CONF_TRACK_CLIENTS: False,
+            CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
             CONF_TRACK_DEVICES: False,
         }
     ],
@@ -522,7 +522,7 @@ async def test_bandwidth_sensors(
     hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 3
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
     assert hass.states.get("sensor.wireless_client_rx") is None
     assert hass.states.get("sensor.wireless_client_tx") is None
@@ -535,7 +535,7 @@ async def test_bandwidth_sensors(
     hass.config_entries.async_update_entry(config_entry_setup, options=options)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 7
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
@@ -544,6 +544,9 @@ async def test_bandwidth_sensors(
 
 
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]}]
+)
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wired_client_speed_sensor(
@@ -581,7 +584,13 @@ async def test_wired_client_speed_sensor(
 
 @pytest.mark.parametrize(
     "config_entry_options",
-    [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_CLIENT_SOURCE: ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+        }
+    ],
 )
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT, WIRELESS_CLIENT]])
 @pytest.mark.usefixtures("config_entry_setup")
@@ -980,7 +989,6 @@ async def test_device_system_stats(
         {
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: False,
-            CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         }
     ],
@@ -1120,7 +1128,6 @@ async def test_bandwidth_port_sensors(
         {
             CONF_ALLOW_BANDWIDTH_SENSORS: False,
             CONF_ALLOW_UPTIME_SENSORS: False,
-            CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         }
     ],
@@ -1393,7 +1400,10 @@ async def _test_uptime_entity(
     return config_entry
 
 
-@pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_UPTIME_SENSORS: True}])
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_ALLOW_UPTIME_SENSORS: True, CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]}],
+)
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
 @pytest.mark.parametrize(
     ("initial_uptime", "event_uptime", "small_variation_uptime", "new_uptime"),

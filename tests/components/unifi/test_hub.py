@@ -8,7 +8,7 @@ from unittest.mock import patch
 import aiounifi
 import pytest
 
-from homeassistant.components.unifi.const import DOMAIN
+from homeassistant.components.unifi.const import CONF_CLIENT_SOURCE, DOMAIN
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
@@ -81,6 +81,9 @@ async def test_reset_fails(
 
 
 @pytest.mark.usefixtures("mock_device_registry")
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]}]
+)
 async def test_connection_state_signalling(
     hass: HomeAssistant,
     config_entry_factory: ConfigEntryFactoryType,

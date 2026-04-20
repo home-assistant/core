@@ -17,9 +17,7 @@ from homeassistant.components.unifi.const import (
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
-    CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    CONF_TRACK_WIRED_CLIENTS,
     DOMAIN,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
@@ -412,8 +410,6 @@ async def test_advanced_option_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_TRACK_CLIENTS: False,
-            CONF_TRACK_WIRED_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
             CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
             CONF_DETECTION_TIME: 100,
@@ -423,7 +419,6 @@ async def test_advanced_option_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "client_control"
     assert not result["last_step"]
-
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -447,8 +442,6 @@ async def test_advanced_option_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
-        CONF_TRACK_CLIENTS: False,
-        CONF_TRACK_WIRED_CLIENTS: False,
         CONF_TRACK_DEVICES: False,
         CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
         CONF_DETECTION_TIME: 100,
@@ -478,7 +471,6 @@ async def test_simple_option_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
             CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         },
@@ -486,7 +478,7 @@ async def test_simple_option_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_TRACK_CLIENTS: False,
+        CONF_CLIENT_SOURCE: [],
         CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }

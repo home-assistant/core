@@ -105,9 +105,7 @@
           "detection_time": "Time in seconds from last seen until considered away",
           "ignore_wired_bug": "Disable UniFi Network wired bug logic",
           "ssid_filter": "Select SSIDs to track wireless clients on",
-          "track_clients": "Track network clients",
-          "track_devices": "Track network devices (Ubiquiti devices)",
-          "track_wired_clients": "Include wired network clients"
+          "track_devices": "Track network devices (Ubiquiti devices)"
         },
         "data_description": {
           "detection_time": "Number of seconds since last seen before a client is considered away.",
@@ -123,7 +121,6 @@
       "simple_options": {
         "data": {
           "block_client": "[%key:component::unifi::options::step::client_control::data::block_client%]",
-          "track_clients": "[%key:component::unifi::options::step::device_tracker::data::track_clients%]",
           "track_devices": "[%key:component::unifi::options::step::device_tracker::data::track_devices%]"
         },
         "data_description": {

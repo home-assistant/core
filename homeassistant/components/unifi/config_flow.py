@@ -52,9 +52,7 @@ from .const import (
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
-    CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
 )
@@ -76,6 +74,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Network config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     sites: Sites
 
@@ -287,15 +286,12 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_TRACK_CLIENTS,
-                        default=self.hub.config.option_track_clients,
-                    ): bool,
-                    vol.Optional(
                         CONF_TRACK_DEVICES,
                         default=self.hub.config.option_track_devices,
                     ): bool,
                     vol.Optional(
-                        CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
+                        CONF_BLOCK_CLIENT,
+                        default=self.options[CONF_BLOCK_CLIENT],
                     ): cv.multi_select(clients_to_block),
                 }
             ),
@@ -369,19 +365,12 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_TRACK_CLIENTS,
-                        default=self.hub.config.option_track_clients,
-                    ): bool,
-                    vol.Optional(
-                        CONF_TRACK_WIRED_CLIENTS,
-                        default=self.hub.config.option_track_wired_clients,
-                    ): bool,
-                    vol.Optional(
                         CONF_TRACK_DEVICES,
                         default=self.hub.config.option_track_devices,
                     ): bool,
                     vol.Optional(
-                        CONF_SSID_FILTER, default=selected_ssids_to_filter
+                        CONF_SSID_FILTER,
+                        default=selected_ssids_to_filter,
                     ): cv.multi_select(ssid_filter),
                     vol.Optional(
                         CONF_DETECTION_TIME,

@@ -26,17 +26,13 @@ from ..const import (
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
-    CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
-    DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
-    DEFAULT_TRACK_WIRED_CLIENTS,
 )
 
 
@@ -58,10 +54,6 @@ class UnifiConfig:
 
     # Device tracker options
 
-    option_track_clients: list[str]
-    """Config entry option to not track clients."""
-    option_track_wired_clients: list[str]
-    """Config entry option to not track wired clients."""
     option_track_devices: bool
     """Config entry option to not track devices."""
     option_ssid_filter: set[str]
@@ -99,10 +91,6 @@ class UnifiConfig:
             site=config[CONF_SITE_ID],
             ssl_context=config.get(CONF_VERIFY_SSL, False),
             option_supported_clients=options.get(CONF_CLIENT_SOURCE, []),
-            option_track_clients=options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS),
-            option_track_wired_clients=options.get(
-                CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
-            ),
             option_track_devices=options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES),
             option_ssid_filter=set(options.get(CONF_SSID_FILTER, [])),
             option_detection_time=timedelta(
