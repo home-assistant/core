@@ -26,7 +26,7 @@ from .const import (
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 
-type TuyaConfigEntry = ConfigEntry[SharingDeviceListener]
+type TuyaConfigEntry = ConfigEntry[DeviceListener]
 
 
 def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
