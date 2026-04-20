@@ -98,12 +98,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
-                    ): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_SCHEMA, reconfigure_entry.data
             ),
             errors=errors,
         )
