@@ -1634,7 +1634,7 @@ nextcord==3.1.0
 nextdns==5.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.7.0
+nhc==0.8.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.22.0
@@ -2935,11 +2935,9 @@ sentence-stream==1.2.0
 sentry-sdk==2.48.0
 
 # homeassistant.components.acer_projector
-# homeassistant.components.homeassistant_hardware
 # homeassistant.components.serial
 # homeassistant.components.usb
-# homeassistant.components.zha
-serialx==1.2.2
+serialx==1.4.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.1.1
@@ -3205,7 +3203,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==1.0.3
+universal-silabs-flasher==1.1.0
 
 # homeassistant.components.upb
 upb-lib==0.6.1
@@ -3398,7 +3396,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==1.1.2
+zha==1.2.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
