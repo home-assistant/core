@@ -82,7 +82,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         ):
             # guard missing value
             return None
-        return bool(
+        return (
             LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP[CommandClass(value.command_class)]
             == self.info.primary_value.value
         )

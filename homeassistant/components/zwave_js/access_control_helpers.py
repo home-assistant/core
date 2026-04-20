@@ -8,15 +8,15 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from zwave_js_server.const import SupervisionStatus
 from zwave_js_server.const.command_class.access_control import (
+    SetCredentialStatus,
+    SetUserStatus,
     UserCredentialRule,
     UserCredentialType,
     UserCredentialUserType,
 )
 from zwave_js_server.model.access_control import SetUserOptions
 from zwave_js_server.model.node import Node
-from zwave_js_server.model.value import SupervisionResult
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -89,24 +89,53 @@ CREDENTIAL_RULE_REVERSE_MAP: dict[str, UserCredentialRule] = {
 }
 
 
-def _raise_on_supervision_fail(
-    result: SupervisionResult | None, translation_key: str
-) -> None:
-    """Raise HomeAssistantError if the supervision result indicates failure.
+_SET_USER_STATUS_KEYS: dict[SetUserStatus, str] = {
+    SetUserStatus.ERROR_ADD_REJECTED_LOCATION_OCCUPIED: "user_rejected_add_occupied",
+    SetUserStatus.ERROR_MODIFY_REJECTED_LOCATION_EMPTY: "user_rejected_modify_empty",
+    SetUserStatus.ERROR_UNKNOWN: "user_rejected_unknown",
+}
 
-    A ``None`` result means the device did not report supervision (treated as
-    success-by-omission). ``WORKING`` is reported while a long-running command
-    is still in progress — it is never a final state once awaited, so it is
-    treated as success here. ``NO_SUPPORT`` and ``FAIL`` both indicate the
-    device rejected or cannot handle the command.
-    """
-    if result is None:
+_SET_CREDENTIAL_STATUS_KEYS: dict[SetCredentialStatus, str] = {
+    SetCredentialStatus.ERROR_ADD_REJECTED_LOCATION_OCCUPIED: (
+        "credential_rejected_add_occupied"
+    ),
+    SetCredentialStatus.ERROR_MODIFY_REJECTED_LOCATION_EMPTY: (
+        "credential_rejected_modify_empty"
+    ),
+    SetCredentialStatus.ERROR_DUPLICATE_CREDENTIAL: "credential_rejected_duplicate",
+    SetCredentialStatus.ERROR_MANUFACTURER_SECURITY_RULES: (
+        "credential_rejected_manufacturer_rules"
+    ),
+    SetCredentialStatus.ERROR_DUPLICATE_ADMIN_PIN_CODE: (
+        "credential_rejected_duplicate_admin_pin"
+    ),
+    SetCredentialStatus.ERROR_WRONG_USER_UNIQUE_IDENTIFIER: (
+        "credential_rejected_wrong_uui"
+    ),
+    SetCredentialStatus.ERROR_UNKNOWN: "credential_rejected_unknown",
+}
+
+
+def _raise_on_set_user_error(status: SetUserStatus) -> None:
+    """Raise HomeAssistantError when a user-mutation command is rejected."""
+    if status is SetUserStatus.OK:
         return
-    if result.status in (SupervisionStatus.FAIL, SupervisionStatus.NO_SUPPORT):
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-        )
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=_SET_USER_STATUS_KEYS.get(status, "user_rejected_unknown"),
+    )
+
+
+def _raise_on_set_credential_error(status: SetCredentialStatus) -> None:
+    """Raise HomeAssistantError when a credential-mutation command is rejected."""
+    if status is SetCredentialStatus.OK:
+        return
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=_SET_CREDENTIAL_STATUS_KEYS.get(
+            status, "credential_rejected_unknown"
+        ),
+    )
 
 
 # --- TypedDicts for structured return values ---
@@ -132,11 +161,12 @@ class CredentialCapabilitiesResult(TypedDict):
     supported_credential_types: dict[str, CredentialTypeCapability]
 
 
-class CredentialReference(TypedDict):
+class Credential(TypedDict):
     """A credential reference within a user entry."""
 
     type: str
     slot: int
+    data: str | None
 
 
 class UserEntry(TypedDict):
@@ -147,7 +177,7 @@ class UserEntry(TypedDict):
     active: bool
     user_type: str
     credential_rule: str | None
-    credentials: list[CredentialReference]
+    credentials: list[Credential]
 
 
 class UsersResult(TypedDict):
@@ -216,7 +246,7 @@ async def async_get_credential_capabilities(
             for ut in user_caps.supported_user_types
             if ut in USER_TYPE_MAP
         ],
-        max_user_name_length=user_caps.max_user_name_length,
+        max_user_name_length=user_caps.max_user_name_length or 0,
         supported_credential_rules=[
             CREDENTIAL_RULE_MAP[cr]
             for cr in user_caps.supported_credential_rules
@@ -237,33 +267,33 @@ async def async_get_users(node: Node) -> UsersResult:
 
     user_caps = await node.access_control.async_get_user_capabilities_cached()
     users = await node.access_control.async_get_users_cached()
+    all_credentials = await node.access_control.async_get_all_credentials_cached()
 
-    user_list: list[UserEntry] = []
-    for user in users:
-        credentials_data = await node.access_control.async_get_credentials_cached(
-            user.user_id
-        )
-        credentials: list[CredentialReference] = [
-            CredentialReference(
+    credentials_by_user: dict[int, list[Credential]] = {}
+    for cred in all_credentials:
+        credentials_by_user.setdefault(cred.user_id, []).append(
+            Credential(
                 type=CREDENTIAL_TYPE_MAP.get(cred.type, str(cred.type)),
                 slot=cred.slot,
-            )
-            for cred in credentials_data
-        ]
-        user_list.append(
-            UserEntry(
-                user_index=user.user_id,
-                user_name=user.user_name,
-                active=user.active,
-                user_type=USER_TYPE_MAP.get(user.user_type, str(user.user_type)),
-                credential_rule=(
-                    CREDENTIAL_RULE_MAP.get(user.credential_rule)
-                    if user.credential_rule is not None
-                    else None
-                ),
-                credentials=credentials,
+                data=cred.data if isinstance(cred.data, str) else None,
             )
         )
+
+    user_list: list[UserEntry] = [
+        UserEntry(
+            user_index=user.user_id,
+            user_name=user.user_name,
+            active=user.active,
+            user_type=USER_TYPE_MAP.get(user.user_type, str(user.user_type)),
+            credential_rule=(
+                CREDENTIAL_RULE_MAP.get(user.credential_rule)
+                if user.credential_rule is not None
+                else None
+            ),
+            credentials=credentials_by_user.get(user.user_id, []),
+        )
+        for user in users
+    ]
 
     return UsersResult(
         max_users=user_caps.max_users,
@@ -309,21 +339,21 @@ async def async_set_user(
         credential_rule=credential_rule,
     )
 
-    result = await node.access_control.async_set_user(user_index, options)
-    _raise_on_supervision_fail(result, "set_user_rejected")
+    status = await node.access_control.async_set_user(user_index, options)
+    _raise_on_set_user_error(status)
     return SetUserResult(user_index=user_index)
 
 
 async def async_clear_user(node: Node, user_index: int) -> None:
     """Delete a single access-control user."""
-    result = await node.access_control.async_delete_user(user_index)
-    _raise_on_supervision_fail(result, "clear_user_rejected")
+    status = await node.access_control.async_delete_user(user_index)
+    _raise_on_set_user_error(status)
 
 
 async def async_clear_all_users(node: Node) -> None:
     """Delete all access-control users."""
-    result = await node.access_control.async_delete_all_users()
-    _raise_on_supervision_fail(result, "clear_all_users_rejected")
+    status = await node.access_control.async_delete_all_users()
+    _raise_on_set_user_error(status)
 
 
 async def async_set_credential(
@@ -359,8 +389,10 @@ async def async_set_credential(
                 translation_key="credential_type_not_supported",
                 translation_placeholders={"credential_type": cred_type_str},
             )
-        existing = await node.access_control.async_get_credentials_cached(user_index)
-        used_slots = {c.slot for c in existing if c.type == credential_type}
+        existing = await node.access_control.async_get_credentials_by_type_cached(
+            credential_type
+        )
+        used_slots = {c.slot for c in existing}
         credential_slot = next(
             (
                 s
@@ -379,10 +411,10 @@ async def async_set_credential(
                 translation_placeholders={"credential_type": cred_type_str},
             )
 
-    result = await node.access_control.async_set_credential(
+    status = await node.access_control.async_set_credential(
         user_index, credential_type, credential_slot, credential_data
     )
-    _raise_on_supervision_fail(result, "set_credential_rejected")
+    _raise_on_set_credential_error(status)
 
     return SetCredentialResult(
         credential_slot=credential_slot,
@@ -397,20 +429,20 @@ async def async_clear_credential(
     credential_slot: int,
 ) -> None:
     """Delete a single credential."""
-    result = await node.access_control.async_delete_credential(
+    status = await node.access_control.async_delete_credential(
         user_index, credential_type, credential_slot
     )
-    _raise_on_supervision_fail(result, "clear_credential_rejected")
+    _raise_on_set_credential_error(status)
 
 
 async def async_clear_all_credentials(node: Node, user_index: int) -> None:
     """Delete all credentials for a user."""
     credentials = await node.access_control.async_get_credentials_cached(user_index)
     for cred in credentials:
-        result = await node.access_control.async_delete_credential(
+        status = await node.access_control.async_delete_credential(
             user_index, cred.type, cred.slot
         )
-        _raise_on_supervision_fail(result, "clear_credential_rejected")
+        _raise_on_set_credential_error(status)
 
 
 async def async_get_credential_status(
@@ -421,7 +453,7 @@ async def async_get_credential_status(
 ) -> CredentialStatusResult:
     """Query the status of a credential slot."""
     credential = await node.access_control.async_get_credential_cached(
-        user_index, credential_type, credential_slot
+        credential_type, credential_slot
     )
 
     return CredentialStatusResult(

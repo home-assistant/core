@@ -6,10 +6,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import voluptuous as vol
-from zwave_js_server.const import SupervisionStatus
-from zwave_js_server.const.command_class.access_control import UserCredentialType
+from zwave_js_server.const.command_class.access_control import (
+    SetCredentialStatus,
+    SetUserStatus,
+    UserCredentialType,
+)
 from zwave_js_server.model.node import Node
-from zwave_js_server.model.value import SupervisionResult
 
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
@@ -41,14 +43,16 @@ def _mock_access_control(node: Node) -> MagicMock:
 
     api.async_get_users_cached = AsyncMock(return_value=[])
     api.async_get_user_cached = AsyncMock(return_value=None)
-    api.async_set_user = AsyncMock(return_value=None)
-    api.async_delete_user = AsyncMock(return_value=None)
-    api.async_delete_all_users = AsyncMock(return_value=None)
+    api.async_set_user = AsyncMock(return_value=SetUserStatus.OK)
+    api.async_delete_user = AsyncMock(return_value=SetUserStatus.OK)
+    api.async_delete_all_users = AsyncMock(return_value=SetUserStatus.OK)
 
     api.async_get_credentials_cached = AsyncMock(return_value=[])
+    api.async_get_credentials_by_type_cached = AsyncMock(return_value=[])
+    api.async_get_all_credentials_cached = AsyncMock(return_value=[])
     api.async_get_credential_cached = AsyncMock(return_value=None)
-    api.async_set_credential = AsyncMock(return_value=None)
-    api.async_delete_credential = AsyncMock(return_value=None)
+    api.async_set_credential = AsyncMock(return_value=SetCredentialStatus.OK)
+    api.async_delete_credential = AsyncMock(return_value=SetCredentialStatus.OK)
 
     # cached_property: override via instance __dict__
     node.endpoints[0].__dict__["access_control"] = api
@@ -263,7 +267,7 @@ async def test_get_users(
     user.user_type = MagicMock()
     user.credential_rule = None
     api.async_get_users_cached.return_value = [user]
-    api.async_get_credentials_cached.return_value = []
+    api.async_get_all_credentials_cached.return_value = []
 
     result = await hass.services.async_call(
         DOMAIN,
@@ -389,17 +393,17 @@ async def test_set_credential_multi_target(
     assert result[device_2]["user_index"] == 1
 
 
-async def test_set_credential_supervision_fail_raises(
+async def test_set_credential_rejection_raises(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """A device-reported supervision FAIL must surface as HomeAssistantError."""
+    """A device-reported rejection must surface as HomeAssistantError."""
     api = _mock_access_control(lock_schlage_be469)
     api.async_set_credential = AsyncMock(
-        return_value=SupervisionResult({"status": SupervisionStatus.FAIL})
+        return_value=SetCredentialStatus.ERROR_DUPLICATE_CREDENTIAL
     )
 
     with pytest.raises(HomeAssistantError):
@@ -418,17 +422,17 @@ async def test_set_credential_supervision_fail_raises(
         )
 
 
-async def test_set_user_supervision_fail_raises(
+async def test_set_user_rejection_raises(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """A device-reported supervision FAIL on set_user must raise."""
+    """A device-reported rejection on set_user must raise."""
     api = _mock_access_control(lock_schlage_be469)
     api.async_set_user = AsyncMock(
-        return_value=SupervisionResult({"status": SupervisionStatus.FAIL})
+        return_value=SetUserStatus.ERROR_ADD_REJECTED_LOCATION_OCCUPIED
     )
 
     with pytest.raises(HomeAssistantError):
@@ -519,7 +523,7 @@ async def test_set_credential_no_available_slots(
     cred2 = MagicMock()
     cred2.type = UserCredentialType.PIN_CODE
     cred2.slot = 2
-    api.async_get_credentials_cached.return_value = [cred1, cred2]
+    api.async_get_credentials_by_type_cached.return_value = [cred1, cred2]
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

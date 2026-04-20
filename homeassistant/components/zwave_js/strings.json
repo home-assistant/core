@@ -301,14 +301,8 @@
     "clear_all_users_failed": {
       "message": "Failed to clear all users: {error}"
     },
-    "clear_all_users_rejected": {
-      "message": "The device rejected the request to delete all users."
-    },
     "clear_credential_failed": {
       "message": "Failed to clear credential: {error}"
-    },
-    "clear_credential_rejected": {
-      "message": "The device rejected the credential deletion."
     },
     "clear_lock_usercode_failed": {
       "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
@@ -316,8 +310,26 @@
     "clear_user_failed": {
       "message": "Failed to clear user {user_index}: {error}"
     },
-    "clear_user_rejected": {
-      "message": "The device rejected the user deletion."
+    "credential_rejected_add_occupied": {
+      "message": "Cannot add credential: the target slot is already in use."
+    },
+    "credential_rejected_duplicate": {
+      "message": "This credential is already registered on the device."
+    },
+    "credential_rejected_duplicate_admin_pin": {
+      "message": "This credential matches the admin PIN code and cannot be reused."
+    },
+    "credential_rejected_manufacturer_rules": {
+      "message": "The credential violates the device's manufacturer security rules (for example, it is too short, too long, or uses a disallowed pattern)."
+    },
+    "credential_rejected_modify_empty": {
+      "message": "Cannot modify credential: the slot is empty."
+    },
+    "credential_rejected_unknown": {
+      "message": "The device rejected the credential without giving a reason."
+    },
+    "credential_rejected_wrong_uui": {
+      "message": "The device rejected the credential because the user unique identifier does not match."
     },
     "credential_type_not_supported": {
       "message": "Credential type {credential_type} is not supported on this device"
@@ -343,17 +355,20 @@
     "set_credential_failed": {
       "message": "Failed to set credential: {error}"
     },
-    "set_credential_rejected": {
-      "message": "The device rejected the credential. The credential may be a duplicate, too short/long, or otherwise invalid for this device."
-    },
     "set_lock_usercode_failed": {
       "message": "Unable to set lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
     },
     "set_user_failed": {
       "message": "Failed to set user: {error}"
     },
-    "set_user_rejected": {
-      "message": "The device rejected the user update."
+    "user_rejected_add_occupied": {
+      "message": "Cannot add user: the target slot is already in use."
+    },
+    "user_rejected_modify_empty": {
+      "message": "Cannot modify user: the slot is empty."
+    },
+    "user_rejected_unknown": {
+      "message": "The device rejected the user update without giving a reason."
     }
   },
   "issues": {
