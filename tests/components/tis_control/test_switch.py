@@ -61,6 +61,15 @@ async def tis_switch(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+        mock_api_switch_cls.assert_called_once_with(
+            mock_tis_api,
+            switch_name="Test Switch",
+            channel_number=1,
+            device_id=[1, 2, 3],
+            is_protected=False,
+            gateway="mock_gateway",
+        )
+
         yield mock_switch_wrapper
 
 
@@ -210,6 +219,15 @@ async def test_setup_switch_no_name(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+        mock_api_switch_cls.assert_called_once_with(
+            mock_tis_api,
+            switch_name=None,
+            channel_number=1,
+            device_id=[1, 2, 3],
+            is_protected=False,
+            gateway="mock_gateway",
+        )
+
     entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
 
     assert len(entity_ids) == 1
@@ -310,6 +328,15 @@ async def test_invalid_appliance_data(
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
+
+        mock_api_switch_cls.assert_called_once_with(
+            mock_tis_api,
+            switch_name="Valid Switch",
+            channel_number=1,
+            device_id=[1, 2, 3],
+            is_protected=False,
+            gateway="mock_gateway",
+        )
 
     # Verify that only the single valid entity was created.
     entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
