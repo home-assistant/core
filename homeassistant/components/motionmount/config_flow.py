@@ -107,9 +107,17 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             # so we can avoid probing the device if its already
             # configured or ignored
             await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: host, CONF_PORT: port}
+            existing_entry = self._async_current_entries()
+            existing_host = next(
+                (e.data.get(CONF_HOST, "") for e in existing_entry if e.unique_id == unique_id),
+                "",
             )
+            if not existing_host or existing_host.endswith(".local"):
+                host_updates = {CONF_HOST: host, CONF_PORT: port}
+            else:
+                host_updates = {CONF_PORT: port}
+                self.connection_data[CONF_HOST] = existing_host
+            self._abort_if_unique_id_configured(updates=host_updates)
         else:
             # Avoid probing devices that already have an entry
             self._async_abort_entries_match({CONF_HOST: host})
@@ -131,9 +139,17 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if unique_id:
             await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: host, CONF_PORT: port}
+            existing_entry = self._async_current_entries()
+            existing_host = next(
+                (e.data.get(CONF_HOST, "") for e in existing_entry if e.unique_id == unique_id),
+                "",
             )
+            host_updates = (
+                {CONF_HOST: host, CONF_PORT: port}
+                if not existing_host or existing_host.endswith(".local")
+                else {CONF_PORT: port}
+            )
+            self._abort_if_unique_id_configured(updates=host_updates)
         else:
             await self._async_handle_discovery_without_unique_id()
 
