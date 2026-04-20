@@ -8,7 +8,6 @@
       "invalid_url": "URL is invalid or unreachable",
       "invalid_version": "Unsupported OPNsense firmware version",
       "privilege_missing": "The API key used does not have sufficient privileges. Please check the integration documentation for required permissions",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "ssl_error": "SSL certificate verification failed",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
