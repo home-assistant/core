@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import ActiveConnection, messages
+from homeassistant.const import EVENT_CALL_SERVICE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
@@ -289,6 +290,8 @@ async def ws_event_stream(
             return
 
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
+    # A past end_time makes this a one-shot fetch that never goes live.
+    will_go_live = not (end_time and end_time <= utc_now)
     event_processor = EventProcessor(
         hass,
         event_types,
@@ -297,6 +300,7 @@ async def ws_event_stream(
         None,
         timestamp=True,
         include_entity_name=False,
+        for_live_stream=will_go_live,
     )
 
     if end_time and end_time <= utc_now:
@@ -357,11 +361,15 @@ async def ws_event_stream(
         logbook_config: LogbookConfig = hass.data[DOMAIN]
         entities_filter = logbook_config.entity_filter
 
+    # Live subscription needs call_service events so the live consumer can
+    # cache parent user_ids as they fire. Historical queries don't — the
+    # context_only join fetches them by context_id regardless of type.
+    # Unfiltered streams already include it via BUILT_IN_EVENTS.
     async_subscribe_events(
         hass,
         subscriptions,
         _queue_or_cancel,
-        event_types,
+        {*event_types, EVENT_CALL_SERVICE},
         entities_filter,
         entity_ids,
         device_ids,
