@@ -1,189 +1,5 @@
 # serializer version: 1
-# name: test_service[end0-start0-incl_vat0-get_energy_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end0-start0-incl_vat0-get_gas_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end0-start0-incl_vat1-get_energy_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end0-start0-incl_vat1-get_gas_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end0-start1-incl_vat0-get_energy_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end0-start1-incl_vat0-get_gas_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end0-start1-incl_vat1-get_energy_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end0-start1-incl_vat1-get_gas_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end1-start0-incl_vat0-get_energy_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end1-start0-incl_vat0-get_gas_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end1-start0-incl_vat1-get_energy_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end1-start0-incl_vat1-get_gas_prices]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
-# name: test_service[end1-start1-incl_vat0-get_energy_prices]
-  dict({
-    'prices': list([
-      dict({
-        'price': 0.1308775,
-        'timestamp': '2026-04-10 07:00:00+00:00',
-      }),
-      dict({
-        'price': 0.125615,
-        'timestamp': '2026-04-10 08:00:00+00:00',
-      }),
-      dict({
-        'price': 0.1072,
-        'timestamp': '2026-04-10 09:00:00+00:00',
-      }),
-      dict({
-        'price': 0.103655,
-        'timestamp': '2026-04-10 10:00:00+00:00',
-      }),
-      dict({
-        'price': 0.09139,
-        'timestamp': '2026-04-10 11:00:00+00:00',
-      }),
-      dict({
-        'price': 0.095425,
-        'timestamp': '2026-04-10 12:00:00+00:00',
-      }),
-      dict({
-        'price': 0.084555,
-        'timestamp': '2026-04-10 13:00:00+00:00',
-      }),
-      dict({
-        'price': 0.1012625,
-        'timestamp': '2026-04-10 14:00:00+00:00',
-      }),
-      dict({
-        'price': 0.1207175,
-        'timestamp': '2026-04-10 15:00:00+00:00',
-      }),
-      dict({
-        'price': 0.1504,
-        'timestamp': '2026-04-10 16:00:00+00:00',
-      }),
-      dict({
-        'price': 0.2250025,
-        'timestamp': '2026-04-10 17:00:00+00:00',
-      }),
-      dict({
-        'price': 0.2381425,
-        'timestamp': '2026-04-10 18:00:00+00:00',
-      }),
-      dict({
-        'price': 0.17063,
-        'timestamp': '2026-04-10 19:00:00+00:00',
-      }),
-      dict({
-        'price': 0.142075,
-        'timestamp': '2026-04-10 20:00:00+00:00',
-      }),
-      dict({
-        'price': 0.12572,
-        'timestamp': '2026-04-10 21:00:00+00:00',
-      }),
-      dict({
-        'price': 0.125925,
-        'timestamp': '2026-04-10 22:00:00+00:00',
-      }),
-      dict({
-        'price': 0.1120525,
-        'timestamp': '2026-04-10 23:00:00+00:00',
-      }),
-      dict({
-        'price': 0.104565,
-        'timestamp': '2026-04-11 00:00:00+00:00',
-      }),
-      dict({
-        'price': 0.1010475,
-        'timestamp': '2026-04-11 01:00:00+00:00',
-      }),
-      dict({
-        'price': 0.0997025,
-        'timestamp': '2026-04-11 02:00:00+00:00',
-      }),
-      dict({
-        'price': 0.0968925,
-        'timestamp': '2026-04-11 03:00:00+00:00',
-      }),
-      dict({
-        'price': 0.0963775,
-        'timestamp': '2026-04-11 04:00:00+00:00',
-      }),
-      dict({
-        'price': 0.084415,
-        'timestamp': '2026-04-11 05:00:00+00:00',
-      }),
-      dict({
-        'price': 0.0640525,
-        'timestamp': '2026-04-11 06:00:00+00:00',
-      }),
-    ]),
-  })
-# ---
-# name: test_service[end1-start1-incl_vat0-get_gas_prices]
-  dict({
-    'prices': list([
-      dict({
-        'price': 0.430304930424,
-        'timestamp': '2026-04-11 04:00:00+00:00',
-      }),
-    ]),
-  })
-# ---
-# name: test_service[end1-start1-incl_vat1-get_energy_prices]
+# name: test_service[get_energy_prices-service_data1]
   dict({
     'prices': list([
       dict({
@@ -285,13 +101,25 @@
     ]),
   })
 # ---
-# name: test_service[end1-start1-incl_vat1-get_gas_prices]
+# name: test_service[get_energy_prices-service_data3]
+  dict({
+    'prices': list([
+    ]),
+  })
+# ---
+# name: test_service[get_gas_prices-service_data0]
   dict({
     'prices': list([
       dict({
-        'price': 0.52066896581304,
+        'price': 0.430304930424,
         'timestamp': '2026-04-11 04:00:00+00:00',
       }),
+    ]),
+  })
+# ---
+# name: test_service[get_gas_prices-service_data2]
+  dict({
+    'prices': list([
     ]),
   })
 # ---
