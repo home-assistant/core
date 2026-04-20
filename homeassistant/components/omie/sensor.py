@@ -1,7 +1,5 @@
 """Sensor for the OMIE - Spain and Portugal electricity prices integration."""
 
-from dataclasses import dataclass
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -22,22 +20,17 @@ PARALLEL_UPDATES = 0
 
 _ATTRIBUTION = "Data provided by OMIE.es"
 
-
-@dataclass(frozen=True)
-class OMIEPriceEntityDescription(SensorEntityDescription):
-    """Describes OMIE price entities."""
-
-    def __init__(self, key: str) -> None:
-        """Construct an OMIEPriceEntityDescription that reports prices in €/kWh."""
-        super().__init__(
-            key=key,
-            has_entity_name=True,
-            translation_key=key,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-            icon="mdi:currency-eur",
-            suggested_display_precision=4,
-        )
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    key: SensorEntityDescription(
+        key=key,
+        has_entity_name=True,
+        translation_key=key,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=4,
+    )
+    for key in ("pt_spot_price", "es_spot_price")
+}
 
 
 class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
@@ -54,7 +47,7 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = OMIEPriceEntityDescription(key=pyomie_series_name)
+        self.entity_description = SENSOR_DESCRIPTIONS[pyomie_series_name]
         self._attr_device_info = device_info
         self._attr_unique_id = pyomie_series_name
         self._pyomie_series_name = pyomie_series_name
@@ -97,7 +90,7 @@ async def async_setup_entry(
     device_info = DeviceInfo(
         configuration_url="https://www.omie.es/en/market-results",
         entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, entry.entry_id)},
+        identifiers={(DOMAIN, DOMAIN)},
         name="OMIE",
     )
 

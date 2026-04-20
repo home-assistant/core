@@ -2,10 +2,16 @@
 
 from typing import Any, Final
 
+from aiohttp import ClientResponseError
+import pyomie.main as pyomie
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .util import CET
 
 DEFAULT_NAME: Final = "OMIE"
 
@@ -20,6 +26,15 @@ class OMIEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the first and only step."""
         if user_input is not None:
-            return self.async_create_entry(title=DEFAULT_NAME, data={})
+            errors: dict[str, str] = {}
+            session = async_get_clientsession(self.hass)
+            cet_today = dt_util.now().astimezone(CET).date()
+            try:
+                await pyomie.spot_price(session, cet_today)
+            except ClientResponseError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(title=DEFAULT_NAME, data={})
+            return self.async_show_form(step_id="user", errors=errors)
 
         return self.async_show_form(step_id="user")

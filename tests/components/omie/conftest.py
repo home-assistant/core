@@ -22,7 +22,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="OMIE",
         domain=DOMAIN,
-        unique_id="omie_singleton",
     )
 
 
@@ -50,7 +49,10 @@ async def hass_madrid(hass: HomeAssistant) -> None:
 @pytest.fixture
 def mock_pyomie():
     """Mock pyomie.spot_price with realistic responses."""
-    with patch("homeassistant.components.omie.coordinator.pyomie") as mock:
+    with (
+        patch("homeassistant.components.omie.coordinator.pyomie") as mock,
+        patch("homeassistant.components.omie.config_flow.pyomie", mock),
+    ):
         mock.spot_price.side_effect = spot_price_fetcher({})
         yield mock
 

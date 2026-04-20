@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 import aiohttp
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -37,8 +36,10 @@ async def test_setup_and_unload_entry(
 
 
 @pytest.mark.usefixtures("hass_madrid")
+@pytest.mark.freeze_time("2024-01-15T12:01:00Z")
 async def test_coordinator_unavailability_logging(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_pyomie,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
@@ -46,18 +47,17 @@ async def test_coordinator_unavailability_logging(
     """Test coordinator logs unavailability and recovery appropriately."""
     mock_config_entry.add_to_hass(hass)
 
-    with freeze_time("2024-01-15T12:01:00Z"):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_pyomie.spot_price.call_count == 1
     assert "ERROR" not in caplog.text
 
     # Trigger refresh with API failure
     mock_pyomie.spot_price.side_effect = aiohttp.ClientError("Connection timeout")
-    with freeze_time("2024-01-15T12:16:02Z"):
-        async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
+    freezer.move_to("2024-01-15T12:16:02Z")
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
 
     assert mock_pyomie.spot_price.call_count == 2
     assert "Error requesting omie data" in caplog.text
@@ -65,18 +65,18 @@ async def test_coordinator_unavailability_logging(
 
     # Second failure should not log again
     caplog.clear()
-    with freeze_time("2024-01-15T12:31:02Z"):
-        async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
+    freezer.move_to("2024-01-15T12:31:02Z")
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
 
     assert mock_pyomie.spot_price.call_count == 3
     assert "Error" not in caplog.text
 
     # Trigger recovery
     mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
-    with freeze_time("2024-01-15T12:46:02Z"):
-        async_fire_time_changed(hass, dt_util.utcnow())
-        await hass.async_block_till_done()
+    freezer.move_to("2024-01-15T12:46:02Z")
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
 
     assert mock_pyomie.spot_price.call_count == 4
     assert "Fetching omie data recovered" in caplog.text

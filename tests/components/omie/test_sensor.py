@@ -21,6 +21,7 @@ async def test_sensor_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyomie,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
@@ -28,7 +29,6 @@ async def test_sensor_setup(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
