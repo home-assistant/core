@@ -493,8 +493,8 @@ async def test_simple_option_flow(
 
 async def test_discover_unifi_positive(hass: HomeAssistant) -> None:
     """Verify positive run of UniFi discovery."""
-    with patch("socket.gethostbyname", return_value=True):
-        assert await _async_discover_unifi(hass)
+    with patch("socket.gethostbyname", return_value="192.168.1.1"):
+        assert await _async_discover_unifi(hass) == "192.168.1.1"
 
 
 async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
@@ -508,7 +508,6 @@ INTEGRATION_DISCOVERY_INFO = {
     "hw_addr": "e0:63:da:20:14:a9",
     "hostname": "UniFi-Dream-Machine",
     "platform": "UCG-Ultra",
-    "services": {"Protect": True, "Network": True},
     "direct_connect_domain": "x.ui.direct",
 }
 
