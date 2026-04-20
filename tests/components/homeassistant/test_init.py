@@ -642,18 +642,38 @@ async def test_reload_all(
 
 
 @pytest.mark.parametrize(
-    ("arch", "bit_32", "venv", "expected_issue"),
+    ("arch", "bit_32", "venv", "expected_issues"),
     [
-        ("i386", True, False, "deprecated_method_architecture_local_deps"),
-        ("armhf", True, False, "deprecated_method_architecture_local_deps"),
-        ("armv7", True, False, "deprecated_method_architecture_local_deps"),
-        ("aarch64", False, False, "deprecated_method_local_deps"),
-        ("generic-x86-64", False, False, "deprecated_method_local_deps"),
-        ("i386", True, True, "deprecated_method_architecture"),
-        ("armhf", True, True, "deprecated_method_architecture"),
-        ("armv7", True, True, "deprecated_method_architecture"),
-        ("aarch64", False, True, "deprecated_method"),
-        ("generic-x86-64", False, True, "deprecated_method"),
+        (
+            "i386",
+            True,
+            False,
+            ["deprecated_method_architecture", "unsupported_local_deps"],
+        ),
+        (
+            "armhf",
+            True,
+            False,
+            ["deprecated_method_architecture", "unsupported_local_deps"],
+        ),
+        (
+            "armv7",
+            True,
+            False,
+            ["deprecated_method_architecture", "unsupported_local_deps"],
+        ),
+        ("aarch64", False, False, ["deprecated_method", "unsupported_local_deps"]),
+        (
+            "generic-x86-64",
+            False,
+            False,
+            ["deprecated_method", "unsupported_local_deps"],
+        ),
+        ("i386", True, True, ["deprecated_method_architecture"]),
+        ("armhf", True, True, ["deprecated_method_architecture"]),
+        ("armv7", True, True, ["deprecated_method_architecture"]),
+        ("aarch64", False, True, ["deprecated_method"]),
+        ("generic-x86-64", False, True, ["deprecated_method"]),
     ],
 )
 async def test_deprecated_installation_issue_core(
@@ -662,7 +682,7 @@ async def test_deprecated_installation_issue_core(
     arch: str,
     bit_32: bool,
     venv: bool,
-    expected_issue: str,
+    expected_issues: list[str],
 ) -> None:
     """Test deprecated installation issue."""
     with (
@@ -671,10 +691,9 @@ async def test_deprecated_installation_issue_core(
             return_value={
                 "installation_type": "Home Assistant Core",
                 "arch": arch,
+                "docker": False,
+                "virtualenv": venv,
             },
-        ),
-        patch(
-            "homeassistant.components.homeassistant.is_virtual_env", return_value=venv
         ),
         patch(
             "homeassistant.components.homeassistant._is_32_bit",
@@ -685,14 +704,15 @@ async def test_deprecated_installation_issue_core(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
-    assert issue.domain == DOMAIN
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.translation_placeholders == {
-        "installation_type": "Core",
-        "arch": arch,
-    }
+    assert len(issue_registry.issues) == len(expected_issues)
+    for expected_issue in expected_issues:
+        issue = issue_registry.async_get_issue(DOMAIN, expected_issue)
+        assert issue.domain == DOMAIN
+        assert issue.severity == ir.IssueSeverity.WARNING
+        assert issue.translation_placeholders == {
+            "installation_type": "Core",
+            "arch": arch,
+        }
 
 
 @pytest.mark.parametrize(

@@ -113,14 +113,6 @@
       "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been deprecated and will no longer be supported after the release of Home Assistant 2025.12.",
       "title": "Deprecation notice"
     },
-    "deprecated_method_architecture_local_deps": {
-      "description": "This system is using the {installation_type} installation type outside a virtual environment, and 32-bit hardware (`{arch}`), both of which have been deprecated and will no longer be supported after the release of Home Assistant 2025.12.",
-      "title": "Deprecation notice"
-    },
-    "deprecated_method_local_deps": {
-      "description": "This system is using the {installation_type} installation type outside a virtual environment, which has been unsupported since Home Assistant 2025.12 and will not work after the release of Home Assistant 2026.11. To continue receiving updates and support, migrate to a supported installation method.",
-      "title": "Deprecation notice: Installation method"
-    },
     "deprecated_os_aarch64": {
       "description": "This system is running on a 32-bit operating system (`armv7`), which has been deprecated and will no longer receive updates after the release of Home Assistant 2025.12. To continue using Home Assistant on this hardware, you will need to install a 64-bit operating system. Please refer to our [installation guide]({installation_guide}).",
       "title": "[%key:component::homeassistant::issues::deprecated_architecture::title%]"
@@ -211,6 +203,10 @@
         }
       },
       "title": "Storage corruption detected for {storage_key}"
+    },
+    "unsupported_local_deps": {
+      "description": "This system is using the {installation_type} installation type outside a virtual environment or a docker container, this is not supported and will not work after the release of Home Assistant 2026.11.",
+      "title": "Deprecation notice: Installation method"
     }
   },
   "services": {

@@ -54,7 +54,6 @@ from homeassistant.helpers.target import (
 )
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.package import is_virtual_env
 
 # The scene integration will do a late import of scene
 # so we want to make sure its loaded with the component
@@ -418,7 +417,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         installation_type = info["installation_type"][15:]
         if installation_type in {"Core", "Container"}:
-            core_installation = installation_type == "Core"
+            deprecated_method = installation_type == "Core"
             bit32 = _is_32_bit()
             arch = info["arch"]
             if bit32 and installation_type == "Container":
@@ -434,14 +433,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     translation_placeholders={"arch": arch},
                 )
             deprecated_architecture = bit32 and installation_type != "Container"
-            if core_installation or deprecated_architecture:
+            if deprecated_method or deprecated_architecture:
                 issue_id = "deprecated"
-                if core_installation:
+                if deprecated_method:
                     issue_id += "_method"
                 if deprecated_architecture:
                     issue_id += "_architecture"
-                if core_installation and not is_virtual_env():
-                    issue_id += "_local_deps"
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
@@ -455,6 +452,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "arch": arch,
                     },
                 )
+        if not info["docker"] and not info["virtualenv"]:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "unsupported_local_deps",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="unsupported_local_deps",
+                translation_placeholders={
+                    "installation_type": installation_type,
+                    "arch": arch,
+                },
+            )
 
     # Delay deprecation check to make sure installation method is determined correctly
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_deprecation)
