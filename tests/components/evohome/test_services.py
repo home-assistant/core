@@ -16,7 +16,6 @@ from homeassistant.components.evohome.const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
-    REFRESH_BREAKS_IN_HA_VERSION,
     RESET_BREAKS_IN_HA_VERSION,
     SERVICE_BREAKS_IN_HA_VERSION,
     EvoService,
@@ -34,10 +33,7 @@ from .const import TEST_INSTALLS
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.usefixtures("evohome")
-async def test_refresh_system(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
+async def test_refresh_system(hass: HomeAssistant) -> None:
     """Test Evohome's refresh_system service (for all temperature control systems)."""
 
     # EvoService.REFRESH_SYSTEM
@@ -50,13 +46,6 @@ async def test_refresh_system(
         )
 
         mock_fcn.assert_awaited_once_with()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_refresh_system_service")
-    assert issue is not None
-    assert issue.translation_key == "deprecated_refresh_system_service"
-    assert issue.translation_placeholders == {
-        "breaks_in_ha_version": REFRESH_BREAKS_IN_HA_VERSION,
-    }
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
