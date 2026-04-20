@@ -2,8 +2,6 @@
 
 import logging
 
-from Tami4EdgeAPI import Tami4EdgeAPI
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
