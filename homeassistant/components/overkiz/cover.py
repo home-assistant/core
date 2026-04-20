@@ -448,6 +448,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 OverkizState.CORE_MEMORIZED_1_POSITION
             ]:
                 position = fallback_state.value_as_int
+            else:
+                return None
 
         # Fallback for "Unknown position" preset
         if position == _POSITION_UNKNOWN:
@@ -460,6 +462,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
             if fallback_state := self.device.states[OverkizState.CORE_TARGET_CLOSURE]:
                 position = fallback_state.value_as_int
+            else:
+                return None
 
         if position is None:
             return None
