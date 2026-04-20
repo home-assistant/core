@@ -128,11 +128,10 @@ HOUSECODES = [
     "p",
 ]
 
-EVENT_GROUP_ON = "insteon.button_on"
-EVENT_GROUP_OFF = "insteon.button_off"
-EVENT_GROUP_ON_FAST = "insteon.button_on_fast"
-EVENT_GROUP_OFF_FAST = "insteon.button_off_fast"
 EVENT_CONF_BUTTON = "button"
+EVENT_CONF_BATTERY = "battery"
+EVENT_CONF_HEARTBEAT = "heartbeat"
+EVENT_CONF_MOISTURE = "moisture"
 
 STATE_NAME_LABEL_MAP = {
     DIMMABLE_LIGHT_MAIN: "Main",

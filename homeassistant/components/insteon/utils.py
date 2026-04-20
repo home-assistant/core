@@ -10,6 +10,18 @@ from pyinsteon import devices
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, DeviceAction
 from pyinsteon.device_types.device_base import Device
+from pyinsteon.events import (
+    HEARTBEAT_EVENT,
+    LEAK_DRY_EVENT,
+    LEAK_WET_EVENT,
+    LOW_BATTERY_EVENT,
+    OFF_EVENT,
+    OFF_FAST_EVENT,
+    ON_EVENT,
+    ON_FAST_EVENT,
+    Event,
+)
+from serial.tools import list_ports
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 
 from homeassistant.components import usb
@@ -21,11 +33,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DOMAIN,
+    EVENT_CONF_BATTERY,
     EVENT_CONF_BUTTON,
-    EVENT_GROUP_OFF,
-    EVENT_GROUP_OFF_FAST,
-    EVENT_GROUP_ON,
-    EVENT_GROUP_ON_FAST,
+    EVENT_CONF_HEARTBEAT,
+    EVENT_CONF_MOISTURE,
     SIGNAL_ADD_ENTITIES,
 )
 from .ipdb import get_device_platform_groups, get_device_platforms
@@ -52,29 +63,56 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
 
     @callback
     def async_fire_insteon_event(
-        name: str, address: Address, group: int, button: str | None = None
+        name: str,
+        address: Address,
+        group: int,
+        button: str | None = None,
+        low_battery: bool | None = None,
+        heartbeat: bool | None = None,
+        dry: bool | None = None,
     ):
-        # Firing an event when a button is pressed.
-        if button and button[-2] == "_":
-            button_id = button[-1].lower()
-        else:
-            button_id = None
-
+        event = name
         schema = {CONF_ADDRESS: address, "group": group}
-        if button_id:
-            schema[EVENT_CONF_BUTTON] = button_id
-        if name == ON_EVENT:
-            event = EVENT_GROUP_ON
-        elif name == OFF_EVENT:
-            event = EVENT_GROUP_OFF
-        elif name == ON_FAST_EVENT:
-            event = EVENT_GROUP_ON_FAST
-        elif name == OFF_FAST_EVENT:
-            event = EVENT_GROUP_OFF_FAST
-        else:
-            event = f"insteon.{name}"
+
+        # Prefix button events with "button_" and add the button number to the event data.
+        if (
+            name in (ON_EVENT, OFF_EVENT, ON_FAST_EVENT, OFF_FAST_EVENT)
+            and button is not None
+            and button[-2] == "_"
+        ):
+            schema[EVENT_CONF_BUTTON] = button[-1].lower()
+            event = f"button_{event}"
+
+        # Low battery
+        if name == LOW_BATTERY_EVENT and low_battery is not None:
+            schema[EVENT_CONF_BATTERY] = "low" if low_battery else "ok"
+
+        # Heartbeat missed
+        if name == HEARTBEAT_EVENT and heartbeat is not None:
+            schema[EVENT_CONF_HEARTBEAT] = "missed" if heartbeat else "received"
+
+        # Wet / dry for leak sensors
+        if name in (LEAK_WET_EVENT, LEAK_DRY_EVENT) and dry is not None:
+            schema[EVENT_CONF_MOISTURE] = "wet" if not dry else "dry"
+
+        # Prefix the event name with "insteon." to avoid conflicts with other integrations and to make it clear that the event is related to Insteon devices.
+        event = f"insteon.{event}"
+        legacy_event = event
+
+        # Remove the redundant "_event" suffix from the event name.
+        if event[-6:] == "_event":
+            event = event[:-6]
+
+        # Fire the event along with the data about the device address, group, button, etc
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
+
+        # For backward compatibility with custom automations that may be using the old event names, we will also fire an event with the old event name.
+        schema["deprecated"] = (
+            "Use the event name without the '_event' suffix instead, as the old event name will eventually be removed in a future release."
+        )
+        _LOGGER.debug("Firing event %s with %s", legacy_event, schema)
+        hass.bus.async_fire(legacy_event, schema)
 
     if str(device.address).startswith("X10"):
         return
