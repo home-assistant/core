@@ -109,7 +109,11 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             existing_entry = self._async_current_entries()
             existing_host = next(
-                (e.data.get(CONF_HOST, "") for e in existing_entry if e.unique_id == unique_id),
+                (
+                    e.data.get(CONF_HOST, "")
+                    for e in existing_entry
+                    if e.unique_id == unique_id
+                ),
                 "",
             )
             if not existing_host or existing_host.endswith(".local"):
@@ -141,7 +145,11 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             existing_entry = self._async_current_entries()
             existing_host = next(
-                (e.data.get(CONF_HOST, "") for e in existing_entry if e.unique_id == unique_id),
+                (
+                    e.data.get(CONF_HOST, "")
+                    for e in existing_entry
+                    if e.unique_id == unique_id
+                ),
                 "",
             )
             host_updates = (
