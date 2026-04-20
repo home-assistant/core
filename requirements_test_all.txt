@@ -1077,7 +1077,7 @@ hass-splunk==0.1.4
 hassil==3.5.0
 
 # homeassistant.components.jewish_calendar
-hdate[astral]==1.1.2
+hdate[astral]==1.2.1
 
 # homeassistant.components.hdfury
 hdfury==1.6.0
