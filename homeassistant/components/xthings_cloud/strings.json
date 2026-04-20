@@ -62,6 +62,10 @@
           "email": "Email",
           "password": "Password"
         },
+        "data_description": {
+          "email": "The email address used to register your Xthings Cloud account.",
+          "password": "Your Xthings Cloud account password."
+        },
         "description": "Your session has expired. Please re-enter your credentials.",
         "title": "Re-authenticate Xthings Cloud"
       },

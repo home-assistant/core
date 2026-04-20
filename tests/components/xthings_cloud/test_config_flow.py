@@ -20,8 +20,8 @@ from tests.common import MockConfigEntry
 
 MOCK_EMAIL = "test@example.com"
 MOCK_PASSWORD = "testpassword"
-MOCK_TOKEN = "mock_token"
-MOCK_REFRESH_TOKEN = "mock_refresh"
+MOCK_TOKEN = "mock_token_123"
+MOCK_REFRESH_TOKEN = "mock_refresh_token_456"
 
 
 async def test_user_flow_success(
