@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from enum import StrEnum, auto
 import logging
 
@@ -48,13 +47,16 @@ SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
 )
 
 
-def _iter_loaded_clients(
+def _get_client(
     hass: HomeAssistant,
-) -> Iterator[tuple[Vallox, ValloxDataUpdateCoordinator]]:
-    """Yield (client, coordinator) for every loaded Vallox config entry."""
-    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-        data = hass.data[DOMAIN][entry.entry_id]
-        yield data["client"], data["coordinator"]
+) -> tuple[Vallox, ValloxDataUpdateCoordinator]:
+    """Return (client, coordinator) for Vallox config entry."""
+    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    if len(entries) != 1:
+        raise ValueError("Expected exactly one loaded Vallox config entry")
+
+    data = hass.data[DOMAIN][entries[0].entry_id]
+    return data["client"], data["coordinator"]
 
 
 async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> None:
@@ -62,14 +64,12 @@ async def _async_set_profile_fan_speed(call: ServiceCall, profile: Profile) -> N
     fan_speed: int = call.data[ATTR_PROFILE_FAN_SPEED]
     _LOGGER.debug("Setting %s fan speed to: %d%%", profile.name, fan_speed)
 
-    for client, coordinator in _iter_loaded_clients(call.hass):
-        try:
-            await client.set_fan_speed(profile, fan_speed)
-        except ValloxApiException as err:
-            _LOGGER.error(
-                "Error setting fan speed for %s profile: %s", profile.name, err
-            )
-            continue
+    client, coordinator = _get_client(call.hass)
+    try:
+        await client.set_fan_speed(profile, fan_speed)
+    except ValloxApiException as err:
+        _LOGGER.error("Error setting fan speed for %s profile: %s", profile.name, err)
+    else:
         await coordinator.async_request_refresh()
 
 
@@ -94,17 +94,17 @@ async def _async_set_profile(call: ServiceCall) -> None:
     duration: int | None = call.data.get(ATTR_DURATION)
     _LOGGER.debug("Activating profile %s for %s min", profile_key, duration)
 
-    for client, coordinator in _iter_loaded_clients(call.hass):
-        try:
-            await client.set_profile(I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration)
-        except ValloxApiException as err:
-            _LOGGER.error(
-                "Error setting profile %s for duration %s: %s",
-                profile_key,
-                duration,
-                err,
-            )
-            continue
+    client, coordinator = _get_client(call.hass)
+    try:
+        await client.set_profile(I18N_KEY_TO_VALLOX_PROFILE[profile_key], duration)
+    except ValloxApiException as err:
+        _LOGGER.error(
+            "Error setting profile %s for duration %s: %s",
+            profile_key,
+            duration,
+            err,
+        )
+    else:
         await coordinator.async_request_refresh()
 
 
