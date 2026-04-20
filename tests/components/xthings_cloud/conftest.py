@@ -60,6 +60,15 @@ def mock_login_2fa_phone() -> dict:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.xthings_cloud.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_api_client(mock_login_success: dict) -> Generator[AsyncMock]:
     """Mock the XthingsCloudApiClient."""
     with patch(

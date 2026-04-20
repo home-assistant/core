@@ -26,6 +26,7 @@ MOCK_REFRESH_TOKEN = "mock_refresh_token_456"
 
 async def test_user_flow_success(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     mock_instance_id: None,
 ) -> None:
@@ -126,6 +127,7 @@ async def test_user_flow_unknown_error(
 
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     mock_instance_id: None,
     mock_config_entry: MockConfigEntry,
@@ -145,6 +147,7 @@ async def test_user_flow_already_configured(
 
 async def test_user_flow_2fa_email(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     mock_instance_id: None,
     mock_login_success: dict,
@@ -174,6 +177,7 @@ async def test_user_flow_2fa_email(
 
 async def test_user_flow_2fa_phone(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_api_client: AsyncMock,
     mock_instance_id: None,
     mock_login_success: dict,

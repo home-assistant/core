@@ -47,12 +47,18 @@
         "data": {
           "verification_code": "Verification Code"
         },
+        "data_description": {
+          "verification_code": "Enter the 6-digit code sent to your email."
+        },
         "description": "A 6-digit verification code has been sent to {email}. Please enter the code.",
         "title": "Email Verification"
       },
       "reauth_2fa_phone": {
         "data": {
           "verification_code": "Verification Code"
+        },
+        "data_description": {
+          "verification_code": "Enter the 6-digit code sent to your phone."
         },
         "description": "A 6-digit verification code has been sent to your phone. Please enter the code.",
         "title": "Phone Verification"
