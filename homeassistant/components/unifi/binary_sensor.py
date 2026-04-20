@@ -51,7 +51,8 @@ def async_device_wan_status_supported_fn(
 ) -> bool:
     """Determine if device has the specific WAN interface."""
     wan_index = wan_name.removeprefix("WAN") or "1"
-    return f"wan{wan_index}" in hub.api.devices[obj_id].raw
+    device = hub.api.devices[obj_id]
+    return getattr(device, f"wan{wan_index}") is not None
 
 
 @callback
