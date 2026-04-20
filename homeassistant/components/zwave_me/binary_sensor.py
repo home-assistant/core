@@ -9,13 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 BINARY_SENSORS_MAP: dict[str, BinarySensorEntityDescription] = {
@@ -32,22 +31,22 @@ DEVICE_NAME = ZWaveMePlatform.BINARY_SENSOR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform."""
 
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
-        controller: ZWaveMeController = hass.data[DOMAIN][config_entry.entry_id]
-        description = BINARY_SENSORS_MAP.get(
-            new_device.probeType, BINARY_SENSORS_MAP["generic"]
-        )
-        sensor = ZWaveMeBinarySensor(controller, new_device, description)
-
         async_add_entities(
             [
-                sensor,
+                ZWaveMeBinarySensor(
+                    config_entry.runtime_data,
+                    new_device,
+                    BINARY_SENSORS_MAP.get(
+                        new_device.probeType, BINARY_SENSORS_MAP["generic"]
+                    ),
+                )
             ]
         )
 

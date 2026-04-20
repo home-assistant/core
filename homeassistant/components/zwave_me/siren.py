@@ -2,13 +2,15 @@
 
 from typing import Any
 
+from zwave_me_ws import ZWaveMeData
+
 from homeassistant.components.siren import SirenEntity, SirenEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.SIREN
@@ -16,21 +18,14 @@ DEVICE_NAME = ZWaveMePlatform.SIREN
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the siren platform."""
 
     @callback
     def add_new_device(new_device):
-        controller = hass.data[DOMAIN][config_entry.entry_id]
-        siren = ZWaveMeSiren(controller, new_device)
-
-        async_add_entities(
-            [
-                siren,
-            ]
-        )
+        async_add_entities([ZWaveMeSiren(config_entry.runtime_data, new_device)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -42,7 +37,7 @@ async def async_setup_entry(
 class ZWaveMeSiren(ZWaveMeEntity, SirenEntity):
     """Representation of a ZWaveMe siren."""
 
-    def __init__(self, controller, device):
+    def __init__(self, controller: ZWaveMeController, device: ZWaveMeData) -> None:
         """Initialize the device."""
         super().__init__(controller, device)
         self._attr_supported_features = (
