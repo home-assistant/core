@@ -12,12 +12,10 @@ from afsapi import (
     FSApiError,
     FSConnectionError,
     FSNotImplementedError,
-    OutOfRangeError,
     PlayCaps,
     PlayRepeatMode,
     PlayState,
 )
-from afsapi.exceptions import FSNodeBlockedError
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -29,7 +27,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -57,13 +55,17 @@ def fs_command_exception_wrap[
         except FSConnectionError as err:
             command = func.__name__.removeprefix("async_")
             raise HomeAssistantError(
-                f"Failed to execute {command}: could not connect to device"
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"command": command},
             ) from err
-        except (OutOfRangeError, FSNodeBlockedError) as err:
-            raise ServiceValidationError(str(err)) from err
         except FSApiError as err:
             command = func.__name__.removeprefix("async_")
-            raise HomeAssistantError(f"Failed to execute {command}: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"command": command, "message": str(err)},
+            ) from err
 
     return _wrap
 
