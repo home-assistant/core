@@ -50,6 +50,7 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
 
     async def _async_setup(self) -> None:
         """Set up the coordinator with initial authentication check."""
+        assert self.config_entry is not None
         try:
             await self.api.login(
                 self.config_entry.data[CONF_EMAIL],
