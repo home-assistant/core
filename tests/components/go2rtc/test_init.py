@@ -42,7 +42,10 @@ from homeassistant.components.go2rtc.const import (
     DOMAIN,
     RECOMMENDED_VERSION,
 )
-from homeassistant.components.go2rtc.util import get_go2rtc_unix_socket_path
+from homeassistant.components.go2rtc.util import (
+    get_camera_identifier,
+    get_go2rtc_unix_socket_path,
+)
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -85,9 +88,10 @@ async def _test_setup_and_signaling(
     config: ConfigType,
     after_setup_fn: Callable[[], None],
     camera: MockCamera,
+    camera_unique_id: str | None,
 ) -> None:
     """Test the go2rtc config entry."""
-    entity_id = camera.entity_id
+    identifier = camera_unique_id or camera.entity_id
     assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
 
     assert await async_setup_component(hass, DOMAIN, config)
@@ -124,17 +128,17 @@ async def _test_setup_and_signaling(
     await test("sesion_1")
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id,
+        identifier,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
     # Stream exists but the source is different
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://different")])
+        identifier: Stream([Producer("rtsp://different")])
     }
 
     receive_message_callback.reset_mock()
@@ -142,17 +146,17 @@ async def _test_setup_and_signaling(
     await test("session_2")
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id,
+        identifier,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
     # If the stream is already added, the stream should not be added again.
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://stream")])
+        identifier: Stream([Producer("rtsp://stream")])
     }
 
     receive_message_callback.reset_mock()
@@ -191,6 +195,13 @@ async def _test_setup_and_signaling(
     "mock_get_binary",
     "mock_is_docker_env",
     "mock_go2rtc_entry",
+)
+@pytest.mark.parametrize(
+    "camera_unique_id",
+    [
+        "test_camera_unique_id",
+        None,
+    ],
 )
 @pytest.mark.parametrize(
     ("config", "ui_enabled", "expected_username", "expected_password"),
@@ -245,6 +256,7 @@ async def test_setup_go_binary(
     ui_enabled: bool,
     expected_username: str,
     expected_password: str,
+    camera_unique_id: str | None,
 ) -> None:
     """Test the go2rtc config entry with binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
@@ -276,6 +288,7 @@ async def test_setup_go_binary(
             config,
             after_setup,
             init_test_integration,
+            camera_unique_id,
         )
 
     await hass.async_stop()
@@ -283,6 +296,13 @@ async def test_setup_go_binary(
 
 
 @pytest.mark.usefixtures("mock_go2rtc_entry")
+@pytest.mark.parametrize(
+    "camera_unique_id",
+    [
+        "test_camera_unique_id",
+        None,
+    ],
+)
 @pytest.mark.parametrize(
     ("go2rtc_binary", "is_docker_env"),
     [
@@ -301,6 +321,7 @@ async def test_setup(
     mock_get_binary: Mock,
     mock_is_docker_env: Mock,
     has_go2rtc_entry: bool,
+    camera_unique_id: str | None,
 ) -> None:
     """Test the go2rtc config entry without binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
@@ -318,6 +339,7 @@ async def test_setup(
         config,
         after_setup,
         init_test_integration,
+        camera_unique_id,
     )
 
     mock_get_binary.assert_not_called()
@@ -816,11 +838,12 @@ async def test_generic_workaround(
         image = await async_get_image(hass, camera.entity_id)
         assert image.content == image_bytes
 
+    identifier = get_camera_identifier(camera)
     rest_client.streams.add.assert_called_once_with(
-        camera.entity_id,
+        identifier,
         [
             "ffmpeg:https://my_stream_url.m3u8",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
@@ -849,11 +872,12 @@ async def _test_camera_orientation(
     await camera_fn(hass, camera)
 
     # Verify the stream was configured correctly
+    identifier = get_camera_identifier(camera)
     rest_client.streams.add.assert_called_once_with(
-        camera.entity_id,
+        identifier,
         [
             expected_stream_source,
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
