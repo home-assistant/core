@@ -20,7 +20,7 @@ class ZWaveMeController:
 
     def __init__(self, hass: HomeAssistant, config: ZWaveMeConfigEntry) -> None:
         """Create the API instance."""
-        self.device_ids: set = set()
+        self.device_ids: set[str] = set()
         self._hass = hass
         self.config = config
         self.zwave_api = ZWaveMe(
