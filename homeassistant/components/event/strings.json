@@ -30,10 +30,6 @@
   },
   "title": "Event",
   "triggers": {
-    "rang": {
-      "description": "Triggers after one or more doorbells rang.",
-      "name": "Doorbell rang"
-    },
     "received": {
       "description": "Triggers after one or more event entities receive a matching event.",
       "fields": {

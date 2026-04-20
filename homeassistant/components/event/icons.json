@@ -14,9 +14,6 @@
     }
   },
   "triggers": {
-    "rang": {
-      "trigger": "mdi:doorbell"
-    },
     "received": {
       "trigger": "mdi:eye-check"
     }

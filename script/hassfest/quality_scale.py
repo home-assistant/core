@@ -2103,6 +2103,7 @@ NO_QUALITY_SCALE = [
     "device_tracker",
     "diagnostics",
     "door",
+    "doorbell",
     "ffmpeg",
     "file_upload",
     "frontend",

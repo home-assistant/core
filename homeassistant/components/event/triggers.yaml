@@ -14,8 +14,3 @@ received:
             - unavailable
             - unknown
           multiple: true
-rang:
-  target:
-    entity:
-      domain: event
-      device_class: doorbell
