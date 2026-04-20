@@ -452,6 +452,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "arch": arch,
                     },
                 )
+        if not info["docker"] and not info["virtualenv"]:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "unsupported_local_deps",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="unsupported_local_deps",
+            )
 
     # Delay deprecation check to make sure installation method is determined correctly
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_deprecation)
