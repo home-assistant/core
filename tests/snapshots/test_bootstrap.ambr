@@ -1,7 +1,6 @@
 # serializer version: 1
 # name: test_setting_up_config[False]
   set({
-    'ai_task',
     'air_quality',
     'alarm_control_panel',
     'analytics',
@@ -65,7 +64,6 @@
     'logger',
     'lovelace',
     'media_player',
-    'media_source',
     'moisture',
     'motion',
     'network',
@@ -109,7 +107,6 @@
 # ---
 # name: test_setting_up_empty_config[False]
   set({
-    'ai_task',
     'air_quality',
     'alarm_control_panel',
     'analytics',
@@ -172,7 +169,6 @@
     'logger',
     'lovelace',
     'media_player',
-    'media_source',
     'moisture',
     'motion',
     'network',
