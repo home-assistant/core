@@ -16,7 +16,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-pytestmark = [pytest.mark.freeze_time("2025-12-21 15:00:00")]
+pytestmark = [pytest.mark.freeze_time("2026-04-10 20:32:59")]
 
 
 async def test_sensor(
@@ -34,19 +34,12 @@ async def test_sensor(
 
 
 @pytest.mark.usefixtures("init_integration")
-@pytest.mark.parametrize(
-    ("service", "expected_state"),
-    [
-        ("get_gas_prices", STATE_UNKNOWN),
-        ("get_electricity_prices", "1.03089335148272"),
-    ],
-)
+@pytest.mark.parametrize("service", ["get_gas_prices", "get_electricity_prices"])
 async def test_no_data(
     hass: HomeAssistant,
     mock_energyzero: MagicMock,
     freezer: FrozenDateTimeFactory,
     service: str,
-    expected_state: str,
 ) -> None:
     """Test the EnergyZero - No data available scenarios."""
     if service == "get_electricity_prices":
@@ -55,8 +48,10 @@ async def test_no_data(
             mock_energyzero.get_electricity_prices.return_value,
             EnergyZeroNoDataError,
         ]
+        expected_state = str(mock_energyzero.get_gas_prices.return_value.current_price)
     else:
         getattr(mock_energyzero, service).side_effect = EnergyZeroNoDataError
+        expected_state = STATE_UNKNOWN
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
