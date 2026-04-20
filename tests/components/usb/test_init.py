@@ -1344,6 +1344,59 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
     ]
 
 
+async def test_async_scan_serial_ports_with_scanner(hass: HomeAssistant) -> None:
+    """Contributed ports are appended to, and override, real scan results."""
+    real_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    real_usb = USBDevice(
+        device="/dev/serial/by-id/usb-Real-Stick",
+        vid="303A",
+        pid="4001",
+        serial_number="ABC123",
+        manufacturer="Nabu Casa",
+        description="ZBT-2",
+    )
+    contributed_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+    extra_socket = SerialDevice(
+        device="socket://127.0.0.1:9999",
+        serial_number=None,
+        manufacturer="Test",
+        description="Extra",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+    unregister = usb.async_register_serial_port_scanner(
+        hass, lambda _hass: [contributed_amA1, extra_socket]
+    )
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [contributed_amA1, real_usb, extra_socket]
+
+    unregister()
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+
 def test_usb_device_from_path_finds_by_symlink() -> None:
     """Test usb_device_from_path finds device by symlink path."""
     scanned_device = USBDevice(

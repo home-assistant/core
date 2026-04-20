@@ -345,15 +345,21 @@ class USBDiscovery:
         return _async_remove_callback
 
     async def async_scan_serial_ports(self) -> Sequence[USBDevice | SerialDevice]:
-        """Scan serial ports and return USB and other serial devices."""
-        ports: list[USBDevice | SerialDevice] = list(
-            await self.hass.async_add_executor_job(scan_serial_ports)
-        )
+        """Scan serial ports and return USB and other serial devices.
+
+        Ports returned by registered scanners override real ports with the same
+        device path, letting integrations enhance the metadata for known devices.
+        """
+        ports: dict[str, USBDevice | SerialDevice] = {
+            p.device: p
+            for p in await self.hass.async_add_executor_job(scan_serial_ports)
+        }
 
         for scanner in self._serial_port_scanners:
-            ports.extend(scanner(self.hass))
+            for port in scanner(self.hass):
+                ports[port.device] = port
 
-        return ports
+        return list(ports.values())
 
     @hass_callback
     def async_get_usb_matchers_for_device(self, device: USBDevice) -> list[USBMatcher]:
