@@ -94,6 +94,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     """Unload a config entry."""
-    if entry.data.get(CONF_USERNAME) and entry.data.get(CONF_PASSWORD):
-        return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
