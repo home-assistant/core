@@ -5,7 +5,7 @@ from __future__ import annotations
 from earn_e_p1 import DEFAULT_PORT, EarnEP1Listener
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -21,6 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
     """Set up EARN-E P1 Meter from a config entry."""
     host = entry.data[CONF_HOST]
     serial = entry.data[CONF_SERIAL]
+    mac = entry.data.get(CONF_MAC)
 
     # Get or create shared listener
     if DOMAIN not in hass.data:
@@ -34,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EarnEP1ConfigEntry) -> b
         hass.data[DOMAIN] = listener
 
     listener = hass.data[DOMAIN]
-    coordinator = EarnEP1Coordinator(hass, entry, host, serial, listener)
+    coordinator = EarnEP1Coordinator(hass, entry, host, serial, listener, mac)
     coordinator.start()
 
     entry.runtime_data = coordinator
