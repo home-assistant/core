@@ -48,7 +48,7 @@ async def async_setup_platform(
 class EvoRefreshLocationButton(
     CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEntity
 ):
-    """Button entity to force a refresh of a Location's status."""
+    """Button entity to force a refresh of a Location's state."""
 
     _evo_device: evo.Location
 
