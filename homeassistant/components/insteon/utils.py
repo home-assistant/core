@@ -22,7 +22,6 @@ from pyinsteon.events import (
     Event,
 )
 from serial.tools import list_ports
-from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 
 from homeassistant.components import usb
 from homeassistant.const import CONF_ADDRESS, Platform
