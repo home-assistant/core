@@ -9,7 +9,8 @@ from earn_e_p1 import EarnEP1Device, EarnEP1Listener, discover, validate
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_SERIAL, DOMAIN
 
@@ -34,6 +35,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_device: EarnEP1Device | None = None
+        self._discovered_mac: str | None = None
 
     async def _async_discover(self) -> EarnEP1Device | None:
         """Discover an EARN-E device on the network."""
@@ -57,6 +59,34 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         if listener is not None:
             return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
         return await validate(host, timeout=VALIDATION_TIMEOUT)
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery of an EARN-E P1 meter."""
+        ip = discovery_info.ip
+        raw_mac = discovery_info.macaddress
+
+        try:
+            device = await self._async_validate_host(ip)
+        except OSError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected error validating DHCP-discovered device")
+            return self.async_abort(reason="unknown")
+
+        if device is None:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(device.serial)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: ip, CONF_MAC: raw_mac},
+        )
+
+        self._discovered_device = device
+        self._discovered_mac = raw_mac
+        self.context["title_placeholders"] = {"host": ip}
+        return await self.async_step_discovery_confirm()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -124,9 +154,15 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             if device.serial:
                 await self.async_set_unique_id(device.serial)
                 self._abort_if_unique_id_configured()
+                data: dict[str, Any] = {
+                    CONF_HOST: device.host,
+                    CONF_SERIAL: device.serial,
+                }
+                if self._discovered_mac is not None:
+                    data[CONF_MAC] = self._discovered_mac
                 return self.async_create_entry(
                     title=f"EARN-E P1 ({device.host})",
-                    data={CONF_HOST: device.host, CONF_SERIAL: device.serial},
+                    data=data,
                 )
 
             # Discovery didn't get serial — validate to obtain it
@@ -143,9 +179,12 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await self.async_set_unique_id(validated.serial)
             self._abort_if_unique_id_configured()
+            data = {CONF_HOST: validated.host, CONF_SERIAL: validated.serial}
+            if self._discovered_mac is not None:
+                data[CONF_MAC] = self._discovered_mac
             return self.async_create_entry(
                 title=f"EARN-E P1 ({validated.host})",
-                data={CONF_HOST: validated.host, CONF_SERIAL: validated.serial},
+                data=data,
             )
 
         return self.async_show_form(

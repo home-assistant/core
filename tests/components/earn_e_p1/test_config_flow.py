@@ -9,11 +9,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import DOMAIN, MOCK_HOST, MOCK_SERIAL
+from .conftest import DHCP_DISCOVERY, DOMAIN, MOCK_HOST, MOCK_MAC, MOCK_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -350,3 +350,29 @@ async def test_validate_without_shared_listener(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_dhcp_discovery_new_device(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test DHCP discovers a new device and creates a config entry."""
+    with patch(VALIDATE_PATH, return_value=_mock_device()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: MOCK_HOST,
+        CONF_SERIAL: MOCK_SERIAL,
+        CONF_MAC: MOCK_MAC,
+    }
+    assert result["result"].unique_id == MOCK_SERIAL
