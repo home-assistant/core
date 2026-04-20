@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from datetime import datetime
 import re
-from typing import Any
 
 import evohomeasync2 as evo
 
@@ -50,7 +49,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-def _normalize_fault(fault: dict[str, Any]) -> dict[str, Any]:
+def _normalize_fault(fault: dict[str, str]) -> dict[str, datetime | str]:
     """Until library is updated to return snake_case, convert from PascalCase.
 
     Doing this conversion here allows adding this platform without needing to wait for
@@ -63,7 +62,7 @@ def _normalize_fault(fault: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "fault": _pascal_to_snake(fault["fault_type"]),
-        "since": parse_datetime(fault["since"]),
+        "since": parse_datetime(fault["since"], raise_on_error=True),
     }
 
 
@@ -94,13 +93,10 @@ class EvoFaultSensorBase(
         return bool(self._evo_device.active_faults)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, str | int | tuple]:
+    def extra_state_attributes(self) -> dict[str, list[dict[str, datetime | str]]]:
         """Return diagnostic details for all current faults."""
-        faults = tuple(_normalize_fault(f) for f in self._evo_device.active_faults)  # type: ignore[arg-type]
-        return {
-            "fault_count": len(faults),
-            "faults": faults,
-        }
+        faults = [_normalize_fault(f) for f in self._evo_device.active_faults]  # type: ignore[arg-type]
+        return {"faults": faults}
 
 
 class EvoGatewayFaultSensor(EvoFaultSensorBase):
@@ -135,8 +131,6 @@ class EvoControllerFaultSensor(EvoFaultSensorBase):
 
 class EvoDhwFaultSensor(EvoFaultSensorBase):
     """Fault sensor for a DHW controller."""
-
-    _attr_name = "DHW faults"
 
     _evo_device: evo.HotWater
 
