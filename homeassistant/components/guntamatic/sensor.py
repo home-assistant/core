@@ -116,16 +116,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guntamatic sensors from config entry."""
-
     coordinator = entry.runtime_data
 
-    sensors = [
-        GuntamaticSensor(coordinator, description)
-        for description in GUNTAMATIC_SENSORS
-        if description.key in coordinator.data
-    ]
-
-    async_add_entities(sensors)
+    async_add_entities(
+        [
+            GuntamaticSensor(coordinator, description)
+            for description in GUNTAMATIC_SENSORS
+            if description.key in coordinator.data
+        ]
+    )
 
 
 class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):

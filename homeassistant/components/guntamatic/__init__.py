@@ -17,10 +17,7 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GuntamaticConfigEntry) -> bool:
     """Set up guntamatic from a config entry."""
-
-    heater = Heater(entry.data[CONF_HOST])
-
-    coordinator = GuntamaticCoordinator(hass, heater, entry)
+    coordinator = GuntamaticCoordinator(hass, Heater(entry.data[CONF_HOST]), entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
