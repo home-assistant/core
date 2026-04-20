@@ -63,8 +63,8 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_code"),
     [
-        (SERVICE_TURN_ON, {}, LGTVCode.POWER),
-        (SERVICE_TURN_OFF, {}, LGTVCode.POWER),
+        (SERVICE_TURN_ON, {}, LGTVCode.POWER_ON),
+        (SERVICE_TURN_OFF, {}, LGTVCode.POWER_OFF),
         (SERVICE_VOLUME_UP, {}, LGTVCode.VOLUME_UP),
         (SERVICE_VOLUME_DOWN, {}, LGTVCode.VOLUME_DOWN),
         (SERVICE_VOLUME_MUTE, {"is_volume_muted": True}, LGTVCode.MUTE),

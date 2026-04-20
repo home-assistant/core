@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==2.2.0
+PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
 PyViCare==2.59.0
@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.0
+actron-neo-api==0.5.3
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -392,6 +392,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
+# homeassistant.components.russound_rnet
 aiorussound==5.0.1
 
 # homeassistant.components.ruuvi_gateway
@@ -1036,6 +1037,9 @@ fressnapftracker==0.2.2
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.1
 
+# homeassistant.components.fumis
+fumis==0.2.1
+
 # homeassistant.components.fyta
 fyta_cli==0.7.2
 
@@ -1188,7 +1192,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==5.11.1
+habluetooth==6.1.0
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1398,7 +1402,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.3.28.223133
+knx-frontend==2026.4.19.175239
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1494,7 +1498,7 @@ lxml==6.0.1
 matrix-nio==0.25.2
 
 # homeassistant.components.matter
-matter-python-client==0.4.1
+matter-python-client==0.6.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -2686,7 +2690,7 @@ python-songpal==0.16.2
 python-tado==0.18.16
 
 # homeassistant.components.technove
-python-technove==2.0.0
+python-technove==2.1.1
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
@@ -2871,9 +2875,6 @@ rova==0.4.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
-
-# homeassistant.components.russound_rnet
-russound==0.2.0
 
 # homeassistant.components.ruuvitag_ble
 ruuvitag-ble==0.4.0

@@ -145,7 +145,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._discovered_ip == self._discovered_ip  # noqa: SLF001
+        return other_flow._discovered_ip == self._discovered_ip
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
