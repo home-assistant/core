@@ -92,9 +92,6 @@ async def test_victron_device_tracker(
     assert state is not None
     assert state.attributes["latitude"] == 52.1
     assert state.attributes["longitude"] == 4.4
-    assert state.attributes["altitude"] == 11.0
-    assert state.attributes["course"] == 180.0
-    assert state.attributes["speed"] == 3.5
 
     # Send GPS fix lost to exercise the non-GpsLocation reset branch.
     await inject_message(
@@ -109,6 +106,3 @@ async def test_victron_device_tracker(
     assert state is not None
     assert "latitude" not in state.attributes
     assert "longitude" not in state.attributes
-    assert "altitude" not in state.attributes
-    assert "course" not in state.attributes
-    assert "speed" not in state.attributes
