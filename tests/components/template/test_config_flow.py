@@ -956,7 +956,7 @@ async def test_options_remove_device_class(
     extra_options: dict[str, Any],
     suggested_device_class: str | None,
 ) -> None:
-    """Test removing the binary sensor device class in options."""
+    """Test removing the device class in options."""
 
     input_entities = ["one", "two"]
 
