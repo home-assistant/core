@@ -40,21 +40,25 @@ async def test_user(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> Non
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    # Use async_configure instead of async_init for form submission
+    # Submit user step, should go to interfaces step
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=CONFIG_DATA,
     )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "interfaces"
 
+    # Submit interfaces step (simulate user selecting all interfaces)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"tracker_interfaces": []},
+    )
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == "http://router.lan/api"
-
     assert result.get("data") == CONFIG_DATA
-
     assert "result" in result
     config_entry: ConfigEntry | None = result.get("result")
     assert config_entry is not None
-
     subentries: Iterable[ConfigSubentryData] | None = result.get("subentries")
     assert subentries is not None
     assert subentries == ()
@@ -111,21 +115,40 @@ async def test_on_api_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
         )
-
         assert result.get("type") == data_entry_flow.FlowResultType.FORM
-        assert result.get("errors") == {"base": "cannot_connect"}
+        assert result.get("step_id") == "user"
 
-    # No error this time
-    with patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"):
-        # Use async_configure instead of async_init for form submission
+        # Submit user step, should show error
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONFIG_DATA,
         )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("errors") == {"base": "cannot_connect"}
 
-    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+    # No error this time
+    with (
+        patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
+            return_value={"LAN": {"name": "LAN"}},
+        ),
+    ):
+        # Submit user step, should go to interfaces step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_DATA,
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "interfaces"
+
+        # Submit interfaces step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"tracker_interfaces": []},
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_on_unknown_error(hass: HomeAssistant) -> None:
@@ -134,6 +157,9 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": SOURCE_USER},
     )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
     with patch(
         "homeassistant.components.opnsense.config_flow.OPNsenseClient.validate",
         side_effect=TypeError,
@@ -142,14 +168,28 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONFIG_DATA,
         )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "unknown"}
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("errors") == {"base": "unknown"}
 
     # No error this time
-    with patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"):
-        # Use async_configure instead of async_init for form submission
+    with (
+        patch("homeassistant.components.opnsense.config_flow.OPNsenseClient.validate"),
+        patch(
+            "homeassistant.components.opnsense.config_flow.OPNsenseClient.get_interfaces",
+            return_value={"LAN": {"name": "LAN"}},
+        ),
+    ):
+        # Submit user step, should go to interfaces step
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONFIG_DATA,
         )
-    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result.get("type") == data_entry_flow.FlowResultType.FORM
+        assert result.get("step_id") == "interfaces"
+
+        # Submit interfaces step
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"tracker_interfaces": []},
+        )
+        assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
