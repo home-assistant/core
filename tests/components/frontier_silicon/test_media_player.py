@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from afsapi.exceptions import FSConnectionError, FSNotImplementedError
+from afsapi import FSConnectionError, FSNotImplementedError
 import pytest
 
 from homeassistant.components.frontier_silicon.const import DOMAIN
