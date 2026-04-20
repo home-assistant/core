@@ -5,20 +5,21 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientResponseError, ClientSession
 import voluptuous as vol
 from weatherflow4py.api import WeatherFlowRestAPI
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
 
-async def _validate_api_token(api_token: str) -> dict[str, Any]:
+async def _validate_api_token(api_token: str, session: ClientSession) -> dict[str, Any]:
     """Validate the API token."""
     try:
-        async with WeatherFlowRestAPI(api_token) as api:
+        async with WeatherFlowRestAPI(api_token, session=session) as api:
             await api.async_get_stations()
     except ClientResponseError as err:
         if err.status == 401:
@@ -46,7 +47,9 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             api_token = user_input[CONF_API_TOKEN]
-            errors = await _validate_api_token(api_token)
+            errors = await _validate_api_token(
+                api_token, async_get_clientsession(self.hass)
+            )
             if not errors:
                 # Update the existing entry and abort
                 existing_entry = self._get_reauth_entry()
@@ -62,6 +65,29 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow to update the API token."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            api_token = user_input[CONF_API_TOKEN]
+            errors = await _validate_api_token(
+                api_token, async_get_clientsession(self.hass)
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={CONF_API_TOKEN: api_token},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -71,7 +97,9 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match(user_input)
             api_token = user_input[CONF_API_TOKEN]
-            errors = await _validate_api_token(api_token)
+            errors = await _validate_api_token(
+                api_token, async_get_clientsession(self.hass)
+            )
             if not errors:
                 return self.async_create_entry(
                     title="Weatherflow REST",

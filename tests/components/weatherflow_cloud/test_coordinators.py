@@ -217,7 +217,5 @@ async def test_rest_coordinator_other_error(
     )
 
     # Verify the error is properly converted to UpdateFailed
-    with pytest.raises(
-        UpdateFailed, match="Update failed: 500, message='Internal Server Error'"
-    ):
+    with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()

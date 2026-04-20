@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfLength,
@@ -34,8 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import UTC
 
-from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
-from .const import DOMAIN
+from . import WeatherFlowCloudConfigEntry, WeatherFlowCloudUpdateCoordinatorREST
 from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
 from .entity import WeatherFlowCloudEntity
 
@@ -350,12 +348,12 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WeatherFlowCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors based on a config entry."""
 
-    coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][entry.entry_id]
+    coordinators = entry.runtime_data
     rest_coordinator = coordinators.rest
     wind_coordinator = coordinators.wind  # Now properly typed
     observation_coordinator = coordinators.observation  # Now properly typed
