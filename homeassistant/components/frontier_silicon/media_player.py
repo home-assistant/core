@@ -87,7 +87,6 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         self.__modes_by_label: dict[str, str] | None = None
         self.__sound_modes_by_label: dict[str, str] | None = None
-        self.__play_state: PlayState | None = None
         self.__play_caps: PlayCaps = PlayCaps(0)
 
         self._supports_sound_mode: bool = True
@@ -132,7 +131,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         afsapi = self.fs_device
         try:
             if await afsapi.get_power():
-                self.__play_state = await afsapi.get_play_status()
+                status = await afsapi.get_play_status()
                 self._attr_state = {
                     PlayState.IDLE: MediaPlayerState.IDLE,
                     PlayState.BUFFERING: MediaPlayerState.BUFFERING,
@@ -140,9 +139,8 @@ class AFSAPIDevice(MediaPlayerEntity):
                     PlayState.PAUSED: MediaPlayerState.PAUSED,
                     PlayState.REBUFFERING: MediaPlayerState.BUFFERING,
                     PlayState.STOPPED: MediaPlayerState.IDLE,
-                }.get(self.__play_state, MediaPlayerState.IDLE)
+                }.get(status, MediaPlayerState.IDLE)
             else:
-                self.__play_state = None
                 self._attr_state = MediaPlayerState.OFF
         except FSConnectionError:
             if self._attr_available:
@@ -284,7 +282,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.__play_state == PlayState.STOPPED:
+        if (await self.fs_device.get_play_state()) == PlayState.STOPPED:
             # The 'play' command only seems to work when the current stream is paused.
             # We need to send a 'stop' command instead to resume a stopped stream.
             await self.fs_device.stop()
