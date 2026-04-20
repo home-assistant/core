@@ -6,6 +6,7 @@ DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
     Platform.CLIMATE: {"HYS"},
+    Platform.INFRARED: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.LIGHT: {"LB1", "LB2"},
     Platform.REMOTE: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.SELECT: {"HYS"},
@@ -44,3 +45,6 @@ DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 5
+
+# Broadlink IR packet format - repeat count byte offset
+IR_PACKET_REPEAT_INDEX = 1

@@ -6,6 +6,7 @@
     "pep621",
     "pip_requirements",
     "pre-commit",
+    "regex",
     "homeassistant-manifest"
   ],
 
@@ -25,6 +26,16 @@
       "/^homeassistant/components/[^/]+/manifest\\.json$/"
     ]
   },
+
+  "regexManagers": [
+    {
+      "description": "Update ruff required-version in pyproject.toml",
+      "managerFilePatterns": ["/^pyproject\\.toml$/"],
+      "matchStrings": ["required-version = \">=(?<currentValue>[\\d.]+)\""],
+      "depNameTemplate": "ruff",
+      "datasourceTemplate": "pypi"
+    }
+  ],
 
   "minimumReleaseAge": "7 days",
   "prConcurrentLimit": 10,
@@ -76,6 +87,50 @@
         "zeroconf"
       ],
       "enabled": true,
+      "labels": ["dependency", "core"]
+    },
+    {
+      "description": "Common Python utilities (allowlisted)",
+      "matchPackageNames": [
+        "astral",
+        "atomicwrites-homeassistant",
+        "audioop-lts",
+        "awesomeversion",
+        "bcrypt",
+        "ciso8601",
+        "cronsim",
+        "defusedxml",
+        "fnv-hash-fast",
+        "getmac",
+        "ical",
+        "ifaddr",
+        "lru-dict",
+        "mutagen",
+        "propcache",
+        "pyserial",
+        "python-slugify",
+        "PyTurboJPEG",
+        "securetar",
+        "standard-aifc",
+        "standard-telnetlib",
+        "ulid-transform",
+        "url-normalize",
+        "xmltodict"
+      ],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Home Assistant ecosystem packages (core-maintained, no cooldown)",
+      "matchPackageNames": [
+        "hassil",
+        "home-assistant-bluetooth",
+        "home-assistant-frontend",
+        "home-assistant-intents",
+        "infrared-protocols"
+      ],
+      "enabled": true,
+      "minimumReleaseAge": null,
       "labels": ["dependency", "core"]
     },
     {
