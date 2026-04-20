@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_offline": "Your stove's Fumis WiRCU Wi-Fi module is not connected to the internet. Make sure the module has power and is connected to your Wi-Fi network.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "mac": "MAC address",
+          "pin": "PIN code"
+        },
+        "data_description": {
+          "mac": "The MAC address is a unique code of letters and numbers that identifies your stove. You can find it on the label of the Fumis WiRCU Wi-Fi module connected to your stove.",
+          "pin": "You can find the PIN code on the label of the Fumis WiRCU Wi-Fi module connected to your stove."
+        },
+        "description": "Integrate your Fumis-based pellet stove with Home Assistant to monitor and control it. You can see your stove's temperature, heating status, and adjust the target temperature right from your dashboard or use it in your automations. This way, you can make sure your home is always nice, warm, and comfortable."
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication with the Fumis online service failed. Check your MAC address and PIN code."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Fumis online service: {error}"
+    },
+    "stove_offline": {
+      "message": "Your stove's Fumis WiRCU Wi-Fi module is not connected to the internet."
+    },
+    "unknown_error": {
+      "message": "An unexpected error occurred while communicating with the Fumis online service: {error}"
+    }
+  }
+}

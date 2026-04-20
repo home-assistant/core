@@ -71,6 +71,43 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by zeroconf."""
         return self._async_create_entry()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing Elgato device."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            elgato = Elgato(
+                host=user_input[CONF_HOST],
+                session=async_get_clientsession(self.hass),
+            )
+
+            try:
+                info = await elgato.info()
+            except ElgatoError:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(info.serial_number)
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=self._get_reconfigure_entry().data[CONF_HOST],
+                    ): str,
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

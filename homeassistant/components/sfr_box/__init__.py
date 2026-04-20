@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
@@ -14,14 +13,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS, PLATFORMS_WITH_AUTH
+from .const import DOMAIN, PLATFORMS
 from .coordinator import SFRConfigEntry, SFRDataUpdateCoordinator, SFRRuntimeData
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     """Set up SFR box as config entry."""
     box = SFRBox(ip=entry.data[CONF_HOST], client=async_get_clientsession(hass))
-    platforms = PLATFORMS
     has_auth = False
     if (username := entry.data.get(CONF_USERNAME)) and (
         password := entry.data.get(CONF_PASSWORD)
@@ -39,11 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
                 translation_key="unknown_error",
                 translation_placeholders={"error": str(err)},
             ) from err
-        platforms = PLATFORMS_WITH_AUTH
         has_auth = True
 
     data = SFRRuntimeData(
         box=box,
+        has_authentication=has_auth,
         dsl=SFRDataUpdateCoordinator(
             hass, entry, box, "dsl", lambda b: b.dsl_get_info()
         ),
@@ -65,8 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     # Preload system information
     await data.system.async_config_entry_first_refresh()
     system_info = data.system.data
-    if TYPE_CHECKING:
-        assert system_info is not None
 
     # Preload other coordinators (based on net infrastructure)
     tasks = [data.wan.async_config_entry_first_refresh()]
@@ -91,15 +87,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     )
 
     entry.runtime_data = data
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> bool:
     """Unload a config entry."""
-    if entry.data.get(CONF_USERNAME) and entry.data.get(CONF_PASSWORD):
-        return await hass.config_entries.async_unload_platforms(
-            entry, PLATFORMS_WITH_AUTH
-        )
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
