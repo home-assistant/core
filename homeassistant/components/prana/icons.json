@@ -1,6 +1,20 @@
 {
   "entity": {
     "fan": {
+      "ventilation": {
+        "default": "mdi:fan",
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:tune",
+            "state": {
+              "auto": "mdi:fan-auto",
+              "auto_plus": "mdi:fan-auto",
+              "boost": "mdi:fan-plus",
+              "night": "mdi:weather-night"
+            }
+          }
+        }
+      },
       "extract": {
         "default": "mdi:arrow-expand-right"
       },
@@ -26,26 +40,11 @@
       "inside_temperature": {
         "default": "mdi:home-thermometer"
       },
-      "inside_temperature_2": {
-        "default": "mdi:home-thermometer"
-      },
       "outside_temperature": {
-        "default": "mdi:thermometer"
-      },
-      "outside_temperature_2": {
         "default": "mdi:thermometer"
       }
     },
     "switch": {
-      "auto": {
-        "default": "mdi:fan-auto"
-      },
-      "auto_plus": {
-        "default": "mdi:fan-auto"
-      },
-      "bound": {
-        "default": "mdi:link"
-      },
       "heater": {
         "default": "mdi:radiator"
       },

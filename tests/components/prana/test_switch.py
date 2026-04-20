@@ -33,41 +33,17 @@ async def test_switches(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("type_key", "entity_suffix"),
-    [
-        ("winter", "_winter"),
-        ("heater", "_heater"),
-        ("auto", "_auto"),
-        ("bound", "_bound"),
-        ("auto_plus", "_auto_plus"),
-    ],
-)
-async def test_switches_actions(
+@pytest.mark.parametrize("switch_key", ["heater", "winter"])
+async def test_switch_actions(
     hass: HomeAssistant,
     mock_prana_api: MagicMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    type_key: str,
-    entity_suffix: str,
+    switch_key: str,
 ) -> None:
-    """Test turning switches on and off calls the API through the coordinator."""
+    """Switch on/off calls set_switch with the corresponding key."""
     await async_init_integration(hass, mock_config_entry)
 
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert entries
-    target = f"switch.prana_recuperator{entity_suffix}"
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: target},
-        blocking=True,
-    )
-
-    mock_prana_api.set_switch.assert_called()
+    target = f"switch.prana_recuperator_{switch_key}"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -75,5 +51,12 @@ async def test_switches_actions(
         {ATTR_ENTITY_ID: target},
         blocking=True,
     )
+    mock_prana_api.set_switch.assert_called_with(switch_key, True)
 
-    assert mock_prana_api.set_switch.call_count >= 2
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: target},
+        blocking=True,
+    )
+    mock_prana_api.set_switch.assert_called_with(switch_key, False)

@@ -35,9 +35,7 @@ class PranaSensorType(StrEnum):
     AIR_PRESSURE = "air_pressure"
     CO2 = "co2"
     INSIDE_TEMPERATURE = "inside_temperature"
-    INSIDE_TEMPERATURE_2 = "inside_temperature_2"
     OUTSIDE_TEMPERATURE = "outside_temperature"
-    OUTSIDE_TEMPERATURE_2 = "outside_temperature_2"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -74,31 +72,32 @@ ENTITIES: tuple[PranaSensorEntityDescription, ...] = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
     ),
+    # Devices only have two physical probes (one inside, one outside), but
+    # the upstream library mislabels the secondary pair: `inside_temperature_2`
+    # actually contains the outside reading and `outside_temperature_2` the
+    # inside one. On models where the primary fields are populated we use
+    # them; otherwise we fall back to the swapped secondary. Remove this
+    # workaround once upstream fixes the field labeling:
+    # https://github.com/prana-dev-official/prana-local-api
     PranaSensorEntityDescription(
         key=PranaSensorType.INSIDE_TEMPERATURE,
         translation_key="inside_temperature",
-        value_fn=lambda coord: coord.data.inside_temperature,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    PranaSensorEntityDescription(
-        key=PranaSensorType.INSIDE_TEMPERATURE_2,
-        translation_key="inside_temperature_2",
-        value_fn=lambda coord: coord.data.inside_temperature_2,
+        value_fn=lambda coord: (
+            coord.data.inside_temperature
+            if coord.data.inside_temperature is not None
+            else coord.data.outside_temperature_2
+        ),
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     PranaSensorEntityDescription(
         key=PranaSensorType.OUTSIDE_TEMPERATURE,
         translation_key="outside_temperature",
-        value_fn=lambda coord: coord.data.outside_temperature,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    PranaSensorEntityDescription(
-        key=PranaSensorType.OUTSIDE_TEMPERATURE_2,
-        translation_key="outside_temperature_2",
-        value_fn=lambda coord: coord.data.outside_temperature_2,
+        value_fn=lambda coord: (
+            coord.data.outside_temperature
+            if coord.data.outside_temperature is not None
+            else coord.data.inside_temperature_2
+        ),
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),

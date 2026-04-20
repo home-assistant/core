@@ -18,12 +18,7 @@ PARALLEL_UPDATES = 1
 class PranaSwitchType(StrEnum):
     """Enumerates Prana switch types exposed by the device API."""
 
-    BOUND = "bound"
     HEATER = "heater"
-    NIGHT = "night"
-    BOOST = "boost"
-    AUTO = "auto"
-    AUTO_PLUS = "auto_plus"
     WINTER = "winter"
 
 
@@ -35,26 +30,13 @@ class PranaSwitchEntityDescription(SwitchEntityDescription):
     value_fn: Callable[[PranaCoordinator], bool]
 
 
+# Heater and winter are anti-ice protections that run alongside the operating
+# mode (auto, night, etc.) and are therefore toggles, not preset modes.
 ENTITIES: tuple[PranaSwitchEntityDescription, ...] = (
-    PranaSwitchEntityDescription(
-        key=PranaSwitchType.BOUND,
-        translation_key="bound",
-        value_fn=lambda coord: coord.data.bound,
-    ),
     PranaSwitchEntityDescription(
         key=PranaSwitchType.HEATER,
         translation_key="heater",
         value_fn=lambda coord: coord.data.heater,
-    ),
-    PranaSwitchEntityDescription(
-        key=PranaSwitchType.AUTO,
-        translation_key="auto",
-        value_fn=lambda coord: coord.data.auto,
-    ),
-    PranaSwitchEntityDescription(
-        key=PranaSwitchType.AUTO_PLUS,
-        translation_key="auto_plus",
-        value_fn=lambda coord: coord.data.auto_plus,
     ),
     PranaSwitchEntityDescription(
         key=PranaSwitchType.WINTER,
@@ -77,7 +59,7 @@ async def async_setup_entry(
 
 
 class PranaSwitch(PranaBaseEntity, SwitchEntity):
-    """Representation of a Prana switch (bound/heater/auto/etc)."""
+    """Representation of a Prana switch."""
 
     entity_description: PranaSwitchEntityDescription
 
