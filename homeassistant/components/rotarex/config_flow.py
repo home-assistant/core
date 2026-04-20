@@ -3,8 +3,8 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
 from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -37,7 +37,6 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             api = RotarexApi(async_get_clientsession(self.hass))
-            api.set_credentials(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             try:
                 await api.login(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             except InvalidAuth:

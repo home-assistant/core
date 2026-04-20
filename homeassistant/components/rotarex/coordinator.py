@@ -1,11 +1,14 @@
 """DataUpdateCoordinator for the Rotarex integration."""
 
-import logging
+from __future__ import annotations
+
 from datetime import timedelta
+import logging
+from typing import TYPE_CHECKING
 
-from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
+import aiohttp
+from rotarex_dimes_srg_api import InvalidAuth, RotarexApi, RotarexTank
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -13,7 +16,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .models import RotarexTank
+
+if TYPE_CHECKING:
+    from . import RotarexConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,14 +31,15 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RotarexConfigEntry,
     ) -> None:
         """Initialize the data update coordinator."""
         session = async_get_clientsession(hass)
         self.api = RotarexApi(session)
-        self._email = config_entry.data[CONF_EMAIL]
-        self._password = config_entry.data[CONF_PASSWORD]
-        self.api.set_credentials(self._email, self._password)
+        self.api.set_credentials(
+            config_entry.data[CONF_EMAIL],
+            config_entry.data[CONF_PASSWORD],
+        )
         super().__init__(
             hass,
             _LOGGER,
@@ -45,13 +51,16 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
     async def _async_setup(self) -> None:
         """Set up the coordinator with initial authentication check."""
         try:
-            await self.api.login(self._email, self._password)
+            await self.api.login(
+                self.config_entry.data[CONF_EMAIL],
+                self.config_entry.data[CONF_PASSWORD],
+            )
         except InvalidAuth as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
-        except Exception as err:
+        except aiohttp.ClientError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -60,19 +69,14 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
     async def _async_update_data(self) -> dict[str, RotarexTank]:
         """Fetch data from API endpoint."""
         try:
-            tanks_data = await self.api.fetch_tanks()
-            # Convert to typed dataclasses and index by GUID
-            return {
-                tank_dict["Guid"]: RotarexTank.from_dict(tank_dict)
-                for tank_dict in tanks_data
-                if "Guid" in tank_dict
-            }
+            tanks = await self.api.fetch_tanks()
+            return {tank.guid: tank for tank in tanks}
         except InvalidAuth as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
-        except Exception as err:
+        except aiohttp.ClientError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

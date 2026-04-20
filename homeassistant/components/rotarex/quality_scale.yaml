@@ -47,7 +47,10 @@ rules:
   discovery:
     status: exempt
     comment: |
-      No discovery.
+      Rotarex DIMES SRG is a cloud-based service. Tanks communicate exclusively
+      through the Rotarex cloud API and do not announce themselves on the local
+      network via hostname, DHCP, or mDNS. Local discovery is therefore not
+      applicable.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

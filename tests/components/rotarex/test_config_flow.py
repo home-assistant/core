@@ -35,19 +35,19 @@ async def test_form(hass: HomeAssistant, mock_rotarex_api: AsyncMock) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == NAME
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"] == {
         CONF_EMAIL: "test@example.com",
         CONF_PASSWORD: "test_password",
     }
-    assert result2["result"].unique_id == "test@example.com"
+    assert result["result"].unique_id == "test@example.com"
     assert mock_rotarex_api.login.call_count >= 1
 
 
@@ -68,21 +68,21 @@ async def test_form_errors(
 
     mock_rotarex_api.login.side_effect = exception
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
     # Verify we can recover by submitting valid credentials
     mock_rotarex_api.login.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "test_password"},
     )
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(

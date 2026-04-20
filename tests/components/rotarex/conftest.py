@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
 
 from homeassistant.components.rotarex.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -37,33 +38,33 @@ def mock_rotarex_api() -> Generator[AsyncMock]:
         api.set_credentials = lambda *args, **kwargs: None
         api.fetch_tanks = AsyncMock(
             return_value=[
-                {
-                    "Guid": "tank1-guid",
-                    "Name": "Tank 1",
-                    "SynchDatas": [
-                        {
-                            "SynchDate": "2024-01-01T12:00:00Z",
-                            "Level": 75.5,
-                            "Battery": 85.0,
-                        },
-                        {
-                            "SynchDate": "2024-01-02T12:00:00Z",
-                            "Level": 70.0,
-                            "Battery": 80.0,
-                        },
+                RotarexTank(
+                    guid="tank1-guid",
+                    name="Tank 1",
+                    synch_datas=[
+                        RotarexSyncData(
+                            synch_date="2024-01-01T12:00:00Z",
+                            level=75.5,
+                            battery=85.0,
+                        ),
+                        RotarexSyncData(
+                            synch_date="2024-01-02T12:00:00Z",
+                            level=70.0,
+                            battery=80.0,
+                        ),
                     ],
-                },
-                {
-                    "Guid": "tank2-guid",
-                    "Name": "Tank 2",
-                    "SynchDatas": [
-                        {
-                            "SynchDate": "2024-01-01T12:00:00Z",
-                            "Level": 50.0,
-                            "Battery": 90.0,
-                        },
+                ),
+                RotarexTank(
+                    guid="tank2-guid",
+                    name="Tank 2",
+                    synch_datas=[
+                        RotarexSyncData(
+                            synch_date="2024-01-01T12:00:00Z",
+                            level=50.0,
+                            battery=90.0,
+                        ),
                     ],
-                },
+                ),
             ]
         )
         yield api

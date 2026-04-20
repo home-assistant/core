@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,7 +24,6 @@ from homeassistant.util import dt as dt_util
 from . import RotarexConfigEntry
 from .const import DOMAIN
 from .coordinator import RotarexDataUpdateCoordinator
-from .models import RotarexSyncData, RotarexTank
 
 
 def _parse_synch_date(synch_date: str) -> datetime | None:
@@ -95,7 +96,6 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
 
     entity_description: RotarexTankSensorEntityDescription
     _attr_has_entity_name = True
-    _latest_sync_cache: RotarexSyncData | None = None
 
     def __init__(
         self,
@@ -118,11 +118,6 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
             model="DIMES SRG",
         )
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._latest_sync_cache = None
-        super()._handle_coordinator_update()
-
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -136,18 +131,15 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         return self.entity_description.value_fn(sync)
 
     def _get_latest_sync(self) -> RotarexSyncData | None:
-        """Return the most recent synchronization entry for the tank.
-        
-        Results are cached per coordinator update to avoid duplicate parsing.
-        """
-        if self._latest_sync_cache is not None:
-            return self._latest_sync_cache
-        
+        """Return the most recent synchronization entry for the tank."""
+        # A tank can disappear from coordinator data if the API stops returning
+        # it (stale device). The entity becomes unavailable in that case.
         tank = self.coordinator.data.get(self._tank_id)
         if not tank or not tank.synch_datas:
             return None
 
-        # Parse synchronization dates to ensure correct chronological ordering.
+        # Parse dates to guarantee correct chronological ordering regardless
+        # of the string format returned by the API.
         parsed_syncs: list[tuple[RotarexSyncData, datetime]] = []
         for sync in tank.synch_datas:
             parsed = _parse_synch_date(sync.synch_date)
@@ -158,5 +150,4 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
             return None
 
         latest_sync, _ = max(parsed_syncs, key=lambda item: item[1])
-        self._latest_sync_cache = latest_sync
         return latest_sync
