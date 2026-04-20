@@ -62,6 +62,7 @@ async def test_lock_services(
         LOCK_DOMAIN,
         service,
         {ATTR_ENTITY_ID: "lock.test_lock"},
+        blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(1, 1, target_value)
 
