@@ -461,9 +461,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="unsupported_local_deps",
-                translation_placeholders={
-                    "installation_type": info["installation_type"]
-                },
             )
 
     # Delay deprecation check to make sure installation method is determined correctly

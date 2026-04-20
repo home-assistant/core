@@ -644,66 +644,11 @@ async def test_reload_all(
 @pytest.mark.parametrize(
     ("arch", "bit_32", "installation_type", "venv", "expected_issues"),
     [
-        (
-            "i386",
-            True,
-            "Unknown",
-            False,
-            [
-                (
-                    "unsupported_local_deps",
-                    {"installation_type": "Unknown"},
-                ),
-            ],
-        ),
-        (
-            "armhf",
-            True,
-            "Unknown",
-            False,
-            [
-                (
-                    "unsupported_local_deps",
-                    {"installation_type": "Unknown"},
-                ),
-            ],
-        ),
-        (
-            "armv7",
-            True,
-            "Unknown",
-            False,
-            [
-                (
-                    "unsupported_local_deps",
-                    {"installation_type": "Unknown"},
-                ),
-            ],
-        ),
-        (
-            "aarch64",
-            False,
-            "Unknown",
-            False,
-            [
-                (
-                    "unsupported_local_deps",
-                    {"installation_type": "Unknown"},
-                ),
-            ],
-        ),
-        (
-            "generic-x86-64",
-            False,
-            "Unknown",
-            False,
-            [
-                (
-                    "unsupported_local_deps",
-                    {"installation_type": "Unknown"},
-                ),
-            ],
-        ),
+        ("i386", True, "Unknown", False, [("unsupported_local_deps", None)]),
+        ("armhf", True, "Unknown", False, [("unsupported_local_deps", None)]),
+        ("armv7", True, "Unknown", False, [("unsupported_local_deps", None)]),
+        ("aarch64", False, "Unknown", False, [("unsupported_local_deps", None)]),
+        ("generic-x86-64", False, "Unknown", False, [("unsupported_local_deps", None)]),
         (
             "i386",
             True,
@@ -768,7 +713,7 @@ async def test_deprecated_installation_issue_core(
     bit_32: bool,
     installation_type: str,
     venv: bool,
-    expected_issues: list[tuple[str, dict[str, str]]],
+    expected_issues: list[tuple[str, dict[str, str | None]]],
 ) -> None:
     """Test deprecated installation issue."""
     with (
