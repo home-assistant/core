@@ -281,7 +281,7 @@ async def test_import_yaml_creates_entry(
     mock_setup_entry: AsyncMock,
     mock_russound_client: AsyncMock,
 ) -> None:
-    """Test YAML import creates a config entry."""
+    """Test YAML import prompts for model and pre-fills sources/zones."""
     yaml_config = {
         CONF_HOST: "192.168.1.100",
         CONF_NAME: "Russound",
@@ -296,6 +296,44 @@ async def test_import_yaml_creates_entry(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config
+    )
+
+    # Import validates connection, then shows model selection
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+
+    # User selects model
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "cas44"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sources"
+
+    # Sources are pre-filled from YAML — submit as-is
+    source_input = {
+        "source_1": "Sonos",
+        "source_2": "TV",
+        "source_3": "Radio",
+        "source_4": "",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        source_input,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zones"
+
+    # Zones are pre-filled from YAML — submit as-is
+    zone_input = {
+        "zone_1_1": "Kitchen",
+        "zone_1_2": "Living Room",
+        "zone_1_3": "",
+        "zone_1_4": "",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        zone_input,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -361,59 +399,6 @@ async def test_import_yaml_duplicate_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_import_yaml_infers_cas44_model(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_russound_client: AsyncMock,
-) -> None:
-    """Test YAML import infers CAS44 model from zone IDs."""
-    yaml_config = {
-        CONF_HOST: "10.0.0.1",
-        CONF_NAME: "Russound",
-        CONF_PORT: 5000,
-        "zones": {
-            1: {CONF_NAME: "Zone 1"},
-            2: {CONF_NAME: "Zone 2"},
-            3: {CONF_NAME: "Zone 3"},
-            4: {CONF_NAME: "Zone 4"},
-        },
-        "sources": [{CONF_NAME: "Source 1"}],
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_MODEL] == "cas44"
-
-
-async def test_import_yaml_infers_mca_c5_model(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_russound_client: AsyncMock,
-) -> None:
-    """Test YAML import infers MCA-C5 model from zone IDs > 6."""
-    yaml_config = {
-        CONF_HOST: "10.0.0.1",
-        CONF_NAME: "Russound",
-        CONF_PORT: 5000,
-        "zones": {
-            1: {CONF_NAME: "Zone 1"},
-            7: {CONF_NAME: "Zone 7"},
-            8: {CONF_NAME: "Zone 8"},
-        },
-        "sources": [{CONF_NAME: "Source 1"}],
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=yaml_config
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_MODEL] == "mca-c5"
 
 
 async def test_options_flow_updates_sources(

@@ -100,16 +100,6 @@ async def _async_validate_connection(
     return True
 
 
-def _infer_model_from_zones(zone_ids: list[int]) -> str:
-    """Infer model key from YAML zone IDs."""
-    max_zone = max(zone_ids) if zone_ids else 6
-    if max_zone <= 4:
-        return "cas44"
-    if max_zone <= 6:
-        return "caa66"
-    return "mca-c5"
-
-
 class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
     """Russound RNET config flow."""
 
@@ -221,9 +211,14 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_SOURCES] = sources
             return await self.async_step_zones()
 
+        # Pre-fill from YAML import data if available
+        existing_sources = self.data.get(CONF_SOURCES, {})
         source_schema = vol.Schema(
             {
-                vol.Optional(f"source_{i}", default=""): TextSelector()
+                vol.Optional(
+                    f"source_{i}",
+                    default=existing_sources.get(str(i), ""),
+                ): TextSelector()
                 for i in range(1, model.max_sources + 1)
             }
         )
@@ -250,9 +245,14 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=self.data,
             )
 
+        # Pre-fill from YAML import data if available
+        existing_zones = self.data.get(CONF_ZONES, {})
         zone_schema = vol.Schema(
             {
-                vol.Optional(f"zone_{c}_{z}", default=""): TextSelector()
+                vol.Optional(
+                    f"zone_{c}_{z}",
+                    default=existing_zones.get(f"{c}_{z}", ""),
+                ): TextSelector()
                 for c in range(1, model.max_controllers + 1)
                 for z in range(1, model.max_zones + 1)
             }
@@ -269,6 +269,12 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             {CONF_TYPE: TYPE_TCP, CONF_HOST: host, CONF_PORT: port}
         )
 
+        # Validate connection
+        client = RussoundRNETClient(RussoundTcpConnectionHandler(host, port))
+        if not await _async_validate_connection(client):
+            deprecate_yaml_issue(self.hass, import_success=False)
+            return self.async_abort(reason="cannot_connect")
+
         # Build source names from YAML config (only named sources)
         yaml_sources = import_data.get("sources", [])
         sources = {
@@ -277,14 +283,10 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             if src.get(CONF_NAME, "").strip()
         }
 
-        # Infer model from zone configuration
-        yaml_zones = import_data.get("zones", {})
-        zone_ids = list(yaml_zones.keys()) if yaml_zones else []
-        model_key = _infer_model_from_zones(zone_ids)
-
         # Preserve zone names from YAML; old YAML used flat zone IDs
         # mapped as controller = ceil(id/6), zone = ((id-1) % 6) + 1
-        zones = {}
+        yaml_zones = import_data.get("zones", {})
+        zones: dict[str, str] = {}
         for zone_id, zone_data in yaml_zones.items():
             controller_id = (zone_id - 1) // 6 + 1
             local_zone_id = (zone_id - 1) % 6 + 1
@@ -292,26 +294,17 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             if name:
                 zones[f"{controller_id}_{local_zone_id}"] = name
 
-        data = {
+        # Store partial data; prompt user for model selection
+        self.data = {
             CONF_TYPE: TYPE_TCP,
             CONF_HOST: host,
             CONF_PORT: port,
-            CONF_MODEL: model_key,
             CONF_SOURCES: sources,
             CONF_ZONES: zones,
         }
 
-        # Validate connection
-        client = RussoundRNETClient(RussoundTcpConnectionHandler(host, port))
-        if not await _async_validate_connection(client):
-            deprecate_yaml_issue(self.hass, import_success=False)
-            return self.async_abort(reason="cannot_connect")
-
         deprecate_yaml_issue(self.hass, import_success=True)
-        return self.async_create_entry(
-            title=RNET_MODELS[model_key].name,
-            data=data,
-        )
+        return await self.async_step_model()
 
 
 class RussoundRNETOptionsFlow(OptionsFlow):
