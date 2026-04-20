@@ -1204,7 +1204,7 @@ hass-splunk==0.1.4
 hassil==3.5.0
 
 # homeassistant.components.jewish_calendar
-hdate[astral]==1.1.2
+hdate[astral]==1.2.1
 
 # homeassistant.components.hdfury
 hdfury==1.6.0
@@ -1494,7 +1494,7 @@ lxml==6.0.1
 matrix-nio==0.25.2
 
 # homeassistant.components.matter
-matter-python-client==0.4.1
+matter-python-client==0.6.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -3067,7 +3067,7 @@ synology-srm==0.2.0
 systembridgeconnector==5.4.3
 
 # homeassistant.components.tailscale
-tailscale==0.6.2
+tailscale==0.7.0
 
 # homeassistant.components.tank_utility
 tank-utility==1.5.0
