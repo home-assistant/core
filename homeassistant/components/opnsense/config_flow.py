@@ -7,7 +7,9 @@ from aiopnsense import (
     OPNsenseBelowMinFirmware,
     OPNsenseClient,
     OPNsenseConnectionError,
+    OPNsenseInvalidAuth,
     OPNsenseInvalidURL,
+    OPNsensePrivilegeMissing,
     OPNsenseSSLError,
     OPNsenseTimeoutError,
     OPNsenseUnknownFirmware,
@@ -86,6 +88,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._async_check_connection(client)
+        except OPNsenseInvalidAuth:
+            errors["base"] = "invalid_auth"
+        except OPNsensePrivilegeMissing:
+            errors["base"] = "previlege_missing"
         except OPNsenseInvalidURL:
             errors["base"] = "invalid_url"
         except OPNsenseSSLError:
@@ -125,6 +131,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.validate()
         except OPNsenseInvalidURL:
             return self.async_abort(reason="invalid_url")
+        except OPNsenseInvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except OPNsensePrivilegeMissing:
+            return self.async_abort(reason="previlege_missing")
         except OPNsenseSSLError:
             return self.async_abort(reason="ssl_error")
         except OPNsenseConnectionError, OPNsenseTimeoutError, requestsConnectionError:
