@@ -190,12 +190,9 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await self.async_set_unique_id(validated.serial)
             self._abort_if_unique_id_configured()
-            data = {CONF_HOST: validated.host, CONF_SERIAL: validated.serial}
-            if self._discovered_mac is not None:
-                data[CONF_MAC] = self._discovered_mac
             return self.async_create_entry(
                 title=f"EARN-E P1 ({validated.host})",
-                data=data,
+                data={CONF_HOST: validated.host, CONF_SERIAL: validated.serial},
             )
 
         return self.async_show_form(
