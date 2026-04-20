@@ -19,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import TailscaleConfigEntry
 from .entity import TailscaleEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TailscaleBinarySensorEntityDescription(BinarySensorEntityDescription):
