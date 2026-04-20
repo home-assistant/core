@@ -71,7 +71,7 @@
         "location_already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
         "location_name_already_configured": "Location name already configured.",
         "mismatch_country_and_laqi": "[%key:component::google_air_quality::config::error::missmatch_country_and_laqi%]",
-        "missing_custom_laqi_options": "[%key:component::google_air_quality::config::error::missing_custom_laqi_options%]",
+        "mising_custom_laqi_options": "[%key:component::google_air_quality::config::error::mising_custom_laqi_options%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
