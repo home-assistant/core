@@ -11,13 +11,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import CONF_NAME, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ValloxDataUpdateCoordinator
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 from .entity import ValloxEntity
 
 
@@ -103,15 +101,15 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ValloxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ValloxNumberEntity(
-            data["name"], data["coordinator"], description, data["client"]
+            entry.data[CONF_NAME], coordinator, description, coordinator.client
         )
         for description in NUMBER_ENTITIES
     )

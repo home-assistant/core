@@ -8,13 +8,11 @@ from typing import Any
 from vallox_websocket_api import Vallox
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import CONF_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ValloxDataUpdateCoordinator
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 from .entity import ValloxEntity
 
 
@@ -81,16 +79,15 @@ SWITCH_ENTITIES: tuple[ValloxSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ValloxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switches."""
-
-    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         ValloxSwitchEntity(
-            data["name"], data["coordinator"], description, data["client"]
+            entry.data[CONF_NAME], coordinator, description, coordinator.client
         )
         for description in SWITCH_ENTITIES
     )

@@ -8,14 +8,13 @@ from typing import Any, NamedTuple
 from vallox_websocket_api import Vallox, ValloxApiException, ValloxInvalidInputException
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
-    DOMAIN,
     METRIC_KEY_MODE,
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
@@ -25,7 +24,7 @@ from .const import (
     PRESET_MODE_TO_VALLOX_PROFILE,
     VALLOX_PROFILE_TO_PRESET_MODE,
 )
-from .coordinator import ValloxDataUpdateCoordinator
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 from .entity import ValloxEntity
 
 
@@ -58,18 +57,16 @@ def _convert_to_int(value: StateType) -> int | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ValloxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fan device."""
-    data = hass.data[DOMAIN][entry.entry_id]
-
-    client = data["client"]
+    coordinator = entry.runtime_data
 
     device = ValloxFanEntity(
-        data["name"],
-        client,
-        data["coordinator"],
+        entry.data[CONF_NAME],
+        coordinator.client,
+        coordinator,
     )
 
     async_add_entities([device])
