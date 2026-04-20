@@ -24,5 +24,17 @@
         }
       }
     }
+  },
+  "services": {
+    "cancel": {
+      "name": "Cancel emergency notification",
+      "description": "Cancels one or more Pushover emergency notifications (priority 2) that were previously sent. All configured Pushover accounts are checked.",
+      "fields": {
+        "tag": {
+          "name": "Tag",
+          "description": "Tag assigned to the message via the 'data.tags' field when sending. Omit to cancel all tracked emergency notifications."
+        }
+      }
+    }
   }
 }
