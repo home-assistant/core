@@ -26,15 +26,14 @@ from .const import (
     AudioFormats,
     AudioSampleRates,
 )
-from .models import SpeechAudioProcessing, SpeechMetadata, SpeechResult
+from .models import (
+    DEFAULT_AUDIO_PROCESSING,
+    SpeechAudioProcessing,
+    SpeechMetadata,
+    SpeechResult,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_AUDIO_PROCESSING = SpeechAudioProcessing(
-    requires_external_vad=True,
-    prefers_auto_gain_enabled=True,
-    prefers_noise_reduction_enabled=True,
-)
 
 
 @callback

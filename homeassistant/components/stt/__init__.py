@@ -46,7 +46,12 @@ from .legacy import (
     async_get_provider,
     async_setup_legacy,
 )
-from .models import SpeechAudioProcessing, SpeechMetadata, SpeechResult
+from .models import (
+    DEFAULT_AUDIO_PROCESSING,
+    SpeechAudioProcessing,
+    SpeechMetadata,
+    SpeechResult,
+)
 
 __all__ = [
     "DOMAIN",
@@ -68,12 +73,6 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-DEFAULT_AUDIO_PROCESSING = SpeechAudioProcessing(
-    requires_external_vad=True,
-    prefers_auto_gain_enabled=True,
-    prefers_noise_reduction_enabled=True,
-)
 
 
 @callback

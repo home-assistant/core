@@ -47,3 +47,10 @@ class SpeechAudioProcessing:
 
     prefers_noise_reduction_enabled: bool
     """True if input audio should apply noise reduction for best results."""
+
+
+DEFAULT_AUDIO_PROCESSING = SpeechAudioProcessing(
+    requires_external_vad=True,
+    prefers_auto_gain_enabled=True,
+    prefers_noise_reduction_enabled=True,
+)
