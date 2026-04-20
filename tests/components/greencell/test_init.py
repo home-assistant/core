@@ -1,6 +1,7 @@
 """Greencell integration initialization test cases."""
 
 import asyncio
+from collections.abc import Callable
 import time
 from unittest.mock import patch
 
@@ -86,7 +87,10 @@ def test_ready_handler_noop_when_already_set() -> None:
 async def _mock_subscribe_fires(messages: list[tuple[str, str]]):
     """Return a mock async_subscribe that fires given messages on subscription."""
 
-    async def _subscribe(hass, topic, msg_callback, *args, **kwargs):
+    async def _subscribe(
+        hass: HomeAssistant, topic: str, msg_callback, *args, **kwargs
+    ) -> Callable[[], None]:
+        """Mock async_subscribe that fires given messages on subscription."""
         for msg_topic, payload in messages:
             if msg_topic == topic:
                 msg_callback(_make_message(topic, payload))
@@ -176,7 +180,10 @@ async def test_async_setup_entry_timeout_raises_not_ready(
     """Test setup raises ConfigEntryNotReady when device doesn't respond in time."""
     mock_config_entry.add_to_hass(hass)
 
-    async def _subscribe_noop(hass, topic, msg_callback, *args, **kwargs):
+    async def _subscribe_noop(
+        hass: HomeAssistant, topic: str, msg_callback, *args, **kwargs
+    ) -> Callable[[], None]:
+        """Mock async_subscribe that does not fire any messages."""
         return lambda: None
 
     with (
