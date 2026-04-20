@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import CONF_REFRESH_TOKEN
-from .coordinator import Tami4ConfigEntry, Tami4Data, Tami4EdgeCoordinator
+from .coordinator import Tami4ConfigEntry, Tami4EdgeCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Tami4ConfigEntry) -> boo
     coordinator = Tami4EdgeCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = Tami4Data(api=api, coordinator=coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

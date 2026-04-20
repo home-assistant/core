@@ -55,13 +55,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Tami4Edge."""
-    api = entry.runtime_data.api
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     async_add_entities(
         Tami4EdgeSensorEntity(
             coordinator=coordinator,
-            api=api,
+            api=coordinator.api,
             entity_description=entity_description,
         )
         for entity_description in ENTITY_DESCRIPTIONS
