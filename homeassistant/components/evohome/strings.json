@@ -21,6 +21,9 @@
     "mode_not_supported": {
       "message": "The mode `{mode}` is not supported by this controller"
     },
+    "refresh_too_recent": {
+      "message": "The location was refreshed less than {seconds} seconds ago; please wait before refreshing again"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }
@@ -38,6 +41,10 @@
       "description": "Using the `Reset` preset on an Evohome controller is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
       "title": "Evohome Reset preset is deprecated"
     },
+    "deprecated_refresh_system_service": {
+      "description": "The `refresh_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the location's Refresh button instead.",
+      "title": "Evohome 'Refresh system' action is deprecated"
+    },
     "deprecated_reset_system_service": {
       "description": "The `reset_system` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the system's Reset button instead.",
       "title": "Evohome 'Reset system' action is deprecated"
@@ -49,7 +56,7 @@
       "name": "Clear zone override"
     },
     "refresh_system": {
-      "description": "Pulls the latest data from the vendor's servers now, rather than waiting for the next scheduled update.",
+      "description": "Pulls the latest data from the vendor's servers now, rather than waiting for the next scheduled update (deprecated).",
       "name": "Refresh system"
     },
     "reset_system": {

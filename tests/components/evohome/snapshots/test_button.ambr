@@ -1,4 +1,17 @@
 # serializer version: 1
+# name: test_setup_platform[botched][button.refresh_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup_platform[botched][button.reset_bathroom_dn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -110,6 +123,19 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.refresh_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_my_home',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -246,6 +272,19 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup_platform[h032585][button.refresh_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup_platform[h032585][button.reset_my_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -266,6 +305,19 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h099625][button.refresh_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_my_home',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -311,6 +363,19 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup_platform[h139906][button.refresh_vr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh Vr**********',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_vr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup_platform[h139906][button.reset_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -344,6 +409,19 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_vr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[h157546][button.refresh_kl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh Kl********',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_kl',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -428,6 +506,19 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup_platform[minimal][button.refresh_my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh My Home',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup_platform[minimal][button.reset_main_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -448,6 +539,19 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[sys_004][button.refresh_living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refresh Living room',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.refresh_living_room',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

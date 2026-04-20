@@ -33,7 +33,7 @@ set_system_mode:
 
 reset_system:
 
-refresh_system:
+refresh_system: # deprecated; use the location's Refresh button instead
 
 set_zone_override:
   target:

@@ -26,10 +26,13 @@ from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT, EvoTcsConfigRe
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 
 
-class EvoDataUpdateCoordinator(DataUpdateCoordinator):
+class EvoDataUpdateCoordinator(TimestampDataUpdateCoordinator):
     """Coordinator for evohome integration/client."""
 
     # These will not be None after _async_setup())
