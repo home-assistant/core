@@ -247,10 +247,10 @@ async def test_update_succeeds_when_close_raises(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "expected_state"),
+    ("service", "service_data", "expected_brightness"),
     [
-        ("turn_on", {}, STATE_ON),
-        ("turn_off", {}, STATE_OFF),
+        ("turn_on", {}, 4095),
+        ("turn_off", {}, 0),
     ],
 )
 async def test_command_succeeds_when_close_raises(
@@ -258,7 +258,7 @@ async def test_command_succeeds_when_close_raises(
     setup_integration: MagicMock,
     service: str,
     service_data: dict[str, str],
-    expected_state: str,
+    expected_brightness: int,
 ) -> None:
     """Test cleanup errors after commands do not mask success."""
     bulb = setup_integration
@@ -271,9 +271,7 @@ async def test_command_succeeds_when_close_raises(
         blocking=True,
     )
 
-    state = hass.states.get("light.bedroom")
-    assert state is not None
-    assert state.state == expected_state
+    bulb.set_brightness.assert_called_once_with(expected_brightness)
 
 
 @pytest.mark.parametrize(
