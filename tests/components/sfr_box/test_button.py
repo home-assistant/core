@@ -57,7 +57,7 @@ async def test_buttons_no_auth(
     await hass.async_block_till_done()
 
     # Ensure auth-only entities are not registered
-    assert sorted(entity_registry.entities) == snapshot
+    assert len(entity_registry.entities) == 0
 
 
 async def test_reboot(hass: HomeAssistant, config_entry_with_auth: ConfigEntry) -> None:
