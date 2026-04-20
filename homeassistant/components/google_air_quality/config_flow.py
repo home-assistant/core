@@ -98,7 +98,7 @@ async def _validate_input(
                 lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
             )
     except InvalidCustomLAQIConfigurationError:
-        errors["base"] = "missmatch_country_and_laqi"
+        errors["base"] = "mismatch_country_and_laqi"
     except GoogleAirQualityApiError as err:
         errors["base"] = "cannot_connect"
         description_placeholders["error_message"] = str(err)

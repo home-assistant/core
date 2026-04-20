@@ -15,8 +15,8 @@
     },
     "error": {
       "cannot_connect": "Unable to connect to the Google Air Quality API:\n\n{error_message}",
+      "mismatch_country_and_laqi": "This local AQI is not available for the selected country. Please select an available combination.",
       "missing_custom_laqi_options": "Please provide both country and custom local AQI when custom local AQI is enabled.",
-      "missmatch_country_and_laqi": "This local AQI is not available for the selected country. Please select an available combination.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -67,11 +67,11 @@
       },
       "entry_type": "Air quality location",
       "error": {
-        "cannot_connect": "%key:component::google_air_quality::config::error::cannot_connect%]",
+        "cannot_connect": "[%key:component::google_air_quality::config::error::cannot_connect%]",
         "location_already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
         "location_name_already_configured": "Location name already configured.",
+        "mismatch_country_and_laqi": "[%key:component::google_air_quality::config::error::missmatch_country_and_laqi%]",
         "missing_custom_laqi_options": "[%key:component::google_air_quality::config::error::missing_custom_laqi_options%]",
-        "missmatch_country_and_laqi": "[%key:component::google_air_quality::config::error::missmatch_country_and_laqi%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
