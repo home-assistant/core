@@ -60,7 +60,6 @@ async def async_setup_entry(
     async_add_entities(
         Tami4EdgeSensorEntity(
             coordinator=coordinator,
-            api=coordinator.api,
             entity_description=entity_description,
         )
         for entity_description in ENTITY_DESCRIPTIONS
@@ -77,11 +76,10 @@ class Tami4EdgeSensorEntity(
     def __init__(
         self,
         coordinator: Tami4EdgeCoordinator,
-        api: Tami4EdgeAPI,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the Tami4Edge sensor entity."""
-        Tami4EdgeBaseEntity.__init__(self, api, entity_description)
+        Tami4EdgeBaseEntity.__init__(self, coordinator.api, entity_description)
         CoordinatorEntity.__init__(self, coordinator)
         self._update_attr()
 
