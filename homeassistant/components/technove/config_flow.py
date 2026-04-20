@@ -51,7 +51,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     )
                     return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(),
+                        entry,
                         data_updates={CONF_HOST: user_input[CONF_HOST]},
                     )
                 self._abort_if_unique_id_configured(
