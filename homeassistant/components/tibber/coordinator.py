@@ -402,10 +402,10 @@ class TibberFetchPriceCoordinator(TibberCoordinator[dict[str, tibber.TibberHome]
         except tibber.exceptions.HttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err})") from err
         else:
-            update_interval = now - (
+            update_interval = (
                 dt_util.start_of_local_day(now)
                 + timedelta(days=1, seconds=self._tomorrow_price_poll_threshold_seconds)
-            )
+            ) - now
         finally:
             self.update_interval = update_interval
 
