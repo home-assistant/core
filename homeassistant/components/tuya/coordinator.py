@@ -11,6 +11,7 @@ from tuya_sharing import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -41,32 +42,46 @@ def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Ma
     )
 
 
-async def async_create_listener(
-    hass: HomeAssistant, entry: TuyaConfigEntry
-) -> DeviceListener:
-    """Create DeviceListener."""
-    token_listener = TokenListener(hass, entry)
-
-    # Move to executor as it makes blocking call to import_module
-    # with args ('.system', 'urllib3.contrib.resolver')
-    manager = await hass.async_add_executor_job(_create_manager, entry, token_listener)
-
-    listener = DeviceListener(hass, manager)
-    manager.add_device_listener(listener)
-
-    return listener
-
-
 class DeviceListener(SharingDeviceListener):
     """Device Update Listener."""
+
+    manager: Manager
 
     def __init__(
         self,
         hass: HomeAssistant,
-        manager: Manager,
+        entry: TuyaConfigEntry,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
+        self.entry = entry
+
+    async def async_initialise(self) -> None:
+        """Create DeviceListener."""
+        hass = self.hass
+        entry = self.entry
+
+        token_listener = TokenListener(hass, entry)
+
+        # Move to executor as it makes blocking call to import_module
+        # with args ('.system', 'urllib3.contrib.resolver')
+        manager = await hass.async_add_executor_job(
+            _create_manager, entry, token_listener
+        )
+
+        listener = DeviceListener(hass, manager)
+        manager.add_device_listener(listener)
+
+        try:
+            await hass.async_add_executor_job(manager.update_device_cache)
+        except Exception as exc:
+            # While in general, we should avoid catching broad exceptions,
+            # we have no other way of detecting this case.
+            if "sign invalid" in str(exc):
+                msg = "Authentication failed. Please re-authenticate"
+                raise ConfigEntryAuthFailed(msg) from exc
+            raise
+
         self.manager = manager
 
     def update_device(

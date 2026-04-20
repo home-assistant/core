@@ -9,7 +9,6 @@ from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import Manager
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -23,7 +22,7 @@ from .const import (
     PLATFORMS,
     TUYA_CLIENT_ID,
 )
-from .coordinator import TuyaConfigEntry, async_create_listener
+from .coordinator import DeviceListener, TuyaConfigEntry
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -46,17 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     )
 
     # Get initial devices from Tuya
-    listener = await async_create_listener(hass, entry)
+    listener = DeviceListener(hass, entry)
+    await listener.async_initialise()
     manager = listener.manager
-    try:
-        await hass.async_add_executor_job(manager.update_device_cache)
-    except Exception as exc:
-        # While in general, we should avoid catching broad exceptions,
-        # we have no other way of detecting this case.
-        if "sign invalid" in str(exc):
-            msg = "Authentication failed. Please re-authenticate"
-            raise ConfigEntryAuthFailed(msg) from exc
-        raise
 
     # Cleanup device registry
     await cleanup_device_registry(hass, manager, entry)
