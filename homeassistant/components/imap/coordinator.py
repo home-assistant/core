@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from contextlib import suppress
 from datetime import datetime, timedelta
 import email
 from email.header import decode_header, make_header
@@ -494,6 +495,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
 
     async def _async_wait_push_loop(self) -> None:
         """Wait for data push from server."""
+        idle: asyncio.Future | None = None
         while True:
             try:
                 self.number_of_messages = await self._async_fetch_number_of_messages()
@@ -527,8 +529,9 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             else:
                 self.auth_errors = 0
                 self.async_set_updated_data(self.number_of_messages)
+
             try:
-                idle: asyncio.Future = await self.imap_client.idle_start()
+                idle = await self.imap_client.idle_start()
                 await self.imap_client.wait_server_push()
                 self.imap_client.idle_done()
                 async with asyncio.timeout(10):
@@ -542,6 +545,18 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 )
                 await self._cleanup()
                 await asyncio.sleep(BACKOFF_TIME)
+
+            finally:
+                # Ensure no pending IDLE future survives
+                if idle is not None and not idle.done():
+                    idle.cancel()
+                    _LOGGER.debug(
+                        "Canceling IDLE wait for %s",
+                        self.config_entry.data[CONF_SERVER],
+                    )
+                    with suppress(AioImapException, TimeoutError):
+                        async with asyncio.timeout(10):
+                            await idle
 
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
