@@ -35,7 +35,7 @@ class ZWaveMeController:
         )
         self.platforms_inited = False
 
-    async def async_establish_connection(self):
+    async def async_establish_connection(self) -> bool:
         """Get connection status."""
         return await self.zwave_api.get_connection()
 
