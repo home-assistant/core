@@ -7,22 +7,21 @@ from typing import Any
 import pyvera as veraApi
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import ControllerData, get_controller_data
+from .common import ControllerData, VeraConfigEntry
 from .entity import VeraEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VeraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    controller_data = get_controller_data(hass, entry)
+    controller_data = entry.runtime_data
     async_add_entities(
         [
             VeraSwitch(device, controller_data)
