@@ -91,7 +91,22 @@ async def async_setup_platform(
         raise PlatformNotReady("Could not discover Avea bulbs for YAML import") from err
 
     if not bulbs:
-        raise PlatformNotReady("Could not discover any Avea bulbs for YAML import")
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2026.10.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
 
     for bulb in bulbs:
         result = await hass.config_entries.flow.async_init(
@@ -154,22 +169,22 @@ class AveaLight(LightEntity):
 
     def _sync_update(
         self, ble_device: BLEDevice | None
-    ) -> tuple[int, tuple[int, int, int]]:
+    ) -> tuple[int | None, tuple[int, int, int]]:
         """Fetch the latest state from the device."""
         with self._operation_lock:
             if ble_device is not None:
                 self._light.addr = ble_device
 
-            if not self._light.connect():
-                raise ConnectionError(
-                    f"Could not connect to Avea device {self._address}"
-                )
-
             try:
+                if not self._light.connect():
+                    raise ConnectionError(
+                        f"Could not connect to Avea device {self._address}"
+                    )
                 brightness = self._light.get_brightness()
                 rgb = self._light.get_rgb()
             finally:
-                self._light.close()
+                with suppress(*UPDATE_EXCEPTIONS):
+                    self._light.close()
 
         return brightness, rgb
 
@@ -185,12 +200,11 @@ class AveaLight(LightEntity):
             if ble_device is not None:
                 self._light.addr = ble_device
 
-            if not self._light.connect():
-                raise ConnectionError(
-                    f"Could not connect to Avea device {self._address}"
-                )
-
             try:
+                if not self._light.connect():
+                    raise ConnectionError(
+                        f"Could not connect to Avea device {self._address}"
+                    )
                 if brightness is None and hs_color is None:
                     self._light.set_brightness(4095)
                     return
@@ -204,7 +218,8 @@ class AveaLight(LightEntity):
                     if brightness is None and not was_on:
                         self._light.set_brightness(4095)
             finally:
-                self._light.close()
+                with suppress(*UPDATE_EXCEPTIONS):
+                    self._light.close()
 
     def _sync_turn_off(self, ble_device: BLEDevice | None) -> None:
         """Instruct the light to turn off."""
@@ -212,15 +227,15 @@ class AveaLight(LightEntity):
             if ble_device is not None:
                 self._light.addr = ble_device
 
-            if not self._light.connect():
-                raise ConnectionError(
-                    f"Could not connect to Avea device {self._address}"
-                )
-
             try:
+                if not self._light.connect():
+                    raise ConnectionError(
+                        f"Could not connect to Avea device {self._address}"
+                    )
                 self._light.set_brightness(0)
             finally:
-                self._light.close()
+                with suppress(*UPDATE_EXCEPTIONS):
+                    self._light.close()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

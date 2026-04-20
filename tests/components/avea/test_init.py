@@ -2,14 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
-from homeassistant.components.avea import light as avea_light
 from homeassistant.components.avea.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -123,33 +119,47 @@ async def test_yaml_import_skips_bulbs_that_fail_validation(
     assert issue is not None
 
 
-async def test_yaml_import_raises_when_no_bulbs_are_discovered(
+async def test_yaml_import_handles_when_no_bulbs_are_discovered(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test YAML import raises when no bulbs can be discovered."""
-    with (
-        patch(
-            "homeassistant.components.avea.light.avea.discover_avea_bulbs",
-            return_value=[],
-        ),
-        pytest.raises(PlatformNotReady),
+    """Test YAML import completes when no bulbs can be discovered."""
+    with patch(
+        "homeassistant.components.avea.light.avea.discover_avea_bulbs",
+        return_value=[],
     ):
-        await avea_light.async_setup_platform(hass, {"platform": DOMAIN}, MagicMock())
+        assert await async_setup_component(
+            hass, "light", {"light": {"platform": DOMAIN}}
+        )
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
 
 
-async def test_yaml_import_raises_when_all_bulbs_fail_validation(
+async def test_yaml_import_handles_when_all_bulbs_fail_validation(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test YAML import raises when all bulbs fail validation."""
+    """Test YAML import completes when all bulbs fail validation."""
     failing_bulb = MagicMock()
     failing_bulb.addr = "AA:BB:CC:DD:EE:FF"
     failing_bulb.get_name.side_effect = RuntimeError
 
-    with (
-        patch(
-            "homeassistant.components.avea.light.avea.discover_avea_bulbs",
-            return_value=[failing_bulb],
-        ),
-        pytest.raises(PlatformNotReady),
+    with patch(
+        "homeassistant.components.avea.light.avea.discover_avea_bulbs",
+        return_value=[failing_bulb],
     ):
-        await avea_light.async_setup_platform(hass, {"platform": DOMAIN}, MagicMock())
+        assert await async_setup_component(
+            hass, "light", {"light": {"platform": DOMAIN}}
+        )
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None

@@ -169,12 +169,14 @@ async def test_update_unavailable(
     """Test the entity becomes unavailable on connection failure."""
     bulb = setup_integration
     bulb.connect.return_value = False
+    bulb.close.reset_mock()
 
     await async_update_entity(hass, "light.bedroom")
 
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+    bulb.close.assert_called_once()
 
 
 async def test_update_unavailable_on_invalid_brightness(
@@ -204,6 +206,74 @@ async def test_update_unavailable_on_invalid_rgb(
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("service", ["turn_on", "turn_off"])
+async def test_failed_connect_command_still_closes_bulb(
+    hass: HomeAssistant,
+    setup_integration: MagicMock,
+    service: str,
+) -> None:
+    """Test a failed command still closes the bulb."""
+    bulb = setup_integration
+    bulb.connect.return_value = False
+    bulb.close.reset_mock()
+
+    with pytest.raises(ConnectionError):
+        await hass.services.async_call(
+            "light",
+            service,
+            {ATTR_ENTITY_ID: "light.bedroom"},
+            blocking=True,
+        )
+
+    bulb.close.assert_called_once()
+
+
+async def test_update_succeeds_when_close_raises(
+    hass: HomeAssistant, setup_integration: MagicMock
+) -> None:
+    """Test cleanup errors after update do not mask successful reads."""
+    bulb = setup_integration
+    bulb.get_brightness.return_value = 2048
+    bulb.get_rgb.return_value = (255, 0, 0)
+    bulb.close.side_effect = RuntimeError
+
+    await async_update_entity(hass, "light.bedroom")
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "expected_state"),
+    [
+        ("turn_on", {}, STATE_ON),
+        ("turn_off", {}, STATE_OFF),
+    ],
+)
+async def test_command_succeeds_when_close_raises(
+    hass: HomeAssistant,
+    setup_integration: MagicMock,
+    service: str,
+    service_data: dict[str, str],
+    expected_state: str,
+) -> None:
+    """Test cleanup errors after commands do not mask success."""
+    bulb = setup_integration
+    bulb.close.side_effect = RuntimeError
+
+    await hass.services.async_call(
+        "light",
+        service,
+        {ATTR_ENTITY_ID: "light.bedroom", **service_data},
+        blocking=True,
+    )
+
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
