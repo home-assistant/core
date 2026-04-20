@@ -24,9 +24,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import UnitOfEnergy
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -104,7 +102,7 @@ class TibberCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         config_entry: TibberConfigEntry,
         *,
         name: str,
-        update_interval: timedelta,
+        update_interval: timedelta | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -292,43 +290,13 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
             hass,
             config_entry,
             name=f"{DOMAIN} price",
-            update_interval=timedelta(minutes=1),
         )
-        self._tomorrow_price_poll_threshold_seconds = random.uniform(
-            3600 * 14, 3600 * 23
-        )
-        self._unsub_tomorrow_price_poll: CALLBACK_TYPE | None = None
-        initial_tomorrow_price_poll = dt_util.start_of_local_day() + timedelta(
-            seconds=self._tomorrow_price_poll_threshold_seconds
-        )
-        if initial_tomorrow_price_poll <= dt_util.utcnow():
-            initial_tomorrow_price_poll += timedelta(days=1)
-        self._schedule_tomorrow_price_poll(initial_tomorrow_price_poll)
-        self._tibber_homes: list[tibber.TibberHome] | None = None
+        self._price_fetch_coordinator = TibberFetchPriceCoordinator(hass, config_entry)
 
-    async def async_shutdown(self) -> None:
-        """Cancel any scheduled call, and ignore new runs."""
-        await super().async_shutdown()
-        if self._unsub_tomorrow_price_poll:
-            self._unsub_tomorrow_price_poll()
-            self._unsub_tomorrow_price_poll = None
-
-    def _schedule_tomorrow_price_poll(self, point_in_time: datetime) -> None:
-        """Schedule the next one-shot tomorrow price poll."""
-        if point_in_time <= (now := dt_util.utcnow()):
-            point_in_time = now + timedelta(seconds=1)
-        if self._unsub_tomorrow_price_poll:
-            self._unsub_tomorrow_price_poll()
-        self._unsub_tomorrow_price_poll = async_track_point_in_utc_time(
-            self.hass,
-            self._async_handle_tomorrow_price_poll,
-            point_in_time,
-        )
-
-    async def _async_handle_tomorrow_price_poll(self, _: datetime) -> None:
-        """Handle the scheduled tomorrow price poll."""
-        self._unsub_tomorrow_price_poll = None
-        await self._fetch_data()
+    async def async_config_entry_first_refresh(self) -> None:
+        """Refresh fetch data before building derived price sensor data."""
+        await self._price_fetch_coordinator.async_config_entry_first_refresh()
+        return await super().async_config_entry_first_refresh()
 
     def _time_until_next_15_minute(self) -> timedelta:
         """Return time until the next 15-minute boundary (0, 15, 30, 45) in UTC."""
@@ -345,23 +313,40 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
         return next_run - now
 
     async def _async_update_data(self) -> dict[str, TibberHomeData]:
-        if self._tibber_homes is None:
-            await self._fetch_data()
-
-        homes = self._tibber_homes
-        if homes is None:
-            raise UpdateFailed("No Tibber homes available")
-
-        result = {home.home_id: _build_home_data(home) for home in homes}
-
         self.update_interval = self._time_until_next_15_minute()
-        return result
 
-    async def _fetch_data(self) -> None:
-        """Fetch latest price data via API and update cached home data."""
-        self._schedule_tomorrow_price_poll(
-            dt_util.utcnow() + timedelta(seconds=random.uniform(60, 60 * 10))
+        return {
+            home_id: _build_home_data(home)
+            for home_id, home in self._price_fetch_coordinator.data.items()
+        }
+
+
+class TibberFetchPriceCoordinator(TibberCoordinator[dict[str, tibber.TibberHome]]):
+    """Fetch Tibber price data from the API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TibberConfigEntry,
+    ) -> None:
+        """Initialize the price coordinator."""
+        super().__init__(
+            hass,
+            config_entry,
+            name=f"{DOMAIN} price fetch",
         )
+        self._tomorrow_price_poll_threshold_seconds = random.uniform(
+            3600 * 14, 3600 * 23
+        )
+
+        @callback
+        def _keepalive_listener() -> None:
+            """Keep periodic polling active without external subscribers."""
+
+        self.async_add_listener(_keepalive_listener)
+
+    async def _async_update_data(self) -> dict[str, tibber.TibberHome]:
+        """Fetch latest price data via API and return per-home data."""
         tibber_connection = await self._async_get_client()
         active_homes = tibber_connection.get_homes(only_active=True)
 
@@ -399,32 +384,32 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
                 return True
             return False
 
-        homes_to_update = [home for home in active_homes if _needs_update(home)]
+        update_interval = timedelta(seconds=random.uniform(60, 60 * 10))
+
         try:
-            if homes_to_update:
-                await asyncio.gather(
-                    *(home.update_info_and_price_info() for home in homes_to_update)
+            await asyncio.gather(
+                *(
+                    home.update_info_and_price_info()
+                    for home in active_homes
+                    if _needs_update(home)
                 )
-        except tibber.exceptions.RateLimitExceededError as err:
-            self._schedule_tomorrow_price_poll(
-                dt_util.utcnow() + timedelta(seconds=err.retry_after)
             )
+        except tibber.exceptions.RateLimitExceededError as err:
             raise UpdateFailed(
                 f"Rate limit exceeded, retry after {err.retry_after} seconds",
                 retry_after=err.retry_after,
             ) from err
         except tibber.exceptions.HttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err})") from err
+        else:
+            update_interval = now - (
+                dt_util.start_of_local_day(now)
+                + timedelta(days=1, seconds=self._tomorrow_price_poll_threshold_seconds)
+            )
+        finally:
+            self.update_interval = update_interval
 
-        self._schedule_tomorrow_price_poll(
-            dt_util.start_of_local_day(now)
-            + timedelta(days=1, seconds=self._tomorrow_price_poll_threshold_seconds)
-        )
-        self._tibber_homes = active_homes
-
-
-class TibberFetchPriceCoordinator(TibberPriceCoordinator):
-    """Backward-compatible alias for the merged price fetch coordinator."""
+        return {home.home_id: home for home in active_homes}
 
 
 class TibberDataAPICoordinator(TibberCoordinator[dict[str, TibberDevice]]):
