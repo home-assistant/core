@@ -495,6 +495,9 @@
     },
     "invalid_preset_mode": {
       "message": "Invalid preset mode: {preset_mode}. Turning on is only supported with preset mode 'Manual'."
+    },
+    "open_not_supported": {
+      "message": "This lock does not support the open (unlatch) action."
     }
   }
 }

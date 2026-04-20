@@ -92,6 +92,7 @@ async def test_lock_open_service(
         LOCK_DOMAIN,
         SERVICE_OPEN,
         {ATTR_ENTITY_ID: "lock.test_lock"},
+        blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(1, 1, open_value)
 
@@ -156,9 +157,7 @@ async def test_lock_state_with_open(
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     attribute = mock_homee.nodes[0].attributes[0]
     attribute.target_value = open_value if target_offset == "open" else target_offset
-    attribute.current_value = (
-        open_value if current_offset == "open" else current_offset
-    )
+    attribute.current_value = open_value if current_offset == "open" else current_offset
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("lock.test_lock").state == expected

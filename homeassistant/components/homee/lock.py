@@ -7,9 +7,11 @@ from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
+from .const import DOMAIN
 from .entity import HomeeEntity
 from .helpers import get_name_for_enum, setup_homee_platform
 
@@ -19,7 +21,7 @@ LOCK_STATE_UNLOCKED = 0.0
 LOCK_STATE_LOCKED = 1.0
 
 
-def _determine_open_value(attribute: HomeeAttribute) -> float | None:
+def _determine_lock_state_open(attribute: HomeeAttribute) -> float | None:
     """Return the attribute value that momentarily unlatches the lock.
 
     Different homee-compatible locks encode the "open" (unlatch) command
@@ -27,9 +29,9 @@ def _determine_open_value(attribute: HomeeAttribute) -> float | None:
     where -1 is unlatch; other devices extend above with {0, 1, 2}.
     Returns None when the device only supports two states.
     """
-    if attribute.maximum >= 2.0:
+    if attribute.maximum == 2.0:
         return 2.0
-    if attribute.minimum <= -1.0:
+    if attribute.minimum == -1.0:
         return -1.0
     return None
 
@@ -63,13 +65,11 @@ class HomeeLock(HomeeEntity, LockEntity):
 
     _attr_name = None
 
-    def __init__(
-        self, attribute: HomeeAttribute, entry: HomeeConfigEntry
-    ) -> None:
+    def __init__(self, attribute: HomeeAttribute, entry: HomeeConfigEntry) -> None:
         """Initialize the homee lock."""
         super().__init__(attribute, entry)
-        self._open_value = _determine_open_value(attribute)
-        if self._open_value is not None:
+        self._lock_state_open = _determine_lock_state_open(attribute)
+        if self._lock_state_open is not None:
             self._attr_supported_features = LockEntityFeature.OPEN
 
     @property
@@ -81,8 +81,8 @@ class HomeeLock(HomeeEntity, LockEntity):
     def is_open(self) -> bool:
         """Return if lock is open (unlatched)."""
         return (
-            self._open_value is not None
-            and self._attribute.current_value == self._open_value
+            self._lock_state_open is not None
+            and self._attribute.current_value == self._lock_state_open
         )
 
     @property
@@ -105,9 +105,9 @@ class HomeeLock(HomeeEntity, LockEntity):
     def is_opening(self) -> bool:
         """Return if lock is opening (unlatching)."""
         return (
-            self._open_value is not None
-            and self._attribute.target_value == self._open_value
-            and self._attribute.current_value != self._open_value
+            self._lock_state_open is not None
+            and self._attribute.target_value == self._lock_state_open
+            and self._attribute.current_value != self._lock_state_open
         )
 
     @property
@@ -138,5 +138,9 @@ class HomeeLock(HomeeEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open (unlatch) the lock."""
-        assert self._open_value is not None
-        await self.async_set_homee_value(self._open_value)
+        if self._lock_state_open is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="open_not_supported",
+            )
+        await self.async_set_homee_value(self._lock_state_open)
