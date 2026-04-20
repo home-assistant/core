@@ -555,7 +555,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                         self.config_entry.data[CONF_SERVER],
                     )
                     with suppress(AioImapException, TimeoutError):
-                        async with asyncio.timeout(10):
+                        async with asyncio.timeout(BACKOFF_TIME):
                             await idle
 
     async def shutdown(self, *_: Any) -> None:
