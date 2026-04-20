@@ -3,11 +3,12 @@
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from energyzero import Electricity, Gas
+from energyzero import EnergyPrices, PriceType
 import pytest
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
@@ -40,11 +41,20 @@ async def mock_energyzero(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         "homeassistant.components.energyzero.coordinator.EnergyZero", autospec=True
     ) as energyzero_mock:
         client = energyzero_mock.return_value
-        client.get_electricity_prices_legacy.return_value = Electricity.from_dict(
-            await async_load_json_object_fixture(hass, "today_energy.json", DOMAIN)
+        filter_date = dt_util.now().date()
+        energy_data = await async_load_json_object_fixture(
+            hass, "today_energy.json", DOMAIN
         )
-        client.get_gas_prices_legacy.return_value = Gas.from_dict(
-            await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+        gas_data = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
+        client.get_electricity_prices.return_value = EnergyPrices.from_rest_dict(
+            energy_data,
+            PriceType.ALL_IN,
+            filter_date=filter_date,
+        )
+        client.get_gas_prices.return_value = EnergyPrices.from_rest_dict(
+            gas_data,
+            PriceType.ALL_IN,
+            filter_date=filter_date,
         )
         yield client
 

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from enum import Enum
 from functools import partial
 from typing import Final
 
-from energyzero import Electricity, Gas, VatOption
+from energyzero import EnergyPrices, Interval, PriceType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -46,20 +46,20 @@ SERVICE_SCHEMA: Final = vol.Schema(
 )
 
 
-class PriceType(Enum):
-    """Type of price."""
+class ServicePriceType(Enum):
+    """Type of service."""
 
     ENERGY = "energy"
     GAS = "gas"
 
 
-def __get_date(date_input: str | None) -> date | datetime:
+def __get_date(date_input: str | None) -> date:
     """Get date."""
     if not date_input:
         return dt_util.now().date()
 
     if value := dt_util.parse_datetime(date_input):
-        return value
+        return value.date()
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -70,15 +70,15 @@ def __get_date(date_input: str | None) -> date | datetime:
     )
 
 
-def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
+def __serialize_prices(prices: EnergyPrices) -> ServiceResponse:
     """Serialize prices."""
     return {
         "prices": [
             {
-                key: str(value) if isinstance(value, datetime) else value
-                for key, value in timestamp_price.items()
+                "price": price,
+                "timestamp": str(time_range.start_including),
             }
-            for timestamp_price in prices.timestamp_prices
+            for time_range, price in prices.prices.items()
         ]
     }
 
@@ -113,31 +113,31 @@ def __get_coordinator(call: ServiceCall) -> EnergyZeroDataUpdateCoordinator:
 async def __get_prices(
     call: ServiceCall,
     *,
-    price_type: PriceType,
+    price_type: ServicePriceType,
 ) -> ServiceResponse:
     coordinator = __get_coordinator(call)
 
     start = __get_date(call.data.get(ATTR_START))
-    end = __get_date(call.data.get(ATTR_END))
+    end = __get_date(call.data.get(ATTR_END)) if call.data.get(ATTR_END) else start
 
-    vat = VatOption.INCLUDE
+    selected_price_type = (
+        PriceType.ALL_IN if call.data.get(ATTR_INCL_VAT) else PriceType.MARKET
+    )
 
-    if call.data.get(ATTR_INCL_VAT) is False:
-        vat = VatOption.EXCLUDE
+    data: EnergyPrices
 
-    data: Electricity | Gas
-
-    if price_type == PriceType.GAS:
-        data = await coordinator.energyzero.get_gas_prices_legacy(
+    if price_type == ServicePriceType.GAS:
+        data = await coordinator.energyzero.get_gas_prices(
             start_date=start,
             end_date=end,
-            vat=vat,
+            price_type=selected_price_type,
         )
     else:
-        data = await coordinator.energyzero.get_electricity_prices_legacy(
+        data = await coordinator.energyzero.get_electricity_prices(
             start_date=start,
             end_date=end,
-            vat=vat,
+            interval=Interval.HOUR,
+            price_type=selected_price_type,
         )
 
     return __serialize_prices(data)
@@ -150,14 +150,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.GAS),
+        partial(__get_prices, price_type=ServicePriceType.GAS),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_SERVICE_NAME,
-        partial(__get_prices, price_type=PriceType.ENERGY),
+        partial(__get_prices, price_type=ServicePriceType.ENERGY),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
