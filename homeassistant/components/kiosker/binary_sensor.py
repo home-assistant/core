@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KioskerConfigEntry
-from .coordinator import KioskerData, KioskerDataUpdateCoordinator
+from .coordinator import KioskerData
 from .entity import KioskerEntity
 
 # These entities rely on the shared data coordinator instead of per-entity polling.
@@ -35,7 +35,9 @@ BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
         key="blackoutState",
         translation_key="blackout_state",
         value_fn=lambda x: x.blackout.visible if x.blackout else False,
-        extra_attributes_fn=lambda x: x.blackout.__dict__ if x.blackout else None,
+        extra_attributes_fn=lambda x: (
+            x.blackout.__dict__ if x.blackout and x.blackout.visible else None
+        ),
     ),
     KioskerBinarySensorEntityDescription(
         key="screensaverState",
@@ -60,7 +62,6 @@ async def async_setup_entry(
     """Set up Kiosker binary sensors based on a config entry."""
     coordinator = entry.runtime_data
 
-    # Create all binary sensors - they will handle missing data gracefully
     async_add_entities(
         KioskerBinarySensor(coordinator, description) for description in BINARY_SENSORS
     )
@@ -70,7 +71,6 @@ class KioskerBinarySensor(KioskerEntity, BinarySensorEntity):
     """Representation of a Kiosker binary sensor."""
 
     entity_description: KioskerBinarySensorEntityDescription
-
 
     @property
     def is_on(self) -> bool | None:
