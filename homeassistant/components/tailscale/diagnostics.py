@@ -21,7 +21,9 @@ TO_REDACT = {
     "hostname",
     "machine_key",
     "name",
+    "node_id",
     "node_key",
+    "tailnet_lock_key",
     "user",
 }
 

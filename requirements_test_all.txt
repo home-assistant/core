@@ -2600,7 +2600,7 @@ switchbot-api==2.11.0
 systembridgeconnector==5.4.3
 
 # homeassistant.components.tailscale
-tailscale==0.6.2
+tailscale==0.7.0
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.12
