@@ -32,7 +32,6 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_secret": "API secret",
-          "tracker_interfaces": "Interface(s) to use for tracking devices (if blank all will be used)",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
