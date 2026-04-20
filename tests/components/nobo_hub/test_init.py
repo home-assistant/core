@@ -203,13 +203,22 @@ async def test_entity_base_handles_push_updates(hass: HomeAssistant) -> None:
     """Registered callbacks route pushed hub updates to entity state writes."""
     entry = _make_entry(hass, auto_discovered=False)
     hub = _make_hub_mock()
-    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
+    with (
+        patch("homeassistant.components.nobo_hub.nobo") as mock_cls,
+        patch(
+            "homeassistant.helpers.entity.Entity.async_write_ha_state"
+        ) as mock_write_state,
+    ):
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hub.register_callback.call_count > 0
-    for call in hub.register_callback.call_args_list:
-        call.args[0](hub)
-    await hass.async_block_till_done()
+        assert hub.register_callback.call_count > 0
+        mock_write_state.reset_mock()
+
+        for call in hub.register_callback.call_args_list:
+            call.args[0](hub)
+        await hass.async_block_till_done()
+
+    assert mock_write_state.call_count > 0
