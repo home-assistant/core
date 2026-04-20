@@ -105,7 +105,8 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         hass.bus.async_fire(event, schema)
 
         if legacy_event != event:
-            # For backward compatibility with custom automations that may be using the old event names, we will also fire an event with the old event name.            
+            # For backward compatibility with custom automations that may be using the old event names,
+            # we will also fire an event with the old event name.
             legacy_schema = {
                 **schema,
                 "deprecated": (
