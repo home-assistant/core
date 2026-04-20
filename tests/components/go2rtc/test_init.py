@@ -88,10 +88,9 @@ async def _test_setup_and_signaling(
     config: ConfigType,
     after_setup_fn: Callable[[], None],
     camera: MockCamera,
-    camera_unique_id: str | None,
 ) -> None:
     """Test the go2rtc config entry."""
-    identifier = camera_unique_id or camera.entity_id
+    identifier = get_camera_identifier(camera)
     assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
 
     assert await async_setup_component(hass, DOMAIN, config)
@@ -256,7 +255,6 @@ async def test_setup_go_binary(
     ui_enabled: bool,
     expected_username: str,
     expected_password: str,
-    camera_unique_id: str | None,
 ) -> None:
     """Test the go2rtc config entry with binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
@@ -288,7 +286,6 @@ async def test_setup_go_binary(
             config,
             after_setup,
             init_test_integration,
-            camera_unique_id,
         )
 
     await hass.async_stop()
@@ -321,7 +318,6 @@ async def test_setup(
     mock_get_binary: Mock,
     mock_is_docker_env: Mock,
     has_go2rtc_entry: bool,
-    camera_unique_id: str | None,
 ) -> None:
     """Test the go2rtc config entry without binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
@@ -339,7 +335,6 @@ async def test_setup(
         config,
         after_setup,
         init_test_integration,
-        camera_unique_id,
     )
 
     mock_get_binary.assert_not_called()

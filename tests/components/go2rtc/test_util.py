@@ -29,6 +29,8 @@ from homeassistant.components.go2rtc.util import get_camera_identifier
         ("cam@1", "camera.test", "cam%401"),
         ("cam_1", "camera.test", "cam_1"),
         ("cam%231", "camera.test", "cam%25231"),
+        # Non-ASCII: UTF-8 byte-wise encoding (€ = E2 82 AC)
+        ("cam€1", "camera.test", "cam%E2%82%AC1"),
     ],
 )
 def test_get_camera_identifier(
