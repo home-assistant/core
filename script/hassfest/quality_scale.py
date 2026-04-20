@@ -1986,7 +1986,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
