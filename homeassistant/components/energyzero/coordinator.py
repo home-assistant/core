@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import NamedTuple
+from zoneinfo import ZoneInfo
 
 from energyzero import (
     EnergyPrices,
@@ -54,17 +55,20 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
         today = dt_util.now().date()
         gas_today = None
         energy_tomorrow = None
+        local_tz = ZoneInfo(self.hass.config.time_zone)
 
         try:
             energy_today = await self.energyzero.get_electricity_prices(
                 start_date=today,
                 end_date=today,
                 interval=Interval.HOUR,
+                local_tz=local_tz,
             )
             try:
                 gas_today = await self.energyzero.get_gas_prices(
                     start_date=today,
                     end_date=today,
+                    local_tz=local_tz,
                 )
             except EnergyZeroNoDataError:
                 LOGGER.debug("No data for gas prices for EnergyZero integration")
@@ -76,6 +80,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
                         start_date=tomorrow,
                         end_date=tomorrow,
                         interval=Interval.HOUR,
+                        local_tz=local_tz,
                     )
                 except EnergyZeroNoDataError:
                     LOGGER.debug("No data for tomorrow for EnergyZero integration")
