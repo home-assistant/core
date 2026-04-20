@@ -3,9 +3,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Bathroom Dn zone faults',
     }),
     'context': <ANY>,
@@ -20,9 +19,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Dead Zone zone faults',
     }),
     'context': <ANY>,
@@ -37,13 +35,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 1,
-      'faults': tuple(
+      'faults': list([
         dict({
           'fault': 'temp_zone_actuator_low_battery',
           'since': datetime.datetime(2022, 3, 2, 4, 50, 20, tzinfo=UTC-03:00),
         }),
-      ),
+      ]),
       'friendly_name': 'Front Room zone faults',
     }),
     'context': <ANY>,
@@ -58,9 +55,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Kids Room zone faults',
     }),
     'context': <ANY>,
@@ -75,9 +71,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Kitchen zone faults',
     }),
     'context': <ANY>,
@@ -92,9 +87,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Main Bedroom zone faults',
     }),
     'context': <ANY>,
@@ -109,13 +103,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 1,
-      'faults': tuple(
+      'faults': list([
         dict({
           'fault': 'temp_zone_actuator_communication_lost',
           'since': datetime.datetime(2022, 3, 2, 15, 56, 1, tzinfo=UTC-03:00),
         }),
-      ),
+      ]),
       'friendly_name': 'Main Room zone faults',
     }),
     'context': <ANY>,
@@ -130,9 +123,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home DHW faults',
     }),
     'context': <ANY>,
@@ -147,9 +139,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
@@ -164,9 +155,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
@@ -181,9 +171,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Spare Room zone faults',
     }),
     'context': <ANY>,
@@ -198,9 +187,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Bathroom Dn zone faults',
     }),
     'context': <ANY>,
@@ -215,9 +203,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Dead Zone zone faults',
     }),
     'context': <ANY>,
@@ -232,9 +219,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Front Room zone faults',
     }),
     'context': <ANY>,
@@ -249,9 +235,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Kids Room zone faults',
     }),
     'context': <ANY>,
@@ -266,9 +251,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Kitchen zone faults',
     }),
     'context': <ANY>,
@@ -283,9 +267,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Main Bedroom zone faults',
     }),
     'context': <ANY>,
@@ -300,9 +283,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Main Room zone faults',
     }),
     'context': <ANY>,
@@ -317,9 +299,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home DHW faults',
     }),
     'context': <ANY>,
@@ -334,9 +315,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
@@ -351,9 +331,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
@@ -368,9 +347,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Spare Room zone faults',
     }),
     'context': <ANY>,
@@ -385,9 +363,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
@@ -402,9 +379,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
@@ -419,9 +395,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'THERMOSTAT zone faults',
     }),
     'context': <ANY>,
@@ -436,9 +411,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
@@ -453,9 +427,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
@@ -470,9 +443,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'THERMOSTAT zone faults',
     }),
     'context': <ANY>,
@@ -487,9 +459,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'THERMOSTAT zone faults',
     }),
     'context': <ANY>,
@@ -504,9 +475,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Thermostat 2 zone faults',
     }),
     'context': <ANY>,
@@ -521,13 +491,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 1,
-      'faults': tuple(
+      'faults': list([
         dict({
           'fault': 'temp_zone_sensor_communication_lost',
           'since': datetime.datetime(2025, 2, 6, 11, 20, 29, tzinfo=UTC+01:00),
         }),
-      ),
+      ]),
       'friendly_name': 'Thermostat zone faults',
     }),
     'context': <ANY>,
@@ -542,9 +511,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Vr********** gateway faults',
     }),
     'context': <ANY>,
@@ -559,9 +527,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Vr********** system faults',
     }),
     'context': <ANY>,
@@ -576,9 +543,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Ba****** zone faults',
     }),
     'context': <ANY>,
@@ -593,9 +559,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Ka********* zone faults',
     }),
     'context': <ANY>,
@@ -610,9 +575,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Ka***** zone faults',
     }),
     'context': <ANY>,
@@ -627,9 +591,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Kl******** gateway faults',
     }),
     'context': <ANY>,
@@ -644,9 +607,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Kl******** system faults',
     }),
     'context': <ANY>,
@@ -661,9 +623,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Sl******** zone faults',
     }),
     'context': <ANY>,
@@ -678,9 +639,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Wo******* zone faults',
     }),
     'context': <ANY>,
@@ -695,9 +655,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Main Room zone faults',
     }),
     'context': <ANY>,
@@ -712,9 +671,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home gateway faults',
     }),
     'context': <ANY>,
@@ -729,9 +687,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'My Home system faults',
     }),
     'context': <ANY>,
@@ -746,13 +703,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 1,
-      'faults': tuple(
+      'faults': list([
         dict({
           'fault': 'gateway_communication_lost',
           'since': datetime.datetime(2023, 5, 4, 18, 47, 36, 772704, tzinfo=UTC+02:00),
         }),
-      ),
+      ]),
       'friendly_name': 'Living room gateway faults',
     }),
     'context': <ANY>,
@@ -767,9 +723,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Living room system faults',
     }),
     'context': <ANY>,
@@ -784,9 +739,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'fault_count': 0,
-      'faults': tuple(
-      ),
+      'faults': list([
+      ]),
       'friendly_name': 'Thermostat zone faults',
     }),
     'context': <ANY>,
