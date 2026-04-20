@@ -75,7 +75,6 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
         self._shuffle = False
         self._sound_mode = None
         self._repeat = None
-        self._entity_picture_local = None
         self.platform = MockEntityPlatform(hass)
 
         self.service_calls = {
@@ -170,11 +169,6 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
     def media_image_url(self):
         """Image url of current playing media."""
         return self._media_image_url
-
-    @property
-    def entity_picture_local(self):
-        """Return the entity picture local URL."""
-        return self._entity_picture_local
 
     @property
     def shuffle(self):
@@ -274,11 +268,6 @@ async def mock_states(hass: HomeAssistant) -> Mock:
 
     result.mock_media_image_url_id = f"{input_select.DOMAIN}.entity_picture"
     hass.states.async_set(result.mock_media_image_url_id, "/local/picture.png")
-
-    result.mock_entity_picture_local_id = f"{input_select.DOMAIN}.entity_picture_local"
-    hass.states.async_set(
-        result.mock_entity_picture_local_id, "/local/picture_local.png"
-    )
     return result
 
 
@@ -303,7 +292,6 @@ def config_children_and_attr(mock_states):
             "sound_mode_list": mock_states.mock_sound_mode_list_id,
             "sound_mode": mock_states.mock_sound_mode_id,
             "entity_picture": mock_states.mock_media_image_url_id,
-            "entity_picture_local": mock_states.mock_entity_picture_local_id,
         },
     }
 
@@ -569,9 +557,10 @@ async def test_media_image_url(hass: HomeAssistant, mock_states) -> None:
     mock_states.mock_mp_1.async_schedule_update_ha_state()
     await hass.async_block_till_done()
     await ump.async_update()
-    # mock_mp_1 will convert the url to the api proxy url. This test
-    # ensures ump passes through the same url without an additional proxy.
-    assert mock_states.mock_mp_1.entity_picture == ump.entity_picture
+    # Universal keeps the child picture URL as media_image_url.
+    assert mock_states.mock_mp_1.entity_picture == ump.media_image_url
+    # entity_picture resolves to the universal entity local proxy URL.
+    assert ump.entity_picture == ump.media_image_local
 
 
 async def test_is_volume_muted_children_only(hass: HomeAssistant, mock_states) -> None:
@@ -621,28 +610,14 @@ async def test_entity_picture_children_and_attr(
 
     ump = universal.UniversalMediaPlayer(hass, config)
 
-    assert ump.entity_picture == "/local/picture.png"
+    assert ump.entity_picture == ump.media_image_local
+    assert ump.entity_picture != ump.media_image_url
 
     hass.states.async_set(
-        mock_states.mock_sound_mode_list_id, "/local/other_picture.png"
+        mock_states.mock_media_image_url_id, "/local/other_picture.png"
     )
-    assert ump.sound_mode_list == "/local/other_picture.png"
-
-
-async def test_entity_picture_local_children_and_attr(
-    hass: HomeAssistant, config_children_and_attr, mock_states
-) -> None:
-    """Test entity picture local property w/ children and attrs."""
-    config = validate_config(config_children_and_attr)
-
-    ump = universal.UniversalMediaPlayer(hass, config)
-
-    assert ump.entity_picture_local == "/local/picture_local.png"
-
-    hass.states.async_set(
-        mock_states.mock_entity_picture_local_id, "/local/other_picture_local.png"
-    )
-    assert ump.entity_picture_local == "/local/other_picture_local.png"
+    assert ump.entity_picture == ump.media_image_local
+    assert ump.entity_picture != ump.media_image_url
 
 
 async def test_source_list_children_and_attr(
@@ -1435,8 +1410,9 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.master_bed_tv").state == "on"
     assert hass.states.get("media_player.master_bed_tv").attributes["source"] == "act2"
     assert (
-        hass.states.get("media_player.master_bed_tv").attributes["entity_picture"]
-        == "/local/picture_remote.png"
+        hass.states.get("media_player.master_bed_tv")
+        .attributes["entity_picture"]
+        .startswith("/api/media_player_proxy/media_player.master_bed_tv?")
     )
     assert (
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
