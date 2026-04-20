@@ -2,6 +2,7 @@
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
+    DOMAIN as EVENT_DOMAIN,
     DoorbellEventType,
     EventDeviceClass,
 )
@@ -14,17 +15,15 @@ from homeassistant.helpers.trigger import (
     Trigger,
 )
 
-DOMAIN = "event"
-
 
 class DoorbellRangTrigger(EntityTriggerBase):
     """Trigger for doorbell event entity when a ring event is received."""
 
-    _domain_specs = {DOMAIN: DomainSpec(device_class=EventDeviceClass.DOORBELL)}
+    _domain_specs = {EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.DOORBELL)}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the event type is valid and matches one of the configured types."""
+        """Check if the entity is available and the event type is ring."""
         return (
             state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
             and state.attributes.get(ATTR_EVENT_TYPE) == DoorbellEventType.RING
