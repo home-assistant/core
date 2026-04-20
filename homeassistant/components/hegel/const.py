@@ -81,6 +81,7 @@ MODEL_INPUTS = {
         "XLR 2",
         "Analog 1",
         "Analog 2",
+        "Analog 3",
         "BNC",
         "Coaxial",
         "Optical 1",
