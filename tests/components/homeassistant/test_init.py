@@ -642,83 +642,72 @@ async def test_reload_all(
 
 
 @pytest.mark.parametrize(
-    ("arch", "bit_32", "venv", "expected_issues"),
+    ("arch", "bit_32", "installation_type", "venv", "expected_issues"),
     [
         (
             "i386",
             True,
+            "Unknown",
             False,
             [
                 (
-                    "deprecated_method_architecture",
-                    {"installation_type": "Core", "arch": "i386"},
-                ),
-                (
                     "unsupported_local_deps",
-                    {"installation_type": "Home Assistant Core"},
+                    {"installation_type": "Unknown"},
                 ),
             ],
         ),
         (
             "armhf",
             True,
+            "Unknown",
             False,
             [
                 (
-                    "deprecated_method_architecture",
-                    {"installation_type": "Core", "arch": "armhf"},
-                ),
-                (
                     "unsupported_local_deps",
-                    {"installation_type": "Home Assistant Core"},
+                    {"installation_type": "Unknown"},
                 ),
             ],
         ),
         (
             "armv7",
             True,
+            "Unknown",
             False,
             [
                 (
-                    "deprecated_method_architecture",
-                    {"installation_type": "Core", "arch": "armv7"},
-                ),
-                (
                     "unsupported_local_deps",
-                    {"installation_type": "Home Assistant Core"},
+                    {"installation_type": "Unknown"},
                 ),
             ],
         ),
         (
             "aarch64",
             False,
+            "Unknown",
             False,
             [
-                ("deprecated_method", {"installation_type": "Core", "arch": "aarch64"}),
                 (
                     "unsupported_local_deps",
-                    {"installation_type": "Home Assistant Core"},
+                    {"installation_type": "Unknown"},
                 ),
             ],
         ),
         (
             "generic-x86-64",
             False,
+            "Unknown",
             False,
             [
                 (
-                    "deprecated_method",
-                    {"installation_type": "Core", "arch": "generic-x86-64"},
-                ),
-                (
                     "unsupported_local_deps",
-                    {"installation_type": "Home Assistant Core"},
+                    {"installation_type": "Unknown"},
                 ),
             ],
         ),
         (
             "i386",
             True,
+            "Home Assistant Core",
             True,
             [
                 (
@@ -730,6 +719,7 @@ async def test_reload_all(
         (
             "armhf",
             True,
+            "Home Assistant Core",
             True,
             [
                 (
@@ -741,6 +731,7 @@ async def test_reload_all(
         (
             "armv7",
             True,
+            "Home Assistant Core",
             True,
             [
                 (
@@ -752,12 +743,14 @@ async def test_reload_all(
         (
             "aarch64",
             False,
+            "Home Assistant Core",
             True,
             [("deprecated_method", {"installation_type": "Core", "arch": "aarch64"})],
         ),
         (
             "generic-x86-64",
             False,
+            "Home Assistant Core",
             True,
             [
                 (
@@ -773,6 +766,7 @@ async def test_deprecated_installation_issue_core(
     issue_registry: ir.IssueRegistry,
     arch: str,
     bit_32: bool,
+    installation_type: str,
     venv: bool,
     expected_issues: list[tuple[str, dict[str, str]]],
 ) -> None:
@@ -781,7 +775,7 @@ async def test_deprecated_installation_issue_core(
         patch(
             "homeassistant.components.homeassistant.async_get_system_info",
             return_value={
-                "installation_type": "Home Assistant Core",
+                "installation_type": installation_type,
                 "arch": arch,
                 "docker": False,
                 "virtualenv": venv,
