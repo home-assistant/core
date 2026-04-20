@@ -199,9 +199,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.CURTAIN,
         device_class=CoverDeviceClass.CURTAIN,
+        current_position_state=OverkizState.CORE_CLOSURE,
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
+        is_closed_fn=is_closed,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
