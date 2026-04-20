@@ -554,7 +554,9 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                         "Canceling IDLE wait for %s",
                         self.config_entry.data[CONF_SERVER],
                     )
-                    with suppress(AioImapException, TimeoutError):
+                    with suppress(
+                        AioImapException, asyncio.CancelledError, TimeoutError
+                    ):
                         async with asyncio.timeout(BACKOFF_TIME):
                             await idle
 
