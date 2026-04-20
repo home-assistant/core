@@ -489,7 +489,7 @@ async def async_setup_entry(
     """Set up the Netatmo sensor platform."""
 
     @callback
-    def _create_sensor_entity(
+    def _create_base_sensor_entity(
         sensorClass: type[
             NetatmoClimateBatterySensor
             | NetatmoWeatherSensor
@@ -545,7 +545,7 @@ async def async_setup_entry(
             hass,
             NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
             partial(
-                _create_sensor_entity,
+                _create_base_sensor_entity,
                 NetatmoClimateBatterySensor,
                 DEVICE_CATEGORY_CLIMATE_BATTERY_SENSORS,
             ),
@@ -557,7 +557,7 @@ async def async_setup_entry(
             hass,
             NETATMO_CREATE_OPENING_SENSOR,
             partial(
-                _create_sensor_entity,
+                _create_base_sensor_entity,
                 NetatmoOpeningSensor,
                 DEVICE_CATEGORY_OPENING_SENSORS,
             ),
@@ -569,7 +569,7 @@ async def async_setup_entry(
             hass,
             NETATMO_CREATE_WEATHER_SENSOR,
             partial(
-                _create_sensor_entity,
+                _create_base_sensor_entity,
                 NetatmoWeatherSensor,
                 DEVICE_CATEGORY_WEATHER_SENSORS,
             ),
@@ -581,7 +581,7 @@ async def async_setup_entry(
             hass,
             NETATMO_CREATE_METER_SENSOR,
             partial(
-                _create_sensor_entity,
+                _create_base_sensor_entity,
                 NetatmoMeterSensor,
                 DEVICE_CATEGORY_METER_SENSORS,
             ),
@@ -593,7 +593,7 @@ async def async_setup_entry(
             hass,
             NETATMO_CREATE_SWITCH_SENSOR,
             partial(
-                _create_sensor_entity,
+                _create_base_sensor_entity,
                 NetatmoSwitchSensor,
                 DEVICE_CATEGORY_SWITCH_SENSORS,
             ),
@@ -681,7 +681,7 @@ async def async_setup_entry(
     await add_public_entities(False)
 
 
-class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
+class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -690,7 +690,7 @@ class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
         self,
         netatmo_device: NetatmoDevice,
         description: NetatmoSensorEntityDescription,
-        **kwargs: Any,  # Add this to capture extra args from super()
+        **kwargs: Any,
     ) -> None:
         """Initialize the sensor."""
 
@@ -728,7 +728,7 @@ class NetatmoSensor(NetatmoModuleEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoSensor):
+class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoBaseSensor):
     """Implementation of a Netatmo weather/home coach sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -772,8 +772,11 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoSensor):
         self.async_write_ha_state()
 
 
-class NetatmoLegacySensor(NetatmoSensor):
+class NetatmoLegacySensor(NetatmoBaseSensor):
     """Implementation of a Netatmo legacy sensor."""
+
+    # Legacy sensors are sensors that were implemented before the refactor (like climate, meter and switch)
+    # and that still use the old way (weather style) of retrieving values from the device,
 
     entity_description: NetatmoSensorEntityDescription
 
@@ -820,7 +823,7 @@ class NetatmoSwitchSensor(NetatmoLegacySensor):
     entity_description: NetatmoSensorEntityDescription
 
 
-class NetatmoClimateBatterySensor(NetatmoClimateSensor):
+class NetatmoClimateBatterySensor(NetatmoLegacySensor):
     """Implementation of a Netatmo Climate Battery sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -856,7 +859,7 @@ class NetatmoClimateBatterySensor(NetatmoClimateSensor):
         self.async_write_ha_state()
 
 
-class NetatmoRefactoredSensor(NetatmoSensor):
+class NetatmoSensor(NetatmoBaseSensor):
     """Implementation of a Netatmo refactored sensor."""
 
     entity_description: NetatmoSensorEntityDescription
@@ -912,7 +915,7 @@ class NetatmoRefactoredSensor(NetatmoSensor):
         self.async_write_ha_state()
 
 
-class NetatmoOpeningSensor(NetatmoRefactoredSensor):
+class NetatmoOpeningSensor(NetatmoSensor):
     """Implementation of a Netatmo Opening sensor."""
 
     entity_description: NetatmoSensorEntityDescription
