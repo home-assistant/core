@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import logging
 
-from aiorussound import RussoundTcpConnectionHandler
-from aiorussound.connection import RussoundSerialConnectionHandler
+from aiorussound.connection import (
+    RussoundConnectionHandler,
+    RussoundSerialConnectionHandler,
+    RussoundTcpConnectionHandler,
+)
 from aiorussound.rnet.client import RussoundRNETClient
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
@@ -32,7 +35,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: RussoundRNETConfigEntry
 ) -> bool:
     """Set up Russound RNET from a config entry."""
-    handler: RussoundTcpConnectionHandler | RussoundSerialConnectionHandler
+    handler: RussoundConnectionHandler
     if entry.data[CONF_TYPE] == TYPE_TCP:
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
