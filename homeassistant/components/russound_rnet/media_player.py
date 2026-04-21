@@ -52,6 +52,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Russound RNET platform from YAML (triggers repair-based import)."""
+    # Ensure top-level component is loaded so repairs platform is discoverable
+    from homeassistant.setup import async_setup_component  # noqa: PLC0415
+
+    await async_setup_component(hass, DOMAIN, {})
+
     # Check if a config entry already exists for this host/port
     host = config.get(CONF_HOST, "")
     port = config.get(CONF_PORT, 0)

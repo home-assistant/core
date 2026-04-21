@@ -122,7 +122,16 @@ class YamlImportRepairFlow(RepairsFlow):
             CONF_ZONES: zones,
         }
 
-        return await self.async_step_model()
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Show confirmation before proceeding with import."""
+        if user_input is not None:
+            return await self.async_step_model()
+
+        return self.async_show_form(step_id="confirm")
 
     async def async_step_model(
         self, user_input: dict[str, Any] | None = None
@@ -197,8 +206,8 @@ class YamlImportRepairFlow(RepairsFlow):
                 data=self._data,
             )
 
-            # Delete the import issue now that we're done
-            ir.async_delete_issue(self.hass, DOMAIN, ISSUE_YAML_IMPORT)
+            # Now prompt user to remove YAML
+            async_create_deprecated_yaml_issue(self.hass)
             return self.async_create_entry(data={})
 
         existing_zones = self._data.get(CONF_ZONES, {})

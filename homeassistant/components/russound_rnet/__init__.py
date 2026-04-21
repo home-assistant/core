@@ -10,13 +10,22 @@ from aiorussound.rnet.client import RussoundRNETClient
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_BAUDRATE, TYPE_TCP
+from .const import CONF_BAUDRATE, DOMAIN, TYPE_TCP
 from .coordinator import RussoundRNETConfigEntry, RussoundRNETCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
+CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
+
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Russound RNET component."""
+    return True
 
 
 async def async_setup_entry(
