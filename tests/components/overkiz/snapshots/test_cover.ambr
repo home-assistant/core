@@ -472,7 +472,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 20,
-      'current_tilt_position': 0,
+      'current_tilt_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Basement Roller Shutter',
       'is_closed': False,
@@ -851,7 +851,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
-      'current_tilt_position': 0,
+      'current_tilt_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Veranda Roller Shutter',
       'is_closed': True,
