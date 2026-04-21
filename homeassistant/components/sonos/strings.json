@@ -96,6 +96,12 @@
       },
       "surround_mode": {
         "name": "Surround music full volume"
+      },
+      "tv_autoplay": {
+        "name": "TV autoplay"
+      },
+      "ungroup_on_autoplay": {
+        "name": "Ungroup on autoplay"
       }
     }
   },
@@ -129,6 +135,9 @@
     },
     "timeout_unjoin": {
       "message": "Timeout while waiting for Sonos player to unjoin the group {group_description}"
+    },
+    "toggle_failed": {
+      "message": "Could not toggle {entity_id}."
     }
   },
   "issues": {
