@@ -356,6 +356,13 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Play media by type and id."""
+        if media_id.isdecimal() is False:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_id",
+                translation_placeholders={"media_id": media_id},
+            )
+
         if media_type == CONTENT_TYPE_LOCAL_RADIO:
             await self.coordinator.device.media_play_radio_station(int(media_id))
             return

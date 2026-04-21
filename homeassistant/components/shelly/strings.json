@@ -654,6 +654,9 @@
     "unsupported_media_content_type": {
       "message": "Unsupported media content type for Shelly device: {media_content_type}"
     },
+    "unsupported_media_id": {
+      "message": "Unsupported media ID for Shelly device: {media_id}"
+    },
     "unsupported_media_type": {
       "message": "Unsupported media type for Shelly device: {media_type}"
     },
