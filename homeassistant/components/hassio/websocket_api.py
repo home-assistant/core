@@ -18,7 +18,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import HassioAPIError
 from .config import HassioUpdateParametersDict
 from .const import (
     ATTR_DATA,
@@ -40,6 +39,7 @@ from .const import (
     WS_TYPE_SUBSCRIBE,
 )
 from .coordinator import get_addons_list
+from .handler import HassioAPIError
 from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(

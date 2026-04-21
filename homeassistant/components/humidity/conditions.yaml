@@ -19,6 +19,7 @@ is_value:
         device_class: humidity
       - domain: climate
       - domain: humidifier
+      - domain: weather
   fields:
     behavior:
       required: true

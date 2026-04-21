@@ -4,6 +4,34 @@
     'coordinators': list([
       dict({
         'a125ef17-6bdf-45ad-b106-ce54e95e4634': dict({
+          'batteries': dict({
+            'BAT001': dict({
+              'model': 'ZVS4000',
+              'points': dict({
+                'charge': True,
+                'communication': True,
+                'current': True,
+                'discharge': True,
+                'other': True,
+                'temperature': True,
+                'voltage': True,
+              }),
+              'sw_version': 'V1.02-V0.00.000',
+            }),
+            'BAT002': dict({
+              'model': 'ZVS4000',
+              'points': dict({
+                'charge': True,
+                'communication': True,
+                'current': True,
+                'discharge': True,
+                'other': True,
+                'temperature': True,
+                'voltage': True,
+              }),
+              'sw_version': 'V1.02-V0.00.000',
+            }),
+          }),
           'battery': dict({
             'current_power': dict({
               'is_dormant': False,
@@ -29,17 +57,6 @@
             'serial_number': 'ZVG011025120088',
             'smart_mode': 'CHARGED',
           }),
-          'model': 'ZVS4000',
-          'points': dict({
-            'charge': True,
-            'communication': True,
-            'current': True,
-            'discharge': True,
-            'other': True,
-            'temperature': True,
-            'voltage': True,
-          }),
-          'sw_version': 'V1.02-V0.00.000',
         }),
       }),
     ]),

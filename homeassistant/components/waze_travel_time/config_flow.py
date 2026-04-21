@@ -13,12 +13,14 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_NAME, CONF_REGION
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
     DurationSelector,
     DurationSelectorConfig,
+    LocationSelector,
+    LocationSelectorConfig,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -32,6 +34,7 @@ from .const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
+    CONF_BASE_COORDINATES,
     CONF_DESTINATION,
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
@@ -92,6 +95,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 enable_second=False,
             )
         ),
+        vol.Optional(CONF_BASE_COORDINATES): LocationSelector(
+            LocationSelectorConfig(radius=False)
+        ),
     }
 )
 
@@ -114,18 +120,24 @@ CONFIG_SCHEMA = vol.Schema(
 
 def default_options(
     hass: HomeAssistant,
-) -> dict[str, str | bool | list[str] | dict[str, int]]:
+) -> dict[str, str | bool | list[str] | dict[str, int] | dict[str, float]]:
     """Get the default options."""
     defaults = DEFAULT_OPTIONS.copy()
     if hass.config.units is US_CUSTOMARY_SYSTEM:
         defaults[CONF_UNITS] = IMPERIAL_UNITS
+    defaults[CONF_BASE_COORDINATES] = {
+        CONF_LATITUDE: hass.config.latitude,
+        CONF_LONGITUDE: hass.config.longitude,
+    }
     return defaults
 
 
 class WazeOptionsFlow(OptionsFlow):
     """Handle an options flow for Waze Travel Time."""
 
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             if user_input.get(CONF_INCL_FILTER) is None:
@@ -151,7 +163,7 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Waze Travel Time."""
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback

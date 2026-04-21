@@ -19,7 +19,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 from homeassistant.util.uuid import random_uuid_hex
@@ -75,7 +74,6 @@ def async_register_callback(
     )
 
 
-@bind_hass
 def create(
     hass: HomeAssistant,
     message: str,
@@ -86,14 +84,12 @@ def create(
     hass.add_job(async_create, hass, message, title, notification_id)
 
 
-@bind_hass
 def dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     hass.add_job(async_dismiss, hass, notification_id)
 
 
 @callback
-@bind_hass
 def async_create(
     hass: HomeAssistant,
     message: str,
@@ -127,7 +123,6 @@ def _async_get_or_create_notifications(hass: HomeAssistant) -> dict[str, Notific
 
 
 @callback
-@bind_hass
 def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     notifications = _async_get_or_create_notifications(hass)

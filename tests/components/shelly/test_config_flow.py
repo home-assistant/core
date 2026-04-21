@@ -4914,7 +4914,6 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
     # Provision and verify restart is triggered
     mock_device = create_mock_rpc_device()
     mock_device.ble_setconfig = AsyncMock(return_value={"restart_required": True})
-    mock_device.trigger_reboot = AsyncMock()
 
     with (
         patch(
@@ -5102,9 +5101,8 @@ async def test_bluetooth_ble_initialize_failure_cleans_up(
     hass: HomeAssistant,
 ) -> None:
     """Test that initialize failure properly cleans up the device."""
-    mock_device = AsyncMock()
+    mock_device = create_mock_rpc_device()
     mock_device.initialize = AsyncMock(side_effect=DeviceConnectionError)
-    mock_device.shutdown = AsyncMock()
 
     await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO)
 
