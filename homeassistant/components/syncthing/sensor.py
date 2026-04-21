@@ -40,7 +40,6 @@ async def async_setup_entry(
         raise PlatformNotReady from exception
 
     server_id = syncthing.server_id
-
     entities = [
         FolderSensor(
             syncthing,
