@@ -19,7 +19,6 @@
       },
       "serial": {
         "data": {
-          "baudrate": "Baud rate",
           "device": "Serial device"
         },
         "description": "Enter the serial connection details for your Russound RNET device.",

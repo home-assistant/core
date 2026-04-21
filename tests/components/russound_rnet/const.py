@@ -1,7 +1,6 @@
 """Constants for russound_rnet tests."""
 
 from homeassistant.components.russound_rnet.const import (
-    CONF_BAUDRATE,
     CONF_CONTROLLERS,
     CONF_SOURCES,
     CONF_ZONES,
@@ -50,13 +49,11 @@ MOCK_TCP_OPTIONS = {
 
 MOCK_SERIAL_STEP_INPUT = {
     CONF_DEVICE: "/dev/ttyUSB0",
-    CONF_BAUDRATE: 19200,
 }
 
 MOCK_SERIAL_CONFIG = {
     CONF_TYPE: TYPE_SERIAL,
     CONF_DEVICE: "/dev/ttyUSB0",
-    CONF_BAUDRATE: 19200,
     CONF_MODEL: MODEL,
     CONF_CONTROLLERS: 1,
     CONF_ZONES: MOCK_ZONES,

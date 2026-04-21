@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_BAUDRATE, DOMAIN, TYPE_TCP
+from .const import DEFAULT_BAUDRATE, DOMAIN, TYPE_TCP
 from .coordinator import RussoundRNETConfigEntry, RussoundRNETCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -42,8 +42,7 @@ async def async_setup_entry(
         handler = RussoundTcpConnectionHandler(host, port)
     else:
         device = entry.data[CONF_DEVICE]
-        baudrate = entry.data[CONF_BAUDRATE]
-        handler = RussoundSerialConnectionHandler(device, baudrate)
+        handler = RussoundSerialConnectionHandler(device, DEFAULT_BAUDRATE)
 
     client = RussoundRNETClient(handler)
     coordinator = RussoundRNETCoordinator(hass, entry, client)

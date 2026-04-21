@@ -11,7 +11,6 @@ DOMAIN = "russound_rnet"
 
 CONF_SOURCES = "sources"
 CONF_ZONES = "zones"
-CONF_BAUDRATE = "baudrate"
 CONF_CONTROLLERS = "controllers"
 
 TYPE_TCP = "tcp"

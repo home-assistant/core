@@ -28,7 +28,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_BAUDRATE,
     CONF_CONTROLLERS,
     CONF_SOURCES,
     CONF_ZONES,
@@ -64,10 +63,6 @@ TCP_SCHEMA = vol.Schema(
 SERIAL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE): SerialSelector(),
-        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=1),
-        ),
     }
 )
 
@@ -151,16 +146,14 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             device = user_input[CONF_DEVICE]
-            baudrate = user_input.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
 
             client = RussoundRNETClient(
-                RussoundSerialConnectionHandler(device, baudrate)
+                RussoundSerialConnectionHandler(device, DEFAULT_BAUDRATE)
             )
             if not await _async_validate_connection(client):
                 errors["base"] = "cannot_connect"
             else:
                 self.data[CONF_DEVICE] = device
-                self.data[CONF_BAUDRATE] = baudrate
                 await self.async_set_unique_id(device)
                 self._abort_if_unique_id_configured()
                 return await self.async_step_model()
