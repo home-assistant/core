@@ -1009,7 +1009,7 @@ async def test_q7_clean_segments_invalid_segment_id(
         },
     )
 
-    with pytest.raises(HomeAssistantError, match="Could not parse segment id"):
+    with pytest.raises(HomeAssistantError, match="Invalid segment ID format"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
             SERVICE_CLEAN_AREA,
