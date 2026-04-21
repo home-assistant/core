@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -82,6 +83,26 @@ class AmberDemandWindowBinarySensor(AmberPriceGridSensor):
         return None
 
 
+class AmberDataStaleBinarySensor(
+    CoordinatorEntity[AmberUpdateCoordinator], BinarySensorEntity
+):
+    """Sensor to indicate whether the coordinator is serving stale cached data."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, coordinator: AmberUpdateCoordinator) -> None:
+        """Initialize the Sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.site_id}-data_stale"
+        self._attr_name = f"{coordinator.config_entry.title} - Data Stale"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true when the coordinator is using cached data due to API failures."""
+        return self.coordinator.data_is_stale
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmberConfigEntry,
@@ -103,5 +124,6 @@ async def async_setup_entry(
         [
             AmberPriceSpikeBinarySensor(coordinator, price_spike_description),
             AmberDemandWindowBinarySensor(coordinator, demand_window_description),
+            AmberDataStaleBinarySensor(coordinator),
         ]
     )

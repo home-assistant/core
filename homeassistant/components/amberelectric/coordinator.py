@@ -77,6 +77,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         self.site_id = site_id
         self._consecutive_failures = 0
 
+    @property
+    def data_is_stale(self) -> bool:
+        """Return true if the coordinator is serving cached data due to API failures."""
+        return self._consecutive_failures > 0
+
     def close(self) -> None:
         """Close the underlying API client connection pool."""
         self._api_client.close()  # type: ignore[no-untyped-call]

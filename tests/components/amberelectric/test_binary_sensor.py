@@ -112,7 +112,7 @@ async def setup_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 @pytest.mark.usefixtures("setup_no_spike")
 def test_no_spike_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
@@ -123,7 +123,7 @@ def test_no_spike_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_potential_spike")
 def test_potential_spike_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
@@ -134,7 +134,7 @@ def test_potential_spike_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_spike")
 def test_spike_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "on"
@@ -207,7 +207,7 @@ async def setup_active_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock
 @pytest.mark.usefixtures("setup_inactive_demand_window")
 def test_inactive_demand_window_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber demand_window sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     sensor = hass.states.get("binary_sensor.mock_title_demand_window")
     assert sensor
     assert sensor.state == "off"
@@ -216,7 +216,16 @@ def test_inactive_demand_window_sensor(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_active_demand_window")
 def test_active_demand_window_sensor(hass: HomeAssistant) -> None:
     """Testing the creation of the Amber demand_window sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     sensor = hass.states.get("binary_sensor.mock_title_demand_window")
     assert sensor
     assert sensor.state == "on"
+
+
+@pytest.mark.usefixtures("setup_no_spike")
+def test_data_stale_sensor_fresh(hass: HomeAssistant) -> None:
+    """Test that the data stale sensor is off when data is fresh."""
+    sensor = hass.states.get("binary_sensor.mock_title_data_stale")
+    assert sensor
+    assert sensor.state == "off"
+    assert sensor.attributes["device_class"] == "problem"
