@@ -16,7 +16,7 @@
           "serial": "Serial number (12 digits)"
         },
         "data_description": {
-          "ip_address": "The IP address of your Nobø Ecohub on the local network.",
+          "ip_address": "The IP address of your Nobø Ecohub.",
           "serial": "The full 12-digit serial number printed on the back of your Nobø Ecohub."
         },
         "description": "Configure a Nobø Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address."
@@ -77,7 +77,7 @@
         "data_description": {
           "override_type": "Select \"Now\" to end a global override on the next week profile change, or \"Constant\" to keep it until manually cleared."
         },
-        "description": "Select override type \"Now\" to end override on next week profile change."
+        "description": "Select \"Now\" to end a global override on the next week profile change, or \"Constant\" to keep it until manually cleared."
       }
     }
   }
