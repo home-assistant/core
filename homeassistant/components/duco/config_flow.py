@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -31,6 +32,46 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    _host: str
+    _box_name: str
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        try:
+            box_name, mac = await self._validate_input(discovery_info.host)
+        except DucoConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except DucoError:
+            _LOGGER.exception("Unexpected error discovering Duco box via zeroconf")
+            return self.async_abort(reason="unknown")
+
+        await self.async_set_unique_id(format_mac(mac))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
+
+        self._host = discovery_info.host
+        self._box_name = box_name
+        self.context["title_placeholders"] = {"name": box_name}
+
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._box_name,
+                data={CONF_HOST: self._host},
+            )
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={"name": self._box_name},
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -46,7 +87,7 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error connecting to Duco box")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(format_mac(mac))
+                await self.async_set_unique_id(format_mac(mac), raise_on_progress=False)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
