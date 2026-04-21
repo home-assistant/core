@@ -8,19 +8,9 @@ from google_air_quality_api.model import AirQualityCurrentConditionsData
 import pytest
 
 from homeassistant.components.google_air_quality import CONF_REFERRER
-from homeassistant.components.google_air_quality.const import (
-    CONF_ENABLE_CUSTOM_LAQI,
-    CUSTOM_LAQI,
-    CUSTOM_LOCAL_AQI_OPTIONS,
-    DOMAIN,
-)
+from homeassistant.components.google_air_quality.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_COUNTRY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -53,11 +43,6 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
             data={
                 CONF_LATITUDE: 10.1,
                 CONF_LONGITUDE: 20.1,
-                CUSTOM_LOCAL_AQI_OPTIONS: {
-                    CONF_COUNTRY: "DE",
-                    CUSTOM_LAQI: "deu_lubw",
-                    CONF_ENABLE_CUSTOM_LAQI: True,
-                },
             },
             subentry_type="location",
             title="Home",
