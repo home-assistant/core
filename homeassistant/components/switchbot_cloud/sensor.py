@@ -172,7 +172,7 @@ LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=LOCK_SENSOR_TYPE_LOCK_STATE,
     translation_key="lock_state",
     value_fn=lambda value: (
-        LockState(value).name.lower() if value in LockState.get_states() else "unknown"
+        LockState(value).name.lower() if value in LockState.get_states() else None
     ),
 )
 
