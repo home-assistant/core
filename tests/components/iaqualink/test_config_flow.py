@@ -25,6 +25,19 @@ DHCP_DISCOVERY = DhcpServiceInfo(
     macaddress="001122334455",
 )
 
+MOCK_USER_ID = "account-123"
+MOCK_USER_ID_2 = "account-456"
+
+
+async def _async_mock_login(self: Any) -> None:
+    """Mock a successful login with a stable account ID."""
+    self._user_id = MOCK_USER_ID
+
+
+async def _async_mock_login_other(self: Any) -> None:
+    """Mock a successful login for a different account."""
+    self._user_id = MOCK_USER_ID_2
+
 
 async def _async_mock_login(self: Any) -> None:
     """Mock a successful login."""
@@ -54,7 +67,7 @@ async def test_duplicate_account_aborts(
         domain=DOMAIN,
         title=config_data[CONF_USERNAME],
         data=config_data,
-        unique_id=config_data[CONF_USERNAME].casefold(),
+        unique_id=MOCK_USER_ID,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -65,7 +78,7 @@ async def test_duplicate_account_aborts(
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        return_value=None,
+        _async_mock_login,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], config_data
@@ -245,6 +258,7 @@ async def test_reauth_success(hass: HomeAssistant, config_data: dict[str, str]) 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.title == config_data[CONF_USERNAME]
+    assert entry.unique_id == MOCK_USER_ID
     assert dict(entry.data) == {
         **config_data,
         CONF_PASSWORD: "new_password",
@@ -300,7 +314,7 @@ async def test_reauth_invalid_auth(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
-        unique_id=config_data[CONF_USERNAME].casefold(),
+        unique_id=MOCK_USER_ID,
     )
     entry.add_to_hass(hass)
 
@@ -372,7 +386,7 @@ async def test_reauth_account_mismatch(
 
     with patch(
         "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
-        return_value=None,
+        _async_mock_login_other,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
