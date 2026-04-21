@@ -43,7 +43,6 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    CODE_EXECUTION_UNSUPPORTED_MODELS,
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
@@ -66,7 +65,6 @@ from .const import (
     DOMAIN,
     MIN_THINKING_BUDGET,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
-    WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
 from .coordinator import model_alias
@@ -389,8 +387,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             else cv.positive_int,
         }
 
-        model = self.options[CONF_CHAT_MODEL]
-
         if (
             self.model_info.capabilities
             and self.model_info.capabilities.thinking.supported
@@ -445,42 +441,33 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         else:
             self.options.pop(CONF_THINKING_EFFORT, None)
 
-        if not model.startswith(tuple(CODE_EXECUTION_UNSUPPORTED_MODELS)):
-            step_schema[
+        step_schema.update(
+            {
                 vol.Optional(
                     CONF_CODE_EXECUTION,
                     default=DEFAULT[CONF_CODE_EXECUTION],
-                )
-            ] = bool
-        else:
-            self.options.pop(CONF_CODE_EXECUTION, None)
-
-        if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_WEB_SEARCH,
-                        default=DEFAULT[CONF_WEB_SEARCH],
-                    ): bool,
-                    vol.Optional(
-                        CONF_WEB_SEARCH_MAX_USES,
-                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                    ): int,
-                    vol.Optional(
-                        CONF_WEB_SEARCH_USER_LOCATION,
-                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
-                    ): bool,
-                }
-            )
-        else:
-            self.options.pop(CONF_WEB_SEARCH, None)
-            self.options.pop(CONF_WEB_SEARCH_MAX_USES, None)
-            self.options.pop(CONF_WEB_SEARCH_USER_LOCATION, None)
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_SEARCH,
+                    default=DEFAULT[CONF_WEB_SEARCH],
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_SEARCH_MAX_USES,
+                    default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                ): int,
+                vol.Optional(
+                    CONF_WEB_SEARCH_USER_LOCATION,
+                    default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                ): bool,
+            }
+        )
 
         self.options.pop(CONF_WEB_SEARCH_CITY, None)
         self.options.pop(CONF_WEB_SEARCH_REGION, None)
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+
+        model = self.options[CONF_CHAT_MODEL]
 
         if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
             step_schema[
