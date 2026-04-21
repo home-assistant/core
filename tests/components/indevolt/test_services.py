@@ -467,7 +467,8 @@ async def test_single_device_execution_failure(
         )
 
     # Verify correct translation key is used for the error (for single coordinator)
-    assert exc_info.value.translation_key != "service_call_failed"
+    assert str(exc_info.value) == "Device push failed"
+    assert exc_info.value.translation_key is None
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
