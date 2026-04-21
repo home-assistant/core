@@ -7,13 +7,12 @@ from typing import Any
 
 from yolink.client_request import ClientRequest
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 
 
 class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
@@ -23,7 +22,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
     ) -> None:
         """Init YoLink Entity."""

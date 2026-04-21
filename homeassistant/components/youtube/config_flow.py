@@ -10,12 +10,7 @@ import voluptuous as vol
 from youtubeaio.types import AuthScope, ForbiddenError
 from youtubeaio.youtube import YouTube
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigEntry,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -33,6 +28,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import YouTubeConfigEntry
 
 
 class OAuth2FlowHandler(
@@ -50,7 +46,7 @@ class OAuth2FlowHandler(
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: YouTubeConfigEntry,
     ) -> YouTubeOptionsFlowHandler:
         """Get the options flow for this handler."""
         return YouTubeOptionsFlowHandler()
