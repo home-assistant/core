@@ -387,13 +387,16 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ZONE_NUMBER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                }
-            ).extend(ZONE_SCHEMA.schema),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ZONE_NUMBER): vol.All(
+                            vol.Coerce(int), vol.Range(min=1)
+                        ),
+                    }
+                ).extend(ZONE_SCHEMA.schema),
+                user_input or {},
+            ),
         )
 
     async def async_step_reconfigure(
@@ -423,11 +426,16 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                     data_updates=user_input,
                 )
 
+        suggested_values: dict[str, Any] = {
+            **subconfig_entry.data,
+            **(user_input or {}),
+        }
+
         return self.async_show_form(
             step_id="reconfigure",
             errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                ZONE_SCHEMA, subconfig_entry.data
+                ZONE_SCHEMA, suggested_values
             ),
             description_placeholders={
                 CONF_ZONE_NUMBER: subconfig_entry.data[CONF_ZONE_NUMBER]
