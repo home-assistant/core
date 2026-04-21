@@ -29,19 +29,27 @@ async def async_setup_entry(
 
     coordinator = OPNsenseDeviceTrackerCoordinator(hass, entry, client, interfaces)
 
-    # Initial data fetch
-    await coordinator.async_config_entry_first_refresh()
+    def _async_add_new_entities() -> None:
+        """Add entities for newly discovered devices."""
+        if not coordinator.data:
+            return
 
-    entities = []
-    if coordinator.data:
+        entities = []
         for mac_address in coordinator.data:
+            if mac_address in coordinator.tracked_devices:
+                continue
             entity = OPNsenseDeviceTrackerEntity(coordinator, mac_address)
             coordinator.tracked_devices[mac_address] = entity
             entities.append(entity)
 
-    async_add_entities(entities)
+        if entities:
+            async_add_entities(entities)
 
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
+    # Initial data fetch
+    await coordinator.async_config_entry_first_refresh()
+    _async_add_new_entities()
 class OPNsenseDeviceTrackerEntity(CoordinatorEntity, ScannerEntity):
     """Representation of a tracked device."""
 
