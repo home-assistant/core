@@ -8,13 +8,12 @@ from aiohttp import DummyCookieJar
 from aiomusiccast.musiccast_device import MusicCastDevice
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
-from .coordinator import MusicCastDataUpdateCoordinator
+from .const import CONF_SERIAL, CONF_UPNP_DESC
+from .coordinator import MusicCastConfigEntry, MusicCastDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
@@ -38,7 +37,7 @@ async def get_upnp_desc(hass: HomeAssistant, host: str):
     return upnp_desc
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> bool:
     """Set up MusicCast from a config entry."""
 
     if entry.data.get(CONF_UPNP_DESC) is None:
@@ -60,8 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     coordinator.musiccast.build_capabilities()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await coordinator.musiccast.device.enable_polling()
 
@@ -71,16 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id].musiccast.device.disable_polling()
-        hass.data[DOMAIN].pop(entry.entry_id)
+        entry.runtime_data.musiccast.device.disable_polling()
 
     return unload_ok
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
