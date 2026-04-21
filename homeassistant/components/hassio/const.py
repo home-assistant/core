@@ -9,8 +9,25 @@ from typing import TYPE_CHECKING
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
+    from aiohasupervisor.models import (
+        HomeAssistantInfo,
+        HostInfo,
+        InstalledAddon,
+        NetworkInfo,
+        OSInfo,
+        RootInfo,
+        StoreInfo,
+        SupervisorInfo,
+    )
+
     from .config import HassioConfig
+    from .coordinator import (
+        HassioAddOnDataUpdateCoordinator,
+        HassioMainDataUpdateCoordinator,
+        HassioStatsDataUpdateCoordinator,
+    )
     from .handler import HassIO
+    from .issues import SupervisorIssues
 
 
 DOMAIN = "hassio"
@@ -77,25 +94,31 @@ EVENT_JOB = "job"
 UPDATE_KEY_SUPERVISOR = "supervisor"
 STARTUP_COMPLETE = "complete"
 
-MAIN_COORDINATOR = "hassio_main_coordinator"
-ADDONS_COORDINATOR = "hassio_addons_coordinator"
-STATS_COORDINATOR = "hassio_stats_coordinator"
+MAIN_COORDINATOR: HassKey[HassioMainDataUpdateCoordinator] = HassKey(
+    "hassio_main_coordinator"
+)
+ADDONS_COORDINATOR: HassKey[HassioAddOnDataUpdateCoordinator] = HassKey(
+    "hassio_addons_coordinator"
+)
+STATS_COORDINATOR: HassKey[HassioStatsDataUpdateCoordinator] = HassKey(
+    "hassio_stats_coordinator"
+)
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
 DATA_CONFIG_STORE: HassKey[HassioConfig] = HassKey("hassio_config_store")
-DATA_CORE_INFO = "hassio_core_info"
+DATA_CORE_INFO: HassKey[HomeAssistantInfo] = HassKey("hassio_core_info")
 DATA_CORE_STATS = "hassio_core_stats"
-DATA_HOST_INFO = "hassio_host_info"
-DATA_STORE = "hassio_store"
-DATA_INFO = "hassio_info"
-DATA_OS_INFO = "hassio_os_info"
-DATA_NETWORK_INFO = "hassio_network_info"
-DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
+DATA_HOST_INFO: HassKey[HostInfo] = HassKey("hassio_host_info")
+DATA_STORE: HassKey[StoreInfo] = HassKey("hassio_store")
+DATA_INFO: HassKey[RootInfo] = HassKey("hassio_info")
+DATA_OS_INFO: HassKey[OSInfo] = HassKey("hassio_os_info")
+DATA_NETWORK_INFO: HassKey[NetworkInfo] = HassKey("hassio_network_info")
+DATA_SUPERVISOR_INFO: HassKey[SupervisorInfo] = HassKey("hassio_supervisor_info")
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-DATA_ADDONS_LIST = "hassio_addons_list"
+DATA_ADDONS_LIST: HassKey[list[InstalledAddon]] = HassKey("hassio_addons_list")
 HASSIO_MAIN_UPDATE_INTERVAL = timedelta(minutes=5)
 HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)
 HASSIO_STATS_UPDATE_INTERVAL = timedelta(seconds=60)
@@ -118,7 +141,7 @@ DATA_KEY_OS = "os"
 DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
-DATA_KEY_SUPERVISOR_ISSUES = "supervisor_issues"
+DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssues] = HassKey("supervisor_issues")
 DATA_KEY_MOUNTS = "mounts"
 
 PLACEHOLDER_KEY_ADDON = "addon"
