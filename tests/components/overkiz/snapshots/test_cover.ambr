@@ -471,7 +471,7 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.basement_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 20,
+      'current_position': 80,
       'current_tilt_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Basement Roller Shutter',
@@ -850,7 +850,7 @@
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_roller_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      'current_position': 0,
       'current_tilt_position': 100,
       'device_class': 'shutter',
       'friendly_name': 'Veranda Roller Shutter',
