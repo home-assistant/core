@@ -252,6 +252,16 @@ async def test_doorbell_trigger_options_validation(
                     },
                     "count": 1,
                 },
+                {
+                    "included_state": {
+                        "state": "2026-01-01T00:00:00.000+00:00",
+                        "attributes": {
+                            ATTR_DEVICE_CLASS: "doorbell",
+                            ATTR_EVENT_TYPE: "other_event",
+                        },
+                    },
+                    "count": 0,
+                },
             ],
         ),
     ],
