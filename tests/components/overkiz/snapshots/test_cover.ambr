@@ -1081,6 +1081,59 @@
     'state': 'closed',
   })
 # ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_gate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.garden_gate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/877679',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_gate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'gate',
+      'friendly_name': 'Garden Gate',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.garden_gate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_house_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
