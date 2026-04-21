@@ -137,5 +137,5 @@ async def test_select_main_topic_has_translation_key(
         "main_topic entity must have translation_key"
     )
     assert entity.translation_key == "vebus_inverter_mode"
-    # name should be None (uses device name via has_entity_name)
-    assert entity.name is None
+    # original_name should be None (uses device name via has_entity_name)
+    assert entity.original_name is None
