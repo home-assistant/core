@@ -8,9 +8,19 @@ from google_air_quality_api.model import AirQualityCurrentConditionsData
 import pytest
 
 from homeassistant.components.google_air_quality import CONF_REFERRER
-from homeassistant.components.google_air_quality.const import DOMAIN
+from homeassistant.components.google_air_quality.const import (
+    CONF_ENABLE_CUSTOM_LAQI,
+    CUSTOM_LAQI,
+    CUSTOM_LOCAL_AQI_OPTIONS,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_COUNTRY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -63,6 +73,43 @@ def mock_config_entry(
         data={CONF_API_KEY: "test-api-key", CONF_REFERRER: None},
         entry_id="123456789",
         subentries_data=mock_subentries,
+    )
+
+
+@pytest.fixture
+def mock_subentries_with_custom_laqi() -> list[ConfigSubentryDataWithId]:
+    """Fixture for subentries with custom LAQI enabled."""
+    return [
+        ConfigSubentryDataWithId(
+            data={
+                CONF_LATITUDE: 10.1,
+                CONF_LONGITUDE: 20.1,
+                CUSTOM_LOCAL_AQI_OPTIONS: {
+                    CONF_ENABLE_CUSTOM_LAQI: True,
+                    CUSTOM_LAQI: "us_epa",
+                    CONF_COUNTRY: "DE",
+                },
+            },
+            subentry_type="location",
+            title="Home",
+            subentry_id="home-subentry-id",
+            unique_id=None,
+        )
+    ]
+
+
+@pytest.fixture
+def mock_config_entry_with_custom_laqi(
+    hass: HomeAssistant,
+    mock_subentries_with_custom_laqi: list[ConfigSubentryDataWithId],
+) -> MockConfigEntry:
+    """Fixture for config entry with custom LAQI."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DOMAIN,
+        data={CONF_API_KEY: "test-api-key", CONF_REFERRER: None},
+        entry_id="123456789",
+        subentries_data=mock_subentries_with_custom_laqi,
     )
 
 
