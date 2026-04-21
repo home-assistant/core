@@ -105,13 +105,14 @@ class RussoundRNETCoordinator(
         zone_id: int,
     ) -> None:
         """Poll only the affected zone for instant feedback after a command."""
-        try:
-            info = await self.client.get_all_zone_info(controller_id, zone_id)
-        except RNET_EXCEPTIONS:
-            return
-        if self.data is not None:
-            self.data[(controller_id, zone_id)] = info
-            self.async_set_updated_data(self.data)
+        async with self._lock:
+            try:
+                info = await self.client.get_all_zone_info(controller_id, zone_id)
+            except RNET_EXCEPTIONS:
+                return
+            if self.data is not None:
+                self.data[(controller_id, zone_id)] = info
+                self.async_set_updated_data(self.data)
 
     async def async_shutdown(self) -> None:
         """Disconnect the client on shutdown."""
