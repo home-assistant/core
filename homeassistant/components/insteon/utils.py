@@ -73,13 +73,10 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         schema = {CONF_ADDRESS: address, "group": group}
 
         # Prefix button events with "button_" and add the button number to the event data.
-        if (
-            name in (ON_EVENT, OFF_EVENT, ON_FAST_EVENT, OFF_FAST_EVENT)
-            and button is not None
-            and button[-2] == "_"
-        ):
-            schema[EVENT_CONF_BUTTON] = button[-1].lower()
+        if name in (ON_EVENT, OFF_EVENT, ON_FAST_EVENT, OFF_FAST_EVENT):
             event = f"button_{event}"
+            if button is not None and len(button) >= 2 and button[-2] == "_":
+                schema[EVENT_CONF_BUTTON] = button[-1].lower()
 
         # Low battery
         if name == LOW_BATTERY_EVENT and low_battery is not None:
@@ -97,9 +94,7 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         event = f"insteon.{event}"
         legacy_event = event
 
-        # Remove the redundant "_event" suffix from the event name.
-        if event[-6:] == "_event":
-            event = event[:-6]
+        event = event.removesuffix("_event")
 
         # Fire the event along with the data about the device address, group, button, etc
         _LOGGER.debug("Firing event %s with %s", event, schema)
