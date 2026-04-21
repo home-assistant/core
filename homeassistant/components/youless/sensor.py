@@ -308,7 +308,7 @@ async def async_setup_entry(
     """Initialize the integration."""
     coordinator = entry.runtime_data
     device = entry.data[CONF_DEVICE]
-    if (device := entry.data[CONF_DEVICE]) is None:
+    if device is None:
         device = entry.entry_id
 
     async_add_entities(
