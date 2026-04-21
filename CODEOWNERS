@@ -1253,6 +1253,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/open_router/ @joostlek @ab3lson
 /tests/components/open_router/ @joostlek @ab3lson
+/homeassistant/components/openai_conversation/ @Shulyaka
+/tests/components/openai_conversation/ @Shulyaka
 /homeassistant/components/opendisplay/ @g4bri3lDev
 /tests/components/opendisplay/ @g4bri3lDev
 /homeassistant/components/openerz/ @misialq
