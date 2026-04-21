@@ -202,10 +202,13 @@ async def test_setup_backfills_unique_id(
     system.update = AsyncMock()
     system.get_devices = AsyncMock(return_value={})
 
+    async def mock_login(aqualink_client: AqualinkClient) -> None:
+        aqualink_client._user_id = "account-123"
+
     with (
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
+            mock_login,
         ),
         patch(
             "homeassistant.components.iaqualink.AqualinkClient.get_systems",
@@ -215,7 +218,7 @@ async def test_setup_backfills_unique_id(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.unique_id == config_entry.data["username"].casefold()
+    assert config_entry.unique_id == "account-123"
 
 
 async def test_setup_login_unauthorized(
