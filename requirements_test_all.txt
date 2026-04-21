@@ -1660,7 +1660,7 @@ py-sucks==0.9.11
 py-synologydsm-api==2.7.3
 
 # homeassistant.components.unifi_access
-py-unifi-access==1.1.5
+py-unifi-access==1.2.0
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -2790,7 +2790,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.6.5
+waterfurnace==1.7.1
 
 # homeassistant.components.watergate
 watergate-local-api==2025.1.0
