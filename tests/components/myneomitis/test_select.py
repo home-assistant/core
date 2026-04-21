@@ -95,6 +95,34 @@ async def test_select_option(
     assert state.state == "on"
 
 
+async def test_select_option_ufh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test UFH select option update uses sub-device UFH API route."""
+    mock_pyaxenco_client.get_devices.return_value = [UFH_DEVICE]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: "select.ufh_device", "option": "cooling"},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_sub_device_mode_ufh.assert_awaited_once_with(
+        ",gw-ufh,", "rfid-ufh", 1
+    )
+
+    state = hass.states.get("select.ufh_device")
+    assert state is not None
+    assert state.state == "cooling"
+
+
 async def test_websocket_state_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -10,7 +10,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from pyaxencoapi import PyAxencoAPI
+from pyaxencoapi import PRESET_MODE_MODELS, PyAxencoAPI
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant, callback
@@ -26,35 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORTED_MODELS: frozenset[str] = frozenset({"EWS"})
 SUPPORTED_SUB_MODELS: frozenset[str] = frozenset({"UFH"})
 
-PRESET_MODE_MAP = {
-    "comfort": 1,
-    "eco": 2,
-    "antifrost": 3,
-    "standby": 4,
-    "boost": 6,
-    "setpoint": 8,
-    "comfort_plus": 20,
-    "eco_1": 40,
-    "eco_2": 41,
-    "auto": 60,
-}
-
-PRESET_MODE_MAP_RELAIS = {
-    "on": 1,
-    "off": 2,
-    "auto": 60,
-}
-
-PRESET_MODE_MAP_UFH = {
-    "heating": 0,
-    "cooling": 1,
-}
-
-REVERSE_PRESET_MODE_MAP = {v: k for k, v in PRESET_MODE_MAP.items()}
-
-REVERSE_PRESET_MODE_MAP_RELAIS = {v: k for k, v in PRESET_MODE_MAP_RELAIS.items()}
-
-REVERSE_PRESET_MODE_MAP_UFH = {v: k for k, v in PRESET_MODE_MAP_UFH.items()}
+PRESET_MODE_MAP_RELAIS = PRESET_MODE_MODELS["EWS_RELAIS"]
+PRESET_MODE_MAP_PILOTE = PRESET_MODE_MODELS["EWS_PILOTE"]
+PRESET_MODE_MAP_UFH = PRESET_MODE_MODELS["UFH"]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,15 +46,15 @@ SELECT_TYPES: dict[str, MyNeoSelectEntityDescription] = {
         translation_key="relais",
         options=list(PRESET_MODE_MAP_RELAIS),
         preset_mode_map=PRESET_MODE_MAP_RELAIS,
-        reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP_RELAIS,
+        reverse_preset_mode_map=PRESET_MODE_MAP_RELAIS.reverse,
         state_key="targetMode",
     ),
     "pilote": MyNeoSelectEntityDescription(
         key="pilote",
         translation_key="pilote",
-        options=list(PRESET_MODE_MAP),
-        preset_mode_map=PRESET_MODE_MAP,
-        reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP,
+        options=list(PRESET_MODE_MAP_PILOTE),
+        preset_mode_map=PRESET_MODE_MAP_PILOTE,
+        reverse_preset_mode_map=PRESET_MODE_MAP_PILOTE.reverse,
         state_key="targetMode",
     ),
     "ufh": MyNeoSelectEntityDescription(
@@ -88,7 +62,7 @@ SELECT_TYPES: dict[str, MyNeoSelectEntityDescription] = {
         translation_key="ufh",
         options=list(PRESET_MODE_MAP_UFH),
         preset_mode_map=PRESET_MODE_MAP_UFH,
-        reverse_preset_mode_map=REVERSE_PRESET_MODE_MAP_UFH,
+        reverse_preset_mode_map=PRESET_MODE_MAP_UFH.reverse,
         state_key="changeOverUser",
     ),
 }
@@ -206,20 +180,16 @@ class MyNeoSelect(SelectEntity):
             if self._device["model"] in SUPPORTED_MODELS:
                 await self._api.set_device_mode(self._device["_id"], mode_code)
             else:  # UFH
-                gateway = (
-                    self._parents.split(",")[1]
-                    if isinstance(self._parents, str)
-                    else None
-                )
+                parents = self._parents if isinstance(self._parents, str) else None
                 rfid = self._device.get("rfid")
-                if not gateway or not rfid:
+                if not parents or not rfid:
                     _LOGGER.error(
-                        "Missing gateway or rfid for sub-device %s, cannot set mode",
+                        "Missing parents or rfid for sub-device %s, cannot set mode",
                         self._attr_unique_id,
                     )
                     raise HomeAssistantError(f"Failed to set mode for {self.entity_id}")
 
-                await self._api.set_sub_device_mode_ufh(gateway, str(rfid), mode_code)
+                await self._api.set_sub_device_mode_ufh(parents, str(rfid), mode_code)
         except (aiohttp.ClientError, TimeoutError, ConnectionError) as err:
             _LOGGER.error("Error setting mode for %s: %s", self._device["_id"], err)
             raise HomeAssistantError(

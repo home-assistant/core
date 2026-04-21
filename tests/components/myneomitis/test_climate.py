@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.myneomitis import climate as climate_platform
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -213,7 +214,7 @@ async def test_set_preset_mode_sub_device_timeout(
             blocking=True,
         )
 
-    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 2)
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with(",gw-1,", "rfid-1", 2)
 
 
 async def test_set_temperature_sub_device_missing_parents(
@@ -374,9 +375,9 @@ async def test_set_temperature_sub_device(
         blocking=True,
     )
 
-    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 8)
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with(",gw-1,", "rfid-1", 8)
     mock_pyaxenco_client.set_sub_device_temperature.assert_awaited_with(
-        "gw-1", "rfid-1", 21.0
+        ",gw-1,", "rfid-1", 21.0
     )
 
 
@@ -399,7 +400,7 @@ async def test_set_preset_mode_sub_device(
         blocking=True,
     )
 
-    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 2)
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with(",gw-1,", "rfid-1", 2)
 
 
 async def test_ntd_changeover_sets_cool(
@@ -454,6 +455,35 @@ async def test_skip_unknown_model(
             "connected": True,
         }
     ]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert not any(e.domain == "climate" for e in entries)
+
+
+async def test_skip_supported_model_without_preset_mapping(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Supported model without preset mapping should be skipped."""
+    mock_pyaxenco_client.get_devices.return_value = [
+        {
+            "_id": "climate_no_map",
+            "name": "No Map",
+            "model": "EV30",
+            "state": {},
+            "connected": True,
+        }
+    ]
+    monkeypatch.setattr(climate_platform, "PRESET_MODE_MODELS", {})
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -638,7 +668,7 @@ async def test_set_preset_mode_when_hvac_off_ntd_sets_cool(
     )
 
     mock_pyaxenco_client.set_sub_device_mode.assert_has_awaits(
-        [call("gw-ntd", "rfid-ntd", 4), call("gw-ntd", "rfid-ntd", 2)]
+        [call(",gw-ntd,", "rfid-ntd", 4), call(",gw-ntd,", "rfid-ntd", 2)]
     )
     state = hass.states.get(entity_id)
     assert state is not None
