@@ -74,7 +74,7 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
 
         # Prefix button events with "button_" and add the button number to the event data.
         if name in (ON_EVENT, OFF_EVENT, ON_FAST_EVENT, OFF_FAST_EVENT):
-            event = f"button_{event}"
+            event = f"button_{event}".removesuffix("_event")
             if button is not None and len(button) >= 2 and button[-2] == "_":
                 schema[EVENT_CONF_BUTTON] = button[-1].lower()
 
