@@ -37,7 +37,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        EzvizLastMotion(hass, coordinator, camera) for camera in coordinator.data
+        EzvizLastMotion(hass, coordinator, camera)
+        for camera in coordinator.data
+        if coordinator.data[camera].get("last_alarm_pic") is not None
     )
 
 
@@ -52,9 +54,9 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         ImageEntity.__init__(self, hass)
         self._attr_unique_id = f"{serial}_{IMAGE_TYPE.key}"
         self.entity_description = IMAGE_TYPE
-        self._attr_image_url = self.data["last_alarm_pic"]
+        self._attr_image_url = self.data.get("last_alarm_pic")
         self._attr_image_last_updated = dt_util.parse_datetime(
-            str(self.data["last_alarm_time"])
+            str(self.data.get("last_alarm_time"))
         )
         camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         self.alarm_image_password = (
@@ -92,16 +94,14 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if (
-            self.data["last_alarm_pic"]
-            and self.data["last_alarm_pic"] != self._attr_image_url
-        ):
-            _LOGGER.debug("Image url changed to %s", self.data["last_alarm_pic"])
+        last_alarm_pic = self.data.get("last_alarm_pic")
+        if last_alarm_pic and last_alarm_pic != self._attr_image_url:
+            _LOGGER.debug("Image url changed to %s", last_alarm_pic)
 
-            self._attr_image_url = self.data["last_alarm_pic"]
+            self._attr_image_url = last_alarm_pic
             self._cached_image = None
             self._attr_image_last_updated = dt_util.parse_datetime(
-                str(self.data["last_alarm_time"])
+                str(self.data.get("last_alarm_time"))
             )
 
         super()._handle_coordinator_update()
