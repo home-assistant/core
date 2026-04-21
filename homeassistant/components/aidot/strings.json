@@ -18,7 +18,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
-        "description": "[%key:common::config_flow::description::reauth%]",
+        "description": "Please re-enter your credentials to reauthenticate.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
