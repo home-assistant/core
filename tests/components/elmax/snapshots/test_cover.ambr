@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_covers[cover.espan_dom_01-entry]
+# name: test_covers[cover.direct_panel_https_1_1_1_1_443_api_v2_espan_dom_01-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.espan_dom_01',
+    'entity_id': 'cover.direct_panel_https_1_1_1_1_443_api_v2_espan_dom_01',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -36,16 +36,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[cover.espan_dom_01-state]
+# name: test_covers[cover.direct_panel_https_1_1_1_1_443_api_v2_espan_dom_01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
-      'friendly_name': 'ESPAN.DOM.01',
+      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ESPAN.DOM.01',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.espan_dom_01',
+    'entity_id': 'cover.direct_panel_https_1_1_1_1_443_api_v2_espan_dom_01',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

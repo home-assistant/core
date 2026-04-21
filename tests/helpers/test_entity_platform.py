@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 import types
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -270,35 +270,45 @@ async def test_adding_entities_with_generator_and_thread_callback(
 
 
 @pytest.mark.usefixtures("disable_translations_once")
-async def test_platform_warn_slow_setup(hass: HomeAssistant) -> None:
-    """Warn we log when platform setup takes a long time."""
+async def test_platform_slow_setup_cancel_warning(hass: HomeAssistant) -> None:
+    """Test slow setup warning timer is scheduled and cancelled on success."""
     platform = MockPlatform()
 
     mock_platform(hass, "platform.test_domain", platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    with patch.object(hass.loop, "call_at") as mock_call:
+    call_at_handles: list[tuple[tuple, MagicMock]] = []
+
+    def mock_call_at(*args: Any, **kwargs: Any) -> MagicMock:
+        handle = MagicMock()
+        call_at_handles.append((args, handle))
+        return handle
+
+    with patch.object(hass.loop, "call_at", side_effect=mock_call_at):
         await component.async_setup({DOMAIN: {"platform": "platform"}})
         await hass.async_block_till_done()
-        assert mock_call.called
+        assert call_at_handles
 
-        # mock_calls[3] is the warning message for component setup
-        # mock_calls[10] is the warning message for platform setup
-        timeout, logger_method = mock_call.mock_calls[10][1][:2]
+        # Find the platform setup warning by matching the exact format string
+        warn_args, warn_handle = next(
+            (args, handle)
+            for args, handle in call_at_handles
+            if len(args) >= 3
+            and args[1] == _LOGGER.warning
+            and args[2] == "Setup of %s platform %s is taking over %s seconds."
+        )
 
-        assert timeout - hass.loop.time() == pytest.approx(
+        assert warn_args[0] - hass.loop.time() == pytest.approx(
             entity_platform.SLOW_SETUP_WARNING, 0.5
         )
-        assert logger_method == _LOGGER.warning
-
-        assert mock_call().cancel.called
+        assert warn_handle.cancel.call_count == 1
 
 
-async def test_platform_error_slow_setup(
+async def test_platform_slow_setup_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Don't block startup more than SLOW_SETUP_MAX_WAIT."""
+    """Test that platform setup is aborted after SLOW_SETUP_MAX_WAIT."""
     with patch.object(entity_platform, "SLOW_SETUP_MAX_WAIT", 0):
         called = []
 
@@ -683,9 +693,9 @@ async def test_using_prescribed_entity_id(hass: HomeAssistant) -> None:
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
     await component.async_add_entities(
-        [MockEntity(name="bla", entity_id="hello.world")]
+        [MockEntity(name="bla", entity_id="test_domain.world")]
     )
-    assert "hello.world" in hass.states.async_entity_ids()
+    assert "test_domain.world" in hass.states.async_entity_ids()
 
 
 async def test_using_prescribed_entity_id_with_unique_id(hass: HomeAssistant) -> None:
@@ -2001,6 +2011,34 @@ async def test_invalid_entity_id_report_usage(
     assert entity.platform is not None
 
 
+async def test_wrong_domain_entity_id_report_usage(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that setting an entity_id with wrong domain reports usage."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(entity_id="wrong_domain.some_entity", unique_id="unique")
+
+    mock_integration = Mock(is_built_in=True, domain="test_platform")
+    with (
+        caplog.at_level(logging.WARNING),
+        patch(
+            "homeassistant.helpers.frame.async_get_issue_integration",
+            return_value=mock_integration,
+        ),
+    ):
+        await platform.async_add_entities([entity])
+
+    assert (
+        "Detected that integration 'test_platform' "
+        "sets an entity ID with wrong domain: 'wrong_domain.some_entity'. "
+        "Expected domain is 'test_domain'"
+    ) in caplog.text
+
+    # Ensure the entity was still added
+    assert entity.hass is not None
+    assert entity.platform is not None
+
+
 class MockBlockingEntity(MockEntity):
     """Class to mock an entity that will block adding entities."""
 
@@ -2148,8 +2186,8 @@ class SlowEntity(MockEntity):
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_entity_id"),
     [
-        (False, "Entity Blu", "test_domain.entity_blu"),
-        (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        (False, "Entity Blu", "test_domain.device_bla_entity_blu"),
+        (False, None, "test_domain.device_bla"),
         (True, "Entity Blu", "test_domain.device_bla_entity_blu"),
         (True, None, "test_domain.device_bla"),
     ],
@@ -2204,7 +2242,7 @@ async def test_entity_name_influences_entity_id(
 @pytest.mark.parametrize(
     ("language", "has_entity_name", "expected_entity_id"),
     [
-        ("en", False, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
+        ("en", False, "test_domain.device_bla"),
         ("en", True, "test_domain.device_bla_english_name"),
         ("sv", True, "test_domain.device_bla_swedish_name"),
         # Chinese uses english for entity_id
@@ -2284,13 +2322,8 @@ async def test_translated_entity_name_influences_entity_id(
 @pytest.mark.parametrize(
     ("language", "has_entity_name", "device_class", "expected_entity_id"),
     [
-        ("en", False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
-        (
-            "en",
-            False,
-            "test_class",
-            "test_domain.test_qwer",
-        ),  # Set to <platform>_<unique_id>
+        ("en", False, None, "test_domain.device_bla"),
+        ("en", False, "test_class", "test_domain.device_bla"),
         ("en", True, "test_class", "test_domain.device_bla_english_cls"),
         ("sv", True, "test_class", "test_domain.device_bla_swedish_cls"),
         # Chinese uses english for entity_id

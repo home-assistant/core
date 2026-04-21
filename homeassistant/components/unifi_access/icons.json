@@ -10,6 +10,11 @@
         "default": "mdi:door"
       }
     },
+    "image": {
+      "door_thumbnail": {
+        "default": "mdi:camera"
+      }
+    },
     "switch": {
       "evacuation": {
         "default": "mdi:exit-run"
@@ -17,6 +22,11 @@
       "lockdown": {
         "default": "mdi:lock-alert"
       }
+    }
+  },
+  "services": {
+    "set_lock_rule": {
+      "service": "mdi:lock-clock"
     }
   }
 }

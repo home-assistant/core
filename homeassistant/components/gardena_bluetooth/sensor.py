@@ -47,10 +47,10 @@ def _get_timestamp(value: datetime | None):
     return value.replace(tzinfo=dt_util.get_default_time_zone())
 
 
-def _get_distance_ratio(value: int | None):
+def _get_distance_percentage(value: int | None) -> float | None:
     if value is None:
         return None
-    return value / 1000
+    return value / 10
 
 
 @dataclass(frozen=True)
@@ -133,7 +133,7 @@ DESCRIPTIONS = (
         key=FlowStatistics.overall.unique_id,
         translation_key="flow_statistics_overall",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         char=FlowStatistics.overall,
@@ -141,6 +141,7 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=FlowStatistics.current.unique_id,
         translation_key="flow_statistics_current",
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
@@ -150,7 +151,7 @@ DESCRIPTIONS = (
         key=FlowStatistics.resettable.unique_id,
         translation_key="flow_statistics_resettable",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         char=FlowStatistics.resettable,
@@ -166,10 +167,11 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Spray.current_distance.unique_id,
         translation_key="spray_current_distance",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         char=Spray.current_distance,
-        get=_get_distance_ratio,
+        get=_get_distance_percentage,
     ),
     GardenaBluetoothSensorEntityDescription(
         key=Spray.current_sector.unique_id,

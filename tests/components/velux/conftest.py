@@ -75,6 +75,7 @@ def mock_window() -> AsyncMock:
     window.is_opening = False
     window.is_closing = False
     window.position = MagicMock(position_percent=30, closed=False)
+    window.wink = AsyncMock()
     window.pyvlx = MagicMock()
     return window
 
@@ -213,7 +214,6 @@ def mock_pyvlx(
             mock_blind,
             mock_window,
             mock_exterior_heating,
-            mock_cover_type,
         ]
 
     pyvlx.scenes = [mock_scene]

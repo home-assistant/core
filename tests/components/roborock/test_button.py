@@ -199,7 +199,7 @@ async def test_press_routine_button_failure(
     [
         ("button.zeo_one_start", "START"),
         ("button.zeo_one_pause", "PAUSE"),
-        ("button.zeo_one_shutdown", "SHUTDOWN"),
+        ("button.zeo_one_shut_down", "SHUTDOWN"),
     ],
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
@@ -271,4 +271,56 @@ async def test_press_a01_button_failure(
         )
 
     washing_machine.zeo.set_value.assert_called_once()
+    assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
+
+
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_press_q10_empty_dustbin_button_success(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test pressing Q10 empty dustbin button entity."""
+    entity_id = "button.roborock_q10_s5_empty_dustbin"
+
+    assert hass.states.get(entity_id) is not None
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.vacuum.empty_dustbin.assert_called_once()
+    assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
+
+
+@pytest.mark.freeze_time("2023-10-30 08:50:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_press_q10_empty_dustbin_button_failure(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test failure while pressing Q10 empty dustbin button entity."""
+    entity_id = "button.roborock_q10_s5_empty_dustbin"
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.vacuum.empty_dustbin.side_effect = (
+        RoborockException
+    )
+
+    assert hass.states.get(entity_id) is not None
+    with pytest.raises(HomeAssistantError, match="Error while calling empty_dustbin"):
+        await hass.services.async_call(
+            "button",
+            SERVICE_PRESS,
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
+
+    fake_q10_vacuum.b01_q10_properties.vacuum.empty_dustbin.assert_called_once()
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"

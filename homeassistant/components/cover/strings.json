@@ -1,16 +1,14 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted covers.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted covers to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "awning_is_closed": {
       "description": "Tests if one or more awnings are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -20,7 +18,6 @@
       "description": "Tests if one or more awnings are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -30,7 +27,6 @@
       "description": "Tests if one or more blinds are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -40,7 +36,6 @@
       "description": "Tests if one or more blinds are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -50,7 +45,6 @@
       "description": "Tests if one or more curtains are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -60,7 +54,6 @@
       "description": "Tests if one or more curtains are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -70,7 +63,6 @@
       "description": "Tests if one or more shades are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -80,7 +72,6 @@
       "description": "Tests if one or more shades are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -90,7 +81,6 @@
       "description": "Tests if one or more shutters are closed.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -100,7 +90,6 @@
       "description": "Tests if one or more shutters are open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::condition_behavior_description%]",
           "name": "[%key:component::cover::common::condition_behavior_name%]"
         }
       },
@@ -208,19 +197,19 @@
   "services": {
     "close_cover": {
       "description": "Closes a cover.",
-      "name": "[%key:common::action::close%]"
+      "name": "Close cover"
     },
     "close_cover_tilt": {
       "description": "Tilts a cover to close.",
-      "name": "Close tilt"
+      "name": "Close cover tilt"
     },
     "open_cover": {
       "description": "Opens a cover.",
-      "name": "[%key:common::action::open%]"
+      "name": "Open cover"
     },
     "open_cover_tilt": {
       "description": "Tilts a cover open.",
-      "name": "Open tilt"
+      "name": "Open cover tilt"
     },
     "set_cover_position": {
       "description": "Moves a cover to a specific position.",
@@ -230,7 +219,7 @@
           "name": "Position"
         }
       },
-      "name": "Set position"
+      "name": "Set cover position"
     },
     "set_cover_tilt_position": {
       "description": "Moves a cover tilt to a specific position.",
@@ -240,23 +229,23 @@
           "name": "Tilt position"
         }
       },
-      "name": "Set tilt position"
+      "name": "Set cover tilt position"
     },
     "stop_cover": {
-      "description": "Stops the cover movement.",
-      "name": "[%key:common::action::stop%]"
+      "description": "Stops a cover's movement.",
+      "name": "Stop cover"
     },
     "stop_cover_tilt": {
       "description": "Stops a tilting cover movement.",
-      "name": "Stop tilt"
+      "name": "Stop cover tilt"
     },
     "toggle": {
       "description": "Toggles a cover open/closed.",
-      "name": "[%key:common::action::toggle%]"
+      "name": "Toggle cover"
     },
     "toggle_cover_tilt": {
       "description": "Toggles a cover tilt open/closed.",
-      "name": "Toggle tilt"
+      "name": "Toggle cover tilt"
     }
   },
   "title": "Cover",
@@ -265,8 +254,10 @@
       "description": "Triggers after one or more awnings close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Awning closed"
@@ -275,8 +266,10 @@
       "description": "Triggers after one or more awnings open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Awning opened"
@@ -285,8 +278,10 @@
       "description": "Triggers after one or more blinds close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Blind closed"
@@ -295,8 +290,10 @@
       "description": "Triggers after one or more blinds open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Blind opened"
@@ -305,8 +302,10 @@
       "description": "Triggers after one or more curtains close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Curtain closed"
@@ -315,8 +314,10 @@
       "description": "Triggers after one or more curtains open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Curtain opened"
@@ -325,8 +326,10 @@
       "description": "Triggers after one or more shades close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shade closed"
@@ -335,8 +338,10 @@
       "description": "Triggers after one or more shades open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shade opened"
@@ -345,8 +350,10 @@
       "description": "Triggers after one or more shutters close.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shutter closed"
@@ -355,8 +362,10 @@
       "description": "Triggers after one or more shutters open.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::cover::common::trigger_behavior_description%]",
           "name": "[%key:component::cover::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::cover::common::trigger_for_name%]"
         }
       },
       "name": "Shutter opened"

@@ -454,7 +454,7 @@ async def test_assist_api_prompt(
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={("test", "1234")},
+        connections={("test", "123456")},
         suggested_area="Test Area",
     )
     area = area_registry.async_get_area_by_name("Test Area")

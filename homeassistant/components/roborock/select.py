@@ -20,6 +20,7 @@ from roborock.data import (
     ZeoSpin,
     ZeoTemperature,
 )
+from roborock.data.b01_q10.b01_q10_code_mappings import YXCleanType
 from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
@@ -37,6 +38,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, MAP_SLEEP
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
@@ -44,6 +46,7 @@ from .coordinator import (
 from .entity import (
     RoborockCoordinatedEntityA01,
     RoborockCoordinatedEntityB01Q7,
+    RoborockCoordinatedEntityB01Q10,
     RoborockCoordinatedEntityV1,
 )
 
@@ -266,6 +269,10 @@ async def async_setup_entry(
         for description in A01_SELECT_DESCRIPTIONS
         if description.data_protocol in coordinator.request_protocols
     )
+    async_add_entities(
+        RoborockQ10CleanModeSelectEntity(coordinator)
+        for coordinator in config_entry.runtime_data.b01_q10
+    )
 
 
 class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
@@ -466,3 +473,59 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
             self.entity_description.key,
         )
         return str(current_value)
+
+
+class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEntity):
+    """Select entity for Q10 cleaning mode."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "cleaning_mode"
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+    ) -> None:
+        """Create a select entity for Q10 cleaning mode."""
+        super().__init__(
+            f"cleaning_mode_{coordinator.duid_slug}",
+            coordinator,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Register trait listener for push-based status updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.api.status.add_update_listener(self.async_write_ha_state)
+        )
+
+    @property
+    def options(self) -> list[str]:
+        """Return available cleaning modes."""
+        return [mode.value for mode in YXCleanType if mode != YXCleanType.UNKNOWN]
+
+    @property
+    def current_option(self) -> str | None:
+        """Get the current cleaning mode."""
+        clean_mode = self.coordinator.api.status.clean_mode
+        if clean_mode is None or clean_mode == YXCleanType.UNKNOWN:
+            return None
+        return clean_mode.value
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the cleaning mode."""
+        try:
+            mode = YXCleanType.from_value(option)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="select_option_failed",
+            ) from err
+        try:
+            await self.coordinator.api.vacuum.set_clean_mode(mode)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "cleaning_mode"},
+            ) from err

@@ -83,7 +83,6 @@ from homeassistant.helpers.trace import (
     trace_path,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 from homeassistant.util.hass_dict import HassKey
 
@@ -118,35 +117,13 @@ SERVICE_TRIGGER = "trigger"
 NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "air_quality",
     "alarm_control_panel",
     "assist_satellite",
+    "battery",
+    "calendar",
     "climate",
-    "cover",
-    "device_tracker",
-    "door",
-    "fan",
-    "garage_door",
-    "gate",
-    "humidifier",
-    "lawn_mower",
-    "light",
-    "lock",
-    "media_player",
-    "motion",
-    "occupancy",
-    "person",
-    "schedule",
-    "siren",
-    "switch",
-    "vacuum",
-    "window",
-}
-
-_EXPERIMENTAL_TRIGGER_PLATFORMS = {
-    "alarm_control_panel",
-    "assist_satellite",
-    "button",
-    "climate",
+    "counter",
     "cover",
     "device_tracker",
     "door",
@@ -155,23 +132,73 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "gate",
     "humidifier",
     "humidity",
-    "input_boolean",
+    "illuminance",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
+    "moisture",
     "motion",
     "occupancy",
     "person",
+    "power",
+    "remote",
+    "schedule",
+    "select",
+    "siren",
+    "switch",
+    "temperature",
+    "text",
+    "timer",
+    "todo",
+    "update",
+    "vacuum",
+    "valve",
+    "water_heater",
+    "window",
+}
+
+_EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "air_quality",
+    "alarm_control_panel",
+    "assist_satellite",
+    "battery",
+    "button",
+    "climate",
+    "counter",
+    "cover",
+    "device_tracker",
+    "door",
+    "doorbell",
+    "event",
+    "fan",
+    "garage_door",
+    "gate",
+    "humidifier",
+    "humidity",
+    "illuminance",
+    "lawn_mower",
+    "light",
+    "lock",
+    "media_player",
+    "moisture",
+    "motion",
+    "occupancy",
+    "person",
+    "power",
     "remote",
     "scene",
     "schedule",
     "select",
     "siren",
     "switch",
+    "temperature",
     "text",
+    "todo",
     "update",
     "vacuum",
+    "valve",
+    "water_heater",
     "window",
 }
 
@@ -211,7 +238,6 @@ class IfAction(Protocol):
         """AND all conditions."""
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return true if specified automation entity_id is on.
 

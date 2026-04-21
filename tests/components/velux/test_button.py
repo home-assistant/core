@@ -23,6 +23,7 @@ def platform() -> Platform:
 
 
 @pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
 async def test_button_snapshot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -38,18 +39,33 @@ async def test_button_snapshot(
         mock_config_entry.entry_id,
     )
 
-    # Get the button entity setup and test device association
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entity_entries) == 1
-    entry = entity_entries[0]
+    assert len(entity_entries) == 2
 
-    assert entry.device_id is not None
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry is not None
-    assert (DOMAIN, f"gateway_{mock_config_entry.entry_id}") in device_entry.identifiers
-    assert device_entry.via_device_id is None
+    # Check Reboot button is associated with the gateway device
+    reboot_entry = next(
+        e for e in entity_entries if e.entity_id == "button.klf_200_gateway_restart"
+    )
+    assert reboot_entry.device_id is not None
+    gateway_device = device_registry.async_get(reboot_entry.device_id)
+    assert gateway_device is not None
+    assert (
+        DOMAIN,
+        f"gateway_{mock_config_entry.entry_id}",
+    ) in gateway_device.identifiers
+    assert gateway_device.via_device_id is None
+
+    # Check Identify button is associated with the node device via the gateway
+    identify_entry = next(
+        e for e in entity_entries if e.entity_id == "button.test_window_identify"
+    )
+    assert identify_entry.device_id is not None
+    node_device = device_registry.async_get(identify_entry.device_id)
+    assert node_device is not None
+    assert (DOMAIN, "123456789") in node_device.identifiers
+    assert node_device.via_device_id == gateway_device.id
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -98,3 +114,54 @@ async def test_button_press_failure(
 
     # Verify the reboot method was called
     mock_pyvlx.reboot_gateway.assert_called_once()
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
+async def test_identify_button_press_success(
+    hass: HomeAssistant,
+    mock_window: AsyncMock,
+) -> None:
+    """Test successful identify button press."""
+
+    entity_id = "button.test_window_identify"
+
+    # Press the button
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    # Verify the wink method was called
+    mock_window.wink.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("mock_pyvlx", ["mock_window"], indirect=True)
+async def test_identify_button_press_failure(
+    hass: HomeAssistant,
+    mock_window: AsyncMock,
+) -> None:
+    """Test identify button press failure handling."""
+
+    entity_id = "button.test_window_identify"
+
+    # Mock wink failure
+    mock_window.wink.side_effect = PyVLXException("Connection failed")
+
+    # Press the button and expect HomeAssistantError
+    with pytest.raises(
+        HomeAssistantError,
+        match='Failed to communicate with Velux device: <PyVLXException description="Connection failed" />',
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    # Verify the wink method was called
+    mock_window.wink.assert_awaited_once()

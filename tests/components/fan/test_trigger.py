@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
@@ -13,6 +13,7 @@ from tests.components.common import (
     assert_trigger_behavior_first,
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -41,6 +42,31 @@ async def test_fan_triggers_gated_by_labs_flag(
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("fan.turned_on", {}, True, True),
+        ("fan.turned_off", {}, True, True),
+    ],
+)
+async def test_fan_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that fan triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("fan"),
 )
@@ -61,7 +87,6 @@ async def test_fan_triggers_gated_by_labs_flag(
 )
 async def test_fan_state_trigger_behavior_any(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -73,7 +98,6 @@ async def test_fan_state_trigger_behavior_any(
     """Test that the fan state trigger fires when any fan state changes to a specific state."""
     await assert_trigger_behavior_any(
         hass,
-        service_calls=service_calls,
         target_entities=target_fans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -106,7 +130,6 @@ async def test_fan_state_trigger_behavior_any(
 )
 async def test_fan_state_trigger_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -118,7 +141,6 @@ async def test_fan_state_trigger_behavior_first(
     """Test that the fan state trigger fires when the first fan changes to a specific state."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_fans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -151,7 +173,6 @@ async def test_fan_state_trigger_behavior_first(
 )
 async def test_fan_state_trigger_behavior_last(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_fans: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -163,7 +184,6 @@ async def test_fan_state_trigger_behavior_last(
     """Test that the fan state trigger fires when the last fan changes to a specific state."""
     await assert_trigger_behavior_last(
         hass,
-        service_calls=service_calls,
         target_entities=target_fans,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,

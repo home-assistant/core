@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from unifi_access_api import Door
+
 from homeassistant.components.event import (
+    DoorbellEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -29,7 +32,7 @@ DOORBELL_EVENT_DESCRIPTION = UnifiAccessEventEntityDescription(
     key="doorbell",
     translation_key="doorbell",
     device_class=EventDeviceClass.DOORBELL,
-    event_types=["ring"],
+    event_types=[DoorbellEventType.RING],
     category="doorbell",
 )
 
@@ -53,11 +56,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up UniFi Access event entities."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        UnifiAccessEventEntity(coordinator, door_id, description)
-        for door_id in coordinator.data.doors
-        for description in EVENT_DESCRIPTIONS
-    )
+    added_doors: set[str] = set()
+
+    @callback
+    def _async_add_new_doors() -> None:
+        new_door_ids = sorted(set(coordinator.data.doors) - added_doors)
+        if not new_door_ids:
+            return
+        async_add_entities(
+            UnifiAccessEventEntity(
+                coordinator, coordinator.data.doors[door_id], description
+            )
+            for door_id in new_door_ids
+            for description in EVENT_DESCRIPTIONS
+        )
+        added_doors.update(new_door_ids)
+
+    _async_add_new_doors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_doors))
 
 
 class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
@@ -68,11 +84,10 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
     def __init__(
         self,
         coordinator: UnifiAccessCoordinator,
-        door_id: str,
+        door: Door,
         description: UnifiAccessEventEntityDescription,
     ) -> None:
         """Initialize the event entity."""
-        door = coordinator.data.doors[door_id]
         super().__init__(coordinator, door, description.key)
         self.entity_description = description
 

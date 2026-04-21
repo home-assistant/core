@@ -28,7 +28,6 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import (
-    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_HEALTHY,
     ATTR_SLUG,
@@ -54,6 +53,7 @@ from .const import (
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
     ISSUE_MOUNT_MOUNT_FAILED,
+    MAIN_COORDINATOR,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
@@ -62,8 +62,8 @@ from .const import (
     STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_addons_list, get_host_info
-from .handler import HassIO, get_supervisor_client
+from .coordinator import HassioMainDataUpdateCoordinator, get_addons_list, get_host_info
+from .handler import get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
 ISSUE_KEY_UNSUPPORTED = "unsupported"
@@ -175,10 +175,9 @@ class Issue:
 class SupervisorIssues:
     """Create issues from supervisor events."""
 
-    def __init__(self, hass: HomeAssistant, client: HassIO) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize supervisor issues."""
         self._hass = hass
-        self._client = client
         self._unsupported_reasons: set[str] = set()
         self._unhealthy_reasons: set[str] = set()
         self._issues: dict[UUID, Issue] = {}
@@ -418,8 +417,8 @@ class SupervisorIssues:
 
     def _async_coordinator_refresh(self) -> None:
         """Refresh coordinator to update latest data in entities."""
-        coordinator: HassioDataUpdateCoordinator | None
-        if coordinator := self._hass.data.get(ADDONS_COORDINATOR):
+        coordinator: HassioMainDataUpdateCoordinator | None
+        if coordinator := self._hass.data.get(MAIN_COORDINATOR):
             coordinator.config_entry.async_create_task(
                 self._hass, coordinator.async_refresh()
             )

@@ -1,17 +1,19 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted schedules.",
-    "condition_behavior_name": "Behavior",
-    "trigger_behavior_description": "The behavior of the targeted schedules to trigger on.",
-    "trigger_behavior_name": "Behavior"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_off": {
       "description": "Tests if one or more schedule blocks are currently not active.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::schedule::common::condition_behavior_description%]",
           "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::schedule::common::condition_for_name%]"
         }
       },
       "name": "Schedule is off"
@@ -20,8 +22,10 @@
       "description": "Tests if one or more schedule blocks are currently active.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::schedule::common::condition_behavior_description%]",
           "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::schedule::common::condition_for_name%]"
         }
       },
       "name": "Schedule is on"
@@ -70,7 +74,7 @@
     },
     "reload": {
       "description": "Reloads schedules from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload schedules"
     }
   },
   "title": "Schedule",
@@ -79,8 +83,10 @@
       "description": "Triggers when a schedule block ends.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::schedule::common::trigger_behavior_description%]",
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::schedule::common::trigger_for_name%]"
         }
       },
       "name": "Schedule block ended"
@@ -89,8 +95,10 @@
       "description": "Triggers when a schedule block starts.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::schedule::common::trigger_behavior_description%]",
           "name": "[%key:component::schedule::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::schedule::common::trigger_for_name%]"
         }
       },
       "name": "Schedule block started"
