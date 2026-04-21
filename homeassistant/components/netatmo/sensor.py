@@ -50,10 +50,9 @@ from .const import (
     CONF_WEATHER_AREAS,
     DOMAIN,
     NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
-    NETATMO_CREATE_METER_SENSOR,
-    NETATMO_CREATE_OPENING_SENSOR,
+    NETATMO_CREATE_LEGACY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
-    NETATMO_CREATE_SWITCH_SENSOR,
+    NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
@@ -436,7 +435,7 @@ DEVICE_CATEGORY_CLIMATE_BATTERY_SENSORS: Final[
     NetatmoDeviceCategory.climate: NETATMO_CLIMATE_BATTERY_SENSOR_DESCRIPTIONS,
 }
 
-DEVICE_CATEGORY_OPENING_SENSORS: Final[
+DEVICE_CATEGORY_NEW_SENSORS: Final[
     dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]]
 ] = {
     NetatmoDeviceCategory.opening: NETATMO_OPENING_SENSOR_DESCRIPTIONS,
@@ -449,27 +448,13 @@ DEVICE_CATEGORY_WEATHER_SENSORS: Final[
     NetatmoDeviceCategory.weather: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
 }
 
-# Duplicate for meter level sensors for legacy reasons
+# Duplicate for meter, climate, switch  sensors for legacy reasons
 # (as originally weather definitions reused - target for future simplification)
-DEVICE_CATEGORY_METER_SENSORS: Final[
+DEVICE_CATEGORY_LEGACY_SENSORS: Final[
     dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]]
 ] = {
     NetatmoDeviceCategory.meter: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
-}
-
-# Duplicate for switch level sensors for legacy reasons
-# (as originally weather definitions reused - target for future simplification)
-DEVICE_CATEGORY_SWITCH_SENSORS: Final[
-    dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]]
-] = {
     NetatmoDeviceCategory.switch: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
-}
-
-# Duplicate for room level climate sensors for legacy reasons
-# (as originally weather definitions reused - target for future simplification)
-DEVICE_CATEGORY_CLIMATE_SENSORS: Final[
-    dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]]
-] = {
     NetatmoDeviceCategory.climate: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
 }
 
@@ -493,9 +478,8 @@ async def async_setup_entry(
         sensorClass: type[
             NetatmoClimateBatterySensor
             | NetatmoWeatherSensor
-            | NetatmoOpeningSensor
-            | NetatmoMeterSensor
-            | NetatmoSwitchSensor
+            | NetatmoSensor
+            | NetatmoLegacySensor
         ],
         descriptions: dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]],
         netatmo_device: NetatmoDevice,
@@ -512,9 +496,8 @@ async def async_setup_entry(
         entities: list[
             NetatmoClimateBatterySensor
             | NetatmoWeatherSensor
-            | NetatmoOpeningSensor
-            | NetatmoMeterSensor
-            | NetatmoSwitchSensor
+            | NetatmoSensor
+            | NetatmoLegacySensor
         ] = []
 
         # Create sensors for module
@@ -555,11 +538,11 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            NETATMO_CREATE_OPENING_SENSOR,
+            NETATMO_CREATE_SENSOR,
             partial(
                 _create_base_sensor_entity,
-                NetatmoOpeningSensor,
-                DEVICE_CATEGORY_OPENING_SENSORS,
+                NetatmoSensor,
+                DEVICE_CATEGORY_NEW_SENSORS,
             ),
         )
     )
@@ -579,23 +562,11 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            NETATMO_CREATE_METER_SENSOR,
+            NETATMO_CREATE_LEGACY_SENSOR,
             partial(
                 _create_base_sensor_entity,
-                NetatmoMeterSensor,
-                DEVICE_CATEGORY_METER_SENSORS,
-            ),
-        )
-    )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NETATMO_CREATE_SWITCH_SENSOR,
-            partial(
-                _create_base_sensor_entity,
-                NetatmoSwitchSensor,
-                DEVICE_CATEGORY_SWITCH_SENSORS,
+                NetatmoLegacySensor,
+                DEVICE_CATEGORY_LEGACY_SENSORS,
             ),
         )
     )
@@ -607,7 +578,7 @@ async def async_setup_entry(
             _LOGGER.debug(msg)
             return
 
-        descriptions_to_add = DEVICE_CATEGORY_CLIMATE_SENSORS.get(
+        descriptions_to_add = DEVICE_CATEGORY_LEGACY_SENSORS.get(
             NetatmoDeviceCategory.climate, []
         )
 
@@ -805,24 +776,6 @@ class NetatmoLegacySensor(NetatmoBaseSensor):
         )
 
 
-class NetatmoClimateSensor(NetatmoLegacySensor):
-    """Implementation of a Netatmo Climate sensor."""
-
-    entity_description: NetatmoSensorEntityDescription
-
-
-class NetatmoMeterSensor(NetatmoLegacySensor):
-    """Implementation of a Netatmo Meter sensor."""
-
-    entity_description: NetatmoSensorEntityDescription
-
-
-class NetatmoSwitchSensor(NetatmoLegacySensor):
-    """Implementation of a Netatmo Switch sensor."""
-
-    entity_description: NetatmoSensorEntityDescription
-
-
 class NetatmoClimateBatterySensor(NetatmoLegacySensor):
     """Implementation of a Netatmo Climate Battery sensor."""
 
@@ -913,12 +866,6 @@ class NetatmoSensor(NetatmoBaseSensor):
             self._attr_native_value = value
 
         self.async_write_ha_state()
-
-
-class NetatmoOpeningSensor(NetatmoSensor):
-    """Implementation of a Netatmo Opening sensor."""
-
-    entity_description: NetatmoSensorEntityDescription
 
 
 class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
