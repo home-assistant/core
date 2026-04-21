@@ -556,7 +556,9 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                     try:
                         await idle
                     except asyncio.CancelledError:
-                        if (current_task := asyncio.current_task()) and current_task.cancelling():
+                        if (
+                            current_task := asyncio.current_task()
+                        ) and current_task.cancelling():
                             raise
                     except AioImapException:
                         pass
