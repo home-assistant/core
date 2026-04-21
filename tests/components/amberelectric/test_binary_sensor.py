@@ -17,6 +17,7 @@ from homeassistant.components.amberelectric.const import (
     CONF_SITE_NAME,
     DOMAIN,
 )
+from homeassistant.components.amberelectric.coordinator import AmberUpdateCoordinator
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -229,3 +230,32 @@ def test_data_stale_sensor_fresh(hass: HomeAssistant) -> None:
     assert sensor
     assert sensor.state == "off"
     assert sensor.attributes["device_class"] == "problem"
+
+
+async def test_data_stale_sensor_stale(hass: HomeAssistant) -> None:
+    """Test that the data stale sensor turns on when the coordinator serves cached data."""
+    MockConfigEntry(
+        domain="amberelectric",
+        data={
+            CONF_SITE_NAME: "mock_title",
+            CONF_API_TOKEN: MOCK_API_TOKEN,
+            CONF_SITE_ID: GENERAL_ONLY_SITE_ID,
+        },
+    ).add_to_hass(hass)
+
+    instance = Mock()
+    with patch("amberelectric.AmberApi", return_value=instance):
+        instance.get_current_prices = Mock(return_value=GENERAL_CHANNEL)
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    # Simulate a failed update that falls back to cached data
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator: AmberUpdateCoordinator = entry.runtime_data
+    coordinator._consecutive_failures = 1
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    sensor = hass.states.get("binary_sensor.mock_title_data_stale")
+    assert sensor
+    assert sensor.state == "on"

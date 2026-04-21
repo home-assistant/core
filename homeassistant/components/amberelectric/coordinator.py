@@ -105,7 +105,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 f"Amber API error: {api_exception.status} {api_exception.reason}"
             ) from api_exception
-        except Exception as err:
+        except OSError | TimeoutError as err:
             raise UpdateFailed(f"Error communicating with Amber API: {err}") from err
 
         intervals = [interval.actual_instance for interval in data]
