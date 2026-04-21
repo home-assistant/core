@@ -1,7 +1,7 @@
 """Tests for Shelly media player platform."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from aioshelly.const import MODEL_WALL_DISPLAY
 import pytest
@@ -46,6 +46,49 @@ from . import init_integration, patch_platforms
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.test_name"
+
+AUDIO_FILES = [
+    {
+        "album": "Album Placeholder",
+        "artist": "Artist Placeholder",
+        "duration": 106000,
+        "filename": "track_alpha.mp3",
+        "id": 16,
+        "index": 0,
+        "preview": "https://example.com/media/thumb?id=16&_t=track_alpha.mp3",
+        "size": 3390000,
+        "title": "Track Alpha",
+        "track": 0,
+        "type": "AUDIO",
+        "valid": True,
+        "year": 0,
+    },
+    {
+        "album": "Album Placeholder",
+        "artist": "Artist Placeholder",
+        "duration": 138000,
+        "filename": "track_beta.mp3",
+        "id": 15,
+        "index": 0,
+        "preview": "https://example.com/media/thumb?id=15&_t=track_beta.mp3",
+        "size": 4425000,
+        "title": "Track Beta",
+        "track": 0,
+        "type": "AUDIO",
+        "valid": True,
+        "year": 0,
+    },
+    {
+        "filename": "ringtone_gamma.mp3",
+        "id": 17,
+        "index": 0,
+        "preview": "https://example.com/media/thumb?id=17&_t=ringtone_gamma.mp3",
+        "size": 552000,
+        "title": "Ringtone Gamma",
+        "type": "RINGTONE",
+        "valid": True,
+    },
+]
 
 RADIO_STATIONS = [
     {
@@ -381,11 +424,7 @@ async def test_rpc_media_player_browse_media_radio_stations(
     status = deepcopy(mock_rpc_device.status)
     status["media"] = STATUS_RADIO_STATION
     monkeypatch.setattr(mock_rpc_device, "status", status)
-    monkeypatch.setattr(
-        mock_rpc_device,
-        "media_list_radio_stations",
-        AsyncMock(return_value=RADIO_STATIONS),
-    )
+    mock_rpc_device.media_list_radio_stations.return_value = RADIO_STATIONS
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
@@ -414,4 +453,46 @@ async def test_rpc_media_player_browse_media_radio_stations(
     ]
     assert [child["thumbnail"] for child in msg["result"]["children"]] == [
         station["icon"] for station in RADIO_STATIONS
+    ]
+
+
+async def test_rpc_media_player_browse_media_audio_files(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test Shelly media player browse media audio files."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.media_list_media.return_value = AUDIO_FILES
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": CONTENT_TYPE_AUDIO,
+            "media_content_id": CONTENT_TYPE_AUDIO,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["title"] == "Audio files"
+    assert msg["result"]["media_class"] == "directory"
+    assert msg["result"]["media_content_type"] == CONTENT_TYPE_AUDIO
+    assert [child["title"] for child in msg["result"]["children"]] == [
+        item["title"] for item in AUDIO_FILES if item["type"] == "AUDIO"
+    ]
+    assert [child["media_content_id"] for child in msg["result"]["children"]] == [
+        str(item["id"]) for item in AUDIO_FILES if item["type"] == "AUDIO"
+    ]
+    assert [child["thumbnail"] for child in msg["result"]["children"]] == [
+        item["preview"] for item in AUDIO_FILES if item["type"] == "AUDIO"
     ]
