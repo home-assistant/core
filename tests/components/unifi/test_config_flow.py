@@ -529,7 +529,7 @@ async def test_flow_integration_discovery(hass: HomeAssistant) -> None:
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "host": "10.0.0.1",
+        "host": "x.ui.direct",
         "site": "default",
     }
 
@@ -551,32 +551,69 @@ async def test_flow_integration_discovery_aborts_if_host_already_exists(
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_integration_discovery_updates_host_for_known_mac(
+async def test_flow_integration_discovery_uses_direct_connect_domain(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery updates host when MAC matches but IP changed."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="e0:63:da:20:14:a9",
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_PORT: 443,
-            CONF_VERIFY_SSL: False,
-            CONF_SITE_ID: "default",
-        },
-    )
-    entry.add_to_hass(hass)
-
+    """Test discovery prefers direct_connect_domain over source_ip."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
         data=INTEGRATION_DISCOVERY_INFO,
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": "x.ui.direct",
+        "site": "default",
+    }
+
+    schema_defaults = {
+        marker.schema: marker.default()
+        for marker in result["data_schema"].schema
+        if hasattr(marker, "default") and callable(marker.default)
+    }
+    assert schema_defaults[CONF_HOST] == "x.ui.direct"
+    assert schema_defaults[CONF_VERIFY_SSL] is True
+
+
+@pytest.mark.usefixtures("config_entry")
+async def test_flow_integration_discovery_aborts_on_direct_connect_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort if the direct connect domain matches a configured host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": "10.0.0.1",
+            "direct_connect_domain": "1.2.3.4",
+        },
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_HOST] == "10.0.0.1"
+
+
+async def test_flow_integration_discovery_aborts_without_source_ip(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort discovery when source_ip is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            **INTEGRATION_DISCOVERY_INFO,
+            "source_ip": None,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_flow_integration_discovery_gets_form_with_ignored_entry(
@@ -603,6 +640,6 @@ async def test_flow_integration_discovery_gets_form_with_ignored_entry(
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "host": "10.0.0.1",
+        "host": "x.ui.direct",
         "site": "default",
     }

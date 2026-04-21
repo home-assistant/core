@@ -133,7 +133,10 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             vol.Optional(
                 CONF_PORT, default=self.config.get(CONF_PORT, DEFAULT_PORT)
             ): int,
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+            vol.Optional(
+                CONF_VERIFY_SSL,
+                default=self.config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            ): bool,
         }
 
         return self.async_show_form(
@@ -209,19 +212,26 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery via unifi_discovery."""
         source_ip = discovery_info["source_ip"]
+        if not source_ip:
+            return self.async_abort(reason="cannot_connect")
         mac_address = format_mac(discovery_info["hw_addr"])
+        direct_connect_domain = discovery_info.get("direct_connect_domain")
+        host = direct_connect_domain or source_ip
 
         self.config = {
-            CONF_HOST: source_ip,
+            CONF_HOST: host,
+            CONF_VERIFY_SSL: bool(direct_connect_domain),
         }
 
-        self._async_abort_entries_match({CONF_HOST: self.config[CONF_HOST]})
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data.get(CONF_HOST) in (source_ip, direct_connect_domain):
+                return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured(updates=self.config)
+        self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {
-            CONF_HOST: self.config[CONF_HOST],
+            CONF_HOST: host,
             CONF_SITE_ID: DEFAULT_SITE_ID,
         }
 
