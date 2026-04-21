@@ -13,7 +13,7 @@ async def test_general_price_sensor(
 ) -> None:
     """Test the General Price sensor."""
     await setup_integration(hass, general_channel_config_entry)
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     assert price.state == "0.09"
@@ -40,7 +40,7 @@ async def test_general_price_sensor_with_range(
 ) -> None:
     """Test the General Price sensor with a range."""
     await setup_integration(hass, general_channel_config_entry)
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     attributes = price.attributes
@@ -55,7 +55,7 @@ async def test_general_and_controlled_load_price_sensor(
 ) -> None:
     """Test the Controlled Price sensor."""
     await setup_integration(hass, general_channel_and_controlled_load_config_entry)
-    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_all()) == 10
     price = hass.states.get("sensor.mock_title_controlled_load_price")
     assert price
     assert price.state == "0.04"
@@ -80,7 +80,7 @@ async def test_general_and_feed_in_price_sensor(
 ) -> None:
     """Test the Feed In sensor."""
     await setup_integration(hass, general_channel_and_feed_in_config_entry)
-    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_all()) == 10
     price = hass.states.get("sensor.mock_title_feed_in_price")
     assert price
     assert price.state == "-0.01"
@@ -105,7 +105,7 @@ async def test_general_forecast_sensor(
 ) -> None:
     """Test the General Forecast sensor."""
     await setup_integration(hass, general_channel_config_entry)
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_forecast")
     assert price
     assert price.state == "0.09"
@@ -135,7 +135,7 @@ async def test_general_forecast_sensor_with_range(
 ) -> None:
     """Test the General Forecast sensor with a range."""
     await setup_integration(hass, general_channel_config_entry)
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_forecast")
     assert price
     attributes = price.attributes
@@ -151,7 +151,7 @@ async def test_controlled_load_forecast_sensor(
 ) -> None:
     """Test the Controlled Load Forecast sensor."""
     await setup_integration(hass, general_channel_and_controlled_load_config_entry)
-    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_all()) == 10
     price = hass.states.get("sensor.mock_title_controlled_load_forecast")
     assert price
     assert price.state == "0.04"
@@ -178,7 +178,7 @@ async def test_feed_in_forecast_sensor(
 ) -> None:
     """Test the Feed In Forecast sensor."""
     await setup_integration(hass, general_channel_and_feed_in_config_entry)
-    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_all()) == 10
     price = hass.states.get("sensor.mock_title_feed_in_forecast")
     assert price
     assert price.state == "-0.01"
@@ -206,7 +206,7 @@ async def test_renewable_sensor(
     """Testing the creation of the Amber renewables sensor."""
     await setup_integration(hass, general_channel_config_entry)
 
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     sensor = hass.states.get("sensor.mock_title_renewables")
     assert sensor
     assert sensor.state == "51"
@@ -218,7 +218,7 @@ async def test_general_price_descriptor_descriptor_sensor(
 ) -> None:
     """Test the General Price Descriptor sensor."""
     await setup_integration(hass, general_channel_config_entry)
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
     price = hass.states.get("sensor.mock_title_general_price_descriptor")
     assert price
     assert price.state == "extremely_low"
@@ -232,7 +232,7 @@ async def test_general_and_controlled_load_price_descriptor_sensor(
     """Test the Controlled Price Descriptor sensor."""
     await setup_integration(hass, general_channel_and_controlled_load_config_entry)
 
-    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_all()) == 10
     price = hass.states.get("sensor.mock_title_controlled_load_price_descriptor")
     assert price
     assert price.state == "extremely_low"
@@ -245,7 +245,7 @@ async def test_general_and_feed_in_price_descriptor_sensor(
     """Test the Feed In Price Descriptor sensor."""
     await setup_integration(hass, general_channel_and_feed_in_config_entry)
 
-    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_all()) == 10
     price = hass.states.get("sensor.mock_title_feed_in_price_descriptor")
     assert price
     assert price.state == "extremely_low"
