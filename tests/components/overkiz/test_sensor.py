@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from pathlib import Path
-from typing import NamedTuple
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -16,19 +15,10 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockOverkizClient, SetupOverkizIntegration
+from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import async_deliver_events, build_event
 
 from tests.common import snapshot_platform
-
-
-class FixtureDevice(NamedTuple):
-    """Test device binding a fixture file to a device URL and entity id."""
-
-    fixture: str
-    device_url: str
-    entity_id: str
-
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
