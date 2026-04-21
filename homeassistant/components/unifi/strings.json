@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "UniFi Network site is already configured",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "configuration_updated": "Configuration updated",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
