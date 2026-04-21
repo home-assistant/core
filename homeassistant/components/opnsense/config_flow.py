@@ -172,9 +172,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             entry_data[CONF_TRACKER_INTERFACES] = user_input[CONF_TRACKER_INTERFACES]
         return self.async_create_entry(title=entry_data[CONF_URL], data=entry_data)
 
-    async def async_step_import(
-        self, import_data: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a Yaml config."""
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
 
@@ -191,6 +189,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await client.validate()
+            interfaces_resp = await client.get_interfaces()
         except OPNsenseInvalidURL:
             return self.async_abort(reason="invalid_url")
         except OPNsenseInvalidAuth:
@@ -209,10 +208,28 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during import")
             return self.async_abort(reason="unknown")
 
-        # Persist CONF_TRACKER_INTERFACES if present and not empty
+        # Validate CONF_TRACKER_INTERFACES if present and not empty
         data = dict(import_data)
-        if CONF_TRACKER_INTERFACES in data and not data[CONF_TRACKER_INTERFACES]:
-            data.pop(CONF_TRACKER_INTERFACES)
+        if CONF_TRACKER_INTERFACES in data:
+            if not data[CONF_TRACKER_INTERFACES]:
+                data.pop(CONF_TRACKER_INTERFACES)
+            else:
+                known_interfaces = [
+                    name
+                    for ifinfo in interfaces_resp.values()
+                    if (name := ifinfo.get("name"))
+                ]
+                self.available_interfaces = list(known_interfaces)
+                # Verify that specified tracker interfaces are valid
+                tracker_interfaces = data[CONF_TRACKER_INTERFACES]
+                for intf_description in tracker_interfaces:
+                    if intf_description not in known_interfaces:
+                        _LOGGER.warning(
+                            "Specified OPNsense tracker interface '%s' was not found during import and so was ignored. Found interfaces were: %s",
+                            intf_description,
+                            ", ".join(known_interfaces),
+                        )
+                        tracker_interfaces.remove(intf_description)
         return self.async_create_entry(title=import_data[CONF_URL], data=data)
 
     async def _async_check_connection(self, client: OPNsenseClient) -> None:
