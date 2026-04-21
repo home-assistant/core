@@ -18,7 +18,13 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_PAUSE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE, STATE_PLAYING, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_BUFFERING,
+    STATE_IDLE,
+    STATE_PLAYING,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -84,6 +90,13 @@ async def test_rpc_media_player(
 
     assert (entry := entity_registry.async_get(ENTITY_ID))
     assert entry == snapshot(name=f"{ENTITY_ID}-entry")
+
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "buffering", True)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_BUFFERING
 
 
 async def test_rpc_media_player_audio_file(
