@@ -43,8 +43,8 @@ HOMEKIT_STACK = FixtureDevice(
 # Device with core:MeasuredValueType attribute (test for dynamic unit resolution)
 COZYTOUCH_DHW = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
-    "io://1234-5678-5643/109286#1",
-    "sensor.patio_water_heating_temperature",
+    "io://1234-5678-5643/109286#2",
+    "sensor.patio_water_heating_office_energy_meter_electric_energy_consumption",
 )
 
 SNAPSHOT_FIXTURES = [
