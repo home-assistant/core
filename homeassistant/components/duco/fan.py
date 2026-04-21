@@ -64,6 +64,7 @@ async def async_setup_entry(
     """Set up Duco fan entities."""
     coordinator = entry.runtime_data
 
+    # BOX is always node 1 and is never dynamically added or removed, so no listener needed.
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
         for node in coordinator.data.nodes.values()
