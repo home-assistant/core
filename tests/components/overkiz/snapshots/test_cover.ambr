@@ -1780,7 +1780,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bedroom_blinds-entry]
@@ -1835,7 +1835,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.dining_room_blinds-entry]
@@ -1945,7 +1945,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.guest_room_blinds-entry]
@@ -2000,7 +2000,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.hallway_blinds-entry]
@@ -2055,7 +2055,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.kitchen_blinds-entry]
@@ -2110,7 +2110,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.living_room_blinds-entry]
@@ -2165,7 +2165,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.master_bedroom_blinds-entry]
@@ -2220,7 +2220,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.nursery_blinds-entry]
@@ -2275,7 +2275,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-entry]
@@ -2330,7 +2330,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.study_blinds-entry]
@@ -2385,7 +2385,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.back_door_shutter-entry]
@@ -2439,7 +2439,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.front_door_shutter-entry]
@@ -2493,7 +2493,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'opening',
+    'state': 'open',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window-entry]
