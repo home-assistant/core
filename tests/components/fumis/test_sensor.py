@@ -29,10 +29,11 @@ async def test_sensors(
 @pytest.mark.parametrize(
     "entity_id",
     [
+        "sensor.clou_duo_combustion_chamber_pressure",
         "sensor.clou_duo_fan_1_speed",
         "sensor.clou_duo_fan_2_speed",
+        "sensor.clou_duo_wircu_module",
         "sensor.clou_duo_wi_fi_rssi",
-        "sensor.clou_duo_combustion_chamber_pressure",
     ],
 )
 @pytest.mark.usefixtures("init_integration")

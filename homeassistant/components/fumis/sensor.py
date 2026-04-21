@@ -98,7 +98,11 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
             len(data.controller.fuels) > 0
             and data.controller.fuels[0].quantity_percentage is not None
         ),
-        value_fn=lambda data: data.controller.fuels[0].quantity_percentage,
+        value_fn=lambda data: (
+            data.controller.fuels[0].quantity_percentage
+            if data.controller.fuels
+            else None
+        ),
     ),
     FumisSensorEntityDescription(
         key="fuel_used",
