@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_e
 
 from .client import SatelClient
 from .const import (
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -138,6 +139,14 @@ async def async_migrate_entry(
 
         await async_migrate_entries(hass, config_entry.entry_id, migrate_unique_id)
         hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
+
+    # 2.2 Added encryption key to config entry data
+    if config_entry.version == 2 and config_entry.minor_version < 2:
+        new_data = {**config_entry.data, CONF_ENCRYPTION_KEY: None}
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2
+        )
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",

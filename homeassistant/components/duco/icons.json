@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "iaq_co2": {
+        "default": "mdi:molecule-co2"
+      },
+      "iaq_rh": {
+        "default": "mdi:water-percent"
+      },
+      "ventilation_state": {
+        "default": "mdi:tune-variant"
+      }
+    }
+  }
+}
