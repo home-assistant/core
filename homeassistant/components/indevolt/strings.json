@@ -13,9 +13,7 @@
     },
     "step": {
       "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
+        "data": { "host": "[%key:common::config_flow::data::host%]" },
         "data_description": {
           "host": "[%key:component::indevolt::config::step::user::data_description::host%]"
         },
@@ -23,36 +21,20 @@
         "title": "Reconfigure Indevolt device"
       },
       "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The host of the Indevolt device"
-        },
+        "data": { "host": "[%key:common::config_flow::data::host%]" },
+        "data_description": { "host": "The host of the Indevolt device" },
         "description": "Enter the connection details for your Indevolt device.",
         "title": "Connect to Indevolt device"
       }
     }
   },
   "entity": {
-    "button": {
-      "stop": {
-        "name": "Enable standby mode"
-      }
-    },
+    "button": { "stop": { "name": "Enable standby mode" } },
     "number": {
-      "discharge_limit": {
-        "name": "Discharge limit"
-      },
-      "feedin_power_limit": {
-        "name": "Feed-in power limit"
-      },
-      "inverter_input_limit": {
-        "name": "Inverter input limit"
-      },
-      "max_ac_output_power": {
-        "name": "Max AC output power"
-      }
+      "discharge_limit": { "name": "Discharge limit" },
+      "feedin_power_limit": { "name": "Feed-in power limit" },
+      "inverter_input_limit": { "name": "Inverter input limit" },
+      "max_ac_output_power": { "name": "Max AC output power" }
     },
     "select": {
       "energy_mode": {
@@ -65,12 +47,8 @@
       }
     },
     "sensor": {
-      "ac_input_power": {
-        "name": "AC input power"
-      },
-      "ac_output_power": {
-        "name": "AC output power"
-      },
+      "ac_input_power": { "name": "AC input power" },
+      "ac_output_power": { "name": "AC output power" },
       "battery_charge_discharge_state": {
         "name": "Battery charge/discharge state",
         "state": {
@@ -85,87 +63,33 @@
       "battery_daily_discharging_energy": {
         "name": "Battery daily discharging energy"
       },
-      "battery_pack_1_current": {
-        "name": "Battery pack 1 current"
-      },
-      "battery_pack_1_serial_number": {
-        "name": "Battery pack 1 SN"
-      },
-      "battery_pack_1_soc": {
-        "name": "Battery pack 1 SOC"
-      },
-      "battery_pack_1_temperature": {
-        "name": "Battery pack 1 temperature"
-      },
-      "battery_pack_1_voltage": {
-        "name": "Battery pack 1 voltage"
-      },
-      "battery_pack_2_current": {
-        "name": "Battery pack 2 current"
-      },
-      "battery_pack_2_serial_number": {
-        "name": "Battery pack 2 SN"
-      },
-      "battery_pack_2_soc": {
-        "name": "Battery pack 2 SOC"
-      },
-      "battery_pack_2_temperature": {
-        "name": "Battery pack 2 temperature"
-      },
-      "battery_pack_2_voltage": {
-        "name": "Battery pack 2 voltage"
-      },
-      "battery_pack_3_current": {
-        "name": "Battery pack 3 current"
-      },
-      "battery_pack_3_serial_number": {
-        "name": "Battery pack 3 SN"
-      },
-      "battery_pack_3_soc": {
-        "name": "Battery pack 3 SOC"
-      },
-      "battery_pack_3_temperature": {
-        "name": "Battery pack 3 temperature"
-      },
-      "battery_pack_3_voltage": {
-        "name": "Battery pack 3 voltage"
-      },
-      "battery_pack_4_current": {
-        "name": "Battery pack 4 current"
-      },
-      "battery_pack_4_serial_number": {
-        "name": "Battery pack 4 SN"
-      },
-      "battery_pack_4_soc": {
-        "name": "Battery pack 4 SOC"
-      },
-      "battery_pack_4_temperature": {
-        "name": "Battery pack 4 temperature"
-      },
-      "battery_pack_4_voltage": {
-        "name": "Battery pack 4 voltage"
-      },
-      "battery_pack_5_current": {
-        "name": "Battery pack 5 current"
-      },
-      "battery_pack_5_serial_number": {
-        "name": "Battery pack 5 SN"
-      },
-      "battery_pack_5_soc": {
-        "name": "Battery pack 5 SOC"
-      },
-      "battery_pack_5_temperature": {
-        "name": "Battery pack 5 temperature"
-      },
-      "battery_pack_5_voltage": {
-        "name": "Battery pack 5 voltage"
-      },
-      "battery_power": {
-        "name": "Battery power"
-      },
-      "battery_soc": {
-        "name": "Battery SOC"
-      },
+      "battery_pack_1_current": { "name": "Battery pack 1 current" },
+      "battery_pack_1_serial_number": { "name": "Battery pack 1 SN" },
+      "battery_pack_1_soc": { "name": "Battery pack 1 SOC" },
+      "battery_pack_1_temperature": { "name": "Battery pack 1 temperature" },
+      "battery_pack_1_voltage": { "name": "Battery pack 1 voltage" },
+      "battery_pack_2_current": { "name": "Battery pack 2 current" },
+      "battery_pack_2_serial_number": { "name": "Battery pack 2 SN" },
+      "battery_pack_2_soc": { "name": "Battery pack 2 SOC" },
+      "battery_pack_2_temperature": { "name": "Battery pack 2 temperature" },
+      "battery_pack_2_voltage": { "name": "Battery pack 2 voltage" },
+      "battery_pack_3_current": { "name": "Battery pack 3 current" },
+      "battery_pack_3_serial_number": { "name": "Battery pack 3 SN" },
+      "battery_pack_3_soc": { "name": "Battery pack 3 SOC" },
+      "battery_pack_3_temperature": { "name": "Battery pack 3 temperature" },
+      "battery_pack_3_voltage": { "name": "Battery pack 3 voltage" },
+      "battery_pack_4_current": { "name": "Battery pack 4 current" },
+      "battery_pack_4_serial_number": { "name": "Battery pack 4 SN" },
+      "battery_pack_4_soc": { "name": "Battery pack 4 SOC" },
+      "battery_pack_4_temperature": { "name": "Battery pack 4 temperature" },
+      "battery_pack_4_voltage": { "name": "Battery pack 4 voltage" },
+      "battery_pack_5_current": { "name": "Battery pack 5 current" },
+      "battery_pack_5_serial_number": { "name": "Battery pack 5 SN" },
+      "battery_pack_5_soc": { "name": "Battery pack 5 SOC" },
+      "battery_pack_5_temperature": { "name": "Battery pack 5 temperature" },
+      "battery_pack_5_voltage": { "name": "Battery pack 5 voltage" },
+      "battery_power": { "name": "Battery power" },
+      "battery_soc": { "name": "Battery SOC" },
       "battery_total_charging_energy": {
         "name": "Battery total charging energy"
       },
@@ -235,30 +159,14 @@
           "self_consumed_prioritized": "Self-consumed prioritized"
         }
       },
-      "grid_frequency": {
-        "name": "Grid frequency"
-      },
-      "grid_voltage": {
-        "name": "Grid voltage"
-      },
-      "main_current": {
-        "name": "Main current"
-      },
-      "main_serial_number": {
-        "name": "Main serial number"
-      },
-      "main_soc": {
-        "name": "Main SOC"
-      },
-      "main_temperature": {
-        "name": "Main temperature"
-      },
-      "main_voltage": {
-        "name": "Main voltage"
-      },
-      "meter_power": {
-        "name": "Meter power"
-      },
+      "grid_frequency": { "name": "Grid frequency" },
+      "grid_voltage": { "name": "Grid voltage" },
+      "main_current": { "name": "Main current" },
+      "main_serial_number": { "name": "Main serial number" },
+      "main_soc": { "name": "Main SOC" },
+      "main_temperature": { "name": "Main temperature" },
+      "main_voltage": { "name": "Main voltage" },
+      "meter_power": { "name": "Meter power" },
       "mode": {
         "name": "Device mode",
         "state": {
@@ -267,35 +175,17 @@
           "sub": "Cluster (sub)"
         }
       },
-      "off_grid_output_energy": {
-        "name": "Off-grid output energy"
-      },
-      "rated_capacity": {
-        "name": "Rated capacity"
-      },
-      "serial_number": {
-        "name": "Serial number"
-      },
-      "total_ac_input_energy": {
-        "name": "Total AC input energy"
-      },
-      "total_ac_input_energy_gen1": {
-        "name": "Total AC input energy"
-      },
-      "total_ac_output_energy": {
-        "name": "Total AC output energy"
-      }
+      "off_grid_output_energy": { "name": "Off-grid output energy" },
+      "rated_capacity": { "name": "Rated capacity" },
+      "serial_number": { "name": "Serial number" },
+      "total_ac_input_energy": { "name": "Total AC input energy" },
+      "total_ac_input_energy_gen1": { "name": "Total AC input energy" },
+      "total_ac_output_energy": { "name": "Total AC output energy" }
     },
     "switch": {
-      "bypass": {
-        "name": "Bypass socket"
-      },
-      "grid_charging": {
-        "name": "Allow grid charging"
-      },
-      "light": {
-        "name": "LED indicator"
-      }
+      "bypass": { "name": "Bypass socket" },
+      "grid_charging": { "name": "Allow grid charging" },
+      "light": { "name": "LED indicator" }
     }
   },
   "exceptions": {
@@ -331,10 +221,6 @@
     "charge": {
       "description": "Real-time control: Starts charging with configured power until the target SOC is reached.",
       "fields": {
-        "device_ids": {
-          "description": "The Indevolt device(s) to start charging.",
-          "name": "Device(s)"
-        },
         "power": {
           "description": "Maximum charging power in watts.",
           "name": "Max. power"
@@ -349,10 +235,6 @@
     "discharge": {
       "description": "Real-time control: Starts discharging with configured power until the target SOC is reached.",
       "fields": {
-        "device_ids": {
-          "description": "The Indevolt device(s) to start discharging.",
-          "name": "[%key:component::indevolt::services::charge::fields::device_ids::name%]"
-        },
         "power": {
           "description": "Maximum discharging power in watts.",
           "name": "Max. power"

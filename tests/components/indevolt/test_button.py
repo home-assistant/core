@@ -63,9 +63,7 @@ async def test_button_press_standby(
     )
 
     # Verify set_data was called for mode switch and stop() was called
-    mock_indevolt.set_data.assert_called_once_with(
-        ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE
-    )
+    mock_indevolt.set_data.assert_called_once_with(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE)
     mock_indevolt.stop.assert_called_once()
 
 
@@ -147,8 +145,5 @@ async def test_button_press_standby_portable_mode_error(
         )
 
     # Verify correct translation key is used for the error and confirm no call was made
-    assert (
-        exc_info.value.translation_key
-        == "energy_mode_change_unavailable_outdoor_portable"
-    )
+    assert exc_info.value.translation_key == "energy_mode_change_unavailable_outdoor_portable"
     mock_indevolt.set_data.assert_not_called()
