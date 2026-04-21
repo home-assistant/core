@@ -40,7 +40,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Kiosker A98BE1CE Blackout',
-      'visible': True,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kiosker_a98be1ce_blackout',
