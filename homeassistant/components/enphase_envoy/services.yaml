@@ -1,0 +1,8 @@
+token_lifetime:
+  fields:
+    device_id:
+      selector:
+        device:
+          filter:
+            - integration: enphase_envoy
+              model_id: ENVOY

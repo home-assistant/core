@@ -661,9 +661,6 @@
       "storage_ct_voltage_phase": {
         "name": "Voltage storage CT {phase_name}"
       },
-      "token_lifetime": {
-        "name": "Token lifetime"
-      },
       "total_consumption_ct_current": {
         "name": "Total consumption CT current"
       },
@@ -738,6 +735,15 @@
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
     },
+    "envoy_service_envoy_not_found": {
+      "message": "No Envoy found by {service} for device_id {device_id}. Specify a correct `device_id`."
+    },
+    "envoy_service_no_device_id": {
+      "message": "No Envoy found by {service}. Configure an Envoy or specify a `device_id` if more then 1 Envoy is configured."
+    },
+    "not_initialized": {
+      "message": "{service}: Enphase Envoy is not yet initialized"
+    },
     "unexpected_device": {
       "message": "Unexpected Envoy serial number found at {host}; expected {expected_serial}, found {actual_serial}"
     }
@@ -755,6 +761,18 @@
         },
         "title": "Envoy {serial} {host} options"
       }
+    }
+  },
+  "services": {
+    "token_lifetime": {
+      "description": "Returns days till Envoy access token expiry.",
+      "fields": {
+        "device_id": {
+          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an Envoy from the dropdown list. In YAML mode enter a `device_id` or use an expression like `device_id('sensor.envoy_123456789012_current_power_production')`",
+          "name": "Envoy device ID"
+        }
+      },
+      "name": "Envoy token lifetime"
     }
   }
 }
