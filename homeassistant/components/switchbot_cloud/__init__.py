@@ -130,59 +130,6 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.climates.append((device, coordinator))
-    if (
-        isinstance(device, Device) and device.device_type.startswith("Plug")
-    ) or isinstance(device, Remote):
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.switches.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Meter",
-        "MeterPlus",
-        "MeterPro",
-        "MeterPro(CO2)",
-        "Relay Switch 1PM",
-        "Plug Mini (JP)",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type in [
-        "K10+",
-        "K10+ Pro",
-        "Robot Vacuum Cleaner S1",
-        "Robot Vacuum Cleaner S1 Plus",
-        "K20+ Pro",
-        "Robot Vacuum Cleaner K10+ Pro Combo",
-        "Robot Vacuum Cleaner S10",
-        "Robot Vacuum Cleaner S20",
-        "S20",
-        "Robot Vacuum Cleaner K11 Plus",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.vacuums.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Smart Lock Lite",
-        "Smart Lock Pro",
-        "Smart Lock Ultra",
-        "Smart Lock Vision",
-        "Smart Lock Vision Pro",
-        "Smart Lock Pro Wifi",
-        "Lock Vision",
-        "Lock Vision Pro",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.locks.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type == "Bot":
         coordinator = await coordinator_for_device(
@@ -200,69 +147,11 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Hub 3":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.sensors.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Water Detector":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id, True
-        )
-        devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type == "Garage Door Opener":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.covers.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type in [
-        "Strip Light",
-        "Strip Light 3",
-        "Floor Lamp",
-        "Color Bulb",
-        "RGBICWW Floor Lamp",
-        "RGBICWW Strip Light",
-        "Ceiling Light",
-        "Ceiling Light Pro",
-        "RGBIC Neon Rope Light",
-        "RGBIC Neon Wire Rope Light",
-        "Candle Warmer Lamp",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.lights.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type == "Humidifier2":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.humidifiers.append((device, coordinator))
-
-    if isinstance(device, Device) and device.device_type == "Humidifier":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.humidifiers.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-    if isinstance(device, Device) and device.device_type == "Climate Panel":
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.binary_sensors.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
 
     if device.device_type in DEVICE_SUPPORT_MAP:
         default_config = DEVICE_SUPPORT_MAP[device.device_type]
 
-        default_webhook_status = default_config.get("webhook")
-        assert default_webhook_status is not None
-        assert isinstance(default_webhook_status, bool)
+        default_webhook_status = default_config.webhook
         coordinator = await coordinator_for_device(
             hass,
             entry,
@@ -272,15 +161,83 @@ async def make_device_data(
             manageable_by_webhook=default_webhook_status,
         )
 
-        default_entity_map = default_config.get("entity_list")
-        assert default_entity_map is not None
-        assert isinstance(default_entity_map, list)
+        default_entity_map = default_config.entity_config
         for item in default_entity_map:
-            exist_device_list = getattr(devices_data, str(item.value))
-            for existed_device in exist_device_list:
-                if device.device_id == existed_device[0].device_id:
-                    return
-            exist_device_list.append((device, coordinator))
+            match item:
+                case Platform.BINARY_SENSOR:
+                    devices_data.binary_sensors.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.binary_sensors
+                    ] else None
+                case Platform.BUTTON:
+                    devices_data.buttons.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.buttons
+                    ] else None
+                case Platform.CLIMATE:
+                    devices_data.climates.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.climates
+                    ] else None
+                case Platform.COVER:
+                    devices_data.covers.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.covers
+                    ] else None
+                case Platform.FAN:
+                    devices_data.fans.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.fans
+                    ] else None
+                case Platform.HUMIDIFIER:
+                    devices_data.humidifiers.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.humidifiers
+                    ] else None
+
+                case Platform.IMAGE:
+                    devices_data.images.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.images
+                    ] else None
+                case Platform.LIGHT:
+                    devices_data.lights.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.lights
+                    ] else None
+                case Platform.LOCK:
+                    devices_data.locks.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.locks
+                    ] else None
+
+                case Platform.SENSOR:
+                    devices_data.sensors.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.sensors
+                    ] else None
+                case Platform.SWITCH:
+                    devices_data.switches.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.switches
+                    ] else None
+                case Platform.VACUUM:
+                    devices_data.vacuums.append(
+                        (device, coordinator)
+                    ) if device.device_id not in [
+                        i[0].device_id for i in devices_data.vacuums
+                    ] else None
 
 
 async def async_setup_entry(

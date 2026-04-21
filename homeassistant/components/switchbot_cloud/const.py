@@ -1,8 +1,11 @@
 """Constants for the SwitchBot Cloud integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 from typing import Final
+
+from homeassistant.const import Platform
 
 DOMAIN: Final = "switchbot_cloud"
 ENTRY_TITLE = "SwitchBot Cloud"
@@ -63,250 +66,165 @@ class Humidifier2Mode(Enum):
         return [mode.name.lower() for mode in cls]
 
 
-class EntityTypeForMap(Enum):
-    """Entity Type For Map."""
+@dataclass(frozen=True)
+class SwitchbotCloudDeviceConfig:
+    """Switchbot Cloud Device Config."""
 
-    BINARY_SENSOR = "binary_sensors"
-    BUTTON = "buttons"
-    CLIMATE = "climates"
-    COVER = "covers"
-    FAN = "fans"
-    HUMIDIFIER = "humidifiers"
-    IMAGE = "images"
-    LIGHT = "lights"
-    LOCK = "locks"
-    SENSOR = "sensors"
-    SWITCH = "switches"
-    VACUUM = "vacuums"
+    webhook: bool
+    entity_config: list[Platform]
 
 
-DEVICE_SUPPORT_MAP: Final[dict[str, dict[str, bool | list[EntityTypeForMap]]]] = {
-    "Smart Radiator Thermostat": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.CLIMATE, EntityTypeForMap.SENSOR],
-    },
-    "Relay Switch 1PM": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.SWITCH, EntityTypeForMap.SENSOR],
-    },
-    "Relay Switch 1": {"webhook": False, "entity_list": [EntityTypeForMap.SWITCH]},
-    "Relay Switch 2PM": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.SWITCH, EntityTypeForMap.SENSOR],
-    },
-    "K10+": {"webhook": True, "entity_list": [EntityTypeForMap.VACUUM]},
-    "K10+ Pro": {"webhook": True, "entity_list": [EntityTypeForMap.VACUUM]},
-    "Robot Vacuum Cleaner S1": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.VACUUM],
-    },
-    "Robot Vacuum Cleaner S1 Plus": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.VACUUM],
-    },
-    "K20+ Pro": {"webhook": True, "entity_list": [EntityTypeForMap.VACUUM]},
-    "Robot Vacuum Cleaner K10+ Pro Combo": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.VACUUM],
-    },
-    "Robot Vacuum Cleaner S10": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.VACUUM],
-    },
-    "Robot Vacuum Cleaner S20": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.VACUUM],
-    },
-    "S20": {"webhook": True, "entity_list": [EntityTypeForMap.VACUUM]},
-    "Robot Vacuum Cleaner K11 Plus": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.VACUUM],
-    },
-    "Smart Lock": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Smart Lock Lite": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Smart Lock Pro": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Smart Lock Ultra": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Smart Lock Vision": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Smart Lock Vision Pro": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Smart Lock Pro Wifi": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Lock Vision": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Lock Vision Pro": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.LOCK,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Motion Sensor": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.BINARY_SENSOR, EntityTypeForMap.SENSOR],
-    },
-    "Contact Sensor": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.BINARY_SENSOR, EntityTypeForMap.SENSOR],
-    },
-    "Presence Sensor": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.BINARY_SENSOR, EntityTypeForMap.SENSOR],
-    },
-    "Hub 3": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.BINARY_SENSOR, EntityTypeForMap.SENSOR],
-    },
-    "Water Detector": {
-        "webhook": True,
-        "entity_list": [EntityTypeForMap.BINARY_SENSOR, EntityTypeForMap.SENSOR],
-    },
-    "Battery Circulator Fan": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.FAN, EntityTypeForMap.SENSOR],
-    },
-    "Standing Fan": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.FAN, EntityTypeForMap.SENSOR],
-    },
-    "Circulator Fan": {"webhook": False, "entity_list": [EntityTypeForMap.FAN]},
-    "Curtain": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.COVER,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Curtain3": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.COVER,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Roller Shade": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.COVER,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Blind Tilt": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.COVER,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.BINARY_SENSOR,
-        ],
-    },
-    "Strip Light": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "Strip Light 3": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "Floor Lamp": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "Color Bulb": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "RGBICWW Floor Lamp": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "RGBICWW Strip Light": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "Ceiling Light": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "Ceiling Light Pro": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "RGBIC Neon Rope Light": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.LIGHT],
-    },
-    "RGBIC Neon Wire Rope Light": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.LIGHT],
-    },
-    "Candle Warmer Lamp": {"webhook": False, "entity_list": [EntityTypeForMap.LIGHT]},
-    "Humidifier2": {"webhook": False, "entity_list": [EntityTypeForMap.HUMIDIFIER]},
-    "Humidifier": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.HUMIDIFIER, EntityTypeForMap.SENSOR],
-    },
-    "Home Climate Panel": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.BINARY_SENSOR, EntityTypeForMap.SENSOR],
-    },
-    "AI Art Frame": {
-        "webhook": False,
-        "entity_list": [
-            EntityTypeForMap.BUTTON,
-            EntityTypeForMap.SENSOR,
-            EntityTypeForMap.IMAGE,
-        ],
-    },
-    "WeatherStation": {"webhook": False, "entity_list": [EntityTypeForMap.SENSOR]},
-    "Meter": {"webhook": False, "entity_list": [EntityTypeForMap.SENSOR]},
-    "MeterPlus": {"webhook": False, "entity_list": [EntityTypeForMap.SENSOR]},
-    "WoIOSensor": {"webhook": False, "entity_list": [EntityTypeForMap.SENSOR]},
-    "Hub 2": {"webhook": False, "entity_list": [EntityTypeForMap.SENSOR]},
-    "MeterPro": {"webhook": False, "entity_list": [EntityTypeForMap.SENSOR]},
-    "MeterPro(CO2)": {"webhook": False, "entity_list": [EntityTypeForMap.SENSOR]},
-    "Plug": {"webhook": False, "entity_list": [EntityTypeForMap.SWITCH]},
-    "Plug Mini (US)": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.SENSOR, EntityTypeForMap.SWITCH],
-    },
-    "Plug Mini (JP)": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.SENSOR, EntityTypeForMap.SWITCH],
-    },
-    "Plug Mini (EU)": {
-        "webhook": False,
-        "entity_list": [EntityTypeForMap.SENSOR, EntityTypeForMap.SWITCH],
-    },
+DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
+    "Smart Radiator Thermostat": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.CLIMATE, Platform.SENSOR]
+    ),
+    "Relay Switch 1PM": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.SWITCH, Platform.SENSOR]
+    ),
+    "Relay Switch 1": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.SWITCH]
+    ),
+    "Relay Switch 2PM": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.SWITCH, Platform.SENSOR]
+    ),
+    "K10+": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
+    "K10+ Pro": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
+    "Robot Vacuum Cleaner S1": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.VACUUM]
+    ),
+    "Robot Vacuum Cleaner S1 Plus": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.VACUUM]
+    ),
+    "K20+ Pro": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
+    "Robot Vacuum Cleaner K10+ Pro Combo": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.VACUUM]
+    ),
+    "Robot Vacuum Cleaner S10": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.VACUUM]
+    ),
+    "Robot Vacuum Cleaner S20": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.VACUUM]
+    ),
+    "S20": SwitchbotCloudDeviceConfig(True, entity_config=[Platform.VACUUM]),
+    "Robot Vacuum Cleaner K11 Plus": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.VACUUM]
+    ),
+    "Smart Lock": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Smart Lock Lite": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Smart Lock Pro": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Smart Lock Ultra": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Smart Lock Vision": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Smart Lock Vision Pro": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Smart Lock Pro Wifi": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Lock Vision": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Lock Vision Pro": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LOCK, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Motion Sensor": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+    ),
+    "Contact Sensor": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+    ),
+    "Presence Sensor": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+    ),
+    "Hub 3": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+    ),
+    "Water Detector": SwitchbotCloudDeviceConfig(
+        True, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+    ),
+    "Battery Circulator Fan": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.FAN, Platform.SENSOR]
+    ),
+    "Standing Fan": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.FAN, Platform.SENSOR]
+    ),
+    "Circulator Fan": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.FAN]),
+    "Curtain": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Curtain3": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Roller Shade": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Blind Tilt": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.COVER, Platform.SENSOR, Platform.BINARY_SENSOR]
+    ),
+    "Strip Light": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
+    "Strip Light 3": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
+    "Floor Lamp": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
+    "Color Bulb": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
+    "RGBICWW Floor Lamp": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LIGHT]
+    ),
+    "RGBICWW Strip Light": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LIGHT]
+    ),
+    "Ceiling Light": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.LIGHT]),
+    "Ceiling Light Pro": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LIGHT]
+    ),
+    "RGBIC Neon Rope Light": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LIGHT]
+    ),
+    "RGBIC Neon Wire Rope Light": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LIGHT]
+    ),
+    "Candle Warmer Lamp": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.LIGHT]
+    ),
+    "Humidifier2": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.HUMIDIFIER]
+    ),
+    "Humidifier": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.HUMIDIFIER, Platform.SENSOR]
+    ),
+    "Home Climate Panel": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.BINARY_SENSOR, Platform.SENSOR]
+    ),
+    "AI Art Frame": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.BUTTON, Platform.SENSOR, Platform.IMAGE]
+    ),
+    "WeatherStation": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.SENSOR]
+    ),
+    "Meter": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
+    "MeterPlus": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
+    "WoIOSensor": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
+    "Hub 2": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
+    "MeterPro": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
+    "MeterPro(CO2)": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SENSOR]),
+    "Plug": SwitchbotCloudDeviceConfig(False, entity_config=[Platform.SWITCH]),
+    "Plug Mini (US)": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.SENSOR, Platform.SWITCH]
+    ),
+    "Plug Mini (JP)": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.SENSOR, Platform.SWITCH]
+    ),
+    "Plug Mini (EU)": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.SENSOR, Platform.SWITCH]
+    ),
+    "Garage Door Opener": SwitchbotCloudDeviceConfig(
+        False, entity_config=[Platform.COVER, Platform.BINARY_SENSOR]
+    ),
 }
