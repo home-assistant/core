@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_ammonia-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_ammonia-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -38,7 +38,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_ammonia-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_ammonia-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -54,7 +54,7 @@
     'state': '81.41',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_benzene-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_benzene-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -93,7 +93,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_benzene-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_benzene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -109,7 +109,7 @@
     'state': '0.24',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_carbon_monoxide-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -151,7 +151,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_carbon_monoxide-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -168,7 +168,7 @@
     'state': '0.26902',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_lqi_de_category-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_lqi_de_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -213,7 +213,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_lqi_de_category-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_lqi_de_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -235,7 +235,7 @@
     'state': 'good_air_quality',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_lqi_de_dominant_pollutant-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_lqi_de_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -279,7 +279,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_lqi_de_dominant_pollutant-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_lqi_de_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -300,7 +300,7 @@
     'state': 'no2',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_nitrogen_dioxide-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -339,7 +339,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_nitrogen_dioxide-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -356,7 +356,7 @@
     'state': '14.18',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_nitrogen_monoxide-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_nitrogen_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -395,7 +395,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_nitrogen_monoxide-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_nitrogen_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -412,7 +412,7 @@
     'state': '0.62',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_non_methane_hydrocarbons-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_non_methane_hydrocarbons-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -451,7 +451,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_non_methane_hydrocarbons-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_non_methane_hydrocarbons-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -467,7 +467,7 @@
     'state': '52.66',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_ozone-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_ozone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -506,7 +506,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_ozone-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -523,7 +523,7 @@
     'state': '24.94',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_pm10-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -562,7 +562,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_pm10-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -579,7 +579,7 @@
     'state': '21.95',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_pm2_5-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -618,7 +618,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_pm2_5-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -635,7 +635,7 @@
     'state': '10.6',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_sulphur_dioxide-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -674,7 +674,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_sulphur_dioxide-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -691,7 +691,7 @@
     'state': '1.2',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_uaqi_category-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_uaqi_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -736,7 +736,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_uaqi_category-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_uaqi_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -758,7 +758,7 @@
     'state': 'excellent_air_quality',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_uaqi_dominant_pollutant-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_uaqi_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -804,7 +804,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_uaqi_dominant_pollutant-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_uaqi_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -827,7 +827,7 @@
     'state': 'o3',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_universal_air_quality_index-entry]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_universal_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -866,7 +866,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data.json][sensor.home_universal_air_quality_index-state]
+# name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_universal_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -882,7 +882,7 @@
     'state': '80',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_carbon_monoxide-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -924,7 +924,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_carbon_monoxide-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -941,7 +941,7 @@
     'state': '0.3493',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_luqx_de_aqi-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_aqi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -980,7 +980,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_luqx_de_aqi-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -996,7 +996,7 @@
     'state': '3',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_luqx_de_category-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1042,7 +1042,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_luqx_de_category-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1065,7 +1065,7 @@
     'state': 'satisfactory_air_quality',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_luqx_de_dominant_pollutant-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1110,7 +1110,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_luqx_de_dominant_pollutant-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1132,7 +1132,7 @@
     'state': 'pm10',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_nitrogen_dioxide-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1171,7 +1171,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_nitrogen_dioxide-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1188,7 +1188,7 @@
     'state': '14.25',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_ozone-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_ozone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1227,7 +1227,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_ozone-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1244,7 +1244,7 @@
     'state': '8.4',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_pm10-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1283,7 +1283,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_pm10-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1300,7 +1300,7 @@
     'state': '32.04',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_pm2_5-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1339,7 +1339,7 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_pm2_5-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1356,7 +1356,7 @@
     'state': '27.23',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_sulphur_dioxide-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1395,7 +1395,7 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_sulphur_dioxide-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1412,7 +1412,7 @@
     'state': '1.13',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_uaqi_category-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_uaqi_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1457,7 +1457,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_uaqi_category-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_uaqi_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1479,7 +1479,7 @@
     'state': 'moderate_air_quality',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_uaqi_dominant_pollutant-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_uaqi_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1525,7 +1525,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_uaqi_dominant_pollutant-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_uaqi_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
@@ -1548,7 +1548,7 @@
     'state': 'pm25',
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_universal_air_quality_index-entry]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_universal_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1587,7 +1587,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[air_quality_data_custom_laqi.json][sensor.home_universal_air_quality_index-state]
+# name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_universal_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
