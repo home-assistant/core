@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -13,7 +12,6 @@ from pyoverkiz.enums import (
     UIClass,
     UIWidget,
 )
-from pyoverkiz.models import Device
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.cover import (
@@ -38,46 +36,6 @@ _POSITION_MY = 108  # "My position" preset
 _POSITION_UNKNOWN = 124  # "Unknown position" preset
 
 
-def is_closed(device: Device) -> bool | None:
-    """Return if the cover is closed."""
-    if state := device.states[OverkizState.CORE_OPEN_CLOSED]:
-        return state.value == OverkizCommandParam.CLOSED
-
-    return None
-
-
-def is_closed_unknown(device: Device) -> bool | None:
-    """Return if the cover is closed."""
-    if state := device.states[OverkizState.CORE_OPEN_CLOSED_UNKNOWN]:
-        return state.value == OverkizCommandParam.CLOSED
-
-    return None
-
-
-def is_closed_pedestrian(device: Device) -> bool | None:
-    """Return if the cover is closed."""
-    if state := device.states[OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN]:
-        return state.value == OverkizCommandParam.CLOSED
-
-    return None
-
-
-def is_closed_upper(device: Device) -> bool | None:
-    """Return if the cover is closed."""
-    if state := device.states[OverkizState.CORE_UPPER_OPEN_CLOSED]:
-        return state.value == OverkizCommandParam.CLOSED
-
-    return None
-
-
-def is_closed_slats(device: Device) -> bool | None:
-    """Return if the cover slats are closed."""
-    if state := device.states.get(OverkizState.CORE_SLATS_OPEN_CLOSED):
-        return state.value == OverkizCommandParam.CLOSED
-
-    return None
-
-
 @dataclass(frozen=True, kw_only=True)
 class OverkizCoverDescription(CoverEntityDescription):
     """Class to describe an Overkiz cover."""
@@ -88,14 +46,14 @@ class OverkizCoverDescription(CoverEntityDescription):
     current_position_state: OverkizState | None = None
     invert_position: bool = True
     set_position_command: OverkizCommand | None = None
-    is_closed_fn: Callable[[Device], bool | None] | None = None
+    is_closed_state: OverkizState | None = None
     current_tilt_position_state: OverkizState | None = None
     invert_tilt_position: bool = False
     set_tilt_position_command: OverkizCommand | None = None
     open_tilt_command: OverkizCommand | None = None
-    open_tilt_command_args: OverkizStateType | list[OverkizStateType] = None
+    open_tilt_command_args: OverkizStateType | list[OverkizStateType] | None = None
     close_tilt_command: OverkizCommand | None = None
-    close_tilt_command_args: OverkizStateType | list[OverkizStateType] = None
+    close_tilt_command_args: OverkizStateType | list[OverkizStateType] | None = None
     stop_tilt_command: OverkizCommand | None = None
 
 
@@ -113,7 +71,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
         invert_position=False,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
     OverkizCoverDescription(
         key=UIWidget.PERGOLA_HORIZONTAL_AWNING_UNO,
@@ -123,7 +81,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
         invert_position=False,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
     # Needs override to support lower/upper position control
     # uiClass is RollerShutter
@@ -135,7 +93,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.UPPER_OPEN,
         close_command=OverkizCommand.UPPER_CLOSE,
         invert_position=False,
-        is_closed_fn=is_closed_upper,
+        is_closed_state=OverkizState.CORE_UPPER_OPEN_CLOSED,
         # Lower position used as tilt (no separate tilt state)
         current_tilt_position_state=OverkizState.CORE_LOWER_CLOSURE,
         set_tilt_position_command=OverkizCommand.SET_LOWER_CLOSURE,
@@ -148,7 +106,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
         stop_tilt_command=OverkizCommand.STOP,
@@ -178,7 +136,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
         invert_position=False,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -188,7 +146,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -211,7 +169,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -221,7 +179,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -231,7 +189,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
@@ -243,7 +201,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.PERGOLA,
         device_class=CoverDeviceClass.AWNING,
-        is_closed_fn=is_closed_slats,
+        is_closed_state=OverkizState.CORE_SLATS_OPEN_CLOSED,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         invert_tilt_position=True,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
@@ -258,7 +216,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed_unknown,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -266,7 +224,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         device_class=CoverDeviceClass.GATE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed_pedestrian,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -276,7 +234,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -286,7 +244,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -296,7 +254,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -306,7 +264,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -314,7 +272,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         device_class=CoverDeviceClass.BLIND,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         open_tilt_command=OverkizCommand.TILT_UP,
         close_tilt_command=OverkizCommand.TILT_DOWN,
         stop_tilt_command=OverkizCommand.STOP,
@@ -332,30 +290,28 @@ async def async_setup_entry(
     """Set up the Overkiz covers from a config entry."""
     data = entry.runtime_data
 
-    entities = [
-        OverkizCover(
-            device.device_url,
-            data.coordinator,
-            description,
-        )
-        for device in data.platforms[Platform.COVER]
-        if (
-            description := SUPPORTED_DEVICES.get(device.widget)
-            or SUPPORTED_DEVICES.get(device.ui_class)
-        )
-    ]
+    entities: list[OverkizCover] = []
 
-    # Cover platform does not support configuring the speed of the cover
-    # For covers where the speed can be configured, we create a separate entity
-    entities += [
-        OverkizLowSpeedCover(device.device_url, data.coordinator, description)
-        for device in data.platforms[Platform.COVER]
-        if (
-            description := SUPPORTED_DEVICES.get(device.widget)
+    for device in data.platforms[Platform.COVER]:
+        if description := (
+            SUPPORTED_DEVICES.get(device.widget)
             or SUPPORTED_DEVICES.get(device.ui_class)
-        )
-        and OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED in device.definition.commands
-    ]
+        ):
+            entities.append(
+                OverkizCover(device.device_url, data.coordinator, description)
+            )
+
+            # Cover platform does not support configuring the speed of the cover
+            # For covers where the speed can be configured, we create a separate entity
+            if (
+                OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED
+                in device.definition.commands
+            ):
+                entities.append(
+                    OverkizLowSpeedCover(
+                        device.device_url, data.coordinator, description
+                    )
+                )
 
     async_add_entities(entities)
 
@@ -429,9 +385,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if is_closed_fn := self.entity_description.is_closed_fn:
-            if (closed := is_closed_fn(self.device)) is not None:
-                return closed
+        if is_closed_state := self.entity_description.is_closed_state:
+            if state := self.device.states.get(is_closed_state):
+                return state.value == OverkizCommandParam.CLOSED
 
         if (position := self.current_cover_position) is not None:
             return position == 0
