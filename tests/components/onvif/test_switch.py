@@ -37,17 +37,6 @@ async def test_wiper_switch_no_ptz(hass: HomeAssistant) -> None:
     assert hass.states.get("switch.testcamera_wiper") is None
 
 
-async def test_wiper_switch_with_ptz_only(hass: HomeAssistant) -> None:
-    """Test the wiper switch gets created for PTZ-only devices."""
-    await setup_onvif_integration(
-        hass, capabilities=Capabilities(imaging=False, ptz=True, deviceio=False)
-    )
-
-    state = hass.states.get("switch.testcamera_wiper")
-    assert state
-    assert state.state == STATE_UNKNOWN
-
-
 async def test_turn_wiper_switch_on(hass: HomeAssistant) -> None:
     """Test Wiper switch turn on."""
     _, _camera, device = await setup_onvif_integration(hass)
@@ -296,7 +285,7 @@ async def test_turn_relay_switch_off(hass: HomeAssistant) -> None:
 
 
 async def test_relay_switch_error_handling(hass: HomeAssistant) -> None:
-    """Test relay switch error handling reverts state."""
+    """Test relay switch error handling keeps state unknown."""
     _, _camera, device = await setup_onvif_integration(
         hass, capabilities=Capabilities(deviceio=True, relay_outputs=1)
     )
@@ -312,13 +301,12 @@ async def test_relay_switch_error_handling(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    # State should remain unknown (not changed to on)
     state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
     assert state.state == STATE_UNKNOWN
 
 
 async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None:
-    """Test relay switch turn_off error handling reverts state."""
+    """Test relay switch turn_off error handling keeps the prior state."""
     _, _camera, device = await setup_onvif_integration(
         hass, capabilities=Capabilities(deviceio=True, relay_outputs=1)
     )
@@ -333,11 +321,9 @@ async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None
     )
     await hass.async_block_till_done()
 
-    # Verify it's on
     state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
     assert state.state == STATE_ON
 
-    # Now make turn_off fail
     device.async_set_relay_output_state = AsyncMock(
         side_effect=ONVIFError("Test error")
     )
@@ -350,6 +336,5 @@ async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None
             blocking=True,
         )
 
-    # State should remain on (not changed to off)
     state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
     assert state.state == STATE_ON

@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, GET_CAPABILITIES_EXCEPTIONS
+from .const import DOMAIN
 from .device import ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
@@ -128,46 +128,28 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_translation_key = "relay"
 
     def __init__(self, device: ONVIFDevice, relay: RelayOutput) -> None:
         """Initialize the relay switch."""
         super().__init__(device)
         self._relay_token = relay.token
-        properties = getattr(relay, "Properties", None)
-        if properties is not None and hasattr(properties, "Name"):
-            self._attr_name = properties.Name
-        else:
-            self._attr_name = f"Relay {relay.token}"
-
-        # The initial relay state is unknown until explicitly set
-        self._attr_is_on = None
-
+        self._attr_translation_placeholders = {"token": relay.token}
         self._attr_unique_id = f"{self.mac_or_serial}_relay_{self._relay_token}"
+
+    @property
+    def suggested_object_id(self) -> str:
+        """Return suggested object id."""
+        return f"Relay {self._relay_token}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        previous_state = self._attr_is_on
-        try:
-            await self.device.async_set_relay_output_state(self._relay_token, "active")
-            self._attr_is_on = True
-            self.async_write_ha_state()
-        except GET_CAPABILITIES_EXCEPTIONS:
-            # Revert to previous state on error
-            self._attr_is_on = previous_state
-            self.async_write_ha_state()
-            raise
+        await self.device.async_set_relay_output_state(self._relay_token, "active")
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        previous_state = self._attr_is_on
-        try:
-            await self.device.async_set_relay_output_state(
-                self._relay_token, "inactive"
-            )
-            self._attr_is_on = False
-            self.async_write_ha_state()
-        except GET_CAPABILITIES_EXCEPTIONS:
-            # Revert to previous state on error
-            self._attr_is_on = previous_state
-            self.async_write_ha_state()
-            raise
+        await self.device.async_set_relay_output_state(self._relay_token, "inactive")
+        self._attr_is_on = False
+        self.async_write_ha_state()

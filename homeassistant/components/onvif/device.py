@@ -231,10 +231,7 @@ class ONVIFDevice:
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
             # Some cameras don't support setting the timezone and will throw an IndexError
             # if we try to set it. If we get an error, try again without the timezone.
-            except IndexError:
-                if idx == timezone_max_idx:
-                    raise
-            except Fault:
+            except (IndexError, Fault):
                 if idx == timezone_max_idx:
                     raise
             else:
@@ -317,13 +314,7 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except (
-            TimeoutError,
-            aiohttp.ClientError,
-            TransportError,
-            IndexError,
-            Fault,
-        ):
+        except (TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault):
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 
@@ -410,34 +401,34 @@ class ONVIFDevice:
         with suppress(*GET_CAPABILITIES_EXCEPTIONS):
             deviceio_service = await self.device.create_deviceio_service()
             deviceio = True
-            # Try to get relay output count from capabilities
             try:
                 capabilities = await deviceio_service.GetServiceCapabilities()
-                if capabilities and hasattr(capabilities, "RelayOutputs"):
-                    relay_outputs = int(capabilities.RelayOutputs)
             except RELAY_DISCOVERY_EXCEPTIONS:
                 pass
-            # Fall back to GetRelayOutputs if relay count is still unknown,
-            # e.g. when GetServiceCapabilities() succeeds but omits RelayOutputs
-            # or when it raised an exception that was suppressed above
+            else:
+                if capabilities and hasattr(capabilities, "RelayOutputs"):
+                    with suppress(ValueError):
+                        relay_outputs = int(capabilities.RelayOutputs)
+
             if relay_outputs is None:
                 try:
                     relay_list = await deviceio_service.GetRelayOutputs()
+                except RELAY_DISCOVERY_EXCEPTIONS:
+                    pass
+                else:
                     if relay_list and hasattr(relay_list, "RelayOutput"):
                         relay_outputs = (
                             len(relay_list.RelayOutput)
                             if isinstance(relay_list.RelayOutput, list)
                             else 1
                         )
-                except RELAY_DISCOVERY_EXCEPTIONS:
-                    pass
 
         return Capabilities(
             snapshot=snapshot,
             ptz=ptz,
             imaging=imaging,
             deviceio=deviceio,
-            relay_outputs=relay_outputs or 0,
+            relay_outputs=relay_outputs if relay_outputs is not None else 0,
         )
 
     async def async_start_events(self):
@@ -728,12 +719,6 @@ class ONVIFDevice:
 
     async def async_get_relay_outputs(self) -> list[Any]:
         """Get relay outputs from the ONVIF DeviceIO service."""
-        if not self.capabilities.deviceio:
-            LOGGER.warning(
-                "The DeviceIO service is not supported on device '%s'", self.name
-            )
-            return []
-
         LOGGER.debug("Getting relay outputs")
         try:
             deviceio_service = await self.device.create_deviceio_service()
@@ -771,12 +756,6 @@ class ONVIFDevice:
             ValueError: If the relay output state is invalid
 
         """
-        if not self.capabilities.deviceio:
-            LOGGER.warning(
-                "The DeviceIO service is not supported on device '%s'", self.name
-            )
-            raise ONVIFError("DeviceIO service not supported")
-
         if state not in RELAY_OUTPUT_STATES:
             raise ValueError(f"Invalid relay output state: {state}")
 
