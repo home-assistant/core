@@ -56,10 +56,8 @@ class RussoundRNETEntity(CoordinatorEntity[RussoundRNETCoordinator]):
         self._zone_id = zone_id
         entry = coordinator.config_entry
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_{controller_id}_{zone_id}")},
+            identifiers={(DOMAIN, f"{entry.unique_id}_{controller_id}_{zone_id}")},
             name=zone_name or f"Zone {zone_id}",
             manufacturer="Russound",
             model=entry.data.get("model"),
         )
-        if controller_id > 1:
-            self._attr_device_info["via_device"] = (DOMAIN, entry.entry_id)
