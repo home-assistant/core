@@ -152,7 +152,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     def _calculate_update_interval(self) -> None:
-        """Calculate a update interval based on remaining calls and estimates."""
+        """Calculate an update interval based on remaining calls and estimates."""
 
         # Tado resets somewhere between 12:00 and 13:00, Berlin time
         # So let's pretend we're in Berlin...
