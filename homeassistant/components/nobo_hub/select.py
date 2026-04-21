@@ -52,7 +52,6 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
 
     _attr_translation_key = "global_override"
     _attr_device_class = "nobo_hub__override"
-    _attr_should_poll = False
     _modes = {
         nobo.API.OVERRIDE_MODE_NORMAL: "none",
         nobo.API.OVERRIDE_MODE_AWAY: "away",
@@ -103,7 +102,6 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
     """Week profile selector for Nobø zones."""
 
     _attr_translation_key = "week_profile"
-    _attr_should_poll = False
     _profiles: dict[int, str] = {}
     _attr_options: list[str] = []
     _attr_current_option: str | None = None
