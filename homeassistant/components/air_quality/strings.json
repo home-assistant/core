@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least",
@@ -24,6 +25,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::condition_for_name%]"
         }
       },
       "name": "Carbon monoxide cleared"
@@ -33,6 +37,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::condition_for_name%]"
         }
       },
       "name": "Carbon monoxide detected"
@@ -54,6 +61,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::condition_for_name%]"
         }
       },
       "name": "Gas cleared"
@@ -63,6 +73,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::condition_for_name%]"
         }
       },
       "name": "Gas detected"
@@ -168,6 +181,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::condition_for_name%]"
         }
       },
       "name": "Smoke cleared"
@@ -177,6 +193,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::air_quality::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::condition_for_name%]"
         }
       },
       "name": "Smoke detected"
