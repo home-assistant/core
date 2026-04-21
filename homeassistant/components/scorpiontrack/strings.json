@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This shared location is already configured."
+    },
+    "error": {
+      "cannot_connect": "The ScorpionTrack share could not be reached right now.",
+      "invalid_token": "Your shared-location link is invalid or incomplete.",
+      "share_unavailable": "Your shared-location link is invalid, expired, has been revoked, or no longer returns data.",
+      "unknown": "An unexpected error occurred."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "share_token": "Share URL or token"
+        },
+        "data_description": {
+          "share_token": "Paste the full ScorpionTrack shared-location URL or just the token itself."
+        },
+        "description": "Paste a ScorpionTrack shared-location URL or the token from that URL.",
+        "title": "Connect a ScorpionTrack share"
+      }
+    }
+  }
+}
