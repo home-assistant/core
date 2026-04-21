@@ -114,6 +114,7 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
 
         self.coordinator.data.on = True
         self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
