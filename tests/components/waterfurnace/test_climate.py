@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.waterfurnace.const import UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -30,7 +30,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 ENTITY_ID = "climate.test_abc_type"
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
+
+
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_climate_snapshot(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -41,7 +47,7 @@ async def test_climate_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 @pytest.mark.parametrize(
     ("active_mode_index", "expected_hvac_mode"),
     [
@@ -71,7 +77,7 @@ async def test_hvac_mode_mapping(
     assert state.state == expected_hvac_mode.value
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 @pytest.mark.parametrize(
     ("mode_index", "expected_action"),
     [
@@ -115,7 +121,7 @@ async def test_hvac_action_mapping(
     assert state.attributes["hvac_action"] == expected_action
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 @pytest.mark.parametrize(
     ("hvac_mode", "expected_wf_mode"),
     [
@@ -142,7 +148,7 @@ async def test_set_hvac_mode(
     mock_waterfurnace_client.set_mode.assert_called_once_with(expected_wf_mode)
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_temperature_single_heat(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -160,7 +166,7 @@ async def test_set_temperature_single_heat(
     mock_waterfurnace_client.set_cooling_setpoint.assert_not_called()
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_temperature_single_cool(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -182,7 +188,7 @@ async def test_set_temperature_single_cool(
     mock_waterfurnace_client.set_heating_setpoint.assert_not_called()
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_temperature_range(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -208,7 +214,7 @@ async def test_set_temperature_range(
     mock_waterfurnace_client.set_cooling_setpoint.assert_called_once()
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_humidity(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -223,7 +229,7 @@ async def test_set_humidity(
     mock_waterfurnace_client.set_humidity.assert_called_once_with(50)
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_target_temperature_heat_mode(
     hass: HomeAssistant,
 ) -> None:
@@ -234,7 +240,7 @@ async def test_target_temperature_heat_mode(
     assert state.attributes["temperature"] == 20.0
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_target_temperature_cool_mode(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -250,7 +256,7 @@ async def test_target_temperature_cool_mode(
     assert state.attributes["temperature"] == pytest.approx(23.3, abs=0.1)
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_target_temperature_range_auto_mode(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -268,7 +274,7 @@ async def test_target_temperature_range_auto_mode(
     assert state.attributes["temperature"] is None
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_target_humidity(
     hass: HomeAssistant,
 ) -> None:
@@ -279,7 +285,7 @@ async def test_target_humidity(
     assert state.attributes["humidity"] == 45
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_hvac_mode_error(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -295,7 +301,7 @@ async def test_set_hvac_mode_error(
         )
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_temperature_error(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -311,7 +317,7 @@ async def test_set_temperature_error(
         )
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_humidity_error(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -327,7 +333,7 @@ async def test_set_humidity_error(
         )
 
 
-@pytest.mark.usefixtures("init_climate")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_set_temperature_with_hvac_mode(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,

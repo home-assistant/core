@@ -152,30 +152,21 @@ async def seed_statistics(
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE, Platform.SENSOR]
+
+
+@pytest.fixture
 async def init_integration(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the WaterFurnace integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return mock_config_entry
-
-
-@pytest.fixture
-async def init_climate(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_waterfurnace_client: Mock,
-    seed_statistics: None,
-) -> MockConfigEntry:
-    """Set up only the climate platform for testing."""
-    with patch("homeassistant.components.waterfurnace.PLATFORMS", [Platform.CLIMATE]):
+    with patch("homeassistant.components.waterfurnace.PLATFORMS", platforms):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
