@@ -87,6 +87,7 @@ async def test_user_flow_tcp_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CAA66"
     assert result["data"] == MOCK_TCP_CONFIG
+    assert result["result"].unique_id == "192.168.1.100:9999"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -149,6 +150,7 @@ async def test_user_flow_serial_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CAA66"
     assert result["data"] == MOCK_SERIAL_CONFIG
+    assert result["result"].unique_id == "/dev/ttyUSB0"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

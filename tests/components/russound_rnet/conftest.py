@@ -28,6 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=MOCK_TCP_CONFIG,
         title=MODEL,
+        unique_id="192.168.1.100:9999",
     )
 
 
@@ -38,6 +39,7 @@ def mock_serial_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data=MOCK_SERIAL_CONFIG,
         title=MODEL,
+        unique_id="/dev/ttyUSB0",
     )
 
 

@@ -140,16 +140,14 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            self._async_abort_entries_match(
-                {CONF_TYPE: TYPE_TCP, CONF_HOST: host, CONF_PORT: port}
-            )
-
             client = RussoundRNETClient(RussoundTcpConnectionHandler(host, port))
             if not await _async_validate_connection(client):
                 errors["base"] = "cannot_connect"
             else:
                 self.data[CONF_HOST] = host
                 self.data[CONF_PORT] = port
+                await self.async_set_unique_id(f"{host}:{port}")
+                self._abort_if_unique_id_configured()
                 return await self.async_step_model()
 
         return self.async_show_form(
@@ -166,10 +164,6 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             device = user_input[CONF_DEVICE]
             baudrate = user_input.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
 
-            self._async_abort_entries_match(
-                {CONF_TYPE: TYPE_SERIAL, CONF_DEVICE: device}
-            )
-
             client = RussoundRNETClient(
                 RussoundSerialConnectionHandler(device, baudrate)
             )
@@ -178,6 +172,8 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.data[CONF_DEVICE] = device
                 self.data[CONF_BAUDRATE] = baudrate
+                await self.async_set_unique_id(device)
+                self._abort_if_unique_id_configured()
                 return await self.async_step_model()
 
         return self.async_show_form(
@@ -264,9 +260,8 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
         host = import_data.get(CONF_HOST, "")
         port = import_data.get(CONF_PORT, 0)
 
-        self._async_abort_entries_match(
-            {CONF_TYPE: TYPE_TCP, CONF_HOST: host, CONF_PORT: port}
-        )
+        await self.async_set_unique_id(f"{host}:{port}")
+        self._abort_if_unique_id_configured()
 
         model_key = import_data[CONF_MODEL]
         model = RNET_MODELS[model_key]
