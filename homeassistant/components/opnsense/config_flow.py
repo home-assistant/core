@@ -14,7 +14,6 @@ from aiopnsense import (
     OPNsenseTimeoutError,
     OPNsenseUnknownFirmware,
 )
-from requests.exceptions import ConnectionError as requestsConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -139,7 +138,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_url"
         except OPNsenseSSLError:
             errors["base"] = "ssl_error"
-        except OPNsenseConnectionError, OPNsenseTimeoutError, requestsConnectionError:
+        except OPNsenseConnectionError, OPNsenseTimeoutError:
             errors["base"] = "cannot_connect"
         except OPNsenseUnknownFirmware:
             errors["base"] = "invalid_version"
@@ -198,7 +197,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="privilege_missing")
         except OPNsenseSSLError:
             return self.async_abort(reason="ssl_error")
-        except OPNsenseConnectionError, OPNsenseTimeoutError, requestsConnectionError:
+        except OPNsenseConnectionError, OPNsenseTimeoutError:
             return self.async_abort(reason="cannot_connect")
         except OPNsenseUnknownFirmware:
             return self.async_abort(reason="invalid_version")

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -62,7 +62,7 @@ class OPNsenseDeviceTrackerEntity(CoordinatorEntity, ScannerEntity):
     def device_data(self) -> DeviceDetails | None:
         """Return device data for current device."""
         if self.coordinator.data and self._mac_address in self.coordinator.data:
-            return self.coordinator.data[self._mac_address]  # type: ignore[no-any-return]
+            return cast(DeviceDetails, self.coordinator.data[self._mac_address])
         return None
 
     @property
