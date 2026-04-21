@@ -140,11 +140,6 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._dhw_active = self._api.getDomesticHotWaterActive()
 
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attributes[ATTR_SCHEDULE] = (
-                    self._api.getDomesticHotWaterCirculationSchedule()
-                )
-
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:

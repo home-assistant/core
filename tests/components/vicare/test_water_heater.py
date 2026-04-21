@@ -29,7 +29,15 @@ async def test_dhw_circulation_schedule(
 ) -> None:
     """Test water heater domestic hot water circulation schedule."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
-    mock_schedule = {"mon": [{"start": "06:00", "end": "08:00"}]}
+    mock_schedule = {
+        "mon": [{"mode": "on", "start": "00:00", "end": "24:00", "position": 0}],
+        "tue": [{"mode": "on", "start": "00:00", "end": "24:00", "position": 0}],
+        "wed": [{"mode": "on", "start": "00:00", "end": "24:00", "position": 0}],
+        "thu": [{"mode": "on", "start": "00:00", "end": "24:00", "position": 0}],
+        "fri": [{"mode": "on", "start": "00:00", "end": "24:00", "position": 0}],
+        "sat": [{"mode": "on", "start": "00:00", "end": "24:00", "position": 0}],
+        "sun": [{"mode": "on", "start": "00:00", "end": "24:00", "position": 0}],
+    }
 
     mock_device = MagicMock()
     mock_device.getDomesticHotWaterCirculationSchedule.return_value = mock_schedule
