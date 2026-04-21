@@ -9,7 +9,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.heiman_home.const import DOMAIN
+from homeassistant.components.heiman_home import const as heiman_const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -24,7 +24,7 @@ __all__ = [
 async def clear_entries_before_test(hass: HomeAssistant) -> None:
     """Clear config entries before each test to ensure isolation."""
     # Clean up any existing entries from previous tests
-    for entry in hass.config_entries.async_entries(DOMAIN):
+    for entry in hass.config_entries.async_entries(heiman_const.DOMAIN):
         await hass.config_entries.async_remove(entry.entry_id)
 
 
@@ -34,9 +34,9 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
         hass,
-        DOMAIN,
+        heiman_const.DOMAIN,
         ClientCredential("client-id", "client-secret"),
-        DOMAIN,
+        heiman_const.DOMAIN,
     )
 
 
@@ -44,7 +44,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
-        domain=DOMAIN,
+        domain=heiman_const.DOMAIN,
         data={
             "token": {
                 "access_token": "test-access-token",

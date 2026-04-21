@@ -1,8 +1,10 @@
 """Tests for the Heiman Home update platform."""
 
+import importlib
 from unittest.mock import MagicMock, patch
 
 from heimanconnect import HeimanDevice
+from packaging.version import InvalidVersion
 
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.components.heiman_home.update import (
@@ -271,7 +273,10 @@ async def test_update_entity_supported_features(hass: HomeAssistant) -> None:
         device=mock_device,
     )
 
-    assert update.supported_features == UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
+    assert (
+        update.supported_features
+        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
+    )
 
 
 async def test_update_entity_in_progress(hass: HomeAssistant) -> None:
@@ -383,7 +388,6 @@ async def test_version_is_newer_with_import_error(hass: HomeAssistant) -> None:
     )
 
     # Mock version.parse to raise ImportError
-    import importlib
     version_module = importlib.import_module("packaging.version")
     original_parse = version_module.parse
 
@@ -416,7 +420,6 @@ async def test_version_is_newer_with_exception(hass: HomeAssistant) -> None:
     )
 
     # Mock version.parse to raise generic Exception
-    import importlib
     version_module = importlib.import_module("packaging.version")
     original_parse = version_module.parse
 
@@ -583,7 +586,9 @@ async def test_update_latest_version_does_not_downgrade(hass: HomeAssistant) -> 
     assert update._attr_installed_version == "2.0.0"
 
 
-async def test_version_is_newer_with_non_comparable_strings(hass: HomeAssistant) -> None:
+async def test_version_is_newer_with_non_comparable_strings(
+    hass: HomeAssistant,
+) -> None:
     """Test _version_is_newer handles non-comparable version strings."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -600,7 +605,6 @@ async def test_version_is_newer_with_non_comparable_strings(hass: HomeAssistant)
     )
 
     # Mock version.parse to raise Exception
-    import importlib
     version_module = importlib.import_module("packaging.version")
     original_parse = version_module.parse
 
@@ -615,7 +619,9 @@ async def test_version_is_newer_with_non_comparable_strings(hass: HomeAssistant)
         version_module.parse = original_parse
 
 
-async def test_update_extract_firmware_version_from_attribute(hass: HomeAssistant) -> None:
+async def test_update_extract_firmware_version_from_attribute(
+    hass: HomeAssistant,
+) -> None:
     """Test firmware version extraction from device.firmware_version attribute."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -634,7 +640,9 @@ async def test_update_extract_firmware_version_from_attribute(hass: HomeAssistan
     assert update.installed_version == "2.5.1"
 
 
-async def test_update_extract_firmware_version_from_raw_data(hass: HomeAssistant) -> None:
+async def test_update_extract_firmware_version_from_raw_data(
+    hass: HomeAssistant,
+) -> None:
     """Test firmware version extraction from raw_data.firmwareInfo.version."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1144,7 +1152,9 @@ async def test_update_latest_version_fallback_to_installed(hass: HomeAssistant) 
     assert update.latest_version == "1.5.0"
 
 
-async def test_update_latest_version_set_to_installed_when_empty(hass: HomeAssistant) -> None:
+async def test_update_latest_version_set_to_installed_when_empty(
+    hass: HomeAssistant,
+) -> None:
     """Test _update_from_cache sets latest_version when it's empty."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1165,7 +1175,9 @@ async def test_update_latest_version_set_to_installed_when_empty(hass: HomeAssis
     assert update.latest_version == "2.0.0"
 
 
-async def test_update_installed_version_not_updated_when_cached(hass: HomeAssistant) -> None:
+async def test_update_installed_version_not_updated_when_cached(
+    hass: HomeAssistant,
+) -> None:
     """Test _update_from_cache does not update installed_version when already set."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1213,7 +1225,10 @@ async def test_update_available_with_no_latest_version(hass: HomeAssistant) -> N
     # latest_version property should still work when _attr_latest_version is None
     assert update.latest_version == "1.0.0"
     # No update available (versions are the same)
-    assert update._version_is_newer(update.latest_version, update.installed_version) is False
+    assert (
+        update._version_is_newer(update.latest_version, update.installed_version)
+        is False
+    )
 
 
 async def test_version_is_newer_with_logging(hass: HomeAssistant) -> None:
@@ -1233,9 +1248,6 @@ async def test_version_is_newer_with_logging(hass: HomeAssistant) -> None:
     )
 
     # Mock version.parse to raise InvalidVersion which is a subclass of Exception
-    import importlib
-    from packaging.version import InvalidVersion
-
     version_module = importlib.import_module("packaging.version")
     original_parse = version_module.parse
 
@@ -1268,8 +1280,6 @@ async def test_version_is_newer_generic_exception(hass: HomeAssistant) -> None:
     )
 
     # Mock version.parse to raise generic Exception
-    import importlib
-
     version_module = importlib.import_module("packaging.version")
     original_parse = version_module.parse
 
@@ -1519,8 +1529,6 @@ async def test_update_version_is_newer_with_oserror(hass: HomeAssistant) -> None
     )
 
     # Mock version.parse to raise OSError
-    import importlib
-
     version_module = importlib.import_module("packaging.version")
     original_parse = version_module.parse
 

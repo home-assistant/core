@@ -191,7 +191,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                 matched_key = cfg["key"]
                 break
 
-        if config:
+        if config and prop:
             # For signal_strength properties, verify the value is numeric
             # Some devices may have "SignalStrength" property with string values
             if matched_key == "signal_strength":
@@ -340,7 +340,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             if value is not None and not isinstance(value, (int, float)):
                 _LOGGER.warning(
                     "Sensor %s has device class %s but value is non-numeric: %s (%s). "
-                    "Returning None to avoid Home Assistant validation error.",
+                    "Returning None to avoid Home Assistant validation error",
                     self.name,
                     device_class,
                     value,

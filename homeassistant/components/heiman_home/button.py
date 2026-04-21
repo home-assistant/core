@@ -63,21 +63,21 @@ async def async_setup_entry(
 
 def _is_button_property(prop) -> bool:
     """Check if property should be a button.
-    
+
     Args:
         prop: Property object
-        
+
     Returns:
         True if property should be a button
     """
     # Must be writable
     if not prop.writable:
         return False
-    
+
     # Check data_type first
     if prop.data_type == "bool":
         return True
-    
+
     # Check property identifier for known button types
     prop_lower = prop.identifier.lower()
     button_keywords = ["mute", "reset", "test", "check", "locate", "self-test"]
@@ -128,8 +128,10 @@ class HeimanButtonEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], ButtonE
         # Apply icon
         if prop:
             self._apply_icon(property_identifier, prop)
-    
-    def _apply_icon(self, property_identifier: str, prop: DeviceProperty | None) -> None:
+
+    def _apply_icon(
+        self, property_identifier: str, prop: DeviceProperty | None
+    ) -> None:
         """Apply icon based on property type.
 
         Args:
@@ -157,13 +159,18 @@ class HeimanButtonEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], ButtonE
             self._attr_icon = "mdi:radar"
         elif "mute" in check_text or "silent" in check_text:
             self._attr_icon = "mdi:volume-mute"
-        elif "self-test" in check_text or "selftest" in check_text or "remotecheck" in check_text or "test" in check_text:
+        elif (
+            "self-test" in check_text
+            or "selftest" in check_text
+            or "remotecheck" in check_text
+            or "test" in check_text
+        ):
             self._attr_icon = "mdi:clipboard-check-outline"
         elif "power" in check_text or "switch" in check_text:
             self._attr_icon = "mdi:power-socket"
         else:
             self._attr_icon = "mdi:toggle-switch"
-    
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -175,7 +182,7 @@ class HeimanButtonEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], ButtonE
             return False
 
         return device.online is True
-    
+
     async def async_press(self) -> None:
         """Handle the button press."""
         device = self.coordinator.get_device(self._device.device_id)
@@ -212,12 +219,12 @@ class HeimanButtonEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], ButtonE
                 values={self._property_identifier: value_to_write},
                 device_info=device_info,
             )
-    
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}
-        
+
         device = self.coordinator.get_device(self._device.device_id)
         if device:
             prop = device.properties.get(self._property_identifier)
@@ -227,5 +234,5 @@ class HeimanButtonEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], ButtonE
                 if prop.data_type:
                     attributes["data_type"] = prop.data_type
                 attributes["raw_value"] = prop.value
-        
+
         return attributes

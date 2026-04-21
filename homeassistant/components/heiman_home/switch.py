@@ -108,8 +108,10 @@ class HeimanSwitchEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SwitchE
         # Apply icon
         if prop:
             self._apply_icon(property_identifier, prop)
-    
-    def _apply_icon(self, property_identifier: str, prop: DeviceProperty | None) -> None:
+
+    def _apply_icon(
+        self, property_identifier: str, prop: DeviceProperty | None
+    ) -> None:
         """Apply icon based on property type.
 
         Args:
@@ -131,7 +133,7 @@ class HeimanSwitchEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SwitchE
 
         # Default switch icon
         self._attr_icon = "mdi:toggle-switch"
-    
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -143,7 +145,7 @@ class HeimanSwitchEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SwitchE
             return False
 
         return device.online is True
-    
+
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
@@ -169,7 +171,7 @@ class HeimanSwitchEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SwitchE
             return prop.value != 0
 
         return None
-    
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         # Write property via MQTT client using async_write_property method
@@ -195,7 +197,7 @@ class HeimanSwitchEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SwitchE
                 values={self._property_identifier: True},
                 device_info=device_info,
             )
-    
+
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         # Write property via MQTT client using async_write_property method
@@ -221,12 +223,12 @@ class HeimanSwitchEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SwitchE
                 values={self._property_identifier: False},
                 device_info=device_info,
             )
-    
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}
-        
+
         device = self.coordinator.get_device(self._device.device_id)
         if device:
             prop = device.properties.get(self._property_identifier)
@@ -236,5 +238,5 @@ class HeimanSwitchEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SwitchE
                 if prop.data_type:
                     attributes["data_type"] = prop.data_type
                 attributes["raw_value"] = prop.value
-        
+
         return attributes

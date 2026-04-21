@@ -7,6 +7,7 @@ from heimanconnect import DeviceProperty, HeimanDevice
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.components.heiman_home.select import (
     HeimanSelectEntity,
+    _is_select_property,
     async_setup_entry,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -312,9 +313,7 @@ async def test_select_entity_options_default(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "arm_mode": DeviceProperty(
-            identifier="arm_mode", name="Arm Mode", value="home"
-        )
+        "arm_mode": DeviceProperty(identifier="arm_mode", name="Arm Mode", value="home")
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -381,7 +380,9 @@ async def test_select_entity_async_select_option_alarm_sound(
     assert select.current_option == "Medium Beep"
 
 
-async def test_select_entity_async_select_option_default_mode(hass: HomeAssistant) -> None:
+async def test_select_entity_async_select_option_default_mode(
+    hass: HomeAssistant,
+) -> None:
     """Test select entity async_select_option for default mode."""
     mock_coordinator = MagicMock()
     mock_mqtt_client = AsyncMock()
@@ -395,9 +396,7 @@ async def test_select_entity_async_select_option_default_mode(hass: HomeAssistan
         "parentId": None,
     }
     mock_device.properties = {
-        "arm_mode": DeviceProperty(
-            identifier="arm_mode", name="Arm Mode", value="home"
-        )
+        "arm_mode": DeviceProperty(identifier="arm_mode", name="Arm Mode", value="home")
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -549,9 +548,7 @@ async def test_select_icon_default(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "arm_mode": DeviceProperty(
-            identifier="arm_mode", name="Arm Mode", value="home"
-        )
+        "arm_mode": DeviceProperty(identifier="arm_mode", name="Arm Mode", value="home")
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -630,9 +627,7 @@ async def test_select_get_value_default_mode(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "arm_mode": DeviceProperty(
-            identifier="arm_mode", name="Arm Mode", value="home"
-        )
+        "arm_mode": DeviceProperty(identifier="arm_mode", name="Arm Mode", value="home")
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -657,9 +652,7 @@ async def test_select_get_description_default_mode(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "arm_mode": DeviceProperty(
-            identifier="arm_mode", name="Arm Mode", value="home"
-        )
+        "arm_mode": DeviceProperty(identifier="arm_mode", name="Arm Mode", value="home")
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -987,8 +980,6 @@ async def test_select_icon_lowercase_matching(hass: HomeAssistant) -> None:
 
 async def test_select_is_select_property(hass: HomeAssistant) -> None:
     """Test _is_select_property function."""
-    from homeassistant.components.heiman_home.select import _is_select_property
-
     # Non-writable property should return False
     non_writable_prop = DeviceProperty(
         identifier="test",
@@ -1129,7 +1120,9 @@ async def test_select_icon_no_match_fallback(hass: HomeAssistant) -> None:
     assert select.icon == "mdi:volume-high"
 
 
-async def test_select_icon_lowercase_match_alarmsoundoption(hass: HomeAssistant) -> None:
+async def test_select_icon_lowercase_match_alarmsoundoption(
+    hass: HomeAssistant,
+) -> None:
     """Test select icon with AlarmSoundOption lowercase matching."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1261,7 +1254,9 @@ async def test_select_icon_lowercase_match(hass: HomeAssistant) -> None:
     assert select.icon == "mdi:volume-high"
 
 
-async def test_select_get_description_fallback_to_value_list(hass: HomeAssistant) -> None:
+async def test_select_get_description_fallback_to_value_list(
+    hass: HomeAssistant,
+) -> None:
     """Test select _get_description fallback branch when reverse_value_list is incomplete."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1269,9 +1264,7 @@ async def test_select_get_description_fallback_to_value_list(hass: HomeAssistant
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "mode": DeviceProperty(
-            identifier="mode", name="Mode", value="disarmed"
-        )
+        "mode": DeviceProperty(identifier="mode", name="Mode", value="disarmed")
     }
 
     mock_coordinator.get_device.return_value = mock_device

@@ -6,6 +6,7 @@ from heimanconnect import DeviceProperty, HeimanDevice
 
 from homeassistant.components.heiman_home.button import (
     HeimanButtonEntity,
+    _is_button_property,
     async_setup_entry,
 )
 from homeassistant.components.heiman_home.const import DOMAIN
@@ -122,9 +123,7 @@ async def test_button_entity_available_property(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.last_update_success = True
@@ -164,9 +163,7 @@ async def test_button_entity_device_info(hass: HomeAssistant) -> None:
     mock_device.online = True
     mock_device.device_info = None
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -195,9 +192,7 @@ async def test_button_entity_unique_id(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -219,9 +214,7 @@ async def test_button_entity_has_entity_name(hass: HomeAssistant) -> None:
     mock_device.device_name = "My Gateway"
     mock_device.online = True
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -249,9 +242,7 @@ async def test_button_entity_async_press(hass: HomeAssistant) -> None:
         "parentId": None,
     }
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -285,9 +276,7 @@ async def test_button_entity_async_press_no_device(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -509,9 +498,7 @@ async def test_button_icon_mute(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -781,9 +768,7 @@ async def test_button_async_press_without_raw_data(hass: HomeAssistant) -> None:
     mock_device.device_type = "sensor"
     mock_device.parent_id = None
     mock_device.properties = {
-        "mute": DeviceProperty(
-            identifier="mute", name="Mute", value=1, writable=True
-        )
+        "mute": DeviceProperty(identifier="mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -817,9 +802,7 @@ async def test_button_icon_lowercase_matching(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "Mute": DeviceProperty(
-            identifier="Mute", name="Mute", value=1, writable=True
-        )
+        "Mute": DeviceProperty(identifier="Mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -841,9 +824,7 @@ async def test_button_icon_page(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "page": DeviceProperty(
-            identifier="page", name="Page", value=1, writable=True
-        )
+        "page": DeviceProperty(identifier="page", name="Page", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -865,9 +846,7 @@ async def test_button_icon_find(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "find": DeviceProperty(
-            identifier="find", name="Find", value=1, writable=True
-        )
+        "find": DeviceProperty(identifier="find", name="Find", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -883,8 +862,6 @@ async def test_button_icon_find(hass: HomeAssistant) -> None:
 
 async def test_button_is_button_property(hass: HomeAssistant) -> None:
     """Test _is_button_property function."""
-    from homeassistant.components.heiman_home.button import _is_button_property
-
     # Non-writable property should return False
     non_writable_prop = DeviceProperty(
         identifier="test",
@@ -981,9 +958,7 @@ async def test_button_icon_exact_match(hass: HomeAssistant) -> None:
     mock_device.online = True
     # Use property that has exact match in ENTITY_ICONS
     mock_device.properties = {
-        "Mute": DeviceProperty(
-            identifier="Mute", name="Mute", value=1, writable=True
-        )
+        "Mute": DeviceProperty(identifier="Mute", name="Mute", value=1, writable=True)
     }
 
     mock_coordinator.get_device.return_value = mock_device

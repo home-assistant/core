@@ -4,19 +4,21 @@ from unittest.mock import MagicMock, patch
 
 from heimanconnect import DeviceProperty, HeimanDevice
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.heiman_home.binary_sensor import (
     HeimanBinarySensorEntity,
     async_setup_entry,
 )
 from homeassistant.components.heiman_home.const import DOMAIN
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_binary_sensor_setup(hass: HomeAssistant, setup_credentials: None) -> None:
+async def test_binary_sensor_setup(
+    hass: HomeAssistant, setup_credentials: None
+) -> None:
     """Test binary sensor platform setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -198,7 +200,9 @@ async def test_binary_sensor_entity_is_on(hass: HomeAssistant) -> None:
     assert sensor.is_on is None
 
 
-async def test_binary_sensor_entity_is_on_string_alarm_states(hass: HomeAssistant) -> None:
+async def test_binary_sensor_entity_is_on_string_alarm_states(
+    hass: HomeAssistant,
+) -> None:
     """Test binary sensor entity is_on with various string alarm states."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -909,9 +913,7 @@ async def test_binary_sensor_icon_problem(hass: HomeAssistant) -> None:
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "CoStatus": DeviceProperty(
-            identifier="CoStatus", name="CO Status", value=False
-        )
+        "CoStatus": DeviceProperty(identifier="CoStatus", name="CO Status", value=False)
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -1159,9 +1161,7 @@ async def test_binary_sensor_icon_lowercase_matching(hass: HomeAssistant) -> Non
     mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
-        "alarm": DeviceProperty(
-            identifier="alarm", name="Alarm", value="alarm"
-        )
+        "alarm": DeviceProperty(identifier="alarm", name="Alarm", value="alarm")
     }
 
     mock_coordinator.get_device.return_value = mock_device
@@ -1291,9 +1291,7 @@ async def test_binary_sensor_icon_no_match_fallback(hass: HomeAssistant) -> None
     mock_device.online = True
     # Use property name that matches BINARY_SENSOR_DEVICE_CLASS_MAP but not ENTITY_ICONS
     mock_device.properties = {
-        "CoStatus": DeviceProperty(
-            identifier="CoStatus", name="CO Status", value=False
-        )
+        "CoStatus": DeviceProperty(identifier="CoStatus", name="CO Status", value=False)
     }
 
     mock_coordinator.get_device.return_value = mock_device

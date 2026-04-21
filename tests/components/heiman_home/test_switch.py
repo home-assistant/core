@@ -9,7 +9,6 @@ from homeassistant.components.heiman_home.switch import (
     HeimanSwitchEntity,
     async_setup_entry,
 )
-from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -234,7 +233,19 @@ async def test_switch_entity_is_on_string_values(hass: HomeAssistant) -> None:
     )
 
     # Test only the values that switch.py checks: ["on", "true", "1", "opened", "active"]
-    on_values = ["on", "ON", "On", "1", "true", "TRUE", "True", "opened", "Opened", "active", "Active"]
+    on_values = [
+        "on",
+        "ON",
+        "On",
+        "1",
+        "true",
+        "TRUE",
+        "True",
+        "opened",
+        "Opened",
+        "active",
+        "Active",
+    ]
     for value in on_values:
         mock_device.properties = {
             "power_switch": DeviceProperty(
@@ -244,7 +255,20 @@ async def test_switch_entity_is_on_string_values(hass: HomeAssistant) -> None:
         mock_coordinator.get_device.return_value = mock_device
         assert switch.is_on is True, f"Expected True for value: {value}"
 
-    off_values = ["off", "OFF", "Off", "0", "false", "FALSE", "False", "no", "NO", "No", "closed", "Closed"]
+    off_values = [
+        "off",
+        "OFF",
+        "Off",
+        "0",
+        "false",
+        "FALSE",
+        "False",
+        "no",
+        "NO",
+        "No",
+        "closed",
+        "Closed",
+    ]
     for value in off_values:
         mock_device.properties = {
             "power_switch": DeviceProperty(
@@ -1109,14 +1133,6 @@ async def test_switch_is_on_none_value(hass: HomeAssistant) -> None:
 
     # When prop.value is None, is_on returns None (per implementation)
     assert switch.is_on is None
-
-
-async def test_switch_icon_lowercase_matching(hass: HomeAssistant) -> None:
-    """Test switch icon with lowercase property identifier matching."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
     mock_device.online = True
     mock_device.properties = {
         "power_switch": DeviceProperty(

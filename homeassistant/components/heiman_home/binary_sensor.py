@@ -64,9 +64,14 @@ async def async_setup_entry(
     _create_binary_sensors_for_devices()
 
     # Listen for coordinator updates to add new devices dynamically
-    entry.async_on_unload(coordinator.async_add_listener(_create_binary_sensors_for_devices))
+    entry.async_on_unload(
+        coordinator.async_add_listener(_create_binary_sensors_for_devices)
+    )
 
-class HeimanBinarySensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], BinarySensorEntity):
+
+class HeimanBinarySensorEntity(
+    CoordinatorEntity[HeimanDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation of a Heiman binary sensor entity."""
 
     _attr_has_entity_name = True
@@ -112,7 +117,7 @@ class HeimanBinarySensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], B
             self._apply_device_class(property_identifier, prop)
             # Apply icon
             self._apply_icon(property_identifier, prop)
-    
+
     def _apply_device_class(
         self, property_identifier: str, prop: DeviceProperty | None
     ) -> None:
@@ -132,7 +137,7 @@ class HeimanBinarySensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], B
         # Default to generic type for alarm-related properties
         if "alarm" in prop_lower:
             self._attr_device_class = BinarySensorDeviceClass.PROBLEM
-    
+
     def _apply_icon(
         self, property_identifier: str, prop: DeviceProperty | None
     ) -> None:
@@ -171,7 +176,7 @@ class HeimanBinarySensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], B
             self._attr_icon = "mdi:alert-circle"
         else:
             self._attr_icon = "mdi:radiobox-marked"
-    
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -183,7 +188,7 @@ class HeimanBinarySensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], B
             return False
 
         return device.online is True
-    
+
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -207,17 +212,20 @@ class HeimanBinarySensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], B
         # Handle numeric values (0/1)
         if isinstance(prop.value, (int, float)):
             # For UnderVoltError: 0 = normal (False), non-zero = alarm (True)
-            if "volt" in self._property_identifier.lower() or "error" in self._property_identifier.lower():
+            if (
+                "volt" in self._property_identifier.lower()
+                or "error" in self._property_identifier.lower()
+            ):
                 return prop.value != 0
             return prop.value != 0
 
         return None
-    
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {}
-        
+
         device = self.coordinator.get_device(self._device.device_id)
         if device:
             prop = device.properties.get(self._property_identifier)
@@ -227,5 +235,5 @@ class HeimanBinarySensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], B
                 if prop.data_type:
                     attributes["data_type"] = prop.data_type
                 attributes["raw_value"] = prop.value
-        
+
         return attributes
