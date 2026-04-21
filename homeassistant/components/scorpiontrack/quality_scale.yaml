@@ -1,0 +1,83 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not provide an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      ScorpionTrack share links are public tokens rather than account credentials.
+      Replacing an expired or revoked share requires configuring a new share link.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: This cloud polling integration has no discovery mechanism.
+  discovery-update-info:
+    status: exempt
+    comment: This cloud polling integration has no discovery mechanism.
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category:
+    status: exempt
+    comment: The integration only creates primary device_tracker entities.
+  entity-device-class:
+    status: exempt
+    comment: Device tracker entities do not use device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The device_tracker entity is the primary entity and should be enabled by default.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: The integration uses a static icon and has no translated icon states.
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
