@@ -765,7 +765,7 @@
   },
   "services": {
     "token_lifetime": {
-      "description": "Returns days untill Envoy access token expiry.",
+      "description": "Returns days until Envoy access token expiry.",
       "fields": {
         "device_id": {
           "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an Envoy from the dropdown list. In YAML mode enter a `device_id` or use an expression like `device_id('sensor.envoy_123456789012_current_power_production')`",
