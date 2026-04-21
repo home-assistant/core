@@ -336,6 +336,7 @@ async def test_dhcp_discovery_new_device(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {"name": "SILENT_CONNECT"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
