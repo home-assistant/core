@@ -1,0 +1,83 @@
+# serializer version: 1
+# name: test_climate_entities[climate.living_room-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_modes': list([
+        'none',
+        'comfort',
+        'eco',
+        'away',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.living_room',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'nobo_hub',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 18>,
+    'translation_key': None,
+    'unique_id': '102000013098:1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities[climate.living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Living room',
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.AUTO: 'auto'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_mode': 'comfort',
+      'preset_modes': list([
+        'none',
+        'comfort',
+        'eco',
+        'away',
+      ]),
+      'supported_features': <ClimateEntityFeature: 18>,
+      'target_temp_high': 21,
+      'target_temp_low': 17,
+      'target_temp_step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---

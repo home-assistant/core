@@ -58,7 +58,17 @@ def connect_exc() -> BaseException | None:
 
 
 @pytest.fixture
-def mock_config_entry(ip_address: str, auto_discovered: bool) -> MockConfigEntry:
+def config_entry_options() -> dict[str, str]:
+    """Return the options stored on the config entry."""
+    return {}
+
+
+@pytest.fixture
+def mock_config_entry(
+    ip_address: str,
+    auto_discovered: bool,
+    config_entry_options: dict[str, str],
+) -> MockConfigEntry:
     """Return a mock Nobø Ecohub config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -69,6 +79,7 @@ def mock_config_entry(ip_address: str, auto_discovered: bool) -> MockConfigEntry
             CONF_IP_ADDRESS: ip_address,
             CONF_AUTO_DISCOVERED: auto_discovered,
         },
+        options=config_entry_options,
     )
 
 
