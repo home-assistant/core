@@ -23,12 +23,14 @@ from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
     PortainerStackData,
+    PortainerVolumeData,
 )
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
     PortainerEndpointEntity,
     PortainerStackEntity,
+    PortainerVolumeEntity,
 )
 
 PARALLEL_UPDATES = 0
@@ -53,6 +55,13 @@ class PortainerStackSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer stack sensor description."""
 
     value_fn: Callable[[PortainerStackData], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerVolumeSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer volume sensor description."""
+
+    value_fn: Callable[[PortainerVolumeData], StateType]
 
 
 CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
@@ -287,7 +296,6 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
-
 STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
     PortainerStackSensorEntityDescription(
         key="stack_type",
@@ -311,6 +319,25 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
         value_fn=lambda data: data.container_count,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+VOLUME_SENSORS: tuple[PortainerVolumeSensorEntityDescription, ...] = (
+    PortainerVolumeSensorEntityDescription(
+        key="volume_driver",
+        translation_key="volume_driver",
+        value_fn=lambda data: data.volume.driver,
+    ),
+    PortainerVolumeSensorEntityDescription(
+        key="volume_size",
+        translation_key="volume_size",
+        value_fn=lambda data: (
+            data.volume.usage_data.size if data.volume.usage_data else None
+        ),
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -366,9 +393,25 @@ async def async_setup_entry(
             for entity_description in STACK_SENSORS
         )
 
+    def _async_add_new_volumes(
+        volumes: list[tuple[PortainerCoordinatorData, PortainerVolumeData]],
+    ) -> None:
+        """Add new volume sensors."""
+        async_add_entities(
+            PortainerVolumeSensor(
+                coordinator,
+                entity_description,
+                volume.volume,
+                endpoint,
+            )
+            for (endpoint, volume) in volumes
+            for entity_description in VOLUME_SENSORS
+        )
+
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
     coordinator.new_stacks_callbacks.append(_async_add_new_stacks)
+    coordinator.new_volumes_callbacks.append(_async_add_new_volumes)
 
     _async_add_new_endpoints(
         [
@@ -389,6 +432,13 @@ async def async_setup_entry(
             (endpoint, stack)
             for endpoint in coordinator.data.values()
             for stack in endpoint.stacks.values()
+        ]
+    )
+    _async_add_new_volumes(
+        [
+            (endpoint, volume)
+            for endpoint in coordinator.data.values()
+            for volume in endpoint.volumes.values()
         ]
     )
 
@@ -425,3 +475,14 @@ class PortainerStackSensor(PortainerStackEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.stack_data)
+
+
+class PortainerVolumeSensor(PortainerVolumeEntity, SensorEntity):
+    """Representation of a Portainer volume sensor."""
+
+    entity_description: PortainerVolumeSensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.volume_data)
