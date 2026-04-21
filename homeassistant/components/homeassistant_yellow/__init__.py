@@ -94,7 +94,7 @@ async def async_setup_entry(
                 device=RADIO_DEVICE,
                 serial_number=None,
                 manufacturer=MANUFACTURER,
-                description="Yellow Radio",
+                description="Yellow Zigbee Radio",
             )
         ]
 

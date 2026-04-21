@@ -1397,6 +1397,39 @@ async def test_async_scan_serial_ports_with_scanner(hass: HomeAssistant) -> None
     assert devices == [real_amA1, real_usb]
 
 
+async def test_async_scan_serial_ports_scanner_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A scanner raising does not prevent other scanners or real ports."""
+    real_port = SerialDevice(
+        device="/dev/ttyUSB0",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    contributed_port = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    def broken_scanner(_hass: HomeAssistant) -> list:
+        raise RuntimeError("scanner broke")
+
+    usb.async_register_serial_port_scanner(hass, broken_scanner)
+    usb.async_register_serial_port_scanner(hass, lambda _hass: [contributed_port])
+
+    with patch_scanned_serial_ports(return_value=[real_port]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_port, contributed_port]
+    assert "Error in USB scanner callback" in caplog.text
+    assert "scanner broke" in caplog.text
+
+
 def test_usb_device_from_path_finds_by_symlink() -> None:
     """Test usb_device_from_path finds device by symlink path."""
     scanned_device = USBDevice(

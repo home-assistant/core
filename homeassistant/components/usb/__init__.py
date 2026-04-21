@@ -356,8 +356,11 @@ class USBDiscovery:
         }
 
         for scanner in self._serial_port_scanners:
-            for port in scanner(self.hass):
-                ports[port.device] = port
+            try:
+                for port in scanner(self.hass):
+                    ports[port.device] = port
+            except Exception:
+                _LOGGER.exception("Error in USB scanner callback")
 
         return list(ports.values())
 
