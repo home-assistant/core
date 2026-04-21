@@ -10,6 +10,7 @@ import hashlib
 from typing import Any, Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -276,19 +277,51 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse radio stations and audio files."""
-        if not media_content_type:
-            return await self._async_browse_media_root()
+        try:
+            if not media_content_type:
+                return await self._async_browse_media_root()
 
-        if media_content_type == CONTENT_TYPE_LOCAL_RADIO:
-            return await self._async_browse_radio_stations(expanded=True)
-        if media_content_type == CONTENT_TYPE_LOCAL_AUDIO:
-            return await self._async_browse_local_audio(expanded=True)
+            if media_content_type == CONTENT_TYPE_LOCAL_RADIO:
+                return await self._async_browse_radio_stations(expanded=True)
+            if media_content_type == CONTENT_TYPE_LOCAL_AUDIO:
+                return await self._async_browse_local_audio(expanded=True)
 
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_media_content_type",
-            translation_placeholders={"media_content_type": str(media_content_type)},
-        )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_content_type",
+                translation_placeholders={
+                    "media_content_type": str(media_content_type)
+                },
+            )
+        except DeviceConnectionError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except RpcCallError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
+        except InvalidAuthError as err:
+            await self.coordinator.async_shutdown_device_and_start_reauth()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="rpc_call_action_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "device": self.coordinator.name,
+                },
+            ) from err
 
     async def _async_browse_media_root(self) -> BrowseMedia:
         """Return root BrowseMedia tree."""
