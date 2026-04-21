@@ -126,6 +126,11 @@ class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
             utc_offset_minutes,
         )
 
+        # Time offset is a separate setting that is applied on top of
+        # `set_datetime`, which might lead to confusion (e.g. displayed time
+        # has weird 1-hour difference). Let's reset it to avoid that.
+        await self._device.set_time_offset(0)
+
         await self._device.set_datetime(
             timestamp=timestamp,
             utc_offset_hours=utc_offset_hours,

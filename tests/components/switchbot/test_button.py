@@ -85,6 +85,7 @@ async def test_meter_pro_co2_sync_datetime_button(
     entry.add_to_hass(hass)
 
     mock_set_datetime = AsyncMock(return_value=True)
+    mock_set_time_offset = AsyncMock(return_value=True)
 
     # Use a fixed datetime for testing
     fixed_time = datetime(2025, 1, 9, 12, 30, 45, tzinfo=UTC)
@@ -93,6 +94,10 @@ async def test_meter_pro_co2_sync_datetime_button(
         patch(
             "switchbot.SwitchbotMeterProCO2.set_datetime",
             mock_set_datetime,
+        ),
+        patch(
+            "switchbot.SwitchbotMeterProCO2.set_time_offset",
+            mock_set_time_offset,
         ),
         patch(
             "homeassistant.components.switchbot.button.dt_util.now",
@@ -119,6 +124,7 @@ async def test_meter_pro_co2_sync_datetime_button(
             utc_offset_hours=0,
             utc_offset_minutes=0,
         )
+        mock_set_time_offset.assert_awaited_once_with(0)
 
 
 @pytest.mark.parametrize(
@@ -148,6 +154,7 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
     entry.add_to_hass(hass)
 
     mock_set_datetime = AsyncMock(return_value=True)
+    mock_set_time_offset = AsyncMock(return_value=True)
 
     fixed_time = datetime(2025, 1, 9, 18, 0, 45, tzinfo=tz)
 
@@ -155,6 +162,10 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
         patch(
             "switchbot.SwitchbotMeterProCO2.set_datetime",
             mock_set_datetime,
+        ),
+        patch(
+            "switchbot.SwitchbotMeterProCO2.set_time_offset",
+            mock_set_time_offset,
         ),
         patch(
             "homeassistant.components.switchbot.button.dt_util.now",
@@ -176,6 +187,7 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
             utc_offset_hours=expected_utc_offset_hours,
             utc_offset_minutes=expected_utc_offset_minutes,
         )
+        mock_set_time_offset.assert_awaited_once_with(0)
 
 
 @pytest.mark.parametrize(
