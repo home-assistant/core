@@ -28,6 +28,7 @@ MEDIA_PLAYER_CAPABILITIES = (
 CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
 
 OCF_NETWORK_AUDIO_DEVICE_TYPE = "oic.d.networkaudio"
+SAMSUNG_SOUNDBAR_PRESENTATION_PREFIX = "VD-NetworkAudio-"
 SAMSUNG_NETWORK_AUDIO_SOUND_MODE_PATH = "/sec/networkaudio/soundmode"
 SAMSUNG_NETWORK_AUDIO_SOUND_MODE_KEY = "x.com.samsung.networkaudio.soundmode"
 SAMSUNG_NETWORK_AUDIO_SOUND_MODES = [
@@ -113,12 +114,16 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
 
     def _supports_samsung_network_audio_sound_mode(self) -> bool:
         """Return True if the device is a Samsung network audio soundbar."""
-        ocf = self.device.device.ocf
-        return (
-            ocf is not None
-            and ocf.device_type == OCF_NETWORK_AUDIO_DEVICE_TYPE
-            and self.supports_capability(Capability.EXECUTE)
-        )
+        device = self.device.device
+        ocf = device.ocf
+        if (
+            ocf is None
+            or ocf.device_type != OCF_NETWORK_AUDIO_DEVICE_TYPE
+            or not self.supports_capability(Capability.EXECUTE)
+        ):
+            return False
+        presentation_id = device.presentation_id or ocf.vendor_id or ""
+        return presentation_id.startswith(SAMSUNG_SOUNDBAR_PRESENTATION_PREFIX)
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
         flags = (

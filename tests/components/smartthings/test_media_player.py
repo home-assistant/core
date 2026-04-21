@@ -14,14 +14,17 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
     RepeatMode,
 )
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -449,6 +452,24 @@ async def test_select_sound_mode(
     assert (
         hass.states.get("media_player.soundbar_living").attributes["sound_mode"]
         == "surround"
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["im_speaker_ai_0001"])
+async def test_no_sound_mode_on_non_soundbar(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test non-soundbar network audio devices don't expose sound mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.galaxy_home_mini")
+    assert state is not None
+    assert ATTR_SOUND_MODE_LIST not in state.attributes
+    assert not (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
 
