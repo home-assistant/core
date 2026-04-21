@@ -104,6 +104,39 @@ Q10_STATE_CODE_TO_STATE = {
 }
 
 PARALLEL_UPDATES = 0
+Q7_CURRENT_MAP_NAME = "Current map"
+
+
+def _normalize_q7_segment_id(segment_id: str) -> int:
+    """Normalize a Q7 room id from a Home Assistant segment identifier."""
+    try:
+        return int(segment_id.rsplit("_", maxsplit=1)[-1])
+    except ValueError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="segment_id_parse_error",
+            translation_placeholders={"segment_id": segment_id},
+        ) from err
+
+
+def _get_q7_room_names(map_content: Any) -> dict[int, str]:
+    """Extract Q7 room names from map content additional parameters."""
+    map_data = getattr(map_content, "map_data", None)
+    additional_parameters = getattr(map_data, "additional_parameters", None)
+    if not isinstance(
+        room_names := additional_parameters.get("room_names")
+        if isinstance(additional_parameters, dict)
+        else None,
+        dict,
+    ):
+        return {}
+
+    return {
+        int(room_id): room_name
+        for room_id, room_name in sorted(
+            room_names.items(), key=lambda item: int(item[0])
+        )
+    }
 
 
 async def async_setup_entry(
@@ -356,6 +389,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
@@ -458,15 +492,63 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            await self.coordinator.api.set_fan_speed(
-                SCWindMapping.from_value(fan_speed)
-            )
+            wind_mode = SCWindMapping.from_value(fan_speed)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            ) from err
+
+        try:
+            await self.coordinator.api.set_fan_speed(wind_mode)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
                 translation_placeholders={
                     "command": "set_fan_speed",
+                },
+            ) from err
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments/rooms that can be cleaned on Q7 devices."""
+        if (
+            map_content_trait := getattr(self.coordinator.api, "map_content", None)
+        ) is None:
+            return []
+
+        try:
+            await map_content_trait.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh Q7 map content: %s", err)
+            return []
+
+        return [
+            Segment(
+                id=str(room_id),
+                name=room_name,
+                group=Q7_CURRENT_MAP_NAME,
+            )
+            for room_id, room_name in _get_q7_room_names(map_content_trait).items()
+        ]
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Clean the specified room ids on Q7 devices."""
+        room_ids = [_normalize_q7_segment_id(segment_id) for segment_id in segment_ids]
+        if not room_ids:
+            return
+
+        try:
+            await self.coordinator.api.clean_segments(room_ids)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "clean_segments",
                 },
             ) from err
 
@@ -477,7 +559,24 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         **kwargs: Any,
     ) -> None:
         """Send a command to a vacuum cleaner."""
+        normalized_command = command.casefold()
         try:
+            if (
+                normalized_command == "app_segment_clean"
+                and isinstance(params, list)
+                and len(params) == 1
+            ):
+                first_param = params[0]
+                if (
+                    isinstance(first_param, dict)
+                    and isinstance(first_param.get("segments"), list)
+                    and set(first_param) <= {"segments"}
+                ):
+                    await self.async_clean_segments(
+                        [str(segment_id) for segment_id in first_param["segments"]]
+                    )
+                    return
+
             await self.coordinator.api.send(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
@@ -490,11 +589,74 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""
-        raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+        if (
+            map_content_trait := getattr(self.coordinator.api, "map_content", None)
+        ) is None:
+            raise ServiceNotSupported(DOMAIN, "get_maps", self.entity_id)
+
+        try:
+            await map_content_trait.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh Q7 map content: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            ) from err
+
+        if map_content_trait.map_data is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
+
+        map_flag = int(getattr(map_content_trait.map_data, "map_flag", 0))
+        return {
+            "maps": [
+                {
+                    "flag": map_flag,
+                    "name": Q7_CURRENT_MAP_NAME,
+                    "rooms": {
+                        str(room_id): room_name
+                        for room_id, room_name in _get_q7_room_names(
+                            map_content_trait
+                        ).items()
+                    },
+                }
+            ]
+        }
 
     async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
-        raise ServiceNotSupported(DOMAIN, "get_vacuum_current_position", self.entity_id)
+        if (
+            map_content_trait := getattr(self.coordinator.api, "map_content", None)
+        ) is None:
+            raise ServiceNotSupported(
+                DOMAIN, "get_vacuum_current_position", self.entity_id
+            )
+
+        try:
+            await map_content_trait.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh Q7 map content: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            ) from err
+
+        if map_content_trait.map_data is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            )
+        if (robot_position := map_content_trait.map_data.vacuum_position) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="position_not_found"
+            )
+
+        return {
+            "x": robot_position.x,
+            "y": robot_position.y,
+        }
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Set the vacuum to go to a specific position."""

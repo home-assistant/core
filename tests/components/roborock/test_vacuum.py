@@ -224,7 +224,6 @@ async def test_get_maps(
 @pytest.mark.parametrize(
     "entity_id",
     [
-        Q7_ENTITY_ID,
         Q10_ENTITY_ID,
     ],
 )
@@ -362,7 +361,6 @@ async def test_get_current_position_no_robot_position(
 @pytest.mark.parametrize(
     "entity_id",
     [
-        Q7_ENTITY_ID,
         Q10_ENTITY_ID,
     ],
 )
@@ -584,6 +582,7 @@ def fake_q7_vacuum_api_fixture(
         api.return_to_dock.side_effect = send_message_exception
         api.find_me.side_effect = send_message_exception
         api.set_fan_speed.side_effect = send_message_exception
+        api.clean_segments.side_effect = send_message_exception
         api.send.side_effect = send_message_exception
     return api
 
@@ -687,6 +686,23 @@ async def test_q7_set_fan_speed_command(
     assert len(q7_vacuum_api.set_fan_speed.call_args[0]) == 1
 
 
+async def test_q7_set_fan_speed_invalid(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test invalid Q7 fan speed raises ServiceValidationError."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "ludicrous"},
+            blocking=True,
+        )
+
+    assert q7_vacuum_api.set_fan_speed.call_count == 0
+
+
 async def test_q7_send_command(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -707,6 +723,325 @@ async def test_q7_send_command(
     assert q7_vacuum_api.send.call_args[0] == ("test_command", None)
 
 
+async def test_q7_get_maps_refresh_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that the Q7 get_maps service handles refresh failure."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties.map_content.refresh.side_effect = (
+        RoborockException()
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Something went wrong creating the map"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_MAPS_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_q7_get_maps_no_map_data(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that the Q7 get_maps service handles missing map data."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties.map_content.map_data = None
+
+    with pytest.raises(
+        HomeAssistantError, match="Something went wrong creating the map"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_MAPS_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_q7_get_maps(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test that the Q7 get_maps service returns current-map room names."""
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_MAPS_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        Q7_ENTITY_ID: {
+            "maps": [
+                {
+                    "flag": 0,
+                    "name": "Current map",
+                    "rooms": {"10": "room1", "11": "room2"},
+                }
+            ]
+        }
+    }
+
+
+async def test_q7_get_current_position(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test that the Q7 current-position service returns map coordinates."""
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        Q7_ENTITY_ID: {
+            "x": 123,
+            "y": 456,
+        }
+    }
+
+
+async def test_q7_get_current_position_no_map_data(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that the Q7 current-position service handles missing map data."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties.map_content.map_data = None
+
+    with pytest.raises(
+        HomeAssistantError, match="Something went wrong creating the map"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_q7_get_current_position_no_robot_position(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that the Q7 current-position service handles no robot position."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties.map_content.map_data.vacuum_position = None
+
+    with pytest.raises(HomeAssistantError, match="Robot position not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_q7_clean_segments_with_clean_area(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cleaning Q7 segments via the clean_area service."""
+    entity_registry.async_update_entity_options(
+        Q7_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_1": ["10", "1_11"]},
+            "last_seen_segments": [
+                {"id": "10", "name": "room1", "group": "Current map"},
+                {"id": "11", "name": "room2", "group": "Current map"},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 1
+    assert q7_vacuum_api.clean_segments.call_args[0] == ([10, 11],)
+
+
+async def test_q7_get_segments_returns_rooms_from_map_content(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that Q7 async_get_segments returns room ids from map content."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q7_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["segments"] == [
+        {"id": "10", "name": "room1", "group": "Current map"},
+        {"id": "11", "name": "room2", "group": "Current map"},
+    ]
+
+
+async def test_q7_get_segments_no_map_trait_returns_empty(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test Q7 get_segments returns an empty list without map trait support."""
+    del q7_vacuum_api.map_content
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q7_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["segments"] == []
+
+
+async def test_q7_get_segments_refresh_failure_returns_empty(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test Q7 get_segments returns an empty list on refresh failure."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    fake_q7_vacuum.b01_q7_properties.map_content.refresh.side_effect = (
+        RoborockException()
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q7_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["segments"] == []
+
+
+async def test_q7_app_segment_clean_alias_routes_to_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test APP_SEGMENT_CLEAN style send_command is normalized for Q7."""
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: Q7_ENTITY_ID,
+            "command": "app_segment_clean",
+            "params": [{"segments": [10, "11"]}],
+        },
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 1
+    assert q7_vacuum_api.clean_segments.call_args[0] == ([10, 11],)
+    assert q7_vacuum_api.send.call_count == 0
+
+
+async def test_q7_app_segment_clean_with_extra_payload_passthrough(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test APP_SEGMENT_CLEAN payload with extra keys is passed through unchanged."""
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: Q7_ENTITY_ID,
+            "command": "app_segment_clean",
+            "params": [{"segments": [10], "repeat": 2}],
+        },
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 0
+    assert q7_vacuum_api.send.call_count == 1
+    assert q7_vacuum_api.send.call_args[0] == (
+        "app_segment_clean",
+        [{"segments": [10], "repeat": 2}],
+    )
+
+
+async def test_q7_clean_segments_invalid_segment_id(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test cleaning Q7 segments fails cleanly on invalid segment ids."""
+    entity_registry.async_update_entity_options(
+        Q7_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_1": ["bad_room"]},
+            "last_seen_segments": [
+                {"id": "bad_room", "name": "broken", "group": "Current map"}
+            ],
+        },
+    )
+
+    with pytest.raises(HomeAssistantError, match="Invalid segment ID format"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["area_1"]},
+            blocking=True,
+        )
+
+    assert q7_vacuum_api.clean_segments.call_count == 0
+
+
+async def test_q7_app_segment_clean_uppercase_alias_routes_to_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test uppercase APP_SEGMENT_CLEAN alias is normalized for Q7."""
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: Q7_ENTITY_ID,
+            "command": "APP_SEGMENT_CLEAN",
+            "params": [{"segments": [10, "11"]}],
+        },
+        blocking=True,
+    )
+
+    assert q7_vacuum_api.clean_segments.call_count == 1
+    assert q7_vacuum_api.clean_segments.call_args[0] == ([10, 11],)
+    assert q7_vacuum_api.send.call_count == 0
+
+
 @pytest.mark.parametrize(
     ("service", "api_method", "service_params"),
     [
@@ -716,6 +1051,7 @@ async def test_q7_send_command(
         (SERVICE_RETURN_TO_BASE, "return_to_dock", None),
         (SERVICE_LOCATE, "find_me", None),
         (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}),
+        (SERVICE_CLEAN_AREA, "clean_segments", {"cleaning_area_id": ["area_1"]}),
         (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}),
     ],
 )
@@ -727,12 +1063,25 @@ async def test_q7_failed_commands(
     api_method: str,
     service_params: dict[str, Any] | None,
     q7_vacuum_api: Mock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that when Q7 commands fail, we raise HomeAssistantError."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
     # Store the original state to verify it doesn't change on error
     original_state = vacuum.state
+
+    if service == SERVICE_CLEAN_AREA:
+        entity_registry.async_update_entity_options(
+            Q7_ENTITY_ID,
+            VACUUM_DOMAIN,
+            {
+                "area_mapping": {"area_1": ["10"]},
+                "last_seen_segments": [
+                    {"id": "10", "name": "room1", "group": "Current map"}
+                ],
+            },
+        )
 
     data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
     command_name = (

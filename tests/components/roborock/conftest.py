@@ -56,6 +56,7 @@ from roborock.devices.traits.v1.valley_electricity_timer import (
 from roborock.devices.traits.v1.volume import SoundVolumeTrait
 from roborock.devices.traits.v1.wash_towel_mode import WashTowelModeTrait
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
+from vacuum_map_parser_base.map_data import Point
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
@@ -133,11 +134,27 @@ def create_b01_q7_trait() -> Mock:
     """Create B01 Q7 trait for B01 devices."""
     b01_trait = AsyncMock()
     b01_trait._props_data = deepcopy(Q7_B01_PROPS)
+    b01_trait.map_content = AsyncMock()
+    b01_trait.map_content.map_data = deepcopy(MAP_DATA)
+    b01_trait.map_content.map_data.additional_parameters = {
+        "room_names": {
+            10: "room1",
+            11: "room2",
+        }
+    }
+    b01_trait.map_content.map_data.map_flag = 0
+    b01_trait.map_content.map_data.vacuum_position = Point(x=123, y=456)
 
     async def query_values_side_effect(protocols):
         return b01_trait._props_data
 
+    async def refresh_map_content_side_effect():
+        return None
+
     b01_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
+    b01_trait.map_content.refresh = AsyncMock(
+        side_effect=refresh_map_content_side_effect
+    )
 
     # Add API methods that update the state when called
     async def start_clean_side_effect():
@@ -152,12 +169,17 @@ def create_b01_q7_trait() -> Mock:
     async def return_to_dock_side_effect():
         b01_trait._props_data.status = WorkStatusMapping.DOCKING
 
+    async def clean_segments_side_effect(room_ids: list[int]) -> None:
+        if room_ids:
+            b01_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
+
     b01_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
     b01_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
     b01_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
     b01_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
     b01_trait.find_me = AsyncMock()
     b01_trait.set_fan_speed = AsyncMock()
+    b01_trait.clean_segments = AsyncMock(side_effect=clean_segments_side_effect)
     b01_trait.set_mode = AsyncMock()
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
