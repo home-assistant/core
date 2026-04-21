@@ -89,8 +89,6 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
     )
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-    _attr_min_temp = HEATING_MIN
-    _attr_max_temp = COOLING_MAX
     _attr_min_humidity = 15
     _attr_max_humidity = 95
 
@@ -98,6 +96,20 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         """Initialize the climate entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.unit}_climate"
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature based on current mode."""
+        if self.hvac_mode == HVACMode.COOL:
+            return COOLING_MIN
+        return HEATING_MIN
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature based on current mode."""
+        if self.hvac_mode == HVACMode.HEAT:
+            return HEATING_MAX
+        return COOLING_MAX
 
     @property
     def current_temperature(self) -> float | None:
@@ -153,7 +165,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
             await self.hass.async_add_executor_job(
                 self.coordinator.client.set_mode, HVAC_TO_WF_MODE[hvac_mode]
             )
-        except WFException as err:
+        except (WFException, ValueError) as err:
             raise HomeAssistantError(f"Failed to set HVAC mode: {err}") from err
         # Optimistically update local state so the UI reflects the change
         # immediately. The device takes a few seconds to apply writes, so
@@ -166,32 +178,42 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         """Set target temperature(s)."""
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(hvac_mode)
+
+        low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        temp = kwargs.get(ATTR_TEMPERATURE)
         try:
-            if (low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None and (
-                high := kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            ) is not None:
-                await self.hass.async_add_executor_job(
-                    self.coordinator.client.set_heating_setpoint, low
-                )
-                await self.hass.async_add_executor_job(
-                    self.coordinator.client.set_cooling_setpoint, high
-                )
-                self.coordinator.data.tstatheatingsetpoint = low
-                self.coordinator.data.tstatcoolingsetpoint = high
-            elif (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-                if self.hvac_mode == HVACMode.COOL:
-                    await self.hass.async_add_executor_job(
-                        self.coordinator.client.set_cooling_setpoint, temp
-                    )
-                    self.coordinator.data.tstatcoolingsetpoint = temp
-                else:
-                    await self.hass.async_add_executor_job(
-                        self.coordinator.client.set_heating_setpoint, temp
-                    )
-                    self.coordinator.data.tstatheatingsetpoint = temp
-        except WFException as err:
+            await self.hass.async_add_executor_job(
+                self._set_temperature, low, high, temp
+            )
+        except (WFException, ValueError) as err:
             raise HomeAssistantError(f"Failed to set temperature: {err}") from err
+        if low is not None and high is not None:
+            self.coordinator.data.tstatheatingsetpoint = low
+            self.coordinator.data.tstatcoolingsetpoint = high
+        elif temp is not None:
+            if self.hvac_mode == HVACMode.COOL:
+                self.coordinator.data.tstatcoolingsetpoint = temp
+            else:
+                self.coordinator.data.tstatheatingsetpoint = temp
         self.async_write_ha_state()
+
+    def _set_temperature(
+        self,
+        low: float | None,
+        high: float | None,
+        temp: float | None,
+    ) -> None:
+        """Send temperature setpoint(s) to the device."""
+        client = self.coordinator.client
+        if low is not None and high is not None:
+            client.set_heating_setpoint(low)
+            client.set_cooling_setpoint(high)
+        elif temp is not None:
+            if self.hvac_mode == HVACMode.COOL:
+                client.set_cooling_setpoint(temp)
+            else:
+                client.set_heating_setpoint(temp)
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity."""
@@ -199,7 +221,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
             await self.hass.async_add_executor_job(
                 self.coordinator.client.set_humidity, humidity
             )
-        except WFException as err:
+        except (WFException, ValueError) as err:
             raise HomeAssistantError(f"Failed to set humidity: {err}") from err
         self.coordinator.data.tstathumidsetpoint = humidity
         self.async_write_ha_state()
