@@ -39,6 +39,7 @@ async def test_yaml_import_repair_flow(
 ) -> None:
     """Test the full YAML import repair flow: model → sources → zones → entry."""
     assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     yaml_config = {
         CONF_HOST: "192.168.1.100",
@@ -61,10 +62,14 @@ async def test_yaml_import_repair_flow(
     await async_process_repairs_platforms(hass)
     client = await hass_client()
 
-    # Start the fix flow — init validates connection, then shows model
+    # Start the fix flow — init validates connection, then shows confirm
     data = await start_repair_fix_flow(client, DOMAIN, ISSUE_YAML_IMPORT)
-    assert data["step_id"] == "model"
+    assert data["step_id"] == "confirm"
     flow_id = data["flow_id"]
+
+    # Submit confirm to proceed to model selection
+    data = await process_repair_fix_flow(client, flow_id, {})
+    assert data["step_id"] == "model"
 
     # Select model (CAS44 has 4 sources, 4 zones)
     data = await process_repair_fix_flow(client, flow_id, {CONF_MODEL: "cas44"})
@@ -114,6 +119,7 @@ async def test_yaml_import_repair_flow_cannot_connect(
 ) -> None:
     """Test repair flow aborts when device is unreachable."""
     assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     yaml_config = {
         CONF_HOST: "192.168.1.100",
