@@ -75,7 +75,7 @@ async def _validate_input(
 ) -> bool:
     try:
         custom_options = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS) or {}
-        enable_custom_laqi = custom_options.get("enable_custom_laqi")
+        enable_custom_laqi = custom_options.get(CONF_ENABLE_CUSTOM_LAQI)
 
         if enable_custom_laqi:
             country = custom_options.get(CONF_COUNTRY)
