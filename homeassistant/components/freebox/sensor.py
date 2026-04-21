@@ -186,10 +186,17 @@ class FreeboxCallSensor(FreeboxSensor):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
-        return {
-            dt_util.utc_from_timestamp(call["datetime"]).isoformat(): call["name"]
+        calls = [
+            {
+                "datetime": dt_util.utc_from_timestamp(call["datetime"]).isoformat(),
+                "name": call.get("name", "") or "",
+                "number": call.get("number", "") or "",
+                "duration": call.get("duration", 0),
+            }
             for call in self._call_list_for_type
-        }
+        ]
+        calls.sort(key=lambda c: c["datetime"], reverse=True)
+        return {"calls": calls}
 
 
 class FreeboxDiskSensor(FreeboxSensor):
