@@ -6898,3 +6898,84 @@ async def test_enabled_sequence_in_parallel(
         ],
     }
     assert_action_trace(expected_trace)
+
+
+@pytest.mark.parametrize(
+    "action_config",
+    [
+        {"event": "test_event", "continue_on_error": True},
+        {"delay": "00:00:05", "continue_on_error": True},
+        {"wait_template": "{{ true }}", "continue_on_error": True},
+        {"scene": "scene.test", "continue_on_error": True},
+        {
+            "repeat": {"count": 1, "sequence": []},
+            "continue_on_error": True,
+        },
+        {
+            "choose": [{"conditions": [], "sequence": []}],
+            "continue_on_error": True,
+        },
+        {
+            "wait_for_trigger": {"platform": "state", "entity_id": "sensor.test"},
+            "continue_on_error": True,
+        },
+        {"if": [], "then": [], "continue_on_error": True},
+        {"variables": {"hello": "world"}, "continue_on_error": True},
+        {
+            "set_conversation_response": "Hello",
+            "continue_on_error": True,
+        },
+        {"stop": "Done", "continue_on_error": True},
+        {"sequence": [], "continue_on_error": True},
+        {"parallel": [], "continue_on_error": True},
+    ],
+)
+async def test_continue_on_error_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    action_config: dict,
+) -> None:
+    """Test continue_on_error is deprecated for non-service-call script actions."""
+    with caplog.at_level(logging.WARNING):
+        cv.SCRIPT_SCHEMA([action_config])
+    assert (
+        "The 'continue_on_error' option is deprecated, "
+        "please remove it from your configuration"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "action_config",
+    [
+        {"action": "test.test", "continue_on_error": True},
+        {"service": "test.test", "continue_on_error": True},
+        {"service_template": "test.test", "continue_on_error": True},
+        {
+            "device_id": "test",
+            "domain": "test",
+            "continue_on_error": True,
+        },
+    ],
+)
+async def test_continue_on_error_not_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    action_config: dict,
+) -> None:
+    """Test continue_on_error is not deprecated for service and device action script actions."""
+    with caplog.at_level(logging.WARNING):
+        cv.SCRIPT_SCHEMA([action_config])
+    assert "continue_on_error" not in caplog.text
+
+
+async def test_condition_action_rejects_continue_on_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test CONDITION_ACTION_SCHEMA does not accept continue_on_error."""
+    action_config = {
+        "condition": "template",
+        "value_template": "{{ true }}",
+    }
+    cv.CONDITION_ACTION_SCHEMA(action_config)
+    with pytest.raises(vol.Invalid):
+        cv.CONDITION_ACTION_SCHEMA(action_config | {"continue_on_error": True})
