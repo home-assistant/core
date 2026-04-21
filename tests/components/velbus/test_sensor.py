@@ -25,6 +25,7 @@ async def test_entities(
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
+
 async def test_vmb8in_counter_energy_unavailable_when_no_energy(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
