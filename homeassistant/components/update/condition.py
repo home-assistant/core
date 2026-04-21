@@ -7,8 +7,12 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from .const import DOMAIN
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_available": make_entity_state_condition(DOMAIN, STATE_ON),
-    "is_not_available": make_entity_state_condition(DOMAIN, STATE_OFF),
+    "is_available": make_entity_state_condition(
+        DOMAIN, STATE_ON, support_duration=True
+    ),
+    "is_not_available": make_entity_state_condition(
+        DOMAIN, STATE_OFF, support_duration=True
+    ),
 }
 
 

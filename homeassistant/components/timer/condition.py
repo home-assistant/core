@@ -6,9 +6,13 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from . import DOMAIN, STATUS_ACTIVE, STATUS_IDLE, STATUS_PAUSED
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_active": make_entity_state_condition(DOMAIN, STATUS_ACTIVE),
-    "is_paused": make_entity_state_condition(DOMAIN, STATUS_PAUSED),
-    "is_idle": make_entity_state_condition(DOMAIN, STATUS_IDLE),
+    "is_active": make_entity_state_condition(
+        DOMAIN, STATUS_ACTIVE, support_duration=True
+    ),
+    "is_paused": make_entity_state_condition(
+        DOMAIN, STATUS_PAUSED, support_duration=True
+    ),
+    "is_idle": make_entity_state_condition(DOMAIN, STATUS_IDLE, support_duration=True),
 }
 
 

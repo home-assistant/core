@@ -23,7 +23,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self._user_code: str = ""
         self._verification_uri: str = ""
         self._expires_minutes: str = "30"
-        self.login_task: asyncio.Task | None = None
+        self.login_task: asyncio.Task[None] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -94,7 +94,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error getting user info: %s", err)
             return self.async_abort(reason="oauth2_error")
 
-        unique_id = str(user_data["id"])
+        unique_id = user_data.sub
         await self.async_set_unique_id(unique_id)
 
         # Check if this is a reauth flow
@@ -107,7 +107,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=user_data["email"],
+            title=user_data.email,
             data={CONF_API_TOKEN: self._api.refresh_token_value},
         )
 

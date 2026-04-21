@@ -50,6 +50,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -66,6 +67,8 @@ from .entity import (
     async_wlan_device_info_fn,
 )
 from .hub import UnifiHub
+
+PARALLEL_UPDATES = 1
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
@@ -441,7 +444,13 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.entity_description.control_fn(self.hub, self._obj_id, True)
+        try:
+            await self.entity_description.control_fn(self.hub, self._obj_id, True)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
         if coordinator := self.hub.entity_loader.get_data_update_coordinator(
             self.entity_description.api_handler_fn(self.api)
         ):
@@ -449,7 +458,13 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.entity_description.control_fn(self.hub, self._obj_id, False)
+        try:
+            await self.entity_description.control_fn(self.hub, self._obj_id, False)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
         if coordinator := self.hub.entity_loader.get_data_update_coordinator(
             self.entity_description.api_handler_fn(self.api)
         ):

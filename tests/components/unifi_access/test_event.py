@@ -607,6 +607,7 @@ async def test_logs_add_no_device_config_target_ignored(
 
     log_msg = LogAdd(
         event="access.logs.add",
+        door_id="door-001",  # enriched door_id must not bypass missing device_config
         data=LogAddData(
             source=LogSource(
                 target=[
@@ -777,3 +778,146 @@ async def test_logs_add_device_mapping_pruned_on_refresh(
 
     # door-001 entity was removed when the door disappeared
     assert hass.states.get(FRONT_DOOR_ACCESS_ENTITY) is None
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_uah_door_via_enriched_door_id(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test UAH-DOOR access event resolved via library-enriched door_id."""
+    handlers = _get_ws_handlers(mock_client)
+
+    # UAH-DOOR: device MAC is not in coordinator's _device_to_door,
+    # but the library has enriched msg.door_id via its MAC→door map.
+    log_msg = LogAdd(
+        event="access.logs.add",
+        door_id="door-001",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="uah-door-mac-aa:bb:cc:dd:ee:ff",
+                        display_name="UAH Door Reader",
+                    ),
+                ],
+                actor=LogActor(display_name="Jane Doe"),
+                event=LogEvent(result="ACCESS"),
+                authentication=LogAuthentication(credential_provider="NFC"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["actor"] == "Jane Doe"
+    assert state.attributes["authentication"] == "NFC"
+    assert state.attributes["result"] == "ACCESS"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_uah_door_access_denied(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test UAH-DOOR access_denied event resolved via library-enriched door_id."""
+    handlers = _get_ws_handlers(mock_client)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        door_id="door-001",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="uah-door-mac-aa:bb:cc:dd:ee:ff",
+                        display_name="UAH Door Reader",
+                    ),
+                ],
+                event=LogEvent(result="BLOCKED"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_denied"
+    assert state.attributes["result"] == "BLOCKED"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+async def test_logs_add_uah_door_unknown_door_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test UAH-DOOR event is ignored when door_id is not a known door."""
+    handlers = _get_ws_handlers(mock_client)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        door_id="door-unknown",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="uah-door-mac-aa:bb:cc:dd:ee:ff",
+                        display_name="UAH Door Reader",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_logs_add_no_device_and_no_enriched_door_id_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test logs.add event is ignored when neither device mapping nor door_id resolves."""
+    handlers = _get_ws_handlers(mock_client)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="unknown-device",
+                        display_name="Unknown",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
