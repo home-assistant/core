@@ -52,3 +52,47 @@ def deprecated_dismiss_action_call(hass: HomeAssistant) -> None:
             "new_action": "html5.dismiss_message",
         },
     )
+
+
+@callback
+def deprecated_event_bus(hass: HomeAssistant, event: str) -> None:
+    """Raise a deprecation issue for listeners on the event bus."""
+
+    if listeners := hass.bus.async_listeners().get(event):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_event_bus_{event}",
+            breaks_in_ha_version="2026.11.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_event_bus",
+            translation_placeholders={
+                "event": event,
+                "listeners": str(listeners),
+                "example_yaml": """
+```yaml
+triggers:
+  - trigger: state
+    entity_id:
+      - event.my_device
+    not_from:
+      - unavailable
+conditions:
+  - condition: template
+    value_template: |
+      "{{ trigger.to_state.attributes.event_type == 'clicked' }}"
+```
+""",
+                "example_yaml_trigger": """```yaml
+triggers:
+  - trigger: event.received
+    target:
+      entity_id: event.my_device
+    options:
+      event_type:
+        - received
+```
+""",
+            },
+        )

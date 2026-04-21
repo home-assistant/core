@@ -60,7 +60,11 @@ from .const import (
     SERVICE_DISMISS,
 )
 from .entity import HTML5Entity, Registration
-from .issue import deprecated_dismiss_action_call, deprecated_notify_action_call
+from .issue import (
+    deprecated_dismiss_action_call,
+    deprecated_event_bus,
+    deprecated_notify_action_call,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -408,6 +412,9 @@ class HTML5PushCallbackView(HomeAssistantView):
             event_payload[ATTR_TYPE],
             event_payload,
         )
+
+        deprecated_event_bus(hass, event_name)
+
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
 
