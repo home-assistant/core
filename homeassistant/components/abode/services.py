@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 from jaraco.abode.exceptions import Exception as AbodeException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -34,13 +33,10 @@ AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 def _get_abode_system(hass: HomeAssistant) -> AbodeSystem:
     """Return the Abode system for the loaded config entry."""
-    entries: list[AbodeConfigEntry] = hass.config_entries.async_entries(DOMAIN)
-    loaded_entries = [
-        entry for entry in entries if entry.state is ConfigEntryState.LOADED
-    ]
-    if not loaded_entries:
+    entries: list[AbodeConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
         raise ServiceValidationError("Abode integration is not loaded")
-    return loaded_entries[0].runtime_data
+    return entries[0].runtime_data
 
 
 def _change_setting(call: ServiceCall) -> None:
