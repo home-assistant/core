@@ -116,13 +116,8 @@ async def test_add_insteon_events_off_event_fires_bus(hass: HomeAssistant) -> No
     [
         (LOW_BATTERY_EVENT, {"low_battery": True}, EVENT_CONF_BATTERY, "low"),
         (LOW_BATTERY_EVENT, {"low_battery": False}, EVENT_CONF_BATTERY, "ok"),
-        (HEARTBEAT_EVENT, {"heartbeat_missed": True}, EVENT_CONF_HEARTBEAT, "missed"),
-        (
-            HEARTBEAT_EVENT,
-            {"heartbeat_missed": False},
-            EVENT_CONF_HEARTBEAT,
-            "received",
-        ),
+        (HEARTBEAT_EVENT, {"heartbeat": True}, EVENT_CONF_HEARTBEAT, "missed"),
+        (HEARTBEAT_EVENT, {"heartbeat": False}, EVENT_CONF_HEARTBEAT, "received"),
         (LEAK_WET_EVENT, {"dry": False}, EVENT_CONF_MOISTURE, "wet"),
         (LEAK_DRY_EVENT, {"dry": True}, EVENT_CONF_MOISTURE, "dry"),
     ],
