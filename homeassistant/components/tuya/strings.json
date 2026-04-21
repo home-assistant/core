@@ -590,8 +590,13 @@
         "state": {
           "good": "Good",
           "great": "Great",
+          "hazardous": "Hazardous",
           "mild": "Mild",
-          "severe": "Severe"
+          "moderate": "Moderate",
+          "severe": "Severe",
+          "unhealthy": "Unhealthy",
+          "unhealthy_for_sensitive": "Unhealthy for sensitive groups",
+          "very_unhealthy": "Very unhealthy"
         }
       },
       "air_quality_index": {
