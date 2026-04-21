@@ -44,22 +44,7 @@ AREA_NAME_RULE_HOME = "home"
 AREA_NAME_RULE_HOME_ROOM = "home_room"
 
 # Platform Definitions
-PLATFORMS = ["binary_sensor", "button", "select", "sensor", "switch", "update"]
-
-# Binary Sensor Device Class Mapping
-BINARY_SENSOR_DEVICE_CLASS_MAP = {
-    "SmokeSensorState": "smoke",
-    "CarbonMonoxideAlarm": "carbon_monoxide",
-    "WaterSensorState": "moisture",
-    "Contact": "door",
-    "Motion": "motion",
-    "TamperState": "tamper",
-    "UnderVoltError": "battery",
-    "FreezingPointAlarm": "cold",
-    "CoStatus": "carbon_monoxide",
-    "MotionStatus": "motion",
-    "DoorStatus": "door",
-}
+PLATFORMS = ["sensor"]
 
 # Sensor Device Class and Unit Mapping
 SENSOR_UNIT_MAP = {
@@ -124,22 +109,6 @@ SERVICE_READ_DEVICE_PROPERTIES = "read_device_properties"
 
 # Icon Mapping (icons.json is primary source, this provides fallback)
 ENTITY_ICONS = {
-    # Binary Sensor Icons
-    "binary_sensor": {
-        "SmokeSensorState": "mdi:smoke",
-        "WaterSensorState": "mdi:water",
-        "TamperState": "mdi:alert",
-        "UnderVoltError": "mdi:battery-alert-variant",
-        "FreezingPointAlarm": "mdi:water-thermometer-outline",
-        "MotionStatus": "mdi:motion-sensor",
-        "DoorStatus": "mdi:door",
-        "CoStatus": "mdi:molecule-co",
-        # Lowercase variants for matching
-        "smokestatus": "mdi:smoke",
-        "smokesensorstate": "mdi:smoke",
-        "waterstatus": "mdi:water",
-        "watersensorstate": "mdi:water",
-    },
     # Sensor Icons
     "sensor": {
         "CurrentTemperature": "mdi:thermometer",
@@ -153,31 +122,5 @@ ENTITY_ICONS = {
         "temperature": "mdi:thermometer",
         "SignalStrength": "mdi:signal",
         "TimeZone": "mdi:clock-time-nine-outline",
-    },
-    # Switch Icons
-    "switch": {
-        "LightSwitch": "mdi:lightbulb-outline",
-        "FreezingPointEnable": "mdi:snowflake-alert",
-        "BuzzerEnable": "mdi:surround-sound",
-        # Lowercase variants for matching
-        "lightswitch": "mdi:lightbulb-outline",
-        "switch_state": "mdi:toggle-switch",
-    },
-    # Button Icons
-    "button": {
-        "RemoteLocate": "mdi:radar",
-        "RemoteCheck": "mdi:clipboard-check",
-        "Mute": "mdi:volume-mute",
-        # Lowercase variants for matching
-        "remotelocate": "mdi:radar",
-        "remotecheck": "mdi:clipboard-check",
-        "mute": "mdi:volume-mute",
-        "soundmute": "mdi:volume-mute",  # Only exists as lowercase for testing
-    },
-    # Select Icons
-    "select": {
-        "AlarmSoundOption": "mdi:volume-high",
-        # Lowercase variants for matching
-        "alarmsoundoption": "mdi:volume-high",
     },
 }
