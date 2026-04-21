@@ -6,9 +6,6 @@ import logging
 
 from heimanconnect import HeimanDevice
 
-# Simple version comparison (assumes semantic versioning)
-from packaging import version
-
 from homeassistant import config_entries
 from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
@@ -200,42 +197,13 @@ class HeimanUpdateEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], UpdateE
             ):
                 self._attr_installed_version = installed_version
 
-        # Try to get latest version from coordinator (if supported in future)
-        # pylint: disable=fixme
-        # TODO: Implement when API supports firmware update checks
-        # if self.coordinator and hasattr(self.coordinator, "get_device_property"):
-        #     latest_version = self.coordinator.get_device_property(
-        #         self._device.device_id,
-        #         "LatestFirmwareVersion",
-        #     )
-        #     if latest_version:
-        #         latest_ver_str = str(latest_version)
-        #         self._attr_latest_version = latest_ver_str
-        #         _LOGGER.debug(
-        #             "Update entity %s got latest version from cache: %s",
-        #             self._attr_name,
-        #             latest_ver_str,
-        #         )
+        # TODO: Populate latest version when the API supports firmware update checks.
 
         # If no latest version, use installed version
         if installed_version and not self._attr_latest_version:
             self._attr_latest_version = installed_version
 
         return True
-
-    def _version_is_newer(self, latest_version: str, installed_version: str) -> bool:
-        """Return True if latest_version is newer than installed_version."""
-        try:
-            return version.parse(str(latest_version)) > version.parse(
-                str(installed_version),
-            )
-        except Exception:
-            _LOGGER.exception(
-                "Error comparing versions %s and %s",
-                latest_version,
-                installed_version,
-            )
-            return False
 
     @property
     def release_summary(self) -> str | None:
