@@ -17,6 +17,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_STOP,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -124,6 +126,30 @@ async def test_rpc_media_player_audio_file(
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_IDLE
+
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", True)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_PLAYING
+
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_STOP,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
