@@ -26,7 +26,7 @@ from .coordinator import VizioConfigEntry, VizioDeviceCoordinator
 PARALLEL_UPDATES = 0
 
 # Maps native pyvizio key names to human-friendly aliases.
-# Keys are uppercase native names (e.g. "CC_TOGGLE"), values are lowercase aliases.
+# Keys are uppercase native names (e.g. "CC_TOGGLE"), values are lists of lowercase aliases.
 REMOTE_KEY_ALIASES: dict[str, list[str]] = {
     "CC_TOGGLE": ["closed_captions", "cc"],
     "CH_DOWN": ["channel_down"],
