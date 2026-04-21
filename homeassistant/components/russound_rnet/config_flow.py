@@ -267,10 +267,11 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
 
         model_key = import_data[CONF_MODEL]
         model = RNET_MODELS[model_key]
-        options = {CONF_SOURCES: import_data.pop(CONF_SOURCES, {})}
+        options = {CONF_SOURCES: import_data.get(CONF_SOURCES, {})}
+        data = {key: value for key, value in import_data.items() if key != CONF_SOURCES}
         return self.async_create_entry(
             title=model.name,
-            data=import_data,
+            data=data,
             options=options,
         )
 
