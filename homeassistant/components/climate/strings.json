@@ -288,67 +288,67 @@
   },
   "services": {
     "set_fan_mode": {
-      "description": "Sets the fan mode of a climate-control device.",
+      "description": "Sets the fan mode of a thermostat.",
       "fields": {
         "fan_mode": {
           "description": "Fan operation mode.",
           "name": "Fan mode"
         }
       },
-      "name": "Set climate-control device fan mode"
+      "name": "Set thermostat fan mode"
     },
     "set_humidity": {
-      "description": "Sets the target humidity of a climate-control device.",
+      "description": "Sets the target humidity of a thermostat.",
       "fields": {
         "humidity": {
           "description": "Target humidity.",
           "name": "Humidity"
         }
       },
-      "name": "Set climate-control device target humidity"
+      "name": "Set thermostat target humidity"
     },
     "set_hvac_mode": {
-      "description": "Sets the HVAC mode of a climate-control device.",
+      "description": "Sets the HVAC mode of a thermostat.",
       "fields": {
         "hvac_mode": {
           "description": "HVAC operation mode.",
           "name": "HVAC mode"
         }
       },
-      "name": "Set climate-control device HVAC mode"
+      "name": "Set thermostat HVAC mode"
     },
     "set_preset_mode": {
-      "description": "Sets the preset mode of a climate-control device.",
+      "description": "Sets the preset mode of a thermostat.",
       "fields": {
         "preset_mode": {
           "description": "Preset mode.",
           "name": "Preset mode"
         }
       },
-      "name": "Set climate-control device preset mode"
+      "name": "Set thermostat preset mode"
     },
     "set_swing_horizontal_mode": {
-      "description": "Sets the horizontal swing mode of a climate-control device.",
+      "description": "Sets the horizontal swing mode of a thermostat.",
       "fields": {
         "swing_horizontal_mode": {
           "description": "Horizontal swing operation mode.",
           "name": "Horizontal swing mode"
         }
       },
-      "name": "Set climate-control device horizontal swing mode"
+      "name": "Set thermostat horizontal swing mode"
     },
     "set_swing_mode": {
-      "description": "Sets the swing mode of a climate-control device.",
+      "description": "Sets the swing mode of a thermostat.",
       "fields": {
         "swing_mode": {
           "description": "Swing operation mode.",
           "name": "Swing mode"
         }
       },
-      "name": "Set climate-control device swing mode"
+      "name": "Set thermostat swing mode"
     },
     "set_temperature": {
-      "description": "Sets the target temperature of a climate-control device.",
+      "description": "Sets the target temperature of a thermostat.",
       "fields": {
         "hvac_mode": {
           "description": "HVAC operation mode.",
@@ -367,7 +367,7 @@
           "name": "Target temperature"
         }
       },
-      "name": "Set climate-control device target temperature"
+      "name": "Set thermostat target temperature"
     },
     "toggle": {
       "description": "Toggles a thermostat on/off.",
