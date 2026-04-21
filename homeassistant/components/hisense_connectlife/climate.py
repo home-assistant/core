@@ -120,6 +120,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator)
+        self._coordinator = coordinator
         self._device_id: str | None = device.puid
         self._attr_unique_id = f"{device.device_id}_climate"
         self._attr_name = "Test AC Device"
@@ -342,8 +343,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         """Get current device data from coordinator."""
         if not self._device_id:
             return None
-        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
-        device = coordinator.get_device(self._device_id)
+        device = self._coordinator.get_device(self._device_id)
         if device:
             _LOGGER.debug(
                 "Retrieved device %s with status: %s", self._device_id, device.status
@@ -533,8 +533,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         if not device_id:
             return
         try:
-            coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
-            await coordinator.async_control_device(
+            await self._coordinator.async_control_device(
                 puid=device_id,
                 properties={StatusKey.TARGET_TEMP: str(temperature)},
             )
@@ -558,8 +557,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
             return
-
-        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         try:
             # Make sure the device is on first
             power = (
@@ -586,7 +583,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             )
             device_id = self._device_id
             if power == "0" and device_id:
-                await coordinator.async_control_device(
+                await self._coordinator.async_control_device(
                     puid=device_id,
                     properties={
                         StatusKey.POWER: "1",  # Turn on
@@ -600,7 +597,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                     hvac_mode,
                     hisense_mode,
                 )
-                await coordinator.async_control_device(
+                await self._coordinator.async_control_device(
                     puid=device_id,
                     properties={StatusKey.MODE: hisense_mode},
                 )
@@ -627,7 +624,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._last_command_time = time.time()
         self.async_write_ha_state()
 
-        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         try:
             # Map HA fan mode constant to standard string using the global mapping
             ha_fan_mode_str = HA_FAN_CONST_TO_STR.get(
@@ -652,7 +648,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
             )
             device_id = self._device_id
             if device_id:
-                await coordinator.async_control_device(
+                await self._coordinator.async_control_device(
                     puid=device_id,
                     properties={StatusKey.FAN_SPEED: hisense_fan_mode},
                 )
@@ -674,7 +670,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         )
         self._last_command_time = time.time()
         self.async_write_ha_state()
-        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         try:
             properties: dict[str, str] = {}
 
@@ -712,7 +707,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
                         swing_mode,
                         supported_properties,
                     )
-                    await coordinator.async_control_device(
+                    await self._coordinator.async_control_device(
                         puid=device_id,
                         properties=supported_properties,
                     )
@@ -725,10 +720,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         device_id = self._device_id
         if not device_id:
             return
-        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         try:
             _LOGGER.debug("Turning on device %s", device_id)
-            await coordinator.async_control_device(
+            await self._coordinator.async_control_device(
                 puid=device_id,
                 properties={StatusKey.POWER: "1"},
             )
@@ -740,10 +734,9 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         device_id = self._device_id
         if not device_id:
             return
-        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
         try:
             _LOGGER.debug("Turning off device %s", device_id)
-            await coordinator.async_control_device(
+            await self._coordinator.async_control_device(
                 puid=device_id,
                 properties={StatusKey.POWER: "0"},
             )
@@ -754,8 +747,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         device_id = self._device_id
         if not device_id:
             return
-        coordinator: HisenseACPluginDataUpdateCoordinator = self.coordinator  # type: ignore[assignment]
-        device = coordinator.get_device(device_id)
+        device = self._coordinator.get_device(device_id)
         if not device:
             _LOGGER.warning("Device %s not found during sensor update", device_id)
             return

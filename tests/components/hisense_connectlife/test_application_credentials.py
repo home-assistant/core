@@ -1,12 +1,10 @@
 """Tests for the Hisense ConnectLife application credentials platform."""
 
+from connectlife_cloud import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.components.hisense_connectlife.application_credentials import (
     async_get_authorization_server,
-)
-from homeassistant.components.hisense_connectlife.const import (
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
 )
 from homeassistant.core import HomeAssistant
 

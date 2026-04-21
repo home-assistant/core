@@ -26,24 +26,9 @@ ATTR_WATER_TANK_TEMP = "water_tank_temperature"
 ATTR_ZONE_TEMPERATURE = "zone_temperature"
 ATTR_AC_TYPE = "ac_type"
 
-# Production environment OAuth2 and API configuration
-OAUTH2_AUTHORIZE = "https://oauth.hijuconn.com/login"
-OAUTH2_TOKEN = "https://oauth.hijuconn.com/oauth/token"
-WEBSOCKET_URL = "wss://clife-eu-gateway.hijuconn.com/msg/get_msg_and_channels"
-API_BASE_URL = "https://juapi-3rd.hijuconn.com"
 
 # WebSocket
 WEBSOCKET_RECONNECT_INTERVAL = 30  # seconds
-
-# API Endpoints
-API_DEVICE_LIST = "/clife-svc/pu/get_device_status_list"
-API_GET_PROPERTY_LTST = "/clife-svc/get_property_list"  # Get device property list
-API_QUERY_STATIC_DATA = (
-    "/clife-svc/pu/query_static_data"  # Get device property list using puId
-)
-API_DEVICE_CONTROL = "/device/pu/property/set"
-API_SELF_CHECK = "/basic/self_check/info"  # Get fault information
-API_GET_HOUR_POWER = "/clife-svc/pu/get_hour_power"  # Get power consumption information
 
 # Token settings
 TOKEN_EXPIRY_MARGIN = 60  # seconds before token expiry to refresh

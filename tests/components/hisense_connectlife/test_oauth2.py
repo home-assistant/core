@@ -2,13 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from connectlife_cloud import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 import pytest
 
-from homeassistant.components.hisense_connectlife.const import (
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from homeassistant.components.hisense_connectlife.const import DOMAIN
 from homeassistant.components.hisense_connectlife.oauth2 import (
     HisenseOAuth2Implementation,
     OAuth2Session,

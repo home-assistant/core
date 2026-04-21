@@ -80,8 +80,8 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                         else:
                             _LOGGER.debug("No new token received after refresh")
                             errors["base"] = "token_refresh_failed"
-                    except Exception as err:  # noqa: BLE001
-                        _LOGGER.error("Failed to refresh token: %s", err)
+                    except Exception:
+                        _LOGGER.exception("Failed to refresh token")
                         errors["base"] = "token_refresh_failed"
 
             return self.async_create_entry(title="", data=user_input)
@@ -161,12 +161,11 @@ class OAuth2FlowHandler(
             url = await self._flow_impl.async_generate_authorize_url(self.flow_id)
             _LOGGER.debug("Generated authorization URL: %s", url)
             return self.async_external_step(step_id="auth", url=url)
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Failed to generate authorize URL: %s", err)
+        except Exception:
+            _LOGGER.exception("Failed to generate authorize URL")
             return self.async_show_form(
                 step_id="user", errors={"base": "authorize_url_failure"}
             )
-            # return self.async_abort(reason="authorize_url_fail")
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None

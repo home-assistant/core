@@ -6,6 +6,7 @@ import base64
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.hisense_connectlife.coordinator import (
@@ -261,7 +262,7 @@ async def test_async_control_device_raises_update_failed(
     mock_hass, mock_config_entry, mock_api_client
 ) -> None:
     """Test async_control_device raises UpdateFailed on API error."""
-    mock_api_client.async_control_device = AsyncMock(side_effect=Exception("boom"))
+    mock_api_client.async_control_device = AsyncMock(side_effect=ClientError("boom"))
     coordinator = HisenseACPluginDataUpdateCoordinator(
         mock_hass, mock_api_client, mock_config_entry
     )

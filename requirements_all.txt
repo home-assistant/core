@@ -759,7 +759,7 @@ concord232==0.15.1
 connect-box==0.3.1
 
 # homeassistant.components.hisense_connectlife
-connectlife-cloud==0.3.6
+connectlife-cloud==0.3.8
 
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
