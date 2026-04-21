@@ -1,6 +1,6 @@
 """Tests for the Nobø Ecohub integration setup."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -17,60 +17,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
+from .conftest import SERIAL, STORED_IP, make_entry, make_hub_mock
+
 from tests.common import MockConfigEntry
 
-SERIAL = "102000013098"
-STORED_IP = "192.168.1.122"
 NEW_IP = "192.168.1.55"
-
-
-def _make_entry(
-    hass: HomeAssistant,
-    *,
-    auto_discovered: bool,
-    ip_address: str = STORED_IP,
-) -> MockConfigEntry:
-    """Create a mock config entry for Nobø Ecohub."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="My Eco Hub",
-        unique_id=SERIAL,
-        data={
-            CONF_SERIAL: SERIAL,
-            CONF_IP_ADDRESS: ip_address,
-            CONF_AUTO_DISCOVERED: auto_discovered,
-        },
-    )
-    entry.add_to_hass(hass)
-    return entry
-
-
-def _make_hub_mock(connect_exc: BaseException | None = None) -> MagicMock:
-    """Create a mock pynobo.nobo instance."""
-    hub = MagicMock()
-    hub.connect = AsyncMock(side_effect=connect_exc)
-    hub.start = AsyncMock()
-    hub.stop = AsyncMock()
-    hub.register_callback = MagicMock()
-    hub.deregister_callback = MagicMock()
-    hub.hub_serial = SERIAL
-    hub.hub_info = {
-        "name": "My Eco Hub",
-        "serial": SERIAL,
-        "software_version": "115",
-        "hardware_version": "hw",
-    }
-    hub.zones = {}
-    hub.components = {}
-    hub.overrides = {}
-    hub.week_profiles = {}
-    return hub
 
 
 async def test_setup_manual_entry_uses_stored_ip(hass: HomeAssistant) -> None:
     """Manual entry connects using the stored IP without rediscovery."""
-    entry = _make_entry(hass, auto_discovered=False)
-    hub = _make_hub_mock()
+    entry = make_entry(hass)
+    hub = make_hub_mock()
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
@@ -85,8 +42,8 @@ async def test_setup_manual_entry_uses_stored_ip(hass: HomeAssistant) -> None:
 
 async def test_setup_autodiscovered_entry_uses_stored_ip(hass: HomeAssistant) -> None:
     """Auto-discovered entry with a working stored IP does not rediscover."""
-    entry = _make_entry(hass, auto_discovered=True)
-    hub = _make_hub_mock()
+    entry = make_entry(hass, auto_discovered=True)
+    hub = make_hub_mock()
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
@@ -106,8 +63,8 @@ async def test_setup_manual_entry_connection_fails(
     connect_exc: BaseException,
 ) -> None:
     """Manual entry raises ConfigEntryNotReady on socket errors or timeouts."""
-    entry = _make_entry(hass, auto_discovered=False)
-    hub = _make_hub_mock(connect_exc=connect_exc)
+    entry = make_entry(hass)
+    hub = make_hub_mock(connect_exc=connect_exc)
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
@@ -124,9 +81,9 @@ async def test_setup_manual_entry_connection_fails(
 
 async def test_setup_autodiscovered_rediscovery_updates_ip(hass: HomeAssistant) -> None:
     """Auto-discovered entry recovers via rediscovery and persists the new IP."""
-    entry = _make_entry(hass, auto_discovered=True)
-    hub_fail = _make_hub_mock(connect_exc=OSError("Unreachable"))
-    hub_ok = _make_hub_mock()
+    entry = make_entry(hass, auto_discovered=True)
+    hub_fail = make_hub_mock(connect_exc=OSError("Unreachable"))
+    hub_ok = make_hub_mock()
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.side_effect = [hub_fail, hub_ok]
         mock_cls.async_discover_hubs = AsyncMock(return_value={(NEW_IP, SERIAL)})
@@ -161,9 +118,9 @@ async def test_setup_autodiscovered_rediscovery_failure(
     expected_placeholders: dict[str, str],
 ) -> None:
     """Auto-discovered entry raises the right error when rediscovery can't recover."""
-    entry = _make_entry(hass, auto_discovered=True)
-    hub_first = _make_hub_mock(connect_exc=OSError("Unreachable"))
-    hub_second = _make_hub_mock(
+    entry = make_entry(hass, auto_discovered=True)
+    hub_first = make_hub_mock(connect_exc=OSError("Unreachable"))
+    hub_second = make_hub_mock(
         connect_exc=OSError("Unreachable") if rediscovered_connect_fails else None
     )
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
@@ -204,7 +161,7 @@ async def test_migrate_options_lowercases_override_type(
         minor_version=1,
     )
     entry.add_to_hass(hass)
-    hub = _make_hub_mock()
+    hub = make_hub_mock()
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
@@ -230,7 +187,7 @@ async def test_migrate_options_without_override_type(hass: HomeAssistant) -> Non
         minor_version=1,
     )
     entry.add_to_hass(hass)
-    hub = _make_hub_mock()
+    hub = make_hub_mock()
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
@@ -246,8 +203,8 @@ async def test_setup_registers_hub_device(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """The hub device is registered with the expected metadata."""
-    entry = _make_entry(hass, auto_discovered=False)
-    hub = _make_hub_mock()
+    entry = make_entry(hass)
+    hub = make_hub_mock()
     with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
         mock_cls.return_value = hub
         mock_cls.async_discover_hubs = AsyncMock(return_value=set())
