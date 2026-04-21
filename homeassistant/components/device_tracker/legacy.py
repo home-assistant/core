@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 import hashlib
+import logging
 from types import ModuleType
 from typing import Any, Final, Protocol, final
 
@@ -82,6 +83,8 @@ from .const import (
     SourceType,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 SERVICE_SEE: Final = "see"
 
 SOURCE_TYPES = [cls.value for cls in SourceType]
@@ -127,6 +130,8 @@ SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
 
 YAML_DEVICES: Final = "known_devices.yaml"
 EVENT_NEW_DEVICE: Final = "device_tracker_new_device"
+
+DATA_LEGACY_TRACKERS: Final = "device_tracker.legacy_trackers"
 
 
 class SeeCallback(Protocol):
@@ -243,8 +248,19 @@ async def _async_setup_integration(
     tracker = await get_tracker(hass, config)
     tracker_future.set_result(tracker)
 
+    warned_called_see = False
+
     async def async_see_service(call: ServiceCall) -> None:
         """Service to see a device."""
+        nonlocal warned_called_see
+        if not warned_called_see:
+            _LOGGER.warning(
+                "The %s.%s action is deprecated and will be removed in "
+                "Home Assistant Core 2027.5",
+                DOMAIN,
+                SERVICE_SEE,
+            )
+            warned_called_see = True
         # Temp workaround for iOS, introduced in 0.65
         data = dict(call.data)
         data.pop("hostname", None)
@@ -327,6 +343,18 @@ class DeviceTrackerPlatform:
             try:
                 scanner = None
                 setup: bool | None = None
+
+                legacy_trackers = hass.data.setdefault(DATA_LEGACY_TRACKERS, set())
+                if full_name not in legacy_trackers:
+                    legacy_trackers.add(full_name)
+                    _LOGGER.warning(
+                        "The legacy device tracker platform %s is being set up; legacy "
+                        "device trackers are deprecated and will be removed in Home "
+                        "Assistant Core 2027.5, please migrate to an integration which "
+                        "uses a modern config entry based device tracker",
+                        full_name,
+                    )
+
                 if hasattr(self.platform, "async_get_scanner"):
                     scanner = await self.platform.async_get_scanner(
                         hass, {DOMAIN: self.config}

@@ -16,11 +16,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
+type WiLightConfigEntry = ConfigEntry[WiLightParent]
+
 
 class WiLightParent:
     """Manages a single WiLight Parent Device."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: WiLightConfigEntry) -> None:
         """Initialize the system."""
         self._host: str = config_entry.data[CONF_HOST]
         self._hass = hass

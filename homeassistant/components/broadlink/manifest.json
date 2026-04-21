@@ -3,6 +3,7 @@
   "name": "Broadlink",
   "codeowners": ["@danielhiversen", "@felipediel", "@L-I-Am", "@eifinger"],
   "config_flow": true,
+  "dependencies": ["infrared"],
   "dhcp": [
     {
       "registered_devices": true

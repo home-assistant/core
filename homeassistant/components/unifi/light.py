@@ -35,6 +35,8 @@ from .entity import (
 if TYPE_CHECKING:
     from .hub import UnifiHub
 
+PARALLEL_UPDATES = 1
+
 
 def convert_brightness_to_unifi(ha_brightness: int) -> int:
     """Convert Home Assistant brightness (0-255) to UniFi brightness (0-100)."""

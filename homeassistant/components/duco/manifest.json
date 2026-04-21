@@ -1,0 +1,18 @@
+{
+  "domain": "duco",
+  "name": "Duco",
+  "codeowners": ["@ronaldvdmeer"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/duco",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["duco"],
+  "quality_scale": "silver",
+  "requirements": ["python-duco-client==0.3.2"],
+  "zeroconf": [
+    {
+      "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+      "type": "_http._tcp.local."
+    }
+  ]
+}
