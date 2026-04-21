@@ -1498,6 +1498,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/russound_rio/ @noahhusby
 /tests/components/russound_rio/ @noahhusby
 /homeassistant/components/russound_rnet/ @noahhusby
+/tests/components/russound_rnet/ @noahhusby
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
