@@ -73,6 +73,7 @@ NO_IOT_CLASS = [
     "device_tracker",
     "diagnostics",
     "door",
+    "doorbell",
     "downloader",
     "ffmpeg",
     "file_upload",
