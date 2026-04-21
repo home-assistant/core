@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from aidot.client import AidotClient
@@ -69,7 +70,9 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
