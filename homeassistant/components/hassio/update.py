@@ -229,10 +229,29 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
-    """Update entity to handle updates for the Home Assistant Supervisor."""
+    """Update entity to handle updates for the Home Assistant Supervisor.
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    The Supervisor update API blocks for the entire container download, then
+    Supervisor restarts itself. The base UpdateEntity always resets
+    ``_attr_in_progress`` after ``async_install`` returns, but at that point the
+    restart is still ongoing. ``_update_ongoing`` survives that reset so the UI
+    keeps showing the installing state until the coordinator refreshes with the
+    new version after Supervisor comes back.
+    """
+
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
     _attr_title = "Home Assistant Supervisor"
+    _update_ongoing: bool = False
+    _version_before_update: str | None = None
+
+    @property
+    def in_progress(self) -> bool | None:
+        """Return combined progress from the update job and restart phase."""
+        if self._update_ongoing:
+            return True
+        return self._attr_in_progress
 
     @property
     def latest_version(self) -> str:
@@ -266,12 +285,57 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        self._version_before_update = self.installed_version
+        self._update_ongoing = True
+        self._attr_in_progress = True
+        self.async_write_ha_state()
         try:
             await self.coordinator.supervisor_client.supervisor.update()
         except SupervisorError as err:
+            self._update_ongoing = False
+            self._version_before_update = None
+            self._attr_in_progress = False
+            self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Error updating Home Assistant Supervisor: {err}"
             ) from err
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Clear the ongoing flag once the installed version has changed."""
+        if (
+            self._update_ongoing
+            and self.installed_version != self._version_before_update
+        ):
+            self._update_ongoing = False
+            self._version_before_update = None
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_job_changed(self, job: Job) -> None:
+        """Process update for this entity's update job."""
+        if job.done is False:
+            # Also covers updates not initiated via async_install (CLI,
+            # Supervisor self-update): capture the baseline so the installing
+            # state survives the Supervisor restart phase.
+            if not self._update_ongoing:
+                self._version_before_update = self.installed_version
+                self._update_ongoing = True
+            self._attr_in_progress = True
+            self._attr_update_percentage = job.progress
+        else:
+            self._attr_in_progress = False
+            self._attr_update_percentage = None
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to progress updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.jobs.subscribe(
+                JobSubscription(self._update_job_changed, name="supervisor_update")
+            )
+        )
 
 
 class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):

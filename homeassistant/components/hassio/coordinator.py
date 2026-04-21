@@ -31,16 +31,21 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
+    ATTR_DATA,
     ATTR_REPOSITORIES,
     ATTR_REPOSITORY,
     ATTR_SLUG,
+    ATTR_STARTUP,
+    ATTR_UPDATE_KEY,
     ATTR_URL,
     ATTR_VERSION,
+    ATTR_WS_EVENT,
     CONTAINER_STATS,
     CORE_CONTAINER,
     DATA_ADDONS_INFO,
@@ -63,11 +68,15 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DATA_SUPERVISOR_STATS,
     DOMAIN,
+    EVENT_SUPERVISOR_EVENT,
+    EVENT_SUPERVISOR_UPDATE,
     HASSIO_ADDON_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
+    STARTUP_COMPLETE,
     SUPERVISOR_CONTAINER,
+    UPDATE_KEY_SUPERVISOR,
     SupervisorEntityModel,
 )
 from .handler import get_supervisor_client
@@ -658,6 +667,19 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.is_hass_os = False
         self.supervisor_client = get_supervisor_client(hass)
         self.jobs = SupervisorJobs(hass)
+        self._dispatcher_disconnect = async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
+        )
+
+    @callback
+    def _supervisor_event(self, event: dict[str, Any]) -> None:
+        """Refresh coordinator data when Supervisor restarts after an update."""
+        if (
+            event.get(ATTR_WS_EVENT) == EVENT_SUPERVISOR_UPDATE
+            and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
+        ):
+            self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -797,4 +819,5 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def unload(self) -> None:
         """Clean up when config entry unloaded."""
+        self._dispatcher_disconnect()
         self.jobs.unload()
