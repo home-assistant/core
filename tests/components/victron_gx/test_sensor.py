@@ -24,6 +24,22 @@ async def test_victron_battery_sensor(
     """Test SENSOR MetricKind - battery current sensor is created and updated."""
     victron_hub, mock_config_entry = init_integration
 
+    # Inject a system metric first so the gateway device (system_0) is registered
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/SystemState/State",
+        '{"value": 1}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    # Verify system device has no via_device (it IS the gateway)
+    system_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    )
+    assert system_device is not None
+    assert system_device.via_device_id is None
+
     # Inject a sensor metric (battery current)
     await inject_message(
         victron_hub,
@@ -38,10 +54,9 @@ async def test_victron_battery_sensor(
         entity_registry, mock_config_entry.entry_id
     )
 
-    # Exactly one entity is expected for this injected metric.
-    assert len(entities) == 1
-    entity = entities[0]
-    assert entity.entity_id == "sensor.battery_dc_bus_current"
+    # Exactly two entities are expected: system state + battery current
+    assert len(entities) == 2
+    entity = next(e for e in entities if e.entity_id == "sensor.battery_dc_bus_current")
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_battery_0_battery_current"
     assert entity.original_device_class is SensorDeviceClass.CURRENT
     assert entity.unit_of_measurement == "A"
@@ -61,6 +76,8 @@ async def test_victron_battery_sensor(
     assert device is not None
     assert device.manufacturer == "Victron Energy"
     assert device.name == "Battery"
+    # Verify battery device has via_device pointing to system_0 (gateway)
+    assert device.via_device_id == system_device.id
 
     # Update the same metric to exercise the entity update callback path.
     await inject_message(
