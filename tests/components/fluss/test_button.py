@@ -78,24 +78,36 @@ async def test_devices_without_wifi_permission_are_filtered(
     mock_api_client.async_get_device_status.assert_called_once_with("allowed")
 
 
-async def test_button_unavailable_when_offline(
+async def test_button_unavailable_on_status_error(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A device whose status call fails is reported as unavailable."""
-
-    async def mock_get_device_status(device_id: str) -> dict[str, dict[str, bool]]:
-        if device_id == "2a303030sdj1":
-            raise FlussApiClientError("device offline")
-        return {"status": {"internetConnected": True}}
-
-    mock_api_client.async_get_device_status.side_effect = mock_get_device_status
+    """Buttons become unavailable when the status call errors."""
+    mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
+        "device offline"
+    )
 
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
-    assert hass.states.get("button.device_2").state != STATE_UNAVAILABLE
+    assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE
+
+
+async def test_button_unavailable_when_internet_disconnected(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Buttons become unavailable when the device reports no internet."""
+    mock_api_client.async_get_device_status.return_value = {
+        "status": {"internetConnected": False}
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE
 
 
 async def test_button_press_error(
