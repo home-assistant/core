@@ -227,6 +227,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        invert_tilt_position=True,
         stop_tilt_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
