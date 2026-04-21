@@ -21,6 +21,8 @@ from .helpers import normalize_descriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
+CONSECUTIVE_FAILURE_THRESHOLD = 3
+
 
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a CurrentInterval."""
@@ -58,6 +60,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         config_entry: AmberConfigEntry,
+        api_client: amberelectric.ApiClient,
         api: amberelectric.AmberApi,
         site_id: str,
     ) -> None:
@@ -67,10 +70,16 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             config_entry=config_entry,
             name="amberelectric",
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(minutes=5),
         )
+        self._api_client = api_client
         self._api = api
         self.site_id = site_id
+        self._consecutive_failures = 0
+
+    def close(self) -> None:
+        """Close the underlying API client connection pool."""
+        self._api_client.close()
 
     def update_price_data(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
@@ -89,7 +98,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             )
             intervals = [interval.actual_instance for interval in data]
         except ApiException as api_exception:
-            raise UpdateFailed("Missing price data, skipping update") from api_exception
+            raise UpdateFailed(
+                f"Amber API error: {api_exception.status} {api_exception.reason}"
+            ) from api_exception
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with Amber API: {err}") from err
 
         current = [interval for interval in intervals if is_current(interval)]
         forecasts = [interval for interval in intervals if is_forecast(interval)]
@@ -136,4 +149,17 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
-        return await self.hass.async_add_executor_job(self.update_price_data)
+        try:
+            data = await self.hass.async_add_executor_job(self.update_price_data)
+        except UpdateFailed:
+            self._consecutive_failures += 1
+            if self._consecutive_failures < CONSECUTIVE_FAILURE_THRESHOLD and self.data:
+                LOGGER.debug(
+                    "Amber API call failed (attempt %d/%d), using cached data",
+                    self._consecutive_failures,
+                    CONSECUTIVE_FAILURE_THRESHOLD,
+                )
+                return self.data
+            raise
+        self._consecutive_failures = 0
+        return data

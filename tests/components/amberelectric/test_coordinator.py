@@ -103,7 +103,7 @@ async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) 
 
     current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
     data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
     )
     result = await data_service._async_update_data()
 
@@ -136,7 +136,7 @@ async def test_fetch_no_general_site(
 
     current_price_api.get_current_prices.return_value = CONTROLLED_LOAD_CHANNEL
     data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
     )
     with pytest.raises(UpdateFailed):
         await data_service._async_update_data()
@@ -148,53 +148,55 @@ async def test_fetch_no_general_site(
     )
 
 
-async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> None:
-    """Test that the old values are maintained if a second call fails."""
+async def test_fetch_api_error_uses_cached_data(
+    hass: HomeAssistant, current_price_api: Mock
+) -> None:
+    """Test that cached data is returned for transient API failures below the threshold."""
 
     current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
     data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
     )
     result = await data_service._async_update_data()
+    # Seed the coordinator's internal data cache so grace period logic can access it
+    data_service.data = result
 
-    current_price_api.get_current_prices.assert_called_with(
-        GENERAL_ONLY_SITE_ID,
-        next=288,
-        _request_timeout=REQUEST_TIMEOUT,
-    )
+    current_price_api.get_current_prices.side_effect = ApiException(status=500)
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
-    assert result["forecasts"].get("general") == [
-        GENERAL_CHANNEL[1].actual_instance,
-        GENERAL_CHANNEL[2].actual_instance,
-        GENERAL_CHANNEL[3].actual_instance,
-    ]
-    assert result["current"].get("controlled_load") is None
-    assert result["forecasts"].get("controlled_load") is None
-    assert result["current"].get("feed_in") is None
-    assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(
-        GENERAL_CHANNEL[0].actual_instance.renewables
-    )
+    # First and second failures should return cached data without raising
+    for _ in range(2):
+        cached = await data_service._async_update_data()
+        assert cached["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
+        assert cached["grid"]["price_spike"] == "none"
 
-    current_price_api.get_current_prices.side_effect = ApiException(status=403)
+    # Third consecutive failure exceeds threshold and should raise
     with pytest.raises(UpdateFailed):
         await data_service._async_update_data()
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
-    assert result["forecasts"].get("general") == [
-        GENERAL_CHANNEL[1].actual_instance,
-        GENERAL_CHANNEL[2].actual_instance,
-        GENERAL_CHANNEL[3].actual_instance,
-    ]
-    assert result["current"].get("controlled_load") is None
-    assert result["forecasts"].get("controlled_load") is None
-    assert result["current"].get("feed_in") is None
-    assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(
-        GENERAL_CHANNEL[0].actual_instance.renewables
+
+async def test_fetch_api_error_counter_resets_on_success(
+    hass: HomeAssistant, current_price_api: Mock
+) -> None:
+    """Test that the consecutive failure counter resets after a successful fetch."""
+
+    current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
+    data_service = AmberUpdateCoordinator(
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
     )
-    assert result["grid"]["price_spike"] == "none"
+    result = await data_service._async_update_data()
+    data_service.data = result
+
+    # Trigger two failures (below threshold — returns cached data)
+    current_price_api.get_current_prices.side_effect = ApiException(status=500)
+    for _ in range(2):
+        await data_service._async_update_data()
+    assert data_service._consecutive_failures == 2
+
+    # Successful fetch resets the counter
+    current_price_api.get_current_prices.side_effect = None
+    current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
+    await data_service._async_update_data()
+    assert data_service._consecutive_failures == 0
 
 
 async def test_fetch_general_and_controlled_load_site(
@@ -206,7 +208,7 @@ async def test_fetch_general_and_controlled_load_site(
         GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
     )
     data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, current_price_api, GENERAL_AND_CONTROLLED_SITE_ID
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_AND_CONTROLLED_SITE_ID
     )
     result = await data_service._async_update_data()
 
@@ -248,7 +250,7 @@ async def test_fetch_general_and_feed_in_site(
         GENERAL_CHANNEL + FEED_IN_CHANNEL
     )
     data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, current_price_api, GENERAL_AND_FEED_IN_SITE_ID
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_AND_FEED_IN_SITE_ID
     )
     result = await data_service._async_update_data()
 
@@ -291,7 +293,7 @@ async def test_fetch_potential_spike(
     general_channel[0].actual_instance.spike_status = SpikeStatus.POTENTIAL
     current_price_api.get_current_prices.return_value = general_channel
     data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
     )
     result = await data_service._async_update_data()
     assert result["grid"]["price_spike"] == "potential"
@@ -308,7 +310,7 @@ async def test_fetch_spike(hass: HomeAssistant, current_price_api: Mock) -> None
     general_channel[0].actual_instance.spike_status = SpikeStatus.SPIKE
     current_price_api.get_current_prices.return_value = general_channel
     data_service = AmberUpdateCoordinator(
-        hass, MOCKED_ENTRY, current_price_api, GENERAL_ONLY_SITE_ID
+        hass, MOCKED_ENTRY, Mock(), current_price_api, GENERAL_ONLY_SITE_ID
     )
     result = await data_service._async_update_data()
     assert result["grid"]["price_spike"] == "spike"

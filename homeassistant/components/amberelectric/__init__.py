@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> boo
     api_instance = amberelectric.AmberApi(api_client)
     site_id = entry.data[CONF_SITE_ID]
 
-    coordinator = AmberUpdateCoordinator(hass, entry, api_instance, site_id)
+    coordinator = AmberUpdateCoordinator(hass, entry, api_client, api_instance, site_id)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -36,4 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await hass.async_add_executor_job(entry.runtime_data.close)
+    return unload_ok
