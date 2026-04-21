@@ -130,9 +130,15 @@
       },
       "wired_client_link_speed": {
         "name": "Link speed"
+      },
+      "wlan_clients": {
+        "name": "Clients"
       }
     },
     "switch": {
+      "block_client": {
+        "name": "Blocked"
+      },
       "dpi_restriction": {
         "name": "{name}"
       },
@@ -156,6 +162,9 @@
       },
       "traffic_rule_control": {
         "name": "{name}"
+      },
+      "wlan_control": {
+        "name": "Enabled"
       }
     }
   },

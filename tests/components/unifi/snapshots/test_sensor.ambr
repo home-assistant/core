@@ -1898,7 +1898,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1-entry]
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1_clients-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1914,7 +1914,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ssid_1',
+    'entity_id': 'sensor.ssid_1_clients',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1922,12 +1922,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Clients',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1937,14 +1937,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1-state]
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.ssid_1_clients-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SSID 1',
+      'friendly_name': 'SSID 1 Clients',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ssid_1',
+    'entity_id': 'sensor.ssid_1_clients',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
