@@ -45,9 +45,10 @@ async def test_network_failure_during_setup_retries(
 ) -> None:
     """If the first refresh fails with a network error the entry enters SETUP_RETRY.
 
-    Because runtime_data is assigned before the first refresh, the
-    unload path can still call async_shutdown → gaposa.close() even
-    when setup never reached LOADED.
+    Because runtime_data is assigned only after a successful first refresh,
+    setup never stores runtime_data in this failure case. Cleanup still
+    happens because async_setup_entry explicitly calls
+    coordinator.async_shutdown(), which closes the Gaposa client.
     """
     mock_gaposa_instance.update.side_effect = OSError("boom")
 
