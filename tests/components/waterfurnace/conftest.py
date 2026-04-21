@@ -172,6 +172,7 @@ async def init_climate(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client: Mock,
+    seed_statistics: None,
 ) -> MockConfigEntry:
     """Set up only the climate platform for testing."""
     with patch("homeassistant.components.waterfurnace.PLATFORMS", [Platform.CLIMATE]):
