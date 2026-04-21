@@ -76,7 +76,7 @@ def mock_config_entry(ip_address: str, auto_discovered: bool) -> MockConfigEntry
 def mock_nobo_class(
     connect_exc: BaseException | None,
 ) -> Generator[MagicMock]:
-    """Patch pynobo.nobo; the class mock's return_value is a populated hub."""
+    """Patch the integration's imported `nobo` class with a populated hub instance."""
     with patch("homeassistant.components.nobo_hub.nobo", autospec=True) as mock_cls:
         hub = mock_cls.return_value
         if connect_exc is not None:
