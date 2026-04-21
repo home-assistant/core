@@ -12,6 +12,7 @@ class NoboBaseEntity(Entity):
     """Base class for Nobø Ecohub entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, hub: nobo) -> None:
         """Initialize the entity."""

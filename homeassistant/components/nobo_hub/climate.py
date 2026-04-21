@@ -81,7 +81,8 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
-    # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
+    # Need to poll to get preset change when in HVACMode.AUTO
+    _attr_should_poll = True
 
     def __init__(self, zone_id, hub: nobo, override_type) -> None:
         """Initialize the climate device."""
