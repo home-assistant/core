@@ -65,7 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             raise ConfigEntryAuthFailed(msg) from exc
         raise
 
-    # Connection is successful, store the manager & listener
+    # Connection is successful, store the listener in runtime_data;
+    # access the manager later via listener.manager
     entry.runtime_data = listener
 
     # Cleanup device registry
