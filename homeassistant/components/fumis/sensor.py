@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfPower,
@@ -71,7 +72,7 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
     FumisSensorEntityDescription(
         key="fan_1_speed",
         translation_key="fan_1_speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -81,7 +82,7 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
     FumisSensorEntityDescription(
         key="fan_2_speed",
         translation_key="fan_2_speed",
-        native_unit_of_measurement="rpm",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
