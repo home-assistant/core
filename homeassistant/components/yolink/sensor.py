@@ -416,6 +416,53 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
             state.get("co") if (state := data.get("state")) is not None else None
         ),
     ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_progress",
+        translation_key="sprinkler_progress",
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            running.get("progress")
+            if (running := data.get("running")) is not None
+            else None
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_target",
+        translation_key="sprinkler_target",
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            total.get("value")
+            if (running := data.get("running")) is not None
+            and (total := running.get("total")) is not None
+            else None
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_target_type",
+        translation_key="sprinkler_target_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=["duration", "amount"],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: (
+            total.get("type")
+            if (running := data.get("running")) is not None
+            and (total := running.get("total")) is not None
+            else None
+        ),
+    ),
+    YoLinkSensorEntityDescription(
+        key="sprinkler_water_mode",
+        translation_key="sprinkler_water_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["manual", "schedule"],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER_V2,
+        should_update_entity=lambda value: value is not None,
+        value=lambda device, data: data.get("waterMode"),
+    ),
 )
 
 
