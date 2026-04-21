@@ -10,7 +10,8 @@ from fumis import (
 )
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.fumis.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -37,7 +38,6 @@ async def test_load_unload_config_entry(
 @pytest.mark.parametrize(
     ("side_effect", "expected_log"),
     [
-        (FumisAuthenticationError, "Authentication with the Fumis online service"),
         (FumisConnectionError, "communicating with the Fumis online service"),
         (FumisStoveOfflineError, "not connected to the internet"),
         (FumisError, "communicating with the Fumis online service"),
@@ -60,3 +60,27 @@ async def test_config_entry_not_ready(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert expected_log in caplog.text
+
+
+async def test_config_entry_authentication_failed(
+    hass: HomeAssistant,
+    mock_fumis: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the config entry authentication error triggers reauth."""
+    mock_fumis.update_info.side_effect = FumisAuthenticationError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id
