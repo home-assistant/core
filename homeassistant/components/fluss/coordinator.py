@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
-from .const import LOGGER, UPDATE_INTERVAL_TIMEDELTA
+from .const import LOGGER, UPDATE_INTERVAL
 
 type FlussConfigEntry = ConfigEntry[FlussDataUpdateCoordinator]
 
@@ -36,7 +36,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             LOGGER,
             name=f"Fluss+ ({slugify(api_key[:8])})",
             config_entry=config_entry,
-            update_interval=UPDATE_INTERVAL_TIMEDELTA,
+            update_interval=UPDATE_INTERVAL,
         )
 
     async def _async_get_connectivity(self, device_id: str) -> bool:

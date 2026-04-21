@@ -62,14 +62,7 @@ async def test_status_authentication_error_marks_device_offline(
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
 ) -> None:
-    """An auth error from a per-device status call must not fail the entry.
-
-    canUseWiFi can be revoked between the list call and the status call, in
-    which case the status endpoint returns 403. That does not imply a bad
-    API key (credentials were already validated by async_get_devices), so
-    the device is marked offline instead of transitioning the entry to an
-    auth error state.
-    """
+    """Test that an auth error from a per-device status call marks the device offline."""
     mock_api_client.async_get_device_status.side_effect = (
         FlussApiClientAuthenticationError("permission revoked")
     )
