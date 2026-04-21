@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def fs_command_exception_wrap[
-    _AFSAPIDeviceT: "AFSAPIDevice",
+    _AFSAPIDeviceT: AFSAPIDevice,
     **_P,
     _R,
 ](
