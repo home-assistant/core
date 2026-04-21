@@ -3,22 +3,28 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 import httpx
-from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import CONF_SYSTEMS, DOMAIN
+from .utils import async_get_aqualink_client
 
 CREDENTIALS_DATA_SCHEMA = vol.Schema(
     {
@@ -27,28 +33,63 @@ CREDENTIALS_DATA_SCHEMA = vol.Schema(
     }
 )
 
+type SystemsError = Literal["invalid_auth", "cannot_connect"]
+
+
+@dataclass(slots=True, frozen=True)
+class SystemsSuccess:
+    """Successful systems fetch result."""
+
+    systems: dict[str, Any]
+
+
+@dataclass(slots=True, frozen=True)
+class SystemsFailure:
+    """Failed systems fetch result."""
+
+    error: SystemsError
+
+
+type SystemsResult = SystemsSuccess | SystemsFailure
+
+
+async def async_get_systems(
+    hass: HomeAssistant, username: str, password: str
+) -> SystemsResult:
+    """Fetch systems from iAqualink and map failures to flow error reasons."""
+    try:
+        async with async_get_aqualink_client(hass, username, password) as aqualink:
+            systems = await aqualink.get_systems()
+    except AqualinkServiceUnauthorizedException:
+        return SystemsFailure("invalid_auth")
+    except AqualinkServiceException, TimeoutError, httpx.HTTPError:
+        return SystemsFailure("cannot_connect")
+
+    return SystemsSuccess(systems or {})
+
 
 class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize flow state."""
+        self._pending_user_input: dict[str, Any] | None = None
+        self._system_keys: dict[str, str] | None = None
+
     async def _async_test_credentials(
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
         """Validate credentials against iAqualink."""
         try:
-            async with AqualinkClient(
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                httpx_client=get_async_client(
-                    self.hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2
-                ),
+            async with async_get_aqualink_client(
+                self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             ):
                 pass
         except AqualinkServiceUnauthorizedException:
             return {"base": "invalid_auth"}
-        except AqualinkServiceException, httpx.HTTPError:
+        except AqualinkServiceException, TimeoutError, httpx.HTTPError:
             return {"base": "cannot_connect"}
 
         return {}
@@ -57,19 +98,54 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            errors = await self._async_test_credentials(user_input)
-            if not errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
-                )
+            systems_result = await async_get_systems(
+                self.hass,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
+            if isinstance(systems_result, SystemsFailure):
+                errors = {"base": systems_result.error}
+            else:
+                self._pending_user_input = user_input
+                self._system_keys = {
+                    system.serial: system.name
+                    for system in systems_result.systems.values()
+                }
+                return await self.async_step_systems()
 
         return self.async_show_form(
             step_id="user",
             data_schema=CREDENTIALS_DATA_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_systems(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle selecting which systems to include."""
+        if self._pending_user_input is None or self._system_keys is None:
+            return await self.async_step_user()
+
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._pending_user_input[CONF_USERNAME],
+                data=self._pending_user_input,
+                options=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="systems",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SYSTEMS,
+                        default=list(self._system_keys.keys()),
+                    ): cv.multi_select(self._system_keys),
+                }
+            ),
         )
 
     async def async_step_reauth(
@@ -101,4 +177,76 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=CREDENTIALS_DATA_SCHEMA,
             errors=errors,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> AqualinkOptionsFlowHandler:
+        """Create the options flow."""
+        return AqualinkOptionsFlowHandler()
+
+
+class AqualinkOptionsFlowHandler(OptionsFlowWithReload):
+    """Options flow for Aqualink."""
+
+    def __init__(self) -> None:
+        """Initialize the options flow state."""
+        self._system_keys: dict[str, str] | None = None
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage options."""
+        if user_input is not None and self._system_keys is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        # Fetch systems from API
+        systems_result = await async_get_systems(
+            self.hass,
+            self.config_entry.data[CONF_USERNAME],
+            self.config_entry.data[CONF_PASSWORD],
+        )
+
+        if isinstance(systems_result, SystemsFailure):
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_SYSTEMS,
+                            default=[],
+                        ): cv.multi_select({}),
+                    }
+                ),
+                errors={"base": systems_result.error},
+            )
+
+        # Build schema with all systems as selectable checkboxes
+        self._system_keys = {
+            system.serial: system.name for system in systems_result.systems.values()
+        }
+
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        # Get currently selected systems from options (or default to all)
+        if CONF_SYSTEMS in self.config_entry.options:
+            current_systems = [
+                system_id
+                for system_id in self.config_entry.options[CONF_SYSTEMS]
+                if system_id in self._system_keys
+            ]
+        else:
+            current_systems = list(self._system_keys.keys())
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SYSTEMS,
+                        default=current_systems,
+                    ): cv.multi_select(self._system_keys),
+                }
+            ),
         )

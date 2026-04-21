@@ -25,18 +25,13 @@ from iaqualink.exception import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
-from .const import DOMAIN
+from .const import CONF_SYSTEMS, DOMAIN
 from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
+from .utils import async_get_aqualink_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +55,7 @@ class AqualinkRuntimeData:
 
     client: AqualinkClient
     coordinators: dict[str, AqualinkDataUpdateCoordinator]
+    platforms_loaded: bool
     # These will contain the initialized devices
     binary_sensors: list[AqualinkBinarySensor]
     lights: list[AqualinkLight]
@@ -73,11 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    aqualink = AqualinkClient(
-        username,
-        password,
-        httpx_client=get_async_client(hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2),
-    )
+    aqualink = async_get_aqualink_client(hass, username, password)
     try:
         await aqualink.login()
     except AqualinkServiceUnauthorizedException as auth_exception:
@@ -98,26 +90,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             "Invalid credentials for iAqualink"
         ) from auth_exception
-    except AqualinkServiceException as svc_exception:
+    except (
+        AqualinkServiceException,
+        TimeoutError,
+        httpx.HTTPError,
+    ) as svc_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
             f"Error while attempting to retrieve systems list: {svc_exception}"
         ) from svc_exception
 
-    systems_list = list(systems.values())
-    if not systems_list:
-        await aqualink.close()
-        raise ConfigEntryError("No systems detected or supported")
+    systems = systems or {}
 
     runtime_data = AqualinkRuntimeData(
         aqualink,
         coordinators={},
+        platforms_loaded=False,
         binary_sensors=[],
         lights=[],
         sensors=[],
         switches=[],
         thermostats=[],
     )
+
+    systems_list = list(systems.values())
+    if not systems_list:
+        entry.runtime_data = runtime_data
+        await aqualink.close()
+        _LOGGER.warning("No systems detected or supported")
+        return True
+
+    # Filter to only selected systems (default to all if options not set yet)
+    selected_systems = entry.options.get(
+        CONF_SYSTEMS, [sys.serial for sys in systems_list]
+    )
+
+    entry.runtime_data = runtime_data
+
+    if not selected_systems:
+        await aqualink.close()
+        _LOGGER.warning("No systems selected")
+        return True
+
+    systems_list = [sys for sys in systems_list if sys.serial in selected_systems]
+
+    if not systems_list:
+        await aqualink.close()
+        _LOGGER.warning("No selected systems detected or supported")
+        return True
+
     for system in systems_list:
         coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
         runtime_data.coordinators[system.serial] = coordinator
@@ -134,7 +155,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             raise ConfigEntryAuthFailed(
                 "Invalid credentials for iAqualink"
             ) from auth_exception
-        except AqualinkServiceException as svc_exception:
+        except (
+            AqualinkServiceException,
+            TimeoutError,
+            httpx.HTTPError,
+        ) as svc_exception:
             await aqualink.close()
             raise ConfigEntryNotReady(
                 f"Error while attempting to retrieve devices list: {svc_exception}"
@@ -177,17 +202,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
         runtime_data.thermostats,
     )
 
-    entry.runtime_data = runtime_data
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    runtime_data.platforms_loaded = True
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.client.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not entry.runtime_data.platforms_loaded:
+        return True
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        await entry.runtime_data.client.close()
+
+    return unload_ok
 
 
 def refresh_system[_AqualinkEntityT: AqualinkEntity, **_P](
