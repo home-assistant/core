@@ -76,7 +76,7 @@ async def test_sensors_conditional_creation(
 
     # These should NOT exist with the minimal fixture
     assert "sensor.pellet_stove_combustion_chamber_pressure" not in entity_ids
-    assert "sensor.pellet_stove_combustion_chamber_temperature" not in entity_ids
+    assert "sensor.pellet_stove_combustion_chamber" not in entity_ids
     assert "sensor.pellet_stove_fan_1_speed" not in entity_ids
     assert "sensor.pellet_stove_fan_2_speed" not in entity_ids
     assert "sensor.pellet_stove_fuel_quantity" not in entity_ids
