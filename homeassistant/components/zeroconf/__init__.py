@@ -26,7 +26,7 @@ from homeassistant.loader import async_get_homekit, async_get_zeroconf
 from homeassistant.setup import async_when_setup_or_start
 
 from . import websocket_api
-from .const import DOMAIN, ZEROCONF_TYPE
+from .const import DATA_COMPONENT, DOMAIN, ZEROCONF_TYPE
 from .discovery import (  # noqa: F401
     DATA_DISCOVERY,
     ZeroconfDiscovery,
@@ -89,8 +89,8 @@ def async_get_async_zeroconf(hass: HomeAssistant) -> HaAsyncZeroconf:
 
 
 def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
-    if DOMAIN in hass.data:
-        return cast(HaAsyncZeroconf, hass.data[DOMAIN])
+    if DATA_COMPONENT in hass.data:
+        return hass.data[DATA_COMPONENT]
 
     zeroconf = HaZeroconf(**_async_get_zc_args(hass))
     aio_zc = HaAsyncZeroconf(zc=zeroconf)
@@ -104,7 +104,7 @@ def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     # Wait to the close event to shutdown zeroconf to give
     # integrations time to send a good bye message
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf)
-    hass.data[DOMAIN] = aio_zc
+    hass.data[DATA_COMPONENT] = aio_zc
 
     return aio_zc
 
