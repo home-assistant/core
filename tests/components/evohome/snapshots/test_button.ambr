@@ -25,19 +25,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_platform[botched][button.reset_domestic_hot_water-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Reset Domestic Hot Water',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reset_domestic_hot_water',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_setup_platform[botched][button.reset_front_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -116,6 +103,19 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup_platform[botched][button.reset_my_home_dhw-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home DHW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home_dhw',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup_platform[default][button.reset_bathroom_dn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -136,19 +136,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_dead_zone',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_setup_platform[default][button.reset_domestic_hot_water-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Reset Domestic Hot Water',
-    }),
-    'context': <ANY>,
-    'entity_id': 'button.reset_domestic_hot_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -227,6 +214,19 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.reset_my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_platform[default][button.reset_my_home_dhw-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Reset My Home DHW',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_my_home_dhw',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
