@@ -7,8 +7,9 @@ rules:
     status: exempt
     comment: |
       This integration is local push (iot_class: local_push). Devices emit
-      UDP messages and the integration reacts to them via event subscriptions;
-      there is no polling interval to configure.
+      UDP messages and the integration reacts to them via UDP listener
+      callbacks (asyncio DatagramProtocol); there is no polling interval
+      to configure.
   brands: done
   common-modules:
     status: todo
@@ -40,7 +41,7 @@ rules:
     status: todo
     comment: |
       The integration uses _async_current_entries() to abort duplicate
-      setup (config_flow.py:58), but hassfest requires either
+      setup in the config flow, but hassfest requires either
       single_config_entry: true in the manifest or the modern
       _async_abort_entries_match / async_set_unique_id pattern.
 
