@@ -79,7 +79,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
     def close(self) -> None:
         """Close the underlying API client connection pool."""
-        self._api_client.close()
+        self._api_client.close()  # type: ignore[no-untyped-call]
 
     def update_price_data(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
