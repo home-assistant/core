@@ -62,7 +62,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Mobile app notify platform."""
     if supports_push(hass, entry.data[ATTR_WEBHOOK_ID]):
-        async_add_entities([MobileAppNotifyEntity(entry)])
+        async_add_entities(
+            [MobileAppNotifyEntity(entry, async_get_clientsession(hass))]
+        )
 
 
 class MobileAppNotifyEntity(NotifyEntity):
@@ -73,12 +75,13 @@ class MobileAppNotifyEntity(NotifyEntity):
     _attr_name = None
     _attr_supported_features = NotifyEntityFeature.TITLE
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, session: aiohttp.ClientSession) -> None:
         """Initialize the notify entity."""
 
         self._attr_unique_id = entry.data[ATTR_DEVICE_ID]
         self._attr_device_info = device_info(entry.data)
         self.entry = entry
+        self.session = session
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
@@ -104,7 +107,7 @@ class MobileAppNotifyEntity(NotifyEntity):
 
             try:
                 async with asyncio.timeout(10):
-                    response = await async_get_clientsession(self.hass).post(
+                    response = await self.session.post(
                         self.entry.data[ATTR_APP_DATA][ATTR_PUSH_URL],
                         json={
                             **data,
