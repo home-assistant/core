@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': <NotifyEntityFeature: 1>,
     'translation_key': 'notify',
-    'unique_id': '4d5e6f_notify',
+    'unique_id': '4d5e6f',
     'unit_of_measurement': None,
   })
 # ---
