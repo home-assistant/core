@@ -201,7 +201,10 @@ SENSORS: tuple[FumisSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_fn=lambda data: data.controller.time_to_service is not None,
+        has_fn=lambda data: (
+            data.controller.time_to_service is not None
+            and data.controller.time_to_service >= 0
+        ),
         value_fn=lambda data: data.controller.time_to_service,
     ),
     FumisSensorEntityDescription(
