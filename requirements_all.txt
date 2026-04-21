@@ -1338,7 +1338,7 @@ influxdb-client==1.50.0
 influxdb==5.3.1
 
 # homeassistant.components.infrared
-infrared-protocols==1.3.0
+infrared-protocols==2.0.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.1.1
@@ -1511,7 +1511,7 @@ mbddns==0.1.2
 mcp==1.26.0
 
 # homeassistant.components.minecraft_server
-mcstatus==12.1.0
+mcstatus==13.1.0
 
 # homeassistant.components.meater
 meater-python==0.0.8
