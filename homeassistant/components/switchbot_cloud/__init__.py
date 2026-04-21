@@ -116,7 +116,7 @@ async def make_switchbot_devices(
     return devices_data
 
 
-async def make_device_data(
+async def __make_special_device_data(
     hass: HomeAssistant,
     entry: SwitchbotCloudConfigEntry,
     api: SwitchBotAPI,
@@ -124,7 +124,7 @@ async def make_device_data(
     devices_data: SwitchbotDevices,
     coordinators_by_id: dict[str, SwitchBotCoordinator],
 ) -> None:
-    """Make device data."""
+    """Make special device data."""
     if isinstance(device, Remote) and device.device_type.endswith("Air Conditioner"):
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -147,6 +147,20 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.fans.append((device, coordinator))
+
+
+async def make_device_data(
+    hass: HomeAssistant,
+    entry: SwitchbotCloudConfigEntry,
+    api: SwitchBotAPI,
+    device: Device | Remote,
+    devices_data: SwitchbotDevices,
+    coordinators_by_id: dict[str, SwitchBotCoordinator],
+) -> None:
+    """Make device data."""
+    await __make_special_device_data(
+        hass, entry, api, device, devices_data, coordinators_by_id
+    )
 
     if device.device_type in DEVICE_SUPPORT_MAP:
         default_config = DEVICE_SUPPORT_MAP[device.device_type]
