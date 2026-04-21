@@ -93,15 +93,15 @@ class DeviceListener(SharingDeviceListener):
             device.function,
             device.status_range,
         )
-        self.hass.add_job(self.async_add_device, device)
+        self.hass.add_job(self.async_add_device, device.id)
 
     @callback
-    def async_add_device(self, device: CustomerDevice) -> None:
+    def async_add_device(self, device_id: str) -> None:
         """Add device to Home Assistant."""
         # Ensure the (stale) device isn't present in the device registry
-        self.async_remove_device(device.id)
+        self.async_remove_device(device_id)
 
-        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device_id])
 
     def remove_device(self, device_id: str) -> None:
         """Handle device removal event."""
