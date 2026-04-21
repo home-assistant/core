@@ -67,9 +67,7 @@ async def test_yaml_import_repair_flow(
     flow_id = data["flow_id"]
 
     # Select model (CAS44 has 4 sources, 4 zones)
-    data = await process_repair_fix_flow(
-        client, flow_id, {CONF_MODEL: "cas44"}
-    )
+    data = await process_repair_fix_flow(client, flow_id, {CONF_MODEL: "cas44"})
     assert data["step_id"] == "sources"
 
     # Confirm sources (pre-filled from YAML)

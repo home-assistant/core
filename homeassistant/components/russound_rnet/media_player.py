@@ -15,7 +15,10 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_MODEL, CONF_SOURCES, CONF_ZONES, DOMAIN, RNET_MODELS, TYPE_TCP
@@ -77,7 +80,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RussoundRNETConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Russound RNET media player from a config entry."""
     coordinator = entry.runtime_data
@@ -110,18 +113,18 @@ async def async_setup_entry(
                 )
     else:
         # No zones configured — create all zones from model
-        for controller_id in range(1, model.max_controllers + 1):
-            for zone_id in range(1, model.max_zones + 1):
-                if (controller_id, zone_id) in coordinator.data:
-                    entities.append(
-                        RussoundRNETZone(
-                            coordinator,
-                            controller_id,
-                            zone_id,
-                            f"Zone {zone_id}",
-                            source_list,
-                        )
-                    )
+        entities.extend(
+            RussoundRNETZone(
+                coordinator,
+                controller_id,
+                zone_id,
+                f"Zone {zone_id}",
+                source_list,
+            )
+            for controller_id in range(1, model.max_controllers + 1)
+            for zone_id in range(1, model.max_zones + 1)
+            if (controller_id, zone_id) in coordinator.data
+        )
 
     async_add_entities(entities)
 

@@ -33,9 +33,7 @@ def command[_EntityT: RussoundRNETEntity, **_P](
                     "entity_id": self.entity_id,
                 },
             ) from exc
-        await self.coordinator.async_refresh_zone(
-            self._controller_id, self._zone_id
-        )
+        await self.coordinator.async_refresh_zone(self._controller_id, self._zone_id)
 
     return decorator
 
@@ -62,5 +60,6 @@ class RussoundRNETEntity(CoordinatorEntity[RussoundRNETCoordinator]):
             name=zone_name or f"Zone {zone_id}",
             manufacturer="Russound",
             model=entry.data.get("model"),
-            via_device=(DOMAIN, entry.entry_id) if controller_id > 1 else None,
         )
+        if controller_id > 1:
+            self._attr_device_info["via_device"] = (DOMAIN, entry.entry_id)

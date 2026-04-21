@@ -32,6 +32,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: RussoundRNETConfigEntry
 ) -> bool:
     """Set up Russound RNET from a config entry."""
+    handler: RussoundTcpConnectionHandler | RussoundSerialConnectionHandler
     if entry.data[CONF_TYPE] == TYPE_TCP:
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
