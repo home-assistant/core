@@ -164,21 +164,37 @@ class HeimanSelectEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SelectE
                 "2": "Slow Beep",
             }
         else:
-            # Default options based on common enums
-            self._attr_options = ["disarmed", "armed_home", "armed_away", "armed_night"]
-            # Setup value_list mapping for arm modes
-            self._value_list = {
-                "disarmed": "disarmed",
-                "armed_home": "home",
-                "armed_away": "away",
-                "armed_night": "night",
-            }
-            self._reverse_value_list = {
-                "disarmed": "disarmed",
-                "home": "armed_home",
-                "away": "armed_away",
-                "night": "armed_night",
-            }
+            # Check if this is a known arm mode property
+            arm_mode_keywords = ["arm", "mode", "security", "alert"]
+            prop_lower = self._property_identifier.lower()
+            is_arm_mode = any(kw in prop_lower for kw in arm_mode_keywords)
+
+            if is_arm_mode:
+                # Use arm mode options for security-related properties
+                self._attr_options = [
+                    "disarmed",
+                    "armed_home",
+                    "armed_away",
+                    "armed_night",
+                ]
+                self._value_list = {
+                    "disarmed": "disarmed",
+                    "armed_home": "home",
+                    "armed_away": "away",
+                    "armed_night": "night",
+                }
+                self._reverse_value_list = {
+                    "disarmed": "disarmed",
+                    "home": "armed_home",
+                    "away": "armed_away",
+                    "night": "armed_night",
+                }
+            else:
+                # For unknown properties, use a simple passthrough mapping
+                # These will be populated dynamically from property value_list if available
+                self._attr_options = []
+                self._value_list = {}
+                self._reverse_value_list = {}
 
     def _get_description(self, value) -> str | None:
         """Get description (option text) from value.

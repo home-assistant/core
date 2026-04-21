@@ -130,7 +130,7 @@ class HeimanBinarySensorEntity(
         prop_lower = property_identifier.lower()
         # Try to match known binary sensor types
         for key, device_class in BINARY_SENSOR_DEVICE_CLASS_MAP.items():
-            if key in prop_lower:
+            if key.lower() in prop_lower:
                 self._attr_device_class = BinarySensorDeviceClass(device_class)
                 return
 
