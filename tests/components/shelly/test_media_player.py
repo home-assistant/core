@@ -11,14 +11,24 @@ from syrupy.filters import props
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
+    SERVICE_PLAY_MEDIA,
+    SERVICE_VOLUME_SET,
+)
+from homeassistant.components.shelly.media_player import (
+    CONTENT_TYPE_LOCAL_AUDIO,
+    CONTENT_TYPE_LOCAL_RADIO,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,6 +38,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, patch_platforms
@@ -131,6 +142,7 @@ async def test_rpc_media_player_audio_file(
     )
     mock_rpc_device.mock_update()
 
+    mock_rpc_device.media_play_or_pause.assert_called_once()
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_IDLE
 
@@ -143,6 +155,7 @@ async def test_rpc_media_player_audio_file(
     )
     mock_rpc_device.mock_update()
 
+    assert len(mock_rpc_device.media_play_or_pause.mock_calls) == 2
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_PLAYING
 
@@ -155,6 +168,7 @@ async def test_rpc_media_player_audio_file(
     )
     mock_rpc_device.mock_update()
 
+    mock_rpc_device.media_stop.assert_called_once()
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_IDLE
 
@@ -181,3 +195,111 @@ async def test_rpc_media_player_no_media_meta(
     assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
     assert state.attributes.get(ATTR_MEDIA_DURATION) is None
     assert state.attributes.get(ATTR_MEDIA_POSITION) is None
+
+
+async def test_rpc_media_player_actions(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a Shelly RPC media player."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_NEXT_TRACK,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_rpc_device.media_next.assert_called_once()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PREVIOUS_TRACK,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.media_previous.assert_called_once()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        blocking=True,
+    )
+
+    mock_rpc_device.media_set_volume.assert_called_once_with(5)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_LOCAL_AUDIO,
+            ATTR_MEDIA_CONTENT_ID: "12",
+        },
+        blocking=True,
+    )
+
+    mock_rpc_device.media_play_media.assert_called_once_with(12)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_LOCAL_RADIO,
+            ATTR_MEDIA_CONTENT_ID: "2",
+        },
+        blocking=True,
+    )
+
+    mock_rpc_device.media_play_radio_station.assert_called_once_with(2)
+
+
+async def test_rpc_media_player_play_media_errors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a Shelly RPC errors in play media method."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    with pytest.raises(
+        HomeAssistantError, match="Unsupported media ID for Shelly device: invalid"
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_LOCAL_RADIO,
+                ATTR_MEDIA_CONTENT_ID: "invalid",
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError, match="Unsupported media type for Shelly device: invalid"
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: "invalid",
+                ATTR_MEDIA_CONTENT_ID: "1",
+            },
+            blocking=True,
+        )
