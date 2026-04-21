@@ -20,6 +20,11 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 
@@ -219,20 +224,34 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                     if (name := ifinfo.get("name"))
                 ]
                 self.available_interfaces = list(known_interfaces)
-                # Verify that specified tracker interfaces are valid
-                tracker_interfaces = data[CONF_TRACKER_INTERFACES].copy()
-                for intf_description in tracker_interfaces:
-                    if intf_description not in known_interfaces:
-                        _LOGGER.warning(
-                            "Specified OPNsense tracker interface '%s' was not found during import and so was ignored. Found interfaces were: %s",
-                            intf_description,
-                            ", ".join(known_interfaces),
-                        )
-                        tracker_interfaces.remove(intf_description)
-                if tracker_interfaces:
-                    data[CONF_TRACKER_INTERFACES] = tracker_interfaces
-                else:
-                    data.pop(CONF_TRACKER_INTERFACES)
+                # Abort import if any specified tracker interface is not found
+                missing = [
+                    intf_description
+                    for intf_description in data[CONF_TRACKER_INTERFACES]
+                    if intf_description not in known_interfaces
+                ]
+                if missing:
+                    # Create a repair to guide the user
+                    async_create_issue(
+                        self.hass,
+                        DOMAIN,
+                        f"import_failed_missing_interfaces_{data[CONF_URL]}",
+                        is_fixable=False,
+                        severity=IssueSeverity.CRITICAL,
+                        translation_key="import_failed_missing_interfaces",
+                        translation_placeholders={
+                            "url": data[CONF_URL],
+                            "missing": ", ".join(missing),
+                            "found": ", ".join(known_interfaces),
+                        },
+                    )
+                    return self.async_abort(reason="import_failed_missing_interfaces")
+
+                async_delete_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"import_failed_missing_interfaces_{data[CONF_URL]}",
+                )
         return self.async_create_entry(title=import_data[CONF_URL], data=data)
 
     async def _async_check_connection(self, client: OPNsenseClient) -> None:
