@@ -47,6 +47,12 @@
   },
   "entity": {
     "binary_sensor": {
+      "sprinkler_no_water": {
+        "name": "No water when running"
+      },
+      "sprinkler_water_flowing": {
+        "name": "Water flowing"
+      },
       "water_running": { "name": "Water is flowing" }
     },
     "number": {
@@ -99,6 +105,26 @@
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
           "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "sprinkler_progress": {
+        "name": "Watering progress"
+      },
+      "sprinkler_target": {
+        "name": "Watering target"
+      },
+      "sprinkler_target_type": {
+        "name": "Watering target type",
+        "state": {
+          "amount": "Amount",
+          "duration": "Duration"
+        }
+      },
+      "sprinkler_water_mode": {
+        "name": "Water mode",
+        "state": {
+          "manual": "[%key:common::state::manual%]",
+          "schedule": "Schedule"
         }
       },
       "water_meter_1_reading": {
