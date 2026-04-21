@@ -1776,7 +1776,6 @@ class SerialPortSelectorConfig(BaseSelectorConfig):
 
 
 @SELECTORS.register("serial_port")
-@SELECTORS.register("serial")
 class SerialPortSelector(Selector[SerialPortSelectorConfig]):
     """Selector for a serial port."""
 
