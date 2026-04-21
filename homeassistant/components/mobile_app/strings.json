@@ -20,7 +20,7 @@
   },
   "exceptions": {
     "device_not_connected_for_local_push_notifications": {
-      "message": "Device {device_name} not connected for local push notifications"
+      "message": "Device {device_name} is not connected for local push notifications"
     },
     "error_sending_notification": {
       "message": "Error sending notification to {device_name}"
