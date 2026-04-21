@@ -1388,7 +1388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.my_environment_container_disk_usage_total_size-entry]
@@ -1449,7 +1449,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.my_environment_containers_paused-entry]
@@ -1772,7 +1772,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.my_environment_image_disk_usage_total_size-entry]
@@ -1833,7 +1833,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.my_environment_kernel_version-entry]
@@ -2158,7 +2158,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[sensor.practical_morse_cpu_usage_total-entry]

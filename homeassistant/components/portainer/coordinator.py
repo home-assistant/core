@@ -39,7 +39,7 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
-DEFAULT_SLOW_SCAN_INTERVAL = timedelta(minutes=30)
+DEFAULT_DF_SCAN_INTERVAL = timedelta(minutes=30)
 
 
 @dataclass
@@ -52,7 +52,6 @@ class PortainerCoordinatorData:
     containers: dict[str, PortainerContainerData]
     docker_version: DockerVersion
     docker_info: DockerInfo
-    docker_system_df: DockerSystemDF | None
     stacks: dict[str, PortainerStackData]
 
 
@@ -72,6 +71,13 @@ class PortainerStackData:
 
     stack: Stack
     container_count: int = 0
+
+
+@dataclass
+class PortainerDFData:
+    """Docker system DF data held by the Portainer coordinator."""
+
+    df: DockerSystemDF
 
 
 class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -169,7 +175,7 @@ class PortainerCoordinator(
     """Data Update Coordinator for Portainer."""
 
     config_entry: PortainerConfigEntry
-    slow_coordinator: PortainerSlowCoordinator | None = None
+    docker_system_df_coordinator: PortainerDockerSystemDFCoordinator | None = None
     _update_interval = DEFAULT_SCAN_INTERVAL
 
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
@@ -204,55 +210,52 @@ class PortainerCoordinator(
                 )
                 continue
 
-            try:
-                (
-                    containers,
-                    docker_version,
-                    docker_info,
-                    docker_system_df,
-                ) = await asyncio.gather(
-                    self.portainer.get_containers(endpoint.id),
-                    self.portainer.docker_version(endpoint.id),
-                    self.portainer.docker_info(endpoint.id),
-                    self.portainer.docker_system_df(endpoint.id),
+            (
+                containers,
+                docker_version,
+                docker_info,
+            ) = await asyncio.gather(
+                self.portainer.get_containers(endpoint.id),
+                self.portainer.docker_version(endpoint.id),
+                self.portainer.docker_info(endpoint.id),
+            )
+
+            stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
+            swarm_id = (
+                docker_info.swarm.cluster.get("ID")
+                if docker_info.swarm
+                and docker_info.swarm.control_available
+                and docker_info.swarm.cluster
+                else None
+            )
+            if swarm_id:
+                stack_requests.append(
+                    self.portainer.get_stacks(
+                        endpoint_id=endpoint.id, swarm_id=swarm_id
+                    )
                 )
 
-                stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
-                swarm_id = (
-                    docker_info.swarm.cluster.get("ID")
-                    if docker_info.swarm
-                    and docker_info.swarm.control_available
-                    and docker_info.swarm.cluster
+            stacks = [
+                stack
+                for result in await asyncio.gather(*stack_requests)
+                for stack in result
+            ]
+
+            prev_endpoint = self.data.get(endpoint.id) if self.data else None
+            container_map: dict[str, PortainerContainerData] = {}
+            stack_map: dict[str, PortainerStackData] = {
+                stack.name: PortainerStackData(stack=stack, container_count=0)
+                for stack in stacks
+            }
+
+            # Map containers, started and stopped
+            for container in containers:
+                container_name = self._get_container_name(container.names[0])
+                prev_container = (
+                    prev_endpoint.containers.get(container_name)
+                    if prev_endpoint
                     else None
                 )
-                if swarm_id:
-                    stack_requests.append(
-                        self.portainer.get_stacks(
-                            endpoint_id=endpoint.id, swarm_id=swarm_id
-                        )
-                    )
-
-                stacks = [
-                    stack
-                    for result in await asyncio.gather(*stack_requests)
-                    for stack in result
-                ]
-
-                prev_endpoint = self.data.get(endpoint.id) if self.data else None
-                container_map: dict[str, PortainerContainerData] = {}
-                stack_map: dict[str, PortainerStackData] = {
-                    stack.name: PortainerStackData(stack=stack, container_count=0)
-                    for stack in stacks
-                }
-
-                # Map containers, started and stopped
-                for container in containers:
-                    container_name = self._get_container_name(container.names[0])
-                    prev_container = (
-                        prev_endpoint.containers.get(container_name)
-                        if prev_endpoint
-                        else None
-                    )
 
                 # Check if container belongs to a stack via docker compose label
                 stack_name: str | None = (
@@ -304,13 +307,6 @@ class PortainerCoordinator(
                 for container_name, stats in container_stats.items():
                     container_map[container_name].stats = stats
 
-            # Pull DF data from the slow coordinator to preserve last state across fast refreshes
-            docker_system_df = (
-                self.slow_coordinator.data.get(endpoint.id)
-                if self.slow_coordinator and self.slow_coordinator.data
-                else None
-            )
-
             mapped_endpoints[endpoint.id] = PortainerCoordinatorData(
                 id=endpoint.id,
                 name=endpoint.name,
@@ -318,7 +314,6 @@ class PortainerCoordinator(
                 containers=container_map,
                 docker_version=docker_version,
                 docker_info=docker_info,
-                docker_system_df=docker_system_df,
                 stacks=stack_map,
             )
 
@@ -392,26 +387,20 @@ class PortainerCoordinator(
         return container_name.replace("/", " ").strip()
 
 
-class PortainerSlowCoordinator(PortainerBaseCoordinator[dict[int, DockerSystemDF]]):
-    """Slow Data Update Coordinator for Portainer."""
+class PortainerDockerSystemDFCoordinator(
+    PortainerBaseCoordinator[dict[int, DockerSystemDF]]
+):
+    """Data Update Coordinator for Docker system DF."""
 
     config_entry: PortainerConfigEntry
-    _update_interval = DEFAULT_SLOW_SCAN_INTERVAL
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: PortainerConfigEntry,
-        portainer: Portainer,
-        main_coordinator: PortainerCoordinator,
-    ) -> None:
-        """Initialize the slow coordinator."""
-        super().__init__(hass, config_entry, portainer)
-        self._main_coordinator = main_coordinator
+    _update_interval = DEFAULT_DF_SCAN_INTERVAL
 
     async def update_data(self) -> dict[int, DockerSystemDF]:
-        """Fetch slow-changing/long loading data from Portainer API."""
+        """Fetch Docker system DF    data independently from Portainer API."""
+        endpoints = await self.portainer.get_endpoints()
         results: dict[int, DockerSystemDF] = {}
-        for endpoint_id in self._main_coordinator.data:
-            results[endpoint_id] = await self.portainer.docker_system_df(endpoint_id)
+        for endpoint in endpoints:
+            if endpoint.status == EndpointStatus.DOWN:
+                continue
+            results[endpoint.id] = await self.portainer.docker_system_df(endpoint.id)
         return results

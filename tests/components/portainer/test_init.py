@@ -302,16 +302,16 @@ async def test_container_stack_device_links(
     assert standalone_container_device.via_device_id == endpoint_device.id
 
 
-async def test_slow_refresh_runs_on_ha_start(
+async def test_docker_system_df_refresh_runs_on_ha_start(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test slow coordinator refreshes DF data on HA start."""
+    """Test docker system df coordinator refreshes DF data on HA start."""
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    slow_coordinator = coordinator.slow_coordinator
+    docker_system_df_coordinator = coordinator.docker_system_df_coordinator
     endpoints = list(coordinator.data.values())
     assert endpoints
 
@@ -321,7 +321,9 @@ async def test_slow_refresh_runs_on_ha_start(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_portainer_client.docker_system_df.call_count == len(endpoints)
-    assert slow_coordinator.data
+    assert docker_system_df_coordinator.data
+
+
 async def test_new_endpoint_callback(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
