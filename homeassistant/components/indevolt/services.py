@@ -11,16 +11,17 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.target import (
+    TargetSelection,
+    async_extract_referenced_entity_ids,
+)
 
 from .const import DOMAIN, POWER_LIMITS, RealtimeAction
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
-RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
+RT_ACTION_SERVICE_SCHEMA: Final = cv.make_entity_service_schema(
     {
-        vol.Required("device_ids"): vol.All(
-            cv.ensure_list,
-            [cv.string],
-        ),
         vol.Required("target_soc"): vol.All(
             vol.Coerce(int),
             vol.Range(min=0, max=100),
@@ -91,8 +92,17 @@ async def _async_get_coordinators_from_call(
     """Resolve coordinator(s) targeted by a service call."""
     coordinators: list[IndevoltCoordinator] = []
 
-    # Ensure targets are provided by user
-    device_ids: list[str] = call.data.get("device_ids") or []
+    referenced = async_extract_referenced_entity_ids(hass, TargetSelection(call.data))
+
+    # Collect device IDs directly targeted, plus devices of any targeted entities
+    device_ids: set[str] = set(referenced.referenced_devices)
+    entity_registry = er.async_get(hass)
+    for entity_id in referenced.referenced | referenced.indirectly_referenced:
+        if (
+            entity_entry := entity_registry.async_get(entity_id)
+        ) and entity_entry.device_id:
+            device_ids.add(entity_entry.device_id)
+
     if not device_ids:
         _raise_no_target_entries()
 
@@ -195,7 +205,7 @@ async def _execute_realtime_action(
             translation_domain=DOMAIN,
             translation_key="multi_device_errors",
             translation_placeholders={"errors": "; ".join(errors)},
-        ) from exception
+        )
 
 
 def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Never:
