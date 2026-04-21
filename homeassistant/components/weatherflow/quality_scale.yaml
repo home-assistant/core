@@ -143,10 +143,10 @@ rules:
   exception-translations:
     status: todo
     comment: |
-      The integration does not raise HomeAssistantError or
-      ServiceValidationError with translation keys. Error handling in the
-      config flow uses plain string error keys, not translated exception
-      messages.
+      The integration does not raise translated HomeAssistantError or
+      ServiceValidationError exceptions. Config flow form errors use
+      translation keys resolved via strings.json, but those are separate from
+      the translated exceptions covered by this rule.
   icon-translations: done
   reconfiguration-flow:
     status: todo
