@@ -117,18 +117,24 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
             manufacturer="Rotarex",
             model="DIMES SRG",
         )
+        self._latest_sync: RotarexSyncData | None = self._get_latest_sync()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._get_latest_sync() is not None
+        return super().available and self._latest_sync is not None
 
     @property
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
-        if (sync := self._get_latest_sync()) is None:
+        if self._latest_sync is None:
             return None
-        return self.entity_description.value_fn(sync)
+        return self.entity_description.value_fn(self._latest_sync)
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._latest_sync = self._get_latest_sync()
+        super()._handle_coordinator_update()
 
     def _get_latest_sync(self) -> RotarexSyncData | None:
         """Return the most recent synchronization entry for the tank."""

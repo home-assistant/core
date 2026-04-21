@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+import aiohttp
 from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 import voluptuous as vol
 
@@ -41,6 +42,8 @@ class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.login(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except aiohttp.ClientError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

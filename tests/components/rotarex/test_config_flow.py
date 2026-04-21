@@ -4,6 +4,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pytest
 from rotarex_dimes_srg_api import InvalidAuth
 
@@ -55,6 +56,7 @@ async def test_form(hass: HomeAssistant, mock_rotarex_api: AsyncMock) -> None:
     ("exception", "error"),
     [
         (InvalidAuth, "invalid_auth"),
+        (aiohttp.ClientError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
