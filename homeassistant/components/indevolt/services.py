@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Final, Never
 
 import voluptuous as vol
@@ -15,9 +14,6 @@ import homeassistant.helpers.device_registry as dr
 
 from .const import DOMAIN, POWER_LIMITS, RealtimeAction
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
 
 RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
     {
@@ -42,40 +38,20 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def charge(call: ServiceCall) -> None:
         """Handle the service call to start charging."""
-        coordinators = await _async_get_coordinators_from_call(hass, call)
-
-        target_soc: int = call.data["target_soc"]
-        power: int = call.data["power"]
-
-        _validate_realtime_action(
-            coordinators,
-            power,
-            target_soc,
+        await _async_handle_realtime_action(
+            hass,
+            call,
+            RealtimeAction.CHARGE,
             power_key="max_charge_power",
-        )
-
-        # Perform actions & process results
-        await _execute_realtime_action(
-            coordinators, RealtimeAction.CHARGE, power, target_soc
         )
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
-        coordinators = await _async_get_coordinators_from_call(hass, call)
-
-        power: int = call.data["power"]
-        target_soc: int = call.data["target_soc"]
-
-        _validate_realtime_action(
-            coordinators,
-            power,
-            target_soc,
+        await _async_handle_realtime_action(
+            hass,
+            call,
+            RealtimeAction.DISCHARGE,
             power_key="max_discharge_power",
-        )
-
-        # Perform actions & process results
-        await _execute_realtime_action(
-            coordinators, RealtimeAction.DISCHARGE, power, target_soc
         )
 
     hass.services.async_register(
@@ -84,6 +60,28 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, "discharge", discharge, schema=RT_ACTION_SERVICE_SCHEMA
     )
+
+
+async def _async_handle_realtime_action(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    action_code: RealtimeAction,
+    power_key: str,
+) -> None:
+    """Validate and execute a realtime action for one or more coordinators."""
+    coordinators = await _async_get_coordinators_from_call(hass, call)
+
+    power: int = call.data["power"]
+    target_soc: int = call.data["target_soc"]
+
+    _validate_realtime_action(
+        coordinators,
+        power,
+        target_soc,
+        power_key=power_key,
+    )
+
+    await _execute_realtime_action(coordinators, action_code, power, target_soc)
 
 
 async def _async_get_coordinators_from_call(
