@@ -42,6 +42,88 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "combustion_chamber_temperature": {
+        "name": "Combustion chamber"
+      },
+      "detailed_stove_status": {
+        "name": "Detailed stove status",
+        "state": {
+          "cold_start": "Cold start",
+          "cold_start_off": "Off (cold start)",
+          "combustion": "Combustion",
+          "cooling": "Cooling",
+          "eco": "Eco",
+          "hybrid_init": "Hybrid init",
+          "hybrid_start": "Hybrid start",
+          "ignition": "Ignition",
+          "off": "[%key:common::state::off%]",
+          "pre_combustion": "Pre-combustion",
+          "pre_heating": "Pre-heating",
+          "wood_burning_off": "Off (wood burning)",
+          "wood_combustion": "Wood combustion",
+          "wood_start": "Wood start"
+        }
+      },
+      "fan_1_speed": {
+        "name": "Fan 1 speed"
+      },
+      "fan_2_speed": {
+        "name": "Fan 2 speed"
+      },
+      "fuel_quantity": {
+        "name": "Fuel level"
+      },
+      "fuel_used": {
+        "name": "Fuel consumed"
+      },
+      "heating_time": {
+        "name": "Burning time"
+      },
+      "igniter_starts": {
+        "name": "Igniter starts"
+      },
+      "misfires": {
+        "name": "Misfires"
+      },
+      "module_temperature": {
+        "name": "WiRCU module"
+      },
+      "overheatings": {
+        "name": "Overheatings"
+      },
+      "power_output": {
+        "name": "Power output"
+      },
+      "pressure": {
+        "name": "Combustion chamber pressure"
+      },
+      "stove_status": {
+        "name": "Stove status",
+        "state": {
+          "burning": "Burning",
+          "cooling": "Cooling",
+          "eco": "Eco",
+          "heating_up": "Heating up",
+          "ignition": "Ignition",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "time_to_service": {
+        "name": "Time to service"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    }
+  },
   "exceptions": {
     "authentication_error": {
       "message": "Authentication with the Fumis online service failed. Check your MAC address and PIN code."
