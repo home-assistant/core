@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, MODELS
 from .coordinator import LaundrifyConfigEntry, LaundrifyUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +47,14 @@ class LaundrifyBaseSensor(SensorEntity):
     def __init__(self, device: LaundrifyDevice) -> None:
         """Initialize the sensor."""
         self._device = device
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.id)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.id)},
+            name=device.name,
+            manufacturer=MANUFACTURER,
+            model=MODELS[device.model],
+            sw_version=device.firmwareVersion,
+            configuration_url=f"http://{device.internalIP}",
+        )
         self._attr_unique_id = f"{device.id}_{self._attr_device_class}"
 
 

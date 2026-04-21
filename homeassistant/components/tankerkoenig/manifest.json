@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiotankerkoenig"],
   "quality_scale": "platinum",
-  "requirements": ["aiotankerkoenig==0.4.2"]
+  "requirements": ["aiotankerkoenig==0.5.1"]
 }

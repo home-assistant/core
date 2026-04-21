@@ -70,7 +70,7 @@ class VeluxEntity(Entity):
             via_device=(DOMAIN, f"gateway_{config_entry_id}"),
         )
 
-    async def after_update_callback(self, node) -> None:
+    async def after_update_callback(self, _: Node) -> None:
         """Call after device was updated."""
         self._attr_available = self.node.pyvlx.get_connected()
         if not self._attr_available:

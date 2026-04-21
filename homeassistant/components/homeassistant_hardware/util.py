@@ -10,14 +10,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 
-from universal_silabs_flasher.const import (
-    ApplicationType as FlasherApplicationType,
-    ResetTarget as FlasherResetTarget,
-)
+from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.firmware import parse_firmware_image
-from universal_silabs_flasher.flasher import Flasher
+from universal_silabs_flasher.flasher import BaseFlasher, DeviceSpecificFlasher, Flasher
 
-from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonManager,
+    AddonState,
+    get_apps_list,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -29,6 +31,8 @@ from .const import (
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
+    Z2M_ADDON_NAME,
+    Z2M_ADDON_SLUG_REGEX,
     ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
     ZIGBEE_FLASHER_ADDON_NAME,
     ZIGBEE_FLASHER_ADDON_SLUG,
@@ -63,18 +67,6 @@ class ApplicationType(StrEnum):
         return FlasherApplicationType(self.value)
 
 
-class ResetTarget(StrEnum):
-    """Methods to reset a device into bootloader mode."""
-
-    RTS_DTR = "rts_dtr"
-    BAUDRATE = "baudrate"
-    YELLOW = "yellow"
-
-    def as_flasher_reset_target(self) -> FlasherResetTarget:
-        """Convert the reset target enum into one compatible with USF."""
-        return FlasherResetTarget(self.value)
-
-
 @singleton(OTBR_ADDON_MANAGER_DATA)
 @callback
 def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
@@ -96,6 +88,17 @@ def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager
         _LOGGER,
         ZIGBEE_FLASHER_ADDON_NAME,
         ZIGBEE_FLASHER_ADDON_SLUG,
+    )
+
+
+@callback
+def get_z2m_addon_manager(hass: HomeAssistant, slug: str) -> WaitingAddonManager:
+    """Get the Z2M add-on manager."""
+    return WaitingAddonManager(
+        hass,
+        _LOGGER,
+        Z2M_ADDON_NAME,
+        slug,
     )
 
 
@@ -227,6 +230,32 @@ async def get_otbr_addon_firmware_info(
     )
 
 
+async def get_z2m_addon_firmware_info(
+    hass: HomeAssistant, z2m_addon_manager: AddonManager
+) -> FirmwareInfo | None:
+    """Get firmware info from a Z2M add-on."""
+    try:
+        z2m_addon_info = await z2m_addon_manager.async_get_addon_info()
+    except AddonError:
+        return None
+
+    if z2m_addon_info.state == AddonState.NOT_INSTALLED:
+        return None
+
+    serial = z2m_addon_info.options.get("serial")
+
+    if not isinstance(serial, dict) or (z2m_port := serial.get("port")) is None:
+        return None
+
+    return FirmwareInfo(
+        device=z2m_port,
+        firmware_type=ApplicationType.EZSP,
+        firmware_version=None,
+        source=f"zigbee2mqtt ({z2m_addon_manager.addon_slug})",
+        owners=[OwningAddon(slug=z2m_addon_manager.addon_slug)],
+    )
+
+
 async def guess_hardware_owners(
     hass: HomeAssistant, device_path: str
 ) -> list[FirmwareInfo]:
@@ -236,46 +265,54 @@ async def guess_hardware_owners(
     async for firmware_info in hass.data[DATA_COMPONENT].iter_firmware_info():
         device_guesses[firmware_info.device].append(firmware_info)
 
+    if not is_hassio(hass):
+        return device_guesses.get(device_path, [])
+
     # It may be possible for the OTBR addon to be present without the integration
-    if is_hassio(hass):
-        otbr_addon_manager = get_otbr_addon_manager(hass)
-        otbr_addon_fw_info = await get_otbr_addon_firmware_info(
-            hass, otbr_addon_manager
-        )
-        otbr_path = (
-            otbr_addon_fw_info.device if otbr_addon_fw_info is not None else None
-        )
+    otbr_addon_manager = get_otbr_addon_manager(hass)
+    otbr_addon_fw_info = await get_otbr_addon_firmware_info(hass, otbr_addon_manager)
+    otbr_path = otbr_addon_fw_info.device if otbr_addon_fw_info is not None else None
 
-        # Only create a new entry if there are no existing OTBR ones
-        if otbr_path is not None and not any(
-            info.source == "otbr" for info in device_guesses[otbr_path]
-        ):
-            assert otbr_addon_fw_info is not None
-            device_guesses[otbr_path].append(otbr_addon_fw_info)
+    # Only create a new entry if there are no existing OTBR ones
+    if otbr_path is not None and not any(
+        info.source == "otbr" for info in device_guesses[otbr_path]
+    ):
+        assert otbr_addon_fw_info is not None
+        device_guesses[otbr_path].append(otbr_addon_fw_info)
 
-    if is_hassio(hass):
-        multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
+    multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
 
-        try:
-            multipan_addon_info = await multipan_addon_manager.async_get_addon_info()
-        except AddonError:
-            pass
-        else:
-            if multipan_addon_info.state != AddonState.NOT_INSTALLED:
-                multipan_path = multipan_addon_info.options.get("device")
+    try:
+        multipan_addon_info = await multipan_addon_manager.async_get_addon_info()
+    except AddonError:
+        pass
+    else:
+        if multipan_addon_info.state != AddonState.NOT_INSTALLED:
+            multipan_path = multipan_addon_info.options.get("device")
 
-                if multipan_path is not None:
-                    device_guesses[multipan_path].append(
-                        FirmwareInfo(
-                            device=multipan_path,
-                            firmware_type=ApplicationType.CPC,
-                            firmware_version=None,
-                            source="multiprotocol",
-                            owners=[
-                                OwningAddon(slug=multipan_addon_manager.addon_slug)
-                            ],
-                        )
+            if multipan_path is not None:
+                device_guesses[multipan_path].append(
+                    FirmwareInfo(
+                        device=multipan_path,
+                        firmware_type=ApplicationType.CPC,
+                        firmware_version=None,
+                        source="multiprotocol",
+                        owners=[OwningAddon(slug=multipan_addon_manager.addon_slug)],
                     )
+                )
+
+    # Z2M can be provided by one of many add-ons, we match them by name
+    for app_info in get_apps_list(hass) or []:
+        slug = app_info.get("slug")
+
+        if not isinstance(slug, str) or Z2M_ADDON_SLUG_REGEX.fullmatch(slug) is None:
+            continue
+
+        z2m_addon_manager = get_z2m_addon_manager(hass, slug)
+        z2m_fw_info = await get_z2m_addon_firmware_info(hass, z2m_addon_manager)
+
+        if z2m_fw_info is not None:
+            device_guesses[z2m_fw_info.device].append(z2m_fw_info)
 
     return device_guesses.get(device_path, [])
 
@@ -310,23 +347,20 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
 async def probe_silabs_firmware_info(
     device: str,
     *,
-    bootloader_reset_methods: Sequence[ResetTarget],
-    application_probe_methods: Sequence[tuple[ApplicationType, int]],
+    flasher_cls: type[BaseFlasher],
+    application_probe_methods: Sequence[ApplicationType] | None = None,
 ) -> FirmwareInfo | None:
     """Probe the running firmware on a SiLabs device."""
-    flasher = Flasher(
-        device=device,
-        probe_methods=tuple(
-            (m.as_flasher_application_type(), baudrate)
-            for m, baudrate in application_probe_methods
-        ),
-        bootloader_reset=tuple(
-            m.as_flasher_reset_target() for m in bootloader_reset_methods
-        ),
-    )
+    flasher = flasher_cls(device=device)
 
     try:
-        await flasher.probe_app_type()
+        await flasher.probe_app_type(
+            only=(
+                [m.as_flasher_application_type() for m in application_probe_methods]
+                if application_probe_methods is not None
+                else None
+            )
+        )
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Failed to probe application type", exc_info=True)
 
@@ -349,20 +383,25 @@ async def probe_silabs_firmware_info(
 async def probe_silabs_firmware_type(
     device: str,
     *,
-    bootloader_reset_methods: Sequence[ResetTarget],
     application_probe_methods: Sequence[tuple[ApplicationType, int]],
 ) -> ApplicationType | None:
     """Probe the running firmware type on a SiLabs device."""
-
-    fw_info = await probe_silabs_firmware_info(
-        device,
-        bootloader_reset_methods=bootloader_reset_methods,
-        application_probe_methods=application_probe_methods,
+    flasher = Flasher(
+        device=device,
+        probe_methods=[
+            (m.as_flasher_application_type(), b) for m, b in application_probe_methods
+        ],
     )
-    if fw_info is None:
+
+    try:
+        await flasher.probe_app_type()
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Failed to probe application type", exc_info=True)
+
+    if flasher.app_type is None:
         return None
 
-    return fw_info.firmware_type
+    return ApplicationType.from_flasher_application_type(flasher.app_type)
 
 
 @asynccontextmanager
@@ -385,36 +424,18 @@ async def async_flash_silabs_firmware(
     hass: HomeAssistant,
     device: str,
     fw_data: bytes,
+    flasher_cls: type[DeviceSpecificFlasher],
     expected_installed_firmware_type: ApplicationType,
-    bootloader_reset_methods: Sequence[ResetTarget],
-    application_probe_methods: Sequence[tuple[ApplicationType, int]],
     progress_callback: Callable[[int, int], None] | None = None,
 ) -> FirmwareInfo:
     """Flash firmware to the SiLabs device.
 
     This function is meant to be used within a firmware update context.
     """
-    if not any(
-        method == expected_installed_firmware_type
-        for method, _ in application_probe_methods
-    ):
-        raise ValueError(
-            f"Expected installed firmware type {expected_installed_firmware_type!r}"
-            f" not in application probe methods {application_probe_methods!r}"
-        )
 
     fw_image = await hass.async_add_executor_job(parse_firmware_image, fw_data)
 
-    flasher = Flasher(
-        device=device,
-        probe_methods=tuple(
-            (m.as_flasher_application_type(), baudrate)
-            for m, baudrate in application_probe_methods
-        ),
-        bootloader_reset=tuple(
-            m.as_flasher_reset_target() for m in bootloader_reset_methods
-        ),
-    )
+    flasher = flasher_cls(device=device)
 
     try:
         # Enter the bootloader with indeterminate progress
@@ -431,13 +452,9 @@ async def async_flash_silabs_firmware(
 
     probed_firmware_info = await probe_silabs_firmware_info(
         device,
-        bootloader_reset_methods=bootloader_reset_methods,
+        flasher_cls=flasher_cls,
         # Only probe for the expected installed firmware type
-        application_probe_methods=[
-            (method, baudrate)
-            for method, baudrate in application_probe_methods
-            if method == expected_installed_firmware_type
-        ],
+        application_probe_methods=[expected_installed_firmware_type],
     )
 
     if probed_firmware_info is None:

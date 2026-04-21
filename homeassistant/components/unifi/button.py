@@ -31,9 +31,11 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
+from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -45,6 +47,8 @@ from .entity import (
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
+
+PARALLEL_UPDATES = 1
 
 
 @callback
@@ -151,7 +155,13 @@ class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.control_fn(self.api, self._obj_id)
+        try:
+            await self.entity_description.control_fn(self.api, self._obj_id)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

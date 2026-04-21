@@ -30,14 +30,14 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device (Test Model)"
+    assert result["title"] == "Outdoor Smart Plug (WPO-01)"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
-        CONF_NAME: "Test Device",
-        CONF_DEVICE_ID: "test_device_id",
-        CONF_MODEL: "Test Model",
+        CONF_NAME: "Outdoor Smart Plug",
+        CONF_DEVICE_ID: "aabbccddee02",
+        CONF_MODEL: "WPO-01",
     }
-    assert result["result"].unique_id == "test_device_id"
+    assert result["result"].unique_id == "aabbccddee02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -98,7 +98,7 @@ async def test_connection_error_and_recovery(
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device (Test Model)"
+    assert result["title"] == "Outdoor Smart Plug (WPO-01)"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -164,12 +164,12 @@ async def test_valid_hostname(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         result["flow_id"], {CONF_HOST: "valid-hostname.local"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Device (Test Model)"
+    assert result["title"] == "Outdoor Smart Plug (WPO-01)"
     assert result["data"] == {
         CONF_HOST: "valid-hostname.local",
-        CONF_NAME: "Test Device",
-        CONF_DEVICE_ID: "test_device_id",
-        CONF_MODEL: "Test Model",
+        CONF_NAME: "Outdoor Smart Plug",
+        CONF_DEVICE_ID: "aabbccddee02",
+        CONF_MODEL: "WPO-01",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -192,7 +192,7 @@ async def test_unsupported_device(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
     assert result["description_placeholders"] == {
-        "model": "Test Model",
+        "model": "WPO-01",
         "sw_version": "Test Model Version",
     }
 
@@ -215,12 +215,12 @@ async def test_zeroconf_discovery(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "systemnexa2_test (Test Model)"
+    assert result["title"] == "systemnexa2_test (WPO-01)"
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
         CONF_NAME: "systemnexa2_test",
-        CONF_DEVICE_ID: "test_device_id",
-        CONF_MODEL: "Test Model",
+        CONF_DEVICE_ID: "aabbccddee02",
+        CONF_MODEL: "WPO-01",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -249,8 +249,8 @@ async def test_device_with_none_values(
     device = mock_system_nexa_2_device.return_value
     # Create new InformationData with None unique_id
     device.info_data = InformationData(
-        name="Test Device",
-        model="Test Model",
+        name="Outdoor Smart Plug",
+        model="WPO-01",
         unique_id=None,
         sw_version="Test Model Version",
         hw_version="Test HW Version",
@@ -281,7 +281,7 @@ async def test_zeroconf_discovery_none_values(hass: HomeAssistant) -> None:
         type="_systemnexa2._tcp.local.",
         properties={
             "id": None,
-            "model": "Test Model",
+            "model": "WPO-01",
             "version": "1.0.0",
         },
     )
@@ -291,3 +291,120 @@ async def test_zeroconf_discovery_none_values(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
+
+
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguration flow."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert mock_config_entry.data[CONF_HOST] != "10.0.0.132"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Test successful reconfiguration with new host
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "10.0.0.132"
+    assert mock_config_entry.data[CONF_DEVICE_ID] == "aabbccddee02"
+    assert mock_config_entry.data[CONF_MODEL] == "WPO-01"
+    assert mock_config_entry.data[CONF_NAME] == "Outdoor Smart Plug"
+
+
+async def test_reconfigure_flow_invalid_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow with invalid host."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    # Mock socket.gethostbyname to raise error for invalid hostname
+    with patch(
+        "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror(-2, "Name or service not known"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "invalid_hostname"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_system_nexa_2_device: MagicMock,
+) -> None:
+    """Test reconfiguration flow with connection error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_system_nexa_2_device.initiate_device.side_effect = TimeoutError(
+        "Connection failed"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_system_nexa_2_device.initiate_device.side_effect = Exception("Unknown")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_system_nexa_2_device: MagicMock,
+) -> None:
+    """Test reconfiguration flow with different device."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    different_device_info = InformationData(
+        name="Different Device",
+        model="Test Model",
+        unique_id="different_device_id",
+        sw_version="Test Model Version",
+        hw_version="Test HW Version",
+        wifi_dbm=-50,
+        wifi_ssid="Test WiFi SSID",
+        dimmable=False,
+    )
+    mock_system_nexa_2_device.return_value.get_info.return_value = InformationUpdate(
+        information=different_device_info
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"

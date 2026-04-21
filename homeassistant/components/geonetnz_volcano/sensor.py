@@ -58,11 +58,12 @@ async def async_setup_entry(
 class GeonetnzVolcanoSensor(SensorEntity):
     """Represents an external event with GeoNet NZ Volcano feed data."""
 
+    _attr_icon = DEFAULT_ICON
+    _attr_native_unit_of_measurement = "alert level"
     _attr_should_poll = False
 
     def __init__(self, config_entry_id, feed_manager, external_id, unit_system):
         """Initialize entity with data from feed entry."""
-        self._config_entry_id = config_entry_id
         self._feed_manager = feed_manager
         self._external_id = external_id
         self._attr_unique_id = f"{config_entry_id}_{external_id}"
@@ -71,8 +72,6 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._distance = None
         self._latitude = None
         self._longitude = None
-        self._attribution = None
-        self._alert_level = None
         self._activity = None
         self._hazards = None
         self._feed_last_update = None
@@ -124,7 +123,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._latitude = round(feed_entry.coordinates[0], 5)
         self._longitude = round(feed_entry.coordinates[1], 5)
         self._attr_attribution = feed_entry.attribution
-        self._alert_level = feed_entry.alert_level
+        self._attr_native_value = feed_entry.alert_level
         self._activity = feed_entry.activity
         self._hazards = feed_entry.hazards
         self._feed_last_update = dt_util.as_utc(last_update) if last_update else None
@@ -133,24 +132,9 @@ class GeonetnzVolcanoSensor(SensorEntity):
         )
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._alert_level
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEFAULT_ICON
-
-    @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the entity."""
         return f"Volcano {self._title}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return "alert level"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -1,0 +1,345 @@
+{
+  "creationTime": 1613674982000,
+  "lastUpdateTime": 1613674982000,
+  "id": "SETUP-1234-1234-6362",
+  "location": {
+    "creationTime": 1613674982000,
+    "lastUpdateTime": 1632527573000,
+    "city": "*",
+    "country": "*",
+    "postalCode": "*/*",
+    "addressLine1": "*",
+    "addressLine2": "",
+    "timezone": "Asia/Bangkok",
+    "longitude": "*",
+    "latitude": "*",
+    "twilightMode": 2,
+    "twilightAngle": "CIVIL",
+    "twilightCity": "paris",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "TH"
+  },
+  "gateways": [
+    {
+      "gatewayId": "1234-1234-6362",
+      "type": 53,
+      "subType": 1,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2021.2.4"
+      },
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE",
+      "syncInProgress": false,
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS",
+      "mode": "ACTIVE"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1613675393000,
+      "lastUpdateTime": 1613675393000,
+      "label": "*",
+      "deviceURL": "internal://1234-1234-6362/pod/0",
+      "shortcut": false,
+      "controllableName": "internal:PodMiniComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "update",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCountryCode",
+            "nparams": 1
+          },
+          {
+            "commandName": "activateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "deactivateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPodMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshUpdateStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCalendar",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLightingLedPodMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPodLedOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPodLedOn",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["offline", "online"],
+            "qualifiedName": "core:ConnectivityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CountryCodeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:LocalIPv4AddressState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "doublePress",
+              "longPress",
+              "simplePress",
+              "triplePress",
+              "veryLongPress"
+            ],
+            "qualifiedName": "internal:LastActionConfigButtonState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:LightingLedPodModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "Pod",
+        "uiProfiles": ["UpdatableComponent"],
+        "uiClass": "Pod",
+        "qualifiedName": "internal:PodMiniComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "internal:LightingLedPodModeState",
+          "type": 2,
+          "value": 1.0
+        },
+        {
+          "name": "core:CountryCodeState",
+          "type": 3,
+          "value": "TH"
+        },
+        {
+          "name": "core:LocalIPv4AddressState",
+          "type": 3,
+          "value": "N/A"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "Pod",
+      "type": 1,
+      "oid": "2dfeb3c8-a71d-4552-9e9b-875baf906a6c",
+      "uiClass": "Pod"
+    },
+    {
+      "creationTime": 1613676516000,
+      "lastUpdateTime": 1613676516000,
+      "label": "Patio Shutter",
+      "deviceURL": "rts://1234-1234-6362/16730022",
+      "shortcut": false,
+      "controllableName": "rts:RollerShutterRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 1
+          },
+          {
+            "commandName": "down",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "open",
+            "nparams": 1
+          },
+          {
+            "commandName": "rest",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 1
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 1
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownRollerShutter",
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
+        "uiClass": "RollerShutter",
+        "qualifiedName": "rts:RollerShutterRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [
+        {
+          "name": "rts:diy",
+          "type": 6,
+          "value": false
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "UpDownRollerShutter",
+      "type": 1,
+      "oid": "d4da34c9-5cbf-4278-b8ec-ae66428b9522",
+      "uiClass": "RollerShutter"
+    },
+    {
+      "creationTime": 1613676640000,
+      "lastUpdateTime": 1613676640000,
+      "label": "Kitchen Shutter",
+      "deviceURL": "rts://1234-1234-6362/16749917",
+      "shortcut": false,
+      "controllableName": "rts:RollerShutterRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 1
+          },
+          {
+            "commandName": "down",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "open",
+            "nparams": 1
+          },
+          {
+            "commandName": "rest",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 1
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 1
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownRollerShutter",
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
+        "uiClass": "RollerShutter",
+        "qualifiedName": "rts:RollerShutterRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [
+        {
+          "name": "rts:diy",
+          "type": 6,
+          "value": false
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+      "widget": "UpDownRollerShutter",
+      "type": 1,
+      "oid": "ef870fe7-daf3-4f33-b91e-62b2a809ef4e",
+      "uiClass": "RollerShutter"
+    }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "oid": "fee37cf6-1d39-49fc-8d67-af71dfe20c4d",
+  "rootPlace": {
+    "creationTime": 1613674982000,
+    "lastUpdateTime": 1613674982000,
+    "label": "Palm Court",
+    "type": 0,
+    "oid": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
+    "subPlaces": []
+  },
+  "features": [
+    {
+      "name": "connexoon-rts-window",
+      "source": "GATEWAY_TYPE"
+    }
+  ]
+}

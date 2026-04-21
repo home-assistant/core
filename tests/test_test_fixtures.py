@@ -16,21 +16,29 @@ from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from .common import MockModule, mock_integration
-from .conftest import evict_faked_translations
+from .conftest import HASocketBlockedError, evict_faked_translations
 from .typing import ClientSessionGenerator
 
 
 def test_sockets_disabled() -> None:
     """Test we can't open sockets."""
+    assert not HASocketBlockedError.instances
     with pytest.raises(pytest_socket.SocketBlockedError):
         socket.socket()
+    assert len(HASocketBlockedError.instances) == 1
+
+    # Clear the instances to not fail the test when exiting the
+    # verify_cleanup fixture.
+    HASocketBlockedError.instances.clear()
 
 
 @pytest.mark.usefixtures("socket_enabled")
 def test_sockets_enabled() -> None:
     """Test we can't connect to an address different from 127.0.0.1."""
-    mysocket = socket.socket()
-    with pytest.raises(pytest_socket.SocketConnectBlockedError):
+    with (
+        socket.socket() as mysocket,
+        pytest.raises(pytest_socket.SocketConnectBlockedError),
+    ):
         mysocket.connect(("127.0.0.2", 1234))
 
 

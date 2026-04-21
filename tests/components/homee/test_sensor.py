@@ -1,5 +1,6 @@
 """Test homee sensors."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -23,6 +24,13 @@ from homeassistant.setup import async_setup_component
 from . import async_update_attribute_value, build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -150,7 +158,6 @@ async def test_sensor_snapshot(
     """Test the multisensor snapshot."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

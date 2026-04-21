@@ -107,35 +107,19 @@ class APIData:
 class AirSensor(SensorEntity):
     """Single authority air sensor."""
 
-    ICON = "mdi:cloud-outline"
+    _attr_icon = "mdi:cloud-outline"
 
     def __init__(self, name, api_data):
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = self._key = name
         self._api_data = api_data
         self._site_data = None
-        self._state = None
         self._updated = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
 
     @property
     def site_data(self):
         """Return the dict of sites data."""
         return self._site_data
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self.ICON
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -151,7 +135,7 @@ class AirSensor(SensorEntity):
         sites_status: list = []
         self._api_data.update()
         if self._api_data.data:
-            self._site_data = self._api_data.data[self._name]
+            self._site_data = self._api_data.data[self._key]
             self._updated = self._site_data[0]["updated"]
             sites_status.extend(
                 site["pollutants_status"]
@@ -160,9 +144,9 @@ class AirSensor(SensorEntity):
             )
 
         if sites_status:
-            self._state = max(set(sites_status), key=sites_status.count)
+            self._attr_native_value = max(set(sites_status), key=sites_status.count)
         else:
-            self._state = None
+            self._attr_native_value = None
 
 
 def parse_species(species_data):

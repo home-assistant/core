@@ -67,12 +67,21 @@ class MaxCubeClimate(ClimateEntity):
     """MAX! Cube ClimateEntity."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]
+    _attr_preset_modes = [
+        PRESET_NONE,
+        PRESET_BOOST,
+        PRESET_COMFORT,
+        PRESET_ECO,
+        PRESET_AWAY,
+        PRESET_ON,
+    ]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
@@ -80,17 +89,7 @@ class MaxCubeClimate(ClimateEntity):
         self._attr_name = f"{room.name} {device.name}"
         self._cubehandle = handler
         self._device = device
-        self._attr_should_poll = True
         self._attr_unique_id = self._device.serial
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_preset_modes = [
-            PRESET_NONE,
-            PRESET_BOOST,
-            PRESET_COMFORT,
-            PRESET_ECO,
-            PRESET_AWAY,
-            PRESET_ON,
-        ]
 
     @property
     def min_temp(self) -> float:
@@ -106,7 +105,7 @@ class MaxCubeClimate(ClimateEntity):
         return self._device.max_temperature or MAX_TEMPERATURE
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._device.actual_temperature
 
@@ -176,7 +175,7 @@ class MaxCubeClimate(ClimateEntity):
         return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         temp = self._device.target_temperature
         if temp is None or temp < self.min_temp or temp > self.max_temp:

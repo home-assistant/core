@@ -14,6 +14,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -129,6 +130,7 @@ class R2BackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -142,7 +144,7 @@ class R2BackupAgent(BackupAgent):
             if backup.size < MULTIPART_MIN_PART_SIZE_BYTES:
                 await self._upload_simple(tar_filename, open_stream)
             else:
-                await self._upload_multipart(tar_filename, open_stream)
+                await self._upload_multipart(tar_filename, open_stream, on_progress)
 
             # Upload the metadata file
             metadata_content = json.dumps(backup.as_dict())
@@ -183,11 +185,13 @@ class R2BackupAgent(BackupAgent):
         self,
         tar_filename: str,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-    ):
+        on_progress: OnProgressCallback,
+    ) -> None:
         """Upload a large file using multipart upload.
 
         :param tar_filename: The target filename for the backup.
         :param open_stream: A function returning an async iterator that yields bytes.
+        :param on_progress: A callback to report the number of uploaded bytes.
         """
         _LOGGER.debug("Starting multipart upload for %s", tar_filename)
         key = self._with_prefix(tar_filename)
@@ -201,6 +205,7 @@ class R2BackupAgent(BackupAgent):
             part_number = 1
             buffer = bytearray()  # bytes buffer to store the data
             offset = 0  # start index of unread data inside buffer
+            bytes_uploaded = 0
 
             stream = await open_stream()
             async for chunk in stream:
@@ -229,6 +234,8 @@ class R2BackupAgent(BackupAgent):
                             Body=part_data.tobytes(),
                         )
                         parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
+                        bytes_uploaded += len(part_data)
+                        on_progress(bytes_uploaded=bytes_uploaded)
                         part_number += 1
                 finally:
                     view.release()
@@ -257,6 +264,8 @@ class R2BackupAgent(BackupAgent):
                     Body=remaining_data.tobytes(),
                 )
                 parts.append({"PartNumber": part_number, "ETag": part["ETag"]})
+                bytes_uploaded += len(remaining_data)
+                on_progress(bytes_uploaded=bytes_uploaded)
 
             await cast(Any, self._client).complete_multipart_upload(
                 Bucket=self._bucket,

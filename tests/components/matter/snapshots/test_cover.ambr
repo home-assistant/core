@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_covers[eve_shutter][cover.eve_shutter_switch_20eci1701-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,6 +42,7 @@
       'current_position': 100,
       'device_class': 'shade',
       'friendly_name': 'Eve Shutter Switch 20ECI1701',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -53,8 +55,9 @@
 # ---
 # name: test_covers[mock_window_covering_full][cover.mock_full_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -94,6 +97,7 @@
       'current_tilt_position': 100,
       'device_class': 'awning',
       'friendly_name': 'Mock Full Window Covering',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
@@ -106,8 +110,9 @@
 # ---
 # name: test_covers[mock_window_covering_lift][cover.mock_lift_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -145,6 +150,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'awning',
       'friendly_name': 'Mock Lift Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -157,8 +163,9 @@
 # ---
 # name: test_covers[mock_window_covering_pa_lift][cover.longan_link_wncv_da01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -197,6 +204,7 @@
       'current_position': 51,
       'device_class': 'shade',
       'friendly_name': 'Longan link WNCV DA01',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -209,8 +217,9 @@
 # ---
 # name: test_covers[mock_window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -249,6 +258,7 @@
       'current_tilt_position': 100,
       'device_class': 'blind',
       'friendly_name': 'Mock PA Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -261,8 +271,9 @@
 # ---
 # name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -300,6 +311,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'blind',
       'friendly_name': 'Mock Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -312,8 +324,9 @@
 # ---
 # name: test_covers[zemismart_mt25b][cover.zemismart_mt25b_roller_motor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -352,6 +365,7 @@
       'current_position': 0,
       'device_class': 'shade',
       'friendly_name': 'Zemismart MT25B Roller Motor',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

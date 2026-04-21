@@ -15,12 +15,14 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_CODE,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -82,12 +84,12 @@ async def test_switch_initial_state(
     """Test switch has a correct initial state after initialization."""
 
     # Instantly call callback to ensure we have initial data set
-    async def mock_monitor_callback(
-        alarm_status_callback, zones_callback, outputs_callback
-    ):
-        outputs_callback({"outputs": violated_outputs})
+    async def mock_start(**_: object) -> None:
+        _, _, outputs_callback = get_monitor_callbacks(mock_satel)
 
-    mock_satel.monitor_status = AsyncMock(side_effect=mock_monitor_callback)
+        outputs_callback(violated_outputs)
+
+    mock_satel.start = AsyncMock(side_effect=mock_start)
 
     await setup_integration(hass, mock_config_entry_with_subentries)
 
@@ -106,14 +108,14 @@ async def test_switch_callback(
 
     _, _, output_update_method = get_monitor_callbacks(mock_satel)
 
-    output_update_method({"outputs": {1: 1}})
+    output_update_method({1: 1})
     assert hass.states.get("switch.switchable_output").state == STATE_ON
 
-    output_update_method({"outputs": {1: 0}})
+    output_update_method({1: 0})
     assert hass.states.get("switch.switchable_output").state == STATE_OFF
 
     # The client library should always report all entries, but test that we set the status correctly if it doesn't
-    output_update_method({"outputs": {2: 1}})
+    output_update_method({2: 1})
     assert hass.states.get("switch.switchable_output").state == STATE_UNKNOWN
 
 
@@ -172,7 +174,39 @@ async def test_switch_last_reported(
 
     # Run callbacks with same payload
     _, _, output_update_method = get_monitor_callbacks(mock_satel)
-    output_update_method({"outputs": {1: 0}})
+    output_update_method({1: 0})
 
     assert first_reported != hass.states.get("switch.switchable_output").last_reported
     assert len(events) == 1  # last_reported shall not fire state_changed
+
+
+async def test_switch_actions_require_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test switch actions fail when access code is missing."""
+
+    await setup_integration(hass, mock_config_entry_with_subentries)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry_with_subentries, options={CONF_CODE: None}
+    )
+    await hass.async_block_till_done()
+
+    # Turning the device on or off should raise ServiceValidationError.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.switchable_output"},
+            blocking=True,
+        )

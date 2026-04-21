@@ -79,6 +79,14 @@ async def _async_get_requests(call: ServiceCall) -> ServiceResponse:
         req["media"] = await _get_media(
             client, request.media.media_type, request.media.tmdb_id
         )
+        for user in (req["modified_by"], req["requested_by"]):
+            del user["avatar_e_tag"]
+            del user["avatar_version"]
+            del user["permissions"]
+            del user["recovery_link_expiration_date"]
+            del user["settings"]
+            del user["user_type"]
+            del user["warnings"]
         result.append(req)
 
     return {"requests": cast(list[JsonValueType], result)}

@@ -3,17 +3,19 @@
 import logging
 from typing import Any
 
+from zwave_me_ws import ZWaveMeData
+
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,19 +31,18 @@ SWITCH_MAP: dict[str, SwitchEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
 
     @callback
     def add_new_device(new_device):
-        controller = hass.data[DOMAIN][config_entry.entry_id]
-        switch = ZWaveMeSwitch(controller, new_device, SWITCH_MAP["generic"])
-
         async_add_entities(
             [
-                switch,
+                ZWaveMeSwitch(
+                    config_entry.runtime_data, new_device, SWITCH_MAP["generic"]
+                )
             ]
         )
 
@@ -55,7 +56,12 @@ async def async_setup_entry(
 class ZWaveMeSwitch(ZWaveMeEntity, SwitchEntity):
     """Representation of a ZWaveMe binary switch."""
 
-    def __init__(self, controller, device, description):
+    def __init__(
+        self,
+        controller: ZWaveMeController,
+        device: ZWaveMeData,
+        description: SwitchEntityDescription,
+    ) -> None:
         """Initialize the device."""
         super().__init__(controller, device)
         self.entity_description = description

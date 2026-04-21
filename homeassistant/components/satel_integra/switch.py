@@ -8,9 +8,14 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SWITCHABLE_OUTPUT_NUMBER, SUBENTRY_TYPE_SWITCHABLE_OUTPUT
+from .const import (
+    CONF_SWITCHABLE_OUTPUT_NUMBER,
+    DOMAIN,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
+)
 from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
 
@@ -83,12 +88,24 @@ class SatelIntegraSwitch(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+        if self._code is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_output_access_code",
+            )
+
         await self._controller.set_output(self._code, self._device_number, True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        if self._code is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_output_access_code",
+            )
+
         await self._controller.set_output(self._code, self._device_number, False)
         self._attr_is_on = False
         self.async_write_ha_state()

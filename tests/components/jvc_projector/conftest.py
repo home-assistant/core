@@ -136,6 +136,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
 async def fixture_mock_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_device: MagicMock,
 ) -> MockConfigEntry:
     """Return a mock ConfigEntry setup for the integration."""
     with (

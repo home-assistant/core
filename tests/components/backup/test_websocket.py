@@ -4048,8 +4048,10 @@ async def test_subscribe_event(
         # Legacy backup, which can't be streamed
         ("backup.local", "2bcb3113", "hunter2"),
         # New backup, which can be streamed, try with correct and wrong password
-        ("backup.local", "c0cb53bd", "hunter2"),
-        ("backup.local", "c0cb53bd", "wrong_password"),
+        ("backup.local", "backup_compressed_protected_v2", "hunter2"),
+        ("backup.local", "backup_compressed_protected_v2", "wrong_password"),
+        ("backup.local", "backup_compressed_protected_v3", "hunter2"),
+        ("backup.local", "backup_compressed_protected_v3", "wrong_password"),
     ],
 )
 @pytest.mark.usefixtures("mock_backups")

@@ -62,20 +62,15 @@ class ProliphixThermostat(ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    def __init__(self, pdp):
+    def __init__(self, pdp: proliphix.PDP) -> None:
         """Initialize the thermostat."""
         self._pdp = pdp
-        self._name = None
+        self._attr_name = None
 
     def update(self) -> None:
         """Update the data from the thermostat."""
         self._pdp.update()
-        self._name = self._pdp.name
-
-    @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._name
+        self._attr_name = self._pdp.name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -83,12 +78,12 @@ class ProliphixThermostat(ClimateEntity):
         return {ATTR_FAN: self._pdp.fan_state}
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._pdp.cur_temp
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._pdp.setback
 

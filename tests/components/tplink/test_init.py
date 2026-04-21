@@ -138,7 +138,9 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test no migration happens if the original entity id still exists."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     dimmer = _mocked_device(alias="My dimmer", modules=[Module.Light])
     rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
@@ -545,7 +547,12 @@ async def test_unlink_devices(
     }
     assert device_entries[0].identifiers == set(test_identifiers)
 
-    with patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 3):
+    with (
+        patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 3),
+        _patch_discovery(),
+        _patch_single_discovery(),
+        _patch_connect(),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -596,6 +603,8 @@ async def test_move_credentials_hash(
         patch("homeassistant.components.tplink.Device.connect", new=_connect),
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 4),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -640,6 +649,8 @@ async def test_move_credentials_hash_auth_error(
         ),
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 4),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -682,6 +693,8 @@ async def test_move_credentials_hash_other_error(
         ),
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.CONF_CONFIG_ENTRY_MINOR_VERSION", 4),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -717,6 +730,8 @@ async def test_credentials_hash(
     with (
         patch("homeassistant.components.tplink.PLATFORMS", []),
         patch("homeassistant.components.tplink.Device.connect", new=_connect),
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -753,6 +768,8 @@ async def test_credentials_hash_auth_error(
             "homeassistant.components.tplink.Device.connect",
             side_effect=AuthenticationError,
         ) as connect_mock,
+        _patch_discovery(),
+        _patch_single_discovery(),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -782,6 +799,7 @@ async def test_credentials_hash_auth_error(
 async def test_migrate_remove_device_config(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     device_config: DeviceConfig,
     expected_entry_data: dict[str, Any],

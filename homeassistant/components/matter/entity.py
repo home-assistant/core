@@ -49,6 +49,16 @@ VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
         4: None,  # Inovelli VTM36
         16: ["label", "name", "button"],  # Inovelli VTM30
     },
+    65521: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
+    65522: {  # Test/DIY devices
+        32768: ["ha_entitylabel"],
+        32769: ["ha_entitylabel"],
+        32770: ["ha_entitylabel"],
+    },
 }
 
 
@@ -285,9 +295,9 @@ class MatterEntity(Entity):
         self,
         command: ClusterCommand,
         **kwargs: Any,
-    ) -> None:
+    ) -> Any:
         """Send device command on the primary attribute's endpoint."""
-        await self.matter_client.send_device_command(
+        return await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
             command=command,
