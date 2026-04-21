@@ -9,12 +9,13 @@ from aiohttp.hdrs import AUTHORIZATION
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.html5.const import DOMAIN
 from homeassistant.components.html5.notify import ATTR_ACTION, ATTR_TAG, ATTR_TYPE
 from homeassistant.components.notify import ATTR_DATA, ATTR_TARGET
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_notify import SUBSCRIPTION_1
@@ -118,3 +119,44 @@ async def test_events(
     assert state.attributes.get("action") == event_payload.get(ATTR_ACTION)
     assert state.attributes.get("tag") == event_payload[ATTR_TAG]
     assert state.attributes.get("customKey") == event_payload[ATTR_DATA]["customKey"]
+
+
+@pytest.mark.parametrize("event_type", ["clicked", "received", "closed"])
+@pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
+async def test_deprecation_event_bus(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    hass_client: ClientSessionGenerator,
+    event_type: str,
+) -> None:
+    """Test deprecation of events on the event bus."""
+    load_config.return_value = {"device": SUBSCRIPTION_1}
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen(f"html5_notification.{event_type}", lambda _: None)
+    )
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/notify.html5/callback",
+        json={"type": event_type, "tag": "12345", "target": "device"},
+        headers={AUTHORIZATION: "Bearer JWT"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    body = await resp.json()
+    assert body == {"event": event_type, "status": "ok"}
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"deprecated_event_bus_html5_notification.{event_type}",
+    )
