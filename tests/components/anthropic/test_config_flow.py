@@ -732,6 +732,8 @@ async def test_invalid_model(
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_FETCH: False,
+                CONF_WEB_FETCH_MAX_USES: 5,
                 CONF_CODE_EXECUTION: False,
             },
         ),
