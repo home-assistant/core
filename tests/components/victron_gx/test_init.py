@@ -9,15 +9,16 @@ from victron_mqtt import (
     Hub as VictronVenusHub,
     MetricKind,
 )
+from victron_mqtt.testing import finalize_injection, inject_message
 
+from homeassistant.components.victron_gx import async_remove_config_entry_device
+from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_INSTALLATION_ID
-
-from homeassistant.components.victron_gx.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -220,11 +221,10 @@ async def test_remove_config_entry_device(
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
 ) -> None:
     """Test removing a device from the config entry."""
-    from homeassistant.components.victron_gx import async_remove_config_entry_device
-
-    _, mock_config_entry = init_integration
+    victron_hub, mock_config_entry = init_integration
     device_registry = dr.async_get(hass)
 
+    # A device that was never discovered should be removable
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_test_device")},
@@ -234,3 +234,23 @@ async def test_remove_config_entry_device(
         hass, mock_config_entry, device_entry
     )
     assert result is True
+
+    # Inject a sensor to make battery_0 a known device
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
+        '{"value": 10.5}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    # A device that is currently connected should NOT be removable
+    connected_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0")},
+    )
+
+    result = await async_remove_config_entry_device(
+        hass, mock_config_entry, connected_device
+    )
+    assert result is False
