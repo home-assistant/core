@@ -17,7 +17,7 @@ from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -99,8 +99,7 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         try:
             data = await self.client.async_get_all_device()
         except AidotAuthFailed as error:
-            self.token_fresh_cb()
-            raise ConfigEntryError from error
+            raise ConfigEntryAuthFailed from error
         current_devices = {
             device[CONF_ID]: device
             for device in data[CONF_DEVICE_LIST]
@@ -113,7 +112,8 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
 
         removed_ids = set(self.device_coordinators) - set(current_devices)
         for dev_id in removed_ids:
-            del self.device_coordinators[dev_id]
+            coordinator = self.device_coordinators.pop(dev_id)
+            coordinator.device_client.on_status_update = None
         if removed_ids:
             self._purge_deleted_lists()
 
@@ -128,6 +128,8 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
 
     async def async_cleanup(self) -> None:
         """Perform cleanup actions."""
+        for coordinator in self.device_coordinators.values():
+            coordinator.device_client.on_status_update = None
         await self.client.async_cleanup()
 
     def token_fresh_cb(self) -> None:

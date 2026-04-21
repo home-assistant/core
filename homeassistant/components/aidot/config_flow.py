@@ -53,6 +53,8 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
                 login_info = await client.async_post_login()
             except AidotUserOrPassIncorrect:
                 errors["base"] = "invalid_auth"
+            except (TimeoutError, aiohttp.ClientError):
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 return self.async_create_entry(
@@ -87,6 +89,8 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
                 new_login_info = await client.async_post_login()
             except AidotUserOrPassIncorrect:
                 errors["base"] = "invalid_auth"
+            except (TimeoutError, aiohttp.ClientError):
+                errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
