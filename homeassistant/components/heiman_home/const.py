@@ -49,14 +49,14 @@ PLATFORMS = ["binary_sensor", "button", "select", "sensor", "switch", "update"]
 # Binary Sensor Device Class Mapping
 BINARY_SENSOR_DEVICE_CLASS_MAP = {
     "SmokeSensorState": "smoke",
-    "CarbonMonoxideAlarm": "gas",
+    "CarbonMonoxideAlarm": "carbon_monoxide",
     "WaterSensorState": "moisture",
     "Contact": "door",
     "Motion": "motion",
     "TamperState": "tamper",
     "UnderVoltError": "battery",
     "FreezingPointAlarm": "cold",
-    "CoStatus": "problem",
+    "CoStatus": "carbon_monoxide",
     "MotionStatus": "motion",
     "DoorStatus": "door",
 }
