@@ -126,7 +126,9 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_check_connection(client)
             interfaces_resp = await client.get_interfaces()
             known_interfaces = [
-                ifinfo.get("name", "") for ifinfo in interfaces_resp.values()
+                name
+                for ifinfo in interfaces_resp.values()
+                if (name := ifinfo.get("name"))
             ]
             self.available_interfaces = list(known_interfaces)
         except OPNsenseInvalidAuth:
@@ -161,13 +163,17 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._show_interfaces_form(user_input, None)
 
         # Compose entry data from credentials and selected interfaces
-        entry_data: dict[str, Any] = dict(getattr(self, "_step_user_input", {}))
+        step_user_input = getattr(self, "_step_user_input", None)
+        if not isinstance(step_user_input, dict) or CONF_URL not in step_user_input:
+            return await self.async_step_user()
+
+        entry_data: dict[str, Any] = dict(step_user_input)
         if user_input.get(CONF_TRACKER_INTERFACES):
             entry_data[CONF_TRACKER_INTERFACES] = user_input[CONF_TRACKER_INTERFACES]
         return self.async_create_entry(title=entry_data[CONF_URL], data=entry_data)
 
     async def async_step_import(
-        self, import_data: (dict[str, Any])
+        self, import_data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Import a Yaml config."""
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})

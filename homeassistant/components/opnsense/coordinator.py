@@ -60,7 +60,3 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 f"Error communicating with OPNsense router: {err}"
             ) from err
-
-        # Note: Home Assistant device_tracker does not support dynamic entity addition.
-        # All device_tracker entities must be created during setup.
-        # This coordinator does not attempt to add new entities dynamically.
