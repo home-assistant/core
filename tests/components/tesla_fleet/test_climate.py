@@ -138,6 +138,7 @@ async def test_climate_services(
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_FAN_MODE] == "bioweapon"
+    assert state.state == HVACMode.HEAT_COOL
 
     # Set Fan Mode (Bioweapon) Off
     await hass.services.async_call(

@@ -112,15 +112,11 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate."""
 
+        self.scopes = scopes
         self.read_only = Scope.VEHICLE_CMDS not in scopes
 
         if self.read_only:
             self._attr_hvac_modes = []
-
-        super().__init__(
-            data,
-            side,
-        )
 
         model = data.vin[3]  # S, 3, X, or Y
         year_code = data.vin[9]
@@ -134,6 +130,12 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         is_bio_y = model == "Y" and model_year is not None and model_year >= 2022
 
         self._bioweapon_vin_support = is_bio_s_x or is_bio_y
+
+        super().__init__(
+            data,
+            side,
+        )
+
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -182,10 +184,13 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
         self._attr_preset_mode = self.get("climate_state_climate_keeper_mode")
 
-        if self.get("climate_state_bioweapon_mode"):
-            self._attr_fan_mode = "bioweapon"
+        if self.fan_modes:
+            if self.get("climate_state_bioweapon_mode"):
+                self._attr_fan_mode = "bioweapon"
+            else:
+                self._attr_fan_mode = "off"
         else:
-            self._attr_fan_mode = "off"
+            self._attr_fan_mode = None
 
         self._attr_min_temp = cast(
             float, self.get("climate_state_min_avail_temp", DEFAULT_MIN_TEMP)
@@ -260,6 +265,20 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Bioweapon defense mode."""
+        if Scope.VEHICLE_CMDS not in self.scopes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_scope",
+                translation_placeholders={"scope": Scope.VEHICLE_CMDS.value},
+            )
+
+        if not self.fan_modes or fan_mode not in self.fan_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_mode",
+                translation_placeholders={"fan_mode": fan_mode},
+            )
+
         await self.wake_up_if_asleep()
 
         await handle_vehicle_command(
@@ -318,6 +337,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         """Initialize the cabin overheat climate entity."""
 
         # Scopes
+        self.scopes = scopes
         self.read_only = Scope.VEHICLE_CMDS not in scopes
 
         # Supported Features
