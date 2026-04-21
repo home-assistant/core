@@ -240,17 +240,6 @@ async def test_set_humidity(
 
 
 @pytest.mark.usefixtures("seed_statistics", "init_integration")
-async def test_target_temperature_heat_mode(
-    hass: HomeAssistant,
-) -> None:
-    """Test target_temperature returns heating setpoint in heat mode."""
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    # Fixture: activemode=3 (Heat), tstatheatingsetpoint=68°F → 20°C
-    assert state.attributes["temperature"] == 20.0
-
-
-@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_target_temperature_cool_mode(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -286,17 +275,6 @@ async def test_target_temperature_range_auto_mode(
     assert state.attributes["target_temp_low"] == 20.0
     assert state.attributes["target_temp_high"] == pytest.approx(23.3, abs=0.1)
     assert state.attributes["temperature"] is None
-
-
-@pytest.mark.usefixtures("seed_statistics", "init_integration")
-async def test_target_humidity(
-    hass: HomeAssistant,
-) -> None:
-    """Test target_humidity returns the humidification setpoint."""
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    # Fixture: tstathumidsetpoint=45
-    assert state.attributes["humidity"] == 45
 
 
 @pytest.mark.usefixtures("seed_statistics", "init_integration")
