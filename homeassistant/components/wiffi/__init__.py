@@ -61,7 +61,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> bo
 
 
 class WiffiIntegrationApi:
-    """API object for wiffi handling. Stored in hass.data."""
+    """API object for wiffi handling."""
 
     def __init__(self, hass):
         """Initialize the instance."""
