@@ -475,12 +475,7 @@ async def async_setup_entry(
 
     @callback
     def _create_base_sensor_entity(
-        sensorClass: type[
-            NetatmoClimateBatterySensor
-            | NetatmoWeatherSensor
-            | NetatmoSensor
-            | NetatmoLegacySensor
-        ],
+        sensorClass: type[NetatmoBaseSensor],
         descriptions: dict[NetatmoDeviceCategory, list[NetatmoSensorEntityDescription]],
         netatmo_device: NetatmoDevice,
     ) -> None:
@@ -493,12 +488,7 @@ async def async_setup_entry(
             netatmo_device.device.device_category, []
         )
 
-        entities: list[
-            NetatmoClimateBatterySensor
-            | NetatmoWeatherSensor
-            | NetatmoSensor
-            | NetatmoLegacySensor
-        ] = []
+        entities: list[NetatmoBaseSensor] = []
 
         # Create sensors for module
         for description in descriptions_to_add:
@@ -523,53 +513,37 @@ async def async_setup_entry(
         if entities:
             async_add_entities(entities)
 
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
+    sensor_subscriptions = [
+        (
             NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
-            partial(
-                _create_base_sensor_entity,
-                NetatmoClimateBatterySensor,
-                DEVICE_CATEGORY_CLIMATE_BATTERY_SENSORS,
-            ),
-        )
-    )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
+            NetatmoClimateBatterySensor,
+            DEVICE_CATEGORY_CLIMATE_BATTERY_SENSORS,
+        ),
+        (
             NETATMO_CREATE_SENSOR,
-            partial(
-                _create_base_sensor_entity,
-                NetatmoSensor,
-                DEVICE_CATEGORY_NEW_SENSORS,
-            ),
-        )
-    )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
+            NetatmoSensor,
+            DEVICE_CATEGORY_NEW_SENSORS,
+        ),
+        (
             NETATMO_CREATE_WEATHER_SENSOR,
-            partial(
-                _create_base_sensor_entity,
-                NetatmoWeatherSensor,
-                DEVICE_CATEGORY_WEATHER_SENSORS,
-            ),
-        )
-    )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
+            NetatmoWeatherSensor,
+            DEVICE_CATEGORY_WEATHER_SENSORS,
+        ),
+        (
             NETATMO_CREATE_LEGACY_SENSOR,
-            partial(
-                _create_base_sensor_entity,
-                NetatmoLegacySensor,
-                DEVICE_CATEGORY_LEGACY_SENSORS,
-            ),
+            NetatmoLegacySensor,
+            DEVICE_CATEGORY_LEGACY_SENSORS,
+        ),
+    ]
+
+    for signal, sensor_class, descriptions in sensor_subscriptions:
+        entry.async_on_unload(
+            async_dispatcher_connect(
+                hass,
+                signal,
+                partial(_create_base_sensor_entity, sensor_class, descriptions),
+            )
         )
-    )
 
     @callback
     def _create_room_sensor_entity(netatmo_device: NetatmoRoom) -> None:
