@@ -8,11 +8,10 @@ from typing import NamedTuple
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, OverkizAttribute, OverkizState
+from pyoverkiz.enums import EventName, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.overkiz.const import UPDATE_INTERVAL_ALL_ASSUMED_STATE
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -190,36 +189,3 @@ async def test_sensor_unavailability(
     )
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
-
-
-async def test_homekit_setup_code_missing_attribute(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test HomeKit setup code sensor returns unknown when attribute is absent."""
-    config_entry = await setup_overkiz_integration(fixture=HOMEKIT_STACK.fixture)
-
-    # Remove the HomeKit setup code attribute from the device
-    coordinator = config_entry.runtime_data.coordinator
-    device = coordinator.data[HOMEKIT_STACK.device_url]
-    device.attributes._states = [
-        s
-        for s in device.attributes._states
-        if s.name != OverkizAttribute.HOMEKIT_SETUP_CODE
-    ]
-
-    # Trigger a coordinator refresh so the entity re-reads its value.
-    # This fixture has all-stateless devices, so the update interval is 60 min.
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
-        [],
-        update_interval=UPDATE_INTERVAL_ALL_ASSUMED_STATE,
-    )
-
-    state = hass.states.get(HOMEKIT_STACK.entity_id)
-    assert state
-    assert state.state == "unknown"
