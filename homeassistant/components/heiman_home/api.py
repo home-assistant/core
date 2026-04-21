@@ -16,7 +16,11 @@ from heimanconnect import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -80,9 +84,22 @@ class HeimanApiClient:
         if self._session:
             try:
                 await self._session.async_ensure_token_valid()
+            except OAuth2TokenRequestReauthError as err:
+                # Token is invalid/expired, requires re-authentication
+                _LOGGER.error(
+                    "Token refresh failed, re-authentication required: %s", err
+                )
+                raise ConfigEntryAuthFailed(
+                    "Token expired, please re-authenticate"
+                ) from err
+            except OAuth2TokenRequestTransientError as err:
+                # Temporary error (network issue), should retry
+                _LOGGER.debug("Token refresh transient error, will retry: %s", err)
+                raise UpdateFailed(f"Temporary token refresh error: {err}") from err
             except Exception as err:
-                _LOGGER.error("Token refresh failed: %s", err)
-                raise ConfigEntryAuthFailed(f"Token refresh failed: {err}") from err
+                # Unexpected error
+                _LOGGER.exception("Unexpected error during token refresh")
+                raise UpdateFailed(f"Token refresh failed: {err}") from err
 
         # Re-initialize client if token updated
         current_token = self._get_access_token()
@@ -97,7 +114,7 @@ class HeimanApiClient:
 
         Raises:
             ConfigEntryAuthFailed: If authentication fails
-            HeimanConnectionError: If network request fails
+            UpdateFailed: If network request fails
         """
         await self._ensure_authenticated()
 
@@ -125,7 +142,7 @@ class HeimanApiClient:
 
         Raises:
             ConfigEntryAuthFailed: If authentication fails
-            HeimanConnectionError: If network request fails
+            UpdateFailed: If network request fails
         """
         await self._ensure_authenticated()
 
@@ -156,7 +173,7 @@ class HeimanApiClient:
 
         Raises:
             ConfigEntryAuthFailed: If authentication fails
-            HeimanConnectionError: If network request fails
+            UpdateFailed: If network request fails
         """
         await self._ensure_authenticated()
 
@@ -189,7 +206,7 @@ class HeimanApiClient:
 
         Raises:
             ConfigEntryAuthFailed: If authentication fails
-            HeimanConnectionError: If network request fails
+            UpdateFailed: If network request fails
         """
         await self._ensure_authenticated()
 
@@ -233,7 +250,7 @@ class HeimanApiClient:
 
         Raises:
             ConfigEntryAuthFailed: If authentication fails
-            HeimanConnectionError: If network request fails
+            UpdateFailed: If network request fails
         """
         await self._ensure_authenticated()
 
@@ -276,6 +293,8 @@ class HeimanApiClient:
             library as there is no public API available. This is necessary to access
             deriveMetadata which contains real-time property values.
         """
+        await self._ensure_authenticated()
+
         if not self._cloud_client:
             _LOGGER.warning("Cloud client not initialized")
             return None

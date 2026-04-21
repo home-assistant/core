@@ -4,16 +4,15 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import vol
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .api import HeimanApiClient
-from .const import CONF_HOME_ID, CONF_USER_ID, DOMAIN, REQUESTED_SCOPES, SCOPES
+from .api import HeimanApiClient, HeimanHome
+from .const import CONF_HOME_ID, CONF_USER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,17 +22,16 @@ class AuthInfo:
 
     def __init__(self) -> None:
         """Initialize auth info."""
-        self.homes: list[dict[str, Any]] = []
+        self.homes: list[HeimanHome] = []
         self.user_info: Any = None
         self.auth_data: dict[str, Any] = {}
-        self.selected_home_ids: list[str] = []
 
 
 class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle configuration of Heiman integration."""
 
     VERSION = 1
-    MINOR_VERSION = 2  # Incremented for multi-home support
+    MINOR_VERSION = 1
     DOMAIN = DOMAIN
 
     def __init__(self) -> None:
@@ -49,14 +47,10 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @property
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": " ".join(REQUESTED_SCOPES)}
+        return {}
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for Heiman."""
-        # Validate scopes
-        if not set(data[CONF_TOKEN].get("scope", "").split()) >= set(SCOPES):
-            return self.async_abort(reason="missing_scopes")
-
         # Create API client to validate token and get user info
         api_client = HeimanApiClient(
             hass=self.hass, session=None, token_data=data[CONF_TOKEN]
@@ -68,7 +62,7 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="token_invalid")
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to get user info: %s", err)
-            return self.async_abort(reason="token_invalid")
+            return self.async_abort(reason="user_info_failed")
 
         # Get home info
         try:
@@ -80,6 +74,9 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to get homes: %s", err)
             return self.async_abort(reason="homes_fetch_failed")
+        finally:
+            # Ensure the API client is always closed to avoid leaking resources
+            await api_client.close()
 
         # Store temporary data for home selection
         self._auth_info.homes = homes if isinstance(homes, list) else []
@@ -92,33 +89,27 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_step_select_home(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle home selection step with multi-select support."""
+        """Handle home selection step."""
         if user_input is not None:
-            # User selected homes (supports multi-select)
-            selected_home_ids = user_input.get(CONF_HOME_ID, [])
+            # User selected a home
+            selected_home_id = user_input.get(CONF_HOME_ID)
 
-            if not selected_home_ids:
+            if not selected_home_id:
                 return self.async_show_form(
                     step_id="select_home",
                     data_schema=self._get_home_selection_schema(),
                     errors={"base": "no_home_selected"},
                 )
 
-            # Store selected home IDs
-            self._auth_info.selected_home_ids = selected_home_ids
-
             await self.async_set_unique_id(self._auth_info.user_info.user_id)
 
             if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
-                # Build config data
+                # Build config data with single home ID
                 config_data = {
                     **self._auth_info.auth_data,
-                    CONF_HOME_ID: selected_home_ids[0]
-                    if selected_home_ids
-                    else None,  # Primary home ID
-                    "home_ids": selected_home_ids,  # All selected home IDs
+                    CONF_HOME_ID: selected_home_id,
                     CONF_USER_ID: self._auth_info.user_info.user_id,
                 }
 
@@ -136,25 +127,19 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
 
             # Handle re-authentication
-            if entry := self._get_reauth_entry():
-                if entry.data.get(CONF_USER_ID) != self._auth_info.user_info.user_id:
-                    return self.async_abort(reason="reauth_user_mismatch")
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        **self._auth_info.auth_data,
-                        CONF_HOME_ID: selected_home_ids[0]
-                        if selected_home_ids
-                        else None,
-                        "home_ids": selected_home_ids,
-                        CONF_USER_ID: self._auth_info.user_info.user_id,
-                    },
-                    unique_id=self._auth_info.user_info.user_id,
-                )
-
-            self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+            entry = self._get_reauth_entry()
+            if entry is None:
+                return self.async_abort(reason="reauth_entry_not_found")
+            if entry.data.get(CONF_USER_ID) != self._auth_info.user_info.user_id:
+                return self.async_abort(reason="reauth_user_mismatch")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=self._auth_info.auth_data
+                entry,
+                data_updates={
+                    **self._auth_info.auth_data,
+                    CONF_HOME_ID: selected_home_id,
+                    CONF_USER_ID: self._auth_info.user_info.user_id,
+                },
+                unique_id=self._auth_info.user_info.user_id,
             )
 
         # Show home selection form
@@ -162,12 +147,13 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             step_id="select_home",
             data_schema=self._get_home_selection_schema(),
             description_placeholders={
-                "user_email": self._auth_info.user_info.email or "User",
+                "user_email": getattr(self._auth_info.user_info, "email", None)
+                or "User",
             },
         )
 
     def _get_home_selection_schema(self) -> vol.Schema:
-        """Get home selection schema with multi-select."""
+        """Get home selection schema."""
         homes = self._auth_info.homes
 
         if not homes:
@@ -175,20 +161,16 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         home_options = {}
         for home in homes:
-            home_id = home.get("home_id", "")
-            home_name = home.get("home_name", "Unknown")
-            device_count = home.get("device_count", 0)
+            home_id = getattr(home, "home_id", "")
+            home_name = getattr(home, "home_name", "Unknown")
+            device_count = getattr(home, "device_count", 0)
 
             display_text = f"{home_name} [{device_count} devices]"
             home_options[home_id] = display_text
 
-        default_homes = [home.get("home_id") for home in homes if home.get("home_id")]
-
         return vol.Schema(
             {
-                vol.Required(CONF_HOME_ID, default=default_homes): cv.multi_select(
-                    home_options
-                ),
+                vol.Required(CONF_HOME_ID): vol.In(home_options),
             }
         )
 

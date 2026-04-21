@@ -1,10 +1,9 @@
 """Constants for Heiman integration."""
 
-from datetime import timedelta
-
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
@@ -19,18 +18,6 @@ OAUTH_TOKEN_URL = "https://spapi.heiman.cn/api-auth/oauth/token"
 
 # API Endpoint
 API_BASE_URL = "https://spapi.heiman.cn"
-
-# Scopes
-SCOPES: list[str] = [
-    # "user_info",
-    # "device_list",
-    # "device_control",
-]
-
-REQUESTED_SCOPES: list[str] = [
-    # *SCOPES,
-    # "home_manage",
-]
 
 # Configuration Items
 CONF_HOME_ID = "home_id"
@@ -58,13 +45,11 @@ AREA_NAME_RULE_HOME_ROOM = "home_room"
 
 # Platform Definitions
 PLATFORMS = [
-    # "binary_sensor",
+    "binary_sensor",
+    "button",
     "sensor",
-    # "select",
-    # "switch",
-    # "button",
-    # "update",
-]
+    "select",
+    "switch"]
 
 # Binary Sensor Device Class Mapping
 BINARY_SENSOR_DEVICE_CLASS_MAP = {
@@ -120,7 +105,7 @@ SENSOR_UNIT_MAP = {
     },
     "signal_strength": {
         "device_class": "signal_strength",
-        "unit": "dBm",
+        "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         "state_class": "measurement",
     },
 }
@@ -139,9 +124,6 @@ ALARM_SOUND_DISPLAY_NAMES = {
     "slow": "Slow Beep",
 }
 
-# Update Interval (seconds)
-UPDATE_INTERVAL = timedelta(seconds=60)
-
 # Service Definitions
 SERVICE_READ_DEVICE_PROPERTIES = "read_device_properties"
 
@@ -157,6 +139,11 @@ ENTITY_ICONS = {
         "MotionStatus": "mdi:motion-sensor",
         "DoorStatus": "mdi:door",
         "CoStatus": "mdi:molecule-co",
+        # Lowercase variants for matching
+        "smokestatus": "mdi:smoke",
+        "smokesensorstate": "mdi:smoke",
+        "waterstatus": "mdi:water",
+        "watersensorstate": "mdi:water",
     },
     # Sensor Icons
     "sensor": {
@@ -177,13 +164,25 @@ ENTITY_ICONS = {
         "LightSwitch": "mdi:lightbulb-outline",
         "FreezingPointEnable": "mdi:snowflake-alert",
         "BuzzerEnable": "mdi:surround-sound",
+        # Lowercase variants for matching
+        "lightswitch": "mdi:lightbulb-outline",
+        "switch_state": "mdi:toggle-switch",
     },
     # Button Icons
     "button": {
         "RemoteLocate": "mdi:radar",
         "RemoteCheck": "mdi:clipboard-check",
         "Mute": "mdi:volume-mute",
+        # Lowercase variants for matching
+        "remotelocate": "mdi:radar",
+        "remotecheck": "mdi:clipboard-check",
+        "mute": "mdi:volume-mute",
+        "soundmute": "mdi:volume-mute",  # Only exists as lowercase for testing
     },
     # Select Icons
-    "select": {"AlarmSoundOption": "mdi:volume-high"},
+    "select": {
+        "AlarmSoundOption": "mdi:volume-high",
+        # Lowercase variants for matching
+        "alarmsoundoption": "mdi:volume-high",
+    },
 }

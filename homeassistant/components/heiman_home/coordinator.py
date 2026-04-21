@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import json
 import logging
 from typing import Any
@@ -19,6 +20,7 @@ from heimanconnect import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -27,6 +29,38 @@ from .api import HeimanApiClient
 from .const import CONF_HOME_ID, CONF_USER_ID
 
 _LOGGER = logging.getLogger(__name__)
+
+# Polling interval: 30 minutes
+# MQTT handles real-time property updates, but we need periodic polling for:
+# - Device online/offline status
+# - New device detection
+# - Firmware version updates
+UPDATE_INTERVAL = timedelta(minutes=30)
+
+
+def _infer_entity_type(prop_value: Any) -> str | None:
+    """Infer the appropriate entity type from a property value.
+
+    Args:
+        prop_value: The property value to analyze.
+
+    Returns:
+        The entity type string (e.g., "sensor") or None for auto-detection.
+
+    Note:
+        Boolean values should NOT default to "sensor" - they should be
+        left as None so other entity platforms (switch, binary_sensor)
+        can handle them appropriately based on device metadata.
+    """
+    if isinstance(prop_value, bool):
+        # Boolean values should not be forced to sensor.
+        # Leave as None for auto-detection by other entity platforms.
+        return None
+    if isinstance(prop_value, (int, float)):
+        # Numeric values are typically sensors
+        return "sensor"
+    # String and other types: let entity auto-detection handle it
+    return None
 
 
 @dataclass
@@ -67,8 +101,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         super().__init__(
             hass=hass,
             logger=logger,
+            config_entry=config_entry,
             name="Heiman Home",
-            update_interval=None,  # Disabled automatic refresh
+            update_interval=UPDATE_INTERVAL,
         )
 
         self.api_client = api_client
@@ -77,6 +112,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         self.data = HeimanData()
         self.mqtt_client: HeimanMqttClient | None = None
         self.oauth_session = oauth_session
+        # Cache for device details to avoid N+1 API calls
+        self._device_detail_cache: dict[str, dict[str, Any] | None] = {}
+        self._device_detail_cache_timestamp: datetime | None = None
+        # Cache TTL: 5 minutes
+        self._device_detail_cache_ttl = 300
 
     async def _async_update_data(self) -> HeimanData:
         """Fetch data from Heiman API.
@@ -89,15 +129,15 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             UpdateFailed: If data fetch fails
         """
         try:
-            # Validate API connection on first update
-            if self.data.user_info is None:
-                await self.api_client.async_get_user_info()
-
             # Get home ID
             home_id = self.config_entry.data.get(CONF_HOME_ID)
             if not home_id:
                 msg = "Home ID not found in config entry"
                 raise UpdateFailed(msg)  # noqa: TRY301
+
+            # Clear errors at the start of update, then repopulate as we go
+            # This allows partial failures to be observable
+            self.data.errors.clear()
 
             # Fetch user and home info on first update
             await self._fetch_user_and_home_info()
@@ -107,10 +147,12 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Update last update time
             self.data.last_update = datetime.now(UTC)
-            self.data.errors.clear()
 
         except ConfigEntryAuthFailed:
             _LOGGER.error("Authentication failed during data update")
+            raise
+        except UpdateFailed:
+            # Re-raise UpdateFailed as-is to preserve retry_after and message
             raise
         except Exception as err:
             _LOGGER.error("Unexpected error during data update: %s", err)
@@ -126,9 +168,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 self.data.user_info = await self.api_client.async_get_user_info()
             except ConfigEntryAuthFailed:
                 raise
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.warning("Failed to fetch user info: %s", err)
-                self.data.errors["user_info"] = str(err)
+            except Exception as err:
+                _LOGGER.error("Failed to fetch user info: %s", err)
+                msg = f"Failed to fetch user info: {err}"
+                raise UpdateFailed(msg) from err
 
         # Get home info (only on first update)
         if self.data.home_info is None:
@@ -175,6 +218,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         except ConfigEntryAuthFailed:
             raise
+        except UpdateFailed:
+            # Re-raise UpdateFailed as-is to preserve retry_after and message
+            raise
         except Exception as err:
             _LOGGER.exception("Failed to fetch devices")
             self.data.errors["devices"] = str(err)
@@ -201,19 +247,79 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     device.firmware_version = device.firmware_info.get("version")
 
     async def _update_device_details(self, devices: dict[str, HeimanDevice]) -> None:
-        """Update device details including properties from deriveMetadata."""
+        """Update device details including properties from deriveMetadata.
+
+        Uses caching to avoid N+1 API calls. Cache is invalidated every 5 minutes
+        or when a device is not found in cache. Fetches device details concurrently
+        with a limit of 5 concurrent requests to prevent overwhelming the API.
+        """
+        now = datetime.now(UTC)
+
+        # Check if cache needs refresh
+        cache_expired = (
+            self._device_detail_cache_timestamp is None
+            or (now - self._device_detail_cache_timestamp).total_seconds()
+            > self._device_detail_cache_ttl
+        )
+
+        # If cache expired, clear it
+        if cache_expired:
+            self._device_detail_cache.clear()
+            self._device_detail_cache_timestamp = now
+
+        # Process cached device details first so deriveMetadata is applied even
+        # when only some devices need fetching.
         for device_id, device in devices.items():
-            try:
-                # Get device details via public API method
-                device_detail = await self.api_client.async_get_device_detail(device_id)
-                if device_detail:
-                    self._process_device_detail(device, device_detail)
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug(
-                    "Failed to get device details for %s: %s",
-                    device_id,
-                    err,
-                )
+            device_detail = self._device_detail_cache.get(device_id)
+            if device_detail:
+                self._process_device_detail(device, device_detail)
+
+        # Identify devices that need detail fetching (not in cache)
+        devices_to_fetch = [
+            device_id
+            for device_id in devices
+            if device_id not in self._device_detail_cache
+        ]
+
+        if not devices_to_fetch:
+            return
+
+        # Create a semaphore to limit concurrent requests
+        semaphore = asyncio.Semaphore(5)
+
+        async def fetch_device_detail(
+            device_id: str,
+        ) -> tuple[str, dict[str, Any] | None]:
+            """Fetch device detail with concurrency control."""
+            async with semaphore:
+                try:
+                    device_detail = await self.api_client.async_get_device_detail(
+                        device_id
+                    )
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.debug(
+                        "Failed to get device details for %s: %s",
+                        device_id,
+                        err,
+                    )
+                    return device_id, None
+                else:
+                    return device_id, device_detail
+
+        # Fetch all device details concurrently
+        results = await asyncio.gather(
+            *[fetch_device_detail(device_id) for device_id in devices_to_fetch],
+            return_exceptions=False,
+        )
+
+        # Process results and update cache
+        for device_id, device_detail in results:
+            # Cache the result (including None for failed requests)
+            self._device_detail_cache[device_id] = device_detail
+
+            # Process the detail if available
+            if device_detail and device_id in devices:
+                self._process_device_detail(devices[device_id], device_detail)
 
     def _process_device_detail(
         self, device: HeimanDevice, device_detail: dict[str, Any]
@@ -256,12 +362,13 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         if prop_id == "DeviceINFO" and isinstance(prop_value, dict):
             self._process_device_info(device, prop_value)
         elif prop_id in device.properties:
-            # Update regular property
             if prop_id == "RSSI":
-                # Convert numeric DBM to level string
-                dbm_level = self._convert_dbm_to_level(prop_value)
-                device.properties[prop_id].value = dbm_level
+                # Preserve RSSI as the raw numeric dBm value
+                device.properties[prop_id].value = self._convert_dbm_to_level(
+                    prop_value
+                )
             else:
+                # Update regular property
                 device.properties[prop_id].value = prop_value
 
     def _process_device_info(
@@ -284,8 +391,20 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Convert numeric DBM to level string if DBM_Level not provided
             dbm_level_value = self._convert_dbm_to_level(dbm_value)
 
-        if dbm_level_value is not None and "DeviceINFO_DBM_Level" in device.properties:
-            device.properties["DeviceINFO_DBM_Level"].value = dbm_level_value
+        if dbm_level_value is not None:
+            # Update existing property or create if it doesn't exist
+            if "DeviceINFO_DBM_Level" in device.properties:
+                device.properties["DeviceINFO_DBM_Level"].value = dbm_level_value
+            else:
+                # Create the property if it doesn't exist
+                dbm_property = device.properties.get("DeviceINFO_DBM")
+                device.properties["DeviceINFO_DBM_Level"] = DeviceProperty(
+                    identifier="DeviceINFO_DBM_Level",
+                    name="DBM Level",
+                    value=dbm_level_value,
+                    readable=getattr(dbm_property, "readable", True),
+                    entity=getattr(dbm_property, "entity", "sensor"),
+                )
 
         # Extract IP address
         ip_value = device_info.get("IP")
@@ -303,6 +422,12 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 old_device = old_devices[device_id]
                 # Preserve old device's online status and other dynamic properties
                 for prop_id, old_prop in old_device.properties.items():
+                    if prop_id not in new_device.properties:
+                        # Keep runtime-discovered properties (e.g. MQTT-only fields)
+                        # when they are not present in the next poll response.
+                        new_device.properties[prop_id] = old_prop
+                        continue
+
                     if prop_id in new_device.properties:
                         # Only copy old value if new value is None
                         if (
@@ -311,8 +436,8 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         ):
                             new_device.properties[prop_id].value = old_prop.value
 
-                # Copy online status
-                if not new_device.online and old_device.online:
+                # Copy online status only when the new status is unknown
+                if new_device.online is None and old_device.online is not None:
                     new_device.online = old_device.online
 
     def get_device(self, device_id: str) -> HeimanDevice | None:
@@ -357,17 +482,17 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             dbm_value: Signal strength in dBm (negative number)
 
         Returns:
-            Signal level string: "Strong", "Medium", "Weak", or "Very Weak"
+            Signal level string: "strong", "medium", "weak", or "very_weak"
         """
         # DBM values are typically negative numbers
         # Closer to 0 = stronger signal
         if dbm_value >= -50:
-            return "Strong"
+            return "strong"
         if dbm_value >= -65:
-            return "Medium"
+            return "medium"
         if dbm_value >= -75:
-            return "Weak"
-        return "Very Weak"
+            return "weak"
+        return "very_weak"
 
     async def async_init_mqtt_client(self) -> None:
         """Initialize MQTT client for real-time updates."""
@@ -375,32 +500,26 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             return
 
         try:
-            # Get authentication data from config entry or API client
+            # Get authentication data from config entry or OAuth2 session
             access_token = None
             user_id = self.config_entry.data.get(CONF_USER_ID)
 
-            # Try to get from config first
-            access_token = self.config_entry.data.get("access_token")
+            # Try to get from config entry token data first
+            token_data = self.config_entry.data.get(CONF_TOKEN)
+            if token_data and isinstance(token_data, dict):
+                access_token = token_data.get("access_token")
 
             # Fallback: try to get from OAuth2 session if not in config
             if not access_token and self.oauth_session:
                 try:
-                    token_data = await self.oauth_session.async_ensure_token_valid()
-                    if token_data:
-                        access_token = token_data.get("access_token")
+                    await self.oauth_session.async_ensure_token_valid()
+                    # After ensuring token is valid, get it from session.token
+                    if self.oauth_session.token:
+                        access_token = self.oauth_session.token.get("access_token")
                     else:
-                        _LOGGER.debug("async_ensure_token_valid() returned None")
+                        _LOGGER.debug("OAuth2 session token is None after validation")
                 except Exception as err:  # noqa: BLE001
                     _LOGGER.warning("Failed to get access_token from session: %s", err)
-
-            # Final fallback: get token from api_client
-            if not access_token and hasattr(self.api_client, "_get_access_token"):
-                try:
-                    access_token = self.api_client._get_access_token()  # noqa: SLF001
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.warning(
-                        "Failed to get access_token from api_client: %s", err
-                    )
 
             if not access_token:
                 _LOGGER.warning(
@@ -479,10 +598,14 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 device.properties[prop_name].value = prop_value
             else:
                 # Add new property if it doesn't exist
+                # Infer entity type from property value to avoid incorrect modeling
+                entity_type = _infer_entity_type(prop_value)
                 device.properties[prop_name] = DeviceProperty(
                     identifier=prop_name,
                     name=prop_name,
                     value=prop_value,
+                    readable=True,
+                    entity=entity_type,
                 )
 
         # Schedule entity update if coordinator is set up
@@ -522,10 +645,14 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         device.properties[prop_name].value = prop_value
                     else:
                         # Add new property if it doesn't exist
+                        # Infer entity type from property value to avoid incorrect modeling
+                        entity_type = _infer_entity_type(prop_value)
                         device.properties[prop_name] = DeviceProperty(
                             identifier=prop_name,
                             name=prop_name,
                             value=prop_value,
+                            readable=True,
+                            entity=entity_type,
                         )
 
                 # Trigger entity update
