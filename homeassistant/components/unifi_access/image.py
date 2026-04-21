@@ -5,8 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import logging
 
-from unifi_access_api import Door
-from unifi_access_api.exceptions import UnifiAccessError
+from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import CONF_VERIFY_SSL
@@ -78,8 +77,12 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):
             try:
                 return await self.coordinator.client.get_thumbnail(thumbnail.url)
-            except UnifiAccessError:
-                _LOGGER.warning("Failed to fetch thumbnail for door %s", self._door_id)
+            except UnifiAccessError as err:
+                _LOGGER.warning(
+                    "Failed to fetch thumbnail for door %s: %s",
+                    self._door_id,
+                    err,
+                )
         return None
 
     def _handle_coordinator_update(self) -> None:
