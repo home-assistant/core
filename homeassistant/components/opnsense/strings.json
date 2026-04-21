@@ -69,8 +69,8 @@
       "title": "The {integration_title} YAML configuration is being removed"
     },
     "import_failed_missing_interfaces": {
-      "description": "The following OPNsense tracker interfaces were not found: {missing}. Found interfaces were: {found}. User must manually set up a config entry and remove YAML config",
-      "title": "OPNsense import failed: Missing tracker interfaces"
+      "description": "The following OPNsense tracker interfaces were not found: {missing}. Found interfaces were: {found}. Please manually set up a config entry and remove the YAML config",
+      "title": "The {integration_title} YAML import failed: Missing tracker interfaces"
     }
   }
 }

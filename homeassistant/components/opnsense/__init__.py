@@ -71,9 +71,9 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
         data=config[DOMAIN],
     )
 
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
+    if result.get("type") is FlowResultType.ABORT and result.get("reason") not in (
+        "already_configured",
+        "import_failed_missing_interfaces",
     ):
         async_create_issue(
             hass,
