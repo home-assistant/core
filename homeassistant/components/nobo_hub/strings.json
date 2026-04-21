@@ -15,17 +15,27 @@
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "serial": "Serial number (12 digits)"
         },
+        "data_description": {
+          "ip_address": "The IP address of your Nobø Ecohub.",
+          "serial": "The full 12-digit serial number printed on the back of your Nobø Ecohub."
+        },
         "description": "Configure a Nobø Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address."
       },
       "selected": {
         "data": {
           "serial_suffix": "Serial number suffix (3 digits)"
         },
+        "data_description": {
+          "serial_suffix": "The last 3 digits of the serial number printed on the back of your Nobø Ecohub."
+        },
         "description": "Configuring {hub}.\r\rTo connect to the hub, you need to enter the last 3 digits of the hub's serial number."
       },
       "user": {
         "data": {
           "device": "Discovered hubs"
+        },
+        "data_description": {
+          "device": "Select the Nobø Ecohub discovered on your local network, or choose manual entry."
         },
         "description": "Select Nobø Ecohub to configure."
       }
@@ -64,7 +74,10 @@
         "data": {
           "override_type": "Override type"
         },
-        "description": "Select override type \"Now\" to end override on next week profile change."
+        "data_description": {
+          "override_type": "Select \"Now\" to end a global override on the next week profile change, or \"Constant\" to keep it until manually cleared."
+        },
+        "description": "Select \"Now\" to end a global override on the next week profile change, or \"Constant\" to keep it until manually cleared."
       }
     }
   }
