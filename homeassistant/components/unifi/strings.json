@@ -71,6 +71,23 @@
       }
     }
   },
+  "exceptions": {
+    "action_request_failed": {
+      "message": "Failed to send action request to UniFi Network"
+    },
+    "reconnect_client_device_not_found": {
+      "message": "Unable to reconnect client: device not found"
+    },
+    "reconnect_client_no_mac": {
+      "message": "Unable to reconnect client: device does not have a network MAC address"
+    },
+    "reconnect_client_request_failed": {
+      "message": "Failed to send reconnect request to UniFi Network"
+    },
+    "remove_clients_request_failed": {
+      "message": "Failed to remove clients from UniFi Network"
+    }
+  },
   "options": {
     "abort": {
       "integration_not_setup": "UniFi integration is not set up"
