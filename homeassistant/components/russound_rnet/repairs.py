@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.selector import (
@@ -24,7 +24,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_MODEL,
     CONF_SOURCES,
     CONF_ZONES,
     DOMAIN,

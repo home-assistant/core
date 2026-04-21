@@ -9,7 +9,6 @@ from aiorussound.exceptions import CommandError
 
 DOMAIN = "russound_rnet"
 
-CONF_MODEL = "model"
 CONF_SOURCES = "sources"
 CONF_ZONES = "zones"
 CONF_BAUDRATE = "baudrate"

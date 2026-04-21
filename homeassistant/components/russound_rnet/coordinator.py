@@ -10,10 +10,11 @@ import logging
 from aiorussound.rnet.client import RNETZoneInfo, RussoundRNETClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MODEL, CONF_ZONES, DOMAIN, RNET_EXCEPTIONS, RNET_MODELS
+from .const import CONF_ZONES, DOMAIN, RNET_EXCEPTIONS, RNET_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 

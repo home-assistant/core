@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.russound_rnet.const import (
-    CONF_MODEL,
     CONF_SOURCES,
     CONF_ZONES,
     DOMAIN,
@@ -11,7 +10,7 @@ from homeassistant.components.russound_rnet.const import (
     TYPE_TCP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

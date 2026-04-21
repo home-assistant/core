@@ -12,7 +12,7 @@ from aiorussound.rnet.client import RussoundRNETClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -26,7 +26,6 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_BAUDRATE,
-    CONF_MODEL,
     CONF_SOURCES,
     CONF_ZONES,
     DEFAULT_BAUDRATE,

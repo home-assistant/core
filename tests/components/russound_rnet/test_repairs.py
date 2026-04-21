@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from homeassistant.components.russound_rnet.const import (
-    CONF_MODEL,
     CONF_SOURCES,
     CONF_ZONES,
     DOMAIN,
@@ -17,7 +16,7 @@ from homeassistant.components.russound_rnet.repairs import (
     async_create_deprecated_yaml_issue,
     async_create_yaml_import_issue,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component

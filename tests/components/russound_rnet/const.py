@@ -2,13 +2,12 @@
 
 from homeassistant.components.russound_rnet.const import (
     CONF_BAUDRATE,
-    CONF_MODEL,
     CONF_SOURCES,
     CONF_ZONES,
     TYPE_SERIAL,
     TYPE_TCP,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_PORT, CONF_TYPE
 
 MODEL = "caa66"
 
