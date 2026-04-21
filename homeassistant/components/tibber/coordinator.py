@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import random
-from typing import TYPE_CHECKING, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from aiohttp.client_exceptions import ClientError
 import tibber
@@ -24,7 +25,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -284,6 +285,7 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
         self,
         hass: HomeAssistant,
         config_entry: TibberConfigEntry,
+        price_fetch_coordinator: TibberFetchPriceCoordinator,
     ) -> None:
         """Initialize the price coordinator."""
         super().__init__(
@@ -291,12 +293,54 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
             config_entry,
             name=f"{DOMAIN} price",
         )
-        self._price_fetch_coordinator = TibberFetchPriceCoordinator(hass, config_entry)
+        self._price_fetch_coordinator = price_fetch_coordinator
+        self._unsub_price_fetch_listener: CALLBACK_TYPE | None = None
 
-    async def async_config_entry_first_refresh(self) -> None:
-        """Refresh fetch data before building derived price sensor data."""
-        await self._price_fetch_coordinator.async_config_entry_first_refresh()
-        return await super().async_config_entry_first_refresh()
+    @callback
+    def _build_price_data(self) -> dict[str, TibberHomeData]:
+        """Build derived price data from the fetched Tibber homes."""
+        return {
+            home_id: _build_home_data(home)
+            for home_id, home in (self._price_fetch_coordinator.data or {}).items()
+        }
+
+    @callback
+    def _async_handle_price_fetch_update(self) -> None:
+        """Update derived price data when fetched prices change."""
+        self.update_interval = self._time_until_next_15_minute()
+        self.async_set_updated_data(self._build_price_data())
+
+    @callback
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
+        """Start listening to fetched price data when entities subscribe."""
+        had_listeners = bool(self._listeners)
+        remove_listener = super().async_add_listener(update_callback, context)
+
+        if not had_listeners:
+            self._unsub_price_fetch_listener = (
+                self._price_fetch_coordinator.async_add_listener(
+                    self._async_handle_price_fetch_update
+                )
+            )
+
+        @callback
+        def _remove_listener() -> None:
+            """Remove the listener and stop fetch updates when unused."""
+            remove_listener()
+            if not self._listeners and self._unsub_price_fetch_listener is not None:
+                self._unsub_price_fetch_listener()
+                self._unsub_price_fetch_listener = None
+
+        return _remove_listener
+
+    async def async_shutdown(self) -> None:
+        """Release any fetch coordinator listener before shutdown."""
+        if self._unsub_price_fetch_listener is not None:
+            self._unsub_price_fetch_listener()
+            self._unsub_price_fetch_listener = None
+        await super().async_shutdown()
 
     def _time_until_next_15_minute(self) -> timedelta:
         """Return time until the next 15-minute boundary (0, 15, 30, 45) in UTC."""
@@ -314,11 +358,7 @@ class TibberPriceCoordinator(TibberCoordinator[dict[str, TibberHomeData]]):
 
     async def _async_update_data(self) -> dict[str, TibberHomeData]:
         self.update_interval = self._time_until_next_15_minute()
-
-        return {
-            home_id: _build_home_data(home)
-            for home_id, home in self._price_fetch_coordinator.data.items()
-        }
+        return self._build_price_data()
 
 
 class TibberFetchPriceCoordinator(TibberCoordinator[dict[str, tibber.TibberHome]]):
@@ -336,14 +376,8 @@ class TibberFetchPriceCoordinator(TibberCoordinator[dict[str, tibber.TibberHome]
             name=f"{DOMAIN} price fetch",
         )
         self._tomorrow_price_poll_threshold_seconds = random.uniform(
-            3600 * 14, 3600 * 23
+            3600 * 14, 3600 * 22
         )
-
-        @callback
-        def _keepalive_listener() -> None:
-            """Keep periodic polling active without external subscribers."""
-
-        self.async_add_listener(_keepalive_listener)
 
     async def _async_update_data(self) -> dict[str, tibber.TibberHome]:
         """Fetch latest price data via API and return per-home data."""
