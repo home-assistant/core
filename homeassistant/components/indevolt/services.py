@@ -147,7 +147,7 @@ def _validate_realtime_action(
 
     for coordinator in coordinators:
         try:
-            # Validate discharge power based on device generation
+            # Validate (dis)charge power based on device generation
             max_power: int = POWER_LIMITS[coordinator.generation][power_key]
             if power > max_power:
                 _raise_power_exceeds_max(power, max_power, coordinator.generation)
