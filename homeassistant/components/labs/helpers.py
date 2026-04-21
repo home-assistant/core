@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from homeassistant.const import EVENT_LABS_UPDATED
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.frame import report_usage
 
 from .const import LABS_DATA
 from .models import EventLabsUpdatedData
@@ -33,6 +35,43 @@ def async_is_preview_feature_enabled(
 
 
 @callback
+def async_subscribe_preview_feature(
+    hass: HomeAssistant,
+    domain: str,
+    preview_feature: str,
+    listener: Callable[[EventLabsUpdatedData], Coroutine[Any, Any, None]],
+) -> Callable[[], None]:
+    """Listen for changes to a specific preview feature.
+
+    Args:
+        hass: HomeAssistant instance
+        domain: Integration domain
+        preview_feature: Preview feature name
+        listener: Coroutine function to invoke when the preview feature
+            is toggled. Receives the event data as argument. Runs eagerly.
+
+    Returns:
+        Callable to unsubscribe from the listener
+    """
+
+    @callback
+    def _async_event_filter(event_data: EventLabsUpdatedData) -> bool:
+        """Filter labs events for this integration's preview feature."""
+        return (
+            event_data["domain"] == domain
+            and event_data["preview_feature"] == preview_feature
+        )
+
+    async def _handler(event: Event[EventLabsUpdatedData]) -> None:
+        """Handle labs feature update event."""
+        await listener(event.data)
+
+    return hass.bus.async_listen(
+        EVENT_LABS_UPDATED, _handler, event_filter=_async_event_filter
+    )
+
+
+@callback
 def async_listen(
     hass: HomeAssistant,
     domain: str,
@@ -40,6 +79,8 @@ def async_listen(
     listener: Callable[[], None],
 ) -> Callable[[], None]:
     """Listen for changes to a specific preview feature.
+
+    Deprecated: use async_subscribe_preview_feature instead.
 
     Args:
         hass: HomeAssistant instance
@@ -50,17 +91,16 @@ def async_listen(
     Returns:
         Callable to unsubscribe from the listener
     """
+    report_usage(
+        "calls `async_listen` which is deprecated, "
+        "use `async_subscribe_preview_feature` instead",
+        breaks_in_ha_version="2027.3.0",
+    )
 
-    @callback
-    def _async_feature_updated(event: Event[EventLabsUpdatedData]) -> None:
-        """Handle labs feature update event."""
-        if (
-            event.data["domain"] == domain
-            and event.data["preview_feature"] == preview_feature
-        ):
-            listener()
+    async def _listener(_event_data: EventLabsUpdatedData) -> None:
+        listener()
 
-    return hass.bus.async_listen(EVENT_LABS_UPDATED, _async_feature_updated)
+    return async_subscribe_preview_feature(hass, domain, preview_feature, _listener)
 
 
 async def async_update_preview_feature(

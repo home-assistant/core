@@ -13,7 +13,10 @@ import voluptuous as vol
 
 from homeassistant.components import automation, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.labs import async_listen as async_labs_listen
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_subscribe_preview_feature,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -62,7 +65,6 @@ from homeassistant.helpers.script import (
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import parse_datetime
 
@@ -88,7 +90,6 @@ SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -235,8 +236,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
         await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
         await _async_process_config(hass, conf, component)
 
     async def turn_on_service(service: ServiceCall) -> None:
@@ -282,14 +282,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
-        hass.async_create_task(
-            reload_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-        )
+        await reload_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
 
-    async_labs_listen(
+    async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,

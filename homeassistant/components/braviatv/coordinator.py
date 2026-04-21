@@ -173,6 +173,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
             self.skipped_updates = 0
+            self.update_interval = (
+                timedelta(seconds=120) if power_status == "standby" else SCAN_INTERVAL
+            )
 
             if not self.system_info:
                 self.system_info = await self.client.get_system_info()
@@ -200,7 +203,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     "device": self.config_entry.title,
                 },
             ) from err
-        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
+        except BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff:
             self.is_on = False
             self.connected = False
             _LOGGER.debug(

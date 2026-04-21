@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EntityCategory,
     UnitOfLength,
@@ -34,9 +33,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import UTC
 
-from . import WeatherFlowCloudUpdateCoordinatorREST, WeatherFlowCoordinators
-from .const import DOMAIN
-from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
+from .coordinator import (
+    WeatherFlowCloudConfigEntry,
+    WeatherFlowCloudUpdateCoordinatorREST,
+    WeatherFlowObservationCoordinator,
+    WeatherFlowWindCoordinator,
+)
 from .entity import WeatherFlowCloudEntity
 
 PRECIPITATION_TYPE = {
@@ -338,11 +340,11 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=(
-            lambda data: datetime.fromtimestamp(
-                data.lightning_strike_last_epoch, tz=UTC
+            lambda data: (
+                datetime.fromtimestamp(data.lightning_strike_last_epoch, tz=UTC)
+                if data.lightning_strike_last_epoch is not None
+                else None
             )
-            if data.lightning_strike_last_epoch is not None
-            else None
         ),
     ),
 )
@@ -350,15 +352,15 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WeatherFlowCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors based on a config entry."""
 
-    coordinators: WeatherFlowCoordinators = hass.data[DOMAIN][entry.entry_id]
+    coordinators = entry.runtime_data
     rest_coordinator = coordinators.rest
-    wind_coordinator = coordinators.wind  # Now properly typed
-    observation_coordinator = coordinators.observation  # Now properly typed
+    wind_coordinator = coordinators.wind
+    observation_coordinator = coordinators.observation
 
     entities: list[SensorEntity] = [
         WeatherFlowCloudSensorREST(rest_coordinator, sensor_description, station_id)

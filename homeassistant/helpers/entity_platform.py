@@ -42,6 +42,7 @@ from . import device_registry as dr, entity_registry as er, service, translation
 from .deprecation import deprecated_function
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
+from .frame import report_usage
 from .issue_registry import IssueSeverity, async_create_issue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
@@ -786,7 +787,7 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
-    async def _async_add_entity(
+    async def _async_add_entity(  # noqa: C901
         self,
         entity: Entity,
         update_before_add: bool,
@@ -821,14 +822,41 @@ class EntityPlatform:
 
         # An entity may suggest the entity_id by setting entity_id itself
         if not hasattr(entity, "internal_integration_suggested_object_id"):
-            if entity.entity_id is not None and not valid_entity_id(entity.entity_id):
-                entity.add_to_platform_abort()
-                raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
-            entity.internal_integration_suggested_object_id = (
-                split_entity_id(entity.entity_id)[1]
-                if entity.entity_id is not None
-                else None
-            )
+            if entity.entity_id is None:
+                entity.internal_integration_suggested_object_id = None  # type: ignore[unreachable]
+            else:
+                if not valid_entity_id(entity.entity_id):
+                    if entity.unique_id is not None:
+                        report_usage(
+                            f"sets an invalid entity ID: '{entity.entity_id}'. "
+                            "In most cases, entities should not set entity_id,"
+                            " but if they do, it should be a valid entity ID",
+                            integration_domain=self.platform_name,
+                            breaks_in_ha_version="2027.2.0",
+                        )
+                    else:
+                        entity.add_to_platform_abort()
+                        raise HomeAssistantError(
+                            f"Invalid entity ID: {entity.entity_id}"
+                        )
+                try:
+                    domain, entity.internal_integration_suggested_object_id = (
+                        split_entity_id(entity.entity_id)
+                    )
+                    if domain != self.domain:
+                        report_usage(
+                            f"sets an entity ID with wrong domain: '{entity.entity_id}'. "
+                            f"Expected domain is '{self.domain}'",
+                            integration_domain=self.platform_name,
+                            breaks_in_ha_version="2027.5.0",
+                        )
+                except ValueError:
+                    # This error handling should be removed once we remove
+                    # the invalid entity ID deprecation above.
+                    entity.add_to_platform_abort()
+                    raise HomeAssistantError(
+                        f"Invalid entity ID: {entity.entity_id}"
+                    ) from None
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:

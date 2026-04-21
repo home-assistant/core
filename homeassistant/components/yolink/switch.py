@@ -21,12 +21,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEV_MODEL_MULTI_OUTLET_YS6801, DOMAIN
-from .coordinator import YoLinkCoordinator
+from .const import DEV_MODEL_MULTI_OUTLET_YS6801
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
@@ -61,8 +60,10 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_usb_ports",
         translation_key="usb_ports",
         device_class=SwitchDeviceClass.OUTLET,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET
-        and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801),
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_OUTLET
+            and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801)
+        ),
         plug_index_fn=lambda _: 0,
     ),
     YoLinkSwitchEntityDescription(
@@ -91,16 +92,20 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         key="multi_outlet_plug_3",
         translation_key="plug_3",
         device_class=SwitchDeviceClass.OUTLET,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET
-        and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801),
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_OUTLET
+            and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801)
+        ),
         plug_index_fn=lambda _: 3,
     ),
     YoLinkSwitchEntityDescription(
         key="multi_outlet_plug_4",
         translation_key="plug_4",
         device_class=SwitchDeviceClass.OUTLET,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MULTI_OUTLET
-        and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801),
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_MULTI_OUTLET
+            and device.device_model_name.startswith(DEV_MODEL_MULTI_OUTLET_YS6801)
+        ),
         plug_index_fn=lambda _: 4,
     ),
 )
@@ -115,11 +120,11 @@ DEVICE_TYPE = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink switch from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     switch_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -140,7 +145,7 @@ class YoLinkSwitchEntity(YoLinkEntity, SwitchEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkSwitchEntityDescription,
     ) -> None:

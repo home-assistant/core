@@ -45,7 +45,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.logging import catch_log_exception, log_exception
@@ -175,7 +174,7 @@ async def async_publish(
             # requires bytes as payload
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
-            except (AttributeError, LookupError, UnicodeEncodeError):
+            except AttributeError, LookupError, UnicodeEncodeError:
                 _LOGGER.error(
                     "Can't encode payload for publishing %s on %s with encoding %s",
                     payload,
@@ -221,7 +220,6 @@ def async_on_subscribe_done(
     )
 
 
-@bind_hass
 async def async_subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -273,7 +271,6 @@ def async_subscribe_internal(
     return client.async_subscribe(topic, msg_callback, qos, encoding, job_type)
 
 
-@bind_hass
 def subscribe(
     hass: HomeAssistant,
     topic: str,
@@ -1179,7 +1176,7 @@ class MQTT:
             if subscription.encoding is not None:
                 try:
                     payload = msg.payload.decode(subscription.encoding)
-                except (AttributeError, UnicodeDecodeError):
+                except AttributeError, UnicodeDecodeError:
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload[0:8192],

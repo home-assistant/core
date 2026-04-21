@@ -16,6 +16,8 @@ from .entity import HuumBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -45,7 +47,7 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the current value."""
         return self.coordinator.data.target_humidity
 

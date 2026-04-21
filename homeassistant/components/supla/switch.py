@@ -56,7 +56,7 @@ class SuplaSwitchEntity(SuplaEntity, SwitchEntity):
         await self.async_action("TURN_OFF")
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         if state := self.channel_data.get("state"):
             return state["on"]

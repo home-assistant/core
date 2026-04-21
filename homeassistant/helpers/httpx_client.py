@@ -14,7 +14,6 @@ import httpx
 
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ssl import (
     SSL_ALPN_HTTP11,
@@ -44,7 +43,6 @@ USER_AGENT = "User-Agent"
 
 
 @callback
-@bind_hass
 def get_async_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,
@@ -117,7 +115,10 @@ def create_async_httpx_client(
         kwargs.setdefault("http2", True)
     client = HassHttpXAsyncClient(
         verify=ssl_context,
-        headers={USER_AGENT: SERVER_SOFTWARE},
+        headers={
+            USER_AGENT: SERVER_SOFTWARE,
+            **kwargs.pop("headers", {}),
+        },
         limits=DEFAULT_LIMITS,
         **kwargs,
     )

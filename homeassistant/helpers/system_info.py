@@ -6,16 +6,14 @@ from functools import cache
 from getpass import getuser
 import logging
 import platform
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
 from homeassistant.util.system_info import is_official_image
 
 from .hassio import is_hassio
-from .importlib import async_import_module
 from .singleton import singleton
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,37 +49,27 @@ async def async_get_container_arch(hass: HomeAssistant) -> str:
 cached_get_user = cache(getuser)
 
 
-@bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
-    # Local import to avoid circular dependencies
-    # We use the import helper because hassio
-    # may not be loaded yet and we don't want to
-    # do blocking I/O in the event loop to import it.
-    if TYPE_CHECKING:
-        from homeassistant.components import hassio  # noqa: PLC0415
-    else:
-        hassio = await async_import_module(hass, "homeassistant.components.hassio")
-
     is_hassio_ = is_hassio(hass)
 
     info_object = {
-        "installation_type": "Unknown",
-        "version": current_version,
-        "dev": "dev" in current_version,
-        "hassio": is_hassio_,
-        "virtualenv": is_virtual_env(),
-        "python_version": platform.python_version(),
-        "docker": False,
         "arch": platform.machine(),
-        "timezone": str(hass.config.time_zone),
+        "dev": "dev" in current_version,
+        "docker": False,
+        "hassio": is_hassio_,
+        "installation_type": "Unknown",
         "os_name": platform.system(),
         "os_version": platform.release(),
+        "python_version": platform.python_version(),
+        "timezone": str(hass.config.time_zone),
+        "version": current_version,
+        "virtualenv": is_virtual_env(),
     }
 
     try:
         info_object["user"] = cached_get_user()
-    except (KeyError, OSError):
+    except KeyError, OSError:
         # OSError on python >= 3.13, KeyError on python < 3.13
         # KeyError can be removed when 3.12 support is dropped
         # see https://docs.python.org/3/whatsnew/3.13.html
@@ -105,6 +93,9 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     # Enrich with Supervisor information
     if is_hassio_:
+        # Local import to avoid circular dependencies
+        from homeassistant.components import hassio  # noqa: PLC0415
+
         if not (info := hassio.get_info(hass)):
             _LOGGER.warning("No Home Assistant Supervisor info available")
             info = {}

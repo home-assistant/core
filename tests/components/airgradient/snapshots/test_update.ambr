@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[update.airgradient_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -41,7 +42,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/airgradient/icon.png',
+      'entity_picture': '/api/brands/integration/airgradient/icon.png',
       'friendly_name': 'Airgradient Firmware',
       'in_progress': False,
       'installed_version': '3.1.1',

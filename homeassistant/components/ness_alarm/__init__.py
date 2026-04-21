@@ -1,6 +1,7 @@
 """Support for Ness D8X/D16X devices."""
 
-import datetime
+from __future__ import annotations
+
 import logging
 from typing import NamedTuple
 
@@ -9,41 +10,41 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-    BinarySensorDeviceClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_STATE,
     CONF_HOST,
+    CONF_PORT,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
-    Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
+
+from .const import (
+    CONF_INFER_ARMING_STATE,
+    CONF_ZONE_ID,
+    CONF_ZONE_NAME,
+    CONF_ZONE_TYPE,
+    CONF_ZONES,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_ZONE_TYPE,
+    DOMAIN,
+    PLATFORMS,
+    SIGNAL_ARMING_STATE_CHANGED,
+    SIGNAL_ZONE_CHANGED,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "ness_alarm"
-DATA_NESS: HassKey[Client] = HassKey(DOMAIN)
-
-CONF_DEVICE_PORT = "port"
-CONF_INFER_ARMING_STATE = "infer_arming_state"
-CONF_ZONES = "zones"
-CONF_ZONE_NAME = "name"
-CONF_ZONE_TYPE = "type"
-CONF_ZONE_ID = "id"
-ATTR_OUTPUT_ID = "output_id"
-DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=1)
-DEFAULT_INFER_ARMING_STATE = False
-
-SIGNAL_ZONE_CHANGED = "ness_alarm.zone_changed"
-SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"
+type NessAlarmConfigEntry = ConfigEntry[Client]
 
 
 class ZoneChangedData(NamedTuple):
@@ -53,7 +54,6 @@ class ZoneChangedData(NamedTuple):
     state: bool
 
 
-DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ZONE_NAME): cv.string,
@@ -64,88 +64,111 @@ ZONE_SCHEMA = vol.Schema(
     }
 )
 
+# YAML configuration is deprecated but supported for import
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_DEVICE_PORT): cv.port,
+                vol.Required(CONF_PORT): cv.port,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.positive_time_period,
                 vol.Optional(CONF_ZONES, default=[]): vol.All(
                     cv.ensure_list, [ZONE_SCHEMA]
                 ),
-                vol.Optional(
-                    CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
-                ): cv.boolean,
+                vol.Optional(CONF_INFER_ARMING_STATE, default=False): cv.boolean,
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_PANIC = "panic"
-SERVICE_AUX = "aux"
-
-SERVICE_SCHEMA_PANIC = vol.Schema({vol.Required(ATTR_CODE): cv.string})
-SERVICE_SCHEMA_AUX = vol.Schema(
-    {
-        vol.Required(ATTR_OUTPUT_ID): cv.positive_int,
-        vol.Optional(ATTR_STATE, default=True): cv.boolean,
-    }
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm platform."""
+    async_setup_services(hass)
+    if DOMAIN not in config:
+        return True
 
-    conf = config[DOMAIN]
+    hass.async_create_task(_async_setup(hass, config))
 
-    zones = conf[CONF_ZONES]
-    host = conf[CONF_HOST]
-    port = conf[CONF_DEVICE_PORT]
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-    infer_arming_state = conf[CONF_INFER_ARMING_STATE]
+    return True
 
-    client = Client(
-        host=host,
-        port=port,
-        update_interval=scan_interval.total_seconds(),
-        infer_arming_state=infer_arming_state,
+
+async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config[DOMAIN],
     )
-    hass.data[DATA_NESS] = client
-
-    async def _close(event):
-        await client.close()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
-
-    async def _started(event):
-        # Force update for current arming status and current zone states (once Home Assistant has finished loading required sensors and panel)
-        _LOGGER.debug("invoking client keepalive() & update()")
-        hass.loop.create_task(client.keepalive())
-        hass.loop.create_task(client.update())
-
-    async_at_started(hass, _started)
-
-    hass.async_create_task(
-        async_load_platform(
-            hass, Platform.BINARY_SENSOR, DOMAIN, {CONF_ZONES: zones}, config
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.9.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Ness Alarm",
+            },
         )
-    )
-    hass.async_create_task(
-        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, {}, config)
+        return
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.9.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Ness Alarm",
+        },
     )
 
-    def on_zone_change(zone_id: int, state: bool):
-        """Receives and propagates zone state updates."""
+
+async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
+    """Set up Ness Alarm from a config entry."""
+    client = Client(
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        update_interval=DEFAULT_SCAN_INTERVAL.total_seconds(),
+        infer_arming_state=entry.data.get(CONF_INFER_ARMING_STATE, False),
+    )
+
+    # Verify the client can connect to the alarm panel
+    try:
+        await client.update()
+    except OSError as err:
+        await client.close()
+        raise ConfigEntryNotReady(
+            f"Unable to connect to alarm panel at"
+            f" {entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        ) from err
+
+    entry.runtime_data = client
+
+    def on_zone_change(zone_id: int, state: bool) -> None:
+        """Receive and propagate zone state updates."""
         async_dispatcher_send(
             hass, SIGNAL_ZONE_CHANGED, ZoneChangedData(zone_id=zone_id, state=state)
         )
 
-    def on_state_change(arming_state: ArmingState, arming_mode: ArmingMode | None):
-        """Receives and propagates arming state updates."""
+    def on_state_change(
+        arming_state: ArmingState, arming_mode: ArmingMode | None
+    ) -> None:
+        """Receive and propagate arming state updates."""
         async_dispatcher_send(
             hass, SIGNAL_ARMING_STATE_CHANGED, arming_state, arming_mode
         )
@@ -153,17 +176,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     client.on_zone_change(on_zone_change)
     client.on_state_change(on_state_change)
 
-    async def handle_panic(call: ServiceCall) -> None:
-        await client.panic(call.data[ATTR_CODE])
+    async def _close(event: Event) -> None:
+        await client.close()
 
-    async def handle_aux(call: ServiceCall) -> None:
-        await client.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_PANIC, handle_panic, schema=SERVICE_SCHEMA_PANIC
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_AUX, handle_aux, schema=SERVICE_SCHEMA_AUX
-    )
+    async def _started(hass: HomeAssistant) -> None:
+        _LOGGER.debug("Invoking client keepalive() & update()")
+        hass.async_create_task(client.keepalive())
+        hass.async_create_task(client.update())
+
+    async_at_started(hass, _started)
+
+    # Forward to platforms
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register update listener for options
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        await entry.runtime_data.close()
+
+    return unload_ok
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)

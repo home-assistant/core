@@ -32,7 +32,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PROBE_COUNT, DOMAIN
+from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, DOMAIN
 
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
@@ -144,14 +144,15 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             )
         except BleakError as exc:
             self.logger.debug("Connection failed", exc_info=True)
-            raise DeviceNotFound("Unable to connect to device") from exc
+            raise DeviceFailed("Unable to connect to device") from exc
 
         try:
             async with asyncio.timeout(10):
                 packet_a0 = await client.read(PacketA0Notify)
         except (BleakError, DecodeError, TimeoutError) as exc:
+            self.logger.debug("Configuration read failed", exc_info=True)
             await client.disconnect()
-            raise DeviceFailed(f"Device failed {exc}") from exc
+            raise DeviceFailed("Failed to read device configuration") from exc
 
         config_entry = self.config_entry
 
@@ -202,12 +203,18 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             self._debounced_refresh.async_schedule_call()
             raise DeviceFailed("Device was disconnected")
 
-        client = await self._get_connected_client()
+        try:
+            client = await self._get_connected_client()
+        except DeviceNotFound:
+            return {}
+
         try:
             await client.request(PacketA0Notify)
             await client.request(PacketA1Notify)
             for probe in range(1, self.config_entry.data[CONF_PROBE_COUNT] + 1):
                 await client.write(PacketA8Write(probe=probe))
+            if self.config_entry.data.get(CONF_HAS_AMBIENT):
+                await client.write(PacketA8Write(probe=0))
         except BleakError as exc:
             raise DeviceFailed(f"Device failed {exc}") from exc
         return self.data
@@ -224,5 +231,5 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        if isinstance(self.last_exception, DeviceNotFound):
+        if self.client is None:
             self._debounced_refresh.async_schedule_call()

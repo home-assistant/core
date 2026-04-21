@@ -154,6 +154,10 @@
     }
   },
   "config_panel": {
+    "common": {
+      "group_address": "Group address",
+      "group_addresses": "Group addresses"
+    },
     "dashboard": {
       "connection_flow": {
         "description": "Reconfigure KNX connection or import a new KNX keyring file",
@@ -166,6 +170,10 @@
       "project_upload": {
         "description": "Import a KNX project file to help configure group addresses and datapoint types",
         "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
+      },
+      "time_server": {
+        "description": "Broadcast the current local time and date to the KNX bus",
+        "title": "[%key:component::knx::config_panel::dialogs::time_server::title%]"
       }
     },
     "dialogs": {
@@ -173,6 +181,19 @@
         "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
         "file_upload_label": "ETS project file",
         "title": "Import ETS project"
+      },
+      "time_server": {
+        "date": {
+          "label": "Date"
+        },
+        "datetime": {
+          "label": "Combined date and time"
+        },
+        "description": "Periodically sends the current local time and date to the KNX bus. Values are broadcast every hour to the configured group addresses.\n\nLeave an address field empty to disable sending for that format.",
+        "time": {
+          "label": "Time"
+        },
+        "title": "Time server"
       }
     },
     "dpt": {
@@ -802,6 +823,48 @@
             }
           }
         },
+        "number": {
+          "description": "Entity for numeric datapoints. Temperature, percent, etc.",
+          "knx": {
+            "device_class": {
+              "description": "[%key:component::knx::config_panel::entities::create::sensor::knx::device_class::description%]",
+              "label": "[%key:component::knx::config_panel::entities::create::sensor::knx::device_class::label%]"
+            },
+            "ga_sensor": {
+              "description": "Group address representing value.",
+              "label": "Value"
+            },
+            "max": {
+              "description": "Override the DPT's maximum value allowed to be set.",
+              "label": "Maximum value"
+            },
+            "min": {
+              "description": "Override the DPT's minimum value allowed to be set.",
+              "label": "Minimum value"
+            },
+            "mode": {
+              "description": "[%key:component::knx::config_panel::entities::create::text::knx::mode::description%]",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "auto": "[%key:component::number::entity_component::_::state_attributes::mode::state::auto%]",
+                "box": "[%key:component::number::entity_component::_::state_attributes::mode::state::box%]",
+                "slider": "[%key:component::number::entity_component::_::state_attributes::mode::state::slider%]"
+              }
+            },
+            "section_advanced_options": {
+              "description": "Override default DPT-based entity attributes.",
+              "title": "[%key:component::knx::config_panel::entities::create::sensor::knx::section_advanced_options::title%]"
+            },
+            "step": {
+              "description": "Override the DPT's smallest step size to change the value.",
+              "label": "Step size"
+            },
+            "unit_of_measurement": {
+              "description": "[%key:component::knx::config_panel::entities::create::sensor::knx::unit_of_measurement::description%]",
+              "label": "[%key:component::knx::config_panel::entities::create::sensor::knx::unit_of_measurement::label%]"
+            }
+          }
+        },
         "scene": {
           "description": "A KNX entity can activate a KNX scene and updates when the scene number is received.",
           "knx": {
@@ -823,7 +886,7 @@
               "label": "Force update"
             },
             "device_class": {
-              "description": "Override the DPTs default device class.",
+              "description": "Override the DPT's default device class.",
               "label": "Device class"
             },
             "ga_sensor": {
@@ -835,11 +898,11 @@
               "title": "Overrides"
             },
             "state_class": {
-              "description": "Override the DPTs default state class.",
+              "description": "Override the DPT's default state class.",
               "label": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]"
             },
             "unit_of_measurement": {
-              "description": "Override the DPTs default unit of measurement.",
+              "description": "Override the DPT's default unit of measurement.",
               "label": "Unit of measurement"
             }
           }
@@ -890,6 +953,49 @@
       },
       "description": "Add and manage KNX entities",
       "title": "Entities"
+    },
+    "expose": {
+      "create": {
+        "add_expose": "Add expose",
+        "attribute": {
+          "description": "Expose changes of a specific attribute of the entity instead of the state. Optional. If the attribute is not set, the entity state is exposed."
+        },
+        "cooldown": {
+          "description": "Minimum time between consecutive sends. This can be used to prevent high traffic on the KNX bus when values change very frequently. Only the most recent value during the cooldown period is sent.",
+          "label": "Cooldown"
+        },
+        "copy_info": "Copying options of {entity_name} ({entity_id}).",
+        "default": {
+          "description": "The value to send if the entity state is `unavailable` or `unknown`, or if the attribute is not set. If `default` is omitted, nothing is sent in these cases, but the last known value remains available for read requests.",
+          "label": "Default value"
+        },
+        "entity": {
+          "description": "Home Assistant entity to expose state changes to the KNX bus.",
+          "label": "Entity"
+        },
+        "ga": {
+          "label": "[%key:component::knx::config_panel::common::group_address%]"
+        },
+        "periodic_send": {
+          "description": "Time interval to automatically resend the current value to the KNX bus, even if it hasn’t changed.",
+          "label": "Periodic send interval"
+        },
+        "respond_to_read": {
+          "description": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::description%]",
+          "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]"
+        },
+        "section_advanced_options": {
+          "title": "Advanced options"
+        },
+        "show_raw_values": "Show raw values",
+        "title": "Add exposure",
+        "value_template": {
+          "description": "Optionally transform the entity state or attribute value before sending it to KNX using a template. The template receives the entity state or attribute value as `value` variable.",
+          "label": "Value template"
+        }
+      },
+      "description": "Expose Home Assistant entity states to the KNX bus",
+      "title": "Expose"
     },
     "group_monitor": {
       "description": "Monitor KNX group communication",
@@ -1112,7 +1218,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) that shall be added or removed. Lists are allowed.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "remove": {
           "description": "Whether the group address(es) will be removed.",
@@ -1130,7 +1236,7 @@
       "fields": {
         "address": {
           "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "attribute": {
           "description": "Attribute of the entity that shall be sent to the KNX bus. If not set, the state will be sent. Eg. for a light the state is either “on” or “off” - with attribute you can expose its “brightness”.",
@@ -1160,7 +1266,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to send read request to. Lists will read multiple group addresses.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         }
       },
       "name": "Read from KNX bus"
@@ -1174,7 +1280,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to write to. Lists will send to multiple group addresses successively.",
-          "name": "Group address"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "payload": {
           "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length.",

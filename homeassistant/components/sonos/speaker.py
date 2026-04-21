@@ -291,7 +291,7 @@ class SonosSpeaker:
         else:
             try:
                 value = int(state)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.error(
                     "Invalid value for %s %s",
                     speaker_attribute,

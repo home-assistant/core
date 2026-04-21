@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from functools import partial
+from collections.abc import Mapping
 import json
 import logging
-import re
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import anthropic
 import voluptuous as vol
@@ -14,7 +13,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
-    ConfigEntry,
+    SOURCE_REAUTH,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -30,23 +29,30 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
 )
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CODE_EXECUTION_UNSUPPORTED_MODELS,
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_THINKING_EFFORT,
+    CONF_TOOL_SEARCH,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -58,9 +64,15 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    NON_THINKING_MODELS,
+    MIN_THINKING_BUDGET,
+    TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
+    PromptCaching,
 )
+from .coordinator import model_alias
+
+if TYPE_CHECKING:
+    from . import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,8 +98,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = await hass.async_add_executor_job(
-        partial(anthropic.AsyncAnthropic, api_key=data[CONF_API_KEY])
+    client = anthropic.AsyncAnthropic(
+        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
     )
     await client.models.list(timeout=10.0)
 
@@ -96,7 +108,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthropic."""
 
     VERSION = 2
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -124,6 +136,10 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
+                    )
                 return self.async_create_entry(
                     title="Claude",
                     data=user_input,
@@ -144,13 +160,34 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors or None
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors or None,
+            description_placeholders={
+                "instructions_url": "https://www.home-assistant.io/integrations/anthropic/#generating-an-api-key",
+            },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+            )
+        return await self.async_step_user(user_input)
 
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
@@ -163,6 +200,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
     options: dict[str, Any]
+    model_info: anthropic.types.ModelInfo
 
     @property
     def _is_new(self) -> bool:
@@ -201,10 +239,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        if (suggested_llm_apis := self.options.get(CONF_LLM_HASS_API)) and isinstance(
-            suggested_llm_apis, str
-        ):
-            self.options[CONF_LLM_HASS_API] = [suggested_llm_apis]
+        if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
+            if isinstance(suggested_llm_apis, str):
+                suggested_llm_apis = [suggested_llm_apis]
+            known_apis = {api.id for api in llm.async_get_apis(self.hass)}
+            self.options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in known_apis
+            ]
 
         step_schema: VolDictType = {}
         errors: dict[str, str] = {}
@@ -273,28 +314,48 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage advanced options."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
 
         step_schema: VolDictType = {
             vol.Optional(
                 CONF_CHAT_MODEL,
                 default=DEFAULT[CONF_CHAT_MODEL],
             ): SelectSelector(
-                SelectSelectorConfig(
-                    options=await self._get_model_list(), custom_value=True
-                )
+                SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
             ),
             vol.Optional(
-                CONF_MAX_TOKENS,
-                default=DEFAULT[CONF_MAX_TOKENS],
-            ): int,
-            vol.Optional(
-                CONF_TEMPERATURE,
-                default=DEFAULT[CONF_TEMPERATURE],
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                CONF_PROMPT_CACHING,
+                default=DEFAULT[CONF_PROMPT_CACHING],
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[x.value for x in PromptCaching],
+                    translation_key=CONF_PROMPT_CACHING,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
 
         if user_input is not None:
             self.options.update(user_input)
+
+            coordinator = self._get_entry().runtime_data
+            self.model_info, status = coordinator.get_model_info(
+                self.options[CONF_CHAT_MODEL]
+            )
+            if not status:
+                # Couldn't find the model in the cached list, try to fetch it directly
+                client = coordinator.client
+                try:
+                    self.model_info = await client.models.retrieve(
+                        self.options[CONF_CHAT_MODEL], timeout=10.0
+                    )
+                except anthropic.NotFoundError:
+                    errors[CONF_CHAT_MODEL] = "model_not_found"
+                except anthropic.AnthropicError as err:
+                    errors[CONF_CHAT_MODEL] = "api_error"
+                    description_placeholders["message"] = (
+                        err.message if isinstance(err, anthropic.APIError) else str(err)
+                    )
 
             if not errors:
                 return await self.async_step_model()
@@ -305,6 +366,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Schema(step_schema), self.options
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_model(
@@ -313,26 +375,85 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         """Manage model-specific options."""
         errors: dict[str, str] = {}
 
-        step_schema: VolDictType = {}
+        step_schema: VolDictType = {
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                default=DEFAULT[CONF_MAX_TOKENS],
+            ): vol.All(
+                NumberSelector(
+                    NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
+                ),
+                vol.Coerce(int),
+            )
+            if self.model_info.max_tokens
+            else cv.positive_int,
+        }
 
         model = self.options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(NON_THINKING_MODELS)):
+        if (
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.supported
+            and not self.model_info.capabilities.thinking.types.adaptive.supported
+        ):
             step_schema[
                 vol.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
                 )
-            ] = vol.All(
-                NumberSelector(
-                    NumberSelectorConfig(
-                        min=0,
-                        max=self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-                    )
-                ),
-                vol.Coerce(int),
+            ] = (
+                vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
+                    ),
+                    vol.Coerce(int),
+                )
+                if self.model_info.max_tokens
+                else cv.positive_int
             )
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
+
+        if (
+            self.model_info.capabilities
+            and (effort_capability := self.model_info.capabilities.effort).supported
+        ):
+            effort_options: list[str] = []
+            if self.model_info.capabilities.thinking.types.adaptive.supported:
+                effort_options.append("none")
+            if effort_capability.low.supported:
+                effort_options.append("low")
+            if effort_capability.medium.supported:
+                effort_options.append("medium")
+            if effort_capability.high.supported:
+                effort_options.append("high")
+            if effort_capability.xhigh and effort_capability.xhigh.supported:
+                effort_options.append("xhigh")
+            if effort_capability.max.supported:
+                effort_options.append("max")
+            step_schema[
+                vol.Optional(
+                    CONF_THINKING_EFFORT,
+                    default=DEFAULT[CONF_THINKING_EFFORT],
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=effort_options,
+                    translation_key=CONF_THINKING_EFFORT,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+        else:
+            self.options.pop(CONF_THINKING_EFFORT, None)
+
+        if not model.startswith(tuple(CODE_EXECUTION_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_CODE_EXECUTION,
+                    default=DEFAULT[CONF_CODE_EXECUTION],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_CODE_EXECUTION, None)
 
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(
@@ -361,10 +482,30 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
 
+        if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_TOOL_SEARCH,
+                    default=DEFAULT[CONF_TOOL_SEARCH],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_TOOL_SEARCH, None)
+
         if not step_schema:
-            user_input = {}
+            # Currently our schema is always present, but if one day it becomes empty,
+            # then the below line is needed to skip this step
+            user_input = {}  # pragma: no cover
 
         if user_input is not None:
+            if (
+                CONF_THINKING_BUDGET in user_input
+                and user_input[CONF_THINKING_BUDGET] >= MIN_THINKING_BUDGET
+                and user_input[CONF_THINKING_BUDGET]
+                >= user_input.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
+            ):
+                errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
+
             if user_input.get(CONF_WEB_SEARCH, DEFAULT[CONF_WEB_SEARCH]) and not errors:
                 if user_input.get(
                     CONF_WEB_SEARCH_USER_LOCATION,
@@ -396,51 +537,25 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             last_step=True,
         )
 
-    async def _get_model_list(self) -> list[SelectOptionDict]:
+    def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        try:
-            client = await self.hass.async_add_executor_job(
-                partial(
-                    anthropic.AsyncAnthropic,
-                    api_key=self._get_entry().data[CONF_API_KEY],
-                )
+        coordinator = self._get_entry().runtime_data
+        return [
+            SelectOptionDict(
+                label=model_info.display_name,
+                value=model_alias(model_info.id),
             )
-            models = (await client.models.list()).data
-        except anthropic.AnthropicError:
-            models = []
-        _LOGGER.debug("Available models: %s", models)
-        model_options: list[SelectOptionDict] = []
-        short_form = re.compile(r"[^\d]-\d$")
-        for model_info in models:
-            # Resolve alias from versioned model name:
-            model_alias = (
-                model_info.id[:-9]
-                if model_info.id
-                not in ("claude-3-haiku-20240307", "claude-3-opus-20240229")
-                else model_info.id
-            )
-            if short_form.search(model_alias):
-                model_alias += "-0"
-            if model_alias.endswith(("haiku", "opus", "sonnet")):
-                model_alias += "-latest"
-            model_options.append(
-                SelectOptionDict(
-                    label=model_info.display_name,
-                    value=model_alias,
-                )
-            )
-        return model_options
+            for model_info in coordinator.data or []
+        ]
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = await self.hass.async_add_executor_job(
-                partial(
-                    anthropic.AsyncAnthropic,
-                    api_key=self._get_entry().data[CONF_API_KEY],
-                )
+            client = anthropic.AsyncAnthropic(
+                api_key=self._get_entry().data[CONF_API_KEY],
+                http_client=get_async_client(self.hass),
             )
             location_schema = vol.Schema(
                 {
@@ -461,22 +576,24 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                         "role": "user",
                         "content": "Where are the following coordinates located: "
                         f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})? Please respond "
-                        "only with a JSON object using the following schema:\n"
-                        f"{convert(location_schema)}",
-                    },
-                    {
-                        "role": "assistant",
-                        "content": "{",  # hints the model to skip any preamble
-                    },
+                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                    }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),
+                output_config={
+                    "format": {
+                        "type": "json_schema",
+                        "schema": {
+                            **convert(location_schema),
+                            "additionalProperties": False,
+                        },
+                    }
+                },
             )
             _LOGGER.debug("Model response: %s", response.content)
             location_data = location_schema(
                 json.loads(
-                    "{"
-                    + "".join(
+                    "".join(
                         block.text
                         for block in response.content
                         if isinstance(block, anthropic.types.TextBlock)

@@ -164,7 +164,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             attribute_id = f"{entity_id}/{key}"
             try:
                 float_value = float(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 float_value = None
             if float_value is None or not math.isfinite(float_value):
                 # Don't store string attributes for now

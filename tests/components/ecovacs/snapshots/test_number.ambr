@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entities[5xu9h3][number.goat_g1_cut_direction:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 180,
@@ -60,8 +61,9 @@
 # ---
 # name: test_number_entities[5xu9h3][number.goat_g1_volume:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -118,8 +120,9 @@
 # ---
 # name: test_number_entities[n0vyif][number.x8_pro_omni_clean_count:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 4,
@@ -176,8 +179,9 @@
 # ---
 # name: test_number_entities[n0vyif][number.x8_pro_omni_volume:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,
@@ -234,8 +238,9 @@
 # ---
 # name: test_number_entities[n0vyif][number.x8_pro_omni_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 50,
@@ -292,8 +297,9 @@
 # ---
 # name: test_number_entities[yna5x1][number.ozmo_950_volume:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 11,

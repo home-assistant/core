@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from elgato import ElgatoError
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -14,16 +12,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import SERVICE_IDENTIFY
 from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
+from .helpers import elgato_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -36,13 +30,6 @@ async def async_setup_entry(
     """Set up Elgato Light based on a config entry."""
     coordinator = entry.runtime_data
     async_add_entities([ElgatoLight(coordinator)])
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_IDENTIFY,
-        None,
-        ElgatoLight.async_identify.__name__,
-    )
 
 
 class ElgatoLight(ElgatoEntity, LightEntity):
@@ -85,7 +72,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(mired_temperature)
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.coordinator.data.state.hue is not None:
             return ColorMode.HS
@@ -105,17 +92,13 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         """Return the state of the light."""
         return self.coordinator.data.state.on
 
+    @elgato_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        try:
-            await self.coordinator.client.light(on=False)
-        except ElgatoError as error:
-            raise HomeAssistantError(
-                "An error occurred while updating the Elgato Light"
-            ) from error
-        finally:
-            await self.coordinator.async_refresh()
+        await self.coordinator.client.light(on=False)
+        await self.coordinator.async_request_refresh()
 
+    @elgato_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         temperature_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
@@ -148,26 +131,16 @@ class ElgatoLight(ElgatoEntity, LightEntity):
             else color_util.color_temperature_kelvin_to_mired(temperature_kelvin)
         )
 
-        try:
-            await self.coordinator.client.light(
-                on=True,
-                brightness=brightness,
-                hue=hue,
-                saturation=saturation,
-                temperature=temperature,
-            )
-        except ElgatoError as error:
-            raise HomeAssistantError(
-                "An error occurred while updating the Elgato Light"
-            ) from error
-        finally:
-            await self.coordinator.async_refresh()
+        await self.coordinator.client.light(
+            on=True,
+            brightness=brightness,
+            hue=hue,
+            saturation=saturation,
+            temperature=temperature,
+        )
+        await self.coordinator.async_request_refresh()
 
+    @elgato_exception_handler
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""
-        try:
-            await self.coordinator.client.identify()
-        except ElgatoError as error:
-            raise HomeAssistantError(
-                "An error occurred while identifying the Elgato Light"
-            ) from error
+        await self.coordinator.client.identify()

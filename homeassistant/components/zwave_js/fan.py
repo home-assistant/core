@@ -267,22 +267,10 @@ class ValueMappingZwaveFan(ZwaveFan):
         if percentage == 0:
             return 0
 
-        # Since the percentage steps are computed with rounding, we have to
-        # search to find the appropriate speed.
-        for speed_range in self.fan_value_mapping.speeds:
-            (_, max_speed) = speed_range
-            step_percentage = self.zwave_speed_to_percentage(max_speed)
-
-            # zwave_speed_to_percentage will only return None if
-            # `self.fan_value_mapping.speeds` doesn't contain the
-            # specified speed. This can't happen here, because
-            # the input is coming from the same data structure.
-            assert step_percentage
-
-            if percentage <= step_percentage:
-                break
-
-        return max_speed
+        speed_level = math.ceil(
+            percentage_to_ranged_value((1, self.speed_count), percentage)
+        )
+        return self.fan_value_mapping.speeds[speed_level - 1][1]
 
     def zwave_speed_to_percentage(self, zwave_speed: int) -> int | None:
         """Convert a Zwave speed to a percentage.
@@ -293,15 +281,9 @@ class ValueMappingZwaveFan(ZwaveFan):
         if zwave_speed == 0:
             return 0
 
-        percentage = 0.0
-        for speed_range in self.fan_value_mapping.speeds:
-            (min_speed, max_speed) = speed_range
-            percentage += self.percentage_step
+        for index, (min_speed, max_speed) in enumerate(self.fan_value_mapping.speeds):
             if min_speed <= zwave_speed <= max_speed:
-                # This choice of rounding function is to provide consistency with how
-                # the UI handles steps e.g., for a 3-speed fan, you get steps at 33,
-                # 67, and 100.
-                return round(percentage)
+                return ranged_value_to_percentage((1, self.speed_count), index + 1)
 
         # The specified Z-Wave device value doesn't map to a defined speed.
         return None

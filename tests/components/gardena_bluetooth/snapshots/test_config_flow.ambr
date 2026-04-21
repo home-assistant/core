@@ -28,6 +28,7 @@
         'key': '00000000-0000-0000-0000-000000000001',
         'version': 1,
       }),
+      'dismiss_protected': True,
       'source': 'bluetooth',
       'title_placeholders': dict({
         'name': 'Gardena Water Computer',
@@ -136,15 +137,6 @@
     'flow_id': <ANY>,
     'handler': 'gardena_bluetooth',
     'reason': 'cannot_connect',
-    'type': <FlowResultType.ABORT: 'abort'>,
-  })
-# ---
-# name: test_no_devices
-  FlowResultSnapshot({
-    'description_placeholders': None,
-    'flow_id': <ANY>,
-    'handler': 'gardena_bluetooth',
-    'reason': 'no_devices_found',
     'type': <FlowResultType.ABORT: 'abort'>,
   })
 # ---

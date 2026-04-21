@@ -40,15 +40,18 @@ class YardianCoordinatorData:
     oper_info: OperationInfo
 
 
+type YardianConfigEntry = ConfigEntry[YardianUpdateCoordinator]
+
+
 class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
     """Coordinator for Yardian API calls."""
 
-    config_entry: ConfigEntry
+    config_entry: YardianConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: YardianConfigEntry,
         controller: AsyncYardianClient,
     ) -> None:
         """Initialize Yardian API communication."""

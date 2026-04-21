@@ -9,13 +9,12 @@ from velbusaio.channels import (
     Button,
     ButtonCounter,
     Dimmer,
-    LightSensor,
     Relay,
-    SelectedProgram,
     SensorNumber,
     Temperature,
 )
 from velbusaio.module import Module
+from velbusaio.properties import LightValue, SelectedProgram
 
 from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
@@ -238,7 +237,7 @@ def mock_sensornumber() -> AsyncMock:
 @pytest.fixture
 def mock_lightsensor() -> AsyncMock:
     """Mock a successful velbus channel."""
-    channel = AsyncMock(spec=LightSensor)
+    channel = AsyncMock(spec=LightValue)
     channel.get_categories.return_value = ["sensor"]
     channel.get_name.return_value = "LightSensor"
     channel.get_module_address.return_value = 2

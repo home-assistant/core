@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import mimetypes
 
+from aiodns.error import DNSError
 import pycountry
-from radios import FilterBy, Order, RadioBrowser, Station
+from radios import FilterBy, Order, RadioBrowser, RadioBrowserError, Station
 
-from homeassistant.components.media_player import MediaClass, MediaType
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
@@ -15,6 +16,7 @@ from homeassistant.components.media_source import (
     PlayMedia,
     Unresolvable,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.location import vincenty
 
@@ -55,9 +57,20 @@ class RadioMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
-        radios = self.radios
 
-        station = await radios.station(uuid=item.identifier)
+        if self.entry.state != ConfigEntryState.LOADED:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+            )
+        radios = self.radios
+        try:
+            station = await radios.station(uuid=item.identifier)
+        except (DNSError, RadioBrowserError) as e:
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="radio_browser_error",
+            ) from e
         if not station:
             raise Unresolvable("Radio station is no longer available")
 
@@ -74,25 +87,37 @@ class RadioMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
+
+        if self.entry.state != ConfigEntryState.LOADED:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_ready",
+            )
         radios = self.radios
 
-        return BrowseMediaSource(
-            domain=DOMAIN,
-            identifier=None,
-            media_class=MediaClass.CHANNEL,
-            media_content_type=MediaType.MUSIC,
-            title=self.entry.title,
-            can_play=False,
-            can_expand=True,
-            children_media_class=MediaClass.DIRECTORY,
-            children=[
-                *await self._async_build_popular(radios, item),
-                *await self._async_build_by_tag(radios, item),
-                *await self._async_build_by_language(radios, item),
-                *await self._async_build_local(radios, item),
-                *await self._async_build_by_country(radios, item),
-            ],
-        )
+        try:
+            return BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=None,
+                media_class=MediaClass.CHANNEL,
+                media_content_type=MediaType.MUSIC,
+                title=self.entry.title,
+                can_play=False,
+                can_expand=True,
+                children_media_class=MediaClass.DIRECTORY,
+                children=[
+                    *await self._async_build_popular(radios, item),
+                    *await self._async_build_by_tag(radios, item),
+                    *await self._async_build_by_language(radios, item),
+                    *await self._async_build_local(radios, item),
+                    *await self._async_build_by_country(radios, item),
+                ],
+            )
+        except (DNSError, RadioBrowserError) as e:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="radio_browser_error",
+            ) from e
 
     @callback
     @staticmethod

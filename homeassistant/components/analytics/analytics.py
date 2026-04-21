@@ -22,6 +22,7 @@ from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
 )
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
     get_instance as get_recorder_instance,
@@ -241,12 +242,10 @@ class Analytics:
         self,
         hass: HomeAssistant,
         snapshots_url: str | None = None,
-        disable_snapshots: bool = False,
     ) -> None:
         """Initialize the Analytics class."""
         self._hass: HomeAssistant = hass
         self._snapshots_url = snapshots_url
-        self._disable_snapshots = disable_snapshots
 
         self._session = async_get_clientsession(hass)
         self._data = AnalyticsData(False, {})
@@ -258,15 +257,13 @@ class Analytics:
     def preferences(self) -> dict:
         """Return the current active preferences."""
         preferences = self._data.preferences
-        result = {
+        return {
             ATTR_BASE: preferences.get(ATTR_BASE, False),
             ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
             ATTR_USAGE: preferences.get(ATTR_USAGE, False),
             ATTR_STATISTICS: preferences.get(ATTR_STATISTICS, False),
+            ATTR_SNAPSHOTS: preferences.get(ATTR_SNAPSHOTS, False),
         }
-        if not self._disable_snapshots:
-            result[ATTR_SNAPSHOTS] = preferences.get(ATTR_SNAPSHOTS, False)
-        return result
 
     @property
     def onboarded(self) -> bool:
@@ -290,6 +287,11 @@ class Analytics:
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
         return is_hassio(self._hass)
+
+    @property
+    def _snapshots_enabled(self) -> bool:
+        """Check if snapshots feature is enabled via labs."""
+        return async_is_preview_feature_enabled(self._hass, DOMAIN, "snapshots")
 
     async def load(self) -> None:
         """Load preferences."""
@@ -336,6 +338,7 @@ class Analytics:
 
         hass = self._hass
         supervisor_info = None
+        addons_info: dict[str, Any] | None = None
         operating_system_info: dict[str, Any] = {}
 
         if self._data.uuid is None:
@@ -345,6 +348,7 @@ class Analytics:
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(hass)
             operating_system_info = hassio.get_os_info(hass) or {}
+            addons_info = hassio.get_addons_info(hass) or {}
 
         system_info = await async_get_system_info(hass)
         integrations = []
@@ -417,13 +421,10 @@ class Analytics:
 
                 integrations.append(integration.domain)
 
-            if supervisor_info is not None:
+            if addons_info is not None:
                 supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
-                    *(
-                        supervisor_client.addons.addon_info(addon[ATTR_SLUG])
-                        for addon in supervisor_info[ATTR_ADDONS]
-                    )
+                    *(supervisor_client.addons.addon_info(slug) for slug in addons_info)
                 )
                 addons.extend(
                     {
@@ -531,6 +532,10 @@ class Analytics:
             return
 
         payload = await _async_snapshot_payload(self._hass)
+
+        if not payload:
+            LOGGER.info("Skipping snapshot submission, no data to send")
+            return
 
         headers = {
             "Content-Type": "application/json",
@@ -645,7 +650,10 @@ class Analytics:
                 ),
             )
 
-        if not self.preferences.get(ATTR_SNAPSHOTS, False) or self._disable_snapshots:
+        if (
+            not self.preferences.get(ATTR_SNAPSHOTS, False)
+            or not self._snapshots_enabled
+        ):
             LOGGER.debug("Snapshot analytics not scheduled")
             if self._snapshot_scheduled:
                 self._snapshot_scheduled()

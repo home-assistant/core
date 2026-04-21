@@ -26,7 +26,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 
 DOMAIN = "input_boolean"
 
@@ -81,7 +80,6 @@ class InputBooleanStorageCollection(collection.DictStorageCollection):
         return {CONF_ID: item[CONF_ID]} | update_data
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if input_boolean is True."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -120,8 +118,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all input booleans and load new ones from config."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            return
         await yaml_collection.async_load(
             [
                 {CONF_ID: id_, **(conf or {})}

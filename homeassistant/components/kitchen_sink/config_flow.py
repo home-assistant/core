@@ -8,18 +8,23 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.infrared import (
+    DOMAIN as INFRARED_DOMAIN,
+    async_get_emitters,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlowWithReload,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from . import DOMAIN
+from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
 
 CONF_BOOLEAN = "bool"
 CONF_INT = "int"
@@ -44,7 +49,10 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {"entity": SubentryFlowHandler}
+        return {
+            "entity": SubentryFlowHandler,
+            "infrared_fan": InfraredFanSubentryFlowHandler,
+        }
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Set the config entry up from yaml."""
@@ -65,7 +73,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
 
-class OptionsFlowHandler(OptionsFlowWithReload):
+class OptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
     async def async_step_init(
@@ -146,7 +154,7 @@ class SubentryFlowHandler(ConfigSubentryFlow):
         """Reconfigure a sensor."""
         if user_input is not None:
             title = user_input.pop("name")
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,
@@ -159,6 +167,38 @@ class SubentryFlowHandler(ConfigSubentryFlow):
                 {
                     vol.Required("name"): str,
                     vol.Required("state"): int,
+                }
+            ),
+        )
+
+
+class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle infrared fan subentry flow."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to add an infrared fan."""
+
+        entities = async_get_emitters(self.hass)
+        if not entities:
+            return self.async_abort(reason="no_emitters")
+
+        if user_input is not None:
+            title = user_input.pop("name")
+            return self.async_create_entry(data=user_input, title=title)
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("name"): str,
+                    vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                        EntitySelectorConfig(
+                            domain=INFRARED_DOMAIN,
+                            include_entities=entities,
+                        )
+                    ),
                 }
             ),
         )

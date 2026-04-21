@@ -16,6 +16,7 @@ from homeassistant.components.history_stats.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import Event, HomeAssistant, callback
@@ -110,94 +111,6 @@ async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     assert await hass.config_entries.async_unload(loaded_entry.entry_id)
     await hass.async_block_till_done()
     assert loaded_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.usefixtures("recorder_mock")
-async def test_device_cleaning(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the cleaning of devices linked to the helper History stats."""
-
-    # Source entity device config entry
-    source_config_entry = MockConfigEntry()
-    source_config_entry.add_to_hass(hass)
-
-    # Device entry of the source entity
-    source_device1_entry = device_registry.async_get_or_create(
-        config_entry_id=source_config_entry.entry_id,
-        identifiers={("binary_sensor", "identifier_test1")},
-        connections={("mac", "30:31:32:33:34:01")},
-    )
-
-    # Source entity registry
-    source_entity = entity_registry.async_get_or_create(
-        "binary_sensor",
-        "test",
-        "source",
-        config_entry=source_config_entry,
-        device_id=source_device1_entry.id,
-    )
-    await hass.async_block_till_done()
-    assert entity_registry.async_get("binary_sensor.test_source") is not None
-
-    # Configure the configuration entry for History stats
-    history_stats_config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            CONF_NAME: DEFAULT_NAME,
-            CONF_ENTITY_ID: "binary_sensor.test_source",
-            CONF_STATE: ["on"],
-            CONF_TYPE: "count",
-            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
-            CONF_END: "{{ utcnow() }}",
-        },
-        title="History stats",
-    )
-    history_stats_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Confirm the link between the source entity device and the History stats sensor
-    history_stats_entity = entity_registry.async_get("sensor.history_stats")
-    assert history_stats_entity is not None
-    assert history_stats_entity.device_id == source_entity.device_id
-
-    # Device entry incorrectly linked to History stats config entry
-    device_registry.async_get_or_create(
-        config_entry_id=history_stats_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test2")},
-        connections={("mac", "30:31:32:33:34:02")},
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=history_stats_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test3")},
-        connections={("mac", "30:31:32:33:34:03")},
-    )
-    await hass.async_block_till_done()
-
-    # Before reloading the config entry, two devices are expected to be linked
-    devices_before_reload = device_registry.devices.get_devices_for_config_entry_id(
-        history_stats_config_entry.entry_id
-    )
-    assert len(devices_before_reload) == 2
-
-    # Config entry reload
-    await hass.config_entries.async_reload(history_stats_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Confirm the link between the source entity device and the History stats sensor
-    history_stats_entity = entity_registry.async_get("sensor.history_stats")
-    assert history_stats_entity is not None
-    assert history_stats_entity.device_id == source_entity.device_id
-
-    # After reloading the config entry, only one linked device is expected
-    devices_after_reload = device_registry.devices.get_devices_for_config_entry_id(
-        history_stats_config_entry.entry_id
-    )
-    assert len(devices_after_reload) == 0
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -507,7 +420,58 @@ async def test_migration_1_1(
     assert history_stats_entity_entry.device_id == sensor_entity_entry.device_id
 
     assert history_stats_config_entry.version == 1
-    assert history_stats_config_entry.minor_version == 2
+    assert (
+        history_stats_config_entry.minor_version
+        == HistoryStatsConfigFlowHandler.MINOR_VERSION
+    )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_migration_1_2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    sensor_entity_entry: er.RegistryEntry,
+    sensor_device: dr.DeviceEntry,
+) -> None:
+    """Test migration from v1.2 sets state_class to measurement."""
+
+    history_stats_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: sensor_entity_entry.entity_id,
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+            CONF_END: "{{ utcnow() }}",
+        },
+        title="My history stats",
+        version=1,
+        minor_version=2,
+    )
+    history_stats_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert history_stats_config_entry.state is ConfigEntryState.LOADED
+
+    assert (
+        history_stats_config_entry.options.get(CONF_STATE_CLASS)
+        == SensorStateClass.MEASUREMENT
+    )
+    assert history_stats_config_entry.version == 1
+    assert (
+        history_stats_config_entry.minor_version
+        == HistoryStatsConfigFlowHandler.MINOR_VERSION
+    )
+
+    assert hass.states.get("sensor.my_history_stats") is not None
+    assert (
+        hass.states.get("sensor.my_history_stats").attributes.get(CONF_STATE_CLASS)
+        == SensorStateClass.MEASUREMENT
+    )
 
 
 @pytest.mark.usefixtures("recorder_mock")

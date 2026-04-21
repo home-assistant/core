@@ -12,12 +12,10 @@ from yolink.device import YoLinkDevice
 from yolink.message_resolver import sprinkler_message_resolve
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
@@ -66,15 +64,15 @@ SELECTOR_MAPPINGS: tuple[YoLinkSelectEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink select from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     async_add_entities(
         YoLinkSelectEntity(config_entry, selector_device_coordinator, description)
         for selector_device_coordinator in device_coordinators.values()
-        if selector_device_coordinator.device.device_type in [ATTR_DEVICE_SPRINKLER]
+        if selector_device_coordinator.device.device_type == ATTR_DEVICE_SPRINKLER
         for description in SELECTOR_MAPPINGS
         if description.exists_fn(selector_device_coordinator.device)
     )
@@ -87,7 +85,7 @@ class YoLinkSelectEntity(YoLinkEntity, SelectEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkSelectEntityDescription,
     ) -> None:

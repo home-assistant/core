@@ -14,7 +14,10 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration_with_node_fixture
+from .common import (
+    setup_integration_with_node_fixture,
+    setup_integration_with_node_fixtures,
+)
 
 from tests.common import MockConfigEntry
 
@@ -72,96 +75,10 @@ async def integration_fixture(
     return entry
 
 
-@pytest.fixture(
-    params=[
-        "air_purifier",
-        "air_quality_sensor",
-        "aqara_door_window_p2",
-        "aqara_motion_p2",
-        "aqara_presence_fp300",
-        "aqara_sensor_w100",
-        "aqara_thermostat_w500",
-        "aqara_u200",
-        "battery_storage",
-        "color_temperature_light",
-        "cooktop",
-        "dimmable_light",
-        "dimmable_plugin_unit",
-        "door_lock",
-        "door_lock_with_unbolt",
-        "eberle_ute3000",
-        "ecovacs_deebot",
-        "eufy_vacuum_omni_e28",
-        "eve_contact_sensor",
-        "eve_energy_20ecn4101",
-        "eve_energy_plug",
-        "eve_energy_plug_patched",
-        "eve_thermo_v4",
-        "eve_thermo_v5",
-        "eve_shutter",
-        "eve_weather_sensor",
-        "extended_color_light",
-        "extractor_hood",
-        "fan",
-        "flow_sensor",
-        "generic_switch",
-        "generic_switch_multi",
-        "haojai_switch",
-        "heiman_motion_sensor_m1",
-        "humidity_sensor",
-        "ikea_air_quality_monitor",
-        "ikea_scroll_wheel",
-        "inovelli_vtm30",
-        "laundry_dryer",
-        "leak_sensor",
-        "light_sensor",
-        "microwave_oven",
-        "mock_lock",
-        "mock_thermostat",
-        "mounted_dimmable_load_control_fixture",
-        "multi_endpoint_light",
-        "occupancy_sensor",
-        "on_off_plugin_unit",
-        "onoff_light",
-        "onoff_light_alt_name",
-        "onoff_light_no_name",
-        "onoff_light_with_levelcontrol_present",
-        "oven",
-        "pressure_sensor",
-        "pump",
-        "resideo_x2s_thermostat",
-        "room_airconditioner",
-        "secuyou_smart_lock",
-        "silabs_dishwasher",
-        "silabs_evse_charging",
-        "silabs_laundrywasher",
-        "silabs_light_switch",
-        "silabs_refrigerator",
-        "silabs_water_heater",
-        "smoke_detector",
-        "solar_inverter",
-        "speaker",
-        "switchbot_k11_plus",
-        "switch_unit",
-        "tado_smart_radiator_thermostat_x",
-        "temperature_sensor",
-        "longan_link_thermostat",
-        "vacuum_cleaner",
-        "valve",
-        "window_covering_full",
-        "window_covering_lift",
-        "window_covering_pa_lift",
-        "window_covering_pa_tilt",
-        "window_covering_tilt",
-        "yandex_smart_socket",
-        "zemismart_mt25b",
-    ]
-)
-async def matter_devices(
-    hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
-) -> MatterNode:
-    """Fixture for a Matter device."""
-    return await setup_integration_with_node_fixture(hass, request.param, matter_client)
+@pytest.fixture
+async def matter_devices(hass: HomeAssistant, matter_client: MagicMock) -> None:
+    """Fixture for all Matter devices."""
+    await setup_integration_with_node_fixtures(hass, matter_client)
 
 
 @pytest.fixture

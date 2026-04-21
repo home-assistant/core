@@ -57,6 +57,26 @@ async def test_create_async_httpx_client_without_ssl_and_cookies(
     assert hass.data[client.DATA_ASYNC_CLIENT][(False, SSL_ALPN_HTTP11)] != httpx_client
 
 
+async def test_create_async_httpx_client_default_headers(
+    hass: HomeAssistant,
+) -> None:
+    """Test init async client with default headers."""
+    httpx_client = client.create_async_httpx_client(hass)
+    assert isinstance(httpx_client, httpx.AsyncClient)
+    assert httpx_client.headers[client.USER_AGENT] == client.SERVER_SOFTWARE
+
+
+async def test_create_async_httpx_client_with_headers(
+    hass: HomeAssistant,
+) -> None:
+    """Test init async client with headers."""
+    httpx_client = client.create_async_httpx_client(hass, headers={"x-test": "true"})
+    assert isinstance(httpx_client, httpx.AsyncClient)
+    assert httpx_client.headers["x-test"] == "true"
+    # Default headers are preserved
+    assert httpx_client.headers[client.USER_AGENT] == client.SERVER_SOFTWARE
+
+
 async def test_get_async_client_cleanup(hass: HomeAssistant) -> None:
     """Test init async client with ssl."""
     client.get_async_client(hass)

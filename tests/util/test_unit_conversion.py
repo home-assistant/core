@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfEnergyDistance,
+    UnitOfFrequency,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -53,10 +54,12 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
     NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
@@ -91,6 +94,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         ElectricCurrentConverter,
         ElectricPotentialConverter,
         EnergyConverter,
+        FrequencyConverter,
         InformationConverter,
         MassConverter,
         ApparentPowerConverter,
@@ -107,6 +111,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         VolumeConverter,
         VolumeFlowRateConverter,
         NitrogenDioxideConcentrationConverter,
+        NitrogenMonoxideConcentrationConverter,
         SulphurDioxideConcentrationConverter,
     )
 }
@@ -122,7 +127,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
-        18,
+        18.016,
     ),
     CarbonMonoxideConcentrationConverter: (
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -157,6 +162,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
         0.621371,
     ),
+    FrequencyConverter: (UnitOfFrequency.HERTZ, UnitOfFrequency.KILOHERTZ, 1000),
     InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     MassVolumeConcentrationConverter: (
@@ -168,6 +174,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_PARTS_PER_BILLION,
         1.912503,
+    ),
+    NitrogenMonoxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        1.247389,
     ),
     OzoneConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -305,13 +316,13 @@ _CONVERTED_VALUE: dict[
         (
             90,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
-            5,
+            4.99556,
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         ),
         (
             1,
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
-            18,
+            18.016,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         ),
     ],
@@ -404,6 +415,44 @@ _CONVERTED_VALUE: dict[
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             62.744976,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1912.503,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.062744976,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            100,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.1,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            0.5,
+            CONCENTRATION_PARTS_PER_MILLION,
+            500,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+    ],
+    NitrogenMonoxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.247389,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            96.200906,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
@@ -583,7 +632,11 @@ _CONVERTED_VALUE: dict[
     ],
     ElectricCurrentConverter: [
         (5, UnitOfElectricCurrent.AMPERE, 5000, UnitOfElectricCurrent.MILLIAMPERE),
-        (5, UnitOfElectricCurrent.MILLIAMPERE, 0.005, UnitOfElectricCurrent.AMPERE),
+        (5, UnitOfElectricCurrent.AMPERE, 5e6, UnitOfElectricCurrent.MICROAMPERE),
+        (5, UnitOfElectricCurrent.MILLIAMPERE, 5e-3, UnitOfElectricCurrent.AMPERE),
+        (5, UnitOfElectricCurrent.MILLIAMPERE, 5e3, UnitOfElectricCurrent.MICROAMPERE),
+        (5, UnitOfElectricCurrent.MICROAMPERE, 5e-6, UnitOfElectricCurrent.AMPERE),
+        (5, UnitOfElectricCurrent.MICROAMPERE, 5e-3, UnitOfElectricCurrent.MILLIAMPERE),
     ],
     ElectricPotentialConverter: [
         (5, UnitOfElectricPotential.VOLT, 5000, UnitOfElectricPotential.MILLIVOLT),
@@ -683,6 +736,11 @@ _CONVERTED_VALUE: dict[
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
         ),
     ],
+    FrequencyConverter: [
+        (5000, UnitOfFrequency.HERTZ, 5, UnitOfFrequency.KILOHERTZ),
+        (5, UnitOfFrequency.HERTZ, 5000, UnitOfFrequency.MILLIHERTZ),
+        (5, UnitOfFrequency.GIGAHERTZ, 5000, UnitOfFrequency.MEGAHERTZ),
+    ],
     InformationConverter: [
         (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
         (8e6, UnitOfInformation.BITS, 8, UnitOfInformation.MEGABITS),
@@ -754,6 +812,18 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             60.1378,
             CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1995.417,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.0601378,
+            CONCENTRATION_PARTS_PER_MILLION,
         ),
     ],
     PowerConverter: [

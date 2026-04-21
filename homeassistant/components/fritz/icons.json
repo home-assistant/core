@@ -8,6 +8,14 @@
         "default": "mdi:lan-pending"
       }
     },
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect"
+        }
+      }
+    },
     "sensor": {
       "external_ip": {
         "default": "mdi:earth"

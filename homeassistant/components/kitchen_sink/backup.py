@@ -13,6 +13,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupNotFound,
     Folder,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 
@@ -91,6 +92,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
