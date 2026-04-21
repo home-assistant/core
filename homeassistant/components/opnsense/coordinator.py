@@ -40,7 +40,6 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator):
         )
         self.client = client
         self.interfaces = interfaces
-        self.last_results: DeviceDetailsByMAC = {}
         self.tracked_devices: dict[str, OPNsenseDeviceTrackerEntity] = {}
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC:
