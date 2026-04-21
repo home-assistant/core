@@ -24,9 +24,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not register integration actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -42,12 +40,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: This integration has no supported discovery mechanism.
-  discovery:
-    status: exempt
-    comment: This integration has no supported discovery mechanism.
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
