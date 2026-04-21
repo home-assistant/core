@@ -7,6 +7,7 @@ from typing import Any
 from aidot.client import AidotClient
 from aidot.const import CONF_LOGIN_INFO, DEFAULT_COUNTRY_CODE, SUPPORTED_COUNTRY_CODES
 from aidot.exceptions import AidotUserOrPassIncorrect
+from aiohttp import ClientError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -53,7 +54,7 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
                 login_info = await client.async_post_login()
             except AidotUserOrPassIncorrect:
                 errors["base"] = "invalid_auth"
-            except (TimeoutError, aiohttp.ClientError):
+            except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -89,7 +90,7 @@ class AidotConfigFlow(ConfigFlow, domain=DOMAIN):
                 new_login_info = await client.async_post_login()
             except AidotUserOrPassIncorrect:
                 errors["base"] = "invalid_auth"
-            except (TimeoutError, aiohttp.ClientError):
+            except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(
