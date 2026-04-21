@@ -49,14 +49,14 @@ async def async_get_config_entry_diagnostics(
             "firmware_version": device_info.firmware_version,
             "ip_addr": "**REDACTED**",
         },
-        "device_config": device_diagnostics,
+        "device_config": async_redact_data(device_diagnostics, TO_REDACT),
         "coordinator": {
             "last_update_success": coordinator.last_update_success,
             "update_interval": str(coordinator.update_interval),
             "data": _redact_coordinator_data(coordinator.data),
         },
         "push_server_config": (
-            async_redact_data(push_config, {"server_ip"}) if push_config else None
+            async_redact_data(push_config, TO_REDACT) if push_config else None
         ),
     }
 

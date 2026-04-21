@@ -2,15 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Wibeee device",
-        "description": "Enter the IP address of your Wibeee energy monitor. Make sure the device has a static IP or DHCP reservation.",
+        "title": "Add WiBeee device",
+        "description": "Enter the IP address of your WiBeee energy monitor. Make sure the device has a static IP or DHCP reservation.",
         "data": {
           "host": "Hostname or IP address"
         }
       },
       "reconfigure": {
-        "title": "Reconfigure Wibeee device",
-        "description": "Update the IP address of your Wibeee energy monitor.",
+        "title": "Reconfigure WiBeee device",
+        "description": "Update the IP address of your WiBeee energy monitor.",
         "data": {
           "host": "Hostname or IP address"
         }
@@ -30,11 +30,11 @@
     },
     "abort": {
       "already_configured": "Device is already configured",
-      "not_wibeee_device": "Discovered device is not a Wibeee energy monitor",
+      "not_wibeee_device": "Discovered device is not a WiBeee energy monitor",
       "wrong_device": "The device at this address has a different MAC address than the one being reconfigured"
     },
     "error": {
-      "no_device_info": "Could not connect to the Wibeee device. Verify the IP address and that the device is powered on.",
+      "no_device_info": "Could not connect to the WiBeee device. Verify the IP address and that the device is powered on.",
       "auto_configure_failed": "Failed to auto-configure the device for Local Push. You can configure it manually via the device web interface.",
       "unknown": "Unknown error occurred."
     }
@@ -42,7 +42,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Wibeee integration options",
+        "title": "WiBeee integration options",
         "description": "Configure update settings",
         "data": {
           "update_mode": "Update mode",
@@ -59,10 +59,10 @@
   },
   "exceptions": {
     "reboot_failed": {
-      "message": "Failed to reboot the Wibeee device. Check that the device is reachable."
+      "message": "Failed to reboot the WiBeee device. Check that the device is reachable."
     },
     "reset_energy_failed": {
-      "message": "Failed to reset energy counters on the Wibeee device. Check that the device is reachable."
+      "message": "Failed to reset energy counters on the WiBeee device. Check that the device is reachable."
     }
   },
   "entity": {

@@ -98,6 +98,16 @@ async def validate_input(
     )
 
 
+def _is_routable_ip(ip: str) -> bool:
+    """Check if IP is a valid routable address (not loopback)."""
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    else:
+        return not addr.is_loopback
+
+
 def _get_local_ip_sync() -> str:
     """Determine local IP via socket (blocking, run in executor)."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -277,22 +287,32 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if mode == MODE_LOCAL_PUSH and auto_configure:
                 try:
                     local_ip = await _get_local_ip(self.hass)
-                    ha_port = _get_ha_port(self.hass)
-                    session = async_get_clientsession(self.hass)
-                    api = WibeeeAPI(
-                        session,
-                        self._user_data[CONF_HOST],
-                        timeout=timedelta(seconds=15),
-                    )
-                    success = await api.async_configure_push_server(local_ip, ha_port)
-                    if not success:
+                    if not _is_routable_ip(local_ip):
+                        _LOGGER.warning(
+                            "Detected non-routable local IP %s for auto-configuration. "
+                            "Please configure push manually via the device web interface.",
+                            local_ip,
+                        )
                         errors["base"] = "auto_configure_failed"
                     else:
-                        _LOGGER.debug(
-                            "Auto-configured WiBeee to push to %s:%d",
-                            local_ip,
-                            ha_port,
+                        ha_port = _get_ha_port(self.hass)
+                        session = async_get_clientsession(self.hass)
+                        api = WibeeeAPI(
+                            session,
+                            self._user_data[CONF_HOST],
+                            timeout=timedelta(seconds=15),
                         )
+                        success = await api.async_configure_push_server(
+                            local_ip, ha_port
+                        )
+                        if not success:
+                            errors["base"] = "auto_configure_failed"
+                        else:
+                            _LOGGER.debug(
+                                "Auto-configured WiBeee to push to %s:%d",
+                                local_ip,
+                                ha_port,
+                            )
                 except TimeoutError, aiohttp.ClientError, OSError:
                     _LOGGER.debug(
                         "Failed to auto-configure WiBeee at %s",
@@ -411,16 +431,26 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
             if new_mode == MODE_LOCAL_PUSH and auto_configure:
                 try:
                     local_ip = await _get_local_ip(self.hass)
-                    ha_port = _get_ha_port(self.hass)
-                    session = async_get_clientsession(self.hass)
-                    api = WibeeeAPI(
-                        session,
-                        self.config_entry.data[CONF_HOST],
-                        timeout=timedelta(seconds=15),
-                    )
-                    success = await api.async_configure_push_server(local_ip, ha_port)
-                    if not success:
+                    if not _is_routable_ip(local_ip):
+                        _LOGGER.warning(
+                            "Detected non-routable local IP %s for auto-configuration. "
+                            "Please configure push manually via the device web interface.",
+                            local_ip,
+                        )
                         errors["base"] = "auto_configure_failed"
+                    else:
+                        ha_port = _get_ha_port(self.hass)
+                        session = async_get_clientsession(self.hass)
+                        api = WibeeeAPI(
+                            session,
+                            self.config_entry.data[CONF_HOST],
+                            timeout=timedelta(seconds=15),
+                        )
+                        success = await api.async_configure_push_server(
+                            local_ip, ha_port
+                        )
+                        if not success:
+                            errors["base"] = "auto_configure_failed"
                 except TimeoutError, aiohttp.ClientError, OSError:
                     _LOGGER.debug(
                         "Failed to auto-configure WiBeee at %s",
