@@ -24,6 +24,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_CONTROLLERS,
     CONF_SOURCES,
     CONF_ZONES,
     DOMAIN,
@@ -76,6 +77,7 @@ class YamlImportRepairFlow(RepairsFlow):
         super().__init__()
         self._yaml_config = yaml_config
         self._data: dict[str, Any] = {}
+        self._raw_zones: dict[int, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -104,22 +106,20 @@ class YamlImportRepairFlow(RepairsFlow):
         }
 
         yaml_zones = self._yaml_config.get("zones", {})
-        zones: dict[str, str] = {}
+        # Store raw YAML zone data; convert to controller_zone format after model selection
+        raw_zones: dict[int, str] = {}
         for zone_id, zone_data in yaml_zones.items():
-            zid = int(zone_id)
-            controller_id = (zid - 1) // 6 + 1
-            local_zone_id = (zid - 1) % 6 + 1
             name = zone_data.get(CONF_NAME, "").strip()
             if name:
-                zones[f"{controller_id}_{local_zone_id}"] = name
+                raw_zones[int(zone_id)] = name
 
         self._data = {
             CONF_TYPE: TYPE_TCP,
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_SOURCES: sources,
-            CONF_ZONES: zones,
         }
+        self._raw_zones = raw_zones
 
         return await self.async_step_confirm()
 
@@ -189,14 +189,28 @@ class YamlImportRepairFlow(RepairsFlow):
         """Handle zone name configuration."""
         model = RNET_MODELS[self._data[CONF_MODEL]]
 
+        # Convert raw YAML zone IDs to controller_zone format using model's max_zones
+        existing_zones: dict[str, str] = {}
+        for zid, name in self._raw_zones.items():
+            controller_id = (zid - 1) // model.max_zones + 1
+            local_zone_id = (zid - 1) % model.max_zones + 1
+            existing_zones[f"{controller_id}_{local_zone_id}"] = name
+
+        # Determine number of controllers from converted zones
+        if existing_zones:
+            num_controllers = max(int(key.split("_")[0]) for key in existing_zones)
+        else:
+            num_controllers = 1
+
         if user_input is not None:
             zones = {
                 f"{c}_{z}": name
-                for c in range(1, model.max_controllers + 1)
+                for c in range(1, num_controllers + 1)
                 for z in range(1, model.max_zones + 1)
                 if (name := user_input.get(f"zone_{c}_{z}", "").strip())
             }
             self._data[CONF_ZONES] = zones
+            self._data[CONF_CONTROLLERS] = num_controllers
 
             # Create config entry via config flow
             result = await self.hass.config_entries.flow.async_init(
@@ -211,14 +225,13 @@ class YamlImportRepairFlow(RepairsFlow):
             async_create_deprecated_yaml_issue(self.hass)
             return self.async_create_entry(data={})
 
-        existing_zones = self._data.get(CONF_ZONES, {})
         zone_schema = vol.Schema(
             {
                 vol.Optional(
                     f"zone_{c}_{z}",
                     default=existing_zones.get(f"{c}_{z}", ""),
                 ): TextSelector()
-                for c in range(1, model.max_controllers + 1)
+                for c in range(1, num_controllers + 1)
                 for z in range(1, model.max_zones + 1)
             }
         )

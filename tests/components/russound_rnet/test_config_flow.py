@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.russound_rnet.const import (
+    CONF_CONTROLLERS,
     CONF_SOURCES,
     CONF_ZONES,
     DOMAIN,
@@ -60,7 +61,7 @@ async def test_user_flow_tcp_creates_entry(
     # Select model
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MODEL: MODEL},
+        {CONF_MODEL: MODEL, CONF_CONTROLLERS: 1},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sources"
@@ -124,7 +125,7 @@ async def test_user_flow_serial_creates_entry(
     # Select model
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MODEL: MODEL},
+        {CONF_MODEL: MODEL, CONF_CONTROLLERS: 1},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sources"
@@ -292,6 +293,7 @@ async def test_import_yaml_creates_entry(
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 9999,
         CONF_MODEL: "caa66",
+        CONF_CONTROLLERS: 1,
         CONF_SOURCES: {"1": "Sonos", "2": "TV"},
         CONF_ZONES: {"1_1": "Kitchen", "1_2": "Living Room"},
     }
@@ -307,6 +309,7 @@ async def test_import_yaml_creates_entry(
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 9999,
         CONF_MODEL: "caa66",
+        CONF_CONTROLLERS: 1,
         CONF_ZONES: {"1_1": "Kitchen", "1_2": "Living Room"},
     }
     assert result["options"] == {CONF_SOURCES: {"1": "Sonos", "2": "TV"}}
@@ -326,6 +329,7 @@ async def test_import_yaml_duplicate_aborts(
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 9999,
         CONF_MODEL: "caa66",
+        CONF_CONTROLLERS: 1,
         CONF_SOURCES: {"1": "Sonos"},
         CONF_ZONES: {"1_1": "Kitchen"},
     }
@@ -385,7 +389,7 @@ async def test_empty_sources_and_zones_excluded(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MODEL: MODEL},
+        {CONF_MODEL: MODEL, CONF_CONTROLLERS: 1},
     )
 
     # Only fill in 2 of 6 sources, leave rest empty

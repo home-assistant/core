@@ -11,9 +11,10 @@
     "step": {
       "model": {
         "data": {
+          "controllers": "Number of controllers",
           "model": "Model"
         },
-        "description": "Select your Russound RNET device model.",
+        "description": "Select your Russound RNET device model and the number of controllers in your system.",
         "title": "Device Model"
       },
       "serial": {

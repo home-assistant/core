@@ -2,6 +2,7 @@
 
 from homeassistant.components.russound_rnet.const import (
     CONF_BAUDRATE,
+    CONF_CONTROLLERS,
     CONF_SOURCES,
     CONF_ZONES,
     TYPE_SERIAL,
@@ -39,6 +40,7 @@ MOCK_TCP_CONFIG = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 9999,
     CONF_MODEL: MODEL,
+    CONF_CONTROLLERS: 1,
     CONF_ZONES: MOCK_ZONES,
 }
 
@@ -56,6 +58,7 @@ MOCK_SERIAL_CONFIG = {
     CONF_DEVICE: "/dev/ttyUSB0",
     CONF_BAUDRATE: 19200,
     CONF_MODEL: MODEL,
+    CONF_CONTROLLERS: 1,
     CONF_ZONES: MOCK_ZONES,
 }
 

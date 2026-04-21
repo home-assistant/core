@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from homeassistant.components.russound_rnet.const import (
+    CONF_CONTROLLERS,
     CONF_SOURCES,
     CONF_ZONES,
     DOMAIN,
@@ -102,6 +103,7 @@ async def test_yaml_import_repair_flow(
     assert entry.data[CONF_HOST] == "192.168.1.100"
     assert entry.data[CONF_PORT] == 9999
     assert entry.data[CONF_MODEL] == "cas44"
+    assert entry.data[CONF_CONTROLLERS] == 1
     assert entry.options[CONF_SOURCES] == {"1": "Sonos", "2": "TV"}
     assert entry.data[CONF_ZONES] == {"1_1": "Kitchen", "1_2": "Living Room"}
 

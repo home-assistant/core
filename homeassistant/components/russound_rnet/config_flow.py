@@ -16,6 +16,9 @@ from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_PORT, C
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -26,6 +29,7 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_BAUDRATE,
+    CONF_CONTROLLERS,
     CONF_SOURCES,
     CONF_ZONES,
     DEFAULT_BAUDRATE,
@@ -63,21 +67,6 @@ SERIAL_SCHEMA = vol.Schema(
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
             vol.Coerce(int),
             vol.Range(min=1),
-        ),
-    }
-)
-
-MODEL_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_MODEL): SelectSelector(
-            SelectSelectorConfig(
-                options=[
-                    SelectOptionDict(value=key, label=model.name)
-                    for key, model in RNET_MODELS.items()
-                ],
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="model",
-            )
         ),
     }
 )
@@ -183,12 +172,39 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_model(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle model selection."""
+        """Handle model selection and controller count."""
         if user_input is not None:
             self.data[CONF_MODEL] = user_input[CONF_MODEL]
+            model = RNET_MODELS[self.data[CONF_MODEL]]
+            self.data[CONF_CONTROLLERS] = int(
+                user_input.get(CONF_CONTROLLERS, model.max_controllers)
+            )
             return await self.async_step_sources()
 
-        return self.async_show_form(step_id="model", data_schema=MODEL_SCHEMA)
+        model_schema = vol.Schema(
+            {
+                vol.Required(CONF_MODEL): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(value=key, label=model.name)
+                            for key, model in RNET_MODELS.items()
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                        translation_key="model",
+                    )
+                ),
+                vol.Required(CONF_CONTROLLERS, default=1): NumberSelector(
+                    NumberSelectorConfig(
+                        min=1,
+                        max=max(m.max_controllers for m in RNET_MODELS.values()),
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="model", data_schema=model_schema)
 
     async def async_step_sources(
         self, user_input: dict[str, Any] | None = None
@@ -225,12 +241,13 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zone name configuration. Empty name = zone excluded."""
         model = RNET_MODELS[self.data[CONF_MODEL]]
+        num_controllers = self.data[CONF_CONTROLLERS]
 
         if user_input is not None:
             # Only store non-empty zone names; key = "controller_zone" e.g. "1_1"
             zones = {
                 f"{c}_{z}": name
-                for c in range(1, model.max_controllers + 1)
+                for c in range(1, num_controllers + 1)
                 for z in range(1, model.max_zones + 1)
                 if (name := user_input.get(f"zone_{c}_{z}", "").strip())
             }
@@ -249,7 +266,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"zone_{c}_{z}",
                     default=existing_zones.get(f"{c}_{z}", ""),
                 ): TextSelector()
-                for c in range(1, model.max_controllers + 1)
+                for c in range(1, num_controllers + 1)
                 for z in range(1, model.max_zones + 1)
             }
         )
