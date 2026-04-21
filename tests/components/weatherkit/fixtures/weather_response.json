@@ -6340,5 +6340,38 @@
         "windSpeed": 7.91
       }
     ]
+  },
+  "weatherAlerts": {
+    "name": "WeatherAlertCollection",
+    "metadata": {
+      "attributionURL": "https://developer.apple.com/weatherkit/data-source-attribution/",
+      "expireTime": "2023-09-08T23:03:04Z",
+      "latitude": 35.47,
+      "longitude": 135.749,
+      "readTime": "2023-09-08T22:03:04Z",
+      "version": 1
+    },
+    "alerts": [
+      {
+        "name": "Flood Watch",
+        "id": "test-alert-1",
+        "areaId": "zone123",
+        "description": "Flood Watch issued September 8 at 6:00PM",
+        "effectiveTime": "2023-09-08T18:00:00Z",
+        "expireTime": "2023-09-09T06:00:00Z",
+        "severity": "moderate",
+        "source": "National Weather Service"
+      },
+      {
+        "name": "Wind Advisory",
+        "id": "test-alert-2",
+        "areaId": "zone456",
+        "description": "Wind Advisory issued September 8 at 3:00PM",
+        "effectiveTime": "2023-09-08T15:00:00Z",
+        "expireTime": "2023-09-09T03:00:00Z",
+        "severity": "minor",
+        "source": "National Weather Service"
+      }
+    ]
   }
 }

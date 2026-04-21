@@ -31,6 +31,9 @@
           "rising": "Rising",
           "steady": "Steady"
         }
+      },
+      "weather_alerts": {
+        "name": "Weather alerts"
       }
     }
   }
