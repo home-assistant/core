@@ -380,7 +380,7 @@ async def test_multi_device_charge_partial_validation_failure(
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, alt_mock_config_entry)
 
-    # Mock call to start charging both devices (exceed discharge power for gen 1)
+    # Mock call to start charging both devices (exceed charge power for gen 1)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
