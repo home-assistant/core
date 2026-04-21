@@ -1302,9 +1302,9 @@ async def test_binary_sensor_icon_no_match_fallback(hass: HomeAssistant) -> None
         property_identifier="CoStatus",
     )
 
-    # CoStatus is in BINARY_SENSOR_DEVICE_CLASS_MAP (maps to "problem")
+    # CoStatus is in BINARY_SENSOR_DEVICE_CLASS_MAP (maps to "carbon_monoxide")
     # CoStatus is in ENTITY_ICONS, so it matches ENTITY_ICONS first
-    assert sensor.device_class == BinarySensorDeviceClass.PROBLEM
+    assert sensor.device_class == BinarySensorDeviceClass.CO
     assert sensor.icon == "mdi:molecule-co"
 
 

@@ -1089,10 +1089,10 @@ async def test_select_icon_lowercase_match_not_in_icons(hass: HomeAssistant) -> 
     mock_device.device_id = "device-1"
     mock_device.device_name = "Test Device"
     mock_device.online = True
-    # Property that has lowercase match but not in ENTITY_ICONS
+    # Use a known arm mode property that has lowercase match but not in ENTITY_ICONS
     mock_device.properties = {
-        "VOLUMEHIGH": DeviceProperty(
-            identifier="VOLUMEHIGH", name="Volume High", value="high"
+        "SECURITYMODE": DeviceProperty(
+            identifier="SECURITYMODE", name="Security Mode", value="home"
         )
     }
 
@@ -1101,12 +1101,12 @@ async def test_select_icon_lowercase_match_not_in_icons(hass: HomeAssistant) -> 
     select = HeimanSelectEntity(
         coordinator=mock_coordinator,
         device=mock_device,
-        property_identifier="VOLUMEHIGH",
+        property_identifier="SECURITYMODE",
     )
 
     # Original case not in icons, lowercase not in icons
     # Should fall through to default icon
-    assert select.icon == "mdi:volume-high"
+    assert select.icon == "mdi:shield-home"
 
 
 async def test_select_get_description_unknown_value(hass: HomeAssistant) -> None:
@@ -1142,10 +1142,10 @@ async def test_select_icon_exact_match(hass: HomeAssistant) -> None:
     mock_device.device_id = "device-1"
     mock_device.device_name = "Test Device"
     mock_device.online = True
-    # Property with exact match in ENTITY_ICONS
+    # Use AlarmSoundOption which has exact match in ENTITY_ICONS
     mock_device.properties = {
-        "VolumeHigh": DeviceProperty(
-            identifier="VolumeHigh", name="Volume High", value="high"
+        "AlarmSoundOption": DeviceProperty(
+            identifier="AlarmSoundOption", name="Alarm Sound Option", value="1"
         )
     }
 
@@ -1154,7 +1154,7 @@ async def test_select_icon_exact_match(hass: HomeAssistant) -> None:
     select = HeimanSelectEntity(
         coordinator=mock_coordinator,
         device=mock_device,
-        property_identifier="VolumeHigh",
+        property_identifier="AlarmSoundOption",
     )
 
     # Exact match should use that icon

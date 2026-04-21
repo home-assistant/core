@@ -336,8 +336,12 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             SensorDeviceClass.POWER,
             SensorDeviceClass.ENERGY,
         ):
-            # If value is not numeric, return None to avoid validation errors
-            if value is not None and not isinstance(value, (int, float)):
+            # Reject booleans explicitly because bool is a subclass of int.
+            # If value is not a real numeric type, return None to avoid
+            # validation errors.
+            if value is not None and (
+                isinstance(value, bool) or not isinstance(value, (int, float))
+            ):
                 _LOGGER.warning(
                     "Sensor %s has device class %s but value is non-numeric: %s (%s). "
                     "Returning None to avoid Home Assistant validation error",

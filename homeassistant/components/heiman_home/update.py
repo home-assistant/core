@@ -224,9 +224,6 @@ class HeimanUpdateEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], UpdateE
             return version.parse(str(latest_version)) > version.parse(
                 str(installed_version),
             )
-        except ImportError:
-            # Fallback to simple string comparison if packaging is not available
-            return str(latest_version) != str(installed_version)
         except Exception:
             _LOGGER.exception(
                 "Error comparing versions %s and %s",
