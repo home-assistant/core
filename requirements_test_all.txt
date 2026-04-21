@@ -1330,7 +1330,7 @@ mbddns==0.1.2
 mcp==1.26.0
 
 # homeassistant.components.minecraft_server
-mcstatus==12.1.0
+mcstatus==13.1.0
 
 # homeassistant.components.meater
 meater-python==0.0.8
