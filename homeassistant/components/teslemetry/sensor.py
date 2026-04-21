@@ -1721,8 +1721,7 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity
             # zero) is passed through unchanged so statistics still handle
             # meter cycles correctly. Closes home-assistant/core#159988.
             if (
-                self.entity_description.state_class
-                == SensorStateClass.TOTAL_INCREASING
+                self.entity_description.state_class == SensorStateClass.TOTAL_INCREASING
                 and isinstance(new_value, (float, int))
             ):
                 if (
