@@ -24,6 +24,10 @@ type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 CONSECUTIVE_FAILURE_THRESHOLD = 3
 
 
+class AmberApiError(UpdateFailed):
+    """Raised when a transient API or network error occurs fetching Amber data."""
+
+
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a CurrentInterval."""
     return isinstance(interval, CurrentInterval)
@@ -102,11 +106,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
                 _request_timeout=REQUEST_TIMEOUT,
             )
         except ApiException as api_exception:
-            raise UpdateFailed(
+            raise AmberApiError(
                 f"Amber API error: {api_exception.status} {api_exception.reason}"
             ) from api_exception
         except (OSError, TimeoutError) as err:
-            raise UpdateFailed(f"Error communicating with Amber API: {err}") from err
+            raise AmberApiError(f"Error communicating with Amber API: {err}") from err
 
         intervals = [interval.actual_instance for interval in data]
 
@@ -157,7 +161,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         """Async update wrapper."""
         try:
             data = await self.hass.async_add_executor_job(self.update_price_data)
-        except UpdateFailed:
+        except AmberApiError:
             self._consecutive_failures += 1
             if self._consecutive_failures < CONSECUTIVE_FAILURE_THRESHOLD and self.data:
                 LOGGER.debug(
