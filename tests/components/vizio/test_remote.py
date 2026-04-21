@@ -167,7 +167,7 @@ async def test_send_command_tv_invalid(
 @pytest.mark.parametrize(
     ("command", "expected_key"),
     [
-        # Native keys (lowercase tested for a couple)
+        # Native keys (one lowercase variant tested)
         ("MUTE_TOGGLE", "MUTE_TOGGLE"),
         ("pause", "PAUSE"),
         ("VOL_UP", "VOL_UP"),
