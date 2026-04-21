@@ -11,12 +11,19 @@ from visionpluspython.models import ThermostatMode
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACAction,
     HVACMode,
+)
+from homeassistant.components.watts.const import (
+    ATTR_DURATION,
+    DOMAIN,
+    SERVICE_ACTIVATE_TIMER_MODE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -114,7 +121,7 @@ async def test_fast_polling(
     await hass.async_block_till_done()
 
     assert mock_watts_client.get_device.called
-    mock_watts_client.get_device.assert_called_with("thermostat_123", refresh=True)
+    mock_watts_client.get_device.assert_called_with("thermostat_123")
 
     # Should still be in fast polling after 55s
     mock_watts_client.get_device.reset_mock()
@@ -205,6 +212,148 @@ async def test_set_hvac_mode_off(
     mock_watts_client.set_thermostat_mode.assert_called_once_with(
         "thermostat_123", ThermostatMode.OFF
     )
+
+
+async def test_set_preset_mode_comfort(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to comfort."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_PRESET_MODE: "comfort",
+        },
+        blocking=True,
+    )
+
+    mock_watts_client.set_thermostat_mode.assert_called_once_with(
+        "thermostat_123", ThermostatMode.COMFORT
+    )
+
+
+async def test_set_preset_mode_defrost(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to defrost."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_PRESET_MODE: "defrost",
+        },
+        blocking=True,
+    )
+
+    mock_watts_client.set_thermostat_mode.assert_called_once_with(
+        "thermostat_123", ThermostatMode.DEFROST
+    )
+
+
+async def test_set_preset_mode_timer(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting preset mode to timer."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_PRESET_MODE: "timer",
+        },
+        blocking=True,
+    )
+
+    mock_watts_client.set_thermostat_mode.assert_called_once_with(
+        "thermostat_123", ThermostatMode.TIMER
+    )
+
+
+async def test_set_preset_mode_error(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error handling when setting preset mode fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_watts_client.set_thermostat_mode.side_effect = RuntimeError("API Error")
+
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while setting the preset mode"
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_PRESET_MODE: "defrost",
+            },
+            blocking=True,
+        )
+
+
+async def test_activate_timer_mode(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test activating timer mode with temperature and duration."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ACTIVATE_TIMER_MODE,
+        {
+            ATTR_ENTITY_ID: "climate.living_room_thermostat",
+            ATTR_TEMPERATURE: 20.5,
+            ATTR_DURATION: 90,
+        },
+        blocking=True,
+    )
+
+    mock_watts_client.activate_thermostat_timer.assert_called_once_with(
+        "thermostat_123", 20.5, 90
+    )
+
+
+async def test_activate_timer_mode_error(
+    hass: HomeAssistant,
+    mock_watts_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test error handling when activating timer mode fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_watts_client.activate_thermostat_timer.side_effect = RuntimeError("API Error")
+
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while activating timer mode"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACTIVATE_TIMER_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.living_room_thermostat",
+                ATTR_TEMPERATURE: 20.5,
+                ATTR_DURATION: 90,
+            },
+            blocking=True,
+        )
 
 
 async def test_set_temperature_api_error(

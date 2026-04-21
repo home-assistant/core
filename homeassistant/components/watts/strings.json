@@ -30,7 +30,26 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "Comfort",
+              "defrost": "Defrost",
+              "eco": "Eco",
+              "timer": "Timer"
+            }
+          }
+        }
+      }
+    }
+  },
   "exceptions": {
+    "activate_timer_mode_error": {
+      "message": "An error occurred while activating timer mode"
+    },
     "authentication_failed": {
       "message": "Authentication failed"
     },
@@ -58,6 +77,9 @@
     "set_hvac_mode_error": {
       "message": "An error occurred while setting the HVAC mode"
     },
+    "set_preset_mode_error": {
+      "message": "An error occurred while setting the preset mode"
+    },
     "set_switch_state_error": {
       "message": "An error occurred while setting the switch state"
     },
@@ -66,6 +88,22 @@
     },
     "temporary_connection_error": {
       "message": "Temporary connection error"
+    }
+  },
+  "services": {
+    "activate_timer_mode": {
+      "description": "Activates timer mode on the thermostat for a specified temperature and duration.",
+      "fields": {
+        "duration": {
+          "description": "Duration of the timer in minutes (1–1440).",
+          "name": "Duration"
+        },
+        "temperature": {
+          "description": "Target temperature while the timer is active.",
+          "name": "Temperature"
+        }
+      },
+      "name": "Activate timer mode"
     }
   }
 }

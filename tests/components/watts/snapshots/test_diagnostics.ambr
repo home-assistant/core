@@ -30,7 +30,7 @@
           'device_id': 'thermostat_123',
           'device_name': 'Living Room Thermostat',
           'device_type': 'thermostat',
-a          'hvac_action': 'Heating',
+          'hvac_action': 'Heating',
           'interface': 'homeassistant.components.THERMOSTAT',
           'is_online': True,
           'max_allowed_temperature': 30.0,
