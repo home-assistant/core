@@ -166,6 +166,11 @@ class WaqiSensor(CoordinatorEntity[WAQIDataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.native_value is not None
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.data)
