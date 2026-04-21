@@ -138,7 +138,9 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test no migration happens if the original entity id still exists."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
     config_entry.add_to_hass(hass)
     dimmer = _mocked_device(alias="My dimmer", modules=[Module.Light])
     rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
