@@ -134,7 +134,8 @@
     "yaml_import_needed": {
       "fix_flow": {
         "abort": {
-          "cannot_connect": "Could not connect to the Russound RNET device. Check the connection details in your YAML configuration."
+          "cannot_connect": "Could not connect to the Russound RNET device. Check the connection details in your YAML configuration.",
+          "import_failed": "Failed to create the configuration entry. The device may already be configured."
         },
         "step": {
           "confirm": {

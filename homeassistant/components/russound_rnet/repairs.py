@@ -200,11 +200,13 @@ class YamlImportRepairFlow(RepairsFlow):
             self._data[CONF_ZONES] = zones
 
             # Create config entry via config flow
-            await self.hass.config_entries.flow.async_init(
+            result = await self.hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": "import"},
                 data=self._data,
             )
+            if result.get("type") != "create_entry":
+                return self.async_abort(reason="import_failed")
 
             # Now prompt user to remove YAML
             async_create_deprecated_yaml_issue(self.hass)
