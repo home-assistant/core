@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
@@ -312,10 +312,19 @@ _MEASUREMENT_UNIT_MAP: dict[int, str] = {
 class MatterConcentrationSensor(MatterSensor):
     """Representation of a Matter concentration measurement sensor.
 
-    Reads the MeasurementUnit attribute to dynamically set the unit of measurement.
-    Falls back to the statically defined unit when the device does not report
-    MeasurementUnit.
+    Reads the MeasurementUnit attribute once at init to set the unit of
+    measurement. Falls back to the statically defined unit when the device does
+    not report MeasurementUnit. MeasurementUnit is Fixed per the Matter spec,
+    so reading it once is sufficient.
     """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+        if (unit_value := self.matter_measurement_unit) is not None and (
+            mapped_unit := _MEASUREMENT_UNIT_MAP.get(unit_value)
+        ) is not None:
+            self._attr_native_unit_of_measurement = mapped_unit
 
     @property
     def matter_measurement_unit(self) -> int | None:
@@ -325,17 +334,6 @@ class MatterConcentrationSensor(MatterSensor):
         )
         value: int | None = cluster.measurementUnit
         return value
-
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
-        unit_value = self.matter_measurement_unit
-        if (
-            unit_value is not None
-            and (mapped_unit := _MEASUREMENT_UNIT_MAP.get(unit_value)) is not None
-        ):
-            self._attr_native_unit_of_measurement = mapped_unit
-        super()._update_from_device()
 
 
 # MeasurementUnit value -> device class for TVOC sensors
@@ -353,19 +351,17 @@ class MatterTVOCConcentrationSensor(MatterConcentrationSensor):
 
     Extends MatterConcentrationSensor to also set the device class based on
     the MeasurementUnit, since TVOC uses different device classes depending
-    on whether the unit is mass-based or parts-based.
+    on whether the unit is mass-based or parts-based. MeasurementUnit is Fixed
+    per the Matter spec, so the device class is set once at init.
     """
 
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
-        unit_value = self.matter_measurement_unit
-        if (
-            unit_value is not None
-            and (dc := _TVOC_DEVICE_CLASS_MAP.get(unit_value)) is not None
-        ):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+        if (unit_value := self.matter_measurement_unit) is not None and (
+            dc := _TVOC_DEVICE_CLASS_MAP.get(unit_value)
+        ) is not None:
             self._attr_device_class = dc
-        super()._update_from_device()
 
 
 class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
