@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="192.168.1.23",
-    hostname="iAquaLink-123456",
+    hostname="iaqualink-123456",
     macaddress="001122334455",
 )
 
