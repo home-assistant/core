@@ -131,3 +131,27 @@ async def test_rpc_media_player_audio_file(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_IDLE
+
+
+async def test_rpc_media_player_no_media_meta(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a Shelly RPC media player with no media metadata."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    status["media"]["playback"].pop("media_meta")
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_PLAYING
+    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) is None
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
+    assert state.attributes.get(ATTR_MEDIA_DURATION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
