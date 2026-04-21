@@ -50,6 +50,8 @@ async def async_setup_entry(
     # Initial data fetch
     await coordinator.async_config_entry_first_refresh()
     _async_add_new_entities()
+
+
 class OPNsenseDeviceTrackerEntity(CoordinatorEntity, ScannerEntity):
     """Representation of a tracked device."""
 
