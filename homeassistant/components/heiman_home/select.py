@@ -42,14 +42,21 @@ async def async_setup_entry(
                 if hasattr(prop, "entity") and prop.entity == "select":
                     unique_id = f"{device.device_id}_{property_id}_select"
                     if unique_id not in existing_entities:
-                        new_selects.append(
-                            HeimanSelectEntity(
-                                coordinator=coordinator,
-                                device=device,
-                                property_identifier=property_id,
+                        try:
+                            new_selects.append(
+                                HeimanSelectEntity(
+                                    coordinator=coordinator,
+                                    device=device,
+                                    property_identifier=property_id,
+                                )
                             )
-                        )
-                        existing_entities.add(unique_id)
+                            existing_entities.add(unique_id)
+                        except ValueError:
+                            # Skip entities with no available options
+                            _LOGGER.debug(
+                                "Skipping select entity '%s': no options available",
+                                property_id,
+                            )
 
         if new_selects:
             async_add_entities(new_selects)
@@ -121,6 +128,9 @@ class HeimanSelectEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SelectE
 
         Args:
             prop: Property object
+
+        Raises:
+            ValueError: If no options are available for this property.
         """
         # Try to get options from const if it's a known property type
         if self._property_identifier == "AlarmSoundOption":
@@ -167,11 +177,10 @@ class HeimanSelectEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SelectE
                     "night": "armed_night",
                 }
             else:
-                # For unknown properties, use a simple passthrough mapping
-                # These will be populated dynamically from property value_list if available
-                self._attr_options = []
-                self._value_list = {}
-                self._reverse_value_list = {}
+                # Skip entity creation for unknown select properties with no options
+                raise ValueError(
+                    f"Select property '{self._property_identifier}' has no available options"
+                )
 
     def _get_description(self, value) -> str | None:
         """Get description (option text) from value.

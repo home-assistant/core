@@ -360,13 +360,27 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             if prop_id == "RSSI":
                 # Keep RSSI as numeric dBm value for sensor compatibility
                 # Also create a separate DBM_Level property for signal strength display
-                device.properties[prop_id].value = prop_value
-                dbm_level_value = self._convert_dbm_to_level(prop_value)
-                if dbm_level_value is not None:
-                    if "DeviceINFO_DBM_Level" in device.properties:
-                        device.properties[
-                            "DeviceINFO_DBM_Level"
-                        ].value = dbm_level_value
+                # Validate numeric type to avoid TypeError from string values
+                numeric_prop_value: float | int | None = None
+                if isinstance(prop_value, (int, float)) and not isinstance(
+                    prop_value, bool
+                ):
+                    numeric_prop_value = prop_value
+
+                device.properties[prop_id].value = (
+                    numeric_prop_value
+                    if numeric_prop_value is not None
+                    else prop_value
+                )
+                if numeric_prop_value is not None:
+                    dbm_level_value = self._convert_dbm_to_level(
+                        numeric_prop_value
+                    )
+                    if dbm_level_value is not None:
+                        if "DeviceINFO_DBM_Level" in device.properties:
+                            device.properties[
+                                "DeviceINFO_DBM_Level"
+                            ].value = dbm_level_value
             else:
                 # Update regular property
                 device.properties[prop_id].value = prop_value

@@ -168,6 +168,8 @@ class HeimanBinarySensorEntity(
             self._attr_icon = "mdi:water-check"
         elif device_class == BinarySensorDeviceClass.GAS:
             self._attr_icon = "mdi:molecule-co-warning"
+        elif device_class == BinarySensorDeviceClass.CO:
+            self._attr_icon = "mdi:molecule-co"
         elif device_class == BinarySensorDeviceClass.MOTION:
             self._attr_icon = "mdi:motion-sensor"
         elif device_class == BinarySensorDeviceClass.DOOR:
