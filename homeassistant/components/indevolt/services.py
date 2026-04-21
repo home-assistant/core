@@ -115,14 +115,6 @@ async def _async_get_coordinators_from_call(
 
             entry = loaded_entries[entry_id]
 
-            # Validate coordinator presence within entry
-            if entry.runtime_data is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="config_entry_not_ready",
-                    translation_placeholders={"entry_title": entry.title},
-                )
-
             # Append to the result list (found it)
             if entry.runtime_data not in coordinators:
                 coordinators.append(entry.runtime_data)
