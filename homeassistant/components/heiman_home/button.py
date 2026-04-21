@@ -61,29 +61,6 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_create_buttons_for_devices))
 
 
-def _is_button_property(prop) -> bool:
-    """Check if property should be a button.
-
-    Args:
-        prop: Property object
-
-    Returns:
-        True if property should be a button
-    """
-    # Must be writable
-    if not prop.writable:
-        return False
-
-    # Check data_type first
-    if prop.data_type == "bool":
-        return True
-
-    # Check property identifier for known button types
-    prop_lower = prop.identifier.lower()
-    button_keywords = ["mute", "reset", "test", "check", "locate", "self-test"]
-    return any(keyword in prop_lower for keyword in button_keywords)
-
-
 class HeimanButtonEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], ButtonEntity):
     """Representation of a Heiman button entity."""
 

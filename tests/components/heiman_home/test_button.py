@@ -6,7 +6,6 @@ from heimanconnect import DeviceProperty, HeimanDevice
 
 from homeassistant.components.heiman_home.button import (
     HeimanButtonEntity,
-    _is_button_property,
     async_setup_entry,
 )
 from homeassistant.components.heiman_home.const import DOMAIN
@@ -858,70 +857,6 @@ async def test_button_icon_find(hass: HomeAssistant) -> None:
     )
 
     assert button.icon == "mdi:radar"
-
-
-async def test_button_is_button_property(hass: HomeAssistant) -> None:
-    """Test _is_button_property function."""
-    # Non-writable property should return False
-    non_writable_prop = DeviceProperty(
-        identifier="test",
-        name="Test",
-        value=1,
-        writable=False,
-    )
-    assert _is_button_property(non_writable_prop) is False
-
-    # Bool data_type should return True
-    bool_prop = DeviceProperty(
-        identifier="test",
-        name="Test",
-        value=True,
-        writable=True,
-        data_type="bool",
-    )
-    assert _is_button_property(bool_prop) is True
-
-    # Known button keywords should return True
-    mute_prop = DeviceProperty(
-        identifier="mute_button",
-        name="Mute",
-        value=1,
-        writable=True,
-        data_type="action",
-    )
-    assert _is_button_property(mute_prop) is True
-
-    reset_prop = DeviceProperty(
-        identifier="reset",
-        name="Reset",
-        value=1,
-        writable=True,
-    )
-    assert _is_button_property(reset_prop) is True
-
-    test_prop = DeviceProperty(
-        identifier="selftest",
-        name="Self Test",
-        value=1,
-        writable=True,
-    )
-    assert _is_button_property(test_prop) is True
-
-    check_prop = DeviceProperty(
-        identifier="check",
-        name="Check",
-        value=1,
-        writable=True,
-    )
-    assert _is_button_property(check_prop) is True
-
-    locate_prop = DeviceProperty(
-        identifier="locate",
-        name="Locate",
-        value=1,
-        writable=True,
-    )
-    assert _is_button_property(locate_prop) is True
 
 
 async def test_button_icon_lowercase_match_led(hass: HomeAssistant) -> None:

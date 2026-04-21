@@ -10,7 +10,7 @@ from heimanconnect import HeimanDevice
 from packaging import version
 
 from homeassistant import config_entries
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -65,9 +65,7 @@ class HeimanUpdateEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], UpdateE
     """Representation of a Heiman update entity."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
-    )
+    # Note: INSTALL and SPECIFIC_VERSION not supported until API supports firmware updates
 
     def __init__(
         self,
@@ -203,6 +201,7 @@ class HeimanUpdateEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], UpdateE
                 self._attr_installed_version = installed_version
 
         # Try to get latest version from coordinator (if supported in future)
+        # pylint: disable=fixme
         # TODO: Implement when API supports firmware update checks
         # if self.coordinator and hasattr(self.coordinator, "get_device_property"):
         #     latest_version = self.coordinator.get_device_property(
@@ -244,6 +243,7 @@ class HeimanUpdateEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], UpdateE
     @property
     def release_summary(self) -> str | None:
         """Return summary of the latest release."""
+        # pylint: disable=fixme
         # TODO: Implement when API supports firmware update information
         return None
 

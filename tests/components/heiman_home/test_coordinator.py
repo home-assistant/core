@@ -748,8 +748,8 @@ async def test_coordinator_rssi_level_conversion(
     mock_device.raw_data = {}
     mock_device.properties = {
         "RSSI": DeviceProperty(identifier="RSSI", name="RSSI", value=None),
-        "RSSI_Level": DeviceProperty(
-            identifier="RSSI_Level", name="RSSI Level", value=None
+        "DeviceINFO_DBM_Level": DeviceProperty(
+            identifier="DeviceINFO_DBM_Level", name="DBM Level", value=None
         ),
     }
 
@@ -785,7 +785,7 @@ async def test_coordinator_rssi_level_conversion(
 
     device = coordinator.data.devices["device-1"]
     assert device.properties["RSSI"].value == -55
-    assert device.properties["RSSI_Level"].value == "medium"
+    assert device.properties["DeviceINFO_DBM_Level"].value == "medium"
 
 
 async def test_coordinator_get_device(

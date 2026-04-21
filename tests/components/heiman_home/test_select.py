@@ -7,7 +7,6 @@ from heimanconnect import DeviceProperty, HeimanDevice
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.components.heiman_home.select import (
     HeimanSelectEntity,
-    _is_select_property,
     async_setup_entry,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -978,70 +977,6 @@ async def test_select_icon_lowercase_matching(hass: HomeAssistant) -> None:
     assert select.icon == "mdi:volume-high"
 
 
-async def test_select_is_select_property(hass: HomeAssistant) -> None:
-    """Test _is_select_property function."""
-    # Non-writable property should return False
-    non_writable_prop = DeviceProperty(
-        identifier="test",
-        name="Test",
-        value=1,
-        writable=False,
-    )
-    assert _is_select_property(non_writable_prop) is False
-
-    # Enum data_type should return True
-    enum_prop = DeviceProperty(
-        identifier="test",
-        name="Test",
-        value="option1",
-        writable=True,
-        data_type="enum",
-    )
-    assert _is_select_property(enum_prop) is True
-
-    # Known select keywords should return True
-    mode_prop = DeviceProperty(
-        identifier="mode",
-        name="Mode",
-        value="auto",
-        writable=True,
-        data_type="string",
-    )
-    assert _is_select_property(mode_prop) is True
-
-    option_prop = DeviceProperty(
-        identifier="option",
-        name="Option",
-        value="a",
-        writable=True,
-    )
-    assert _is_select_property(option_prop) is True
-
-    setting_prop = DeviceProperty(
-        identifier="setting",
-        name="Setting",
-        value="high",
-        writable=True,
-    )
-    assert _is_select_property(setting_prop) is True
-
-    level_prop = DeviceProperty(
-        identifier="level",
-        name="Level",
-        value=50,
-        writable=True,
-    )
-    assert _is_select_property(level_prop) is True
-
-    speed_prop = DeviceProperty(
-        identifier="speed",
-        name="Speed",
-        value="fast",
-        writable=True,
-    )
-    assert _is_select_property(speed_prop) is True
-
-
 async def test_select_get_description_fallback(hass: HomeAssistant) -> None:
     """Test _get_description fallback when value not in mapping."""
     mock_coordinator = MagicMock()
@@ -1226,7 +1161,9 @@ async def test_select_icon_exact_match(hass: HomeAssistant) -> None:
     assert select.icon == "mdi:volume-high"
 
 
-async def test_select_icon_lowercase_match(hass: HomeAssistant) -> None:
+async def test_select_icon_lowercase_match_alarmsoundoption_uppercase(
+    hass: HomeAssistant,
+) -> None:
     """Test select icon with uppercase property identifier that triggers lowercase matching."""
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)

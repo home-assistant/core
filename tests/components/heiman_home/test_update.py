@@ -273,10 +273,9 @@ async def test_update_entity_supported_features(hass: HomeAssistant) -> None:
         device=mock_device,
     )
 
-    assert (
-        update.supported_features
-        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
-    )
+    # Note: INSTALL and SPECIFIC_VERSION features are not supported until API
+    # supports firmware updates
+    assert update.supported_features == UpdateEntityFeature(0)
 
 
 async def test_update_entity_in_progress(hass: HomeAssistant) -> None:

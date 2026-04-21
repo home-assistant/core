@@ -1,7 +1,6 @@
 {
   "domain": "heiman_home",
   "name": "Heiman Home",
-  "version": "1.0.0",
   "codeowners": ["@heimanhome"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

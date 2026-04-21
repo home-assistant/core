@@ -46,16 +46,11 @@ def _infer_entity_type(prop_value: Any) -> str | None:
 
     Returns:
         The entity type string (e.g., "sensor") or None for auto-detection.
-
-    Note:
-        Boolean values should NOT default to "sensor" - they should be
-        left as None so other entity platforms (switch, binary_sensor)
-        can handle them appropriately based on device metadata.
     """
     if isinstance(prop_value, bool):
-        # Boolean values should not be forced to sensor.
-        # Leave as None for auto-detection by other entity platforms.
-        return None
+        # Default to binary_sensor for boolean properties discovered at runtime
+        # Binary sensor platform will handle them if entity matches
+        return "binary_sensor"
     if isinstance(prop_value, (int, float)):
         # Numeric values are typically sensors
         return "sensor"
@@ -369,7 +364,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 dbm_level_value = self._convert_dbm_to_level(prop_value)
                 if dbm_level_value is not None:
                     if "DeviceINFO_DBM_Level" in device.properties:
-                        device.properties["DeviceINFO_DBM_Level"].value = dbm_level_value
+                        device.properties[
+                            "DeviceINFO_DBM_Level"
+                        ].value = dbm_level_value
             else:
                 # Update regular property
                 device.properties[prop_id].value = prop_value

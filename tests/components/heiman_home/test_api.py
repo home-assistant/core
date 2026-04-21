@@ -390,20 +390,25 @@ async def test_token_update_refreshes_client(
 
     # Store original HTTP client reference
     original_http_client = client._http_client
+    assert original_http_client is not None
 
     # Update token
     new_token = "new-access-token"
     mock_oauth_session.token = {"access_token": new_token}
 
     # Call async_ensure_token_valid which should trigger client update
-    with patch.object(client, "_cloud_client") as mock_cloud_client:
+    with (
+        patch.object(
+            original_http_client, "update_access_token"
+        ) as mock_update_access_token,
+        patch.object(client, "_cloud_client") as mock_cloud_client,
+    ):
         mock_cloud_client.async_get_user_info = AsyncMock(return_value=MagicMock())
 
         await client.async_get_user_info()
 
         # Verify token was updated in the HTTP client
-        if client._http_client:
-            assert client._http_client is original_http_client
+        mock_update_access_token.assert_called_once_with(new_token)
 
 
 async def test_api_client_close(

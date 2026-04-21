@@ -61,29 +61,6 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_create_selects_for_devices))
 
 
-def _is_select_property(prop) -> bool:
-    """Check if property should be a select entity.
-
-    Args:
-        prop: Property object
-
-    Returns:
-        True if property should be a select
-    """
-    # Must be writable
-    if not prop.writable:
-        return False
-
-    # Check if it's an enum type
-    if prop.data_type == "enum":
-        return True
-
-    # Check property identifier for known select types
-    prop_lower = prop.identifier.lower()
-    select_keywords = ["mode", "option", "setting", "level", "speed"]
-    return any(keyword in prop_lower for keyword in select_keywords)
-
-
 class HeimanSelectEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SelectEntity):
     """Representation of a Heiman select entity."""
 
@@ -334,9 +311,9 @@ class HeimanSelectEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SelectE
                 device_info=device_info,
             )
 
-        # Update current option immediately for better UX
-        self._current_option = option
-        self.async_write_ha_state()
+            # Only update current_option after MQTT write succeeds
+            self._current_option = option
+            self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
