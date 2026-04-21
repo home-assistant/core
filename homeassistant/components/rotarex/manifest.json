@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["rotarex-dimes-srg-api==0.1.7"]
+  "requirements": ["rotarex-dimes-srg-api==0.1.6"]
 }
