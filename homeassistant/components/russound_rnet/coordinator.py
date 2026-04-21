@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from contextlib import suppress
 from datetime import timedelta
 import logging
-from typing import Any
 
 from aiorussound.rnet.client import RNETZoneInfo, RussoundRNETClient
 
@@ -101,17 +99,12 @@ class RussoundRNETCoordinator(
 
         return data
 
-    async def async_send_command(
+    async def async_refresh_zone(
         self,
         controller_id: int,
         zone_id: int,
-        func: Callable[..., Coroutine[Any, Any, Any]],
-        *args: Any,
     ) -> None:
-        """Send a command, then poll only the affected zone for instant feedback."""
-        await func(*args)
-
-        # Poll just the affected zone and push updated state to entities
+        """Poll only the affected zone for instant feedback after a command."""
         try:
             info = await self.client.get_all_zone_info(controller_id, zone_id)
         except RNET_EXCEPTIONS:

@@ -182,10 +182,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (0..1)."""
         device_volume = max(0, min(_MAX_VOLUME, int(volume * _MAX_VOLUME)))
-        await self.coordinator.async_send_command(
-            self._controller_id,
-            self._zone_id,
-            self.coordinator.client.set_volume,
+        await self.coordinator.client.set_volume(
             self._controller_id,
             self._zone_id,
             device_volume,
@@ -194,10 +191,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     @command
     async def async_turn_on(self) -> None:
         """Turn the zone on."""
-        await self.coordinator.async_send_command(
-            self._controller_id,
-            self._zone_id,
-            self.coordinator.client.set_zone_power,
+        await self.coordinator.client.set_zone_power(
             self._controller_id,
             self._zone_id,
             True,
@@ -206,10 +200,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     @command
     async def async_turn_off(self) -> None:
         """Turn the zone off."""
-        await self.coordinator.async_send_command(
-            self._controller_id,
-            self._zone_id,
-            self.coordinator.client.set_zone_power,
+        await self.coordinator.client.set_zone_power(
             self._controller_id,
             self._zone_id,
             False,
@@ -218,10 +209,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     @command
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute/unmute the zone."""
-        await self.coordinator.async_send_command(
-            self._controller_id,
-            self._zone_id,
-            self.coordinator.client.toggle_mute,
+        await self.coordinator.client.toggle_mute(
             self._controller_id,
             self._zone_id,
         )
@@ -231,10 +219,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
         """Select the input source."""
         if source in self._source_to_index:
             index = self._source_to_index[source]
-            await self.coordinator.async_send_command(
-                self._controller_id,
-                self._zone_id,
-                self.coordinator.client.select_source,
+            await self.coordinator.client.select_source(
                 self._controller_id,
                 self._zone_id,
                 index,

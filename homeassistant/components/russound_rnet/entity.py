@@ -33,6 +33,9 @@ def command[_EntityT: RussoundRNETEntity, **_P](
                     "entity_id": self.entity_id,
                 },
             ) from exc
+        await self.coordinator.async_refresh_zone(
+            self._controller_id, self._zone_id
+        )
 
     return decorator
 
