@@ -99,7 +99,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return
             # create persistent notification to warn user that manual token needs refresh
             expire_text: str = (
-                "expiring in {self.token_lifetime} days"
+                f"expiring in {self.token_lifetime} days"
                 if self.token_lifetime > 0
                 else "expired"
             )
