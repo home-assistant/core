@@ -70,13 +70,7 @@ rules:
       handled by the coordinator (unavailable entities) and resolve automatically.
       There are no credentials to expire and no versioned API to become
       incompatible with.
-  stale-devices:
-    status: exempt
-    comment: >-
-      The Duco firmware retains nodes permanently after pairing; there is no
-      API mechanism to determine whether a sensor is still physically present.
-      Removing devices from the registry would discard valid firmware state.
-
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done

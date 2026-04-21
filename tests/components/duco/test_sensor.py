@@ -10,10 +10,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
+from homeassistant.components.duco.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -172,3 +172,41 @@ async def test_new_node_added_dynamically(
     state = hass.states.get("sensor.new_rh_sensor_humidity")
     assert state is not None
     assert state.state == "55.0"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_deregistered_node_removes_device(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a node disappearing from the API removes its device from the registry.
+
+    The Duco firmware removes deregistered RF/wired nodes from the API
+    automatically (confirmed by vendor). This test simulates an RF sensor
+    (UCCO2, node 2) being deregistered from the Duco box.
+    """
+    device_registry = dr.async_get(hass)
+
+    # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
+    )
+    assert device is not None
+
+    # Simulate the firmware removing the deregistered node from the API response.
+    mock_duco_client.async_get_nodes.return_value = [
+        node for node in mock_nodes if node.node_id != 2
+    ]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The device should be removed from the device registry.
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
+    )
+    assert device is None

@@ -20,8 +20,10 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -108,12 +110,48 @@ async def async_setup_entry(
     entry: DucoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Duco sensor entities."""
+    """Set up Duco sensor entities.
+
+    The Duco API dynamically reflects the current node topology (confirmed by
+    vendor):
+    - New sensor modules (UCCO2, BSRH) appear in the API automatically after
+      pairing, without requiring a box restart.
+    - Deregistered RF/wired nodes are removed from the API by the firmware.
+    - Box sensors (BSRH) that are physically disconnected from the PCB are NOT
+      considered deregistered; they remain in the API indefinitely and are
+      never reported as stale.
+
+    Node IDs are stable as long as a node remains registered. Once a node is
+    deregistered its ID may be reused for a newly paired node.
+    """
     coordinator = entry.runtime_data
+
+    # Track the node IDs for which entities have already been created, so we
+    # can detect both newly added and stale (deregistered) nodes on every
+    # coordinator update.
     known_nodes: set[int] = set()
 
     @callback
     def _async_add_new_entities() -> None:
+        # Remove devices whose nodes have disappeared from the API.
+        # The firmware removes deregistered RF/wired nodes automatically.
+        # BSRH box sensors that are physically unplugged from the PCB are
+        # not deregistered by the firmware and will never appear here as stale.
+        stale_node_ids = known_nodes - coordinator.data.nodes.keys()
+        if stale_node_ids:
+            device_reg = dr.async_get(hass)
+            mac = entry.unique_id
+            for node_id in stale_node_ids:
+                device = device_reg.async_get_device(
+                    identifiers={(DOMAIN, f"{mac}_{node_id}")}
+                )
+                if device:
+                    device_reg.async_update_device(
+                        device.id,
+                        remove_config_entry_id=entry.entry_id,
+                    )
+            known_nodes.difference_update(stale_node_ids)
+
         new_entities: list[SensorEntity] = []
         for node in coordinator.data.nodes.values():
             if node.node_id in known_nodes:
