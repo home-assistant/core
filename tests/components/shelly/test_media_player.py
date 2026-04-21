@@ -1,7 +1,7 @@
 """Tests for Shelly media player platform."""
 
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_WALL_DISPLAY
 import pytest
@@ -47,6 +47,32 @@ from tests.typing import WebSocketGenerator
 
 ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.test_name"
 
+RADIO_STATIONS = [
+    {
+        "id": 0,
+        "name": "Station Alpha",
+        "country_code": "XX",
+        "icon": "https://example.com/icons/alpha.png",
+    },
+    {
+        "id": 1,
+        "name": "Station Beta",
+        "country_code": "XX",
+        "icon": "https://example.com/icons/beta.png",
+    },
+    {
+        "id": 2,
+        "name": "Station Gamma",
+        "country_code": "XX",
+        "icon": "https://example.com/icons/gamma.png",
+    },
+    {
+        "id": 3,
+        "name": "Station Delta",
+        "country_code": "XX",
+        "icon": "https://example.com/icons/delta.png",
+    },
+]
 STATUS_RADIO_STATION = {
     "playback": {
         "enable": True,
@@ -334,7 +360,6 @@ async def test_rpc_media_player_browse_media_root(
     assert msg["success"]
     assert msg["result"]["title"] == "Shelly"
     assert msg["result"]["media_class"] == "directory"
-    assert msg["result"]["media_content_type"] == "shelly"
     assert msg["result"]["media_content_id"] == ""
     assert [child["title"] for child in msg["result"]["children"]] == [
         "Radio stations",
@@ -343,4 +368,50 @@ async def test_rpc_media_player_browse_media_root(
     assert [child["media_content_type"] for child in msg["result"]["children"]] == [
         CONTENT_TYPE_RADIO,
         CONTENT_TYPE_AUDIO,
+    ]
+
+
+async def test_rpc_media_player_browse_media_radio_stations(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test Shelly media player browse media radio stations."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_RADIO_STATION
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "media_list_radio_stations",
+        AsyncMock(return_value=RADIO_STATIONS),
+    )
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": CONTENT_TYPE_RADIO,
+            "media_content_id": CONTENT_TYPE_RADIO,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["title"] == "Radio stations"
+    assert msg["result"]["media_class"] == "directory"
+    assert msg["result"]["media_content_type"] == CONTENT_TYPE_RADIO
+    assert [child["title"] for child in msg["result"]["children"]] == [
+        station["name"] for station in RADIO_STATIONS
+    ]
+    assert [child["media_content_id"] for child in msg["result"]["children"]] == [
+        str(station["id"]) for station in RADIO_STATIONS
+    ]
+    assert [child["thumbnail"] for child in msg["result"]["children"]] == [
+        station["icon"] for station in RADIO_STATIONS
     ]

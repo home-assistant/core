@@ -278,7 +278,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     ) -> BrowseMedia:
         """Browse radio stations and audio files."""
         try:
-            if media_content_id in (None, ""):
+            if not media_content_type:
                 return await self._async_browse_media_root()
 
             if media_content_type == CONTENT_TYPE_RADIO:
@@ -328,7 +328,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return BrowseMedia(
             title="Shelly",
             media_class=MediaClass.DIRECTORY,
-            media_content_type=DOMAIN,
+            media_content_type="",
             media_content_id="",
             children=[
                 await self._async_browse_radio_stations(),
@@ -364,7 +364,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             title="Audio files",
             media_class=MediaClass.DIRECTORY,
             media_content_type=CONTENT_TYPE_AUDIO,
-            media_content_id="",
+            media_content_id=CONTENT_TYPE_AUDIO,
             children_media_class=MediaClass.MUSIC,
             children=children,
             can_play=False,
@@ -396,7 +396,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             title="Radio stations",
             media_class=MediaClass.DIRECTORY,
             media_content_type=CONTENT_TYPE_RADIO,
-            media_content_id="",
+            media_content_id=CONTENT_TYPE_RADIO,
             children_media_class=MediaClass.MUSIC,
             children=children,
             can_play=False,
