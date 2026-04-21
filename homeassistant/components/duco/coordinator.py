@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from duco import DucoClient
@@ -18,7 +19,14 @@ from .const import DOMAIN, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
-type DucoData = dict[int, Node]
+
+
+@dataclass
+class DucoData:
+    """Data returned by the Duco coordinator."""
+
+    nodes: dict[int, Node]
+    rssi_wifi: int | None
 
 
 class DucoCoordinator(DataUpdateCoordinator[DucoData]):
@@ -72,4 +80,23 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_key="api_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        return {node.node_id: node for node in nodes}
+
+        try:
+            lan_info = await self.client.async_get_lan_info()
+        except DucoConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except DucoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
+        return DucoData(
+            nodes={node.node_id: node for node in nodes},
+            rssi_wifi=lan_info.rssi_wifi,
+        )

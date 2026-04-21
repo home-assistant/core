@@ -1,0 +1,3037 @@
+# serializer version: 1
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.hallway_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.hallway_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/4080031',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.hallway_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Hallway Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.hallway_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.hallway_shutter_low_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.hallway_shutter_low_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low speed',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Low speed',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/4080031_low_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.hallway_shutter_low_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Hallway Shutter Low speed',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.hallway_shutter_low_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.nursery_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.nursery_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/141613',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.nursery_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Nursery Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.nursery_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.nursery_shutter_low_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.nursery_shutter_low_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low speed',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Low speed',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/141613_low_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.nursery_shutter_low_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Nursery Shutter Low speed',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.nursery_shutter_low_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.office_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/9740264',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.office_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Office Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.office_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.office_shutter_low_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_shutter_low_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low speed',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Low speed',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/9740264_low_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_nexity_rail_din_europe.json][cover.office_shutter_low_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Office Shutter Low speed',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.office_shutter_low_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.kitchen_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kitchen_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16749917',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.kitchen_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'shutter',
+      'friendly_name': 'Kitchen Shutter',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kitchen_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.patio_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.patio_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730022',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.patio_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'shutter',
+      'friendly_name': 'Patio Shutter',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.patio_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.basement_roller_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.basement_roller_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/2150846',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.basement_roller_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 90,
+      'device_class': 'shutter',
+      'friendly_name': 'Basement Roller Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.basement_roller_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.laundry_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.laundry_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/5719467',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.laundry_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 50,
+      'device_class': 'blind',
+      'friendly_name': 'Laundry Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.laundry_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.loft_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.loft_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/13522671',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.loft_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'window',
+      'friendly_name': 'Loft Window',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.loft_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.pantry_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.pantry_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/2890799',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.pantry_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Pantry Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.pantry_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.playroom_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.playroom_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/13915941',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.playroom_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Playroom Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.playroom_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.studio_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.studio_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/3912866',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.studio_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'window',
+      'friendly_name': 'Studio Window',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.studio_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.study_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.study_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/13149769',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.study_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Study Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.study_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_roller_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.veranda_roller_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/12931361',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.veranda_roller_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 50,
+      'device_class': 'shutter',
+      'friendly_name': 'Veranda Roller Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.veranda_roller_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.workshop_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.workshop_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5010/4905039',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_switch_sc_europe.json][cover.workshop_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Workshop Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.workshop_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.bedroom_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bedroom_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/13064380',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.bedroom_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Bedroom Blinds',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bedroom_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.dining_room_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.dining_room_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/2487349',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.dining_room_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Dining Room Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.dining_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_house_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.garden_house_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/12184029',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_house_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Garden House Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.garden_house_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.guest_room_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.guest_room_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/8170693',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.guest_room_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Guest Room Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.guest_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.kids_room_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kids_room_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/9749383',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.kids_room_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Kids Room Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kids_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.kitchen_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kitchen_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/13136078',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.kitchen_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Kitchen Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kitchen_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/8939545',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.living_room_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Living Room Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.main_garage_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.main_garage_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/1166863',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.main_garage_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'garage',
+      'friendly_name': 'Main Garage Door',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.main_garage_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.office_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/13911608',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.office_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Office Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.office_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.patio_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.patio_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/180461',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.patio_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Patio Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.patio_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.side_garage_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.side_garage_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/3880877',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.side_garage_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'garage',
+      'friendly_name': 'Side Garage Door',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.side_garage_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.studio_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.studio_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/7019474',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.studio_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Studio Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.studio_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_connexoon_europe.json][cover.terrace_awning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.terrace_awning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-1234/5928357',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_connexoon_europe.json][cover.terrace_awning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'awning',
+      'friendly_name': 'Terrace Awning',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.terrace_awning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bathroom_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bathroom_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/5456600',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bathroom_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Bathroom Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bathroom_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bedroom_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bedroom_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/16130150',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.bedroom_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Bedroom Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bedroom_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.dining_room_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.dining_room_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/13662182',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.dining_room_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'current_tilt_position': 69,
+      'device_class': 'blind',
+      'friendly_name': 'Dining Room Blinds',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.dining_room_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.garage_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.garage_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/11292138',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.garage_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 69,
+      'device_class': 'blind',
+      'friendly_name': 'Garage Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.garage_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.guest_room_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.guest_room_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/6553884',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.guest_room_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Guest Room Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.guest_room_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.hallway_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.hallway_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/10076003',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.hallway_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Hallway Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.hallway_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.kitchen_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kitchen_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/3248049',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.kitchen_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Kitchen Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kitchen_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.living_room_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/6380765',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.living_room_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Living Room Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.master_bedroom_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.master_bedroom_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/12736675',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.master_bedroom_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Master Bedroom Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.master_bedroom_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.nursery_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.nursery_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/4803435',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.nursery_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 69,
+      'device_class': 'blind',
+      'friendly_name': 'Nursery Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.nursery_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/4877511',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.office_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 68,
+      'device_class': 'blind',
+      'friendly_name': 'Office Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.office_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.study_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.study_blinds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 255>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/6375755',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe.json][cover.study_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -8,
+      'current_tilt_position': 72,
+      'device_class': 'blind',
+      'friendly_name': 'Study Blinds',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 255>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.study_blinds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.back_door_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.back_door_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3897767',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.back_door_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -24,
+      'device_class': 'shutter',
+      'friendly_name': 'Back Door Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.back_door_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.front_door_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.front_door_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3656107',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.front_door_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -24,
+      'device_class': 'shutter',
+      'friendly_name': 'Front Door Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.front_door_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.roof_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/77700',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'window',
+      'friendly_name': 'Roof Window',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.roof_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window_low_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.roof_window_low_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low speed',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Low speed',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/77700_low_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_2.json][cover.roof_window_low_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'window',
+      'friendly_name': 'Roof Window Low speed',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.roof_window_low_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.attic_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.attic_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-5678--9373/16757362',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.attic_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'curtain',
+      'friendly_name': 'Attic Curtain',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.attic_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.conservatory_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.conservatory_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/3868695',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.conservatory_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 86,
+      'device_class': 'blind',
+      'friendly_name': 'Conservatory Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.conservatory_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.library_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.library_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/3904805',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.library_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 86,
+      'device_class': 'blind',
+      'friendly_name': 'Library Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.library_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.patio_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.patio_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/10202865',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.patio_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'window',
+      'friendly_name': 'Patio Window',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.patio_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.sunroom_shades-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.sunroom_shades',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/15097783',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.sunroom_shades-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Sunroom Shades',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.sunroom_shades',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.terrace_awning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.terrace_awning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/5632438',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][cover.terrace_awning-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 86,
+      'device_class': 'blind',
+      'friendly_name': 'Terrace Awning',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.terrace_awning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.bedroom_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bedroom_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-3293/5770898',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.bedroom_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Bedroom Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bedroom_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.dining_room_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.dining_room_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-3293/5353900',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.dining_room_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Dining Room Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.dining_room_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garden_pergola-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.garden_pergola',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 240>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-3293/7614902',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.garden_pergola-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_tilt_position': 0,
+      'device_class': 'awning',
+      'friendly_name': 'Garden Pergola',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 240>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.garden_pergola',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.office_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-3293/3541212',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.office_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Office Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.office_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

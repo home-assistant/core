@@ -148,7 +148,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._host == self._host  # noqa: SLF001
+        return other_flow._host == self._host
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
