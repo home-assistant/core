@@ -93,15 +93,14 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
         device_id = call.data.get(ATTR_ENVOY_DEVICE_ID)
         if not (coordinator := _find_envoy_coordinator(hass, device_id)):
             translation_key = (
-                "envoy_service_envoy_not_found"
+                "envoy_token_lifetime_service_envoy_not_found"
                 if device_id
-                else "envoy_service_no_device_id"
+                else "envoy_token_lifetime_service_no_device_id"
             )
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=translation_key,
                 translation_placeholders={
-                    "service": call.service,
                     "device_id": str(device_id),
                 },
             )

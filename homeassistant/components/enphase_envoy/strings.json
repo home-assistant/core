@@ -735,11 +735,11 @@
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
     },
-    "envoy_service_envoy_not_found": {
-      "message": "No Envoy found by {service} for device_id {device_id}. Specify a correct `device_id`."
+    "envoy_token_lifetime_service_envoy_not_found": {
+      "message": "No Envoy found by token lifetime action for device ID {device_id}."
     },
-    "envoy_service_no_device_id": {
-      "message": "No Envoy found by {service}. Configure an Envoy or specify a `device_id` if more than 1 Envoy is configured."
+    "envoy_token_lifetime_service_no_device_id": {
+      "message": "No Envoy found by token lifetime action. Configure an Envoy or specify a `device_id` if more than 1 Envoy is configured."
     },
     "not_initialized": {
       "message": "{service}: Enphase Envoy is not yet initialized"
@@ -768,7 +768,7 @@
       "description": "Returns days until Envoy access token expiry.",
       "fields": {
         "device_id": {
-          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. In UI mode, click the checkbox and select an Envoy from the dropdown list. In YAML mode enter a `device_id` or use an expression like `device_id('sensor.envoy_123456789012_current_power_production')`",
+          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. Select an Envoy from the dropdown list.",
           "name": "Envoy device ID"
         }
       },
