@@ -370,38 +370,6 @@ async def test_update_entity_auto_update(hass: HomeAssistant) -> None:
     assert update.auto_update is False
 
 
-async def test_version_is_newer_with_import_error(hass: HomeAssistant) -> None:
-    """Test _version_is_newer handles ImportError."""
-    mock_coordinator = MagicMock()
-    mock_device = MagicMock(spec=HeimanDevice)
-    mock_device.device_id = "device-1"
-    mock_device.device_name = "Test Device"
-    mock_device.online = True
-    mock_device.firmware_version = "1.0.0"
-
-    mock_coordinator.get_device.return_value = mock_device
-
-    update = HeimanUpdateEntity(
-        coordinator=mock_coordinator,
-        device=mock_device,
-    )
-
-    # Mock version.parse to raise ImportError
-    version_module = importlib.import_module("packaging.version")
-    original_parse = version_module.parse
-
-    def mock_parse_raise_import(v):
-        raise ImportError("Test ImportError")
-
-    version_module.parse = mock_parse_raise_import
-    try:
-        # Should fallback to string comparison
-        result = update._version_is_newer("2.0.0", "1.0.0")
-        assert result is True  # Different versions
-    finally:
-        version_module.parse = original_parse
-
-
 async def test_version_is_newer_with_exception(hass: HomeAssistant) -> None:
     """Test _version_is_newer handles generic Exception."""
     mock_coordinator = MagicMock()

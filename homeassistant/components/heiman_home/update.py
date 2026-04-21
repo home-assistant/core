@@ -193,7 +193,12 @@ class HeimanUpdateEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], UpdateE
         # Get installed version
         installed_version = self._extract_firmware_version(device)
         if installed_version:
-            self._attr_installed_version = installed_version
+            # Only update if there's no better version
+            if (
+                not self._attr_installed_version
+                or self._attr_installed_version == "unknown"
+            ):
+                self._attr_installed_version = installed_version
 
         # Try to get latest version from coordinator (if supported in future)
         # pylint: disable=fixme

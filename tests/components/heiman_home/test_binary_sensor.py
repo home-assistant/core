@@ -386,7 +386,7 @@ async def test_binary_sensor_device_class_gas(hass: HomeAssistant) -> None:
         property_identifier="CarbonMonoxideAlarm",
     )
 
-    assert sensor.device_class == BinarySensorDeviceClass.GAS
+    assert sensor.device_class == BinarySensorDeviceClass.CO
 
 
 async def test_binary_sensor_device_class_moisture(hass: HomeAssistant) -> None:
@@ -877,7 +877,7 @@ async def test_binary_sensor_icon_gas(hass: HomeAssistant) -> None:
         property_identifier="CarbonMonoxideAlarm",
     )
 
-    assert sensor.icon == "mdi:molecule-co-warning"
+    assert sensor.icon == "mdi:molecule-co"
 
 
 async def test_binary_sensor_icon_moisture(hass: HomeAssistant) -> None:

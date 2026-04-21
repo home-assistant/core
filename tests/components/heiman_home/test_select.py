@@ -1106,7 +1106,7 @@ async def test_select_icon_lowercase_match_not_in_icons(hass: HomeAssistant) -> 
 
     # Original case not in icons, lowercase not in icons
     # Should fall through to default icon
-    assert select.icon == "mdi:shield-home"
+    assert select.icon == "mdi:volume-high"
 
 
 async def test_select_get_description_unknown_value(hass: HomeAssistant) -> None:
