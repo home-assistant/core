@@ -7,6 +7,7 @@ from typing import Any
 from waterfurnace.waterfurnace import WFException
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -163,6 +164,8 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature(s)."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_set_hvac_mode(hvac_mode)
         try:
             if (low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None and (
                 high := kwargs.get(ATTR_TARGET_TEMP_HIGH)

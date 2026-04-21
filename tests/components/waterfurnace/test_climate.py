@@ -325,3 +325,25 @@ async def test_set_humidity_error(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HUMIDITY: 50},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("init_climate")
+async def test_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+) -> None:
+    """Test that ATTR_HVAC_MODE in set_temperature switches mode first."""
+    # Fixture default is activemode=3 (Heat); send cool mode + temperature
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_TEMPERATURE: 24,
+            ATTR_HVAC_MODE: HVACMode.COOL,
+        },
+        blocking=True,
+    )
+    mock_waterfurnace_client.set_mode.assert_called_once_with(2)
+    mock_waterfurnace_client.set_cooling_setpoint.assert_called_once()
+    mock_waterfurnace_client.set_heating_setpoint.assert_not_called()
