@@ -11,6 +11,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "dhcp_confirm": {
+        "data": {
+          "pin": "[%key:component::fumis::config::step::user::data::pin%]"
+        },
+        "data_description": {
+          "pin": "[%key:component::fumis::config::step::user::data_description::pin%]"
+        },
+        "description": "A Fumis WiRCU Wi-Fi module was discovered on your network. Enter the PIN code from the label on the module to set up your pellet stove."
+      },
       "reauth_confirm": {
         "data": {
           "pin": "[%key:component::fumis::config::step::user::data::pin%]"
