@@ -200,6 +200,12 @@
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
     },
+    "invalid_directory_path": {
+      "message": "Invalid directory path: {directory_path}. The path must not contain `~` or `..`."
+    },
+    "invalid_file_name": {
+      "message": "Invalid file name: {file_name}. The file name must not contain `~`, `..`, `/` or `\\`."
+    },
     "invalid_inline_keyboard": {
       "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
     },

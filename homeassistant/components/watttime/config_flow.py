@@ -9,12 +9,7 @@ from aiowatttime import Client
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -31,6 +26,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import WattTimeConfigEntry
 
 CONF_LOCATION_TYPE = "location_type"
 
@@ -127,7 +123,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: WattTimeConfigEntry,
     ) -> WattTimeOptionsFlowHandler:
         """Define the config flow to handle options."""
         return WattTimeOptionsFlowHandler()

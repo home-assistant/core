@@ -66,8 +66,14 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: >-
+      The integration has no actionable repair scenarios. Connection failures are
+      handled by the coordinator (unavailable entities) and resolve automatically.
+      There are no credentials to expire and no versioned API to become
+      incompatible with.
   stale-devices:
     status: todo
     comment: >-
