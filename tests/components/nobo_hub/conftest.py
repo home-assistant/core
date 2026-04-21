@@ -1,17 +1,18 @@
 """Common fixtures for the Nobø Ecohub tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pynobo import nobo as pynobo_nobo
 import pytest
 
+from homeassistant.components.nobo_hub import PLATFORMS
 from homeassistant.components.nobo_hub.const import (
     CONF_AUTO_DISCOVERED,
     CONF_SERIAL,
     DOMAIN,
 )
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -38,72 +39,28 @@ def mock_unload_entry() -> Generator[AsyncMock]:
         yield mock_unload_entry
 
 
-def make_hub_mock(*, connect_exc: BaseException | None = None) -> MagicMock:
-    """Build a mock pynobo.nobo instance with one zone, component, and profile."""
-    hub = MagicMock()
-    hub.connect = AsyncMock(side_effect=connect_exc)
-    hub.start = AsyncMock()
-    hub.stop = AsyncMock()
-    hub.close = AsyncMock()
-    hub.async_create_override = AsyncMock()
-    hub.async_update_zone = AsyncMock()
-
-    hub.hub_serial = SERIAL
-    hub.hub_info = {
-        "name": "My Eco Hub",
-        "serial": SERIAL,
-        "software_version": "115",
-        "hardware_version": "hw",
-    }
-    hub.zones = {
-        "1": {
-            "zone_id": "1",
-            "name": "Living room",
-            "week_profile_id": "0",
-            "temp_comfort_c": "21",
-            "temp_eco_c": "17",
-        },
-    }
-    model = MagicMock()
-    # Direct assignment overrides MagicMock's auto-attr for `.name`.
-    model.name = "Panel heater"
-    model.has_temp_sensor = True
-    hub.components = {
-        "200000059091": {
-            "serial": "200000059091",
-            "name": "Floor sensor",
-            "zone_id": "1",
-            "model": model,
-        },
-    }
-    hub.week_profiles = {
-        "0": {"week_profile_id": "0", "name": "Default", "profile": "00000"},
-    }
-    hub.overrides = {
-        "988": {
-            "mode": pynobo_nobo.API.OVERRIDE_MODE_NORMAL,
-            "target_type": pynobo_nobo.API.OVERRIDE_TARGET_GLOBAL,
-            "target_id": "-1",
-        },
-    }
-    hub.temperatures = {"200000059091": "21.5"}
-
-    # State lookups
-    hub.get_current_zone_mode = MagicMock(return_value=pynobo_nobo.API.NAME_COMFORT)
-    hub.get_zone_override_mode = MagicMock(return_value=pynobo_nobo.API.NAME_NORMAL)
-    hub.get_current_zone_temperature = MagicMock(return_value="20.5")
-    hub.get_current_component_temperature = MagicMock(return_value="21.5")
-    return hub
+@pytest.fixture
+def ip_address() -> str:
+    """Return the stored IP address for the config entry."""
+    return STORED_IP
 
 
-def make_entry(
-    hass: HomeAssistant,
-    *,
-    auto_discovered: bool = False,
-    ip_address: str = STORED_IP,
-) -> MockConfigEntry:
-    """Build a mock config entry for Nobø Ecohub and add it to hass."""
-    entry = MockConfigEntry(
+@pytest.fixture
+def auto_discovered() -> bool:
+    """Return whether the config entry was auto-discovered."""
+    return False
+
+
+@pytest.fixture
+def connect_exc() -> BaseException | None:
+    """Exception to raise from hub.connect(), or None for success."""
+    return None
+
+
+@pytest.fixture
+def mock_config_entry(ip_address: str, auto_discovered: bool) -> MockConfigEntry:
+    """Return a mock Nobø Ecohub config entry."""
+    return MockConfigEntry(
         domain=DOMAIN,
         title="My Eco Hub",
         unique_id=SERIAL,
@@ -113,20 +70,89 @@ def make_entry(
             CONF_AUTO_DISCOVERED: auto_discovered,
         },
     )
-    entry.add_to_hass(hass)
-    return entry
 
 
 @pytest.fixture
-async def integration_setup(
+def mock_nobo_class(
+    connect_exc: BaseException | None,
+) -> Generator[MagicMock]:
+    """Patch pynobo.nobo; the class mock's return_value is a populated hub."""
+    with patch("homeassistant.components.nobo_hub.nobo", autospec=True) as mock_cls:
+        hub = mock_cls.return_value
+        if connect_exc is not None:
+            hub.connect.side_effect = connect_exc
+
+        hub.hub_serial = SERIAL
+        hub.hub_info = {
+            "name": "My Eco Hub",
+            "serial": SERIAL,
+            "software_version": "115",
+            "hardware_version": "hw",
+        }
+        hub.zones = {
+            "1": {
+                "zone_id": "1",
+                "name": "Living room",
+                "week_profile_id": "0",
+                "temp_comfort_c": "21",
+                "temp_eco_c": "17",
+            },
+        }
+        model = MagicMock()
+        # Direct assignment overrides MagicMock's auto-attr for `.name`.
+        model.name = "Panel heater"
+        model.has_temp_sensor = True
+        hub.components = {
+            "200000059091": {
+                "serial": "200000059091",
+                "name": "Floor sensor",
+                "zone_id": "1",
+                "model": model,
+            },
+        }
+        hub.week_profiles = {
+            "0": {"week_profile_id": "0", "name": "Default", "profile": "00000"},
+        }
+        hub.overrides = {
+            "988": {
+                "mode": pynobo_nobo.API.OVERRIDE_MODE_NORMAL,
+                "target_type": pynobo_nobo.API.OVERRIDE_TARGET_GLOBAL,
+                "target_id": "-1",
+            },
+        }
+        hub.temperatures = {"200000059091": "21.5"}
+
+        hub.get_current_zone_mode.return_value = pynobo_nobo.API.NAME_COMFORT
+        hub.get_zone_override_mode.return_value = pynobo_nobo.API.NAME_NORMAL
+        hub.get_current_zone_temperature.return_value = "20.5"
+        hub.get_current_component_temperature.return_value = "21.5"
+
+        mock_cls.async_discover_hubs.return_value = set()
+        yield mock_cls
+
+
+@pytest.fixture
+def mock_nobo_hub(mock_nobo_class: MagicMock) -> MagicMock:
+    """Return the pre-configured pynobo hub instance."""
+    return mock_nobo_class.return_value
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Return the platforms to set up (default: the integration's full list)."""
+    return PLATFORMS
+
+
+@pytest.fixture
+async def init_integration(
     hass: HomeAssistant,
-) -> AsyncGenerator[tuple[MockConfigEntry, MagicMock]]:
-    """Set up the integration with a fully-mocked hub and sample data."""
-    entry = make_entry(hass, auto_discovered=False)
-    hub = make_hub_mock()
-    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
-        mock_cls.return_value = hub
-        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry: MockConfigEntry,
+    mock_nobo_class: MagicMock,
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up the Nobø Ecohub integration."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.nobo_hub.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield entry, hub
+    return mock_config_entry
