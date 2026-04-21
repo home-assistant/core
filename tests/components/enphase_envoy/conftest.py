@@ -56,7 +56,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: dict[str, Any],
     request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
