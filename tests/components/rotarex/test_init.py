@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.rotarex.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

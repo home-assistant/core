@@ -3,9 +3,10 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from rotarex_dimes_srg_api import InvalidAuth
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from rotarex_dimes_srg_api import InvalidAuth
 
 from tests.common import MockConfigEntry
 
