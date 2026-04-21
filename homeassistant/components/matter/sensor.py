@@ -282,6 +282,18 @@ class MatterSensor(MatterEntity, SensorEntity):
         self._attr_native_value = value
 
 
+type ConcentrationMeasurementCluster = (
+    clusters.CarbonDioxideConcentrationMeasurement
+    | clusters.CarbonMonoxideConcentrationMeasurement
+    | clusters.NitrogenDioxideConcentrationMeasurement
+    | clusters.OzoneConcentrationMeasurement
+    | clusters.Pm1ConcentrationMeasurement
+    | clusters.Pm25ConcentrationMeasurement
+    | clusters.Pm10ConcentrationMeasurement
+    | clusters.RadonConcentrationMeasurement
+    | clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement
+)
+
 # Matter MeasurementUnitEnum -> HA unit of measurement
 # The enum and attribute ID are shared across all concentration measurement clusters.
 _MU = clusters.CarbonDioxideConcentrationMeasurement.Enums.MeasurementUnitEnum
@@ -301,22 +313,18 @@ class MatterConcentrationSensor(MatterSensor):
     """Representation of a Matter concentration measurement sensor.
 
     Reads the MeasurementUnit attribute to dynamically set the unit of measurement.
-    Falls back to the statically defined unit when MeasurementUnit is not available.
-
-    Expected attributes_to_watch order:
-      [0] MeasuredValue (the only required_attributes entry)
-      [1] MeasurementUnit (must be first in optional_attributes)
+    Falls back to the statically defined unit when the device does not report
+    MeasurementUnit.
     """
 
     @property
     def matter_measurement_unit(self) -> int | None:
-        """Return the MeasurementUnit value from the device, if available."""
-        if len(self._entity_info.attributes_to_watch) > 1:
-            value: int | None = self.get_matter_attribute_value(
-                self._entity_info.attributes_to_watch[1]
-            )
-            return value
-        return None
+        """Return the MeasurementUnit value from the device, if reported."""
+        cluster: ConcentrationMeasurementCluster = self._endpoint.get_cluster(
+            self._entity_info.primary_attribute.cluster_id
+        )
+        value: int | None = cluster.measurementUnit
+        return value
 
     @callback
     def _update_from_device(self) -> None:
@@ -346,8 +354,6 @@ class MatterTVOCConcentrationSensor(MatterConcentrationSensor):
     Extends MatterConcentrationSensor to also set the device class based on
     the MeasurementUnit, since TVOC uses different device classes depending
     on whether the unit is mass-based or parts-based.
-
-    Expected attributes_to_watch order: see MatterConcentrationSensor.
     """
 
     @callback
