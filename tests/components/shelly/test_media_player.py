@@ -27,8 +27,8 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
 )
 from homeassistant.components.shelly.media_player import (
-    CONTENT_TYPE_LOCAL_AUDIO,
-    CONTENT_TYPE_LOCAL_RADIO,
+    CONTENT_TYPE_AUDIO,
+    CONTENT_TYPE_RADIO,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -42,6 +42,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, patch_platforms
+
+from tests.typing import WebSocketGenerator
 
 ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.test_name"
 
@@ -242,7 +244,7 @@ async def test_rpc_media_player_actions(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_LOCAL_AUDIO,
+            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_AUDIO,
             ATTR_MEDIA_CONTENT_ID: "12",
         },
         blocking=True,
@@ -255,7 +257,7 @@ async def test_rpc_media_player_actions(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_LOCAL_RADIO,
+            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_RADIO,
             ATTR_MEDIA_CONTENT_ID: "2",
         },
         blocking=True,
@@ -284,7 +286,7 @@ async def test_rpc_media_player_play_media_errors(
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_LOCAL_RADIO,
+                ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_RADIO,
                 ATTR_MEDIA_CONTENT_ID: "invalid",
             },
             blocking=True,
@@ -303,3 +305,42 @@ async def test_rpc_media_player_play_media_errors(
             },
             blocking=True,
         )
+
+
+async def test_rpc_media_player_browse_media_root(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test Shelly media player browse media root."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["title"] == "Shelly"
+    assert msg["result"]["media_class"] == "directory"
+    assert msg["result"]["media_content_type"] == "shelly"
+    assert msg["result"]["media_content_id"] == ""
+    assert [child["title"] for child in msg["result"]["children"]] == [
+        "Radio stations",
+        "Audio files",
+    ]
+    assert [child["media_content_type"] for child in msg["result"]["children"]] == [
+        CONTENT_TYPE_RADIO,
+        CONTENT_TYPE_AUDIO,
+    ]
