@@ -33,7 +33,6 @@ def hassio_user_client(
 @pytest.mark.parametrize(
     "path",
     [
-        "app/entrypoint.js",
         "addons/bl_b392/logo",
         "addons/bl_b392/icon",
     ],
@@ -57,12 +56,12 @@ async def test_forward_request_onboarded_user_get(
     assert aioclient_mock.mock_calls[0][3] == {"X-Hass-Source": "core.http"}
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_onboarded_user_unallowed_methods(
     hassio_user_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_user_client.post("/api/hassio/app/entrypoint.js")
+    resp = await hassio_user_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
@@ -75,10 +74,7 @@ async def test_forward_request_onboarded_user_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
-        # The .. is processed, making it an unauthenticated path
-        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
-        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/%252E./icon", HTTPStatus.BAD_REQUEST),
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
@@ -105,7 +101,6 @@ async def test_forward_request_onboarded_user_unallowed_paths(
 @pytest.mark.parametrize(
     "path",
     [
-        "app/entrypoint.js",
         "addons/bl_b392/logo",
         "addons/bl_b392/icon",
     ],
@@ -129,12 +124,12 @@ async def test_forward_request_onboarded_noauth_get(
     assert aioclient_mock.mock_calls[0][3] == {"X-Hass-Source": "core.http"}
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_onboarded_noauth_unallowed_methods(
     hassio_noauth_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_noauth_client.post("/api/hassio/app/entrypoint.js")
+    resp = await hassio_noauth_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
@@ -147,10 +142,7 @@ async def test_forward_request_onboarded_noauth_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
-        # The .. is processed, making it an unauthenticated path
-        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
-        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/%252E./icon", HTTPStatus.BAD_REQUEST),
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
@@ -177,7 +169,6 @@ async def test_forward_request_onboarded_noauth_unallowed_paths(
 @pytest.mark.parametrize(
     ("path", "authenticated"),
     [
-        ("app/entrypoint.js", False),
         ("addons/bl_b392/logo", False),
         ("addons/bl_b392/icon", False),
         ("backups/1234abcd/info", True),
@@ -244,12 +235,12 @@ async def test_forward_request_not_onboarded_post(
     }
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_not_onboarded_unallowed_methods(
     hassio_noauth_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_noauth_client.post("/api/hassio/app/entrypoint.js")
+    resp = await hassio_noauth_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
@@ -262,10 +253,7 @@ async def test_forward_request_not_onboarded_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
-        # The .. is processed, making it an unauthenticated path
-        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
-        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/%252E./icon", HTTPStatus.BAD_REQUEST),
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
@@ -293,7 +281,6 @@ async def test_forward_request_not_onboarded_unallowed_paths(
 @pytest.mark.parametrize(
     ("path", "authenticated"),
     [
-        ("app/entrypoint.js", False),
         ("addons/bl_b392/logo", False),
         ("addons/bl_b392/icon", False),
         ("backups/1234abcd/info", True),
@@ -364,12 +351,12 @@ async def test_forward_request_admin_post(
     }
 
 
-@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE", "RANDOM"])
+@pytest.mark.parametrize("method", ["POST", "PUT", "DELETE"])
 async def test_forward_request_admin_unallowed_methods(
     hassio_client: TestClient, aioclient_mock: AiohttpClientMocker, method: str
 ) -> None:
     """Test fetching normal path."""
-    resp = await hassio_client.post("/api/hassio/app/entrypoint.js")
+    resp = await hassio_client.request(method, "/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == HTTPStatus.METHOD_NOT_ALLOWED
@@ -382,10 +369,7 @@ async def test_forward_request_admin_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
-        # The .. is processed, making it an unauthenticated path
-        ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
-        ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/%252E./icon", HTTPStatus.BAD_REQUEST),
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
     ],
@@ -409,9 +393,9 @@ async def test_bad_gateway_when_cannot_find_supervisor(
     hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we get a bad gateway error if we can't find supervisor."""
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js", exc=TimeoutError)
+    aioclient_mock.get("http://127.0.0.1/addons/bl_b392/icon", exc=TimeoutError)
 
-    resp = await hassio_client.get("/api/hassio/app/entrypoint.js")
+    resp = await hassio_client.get("/api/hassio/addons/bl_b392/icon")
     assert resp.status == HTTPStatus.BAD_GATEWAY
 
 
@@ -478,30 +462,10 @@ async def test_simple_get_no_stream(
     hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Verify that a simple GET request is not a stream."""
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
-    resp = await hassio_client.get("/api/hassio/app/entrypoint.js")
+    aioclient_mock.get("http://127.0.0.1/addons/bl_b392/icon")
+    resp = await hassio_client.get("/api/hassio/addons/bl_b392/icon")
     assert resp.status == HTTPStatus.OK
     assert aioclient_mock.mock_calls[-1][2] is None
-
-
-async def test_entrypoint_cache_control(
-    hassio_client: TestClient, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that we return cache control for requests to the entrypoint only."""
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.js")
-    aioclient_mock.get("http://127.0.0.1/app/entrypoint.fdhkusd8y43r.js")
-
-    resp1 = await hassio_client.get("/api/hassio/app/entrypoint.js")
-    resp2 = await hassio_client.get("/api/hassio/app/entrypoint.fdhkusd8y43r.js")
-
-    # Check we got right response
-    assert resp1.status == HTTPStatus.OK
-    assert resp2.status == HTTPStatus.OK
-
-    assert len(aioclient_mock.mock_calls) == 2
-    assert resp1.headers["Cache-Control"] == "no-store, max-age=0"
-
-    assert "Cache-Control" not in resp2.headers
 
 
 async def test_no_follow_logs_compress(
@@ -533,16 +497,16 @@ async def test_no_event_stream_compress(
 ) -> None:
     """Test that we do not compress SSE (Server-Sent Events) streams."""
     aioclient_mock.get(
-        "http://127.0.0.1/app/events",
+        "http://127.0.0.1/backups/1234abcd/info",
         headers={"Content-Type": "text/event-stream"},
     )
     aioclient_mock.get(
-        "http://127.0.0.1/app/data",
+        "http://127.0.0.1/addons/bl_b392/changelog",
         headers={"Content-Type": "application/json"},
     )
 
-    resp1 = await hassio_client.get("/api/hassio/app/events")
-    resp2 = await hassio_client.get("/api/hassio/app/data")
+    resp1 = await hassio_client.get("/api/hassio/backups/1234abcd/info")
+    resp2 = await hassio_client.get("/api/hassio/addons/bl_b392/changelog")
 
     # Check we got right response
     assert resp1.status == HTTPStatus.OK
