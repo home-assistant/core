@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 from .coordinator import (
+    WeatherFlowCloudConfigEntry,
     WeatherFlowCloudUpdateCoordinatorREST,
+    WeatherFlowCoordinators,
     WeatherFlowObservationCoordinator,
     WeatherFlowWindCoordinator,
 )
@@ -23,16 +23,9 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 
 
-@dataclass
-class WeatherFlowCoordinators:
-    """Data Class for Entry Data."""
-
-    rest: WeatherFlowCloudUpdateCoordinatorREST
-    wind: WeatherFlowWindCoordinator
-    observation: WeatherFlowObservationCoordinator
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: WeatherFlowCloudConfigEntry
+) -> bool:
     """Set up WeatherFlowCloud from a config entry."""
 
     LOGGER.debug("Initializing WeatherFlowCloudDataUpdateCoordinatorREST coordinator")
@@ -82,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         websocket_observation_coordinator.async_setup(),
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WeatherFlowCoordinators(
+    entry.runtime_data = WeatherFlowCoordinators(
         rest_data_coordinator,
         websocket_wind_coordinator,
         websocket_observation_coordinator,
@@ -100,10 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: WeatherFlowCloudConfigEntry
+) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

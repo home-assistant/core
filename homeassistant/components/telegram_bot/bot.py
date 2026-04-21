@@ -48,6 +48,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
 from .const import (
@@ -1052,8 +1053,28 @@ class TelegramNotificationService:
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
         """Download a file from Telegram."""
-        if not directory_path:
+        if directory_path:
+            try:
+                raise_if_invalid_path(directory_path)
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_directory_path",
+                    translation_placeholders={"directory_path": directory_path},
+                ) from err
+        else:
             directory_path = self.hass.config.path(DOMAIN)
+
+        if file_name:
+            try:
+                raise_if_invalid_filename(file_name)
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_file_name",
+                    translation_placeholders={"file_name": file_name},
+                ) from err
+
         file: File = await self._send_msg(
             self.bot.get_file,
             None,

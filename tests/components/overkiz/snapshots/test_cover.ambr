@@ -971,6 +971,60 @@
     'state': 'closed',
   })
 # ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.bedroom_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bedroom_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/9337336',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.bedroom_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'window',
+      'friendly_name': 'Bedroom Window',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bedroom_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.dining_room_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1019,6 +1073,60 @@
     }),
     'context': <ANY>,
     'entity_id': 'cover.dining_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_gate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.garden_gate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/877679',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][cover.garden_gate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 50,
+      'device_class': 'gate',
+      'friendly_name': 'Garden Gate',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.garden_gate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2979,6 +3087,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-5678-3293/16757362',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.living_room_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'curtain',
+      'friendly_name': 'Living Room Curtain',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_cover_entities_snapshot[local_somfy_tahoma_v2_europe.json][cover.office_screen-entry]

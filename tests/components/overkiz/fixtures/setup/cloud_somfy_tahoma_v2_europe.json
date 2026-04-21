@@ -6814,6 +6814,562 @@
       "type": 1,
       "oid": "ba5edf20-6a18-43a5-844b-3e59ef73ddfd",
       "uiClass": "MusicPlayer"
+    },
+    {
+      "creationTime": 1654894301000,
+      "lastUpdateTime": 1654894301000,
+      "label": "Bedroom Window",
+      "deviceURL": "io://1234-1234-6233/9337336",
+      "shortcut": false,
+      "controllableName": "io:WindowOpenerVeluxIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "PositionableTiltedWindow",
+        "uiProfiles": [
+          "StatefulCloseableWindow",
+          "StatefulCloseable",
+          "Closeable",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "Window",
+        "qualifiedName": "io:WindowOpenerVeluxIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Bedroom Window"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 3,
+          "value": "[]",
+          "lastUpdateTime": 1698677297000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 90.0
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "VELUX"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "00000000000000000035"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "type": 1,
+      "widget": "PositionableTiltedWindow",
+      "oid": "23169b01-4f7c-4b19-8f56-1b3c01a764d3",
+      "uiClass": "Window"
+    },
+    {
+      "creationTime": 1654894302000,
+      "lastUpdateTime": 1654894302000,
+      "label": "Garden Gate",
+      "deviceURL": "io://1234-1234-6233/877679",
+      "shortcut": false,
+      "controllableName": "io:DiscreteGateOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPedestrianPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPedestrianPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AdditionalStatusState"
+          },
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerDiagnosticsState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerSettingsState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "pedestrian", "unknown"],
+            "qualifiedName": "core:OpenClosedPedestrianState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PedestrianPositionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DiscreteGateWithPedestrianPosition",
+        "uiProfiles": ["OpenCloseGateOpener", "OpenClose"],
+        "uiClass": "Gate",
+        "qualifiedName": "io:DiscreteGateOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Garden Gate"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 3,
+          "value": "[]",
+          "lastUpdateTime": 1698677297000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 56.0
+        },
+        {
+          "name": "core:OpenClosedPedestrianState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:PedestrianPositionState",
+          "type": 1,
+          "value": 50
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_up",
+            "dead_man_down",
+            "dead_man_stop",
+            "dead_man_impulse_up",
+            "dead_man_impulse_down",
+            "enter_settings_mode",
+            "start_autolearning",
+            "eject_from_setting_mode",
+            "set_cells_activation",
+            "calibrate_bus_cells",
+            "invert_rotation",
+            "set_mode_user_total",
+            "set_close_tempo_total_mode",
+            "set_mode_user_partial",
+            "set_close_short_tempo_partial_mode",
+            "set_close_long_tempo_partial_mode",
+            "set_programmable_safety_input",
+            "set_programmable_safety_input_function",
+            "set_programmable_safety_input_action",
+            "set_wired_control",
+            "set_orange_light_prelighting",
+            "set_area_lighting_activation",
+            "set_area_lighting_tempo",
+            "set_auxiliary_control_activation",
+            "set_auxiliary_control_tempo",
+            "set_lock_output",
+            "set_cruising_speed_type_opening",
+            "set_docking_area_type_in_opening",
+            "set_cruising_speed_type_closing",
+            "set_docking_area_type_in_closing",
+            "set_docking_area_speed_opening",
+            "set_docking_area_speed_closing",
+            "set_motor_shift_in_closing",
+            "set_motor_shift_in_opening",
+            "set_lock_release",
+            "set_additional_thrust_in_closing",
+            "set_motor1_closing_torque_limitation",
+            "set_motor1_opening_torque_limitation",
+            "set_motor1_closing_slowdown_torque_limitation",
+            "set_motor1_opening_slowdown_torque_limitation",
+            "set_motor2_closing_torque_limitation",
+            "set_motor2_opening_torque_limitation",
+            "set_motor2_closing_slowdown_torque_limitation",
+            "set_motor2_opening_slowdown_torque_limitation",
+            "set_settings_lock_status",
+            "reset_actuator_settings",
+            "reset_io_1W_and_key",
+            "refresh_all_access_settings"
+          ]
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5102007G06"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "type": 1,
+      "widget": "DiscreteGateWithPedestrianPosition",
+      "oid": "6ba9b1de-8037-41d7-9150-21f7d5f49a3f",
+      "uiClass": "Gate"
     }
   ],
   "zones": [],
