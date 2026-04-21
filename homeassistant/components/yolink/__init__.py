@@ -12,6 +12,7 @@ from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
 from yolink.message_listener import MessageListener
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -63,10 +64,9 @@ class YoLinkHomeMessageListener(MessageListener):
 
     def on_message(self, device: YoLinkDevice, msg_data: dict[str, Any]) -> None:
         """On YoLink home message received."""
-        entry_data = self._entry.runtime_data
-        if not entry_data:
+        if self._entry.state is not ConfigEntryState.LOADED:
             return
-        device_coordinators = entry_data.device_coordinators
+        device_coordinators = self._entry.runtime_data.device_coordinators
         if not device_coordinators:
             return
         device_coordinator = device_coordinators.get(device.device_id)
