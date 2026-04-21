@@ -330,6 +330,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "002674*",
     },
     {
+        "domain": "iaqualink",
+        "hostname": "iaqualink-*",
+    },
+    {
         "domain": "incomfort",
         "hostname": "rfgateway",
         "macaddress": "0004A3*",

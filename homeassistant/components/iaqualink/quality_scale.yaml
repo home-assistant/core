@@ -40,8 +40,10 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info:
+    status: exempt
+    comment: This integration uses a cloud account.
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
