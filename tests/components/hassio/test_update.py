@@ -1166,9 +1166,17 @@ async def test_update_supervisor(
 
 
 async def test_update_supervisor_progress(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_info: AsyncMock,
 ) -> None:
-    """Test progress reporting for supervisor update via the update job."""
+    """Test progress reporting for a Supervisor update that was not initiated via the entity.
+
+    Covers CLI-triggered and Supervisor self-update flows: the entity must
+    show download progress from job events and stay in the installing state
+    across the Supervisor restart until the coordinator observes the new
+    installed version.
+    """
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -1227,12 +1235,41 @@ async def test_update_supervisor_progress(
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).attributes.get("update_percentage") == 50
 
+    # Job done: download finished, Supervisor is about to restart. The entity
+    # must stay in the installing state until the new version is observed.
     await client.send_json(make_job_message(progress=100, done=True))
     msg = await client.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).attributes.get("in_progress") is False
+    assert hass.states.get(entity_id).attributes.get("in_progress") is True
     assert hass.states.get(entity_id).attributes.get("update_percentage") is None
+
+    # New Supervisor comes up and fires STARTUP_COMPLETE.
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value,
+        version="1.0.1dev222",
+        update_available=False,
+    )
+    await client.send_json(
+        {
+            "id": message_id + 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "supervisor_update",
+                "update_key": "supervisor",
+                "data": {"startup": "complete"},
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=REQUEST_REFRESH_DELAY + 1)
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes.get("in_progress") is False
 
 
 async def test_update_supervisor_stays_in_progress_until_restart(

@@ -315,6 +315,12 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     def _update_job_changed(self, job: Job) -> None:
         """Process update for this entity's update job."""
         if job.done is False:
+            # Also covers updates not initiated via async_install (CLI,
+            # Supervisor self-update): capture the baseline so the installing
+            # state survives the Supervisor restart phase.
+            if not self._update_ongoing:
+                self._version_before_update = self.installed_version
+                self._update_ongoing = True
             self._attr_in_progress = True
             self._attr_update_percentage = job.progress
         else:
