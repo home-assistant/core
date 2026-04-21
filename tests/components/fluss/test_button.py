@@ -84,10 +84,13 @@ async def test_button_unavailable_when_offline(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A device whose status call fails is reported as unavailable."""
-    mock_api_client.async_get_device_status.side_effect = [
-        FlussApiClientError("device offline"),
-        {"status": {"internetConnected": True}},
-    ]
+
+    async def mock_get_device_status(device_id: str) -> dict[str, dict[str, bool]]:
+        if device_id == "2a303030sdj1":
+            raise FlussApiClientError("device offline")
+        return {"status": {"internetConnected": True}}
+
+    mock_api_client.async_get_device_status.side_effect = mock_get_device_status
 
     await setup_integration(hass, mock_config_entry)
 
