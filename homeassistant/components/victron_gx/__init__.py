@@ -74,4 +74,7 @@ async def async_remove_config_entry_device(
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove a device from the config entry if the device is no longer known."""
-    return not config_entry.runtime_data.is_device_connected(device_entry.identifiers)
+    hub: Hub | None = getattr(config_entry, "runtime_data", None)
+    if hub is None:
+        return True
+    return not hub.is_device_connected(device_entry.identifiers)
