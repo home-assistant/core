@@ -76,7 +76,7 @@
   },
   "services": {
     "token_lifetime": {
-      "service": "mdi:mdi-timer"
+      "service": "mdi:timer"
     }
   }
 }
