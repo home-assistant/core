@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_INSTALLATION_ID, CONF_SERIAL
-from .hub import VictronGxConfigEntry
+from .hub import Hub, VictronGxConfigEntry
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_SERIAL, CONF_INSTALLATION_ID}
 
@@ -18,6 +18,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: VictronGxConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    hub: Hub | None = getattr(entry, "runtime_data", None)
     return {
         "entry_data": async_redact_data(dict(entry.data), TO_REDACT),
+        "devices": hub.get_diagnostics_data() if hub is not None else {},
     }

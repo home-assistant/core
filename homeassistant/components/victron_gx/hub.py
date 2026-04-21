@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from enum import Enum
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
     AuthenticationError,
@@ -139,6 +140,31 @@ class Hub:
         if device.unique_id != "system_0":
             device_info["via_device"] = (DOMAIN, f"{installation_id}_system_0")
         return device_info
+
+    def get_diagnostics_data(self) -> dict[str, Any]:
+        """Return diagnostics data for the hub's device and entity tree."""
+        return {
+            device_id: {
+                "name": device.name,
+                "model": device.model,
+                "manufacturer": device.manufacturer,
+                "firmware_version": device.firmware_version,
+                "device_type": device.device_type.string,
+                "metrics": {
+                    metric.short_id: {
+                        "name": metric.name,
+                        "value": metric.value
+                        if not isinstance(metric.value, Enum)
+                        else metric.value.name,
+                        "unit": metric.unit_of_measurement,
+                        "kind": metric.metric_kind.name,
+                        "type": metric.metric_type.name,
+                    }
+                    for metric in device.metrics
+                },
+            }
+            for device_id, device in self._hub.devices.items()
+        }
 
     def register_new_metric_callback(
         self, kind: MetricKind, new_metric_callback: NewMetricCallback

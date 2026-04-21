@@ -1,6 +1,24 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'devices': dict({
+      'battery_0': dict({
+        'device_type': 'Battery',
+        'firmware_version': None,
+        'manufacturer': None,
+        'metrics': dict({
+          'battery_current': dict({
+            'kind': 'SENSOR',
+            'name': 'DC bus current',
+            'type': 'CURRENT',
+            'unit': 'A',
+            'value': 10.5,
+          }),
+        }),
+        'model': None,
+        'name': 'Battery',
+      }),
+    }),
     'entry_data': dict({
       'host': '**REDACTED**',
       'installation_id': '**REDACTED**',
