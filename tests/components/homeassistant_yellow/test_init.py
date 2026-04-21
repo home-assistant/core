@@ -197,7 +197,7 @@ async def test_contributes_radio_serial_port(
                 device="/dev/ttyAMA1",
                 serial_number=None,
                 manufacturer="Nabu Casa",
-                description="Yellow Radio",
+                description="Yellow Zigbee Radio",
             )
         ]
 
