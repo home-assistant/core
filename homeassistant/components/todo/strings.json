@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type"
   },
   "conditions": {
@@ -9,6 +10,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::todo::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::todo::common::condition_for_name%]"
         }
       },
       "name": "All to-do items completed"

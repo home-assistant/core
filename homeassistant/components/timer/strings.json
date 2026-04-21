@@ -1,6 +1,7 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
   },
   "conditions": {
     "is_active": {
@@ -8,6 +9,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is active"
@@ -17,6 +21,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is idle"
@@ -26,6 +33,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::timer::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::timer::common::condition_for_name%]"
         }
       },
       "name": "Timer is paused"

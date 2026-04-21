@@ -6,13 +6,21 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from .const import DOMAIN, LawnMowerActivity
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_docked": make_entity_state_condition(DOMAIN, LawnMowerActivity.DOCKED),
-    "is_encountering_an_error": make_entity_state_condition(
-        DOMAIN, LawnMowerActivity.ERROR
+    "is_docked": make_entity_state_condition(
+        DOMAIN, LawnMowerActivity.DOCKED, support_duration=True
     ),
-    "is_mowing": make_entity_state_condition(DOMAIN, LawnMowerActivity.MOWING),
-    "is_paused": make_entity_state_condition(DOMAIN, LawnMowerActivity.PAUSED),
-    "is_returning": make_entity_state_condition(DOMAIN, LawnMowerActivity.RETURNING),
+    "is_encountering_an_error": make_entity_state_condition(
+        DOMAIN, LawnMowerActivity.ERROR, support_duration=True
+    ),
+    "is_mowing": make_entity_state_condition(
+        DOMAIN, LawnMowerActivity.MOWING, support_duration=True
+    ),
+    "is_paused": make_entity_state_condition(
+        DOMAIN, LawnMowerActivity.PAUSED, support_duration=True
+    ),
+    "is_returning": make_entity_state_condition(
+        DOMAIN, LawnMowerActivity.RETURNING, support_duration=True
+    ),
 }
 
 
