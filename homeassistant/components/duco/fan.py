@@ -64,11 +64,7 @@ async def async_setup_entry(
     """Set up Duco fan entities."""
     coordinator = entry.runtime_data
 
-    # The Duco firmware always assigns node ID 1 to the BOX, and a Duco
-    # installation always has exactly one BOX node present from the first poll
-    # (confirmed by vendor). Unlike RF sensor modules (UCCO2, BSRH), the BOX
-    # node is never added or removed after initial setup, so a static entity
-    # list is sufficient here — no coordinator listener is needed.
+    # BOX is always node 1 and is never dynamically added or removed — no listener needed.
     async_add_entities(
         DucoVentilationFanEntity(coordinator, node)
         for node in coordinator.data.nodes.values()

@@ -182,12 +182,7 @@ async def test_deregistered_node_removes_device(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a node disappearing from the API removes its device from the registry.
-
-    The Duco firmware removes deregistered RF/wired nodes from the API
-    automatically (confirmed by vendor). This test simulates an RF sensor
-    (UCCO2, node 2) being deregistered from the Duco box.
-    """
+    """Test that a node disappearing from the API removes its device from the registry."""
     device_registry = dr.async_get(hass)
 
     # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
