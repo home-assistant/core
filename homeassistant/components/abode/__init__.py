@@ -112,12 +112,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AbodeConfigEntry) -> boo
     return True
 
 
+def _shutdown_client(abode: Abode) -> None:
+    """Shutdown client."""
+    abode.events.stop()
+    abode.logout()
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: AbodeConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    await hass.async_add_executor_job(entry.runtime_data.abode.events.stop)
-    await hass.async_add_executor_job(entry.runtime_data.abode.logout)
+    await hass.async_add_executor_job(_shutdown_client, entry.runtime_data.abode)
 
     if logout_listener := entry.runtime_data.logout_listener:
         logout_listener()
