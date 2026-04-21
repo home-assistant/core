@@ -40,17 +40,11 @@ async def async_setup_entry(
         raise PlatformNotReady from exception
 
     server_id = syncthing.server_id
-    server_name = next(
-        device.get("name", server_id)
-        for device in config["devices"]
-        if device["deviceID"] == server_id
-    )
 
     entities = [
         FolderSensor(
             syncthing,
             server_id,
-            server_name,
             folder["id"],
             folder["label"],
             version["version"],
@@ -100,7 +94,6 @@ class FolderSensor(SensorEntity):
         self,
         syncthing: SyncthingClient,
         server_id: str,
-        server_name: str,
         folder_id: str,
         folder_label: str,
         version: str,
@@ -108,7 +101,6 @@ class FolderSensor(SensorEntity):
         """Initialize the sensor."""
         self._syncthing = syncthing
         self._server_id = server_id
-        self._server_name = server_name
         self._folder_id = folder_id
         self._folder_label = folder_label
         self._state: dict[str, Any] | None = None
@@ -121,7 +113,7 @@ class FolderSensor(SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._server_id)},
             manufacturer="Syncthing Team",
-            name=f"Syncthing {self._server_name}",
+            name=f"Syncthing ({syncthing.url})",
             sw_version=version,
         )
 
