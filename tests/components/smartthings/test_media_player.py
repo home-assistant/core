@@ -13,7 +13,9 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     RepeatMode,
 )
@@ -413,6 +415,40 @@ async def test_media_repeat_mode(
         Command.SET_PLAYBACK_REPEAT_MODE,
         MAIN,
         argument=argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_network_audio_002s"])
+async def test_select_sound_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test media player select sound mode command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: "media_player.soundbar_living",
+            ATTR_SOUND_MODE: "surround",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "0d94e5db-8501-2355-eb4f-214163702cac",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        argument=[
+            "/sec/networkaudio/soundmode",
+            {"x.com.samsung.networkaudio.soundmode": "surround"},
+        ],
+    )
+    assert (
+        hass.states.get("media_player.soundbar_living").attributes["sound_mode"]
+        == "surround"
     )
 
 

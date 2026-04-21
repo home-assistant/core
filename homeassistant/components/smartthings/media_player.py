@@ -27,6 +27,16 @@ MEDIA_PLAYER_CAPABILITIES = (
 
 CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
 
+OCF_NETWORK_AUDIO_DEVICE_TYPE = "oic.d.networkaudio"
+SAMSUNG_NETWORK_AUDIO_SOUND_MODE_PATH = "/sec/networkaudio/soundmode"
+SAMSUNG_NETWORK_AUDIO_SOUND_MODE_KEY = "x.com.samsung.networkaudio.soundmode"
+SAMSUNG_NETWORK_AUDIO_SOUND_MODES = [
+    "standard",
+    "surround",
+    "game",
+    "adaptive sound",
+]
+
 DEVICE_CLASS_MAP: dict[Category | str, MediaPlayerDeviceClass] = {
     Category.NETWORK_AUDIO: MediaPlayerDeviceClass.SPEAKER,
     Category.SPEAKER: MediaPlayerDeviceClass.SPEAKER,
@@ -84,6 +94,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.AUDIO_MUTE,
                 Capability.AUDIO_TRACK_DATA,
                 Capability.AUDIO_VOLUME,
+                Capability.EXECUTE,
                 Capability.MEDIA_INPUT_SOURCE,
                 Capability.MEDIA_PLAYBACK,
                 Capability.MEDIA_PLAYBACK_REPEAT,
@@ -96,6 +107,17 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         self._attr_device_class = DEVICE_CLASS_MAP.get(
             device.device.components[MAIN].user_category
             or device.device.components[MAIN].manufacturer_category,
+        )
+        if self._supports_samsung_network_audio_sound_mode():
+            self._attr_sound_mode_list = SAMSUNG_NETWORK_AUDIO_SOUND_MODES
+
+    def _supports_samsung_network_audio_sound_mode(self) -> bool:
+        """Return True if the device is a Samsung network audio soundbar."""
+        ocf = self.device.device.ocf
+        return (
+            ocf is not None
+            and ocf.device_type == OCF_NETWORK_AUDIO_DEVICE_TYPE
+            and self.supports_capability(Capability.EXECUTE)
         )
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
@@ -128,6 +150,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
         if self.supports_capability(Capability.MEDIA_PLAYBACK_REPEAT):
             flags |= MediaPlayerEntityFeature.REPEAT_SET
+        if self._supports_samsung_network_audio_sound_mode():
+            flags |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         return flags
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -232,6 +256,19 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.SET_PLAYBACK_REPEAT_MODE,
             argument=HA_REPEAT_MODE_TO_SMARTTHINGS[repeat],
         )
+
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Select sound mode."""
+        await self.execute_device_command(
+            Capability.EXECUTE,
+            Command.EXECUTE,
+            argument=[
+                SAMSUNG_NETWORK_AUDIO_SOUND_MODE_PATH,
+                {SAMSUNG_NETWORK_AUDIO_SOUND_MODE_KEY: sound_mode},
+            ],
+        )
+        self._attr_sound_mode = sound_mode
+        self.async_write_ha_state()
 
     @property
     def media_title(self) -> str | None:
