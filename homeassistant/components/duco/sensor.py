@@ -110,20 +110,7 @@ async def async_setup_entry(
     entry: DucoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Duco sensor entities.
-
-    The Duco API dynamically reflects the current node topology (confirmed by
-    vendor):
-    - New sensor modules (UCCO2, BSRH) appear in the API automatically after
-      pairing, without requiring a box restart.
-    - Deregistered RF/wired nodes are removed from the API by the firmware.
-    - Box sensors (BSRH) that are physically disconnected from the PCB are NOT
-      considered deregistered; they remain in the API indefinitely and are
-      never reported as stale.
-
-    Node IDs are stable as long as a node remains registered. Once a node is
-    deregistered its ID may be reused for a newly paired node.
-    """
+    """Set up Duco sensor entities."""
     coordinator = entry.runtime_data
 
     # Track the node IDs for which entities have already been created, so we
