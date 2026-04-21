@@ -126,7 +126,7 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
         hass.data[DOMAIN] = {}
 
     if ACTION_COORDINATORS not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][ACTION_COORDINATORS] = dict[str, EnphaseUpdateCoordinator]()
+        hass.data[DOMAIN][ACTION_COORDINATORS] = {}
 
     # if services are already registered by another envoy don't define again
     existing = hass.services.async_services_for_domain(DOMAIN)
