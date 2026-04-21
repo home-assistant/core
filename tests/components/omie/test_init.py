@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyomie,
+    mock_pyomie: MagicMock,
 ) -> None:
     """Test setup and unload of a config entry."""
     mock_config_entry.add_to_hass(hass)
@@ -40,7 +40,7 @@ async def test_setup_and_unload_entry(
 async def test_coordinator_unavailability_logging(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_pyomie,
+    mock_pyomie: MagicMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

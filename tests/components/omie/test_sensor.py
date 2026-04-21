@@ -1,6 +1,7 @@
 """Test the OMIE sensor platform."""
 
 import datetime as dt
+from unittest.mock import MagicMock
 
 import aiohttp
 from freezegun import freeze_time
@@ -20,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_sensor_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyomie,
+    mock_pyomie: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor platform setup."""
@@ -45,9 +46,9 @@ async def test_sensor_setup(
 async def test_sensor_state_lisbon_timezone(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyomie,
-    mock_omie_results_jan15,
-    mock_omie_results_jan16,
+    mock_pyomie: MagicMock,
+    mock_omie_results_jan15: OMIEResults,
+    mock_omie_results_jan16: OMIEResults,
 ) -> None:
     """Test sensor state updates in Lisbon timezone across publication boundary."""
     mock_config_entry.add_to_hass(hass)
@@ -111,9 +112,9 @@ async def test_sensor_state_lisbon_timezone(
 async def test_sensor_state_madrid_timezone(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyomie,
-    mock_omie_results_jan15,
-    mock_omie_results_jan16,
+    mock_pyomie: MagicMock,
+    mock_omie_results_jan15: OMIEResults,
+    mock_omie_results_jan16: OMIEResults,
 ) -> None:
     """Test sensor state updates in Madrid timezone across publication boundary."""
     mock_config_entry.add_to_hass(hass)
@@ -163,9 +164,9 @@ async def test_sensor_state_madrid_timezone(
 async def test_sensor_unavailable_when_pyomie_throws(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyomie,
-    mock_omie_results_jan15,
-    raise_exc,
+    mock_pyomie: MagicMock,
+    mock_omie_results_jan15: OMIEResults,
+    raise_exc: Exception,
 ) -> None:
     """Test sensor becomes unavailable when pyomie throws."""
     mock_config_entry.add_to_hass(hass)
@@ -194,7 +195,7 @@ async def test_sensor_unavailable_when_pyomie_throws(
 async def test_sensor_unavailable_when_pyomie_returns_incomplete_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pyomie,
+    mock_pyomie: MagicMock,
 ) -> None:
     """Test sensor becomes unavailable when no data is available."""
     mock_config_entry.add_to_hass(hass)

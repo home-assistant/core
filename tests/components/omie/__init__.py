@@ -30,7 +30,7 @@ def spot_price_fetcher(spot_price_data: dict):
         for iso_date, mock_result in spot_price_data.items()
     }
 
-    async def _spot_price_fetcher(session, requested_date) -> OMIEResults:
+    async def _spot_price_fetcher(session, requested_date) -> OMIEResults | None:
         return data_by_date.get(requested_date)
 
     return _spot_price_fetcher

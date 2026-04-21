@@ -3,7 +3,7 @@
 from collections.abc import Generator
 import datetime as dt
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyomie.model import OMIEResults, SpotData
 import pytest
@@ -47,7 +47,7 @@ async def hass_madrid(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_pyomie():
+def mock_pyomie() -> Generator[MagicMock]:
     """Mock pyomie.spot_price with realistic responses."""
     with (
         patch("homeassistant.components.omie.coordinator.pyomie") as mock,

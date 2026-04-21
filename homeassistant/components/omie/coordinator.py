@@ -9,11 +9,11 @@ import logging
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
 
-from homeassistant import util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .util import CET, current_quarter_hour_cet
@@ -43,7 +43,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
 
     async def _async_update_data(self) -> OMIEResults[SpotData]:
         """Update OMIE data, fetching the current CET day."""
-        cet_today = util.dt.now().astimezone(CET).date()
+        cet_today = dt_util.now().astimezone(CET).date()
         if self.data and self.data.market_date == cet_today:
             data = self.data
         else:
@@ -54,7 +54,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
 
     def _set_update_interval(self) -> None:
         """Schedule the next refresh at the start of the next quarter-hour."""
-        now = util.dt.now()
+        now = dt_util.now()
         self.update_interval = calc_update_interval(now)
         _LOGGER.debug("Next refresh at %s", (now + self.update_interval).isoformat())
 

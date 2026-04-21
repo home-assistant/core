@@ -1,6 +1,6 @@
 """Test the OMIE - Spain and Portugal electricity prices config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
@@ -34,11 +34,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_pyomie) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, mock_pyomie: MagicMock) -> None:
     """Test we handle connection error."""
-    mock_pyomie.spot_price.side_effect = aiohttp.ClientResponseError(
-        request_info=None, history=None
-    )
+    mock_pyomie.spot_price.side_effect = aiohttp.ClientError("Connection failed")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
