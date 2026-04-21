@@ -64,6 +64,7 @@ def mock_satel() -> Generator[AsyncMock]:
         client.violated_zones = []
 
         client.connect = AsyncMock(return_value=True)
+        client.read_temperature = AsyncMock(return_value=21.5)
         client.read_temperatures = AsyncMock(return_value={1: 21.5})
         client.set_output = AsyncMock()
 

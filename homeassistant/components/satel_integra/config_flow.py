@@ -108,7 +108,11 @@ async def _async_validate_zone_temperature_sensor(
     errors: dict[str, str] = {}
 
     try:
-        if not await entry.runtime_data.client.controller.read_temperature(zone_number):
+        temperature = await entry.runtime_data.client.controller.read_temperature(
+            zone_number
+        )
+
+        if temperature is None:
             errors[CONF_ENABLE_TEMPERATURE_SENSOR] = "zone_does_not_report_temperature"
 
     except Exception:
