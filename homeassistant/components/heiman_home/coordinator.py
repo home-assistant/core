@@ -368,14 +368,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     numeric_prop_value = prop_value
 
                 device.properties[prop_id].value = (
-                    numeric_prop_value
-                    if numeric_prop_value is not None
-                    else prop_value
+                    numeric_prop_value if numeric_prop_value is not None else prop_value
                 )
                 if numeric_prop_value is not None:
-                    dbm_level_value = self._convert_dbm_to_level(
-                        numeric_prop_value
-                    )
+                    dbm_level_value = self._convert_dbm_to_level(numeric_prop_value)
                     if dbm_level_value is not None:
                         if "DeviceINFO_DBM_Level" in device.properties:
                             device.properties[
