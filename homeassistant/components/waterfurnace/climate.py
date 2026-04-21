@@ -95,7 +95,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
     def __init__(self, coordinator: WaterFurnaceCoordinator) -> None:
         """Initialize the climate entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.unit}_climate"
+        self._attr_unique_id = coordinator.unit
 
     @property
     def min_temp(self) -> float:
