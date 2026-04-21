@@ -38,6 +38,21 @@
         "description": "Enter names for the audio sources connected to your Russound system. Leave a source empty to exclude it.",
         "title": "Source Names"
       },
+      "tcp": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "description": "Enter the TCP connection details for your Russound RNET device.",
+        "title": "TCP Connection"
+      },
+      "user": {
+        "data": {
+          "type": "Connection type"
+        },
+        "description": "Select how to connect to your Russound RNET device.",
+        "title": "Connection Type"
+      },
       "zones": {
         "data": {
           "zone_1_1": "Controller 1, Zone 1",
@@ -107,21 +122,6 @@
         },
         "description": "Enter names for each zone. Leave a zone empty to exclude it.",
         "title": "Zone Names"
-      },
-      "tcp": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "description": "Enter the TCP connection details for your Russound RNET device.",
-        "title": "TCP Connection"
-      },
-      "user": {
-        "data": {
-          "type": "Connection type"
-        },
-        "description": "Select how to connect to your Russound RNET device.",
-        "title": "Connection Type"
       }
     }
   },
@@ -131,6 +131,10 @@
     }
   },
   "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring Russound RNET using YAML is being removed. A config entry already exists for this device.\n\nTo fix this issue:\n\n1. Remove the `russound_rnet` section from your `configuration.yaml` file.\n2. Restart Home Assistant.",
+      "title": "Russound RNET YAML configuration should be removed"
+    },
     "yaml_import_needed": {
       "fix_flow": {
         "abort": {
@@ -236,10 +240,6 @@
         }
       },
       "title": "Russound RNET YAML configuration needs migration"
-    },
-    "deprecated_yaml": {
-      "description": "Configuring Russound RNET using YAML is being removed. A config entry already exists for this device.\n\nTo fix this issue:\n\n1. Remove the `russound_rnet` section from your `configuration.yaml` file.\n2. Restart Home Assistant.",
-      "title": "Russound RNET YAML configuration should be removed"
     }
   },
   "options": {
