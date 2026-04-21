@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from waterfurnace.waterfurnace import WFException
@@ -23,7 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -62,6 +62,7 @@ async def test_climate_snapshot(
 async def test_hvac_mode_mapping(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
     active_mode_index: int,
     expected_hvac_mode: HVACMode,
 ) -> None:
@@ -69,7 +70,10 @@ async def test_hvac_mode_mapping(
     mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = (
         active_mode_index
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -108,12 +112,14 @@ async def test_hvac_mode_mapping(
 async def test_hvac_action_mapping(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
     mode_index: int,
     expected_action: HVACAction,
 ) -> None:
     """Test that WFReading.mode maps to the correct HVACAction."""
     mock_waterfurnace_client.read_with_retry.return_value.modeofoperation = mode_index
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -170,11 +176,13 @@ async def test_set_temperature_single_heat(
 async def test_set_temperature_single_cool(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting temperature in cool mode sets cooling setpoint."""
     # Switch to Cool mode
     mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 2
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Send 24°C; entity converts to ~75.2°F
@@ -192,11 +200,13 @@ async def test_set_temperature_single_cool(
 async def test_set_temperature_range(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting temperature range sets both setpoints."""
     # Switch to Auto mode
     mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 1
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Send 18°C low / 26°C high; entity converts to ~64.4°F / ~78.8°F
@@ -244,10 +254,12 @@ async def test_target_temperature_heat_mode(
 async def test_target_temperature_cool_mode(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test target_temperature returns cooling setpoint in cool mode."""
     mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 2
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -260,10 +272,12 @@ async def test_target_temperature_cool_mode(
 async def test_target_temperature_range_auto_mode(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test target_temperature_high/low in auto mode."""
     mock_waterfurnace_client.read_with_retry.return_value.activesettings.activemode = 1
-    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
