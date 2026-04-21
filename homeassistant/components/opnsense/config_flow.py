@@ -220,7 +220,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 ]
                 self.available_interfaces = list(known_interfaces)
                 # Verify that specified tracker interfaces are valid
-                tracker_interfaces = data[CONF_TRACKER_INTERFACES]
+                tracker_interfaces = data[CONF_TRACKER_INTERFACES].copy()
                 for intf_description in tracker_interfaces:
                     if intf_description not in known_interfaces:
                         _LOGGER.warning(
@@ -229,6 +229,10 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                             ", ".join(known_interfaces),
                         )
                         tracker_interfaces.remove(intf_description)
+                if tracker_interfaces:
+                    data[CONF_TRACKER_INTERFACES] = tracker_interfaces
+                else:
+                    data.pop(CONF_TRACKER_INTERFACES)
         return self.async_create_entry(title=import_data[CONF_URL], data=data)
 
     async def _async_check_connection(self, client: OPNsenseClient) -> None:
