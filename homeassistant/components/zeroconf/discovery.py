@@ -26,9 +26,7 @@ from homeassistant.helpers.service_info.zeroconf import (
 from homeassistant.loader import HomeKitDiscoveredIntegration, ZeroconfMatcher
 
 from .const import DOMAIN, REQUEST_TIMEOUT
-
-if TYPE_CHECKING:
-    from .models import HaZeroconf
+from .models import HaZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 
