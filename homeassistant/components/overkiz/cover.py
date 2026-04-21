@@ -125,6 +125,14 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
+    # Needs override to support this Generic device (rts:GenericRTSComponent)
+    # uiClass is Generic (not mapped to cover as this is a Generic device class)
+    OverkizCoverDescription(
+        key=UIWidget.RTS_GENERIC,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+    ),
     ##
     ## Default cover behavior (via UIClass)
     ##
