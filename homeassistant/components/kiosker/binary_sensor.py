@@ -35,9 +35,6 @@ BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
         key="blackoutState",
         translation_key="blackout_state",
         value_fn=lambda x: x.blackout.visible if x.blackout else False,
-        extra_attributes_fn=lambda x: (
-            x.blackout.__dict__ if x.blackout and x.blackout.visible else None
-        ),
     ),
     KioskerBinarySensorEntityDescription(
         key="screensaverState",
@@ -76,12 +73,3 @@ class KioskerBinarySensor(KioskerEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return extra state attributes."""
-        if self.entity_description.extra_attributes_fn is None:
-            return None
-
-        result = self.entity_description.extra_attributes_fn(self.coordinator.data)
-        return result if result is not None else None
