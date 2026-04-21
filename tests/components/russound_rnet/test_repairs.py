@@ -104,7 +104,7 @@ async def test_yaml_import_repair_flow(
     assert entry.data[CONF_PORT] == 9999
     assert entry.data[CONF_MODEL] == "cas44"
     assert entry.data[CONF_CONTROLLERS] == 1
-    assert entry.options[CONF_SOURCES] == {"1": "Sonos", "2": "TV"}
+    assert entry.data[CONF_SOURCES] == {"1": "Sonos", "2": "TV"}
     assert entry.data[CONF_ZONES] == {"1_1": "Kitchen", "1_2": "Living Room"}
 
     # Verify the import issue was deleted

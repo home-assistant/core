@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-import logging
 from typing import Any
 
 from aiorussound import RussoundTcpConnectionHandler
@@ -11,9 +10,8 @@ from aiorussound.connection import RussoundSerialConnectionHandler
 from aiorussound.rnet.client import RussoundRNETClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_PORT, CONF_TYPE
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -38,9 +36,6 @@ from .const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
-from .coordinator import RussoundRNETConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 TRANSPORT_SCHEMA = vol.Schema(
     {
@@ -90,15 +85,6 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
-        self.options: dict[str, Any] = {}
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: RussoundRNETConfigEntry,
-    ) -> RussoundRNETOptionsFlow:
-        """Return the options flow handler."""
-        return RussoundRNETOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -212,11 +198,11 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                 for i in range(1, model.max_sources + 1)
                 if (name := user_input.get(f"source_{i}", "").strip())
             }
-            self.options[CONF_SOURCES] = sources
+            self.data[CONF_SOURCES] = sources
             return await self.async_step_zones()
 
         # Pre-fill from YAML import data if available
-        existing_sources = self.options.get(CONF_SOURCES, {})
+        existing_sources = self.data.get(CONF_SOURCES, {})
         source_schema = vol.Schema(
             {
                 vol.Optional(
@@ -248,7 +234,6 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=model.name,
                 data=self.data,
-                options=self.options,
             )
 
         # Pre-fill from YAML import data if available
@@ -276,44 +261,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
 
         model_key = import_data[CONF_MODEL]
         model = RNET_MODELS[model_key]
-        options = {CONF_SOURCES: import_data.get(CONF_SOURCES, {})}
-        data = {key: value for key, value in import_data.items() if key != CONF_SOURCES}
         return self.async_create_entry(
             title=model.name,
-            data=data,
-            options=options,
+            data=import_data,
         )
-
-
-class RussoundRNETOptionsFlow(OptionsFlow):
-    """Options flow for Russound RNET — edit source names."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle options flow init."""
-        entry = self.config_entry
-        model_key = entry.data.get(CONF_MODEL, "caa66")
-        model = RNET_MODELS[model_key]
-        current_sources = entry.options.get(CONF_SOURCES, {})
-
-        if user_input is not None:
-            # Only store non-empty source names
-            new_sources = {
-                str(i): name
-                for i in range(1, model.max_sources + 1)
-                if (name := user_input.get(f"source_{i}", "").strip())
-            }
-            return self.async_create_entry(data={CONF_SOURCES: new_sources})
-
-        source_schema = vol.Schema(
-            {
-                vol.Optional(
-                    f"source_{i}",
-                    default=current_sources.get(str(i), ""),
-                ): TextSelector()
-                for i in range(1, model.max_sources + 1)
-            }
-        )
-
-        return self.async_show_form(step_id="init", data_schema=source_schema)

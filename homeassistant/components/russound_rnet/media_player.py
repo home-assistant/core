@@ -84,7 +84,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Russound RNET media player from a config entry."""
     coordinator = entry.runtime_data
-    sources = entry.options.get(CONF_SOURCES, {})
+    sources = entry.data.get(CONF_SOURCES, {})
     zones_config = entry.data.get(CONF_ZONES, {})
 
     # Build source list: only named sources, indexed by their slot number

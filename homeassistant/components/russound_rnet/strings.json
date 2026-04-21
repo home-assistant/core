@@ -242,24 +242,6 @@
       "title": "Russound RNET YAML configuration needs migration"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "source_1": "[%key:component::russound_rnet::config::step::sources::data::source_1%]",
-          "source_2": "[%key:component::russound_rnet::config::step::sources::data::source_2%]",
-          "source_3": "[%key:component::russound_rnet::config::step::sources::data::source_3%]",
-          "source_4": "[%key:component::russound_rnet::config::step::sources::data::source_4%]",
-          "source_5": "[%key:component::russound_rnet::config::step::sources::data::source_5%]",
-          "source_6": "[%key:component::russound_rnet::config::step::sources::data::source_6%]",
-          "source_7": "[%key:component::russound_rnet::config::step::sources::data::source_7%]",
-          "source_8": "[%key:component::russound_rnet::config::step::sources::data::source_8%]"
-        },
-        "description": "Edit names for the audio sources connected to your Russound system.",
-        "title": "Source Names"
-      }
-    }
-  },
   "selector": {
     "connection_type": {
       "options": {
