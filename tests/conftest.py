@@ -211,28 +211,25 @@ def pytest_runtest_setup() -> None:
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
-    def _is_allowed_host(host):
-        # Returns normalized_host for allowed hosts or IP literals
-        allowed = host in ("localhost", "127.0.0.1", "::1", None, "", "0.0.0.0", "::")
-        if allowed:
-            return host
+    def _validate_host(host):
+        if host in ("localhost", "127.0.0.1", "::1", None, "", "0.0.0.0", "::"):
+            return
         try:
             ipaddress.ip_address(host)
         except ValueError:
             raise RuntimeError("DNS resolution disabled in tests") from None
-        else:
-            return host
 
     def getaddrinfo_patched(host, *args: Any, **kwargs: Any):
-        _is_allowed_host(host)
+        _validate_host(host)
         return _real_getaddrinfo(host, *args, **kwargs)
 
     def gethostbyname_patched(host, *args, **kwargs):
-        return _is_allowed_host(host)
+        _validate_host(host)
+        return host
 
     def gethostbyname_ex_patched(host, *args, **kwargs):
-        normalized = _is_allowed_host(host)
-        return (host, [], [normalized])
+        _validate_host(host)
+        return (host, [], [host])
 
     setattr(socket, "getaddrinfo", getaddrinfo_patched)
     setattr(socket, "gethostbyname", gethostbyname_patched)
