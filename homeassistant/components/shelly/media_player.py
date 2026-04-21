@@ -100,6 +100,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
     entity_description: RpcMediaPlayerDescription
 
+    _last_media_position: int | None = None
+    _last_media_position_updated_at: datetime.datetime | None = None
+
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
@@ -177,18 +180,17 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Return the current playback position in seconds."""
-        if (position := self._media_meta.get("position")) is not None:
-            return cast(int, position) // 1000
+        if (position := self._get_updated_media_position()) is not None:
+            return position // 1000
 
         return None
 
     @property
     def media_position_updated_at(self) -> datetime.datetime | None:
         """Return when the position was last updated."""
-        if self.media_position is not None:
-            return dt_util.utcnow()
+        self._get_updated_media_position()
 
-        return None
+        return self._last_media_position_updated_at
 
     @property
     def media_image_url(self) -> str | None:
@@ -209,6 +211,20 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         if (thumb := self._media_meta.get("thumb")) and thumb.startswith("data"):
             return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
         return super().media_image_hash
+
+    def _get_updated_media_position(self) -> int | None:
+        """Return the current playback position and update its timestamp."""
+        if (position := self._media_meta.get("position")) is None:
+            self._last_media_position = None
+            self._last_media_position_updated_at = None
+            return None
+
+        current_position = cast(int, position)
+        if current_position != self._last_media_position:
+            self._last_media_position = current_position
+            self._last_media_position_updated_at = dt_util.utcnow()
+
+        return current_position
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
