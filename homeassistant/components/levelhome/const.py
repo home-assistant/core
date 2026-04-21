@@ -18,12 +18,15 @@ CONF_CONTACT_INFO = "contact_info"
 
 # ---------------------------------------------------------------------------
 # Environment-based configuration
-# Set LEVEL_ENVIRONMENT to "dev", "staging", or "production".
-# Defaults to "production" when the variable is absent.
+# Set LEVEL_ENVIRONMENT to "dev", "stage", or "production".
+# Set LEVEL_PARTNER to "joshai", "crestron", or "homeassistant" to pick the
+# OAuth2 client ID. Both default to JoshAI / production when absent.
 # ---------------------------------------------------------------------------
 
 LEVEL_ENV_VAR = "LEVEL_ENVIRONMENT"
+LEVEL_PARTNER_VAR = "LEVEL_PARTNER"
 DEFAULT_ENVIRONMENT = "production"
+DEFAULT_PARTNER = "joshai"
 
 
 class _EnvConfig(TypedDict):
@@ -32,21 +35,36 @@ class _EnvConfig(TypedDict):
     client_id: str
 
 
-ENVIRONMENTS: dict[str, _EnvConfig] = {
+_ENV_URLS: dict[str, dict[str, str]] = {
     "dev": {
         "oauth2_base_url": "https://oauth2-dev.level.co",
         "partner_base_url": "https://sidewalk-dev.level.co",
-        "client_id": "97e9b7976b48481681cb8fe79dc612504a9453688ea549b38014b9202adc5f90",
     },
     "stage": {
         "oauth2_base_url": "https://oauth2-stage.level.co",
         "partner_base_url": "https://sidewalk-stage.level.co",
-        "client_id": "deeba2a1cd67445fb4319084d76a739624134ef879d54c83aee5b23ca10abffd",
     },
     "production": {
         "oauth2_base_url": "https://oauth2.level.co",
         "partner_base_url": "https://sidewalk.level.co",
-        "client_id": "037e5006b775436499da9284d9f775da9e63f1c868b848eb9c29f788fe248f9b",
+    },
+}
+
+_PARTNER_CLIENT_IDS: dict[str, dict[str, str]] = {
+    "joshai": {
+        "dev": "97e9b7976b48481681cb8fe79dc612504a9453688ea549b38014b9202adc5f90",
+        "stage": "deeba2a1cd67445fb4319084d76a739624134ef879d54c83aee5b23ca10abffd",
+        "production": "037e5006b775436499da9284d9f775da9e63f1c868b848eb9c29f788fe248f9b",
+    },
+    "crestron": {
+        "dev": "6a1d5a61a6464f0b9f9a66fde426cf3a",
+        "stage": "acdf037503d14dba948d36ae2e68693c",
+        "production": "c22cb672451e40c0a169bf2d8e9ba583",
+    },
+    "homeassistant": {
+        "dev": "a407399f037446adb50224db85bd4b37",
+        "stage": "6638a058322d4c09908f43f1fb15173c",
+        "production": "bab5044a2222422680d1d21c188b628c",
     },
 }
 
@@ -54,17 +72,31 @@ ENVIRONMENTS: dict[str, _EnvConfig] = {
 def get_level_environment() -> str:
     """Return the active Level environment name."""
     env = os.environ.get(LEVEL_ENV_VAR, DEFAULT_ENVIRONMENT).lower()
-    if env not in ENVIRONMENTS:
+    if env not in _ENV_URLS:
         env = DEFAULT_ENVIRONMENT
     return env
 
 
+def get_level_partner() -> str:
+    """Return the active Level partner name."""
+    partner = os.environ.get(LEVEL_PARTNER_VAR, DEFAULT_PARTNER).lower()
+    if partner not in _PARTNER_CLIENT_IDS:
+        partner = DEFAULT_PARTNER
+    return partner
+
+
 def get_env_config() -> _EnvConfig:
-    """Return the configuration dict for the active environment."""
-    return ENVIRONMENTS[get_level_environment()]
+    """Return the configuration dict for the active environment and partner."""
+    env = get_level_environment()
+    partner = get_level_partner()
+    return {
+        "oauth2_base_url": _ENV_URLS[env]["oauth2_base_url"],
+        "partner_base_url": _ENV_URLS[env]["partner_base_url"],
+        "client_id": _PARTNER_CLIENT_IDS[partner][env],
+    }
 
 
-DEFAULT_PARTNER_BASE_URL = ENVIRONMENTS[DEFAULT_ENVIRONMENT]["partner_base_url"]
+DEFAULT_PARTNER_BASE_URL = _ENV_URLS[DEFAULT_ENVIRONMENT]["partner_base_url"]
 
 DEVICE_CODE_INITIATE_PATH = "/oauth2/device-code/initiate"
 DEVICE_CODE_VERIFY_PATH = "/oauth2/device-code/verify"
