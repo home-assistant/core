@@ -107,6 +107,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
+        self.options: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -203,11 +204,11 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                 for i in range(1, model.max_sources + 1)
                 if (name := user_input.get(f"source_{i}", "").strip())
             }
-            self.data[CONF_SOURCES] = sources
+            self.options[CONF_SOURCES] = sources
             return await self.async_step_zones()
 
         # Pre-fill from YAML import data if available
-        existing_sources = self.data.get(CONF_SOURCES, {})
+        existing_sources = self.options.get(CONF_SOURCES, {})
         source_schema = vol.Schema(
             {
                 vol.Optional(
@@ -238,6 +239,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=model.name,
                 data=self.data,
+                options=self.options,
             )
 
         # Pre-fill from YAML import data if available
@@ -265,9 +267,11 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
 
         model_key = import_data[CONF_MODEL]
         model = RNET_MODELS[model_key]
+        options = {CONF_SOURCES: import_data.pop(CONF_SOURCES, {})}
         return self.async_create_entry(
             title=model.name,
             data=import_data,
+            options=options,
         )
 
 
@@ -281,7 +285,7 @@ class RussoundRNETOptionsFlow(OptionsFlow):
         entry = self.config_entry
         model_key = entry.data.get(CONF_MODEL, "caa66")
         model = RNET_MODELS[model_key]
-        current_sources = entry.data.get(CONF_SOURCES, {})
+        current_sources = entry.options.get(CONF_SOURCES, {})
 
         if user_input is not None:
             # Only store non-empty source names
@@ -290,10 +294,7 @@ class RussoundRNETOptionsFlow(OptionsFlow):
                 for i in range(1, model.max_sources + 1)
                 if (name := user_input.get(f"source_{i}", "").strip())
             }
-            new_data = {**entry.data, CONF_SOURCES: new_sources}
-            self.hass.config_entries.async_update_entry(entry, data=new_data)
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_create_entry(data={})
+            return self.async_create_entry(data={CONF_SOURCES: new_sources})
 
         source_schema = vol.Schema(
             {

@@ -7,7 +7,13 @@ import pytest
 
 from homeassistant.components.russound_rnet.const import DOMAIN
 
-from .const import MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
+from .const import (
+    MOCK_SERIAL_CONFIG,
+    MOCK_SERIAL_OPTIONS,
+    MOCK_TCP_CONFIG,
+    MOCK_TCP_OPTIONS,
+    MODEL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -27,6 +33,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_TCP_CONFIG,
+        options=MOCK_TCP_OPTIONS,
         title=MODEL,
         unique_id="192.168.1.100:9999",
     )
@@ -38,6 +45,7 @@ def mock_serial_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_SERIAL_CONFIG,
+        options=MOCK_SERIAL_OPTIONS,
         title=MODEL,
         unique_id="/dev/ttyUSB0",
     )

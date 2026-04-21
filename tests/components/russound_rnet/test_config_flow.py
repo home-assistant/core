@@ -17,9 +17,11 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
     MOCK_SERIAL_CONFIG,
+    MOCK_SERIAL_OPTIONS,
     MOCK_SERIAL_STEP_INPUT,
     MOCK_SOURCES,
     MOCK_TCP_CONFIG,
+    MOCK_TCP_OPTIONS,
     MOCK_TCP_STEP_INPUT,
     MOCK_ZONES,
     MODEL,
@@ -87,6 +89,7 @@ async def test_user_flow_tcp_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CAA66"
     assert result["data"] == MOCK_TCP_CONFIG
+    assert result["options"] == MOCK_TCP_OPTIONS
     assert result["result"].unique_id == "192.168.1.100:9999"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -150,6 +153,7 @@ async def test_user_flow_serial_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CAA66"
     assert result["data"] == MOCK_SERIAL_CONFIG
+    assert result["options"] == MOCK_SERIAL_OPTIONS
     assert result["result"].unique_id == "/dev/ttyUSB0"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -299,7 +303,14 @@ async def test_import_yaml_creates_entry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CAA66"
-    assert result["data"] == import_data
+    assert result["data"] == {
+        CONF_TYPE: TYPE_TCP,
+        CONF_HOST: "192.168.1.100",
+        CONF_PORT: 9999,
+        CONF_MODEL: "caa66",
+        CONF_ZONES: {"1_1": "Kitchen", "1_2": "Living Room"},
+    }
+    assert result["options"] == {CONF_SOURCES: {"1": "Sonos", "2": "TV"}}
 
 
 async def test_import_yaml_duplicate_aborts(
@@ -351,7 +362,9 @@ async def test_options_flow_updates_sources(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    assert entry.data[CONF_SOURCES] == {str(i): f"New Source {i}" for i in range(1, 7)}
+    assert entry.options[CONF_SOURCES] == {
+        str(i): f"New Source {i}" for i in range(1, 7)
+    }
 
 
 async def test_empty_sources_and_zones_excluded(
@@ -396,5 +409,5 @@ async def test_empty_sources_and_zones_excluded(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SOURCES] == {"1": "Sonos", "3": "Radio"}
+    assert result["options"][CONF_SOURCES] == {"1": "Sonos", "3": "Radio"}
     assert result["data"][CONF_ZONES] == {"1_1": "Kitchen", "1_4": "Office"}
