@@ -83,6 +83,7 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
                 translation_key="update_failed",
             ) from err
         except Exception as err:
+            _LOGGER.exception("Unexpected error fetching Rotarex data")
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

@@ -146,14 +146,14 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
 
         # Parse dates to guarantee correct chronological ordering regardless
         # of the string format returned by the API.
-        parsed_syncs: list[tuple[RotarexSyncData, datetime]] = []
+        latest_sync: RotarexSyncData | None = None
+        latest_parsed: datetime | None = None
         for sync in tank.synch_datas:
             parsed = _parse_synch_date(sync.synch_date)
-            if parsed is not None:
-                parsed_syncs.append((sync, parsed))
+            if parsed is None:
+                continue
+            if latest_parsed is None or parsed > latest_parsed:
+                latest_sync = sync
+                latest_parsed = parsed
 
-        if not parsed_syncs:
-            return None
-
-        latest_sync, _ = max(parsed_syncs, key=lambda item: item[1])
         return latest_sync
