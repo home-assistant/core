@@ -624,6 +624,7 @@ FLOWS = {
         "rpi_power",
         "ruckus_unleashed",
         "russound_rio",
+        "russound_rnet",
         "ruuvi_gateway",
         "ruuvitag_ble",
         "rympro",
