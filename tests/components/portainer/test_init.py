@@ -311,7 +311,7 @@ async def test_docker_system_df_refresh_runs_on_ha_start(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    docker_system_df_coordinator = coordinator.docker_system_df_coordinator
+    ds_coordinator = coordinator.docker_disk_space
     endpoints = list(coordinator.data.values())
     assert endpoints
 
@@ -321,7 +321,7 @@ async def test_docker_system_df_refresh_runs_on_ha_start(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_portainer_client.docker_system_df.call_count == len(endpoints)
-    assert docker_system_df_coordinator.data
+    assert ds_coordinator.data
 
 
 async def test_new_endpoint_callback(

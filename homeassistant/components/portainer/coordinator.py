@@ -175,7 +175,7 @@ class PortainerCoordinator(
     """Data Update Coordinator for Portainer."""
 
     config_entry: PortainerConfigEntry
-    docker_system_df_coordinator: PortainerDockerSystemDFCoordinator | None = None
+    docker_disk_space: PortainerDockerDiskSpaceCoordinator | None = None
     _update_interval = DEFAULT_SCAN_INTERVAL
 
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
@@ -387,16 +387,16 @@ class PortainerCoordinator(
         return container_name.replace("/", " ").strip()
 
 
-class PortainerDockerSystemDFCoordinator(
+class PortainerDockerDiskSpaceCoordinator(
     PortainerBaseCoordinator[dict[int, DockerSystemDF]]
 ):
-    """Data Update Coordinator for Docker system DF."""
+    """Data Update Coordinator for Docker disk space."""
 
     config_entry: PortainerConfigEntry
     _update_interval = DEFAULT_DF_SCAN_INTERVAL
 
     async def update_data(self) -> dict[int, DockerSystemDF]:
-        """Fetch Docker system DF    data independently from Portainer API."""
+        """Fetch Docker disk space data independently from Portainer API."""
         endpoints = await self.portainer.get_endpoints()
         results: dict[int, DockerSystemDF] = {}
         for endpoint in endpoints:

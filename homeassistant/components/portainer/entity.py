@@ -12,7 +12,7 @@ from .coordinator import (
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
-    PortainerDockerSystemDFCoordinator,
+    PortainerDockerDiskSpaceCoordinator,
     PortainerStackData,
 )
 
@@ -23,10 +23,10 @@ class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
     _attr_has_entity_name = True
 
 
-class PortainerDFCoordinatorEntity(
-    CoordinatorEntity[PortainerDockerSystemDFCoordinator]
+class PortainerDockerDiskSpaceCoordinatorEntity(
+    CoordinatorEntity[PortainerDockerDiskSpaceCoordinator]
 ):
-    """Base class for Portainer entities using the Docker System DF coordinator."""
+    """Base class for Portainer entities using the Docker disk space coordinator."""
 
     _attr_has_entity_name = True
 
@@ -184,16 +184,18 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
         return self.coordinator.data[self.endpoint_id].stacks[self.device_name]
 
 
-class PortainerDockerSystemDFEndpointEntity(PortainerDFCoordinatorEntity):
-    """Base class for endpoint entities backed by the docker system df coordinator."""
+class PortainerDockerSystemDiskSpaceEndpointEntity(
+    PortainerDockerDiskSpaceCoordinatorEntity
+):
+    """Base class for endpoint entities backed by the docker system disk space coordinator."""
 
     def __init__(
         self,
-        coordinator: PortainerDockerSystemDFCoordinator,
+        coordinator: PortainerDockerDiskSpaceCoordinator,
         entity_description: EntityDescription,
         device_info: PortainerCoordinatorData,
     ) -> None:
-        """Initialize a Portainer docker system df endpoint entity."""
+        """Initialize a Portainer docker system disk space endpoint entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self.endpoint_id = device_info.endpoint.id

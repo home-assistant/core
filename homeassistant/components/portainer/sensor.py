@@ -29,7 +29,7 @@ from .coordinator import (
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
-    PortainerDockerSystemDFEndpointEntity,
+    PortainerDockerSystemDiskSpaceEndpointEntity,
     PortainerEndpointEntity,
     PortainerStackEntity,
 )
@@ -59,8 +59,8 @@ class PortainerStackSensorEntityDescription(SensorEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
-class PortainerDockerSystemDFSensorEntityDescription(SensorEntityDescription):
-    """Class to hold Portainer docker system df sensor description."""
+class PortainerDockerSystemDiskSpaceSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer docker system disk space sensor description."""
 
     value_fn: Callable[[DockerSystemDF], StateType]
 
@@ -249,8 +249,10 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     ),
 )
 
-DOCKER_SYSTEM_DF_SENSORS: tuple[PortainerDockerSystemDFSensorEntityDescription, ...] = (
-    PortainerDockerSystemDFSensorEntityDescription(
+DOCKER_SYSTEM_DISK_SPACE_SENSORS: tuple[
+    PortainerDockerSystemDiskSpaceSensorEntityDescription, ...
+] = (
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="container_disk_usage_reclaimable",
         translation_key="container_disk_usage_reclaimable",
         value_fn=lambda data: data.container_disk_usage.reclaimable,
@@ -260,7 +262,7 @@ DOCKER_SYSTEM_DF_SENSORS: tuple[PortainerDockerSystemDFSensorEntityDescription, 
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerDockerSystemDFSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="container_disk_usage_total_size",
         translation_key="container_disk_usage_total_size",
         value_fn=lambda data: data.container_disk_usage.total_size,
@@ -270,7 +272,7 @@ DOCKER_SYSTEM_DF_SENSORS: tuple[PortainerDockerSystemDFSensorEntityDescription, 
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerDockerSystemDFSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="image_disk_usage_reclaimable",
         translation_key="image_disk_usage_reclaimable",
         value_fn=lambda data: data.image_disk_usage.reclaimable,
@@ -280,7 +282,7 @@ DOCKER_SYSTEM_DF_SENSORS: tuple[PortainerDockerSystemDFSensorEntityDescription, 
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerDockerSystemDFSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="image_disk_usage_total_size",
         translation_key="image_disk_usage_total_size",
         value_fn=lambda data: data.image_disk_usage.total_size,
@@ -290,7 +292,7 @@ DOCKER_SYSTEM_DF_SENSORS: tuple[PortainerDockerSystemDFSensorEntityDescription, 
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerDockerSystemDFSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="volume_disk_usage_total",
         translation_key="volume_disk_usage_total_size",
         value_fn=lambda data: data.volume_disk_usage.total_size,
@@ -336,8 +338,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
-    docker_system_df_coordinator = coordinator.docker_system_df_coordinator
-    assert docker_system_df_coordinator is not None
+    ds_coordinator = coordinator.docker_disk_space
+    assert ds_coordinator is not None
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint sensors."""
@@ -349,10 +351,12 @@ async def async_setup_entry(
                     for endpoint in endpoints
                 ),
                 (
-                    PortainerDockerSystemDFSensor(
-                        docker_system_df_coordinator, entity_description, endpoint
+                    PortainerDockerSystemDiskSpaceSensor(
+                        ds_coordinator,
+                        entity_description,
+                        endpoint,
                     )
-                    for entity_description in DOCKER_SYSTEM_DF_SENSORS
+                    for entity_description in DOCKER_SYSTEM_DISK_SPACE_SENSORS
                     for endpoint in endpoints
                 ),
             )
@@ -438,12 +442,12 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
         return self.entity_description.value_fn(endpoint_data)
 
 
-class PortainerDockerSystemDFSensor(
-    PortainerDockerSystemDFEndpointEntity, SensorEntity
+class PortainerDockerSystemDiskSpaceSensor(
+    PortainerDockerSystemDiskSpaceEndpointEntity, SensorEntity
 ):
-    """Representation of a Portainer docker system df sensor."""
+    """Representation of a Portainer docker system disk space sensor."""
 
-    entity_description: PortainerDockerSystemDFSensorEntityDescription
+    entity_description: PortainerDockerSystemDiskSpaceSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
