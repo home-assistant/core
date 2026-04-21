@@ -136,7 +136,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             side,
         )
 
-
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return supported features dynamically."""
