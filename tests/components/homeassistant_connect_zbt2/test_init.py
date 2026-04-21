@@ -14,11 +14,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.usb import (
-    async_request_scan,
-    force_usb_polling_watcher,  # noqa: F401
-    patch_scanned_serial_ports,
-)
+from tests.components.usb import async_request_scan, patch_scanned_serial_ports
+from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
 
 
 async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:

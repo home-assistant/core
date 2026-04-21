@@ -204,33 +204,55 @@ class PortainerCoordinator(
                 )
                 continue
 
-            (
-                containers,
-                docker_version,
-                docker_info,
-                stacks,
-            ) = await asyncio.gather(
-                self.portainer.get_containers(endpoint.id),
-                self.portainer.docker_version(endpoint.id),
-                self.portainer.docker_info(endpoint.id),
-                self.portainer.get_stacks(endpoint.id),
-            )
+            try:
+                (
+                    containers,
+                    docker_version,
+                    docker_info,
+                    docker_system_df,
+                ) = await asyncio.gather(
+                    self.portainer.get_containers(endpoint.id),
+                    self.portainer.docker_version(endpoint.id),
+                    self.portainer.docker_info(endpoint.id),
+                    self.portainer.docker_system_df(endpoint.id),
+                )
 
-            prev_endpoint = self.data.get(endpoint.id) if self.data else None
-            container_map: dict[str, PortainerContainerData] = {}
-            stack_map: dict[str, PortainerStackData] = {
-                stack.name: PortainerStackData(stack=stack, container_count=0)
-                for stack in stacks
-            }
-
-            # Map containers, started and stopped
-            for container in containers:
-                container_name = self._get_container_name(container.names[0])
-                prev_container = (
-                    prev_endpoint.containers.get(container_name)
-                    if prev_endpoint
+                stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
+                swarm_id = (
+                    docker_info.swarm.cluster.get("ID")
+                    if docker_info.swarm
+                    and docker_info.swarm.control_available
+                    and docker_info.swarm.cluster
                     else None
                 )
+                if swarm_id:
+                    stack_requests.append(
+                        self.portainer.get_stacks(
+                            endpoint_id=endpoint.id, swarm_id=swarm_id
+                        )
+                    )
+
+                stacks = [
+                    stack
+                    for result in await asyncio.gather(*stack_requests)
+                    for stack in result
+                ]
+
+                prev_endpoint = self.data.get(endpoint.id) if self.data else None
+                container_map: dict[str, PortainerContainerData] = {}
+                stack_map: dict[str, PortainerStackData] = {
+                    stack.name: PortainerStackData(stack=stack, container_count=0)
+                    for stack in stacks
+                }
+
+                # Map containers, started and stopped
+                for container in containers:
+                    container_name = self._get_container_name(container.names[0])
+                    prev_container = (
+                        prev_endpoint.containers.get(container_name)
+                        if prev_endpoint
+                        else None
+                    )
 
                 # Check if container belongs to a stack via docker compose label
                 stack_name: str | None = (
