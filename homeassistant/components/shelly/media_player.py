@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from dataclasses import dataclass
 import datetime
 import hashlib
@@ -212,8 +213,12 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
         if (thumb := self._media_meta.get("thumb")) and thumb.startswith("data"):
-            prefix, image_data = thumb.split(",", 1)
-            image = base64.b64decode(image_data)
+            try:
+                prefix, image_data = thumb.split(",", 1)
+                image = base64.b64decode(image_data, validate=True)
+            except binascii.Error, ValueError:
+                return await super().async_get_media_image()
+
             mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
             return (image, mime)
 
