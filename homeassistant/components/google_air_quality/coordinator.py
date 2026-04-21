@@ -56,9 +56,15 @@ class GoogleAirQualityUpdateCoordinator(
         self.long = subentry.data[CONF_LONGITUDE]
         self.custom_local_aqi: str | None = None
         self.region_code: str | None = None
-        if subentry.data.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get(CONF_ENABLE_CUSTOM_LAQI):
-            self.custom_local_aqi = subentry.data[CUSTOM_LOCAL_AQI_OPTIONS][CUSTOM_LAQI]
-            self.region_code = subentry.data[CUSTOM_LOCAL_AQI_OPTIONS][CONF_COUNTRY]
+        options = subentry.data.get(CUSTOM_LOCAL_AQI_OPTIONS)
+
+        if isinstance(options, dict) and options.get(CONF_ENABLE_CUSTOM_LAQI):
+            custom_laqi = options.get(CUSTOM_LAQI)
+            region_code = options.get(CONF_COUNTRY)
+
+            if custom_laqi is not None and region_code is not None:
+                self.custom_local_aqi = custom_laqi
+                self.region_code = region_code
 
     async def _async_update_data(self) -> AirQualityCurrentConditionsData:
         """Fetch air quality data for this coordinate."""
