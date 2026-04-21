@@ -92,6 +92,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_UPPER_CLOSURE,
         open_command=OverkizCommand.UPPER_OPEN,
         close_command=OverkizCommand.UPPER_CLOSE,
+        stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_UPPER_OPEN_CLOSED,
         # Lower position used as tilt (no separate tilt state)
         current_tilt_position_state=OverkizState.CORE_LOWER_CLOSURE,
