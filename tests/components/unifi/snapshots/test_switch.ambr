@@ -82,7 +82,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'outlet_control',
     'unique_id': 'outlet-01:02:03:04:05:ff_2',
     'unit_of_measurement': None,
   })
@@ -133,7 +133,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'outlet_control',
     'unique_id': 'outlet-01:02:03:04:05:ff_1',
     'unit_of_measurement': None,
   })
@@ -541,7 +541,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'outlet_control',
     'unique_id': 'outlet-fc:ec:da:76:4f:5f_1',
     'unit_of_measurement': None,
   })

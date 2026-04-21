@@ -1722,9 +1722,9 @@ async def test_wan_monitor_latency_with_no_uptime(
 @pytest.mark.parametrize(
     ("temperature_id", "state", "updated_state", "index_to_update"),
     [
-        ("device_cpu", "66.0", "20", 0),
-        ("device_local", "48.75", "90.64", 1),
-        ("device_phy", "50.25", "80", 2),
+        ("cpu", "66.0", "20", 0),
+        ("local", "48.75", "90.64", 1),
+        ("phy", "50.25", "80", 2),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1810,7 +1810,7 @@ async def test_device_temperature_with_missing_value(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that device temperatures sensors are working as expected."""
-    entity_id = "sensor.device_device_cpu_temperature"
+    entity_id = "sensor.device_cpu_temperature"
 
     temperature_entity = entity_registry.async_get(entity_id)
     assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION

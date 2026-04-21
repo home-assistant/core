@@ -269,9 +269,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         custom_subscribe=lambda api: api.dpi_apps.subscribe,
         device_info_fn=async_dpi_group_device_info_fn,
         is_on_fn=async_dpi_group_is_on_fn,
-        name_fn=lambda group: group.name,
         object_fn=lambda api, obj_id: api.dpi_groups[obj_id],
         supported_fn=lambda hub, obj_id: bool(hub.api.dpi_groups[obj_id].dpiapp_ids),
+        translation_placeholders_fn=lambda group: {"name": group.name or ""},
         unique_id_fn=lambda hub, obj_id: obj_id,
     ),
     UnifiSwitchEntityDescription[FirewallPolicies, FirewallPolicy](
@@ -283,22 +283,25 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_firewall_policy_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
         is_on_fn=lambda hub, firewall_policy: firewall_policy.enabled,
-        name_fn=lambda firewall_policy: firewall_policy.name,
         object_fn=lambda api, obj_id: api.firewall_policies[obj_id],
+        translation_placeholders_fn=lambda firewall_policy: {
+            "name": firewall_policy.name or ""
+        },
         unique_id_fn=lambda hub, obj_id: f"firewall_policy-{obj_id}",
         supported_fn=async_firewall_policy_supported_fn,
     ),
     UnifiSwitchEntityDescription[Outlets, Outlet](
         key="Outlet control",
+        translation_key="outlet_control",
         device_class=SwitchDeviceClass.OUTLET,
         api_handler_fn=lambda api: api.outlets,
         available_fn=async_device_available_fn,
         control_fn=async_outlet_control_fn,
         device_info_fn=async_device_device_info_fn,
         is_on_fn=lambda hub, outlet: outlet.relay_state,
-        name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         supported_fn=async_outlet_switching_supported_fn,
+        translation_placeholders_fn=lambda outlet: {"outlet_name": outlet.name},
         unique_id_fn=lambda hub, obj_id: f"outlet-{obj_id}",
     ),
     UnifiSwitchEntityDescription[PortForwarding, PortForward](
@@ -310,8 +313,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_port_forward_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
         is_on_fn=lambda hub, port_forward: port_forward.enabled,
-        name_fn=lambda port_forward: f"{port_forward.name}",
         object_fn=lambda api, obj_id: api.port_forwarding[obj_id],
+        translation_placeholders_fn=lambda port_forward: {
+            "name": port_forward.name or ""
+        },
         unique_id_fn=lambda hub, obj_id: f"port_forward-{obj_id}",
     ),
     UnifiSwitchEntityDescription[TrafficRules, TrafficRule](
@@ -323,8 +328,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_traffic_rule_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
         is_on_fn=lambda hub, traffic_rule: traffic_rule.enabled,
-        name_fn=lambda traffic_rule: traffic_rule.description,
         object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
+        translation_placeholders_fn=lambda traffic_rule: {
+            "name": traffic_rule.description or ""
+        },
         unique_id_fn=lambda hub, obj_id: f"traffic_rule-{obj_id}",
     ),
     UnifiSwitchEntityDescription[TrafficRoutes, TrafficRoute](
@@ -336,8 +343,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_traffic_route_control_fn,
         device_info_fn=async_unifi_network_device_info_fn,
         is_on_fn=lambda hub, traffic_route: traffic_route.enabled,
-        name_fn=lambda traffic_route: traffic_route.description,
         object_fn=lambda api, obj_id: api.traffic_routes[obj_id],
+        translation_placeholders_fn=lambda traffic_route: {
+            "name": traffic_route.description or ""
+        },
         unique_id_fn=lambda hub, obj_id: f"traffic_route-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
@@ -351,9 +360,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_poe_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         is_on_fn=lambda hub, port: port.poe_mode != "off",
-        name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"poe-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
@@ -367,9 +376,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         is_on_fn=lambda hub, port: bool(port.enabled),
-        name_fn=lambda port: port.name,
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=async_port_control_supported_fn,
+        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Wlans, Wlan](
