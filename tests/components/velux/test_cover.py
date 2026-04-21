@@ -495,25 +495,41 @@ async def test_window_unknown_position(
     assert state.attributes.get("current_position") is None
 
 
+@pytest.mark.parametrize(
+    ("unknown_attr", "unknown_entity_id"),
+    [
+        ("position", "cover.test_dual_roller_shutter"),
+        ("position_upper_curtain", "cover.test_dual_roller_shutter_upper_shutter"),
+        ("position_lower_curtain", "cover.test_dual_roller_shutter_lower_shutter"),
+    ],
+)
 async def test_dual_roller_shutter_unknown_position(
-    hass: HomeAssistant, mock_dual_roller_shutter: AsyncMock
+    hass: HomeAssistant,
+    mock_dual_roller_shutter: AsyncMock,
+    unknown_attr: str,
+    unknown_entity_id: str,
 ) -> None:
-    """Each part should fall back to unknown independently when its position is unknown."""
+    """Each part falls back to unknown independently when only its position is unknown."""
 
-    entity_id_dual = "cover.test_dual_roller_shutter"
-    entity_id_upper = "cover.test_dual_roller_shutter_upper_shutter"
-    entity_id_lower = "cover.test_dual_roller_shutter_lower_shutter"
+    all_entity_ids = {
+        "cover.test_dual_roller_shutter",
+        "cover.test_dual_roller_shutter_upper_shutter",
+        "cover.test_dual_roller_shutter_lower_shutter",
+    }
 
-    mock_dual_roller_shutter.position.known = False
-    mock_dual_roller_shutter.position_upper_curtain.known = False
-    mock_dual_roller_shutter.position_lower_curtain.known = False
+    getattr(mock_dual_roller_shutter, unknown_attr).known = False
     await update_callback_entity(hass, mock_dual_roller_shutter)
 
-    for entity_id in (entity_id_dual, entity_id_upper, entity_id_lower):
+    state = hass.states.get(unknown_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("current_position") is None
+
+    for entity_id in all_entity_ids - {unknown_entity_id}:
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.state == STATE_UNKNOWN
-        assert state.attributes.get("current_position") is None
+        assert state.state != STATE_UNKNOWN
+        assert state.attributes.get("current_position") == 70
 
 
 async def test_blind_unknown_tilt_position(

@@ -172,7 +172,7 @@ class VeluxDualRollerShutter(VeluxCover):
         self.part = part
 
     @property
-    def _active_position(self) -> Position:
+    def _part_position(self) -> Position:
         """Return the pyvlx Position for this part of the shutter."""
         if self.part == VeluxDualRollerPart.UPPER:
             return self.node.position_upper_curtain
@@ -183,7 +183,7 @@ class VeluxDualRollerShutter(VeluxCover):
     @property
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
-        position = self._active_position
+        position = self._part_position
         if not position.known:
             return None
         return 100 - position.position_percent
@@ -191,7 +191,7 @@ class VeluxDualRollerShutter(VeluxCover):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        position = self._active_position
+        position = self._part_position
         if not position.known:
             return None
         return position.closed
