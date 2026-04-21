@@ -78,14 +78,14 @@
         "name": "Light level"
       },
       "lock_state": {
-        "name": "Lock State",
+        "name": "Lock state",
         "state": {
-          "half_locked": "Half Locked",
+          "half_locked": "Half locked",
           "jammed": "Jammed",
-          "latch_bolt_locked": "Latch Bolt Locked",
-          "locked": "Locked",
+          "latch_bolt_locked": "Latch bolt locked",
+          "locked": "[%key:common::state::locked%]",
           "locking": "Locking",
-          "unlocked": "Unlocked",
+          "unlocked": "[%key:common::state::unlocked%]",
           "unlocking": "Unlocking"
         }
       }
