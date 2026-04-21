@@ -69,7 +69,7 @@ def mock_config_entry(
 @pytest.fixture(name="mock_api")
 def mock_client_api(request: pytest.FixtureRequest) -> Generator[Mock]:
     """Set up fake Google Air Quality API responses from fixtures."""
-    filename = request.param if hasattr(request, "param") else "air_quality_data.json"
+    filename = getattr(request, "param", "air_quality_data.json")
     responses = load_json_object_fixture(filename, DOMAIN)
 
     with (
