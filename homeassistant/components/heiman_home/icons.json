@@ -1,0 +1,179 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "co_status": {
+        "default": "mdi:molecule-co",
+        "state": {
+          "off": "mdi:check-circle",
+          "on": "mdi:molecule-co-warning"
+        }
+      },
+      "door_status": {
+        "default": "mdi:door-closed",
+        "state": {
+          "off": "mdi:door-closed",
+          "on": "mdi:door-open"
+        }
+      },
+      "freezing_point_alarm": {
+        "default": "mdi:water-thermometer-outline",
+        "state": {
+          "off": "mdi:snowflake",
+          "on": "mdi:snowflake-alert"
+        }
+      },
+      "motion_status": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "off": "mdi:motion-sensor-off",
+          "on": "mdi:motion-sensor"
+        }
+      },
+      "smoke_sensor_state": {
+        "default": "mdi:smoke",
+        "state": {
+          "off": "mdi:smoke-detector-variant",
+          "on": "mdi:smoke-detector"
+        }
+      },
+      "tamper_state": {
+        "default": "mdi:alert",
+        "state": {
+          "off": "mdi:shield-check",
+          "on": "mdi:alert-circle"
+        }
+      },
+      "under_volt_error": {
+        "default": "mdi:battery-alert-variant",
+        "state": {
+          "off": "mdi:battery-check",
+          "on": "mdi:battery-alert"
+        }
+      },
+      "water_sensor_state": {
+        "default": "mdi:water",
+        "state": {
+          "off": "mdi:water-off",
+          "on": "mdi:water-check"
+        }
+      }
+    },
+    "button": {
+      "mute": {
+        "default": "mdi:volume-mute"
+      },
+      "remote_check": {
+        "default": "mdi:clipboard-check"
+      },
+      "remote_locate": {
+        "default": "mdi:radar"
+      },
+      "reset": {
+        "default": "mdi:reload"
+      }
+    },
+    "select": {
+      "alarm_sound_option": {
+        "default": "mdi:volume-high"
+      },
+      "time_zone": {
+        "default": "mdi:clock-time-nine-outline"
+      }
+    },
+    "sensor": {
+      "battery_percentage": {
+        "default": "mdi:battery",
+        "state": {
+          "0-10": "mdi:battery-alert-variant-outline",
+          "11-20": "mdi:battery-10",
+          "21-30": "mdi:battery-20",
+          "31-40": "mdi:battery-30",
+          "41-50": "mdi:battery-40",
+          "51-60": "mdi:battery-50",
+          "61-70": "mdi:battery-60",
+          "71-80": "mdi:battery-70",
+          "81-90": "mdi:battery-80",
+          "91-100": "mdi:battery-charging"
+        }
+      },
+      "current_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "device_mac": {
+        "default": "mdi:dharmachakra"
+      },
+      "deviceinfo_dbm": {
+        "default": "mdi:signal"
+      },
+      "deviceinfo_dbm_level": {
+        "default": "mdi:signal",
+        "state": {
+          "medium": "mdi:signal-distance-variant",
+          "strong": "mdi:signal-strong",
+          "very_weak": "mdi:signal-off",
+          "weak": "mdi:signal-2g"
+        }
+      },
+      "deviceinfo_ip": {
+        "default": "mdi:ip"
+      },
+      "deviceinfo_mac": {
+        "default": "mdi:dharmachakra"
+      },
+      "humidity": {
+        "default": "mdi:water-percent"
+      },
+      "rssi": {
+        "default": "mdi:signal"
+      },
+      "rssi_level": {
+        "default": "mdi:signal",
+        "state": {
+          "medium": "mdi:signal-distance-variant",
+          "strong": "mdi:signal-strong",
+          "very_weak": "mdi:signal-off",
+          "weak": "mdi:signal-2g"
+        }
+      },
+      "signal_strength": {
+        "default": "mdi:signal"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "switch": {
+      "buzzer_enable": {
+        "default": "mdi:surround-sound",
+        "state": {
+          "off": "mdi:volume-off",
+          "on": "mdi:volume-high"
+        }
+      },
+      "freezing_point_enable": {
+        "default": "mdi:snowflake-alert",
+        "state": {
+          "off": "mdi:snowflake-off",
+          "on": "mdi:snowflake-check"
+        }
+      },
+      "light_switch": {
+        "default": "mdi:lightbulb-outline",
+        "state": {
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on"
+        }
+      }
+    },
+    "update": {
+      "firmware_update": {
+        "default": "mdi:package-up"
+      }
+    }
+  },
+  "services": {
+    "read_device_properties": {
+      "service": "mdi:file-document-outline"
+    }
+  }
+}
