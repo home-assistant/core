@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from contextlib import suppress
 from datetime import datetime, timedelta
 import email
 from email.header import decode_header, make_header
