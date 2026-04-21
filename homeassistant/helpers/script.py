@@ -137,6 +137,17 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 ATTR_CUR = "current"
 ATTR_MAX = "max"
 
+# Configuration errors which should cause the script to stop also when
+# continue_on_error is True.
+CONFIGURATION_ERRORS = (
+    vol.Invalid,
+    exceptions.TemplateError,
+    exceptions.ServiceNotFound,
+    exceptions.InvalidEntityFormatError,
+    exceptions.NoEntitySpecifiedError,
+    exceptions.ConditionError,
+)
+
 DATA_SCRIPTS: HassKey[list[ScriptData]] = HassKey("helpers.script")
 DATA_SCRIPT_BREAKPOINTS: HassKey[dict[str, dict[str, set[str]]]] = HassKey(
     "helpers.script_breakpoints"
@@ -566,19 +577,9 @@ class _ScriptRun:
         if isinstance(exception, _StopScript):
             raise exception
 
-        # These are incorrect scripts, and not runtime errors that need to
-        # be handled and thus cannot be stopped by `continue_on_error`.
-        if isinstance(
-            exception,
-            (
-                vol.Invalid,
-                exceptions.TemplateError,
-                exceptions.ServiceNotFound,
-                exceptions.InvalidEntityFormatError,
-                exceptions.NoEntitySpecifiedError,
-                exceptions.ConditionError,
-            ),
-        ):
+        # These are configuration errors which should cause the script to
+        # stop also when `continue_on_error` is True.
+        if isinstance(exception, CONFIGURATION_ERRORS):
             raise exception
 
         # Only Home Assistant errors can be ignored.
@@ -1015,17 +1016,22 @@ class _ScriptRun:
             params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
         ) or params[CONF_DOMAIN] in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
-        response_data = await self._async_run_long_action(
-            self._hass.async_create_task_internal(
-                self._hass.services.async_call(
-                    **params,
-                    blocking=True,
-                    context=self._context,
-                    return_response=return_response,
-                ),
-                eager_start=True,
+        try:
+            response_data = await self._async_run_long_action(
+                self._hass.async_create_task_internal(
+                    self._hass.services.async_call(
+                        **params,
+                        blocking=True,
+                        context=self._context,
+                        return_response=return_response,
+                    ),
+                    eager_start=True,
+                )
             )
-        )
+        except (*CONFIGURATION_ERRORS, exceptions.HomeAssistantError):
+            raise
+        except Exception as ex:
+            raise exceptions.HomeAssistantError(ex) from ex
         if response_variable:
             self._variables[response_variable] = response_data
 

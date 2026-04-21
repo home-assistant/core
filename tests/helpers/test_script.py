@@ -4153,7 +4153,7 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
     sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(exceptions.HomeAssistantError, match="BROKEN"):
         await script_obj.async_run(context=Context())
 
     assert len(events) == 0
@@ -6324,7 +6324,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
 
 
 async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
-    """Test continue on error doesn't block unknown errors from e.g., libraries."""
+    """Test continue_on_error with unknown errors bubbling up from service calls."""
 
     class MyLibraryError(Exception):
         """My custom library error."""
@@ -6346,14 +6346,12 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
-    with pytest.raises(MyLibraryError):
-        await script_obj.async_run(context=Context())
+    await script_obj.async_run(context=Context())
 
     assert_action_trace(
         {
             "0": [
                 {
-                    "error": "It is not working!",
                     "result": {
                         "params": {
                             "domain": "some",
@@ -6366,7 +6364,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
                 }
             ],
         },
-        expected_script_execution="error",
+        expected_script_execution="finished",
     )
 
 
