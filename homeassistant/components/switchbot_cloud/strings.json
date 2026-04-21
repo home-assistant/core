@@ -78,7 +78,16 @@
         "name": "Light level"
       },
       "lock_state": {
-        "name": "Lock State"
+        "name": "Lock State",
+        "state": {
+          "half_locked": "Half Locked",
+          "jammed": "Jammed",
+          "latch_bolt_locked": "Latch Bolt Locked",
+          "locked": "Locked",
+          "locking": "Locking",
+          "unlocked": "Unlocked",
+          "unlocking": "Unlocking"
+        }
       }
     }
   }

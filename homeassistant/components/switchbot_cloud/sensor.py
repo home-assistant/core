@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
-from .const import DOMAIN
+from .const import DOMAIN, LockState
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -173,11 +173,7 @@ LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=LOCK_SENSOR_TYPE_LOCK_STATE,
     translation_key="lock_state",
     value_fn=lambda value: (
-        value.title()
-        if isinstance(value, str)
-        else None
-        if value is None
-        else str(value).title()
+        LockState(value).name.lower() if value in LockState.get_states() else None
     ),
 )
 
@@ -332,7 +328,6 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         if not self.coordinator.data:
             return
         value = self.coordinator.data.get(self.entity_description.key)
-
         self._attr_native_value = self.entity_description.value_fn(value)
 
 
