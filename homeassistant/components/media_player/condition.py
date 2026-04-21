@@ -6,7 +6,9 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from .const import DOMAIN, MediaPlayerState
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_off": make_entity_state_condition(DOMAIN, MediaPlayerState.OFF),
+    "is_off": make_entity_state_condition(
+        DOMAIN, MediaPlayerState.OFF, support_duration=True
+    ),
     "is_on": make_entity_state_condition(
         DOMAIN,
         {
@@ -27,8 +29,12 @@ CONDITIONS: dict[str, type[Condition]] = {
             MediaPlayerState.PAUSED,
         },
     ),
-    "is_paused": make_entity_state_condition(DOMAIN, MediaPlayerState.PAUSED),
-    "is_playing": make_entity_state_condition(DOMAIN, MediaPlayerState.PLAYING),
+    "is_paused": make_entity_state_condition(
+        DOMAIN, MediaPlayerState.PAUSED, support_duration=True
+    ),
+    "is_playing": make_entity_state_condition(
+        DOMAIN, MediaPlayerState.PLAYING, support_duration=True
+    ),
 }
 
 

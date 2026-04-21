@@ -15,7 +15,8 @@ from tuya_sharing import (
     Manager,
 )
 
-from homeassistant.components.tuya import DOMAIN, DeviceListener
+from homeassistant.components.tuya.const import DOMAIN
+from homeassistant.components.tuya.coordinator import DeviceListener
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
@@ -180,7 +181,9 @@ async def initialize_entry(
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
-    with patch("homeassistant.components.tuya.Manager", return_value=mock_manager):
+    with patch(
+        "homeassistant.components.tuya.coordinator.Manager", return_value=mock_manager
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

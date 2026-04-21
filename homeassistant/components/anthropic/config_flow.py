@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -49,7 +50,6 @@ from .const import (
     CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
-    CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
@@ -64,8 +64,7 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    NON_ADAPTIVE_THINKING_MODELS,
-    NON_THINKING_MODELS,
+    MIN_THINKING_BUDGET,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
@@ -109,7 +108,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthropic."""
 
     VERSION = 2
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -325,14 +324,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 SelectSelectorConfig(options=self._get_model_list(), custom_value=True)
             ),
             vol.Optional(
-                CONF_MAX_TOKENS,
-                default=DEFAULT[CONF_MAX_TOKENS],
-            ): int,
-            vol.Optional(
-                CONF_TEMPERATURE,
-                default=DEFAULT[CONF_TEMPERATURE],
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
                 CONF_PROMPT_CACHING,
                 default=DEFAULT[CONF_PROMPT_CACHING],
             ): SelectSelector(
@@ -384,30 +375,61 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         """Manage model-specific options."""
         errors: dict[str, str] = {}
 
-        step_schema: VolDictType = {}
+        step_schema: VolDictType = {
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                default=DEFAULT[CONF_MAX_TOKENS],
+            ): vol.All(
+                NumberSelector(
+                    NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
+                ),
+                vol.Coerce(int),
+            )
+            if self.model_info.max_tokens
+            else cv.positive_int,
+        }
 
         model = self.options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(NON_THINKING_MODELS)) and model.startswith(
-            tuple(NON_ADAPTIVE_THINKING_MODELS)
+        if (
+            self.model_info.capabilities
+            and self.model_info.capabilities.thinking.supported
+            and not self.model_info.capabilities.thinking.types.adaptive.supported
         ):
             step_schema[
                 vol.Optional(
                     CONF_THINKING_BUDGET, default=DEFAULT[CONF_THINKING_BUDGET]
                 )
-            ] = vol.All(
-                NumberSelector(
-                    NumberSelectorConfig(
-                        min=0,
-                        max=self.options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-                    )
-                ),
-                vol.Coerce(int),
+            ] = (
+                vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(min=0, max=self.model_info.max_tokens)
+                    ),
+                    vol.Coerce(int),
+                )
+                if self.model_info.max_tokens
+                else cv.positive_int
             )
         else:
             self.options.pop(CONF_THINKING_BUDGET, None)
 
-        if not model.startswith(tuple(NON_ADAPTIVE_THINKING_MODELS)):
+        if (
+            self.model_info.capabilities
+            and (effort_capability := self.model_info.capabilities.effort).supported
+        ):
+            effort_options: list[str] = []
+            if self.model_info.capabilities.thinking.types.adaptive.supported:
+                effort_options.append("none")
+            if effort_capability.low.supported:
+                effort_options.append("low")
+            if effort_capability.medium.supported:
+                effort_options.append("medium")
+            if effort_capability.high.supported:
+                effort_options.append("high")
+            if effort_capability.xhigh and effort_capability.xhigh.supported:
+                effort_options.append("xhigh")
+            if effort_capability.max.supported:
+                effort_options.append("max")
             step_schema[
                 vol.Optional(
                     CONF_THINKING_EFFORT,
@@ -415,7 +437,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             ] = SelectSelector(
                 SelectSelectorConfig(
-                    options=["none", "low", "medium", "high", "max"],
+                    options=effort_options,
                     translation_key=CONF_THINKING_EFFORT,
                     mode=SelectSelectorMode.DROPDOWN,
                 )
@@ -471,9 +493,19 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             self.options.pop(CONF_TOOL_SEARCH, None)
 
         if not step_schema:
-            user_input = {}
+            # Currently our schema is always present, but if one day it becomes empty,
+            # then the below line is needed to skip this step
+            user_input = {}  # pragma: no cover
 
         if user_input is not None:
+            if (
+                CONF_THINKING_BUDGET in user_input
+                and user_input[CONF_THINKING_BUDGET] >= MIN_THINKING_BUDGET
+                and user_input[CONF_THINKING_BUDGET]
+                >= user_input.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
+            ):
+                errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
+
             if user_input.get(CONF_WEB_SEARCH, DEFAULT[CONF_WEB_SEARCH]) and not errors:
                 if user_input.get(
                     CONF_WEB_SEARCH_USER_LOCATION,
