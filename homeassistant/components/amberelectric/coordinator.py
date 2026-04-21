@@ -70,7 +70,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             config_entry=config_entry,
             name="amberelectric",
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(minutes=1),
         )
         self._api_client = api_client
         self._api = api
@@ -96,13 +96,14 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
                 next=288,
                 _request_timeout=REQUEST_TIMEOUT,
             )
-            intervals = [interval.actual_instance for interval in data]
         except ApiException as api_exception:
             raise UpdateFailed(
                 f"Amber API error: {api_exception.status} {api_exception.reason}"
             ) from api_exception
         except Exception as err:
             raise UpdateFailed(f"Error communicating with Amber API: {err}") from err
+
+        intervals = [interval.actual_instance for interval in data]
 
         current = [interval for interval in intervals if is_current(interval)]
         forecasts = [interval for interval in intervals if is_forecast(interval)]
