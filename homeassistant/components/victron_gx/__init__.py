@@ -73,5 +73,5 @@ async def async_remove_config_entry_device(
     config_entry: VictronGxConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
-    """Remove a device from the config entry."""
-    return True
+    """Remove a device from the config entry if the device is no longer known."""
+    return not config_entry.runtime_data.is_device_connected(device_entry.identifiers)
