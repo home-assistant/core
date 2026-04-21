@@ -72,6 +72,9 @@
       "pause_container": {
         "name": "Pause container"
       },
+      "recreate_container": {
+        "name": "Recreate container"
+      },
       "restart_container": {
         "name": "Restart container"
       },

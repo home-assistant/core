@@ -7,6 +7,9 @@
       "pause_container": {
         "default": "mdi:pause-circle"
       },
+      "recreate_container": {
+        "default": "mdi:creation"
+      },
       "resume_container": {
         "default": "mdi:play"
       },
