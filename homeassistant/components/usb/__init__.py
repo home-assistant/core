@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
+from contextlib import suppress
 import dataclasses
 from datetime import datetime, timedelta
 import logging
@@ -214,7 +215,7 @@ class USBDiscovery:
         self.initial_scan_done = False
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
         self._port_event_callbacks: set[PORT_EVENT_CALLBACK_TYPE] = set()
-        self._serial_port_scanners: set[SERIAL_PORT_SCANNER_TYPE] = set()
+        self._serial_port_scanners: list[SERIAL_PORT_SCANNER_TYPE] = []
         self._last_processed_devices: set[USBDevice] = set()
         self._scan_lock = asyncio.Lock()
 
@@ -336,11 +337,12 @@ class USBDiscovery:
         scanner: SERIAL_PORT_SCANNER_TYPE,
     ) -> CALLBACK_TYPE:
         """Register a scanner that contributes additional serial ports to scans."""
-        self._serial_port_scanners.add(scanner)
+        self._serial_port_scanners.append(scanner)
 
         @hass_callback
         def _async_remove_callback() -> None:
-            self._serial_port_scanners.discard(scanner)
+            with suppress(ValueError):
+                self._serial_port_scanners.remove(scanner)
 
         return _async_remove_callback
 
