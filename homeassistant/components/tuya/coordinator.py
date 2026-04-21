@@ -1,6 +1,6 @@
 """Support for Tuya Smart devices."""
 
-from typing import Any, NamedTuple
+from typing import Any
 
 from tuya_sharing import (
     CustomerDevice,
@@ -26,14 +26,7 @@ from .const import (
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 
-type TuyaConfigEntry = ConfigEntry[HomeAssistantTuyaData]
-
-
-class HomeAssistantTuyaData(NamedTuple):
-    """Tuya data stored in the Home Assistant data object."""
-
-    manager: Manager
-    listener: SharingDeviceListener
+type TuyaConfigEntry = ConfigEntry[DeviceListener]
 
 
 def create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
