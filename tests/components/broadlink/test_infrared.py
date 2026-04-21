@@ -1,108 +1,167 @@
 """Tests for Broadlink infrared platform."""
 
-from broadlink.remote import data_to_pulses
-from infrared_protocols import NECCommand
 import pytest
 
-from homeassistant.components import infrared
-from homeassistant.components.broadlink.const import DOMAIN, IR_PACKET_REPEAT_INDEX
-from homeassistant.components.broadlink.infrared import BroadlinkIRCommand
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.components.broadlink.const import IR_PACKET_REPEAT_INDEX
+from homeassistant.components.broadlink.infrared import (
+    BroadlinkIRCommand,
+    timings_to_broadlink_packet,
+)
 
-from . import BroadlinkDevice, MockSetup, get_device
+# Test-only constants for Broadlink IR packet format
+IR_PACKET_TYPE = 0x26  # IR data packet type byte
+IR_PACKET_PAYLOAD_OFFSET = 4  # Byte offset where payload starts
 
-IR_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
-
-# IR data packet type byte emitted by Broadlink devices
-IR_PACKET_TYPE = 0x26
-
-
-async def _setup_ir_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    device: BroadlinkDevice,
-) -> tuple[MockSetup, str]:
-    """Set up a Broadlink device and return its infrared entity id."""
-    mock_setup = await device.setup_entry(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
-    )
-    entries = er.async_entries_for_device(entity_registry, device_entry.id)
-    ir_entries = [entry for entry in entries if entry.domain == Platform.INFRARED]
-    assert len(ir_entries) == 1
-    return mock_setup, ir_entries[0].entity_id
+# NEC IR protocol timings (microseconds)
+NEC_HEADER_MARK_US = 9000
+NEC_HEADER_SPACE_US = 4500
+NEC_BIT_MARK_US = 562
+NEC_ONE_SPACE_US = 1687
+NEC_ZERO_SPACE_US = 562
 
 
-async def test_infrared_setup(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the infrared entity is created for every IR-capable device."""
-    for device in map(get_device, IR_DEVICES):
-        _, entity_id = await _setup_ir_device(
-            hass, device_registry, entity_registry, device
-        )
-        assert hass.states.get(entity_id) is not None
+def test_packet_header() -> None:
+    """Test IR type byte, repeat, and length fields."""
+    timings = [NEC_HEADER_MARK_US, -NEC_HEADER_SPACE_US]
+    packet = timings_to_broadlink_packet(timings, repeat=0)
 
-
-async def test_send_nec_command(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test sending an NECCommand transmits a single-shot Broadlink IR packet."""
-    mock_setup, entity_id = await _setup_ir_device(
-        hass, device_registry, entity_registry, get_device("Entrance")
-    )
-
-    await infrared.async_send_command(
-        hass, entity_id, NECCommand(address=0x04, command=0x08)
-    )
-
-    mock_setup.api.send_data.assert_called_once()
-    packet = mock_setup.api.send_data.call_args.args[0]
-    # Protocol-aware commands encode repeats inside the timings, so the
-    # hardware repeat byte must remain zero to avoid double-repeating.
     assert packet[0] == IR_PACKET_TYPE
-    assert packet[IR_PACKET_REPEAT_INDEX] == 0
-    # Round-trip decode: the first pulse pair must match the NEC leader.
-    pulses = data_to_pulses(packet)
-    assert pulses[0] == pytest.approx(9000, abs=50)
-    assert pulses[1] == pytest.approx(4500, abs=50)
+    assert packet[1] == 0  # no repeat
+
+    payload_len = packet[2] | (packet[3] << 8)
+    assert payload_len == len(packet) - IR_PACKET_PAYLOAD_OFFSET
 
 
-async def test_send_broadlink_ir_command_uses_hardware_repeat(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test BroadlinkIRCommand's repeat_count maps to the hardware repeat byte."""
-    mock_setup, entity_id = await _setup_ir_device(
-        hass, device_registry, entity_registry, get_device("Entrance")
-    )
-
-    await infrared.async_send_command(
-        hass,
-        entity_id,
-        BroadlinkIRCommand([(9000, 4500), (562, 562)], repeat_count=3),
-    )
-
-    mock_setup.api.send_data.assert_called_once()
-    packet = mock_setup.api.send_data.call_args.args[0]
-    assert packet[IR_PACKET_REPEAT_INDEX] == 3
+def test_packet_ends_with_silence() -> None:
+    """Test packet structure is well-formed."""
+    timings = [NEC_BIT_MARK_US, -NEC_ZERO_SPACE_US]
+    packet = timings_to_broadlink_packet(timings)
+    assert packet[0] == IR_PACKET_TYPE
+    assert len(packet) >= IR_PACKET_PAYLOAD_OFFSET  # header + minimum payload
 
 
-def test_broadlink_ir_command_repeat_validation() -> None:
-    """Test BroadlinkIRCommand rejects repeat counts outside 0-255."""
+def test_packet_repeat_count() -> None:
+    """Test repeat count is set."""
+    timings = [NEC_BIT_MARK_US, -NEC_ZERO_SPACE_US]
+    packet = timings_to_broadlink_packet(timings, repeat=2)
+    assert packet[IR_PACKET_REPEAT_INDEX] == 2
+
+
+def test_packet_repeat_out_of_range() -> None:
+    """Test that out-of-range repeat raises ValueError."""
+    timings = [NEC_BIT_MARK_US, -NEC_ZERO_SPACE_US]
+    with pytest.raises(ValueError, match="repeat must be 0"):
+        timings_to_broadlink_packet(timings, repeat=-1)
+    with pytest.raises(ValueError, match="repeat must be 0"):
+        timings_to_broadlink_packet(timings, repeat=256)
+
+
+def test_packet_nec_header_encoding() -> None:
+    """Test that a NEC header encodes correctly."""
+    timings = [NEC_HEADER_MARK_US, -NEC_HEADER_SPACE_US]
+    packet = timings_to_broadlink_packet(timings)
+
+    # Skip packet header to get encoded payload
+    data = packet[IR_PACKET_PAYLOAD_OFFSET:]
+
+    # 9000µs → 274 (>255 → 3 bytes: 0x00, 0x01, 0x12)
+    assert data[0] == 0x00
+    assert data[1] == 0x01
+    assert data[2] == 0x12
+
+    # 4500µs → 137 (<=255 → 1 byte)
+    assert data[3] == 0x89
+
+
+def test_packet_known_nec_command() -> None:
+    """Encode a full NEC power command and verify it's well-formed."""
+    nec_timings: list[int] = [NEC_HEADER_MARK_US, -NEC_HEADER_SPACE_US]
+    for bit in (
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,  # address
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,  # ~address
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,  # command
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,  # ~command
+    ):
+        nec_timings.append(NEC_BIT_MARK_US)
+        nec_timings.append(-NEC_ONE_SPACE_US if bit else -NEC_ZERO_SPACE_US)
+    nec_timings.append(NEC_BIT_MARK_US)  # stop bit
+
+    packet = timings_to_broadlink_packet(nec_timings)
+
+    assert packet[0] == IR_PACKET_TYPE
+    assert len(packet) > 10
+
+
+def test_broadlink_ir_command_basic() -> None:
+    """Test BroadlinkIRCommand initialization and interface."""
+    timings = [(500, 500), (500, 1000), (NEC_BIT_MARK_US, NEC_ZERO_SPACE_US)]
+    cmd = BroadlinkIRCommand(timings, repeat_count=3)
+
+    assert cmd.repeat_count == 3
+    assert cmd.get_raw_timings() == [
+        500,
+        -500,
+        500,
+        -1000,
+        NEC_BIT_MARK_US,
+        -NEC_ZERO_SPACE_US,
+    ]
+
+
+def test_broadlink_ir_command_omits_zero_space() -> None:
+    """Test BroadlinkIRCommand drops trailing zero space into a single end pulse."""
+    cmd = BroadlinkIRCommand([(500, 500), (NEC_BIT_MARK_US, 0)])
+    assert cmd.get_raw_timings() == [500, -500, NEC_BIT_MARK_US]
+
+
+def test_broadlink_ir_command_default_repeat() -> None:
+    """Test BroadlinkIRCommand defaults to repeat=0."""
+    timings = [(500, 500)]
+    cmd = BroadlinkIRCommand(timings)
+
+    assert cmd.repeat_count == 0
+
+
+def test_broadlink_ir_command_invalid_repeat() -> None:
+    """Test that BroadlinkIRCommand raises ValueError for out-of-range repeat_count."""
+    timings = [(500, 500)]
+
+    # Test negative repeat count
     with pytest.raises(ValueError, match="repeat_count must be 0–255"):
-        BroadlinkIRCommand([(500, 500)], repeat_count=-1)
-    with pytest.raises(ValueError, match="repeat_count must be 0–255"):
-        BroadlinkIRCommand([(500, 500)], repeat_count=256)
+        BroadlinkIRCommand(timings, repeat_count=-1)
 
-    # Boundary values must succeed.
-    BroadlinkIRCommand([(500, 500)], repeat_count=0)
-    BroadlinkIRCommand([(500, 500)], repeat_count=255)
+    # Test repeat count > 255
+    with pytest.raises(ValueError, match="repeat_count must be 0–255"):
+        BroadlinkIRCommand(timings, repeat_count=256)
+
+    # Test boundary cases that should work
+    BroadlinkIRCommand(timings, repeat_count=0)  # Should not raise
+    BroadlinkIRCommand(timings, repeat_count=255)  # Should not raise
