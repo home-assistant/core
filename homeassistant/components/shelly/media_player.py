@@ -37,8 +37,8 @@ from .entity import (
 )
 from .utils import get_device_entry_gen
 
-CONTENT_TYPE_LOCAL_AUDIO = "local_audio"
-CONTENT_TYPE_LOCAL_RADIO = "local_radio"
+CONTENT_TYPE_AUDIO = "audio"
+CONTENT_TYPE_RADIO = "radio"
 
 PARALLEL_UPDATES = 0
 
@@ -278,13 +278,13 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     ) -> BrowseMedia:
         """Browse radio stations and audio files."""
         try:
-            if not media_content_type:
+            if media_content_id in (None, ""):
                 return await self._async_browse_media_root()
 
-            if media_content_type == CONTENT_TYPE_LOCAL_RADIO:
+            if media_content_type == CONTENT_TYPE_RADIO:
                 return await self._async_browse_radio_stations(expanded=True)
-            if media_content_type == CONTENT_TYPE_LOCAL_AUDIO:
-                return await self._async_browse_local_audio(expanded=True)
+            if media_content_type == CONTENT_TYPE_AUDIO:
+                return await self._async_browse_audio_files(expanded=True)
 
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -326,20 +326,20 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_media_root(self) -> BrowseMedia:
         """Return root BrowseMedia tree."""
         return BrowseMedia(
-            title="Local media",
+            title="Shelly",
             media_class=MediaClass.DIRECTORY,
-            media_content_type="",
+            media_content_type=DOMAIN,
             media_content_id="",
             children=[
                 await self._async_browse_radio_stations(),
-                await self._async_browse_local_audio(),
+                await self._async_browse_audio_files(),
             ],
             can_play=False,
             can_expand=True,
         )
 
-    async def _async_browse_local_audio(self, expanded: bool = False) -> BrowseMedia:
-        """Return BrowseMedia tree for local audio files."""
+    async def _async_browse_audio_files(self, expanded: bool = False) -> BrowseMedia:
+        """Return BrowseMedia tree for audio files."""
         if expanded:
             result: list[
                 dict[str, Any]
@@ -348,7 +348,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
                 BrowseMedia(
                     title=item["title"],
                     media_class=MediaClass.MUSIC,
-                    media_content_type=CONTENT_TYPE_LOCAL_AUDIO,
+                    media_content_type=CONTENT_TYPE_AUDIO,
                     media_content_id=str(item["id"]),
                     thumbnail=item["preview"],
                     can_play=True,
@@ -363,7 +363,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return BrowseMedia(
             title="Audio files",
             media_class=MediaClass.DIRECTORY,
-            media_content_type=CONTENT_TYPE_LOCAL_AUDIO,
+            media_content_type=CONTENT_TYPE_AUDIO,
             media_content_id="",
             children_media_class=MediaClass.MUSIC,
             children=children,
@@ -381,7 +381,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
                 BrowseMedia(
                     title=station["name"],
                     media_class=MediaClass.MUSIC,
-                    media_content_type=CONTENT_TYPE_LOCAL_RADIO,
+                    media_content_type=CONTENT_TYPE_RADIO,
                     media_content_id=str(station["id"]),
                     thumbnail=station["icon"],
                     can_play=True,
@@ -395,7 +395,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return BrowseMedia(
             title="Radio stations",
             media_class=MediaClass.DIRECTORY,
-            media_content_type=CONTENT_TYPE_LOCAL_RADIO,
+            media_content_type=CONTENT_TYPE_RADIO,
             media_content_id="",
             children_media_class=MediaClass.MUSIC,
             children=children,
@@ -417,11 +417,11 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
                 translation_placeholders={"media_id": media_id},
             )
 
-        if media_type == CONTENT_TYPE_LOCAL_RADIO:
+        if media_type == CONTENT_TYPE_RADIO:
             await self.coordinator.device.media_play_radio_station(int(media_id))
             return
 
-        if media_type == CONTENT_TYPE_LOCAL_AUDIO:
+        if media_type == CONTENT_TYPE_AUDIO:
             await self.coordinator.device.media_play_media(int(media_id))
             return
 
