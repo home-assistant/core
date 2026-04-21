@@ -51,9 +51,9 @@ class OverkizCoverDescription(CoverEntityDescription):
     invert_tilt_position: bool = True
     set_tilt_position_command: OverkizCommand | None = None
     open_tilt_command: OverkizCommand | None = None
-    open_tilt_command_args: OverkizStateType | list[OverkizStateType] | None = None
+    open_tilt_command_args: tuple[OverkizStateType, ...] = ()
     close_tilt_command: OverkizCommand | None = None
-    close_tilt_command_args: OverkizStateType | list[OverkizStateType] | None = None
+    close_tilt_command_args: tuple[OverkizStateType, ...] = ()
     stop_tilt_command: OverkizCommand | None = None
 
 
@@ -120,9 +120,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=[15, 1],  # position (1-127), speed (1-15)
+        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=[15, 1],  # position (1-127), speed (1-15)
+        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
         stop_tilt_command=OverkizCommand.STOP,
     ),
     ##
@@ -504,14 +504,14 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """Open the cover tilt."""
         if command := self.entity_description.open_tilt_command:
             await self.executor.async_execute_command(
-                command, self.entity_description.open_tilt_command_args
+                command, *self.entity_description.open_tilt_command_args
             )
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if command := self.entity_description.close_tilt_command:
             await self.executor.async_execute_command(
-                command, self.entity_description.close_tilt_command_args
+                command, *self.entity_description.close_tilt_command_args
             )
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
