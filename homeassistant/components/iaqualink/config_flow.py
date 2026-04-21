@@ -30,6 +30,11 @@ CREDENTIALS_DATA_SCHEMA = vol.Schema(
 )
 
 
+def _username_unique_id(username: str) -> str:
+    """Normalize a username for config entry deduplication."""
+    return username.casefold()
+
+
 class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
@@ -64,6 +69,10 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = await self._async_test_credentials(user_input)
             if not errors:
+                await self.async_set_unique_id(
+                    _username_unique_id(user_input[CONF_USERNAME])
+                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -94,6 +103,10 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = await self._async_test_credentials(user_input)
             if not errors:
+                await self.async_set_unique_id(
+                    _username_unique_id(user_input[CONF_USERNAME])
+                )
+                self._abort_if_unique_id_mismatch(reason="account_mismatch")
                 return self.async_update_reload_and_abort(
                     config_entry,
                     title=user_input[CONF_USERNAME],

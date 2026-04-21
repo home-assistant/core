@@ -189,6 +189,35 @@ async def test_setup_login_exception(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_backfills_unique_id(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test setup assigns a unique ID to existing entries."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock()
+    system.get_devices = AsyncMock(return_value={})
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.unique_id == config_entry.data["username"].casefold()
+
+
 async def test_setup_login_unauthorized(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

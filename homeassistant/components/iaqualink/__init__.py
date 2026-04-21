@@ -32,6 +32,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
+from .config_flow import _username_unique_id
 from .const import DOMAIN
 from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
@@ -70,6 +71,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     """Set up Aqualink from a config entry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
+
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=_username_unique_id(username)
+        )
 
     aqualink = AqualinkClient(
         username,
