@@ -34,6 +34,35 @@ DEFAULT_MAX_TEMP = 28
 
 PARALLEL_UPDATES = 0
 
+VIN_YEAR_CODE_TO_YEAR = {
+    "K": 2019,
+    "L": 2020,
+    "M": 2021,
+    "N": 2022,
+    "P": 2023,
+    "R": 2024,
+    "S": 2025,
+    "T": 2026,
+    "V": 2027,
+    "W": 2028,
+    "X": 2029,
+    "Y": 2030,
+    "1": 2031,
+    "2": 2032,
+    "3": 2033,
+    "4": 2034,
+    "5": 2035,
+    "6": 2036,
+    "7": 2037,
+    "8": 2038,
+    "9": 2039,
+}
+
+
+def _vin_model_year(year_code: str) -> int | None:
+    """Return the model year for a VIN year code."""
+    return VIN_YEAR_CODE_TO_YEAR.get(year_code)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -94,12 +123,15 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         )
 
         model = data.vin[3]  # S, 3, X, or Y
-        year_code = data.vin[9]  # K=2019, L=2020, M=2021, N=2022
+        year_code = data.vin[9]
+        model_year = _vin_model_year(year_code)
 
-        # Model S/X 2019 (K) or newer
-        is_bio_s_x = model in ("S", "X") and year_code >= "K"
-        # Model Y 2022 (N) or newer
-        is_bio_y = model == "Y" and year_code >= "N"
+        # Model S/X 2019 or newer
+        is_bio_s_x = (
+            model in ("S", "X") and model_year is not None and model_year >= 2019
+        )
+        # Model Y 2022 or newer
+        is_bio_y = model == "Y" and model_year is not None and model_year >= 2022
 
         self._bioweapon_vin_support = is_bio_s_x or is_bio_y
 
