@@ -160,3 +160,41 @@ async def test_deprecation_event_bus(
         domain=DOMAIN,
         issue_id=f"deprecated_event_bus_html5_notification.{event_type}",
     )
+
+
+@pytest.mark.parametrize("event_type", ["clicked", "received", "closed"])
+@pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
+async def test_deprecation_event_bus_no_listeners(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    load_config: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    hass_client: ClientSessionGenerator,
+    event_type: str,
+) -> None:
+    """Test no issue is created when there are no listeners."""
+    load_config.return_value = {"device": SUBSCRIPTION_1}
+    await async_setup_component(hass, "http", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/notify.html5/callback",
+        json={"type": event_type, "tag": "12345", "target": "device"},
+        headers={AUTHORIZATION: "Bearer JWT"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    body = await resp.json()
+    assert body == {"event": event_type, "status": "ok"}
+
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"deprecated_event_bus_html5_notification.{event_type}",
+    )
