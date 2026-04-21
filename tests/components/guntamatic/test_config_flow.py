@@ -34,7 +34,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Guntamatic Heater"
@@ -81,7 +80,6 @@ async def test_form_errors(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1"},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 

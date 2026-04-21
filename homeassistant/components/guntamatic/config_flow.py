@@ -27,15 +27,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for guntamatic."""
 
-    VERSION = 1
     _discovered_ip: str
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
+        heater = Heater(discovery_info.ip)
         try:
-            heater = Heater(discovery_info.ip)
             data = await self.hass.async_add_executor_job(heater.parse_data)
         except requests.exceptions.RequestException:
             return self.async_abort(reason="cannot_connect")
