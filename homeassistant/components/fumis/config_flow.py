@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from fumis import (
@@ -77,6 +78,54 @@ class FumisFlowHandler(ConfigFlow, domain=DOMAIN):
                     }
                 ),
                 user_input,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication of a Fumis stove."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication confirmation."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            fumis = Fumis(
+                mac=reauth_entry.data[CONF_MAC],
+                password=user_input[CONF_PIN],
+                session=async_get_clientsession(self.hass),
+            )
+            try:
+                await fumis.update_info()
+            except FumisAuthenticationError:
+                errors[CONF_PIN] = "invalid_auth"
+            except FumisStoveOfflineError:
+                errors["base"] = "device_offline"
+            except FumisConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PIN: user_input[CONF_PIN]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PIN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
             ),
             errors=errors,
         )

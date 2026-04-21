@@ -115,6 +115,9 @@ class SonosPollingEntity(SonosEntity):
     def poll_state(self) -> None:
         """Poll the device for the current state."""
 
+    async def _async_fallback_poll(self) -> None:
+        """No-op: polling entities are already handled by HA's built-in poller."""
+
     def update(self) -> None:
         """Update the state using the built-in entity poller."""
         if not self.available:

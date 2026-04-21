@@ -1,9 +1,9 @@
 .condition_common: &condition_common
-  target:
+  target: &condition_common_target
     entity:
       domain: alarm_control_panel
   fields: &condition_common_fields
-    behavior:
+    behavior: &condition_common_behavior
       required: true
       default: any
       selector:
@@ -13,10 +13,20 @@
             - all
             - any
 
+.condition_common_for: &condition_common_for
+  target: *condition_common_target
+  fields: &condition_common_for_fields
+    behavior: *condition_common_behavior
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
 is_armed: *condition_common
 
 is_armed_away:
-  fields: *condition_common_fields
+  fields: *condition_common_for_fields
   target:
     entity:
       domain: alarm_control_panel
@@ -24,7 +34,7 @@ is_armed_away:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_AWAY
 
 is_armed_home:
-  fields: *condition_common_fields
+  fields: *condition_common_for_fields
   target:
     entity:
       domain: alarm_control_panel
@@ -32,7 +42,7 @@ is_armed_home:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
 
 is_armed_night:
-  fields: *condition_common_fields
+  fields: *condition_common_for_fields
   target:
     entity:
       domain: alarm_control_panel
@@ -40,13 +50,13 @@ is_armed_night:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_NIGHT
 
 is_armed_vacation:
-  fields: *condition_common_fields
+  fields: *condition_common_for_fields
   target:
     entity:
       domain: alarm_control_panel
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_VACATION
 
-is_disarmed: *condition_common
+is_disarmed: *condition_common_for
 
-is_triggered: *condition_common
+is_triggered: *condition_common_for

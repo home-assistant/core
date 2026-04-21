@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data as _bl_pulses_to_data
-import infrared_protocols
 
 from homeassistant.components.infrared import InfraredCommand, InfraredEntity
 from homeassistant.config_entries import ConfigEntry
@@ -83,23 +82,26 @@ class BroadlinkIRCommand(InfraredCommand):
         if not 0 <= repeat_count <= 255:
             raise ValueError(f"repeat_count must be 0–255, got {repeat_count}")
         super().__init__(modulation=self.MODULATION, repeat_count=repeat_count)
-        self._timings = [
-            infrared_protocols.Timing(high_us=high, low_us=low) for high, low in timings
-        ]
+        self._timings: list[int] = []
+        for high, low in timings:
+            self._timings.append(high)
+            if low:
+                self._timings.append(-low)
 
-    def get_raw_timings(self) -> list[infrared_protocols.Timing]:
-        """Return timing pairs for transmission."""
+    def get_raw_timings(self) -> list[int]:
+        """Return signed microsecond timings for transmission."""
         return self._timings
 
 
 def timings_to_broadlink_packet(
-    timings: list[tuple[int, int]],
+    timings: list[int],
     repeat: int = 0,
 ) -> bytes:
-    """Convert raw timing pairs (high_us, low_us) to a Broadlink IR packet.
+    """Convert signed microsecond timings to a Broadlink IR packet.
 
     Args:
-        timings: List of (mark_us, space_us) pairs in microseconds.
+        timings: Flat list of signed microsecond timings. Positive values are
+            pulse (high) durations; negative values are space (low) durations.
         repeat: Number of extra repeats (0 = send once).
 
     Returns:
@@ -109,12 +111,8 @@ def timings_to_broadlink_packet(
     if not 0 <= repeat <= 255:
         raise ValueError(f"repeat must be 0–255, got {repeat}")
 
-    # Flatten (mark, space) pairs into a pulse list, omitting any zero-length spaces
-    pulses: list[int] = []
-    for high_us, low_us in timings:
-        pulses.append(high_us)
-        if low_us:
-            pulses.append(low_us)
+    # Broadlink's pulses_to_data expects positive pulse durations
+    pulses = [abs(t) for t in timings]
 
     # Use broadlink library's encoder (tick=32.84 µs)
     packet = bytearray(_bl_pulses_to_data(pulses))
@@ -160,10 +158,6 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEntity):
         Using isinstance check ensures protocol-level repeats (already in
         timing data) don't get conflated with hardware repeats.
         """
-        timings = [
-            (timing.high_us, timing.low_us) for timing in command.get_raw_timings()
-        ]
-
         # Only BroadlinkIRCommand uses Broadlink hardware repeat. Protocol-aware
         # commands (NECCommand, etc.) encode repeats inside get_raw_timings()
         # and must use hardware repeat=0 to avoid double-repeating.
@@ -172,7 +166,7 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEntity):
         else:
             repeat = 0
 
-        packet = timings_to_broadlink_packet(timings, repeat=repeat)
+        packet = timings_to_broadlink_packet(command.get_raw_timings(), repeat=repeat)
 
         try:
             await self._device.async_request(self._device.api.send_data, packet)
