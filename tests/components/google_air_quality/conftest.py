@@ -83,8 +83,8 @@ def mock_client_api(request: pytest.FixtureRequest) -> Generator[Mock]:
         ),
     ):
         api = mock_api.return_value
-        api.async_get_current_conditions = AsyncMock(
-            return_value=AirQualityCurrentConditionsData.from_dict(responses)
+        api.async_get_current_conditions.return_value = (
+            AirQualityCurrentConditionsData.from_dict(responses)
         )
 
         yield api
