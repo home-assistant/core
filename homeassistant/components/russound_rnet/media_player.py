@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_MODEL, CONF_SOURCES, CONF_ZONES, DOMAIN, RNET_MODELS, TYPE_TCP
+from .const import CONF_SOURCES, CONF_ZONES, DOMAIN, TYPE_TCP
 from .coordinator import RussoundRNETConfigEntry, RussoundRNETCoordinator
 from .entity import RussoundRNETEntity, command
 from .repairs import async_create_deprecated_yaml_issue, async_create_yaml_import_issue
@@ -84,8 +84,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Russound RNET media player from a config entry."""
     coordinator = entry.runtime_data
-    model_key = entry.data.get(CONF_MODEL, "caa66")
-    model = RNET_MODELS[model_key]
     sources = entry.options.get(CONF_SOURCES, {})
     zones_config = entry.data.get(CONF_ZONES, {})
 
@@ -97,34 +95,19 @@ async def async_setup_entry(
 
     entities: list[RussoundRNETZone] = []
 
-    if zones_config:
-        # Only create entities for explicitly configured zones
-        for zone_key, zone_name in zones_config.items():
-            controller_id, zone_id = (int(x) for x in zone_key.split("_"))
-            if (controller_id, zone_id) in coordinator.data:
-                entities.append(
-                    RussoundRNETZone(
-                        coordinator,
-                        controller_id,
-                        zone_id,
-                        zone_name,
-                        source_list,
-                    )
+    # Only create entities for explicitly configured zones
+    for zone_key, zone_name in zones_config.items():
+        controller_id, zone_id = (int(x) for x in zone_key.split("_"))
+        if (controller_id, zone_id) in coordinator.data:
+            entities.append(
+                RussoundRNETZone(
+                    coordinator,
+                    controller_id,
+                    zone_id,
+                    zone_name,
+                    source_list,
                 )
-    else:
-        # No zones configured — create all zones from model
-        entities.extend(
-            RussoundRNETZone(
-                coordinator,
-                controller_id,
-                zone_id,
-                f"Zone {zone_id}",
-                source_list,
             )
-            for controller_id in range(1, model.max_controllers + 1)
-            for zone_id in range(1, model.max_zones + 1)
-            if (controller_id, zone_id) in coordinator.data
-        )
 
     async_add_entities(entities)
 

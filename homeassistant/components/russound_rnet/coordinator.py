@@ -44,17 +44,9 @@ class RussoundRNETCoordinator(
 
         # Build list of (controller_id, zone_id) tuples to poll
         zones_config = entry.data.get(CONF_ZONES, {})
-        if zones_config:
-            self._zone_keys: list[tuple[int, int]] = [
-                (int(key.split("_")[0]), int(key.split("_")[1])) for key in zones_config
-            ]
-        else:
-            # No zones configured — poll all model zones
-            self._zone_keys = [
-                (c, z)
-                for c in range(1, self._model.max_controllers + 1)
-                for z in range(1, self._model.max_zones + 1)
-            ]
+        self._zone_keys: list[tuple[int, int]] = [
+            (int(key.split("_")[0]), int(key.split("_")[1])) for key in zones_config
+        ]
 
         super().__init__(
             hass,
