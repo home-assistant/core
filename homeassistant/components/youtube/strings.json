@@ -34,8 +34,23 @@
   },
   "entity": {
     "sensor": {
+      "latest_short": {
+        "name": "Latest short",
+        "state_attributes": {
+          "published_at": { "name": "Published at" },
+          "video_id": { "name": "Video ID" }
+        }
+      },
       "latest_upload": {
         "name": "Latest upload",
+        "state_attributes": {
+          "is_short": { "name": "Is Short" },
+          "published_at": { "name": "Published at" },
+          "video_id": { "name": "Video ID" }
+        }
+      },
+      "latest_video": {
+        "name": "Latest video",
         "state_attributes": {
           "published_at": { "name": "Published at" },
           "video_id": { "name": "Video ID" }
