@@ -114,46 +114,17 @@ async def test_add_insteon_events_off_event_fires_bus(hass: HomeAssistant) -> No
 @pytest.mark.parametrize(
     ("event_name", "kwargs", "expected_key", "expected_value"),
     [
-        # Low battery status events
-        (
-            LOW_BATTERY_EVENT,
-            {"low_battery": True},
-            EVENT_CONF_BATTERY,
-            "low"
-        ),
-        (
-            LOW_BATTERY_EVENT,
-            {"low_battery": False},
-            EVENT_CONF_BATTERY,"ok"
-        ),
-
-        # Heartbeat events
-        (
-            HEARTBEAT_EVENT,
-            {"heartbeat_missed": True},
-            EVENT_CONF_HEARTBEAT,
-            "missed"
-        ),
+        (LOW_BATTERY_EVENT, {"low_battery": True}, EVENT_CONF_BATTERY, "low"),
+        (LOW_BATTERY_EVENT, {"low_battery": False}, EVENT_CONF_BATTERY, "ok"),
+        (HEARTBEAT_EVENT, {"heartbeat_missed": True}, EVENT_CONF_HEARTBEAT, "missed"),
         (
             HEARTBEAT_EVENT,
             {"heartbeat_missed": False},
             EVENT_CONF_HEARTBEAT,
-            "received"
+            "received",
         ),
-
-        # Leak sensor wet/dry events
-        (
-            LEAK_WET_EVENT,
-            {"dry": False},
-            EVENT_CONF_MOISTURE,
-            "wet"
-        ),
-        (
-            LEAK_DRY_EVENT,
-            {"dry": True},
-            EVENT_CONF_MOISTURE,
-            "dry"
-        ),
+        (LEAK_WET_EVENT, {"dry": False}, EVENT_CONF_MOISTURE, "wet"),
+        (LEAK_DRY_EVENT, {"dry": True}, EVENT_CONF_MOISTURE, "dry"),
     ],
 )
 async def test_add_insteon_events_listener_optional_fields(
@@ -172,7 +143,8 @@ async def test_add_insteon_events_listener_optional_fields(
     (listener,) = mock_event.subscribe.call_args[0]
 
     captured = async_capture_events(
-        hass, f"insteon.{event_name.removesuffix('_event')}")
+        hass, f"insteon.{event_name.removesuffix('_event')}"
+    )
     listener(event_name, addr.id, 1, **kwargs)
     await hass.async_block_till_done()
 
