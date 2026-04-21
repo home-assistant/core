@@ -157,6 +157,8 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
         self._source_to_index = {name: slot for slot, name in source_list}
         entry = coordinator.config_entry
         self._attr_unique_id = f"{entry.entry_id}_{controller_id}_{zone_id}"
+        # RNET doesn't report mute state; track it locally
+        self._attr_is_volume_muted = False
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -195,6 +197,8 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
             self._zone_id,
             device_volume,
         )
+        # Hardware auto-unmutes on volume change
+        self._attr_is_volume_muted = False
 
     @command
     async def async_turn_on(self) -> None:
@@ -217,10 +221,12 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
     @command
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute/unmute the zone."""
-        await self.coordinator.client.toggle_mute(
-            self._controller_id,
-            self._zone_id,
-        )
+        if self._attr_is_volume_muted != mute:
+            await self.coordinator.client.toggle_mute(
+                self._controller_id,
+                self._zone_id,
+            )
+            self._attr_is_volume_muted = mute
 
     @command
     async def async_select_source(self, source: str) -> None:
