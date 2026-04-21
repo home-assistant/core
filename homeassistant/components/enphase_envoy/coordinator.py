@@ -98,10 +98,15 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
                 return
             # create persistent notification to warn user that manual token needs refresh
+            expire_text: str = (
+                "expiring in {self.token_lifetime} days"
+                if self.token_lifetime > 0
+                else "expired"
+            )
             persistent_notification.async_create(
                 self.hass,
-                f"The envoy token is expiring in {self.token_lifetime} days, to refresh the token, use reconfigure for {self.name} in the Enphase envoy integration.",
-                title=f"Envoy token expiring in {self.token_lifetime} days",
+                f"The envoy token is {expire_text}, to refresh the token, use reconfigure for {self.name} in the Enphase envoy integration.",
+                title=f"Envoy token is {expire_text}",
                 notification_id=f"{NOTIFICATION_ID}_{self.envoy_serial_number}",
             )
             return
