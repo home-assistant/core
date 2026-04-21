@@ -153,9 +153,13 @@
       }
     },
     "zone": {
+      "abort": {
+        "entry_not_loaded": "Cannot validate zone temperature support while the integration is disabled."
+      },
       "entry_type": "Zone",
       "error": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "zone_does_not_report_temperature": "This zone does not report temperature data."
       },
       "initiate_flow": {
         "user": "Add zone"
