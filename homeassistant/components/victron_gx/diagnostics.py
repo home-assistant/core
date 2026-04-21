@@ -19,7 +19,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     hub: Hub | None = getattr(entry, "runtime_data", None)
+    merged_config = {**entry.data, **entry.options}
     return {
-        "entry_data": async_redact_data(dict(entry.data), TO_REDACT),
+        "entry_data": async_redact_data(merged_config, TO_REDACT),
         "devices": hub.get_diagnostics_data() if hub is not None else {},
     }
