@@ -16,12 +16,11 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    victron_hub, _ = init_integration
+    victron_hub, config_entry = init_integration
 
     # Inject a sensor metric so the device tree is populated
     await inject_message(
@@ -32,7 +31,5 @@ async def test_diagnostics(
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
-    result = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
-    )
+    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert result == snapshot
