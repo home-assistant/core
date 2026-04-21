@@ -62,10 +62,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up media player for Shelly devices."""
-    if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
-        return None
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
+    return None
 
 
 @callback
