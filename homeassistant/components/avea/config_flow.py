@@ -29,10 +29,14 @@ class CannotConnect(Exception):
 def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
     """Validate the device is reachable and return a title for it."""
     bulb = avea.Bulb(discovery_info.device)
+    validation_error: Exception | None = None
 
     try:
-        if not bulb.connect():
-            raise CannotConnect
+        try:
+            if not bulb.connect():
+                raise CannotConnect
+        except NAME_EXCEPTIONS as err:
+            raise CannotConnect from err
         try:
             name = bulb.get_name()
         except NAME_EXCEPTIONS:
@@ -46,8 +50,18 @@ def _validate_device(discovery_info: BluetoothServiceInfoBleak) -> str:
             bulb.get_brightness()
         except NAME_EXCEPTIONS as err:
             raise CannotConnect from err
+    except CannotConnect as err:
+        validation_error = err
+        raise
+    except Exception as err:
+        validation_error = err
+        raise
     finally:
-        bulb.close()
+        try:
+            bulb.close()
+        except NAME_EXCEPTIONS as err:
+            if validation_error is None:
+                raise CannotConnect from err
 
     return name or discovery_info.name or discovery_info.address
 

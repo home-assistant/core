@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
+
 import avea
+from bleak.exc import BleakError
 
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 type AveaConfigEntry = ConfigEntry[avea.Bulb]
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
+AVEA_EXCEPTIONS = (BleakError, OSError, RuntimeError)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> bool:
@@ -34,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: AveaConfigEntry) -> bool:
     """Unload an Avea config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.async_add_executor_job(entry.runtime_data.close)
+        with suppress(*AVEA_EXCEPTIONS):
+            await hass.async_add_executor_job(entry.runtime_data.close)
 
     return unload_ok

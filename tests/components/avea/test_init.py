@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.avea import async_unload_entry
 from homeassistant.components.avea.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
@@ -163,3 +164,22 @@ async def test_yaml_import_handles_when_all_bulbs_fail_validation(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
     assert issue is not None
+
+
+async def test_unload_entry_handles_close_error(hass: HomeAssistant) -> None:
+    """Test unload succeeds when closing the bulb raises."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Bedroom",
+        unique_id=AVEA_DISCOVERY_INFO.address,
+        data={CONF_ADDRESS: AVEA_DISCOVERY_INFO.address},
+    )
+    entry.add_to_hass(hass)
+    bulb = MagicMock()
+    bulb.close.side_effect = RuntimeError
+    entry.runtime_data = bulb
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", AsyncMock(return_value=True)
+    ):
+        assert await async_unload_entry(hass, entry)

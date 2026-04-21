@@ -44,6 +44,46 @@ def test_validate_device_raises_cannot_connect_on_brightness_error() -> None:
         _validate_device(AVEA_DISCOVERY_INFO)
 
 
+def test_validate_device_raises_cannot_connect_on_connect_error() -> None:
+    """Test the validator maps connect errors to cannot connect."""
+    bulb = MagicMock()
+    bulb.connect.side_effect = RuntimeError
+
+    with (
+        patch("homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb),
+        pytest.raises(CannotConnect),
+    ):
+        _validate_device(AVEA_DISCOVERY_INFO)
+
+
+def test_validate_device_raises_cannot_connect_on_close_error() -> None:
+    """Test the validator maps close errors to cannot connect."""
+    bulb = MagicMock()
+    bulb.connect.return_value = True
+    bulb.get_name.return_value = "Bedroom"
+    bulb.get_brightness.return_value = 0
+    bulb.close.side_effect = RuntimeError
+
+    with (
+        patch("homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb),
+        pytest.raises(CannotConnect),
+    ):
+        _validate_device(AVEA_DISCOVERY_INFO)
+
+
+def test_validate_device_preserves_cannot_connect_when_close_raises() -> None:
+    """Test cleanup errors do not mask an existing cannot connect error."""
+    bulb = MagicMock()
+    bulb.connect.return_value = False
+    bulb.close.side_effect = RuntimeError
+
+    with (
+        patch("homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb),
+        pytest.raises(CannotConnect),
+    ):
+        _validate_device(AVEA_DISCOVERY_INFO)
+
+
 async def test_user_step_success(hass: HomeAssistant) -> None:
     """Test the user step success path."""
     with patch(
