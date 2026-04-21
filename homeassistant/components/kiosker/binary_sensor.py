@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -27,7 +26,6 @@ class KioskerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Kiosker binary sensor entity."""
 
     value_fn: Callable[[KioskerData], bool]
-    extra_attributes_fn: Callable[[KioskerData], dict[str, Any] | None] | None = None
 
 
 BINARY_SENSORS: tuple[KioskerBinarySensorEntityDescription, ...] = (
