@@ -66,7 +66,7 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         group: int,
         button: str | None = None,
         low_battery: bool | None = None,
-        heartbeat_missed: bool | None = None,
+        heartbeat: bool | None = None,
         dry: bool | None = None,
     ):
         event = name
@@ -83,8 +83,8 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
             schema[EVENT_CONF_BATTERY] = "low" if low_battery else "ok"
 
         # Heartbeat missed
-        if name == HEARTBEAT_EVENT and heartbeat_missed is not None:
-            schema[EVENT_CONF_HEARTBEAT] = "missed" if heartbeat_missed else "received"
+        if name == HEARTBEAT_EVENT and heartbeat is not None:
+            schema[EVENT_CONF_HEARTBEAT] = "missed" if heartbeat else "received"
 
         # Wet / dry for leak sensors
         if name in (LEAK_WET_EVENT, LEAK_DRY_EVENT) and dry is not None:
