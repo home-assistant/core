@@ -46,7 +46,7 @@ async def test_climate_snapshot(
     ("active_mode_index", "expected_hvac_mode"),
     [
         (0, HVACMode.OFF),
-        (1, HVACMode.AUTO),
+        (1, HVACMode.HEAT_COOL),
         (2, HVACMode.COOL),
         (3, HVACMode.HEAT),
         (4, HVACMode.HEAT),
@@ -120,7 +120,7 @@ async def test_hvac_action_mapping(
     ("hvac_mode", "expected_wf_mode"),
     [
         (HVACMode.OFF, 0),
-        (HVACMode.AUTO, 1),
+        (HVACMode.HEAT_COOL, 1),
         (HVACMode.COOL, 2),
         (HVACMode.HEAT, 3),
     ],

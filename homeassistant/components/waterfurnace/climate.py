@@ -28,7 +28,7 @@ PARALLEL_UPDATES = 0
 # Maps ActiveSettings.mode string to HVACMode
 ACTIVE_MODE_TO_HVAC: dict[str, HVACMode] = {
     "Off": HVACMode.OFF,
-    "Auto": HVACMode.AUTO,
+    "Auto": HVACMode.HEAT_COOL,
     "Cool": HVACMode.COOL,
     "Heat": HVACMode.HEAT,
     "E-Heat": HVACMode.HEAT,
@@ -37,7 +37,7 @@ ACTIVE_MODE_TO_HVAC: dict[str, HVACMode] = {
 # Maps HVACMode to library's integer mode
 HVAC_TO_WF_MODE: dict[HVACMode, int] = {
     HVACMode.OFF: 0,
-    HVACMode.AUTO: 1,
+    HVACMode.HEAT_COOL: 1,
     HVACMode.COOL: 2,
     HVACMode.HEAT: 3,
 }
@@ -86,7 +86,7 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_min_temp = HEATING_MIN
     _attr_max_temp = COOLING_MAX
@@ -129,15 +129,15 @@ class WaterFurnaceClimate(WaterFurnaceEntity, ClimateEntity):
 
     @property
     def target_temperature_high(self) -> float | None:
-        """Return the upper bound target temperature (Auto mode)."""
-        if self.hvac_mode == HVACMode.AUTO:
+        """Return the upper bound target temperature (Heat/Cool mode)."""
+        if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.coordinator.data.tstatcoolingsetpoint
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
-        """Return the lower bound target temperature (Auto mode)."""
-        if self.hvac_mode == HVACMode.AUTO:
+        """Return the lower bound target temperature (Heat/Cool mode)."""
+        if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.coordinator.data.tstatheatingsetpoint
         return None
 
