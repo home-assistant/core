@@ -79,8 +79,8 @@ async def test_sensors_conditional_creation(
     assert "sensor.pellet_stove_combustion_chamber" not in entity_ids
     assert "sensor.pellet_stove_fan_1_speed" not in entity_ids
     assert "sensor.pellet_stove_fan_2_speed" not in entity_ids
-    assert "sensor.pellet_stove_fuel_quantity" not in entity_ids
-    assert "sensor.pellet_stove_module_temperature" not in entity_ids
+    assert "sensor.pellet_stove_fuel_level" not in entity_ids
+    assert "sensor.pellet_stove_wircu_module" not in entity_ids
     assert "sensor.pellet_stove_temperature" not in entity_ids
     assert "sensor.pellet_stove_time_to_service" not in entity_ids
 
