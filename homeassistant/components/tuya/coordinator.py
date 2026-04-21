@@ -1,6 +1,6 @@
 """Support for Tuya Smart devices."""
 
-from typing import Any
+from typing import Any, NamedTuple
 
 from tuya_sharing import (
     CustomerDevice,
@@ -11,7 +11,6 @@ from tuya_sharing import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -27,10 +26,17 @@ from .const import (
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
 )
 
-type TuyaConfigEntry = ConfigEntry[DeviceListener]
+type TuyaConfigEntry = ConfigEntry[HomeAssistantTuyaData]
 
 
-def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
+class HomeAssistantTuyaData(NamedTuple):
+    """Tuya data stored in the Home Assistant data object."""
+
+    manager: Manager
+    listener: SharingDeviceListener
+
+
+def create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
     """Create a Tuya Manager instance."""
     return Manager(
         TUYA_CLIENT_ID,
@@ -45,43 +51,13 @@ def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Ma
 class DeviceListener(SharingDeviceListener):
     """Device Update Listener."""
 
-    manager: Manager
-
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: TuyaConfigEntry,
+        manager: Manager,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
-        self.entry = entry
-
-    async def async_initialise(self) -> None:
-        """Create DeviceListener."""
-        hass = self.hass
-        entry = self.entry
-
-        token_listener = TokenListener(hass, entry)
-
-        # Move to executor as it makes blocking call to import_module
-        # with args ('.system', 'urllib3.contrib.resolver')
-        manager = await hass.async_add_executor_job(
-            _create_manager, entry, token_listener
-        )
-
-        listener = DeviceListener(hass, manager)
-        manager.add_device_listener(listener)
-
-        try:
-            await hass.async_add_executor_job(manager.update_device_cache)
-        except Exception as exc:
-            # While in general, we should avoid catching broad exceptions,
-            # we have no other way of detecting this case.
-            if "sign invalid" in str(exc):
-                msg = "Authentication failed. Please re-authenticate"
-                raise ConfigEntryAuthFailed(msg) from exc
-            raise
-
         self.manager = manager
 
     def update_device(
@@ -108,8 +84,8 @@ class DeviceListener(SharingDeviceListener):
         )
 
     def add_device(self, device: CustomerDevice) -> None:
-        """Handle device added event."""
-        # Ensure the (stale) device isn't present
+        """Add device added listener."""
+        # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
 
         LOGGER.debug(
@@ -124,7 +100,7 @@ class DeviceListener(SharingDeviceListener):
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 
     def remove_device(self, device_id: str) -> None:
-        """Handle device removal event."""
+        """Add device removed listener."""
         self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
