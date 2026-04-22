@@ -17,13 +17,7 @@ from homeassistant.components.tuya.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import (
-    DEVICE_MOCKS,
-    MockDeviceListener,
-    create_device,
-    create_listener,
-    create_manager,
-)
+from . import DEVICE_MOCKS, create_device, create_manager
 
 from tests.common import MockConfigEntry
 
@@ -139,9 +133,3 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
     Use this for testing behavior on a specific device.
     """
     return await create_device(hass, mock_device_code)
-
-
-@pytest.fixture
-def mock_listener(hass: HomeAssistant, mock_manager: Manager) -> MockDeviceListener:
-    """Fixture for Tuya DeviceListener."""
-    return create_listener(hass, mock_manager)

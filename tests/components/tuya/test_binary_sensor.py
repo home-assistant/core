@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockDeviceListener, check_selective_state_update, initialize_entry
+from . import async_send_device_update, check_selective_state_update, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -67,7 +67,6 @@ async def test_selective_state_update(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
     freezer: FrozenDateTimeFactory,
     updates: dict[str, Any],
     expected_state: str,
@@ -78,7 +77,7 @@ async def test_selective_state_update(
     await check_selective_state_update(
         hass,
         mock_device,
-        mock_listener,
+        mock_manager,
         freezer,
         entity_id="binary_sensor.window_downstairs_door",
         dpcode="doorcontact_state",
@@ -108,7 +107,6 @@ async def test_bitmap(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
     fault_value: int,
     tankfull: str,
     defrost: str,
@@ -121,7 +119,9 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == "off"
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == "off"
 
-    await mock_listener.async_send_device_update(mock_device, {"fault": fault_value})
+    await async_send_device_update(
+        hass, mock_manager, mock_device, {"fault": fault_value}
+    )
 
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost

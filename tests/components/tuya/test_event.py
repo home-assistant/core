@@ -14,7 +14,12 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockDeviceListener, initialize_entry
+from . import (
+    async_mock_offline,
+    async_mock_online,
+    async_send_device_update,
+    initialize_entry,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -32,7 +37,6 @@ async def test_platform_setup_and_discovery(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: list[CustomerDevice],
-    mock_listener: MockDeviceListener,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -41,7 +45,9 @@ async def test_platform_setup_and_discovery(
 
     for mock_device in mock_devices:
         # Simulate an initial device update to generate events
-        await mock_listener.async_send_device_update(mock_device, mock_device.status)
+        await async_send_device_update(
+            hass, mock_manager, mock_device, mock_device.status
+        )
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -70,7 +76,6 @@ async def test_alarm_message_event(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
     snapshot: SnapshotAssertion,
     entity_id: str,
     dpcode: str,
@@ -81,7 +86,7 @@ async def test_alarm_message_event(
 
     mock_device.status[dpcode] = value
 
-    await mock_listener.async_send_device_update(mock_device, mock_device.status)
+    await async_send_device_update(hass, mock_manager, mock_device, mock_device.status)
 
     # Verify event was triggered with correct type and decoded URL
     state = hass.states.get(entity_id)
@@ -99,7 +104,6 @@ async def test_selective_state_update(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Ensure event is only triggered when device reports actual data."""
@@ -111,27 +115,33 @@ async def test_selective_state_update(
 
     # Device receives a data update - event gets triggered and state gets updated
     freezer.tick(10)
-    await mock_listener.async_send_device_update(mock_device, {"switch_mode1": "click"})
+    await async_send_device_update(
+        hass, mock_manager, mock_device, {"switch_mode1": "click"}
+    )
     assert hass.states.get(entity_id).state == "2024-01-01T00:00:10.000+00:00"
 
     # Device goes offline
     freezer.tick(10)
-    await mock_listener.async_mock_offline(mock_device)
+    await async_mock_offline(hass, mock_manager, mock_device)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # Device comes back online - state should go back to last known value,
     # not new datetime since no new data update has come in
     freezer.tick(10)
-    await mock_listener.async_mock_online(mock_device)
+    await async_mock_online(hass, mock_manager, mock_device)
     assert hass.states.get(entity_id).state == "2024-01-01T00:00:10.000+00:00"
 
     # Device receives a new data update - event gets triggered and state gets updated
     freezer.tick(10)
-    await mock_listener.async_send_device_update(mock_device, {"switch_mode1": "click"})
+    await async_send_device_update(
+        hass, mock_manager, mock_device, {"switch_mode1": "click"}
+    )
     assert hass.states.get(entity_id).state == "2024-01-01T00:00:40.000+00:00"
 
     # Device receives a data update on a different datapoint - event doesn't
     # get triggered and state doesn't get updated
     freezer.tick(10)
-    await mock_listener.async_send_device_update(mock_device, {"switch_mode2": "click"})
+    await async_send_device_update(
+        hass, mock_manager, mock_device, {"switch_mode2": "click"}
+    )
     assert hass.states.get(entity_id).state == "2024-01-01T00:00:40.000+00:00"
