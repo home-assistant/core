@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyenphase.auth import EnvoyLegacyAuth
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -174,7 +175,7 @@ async def test_service_via_device_id(
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test inspect service action with child device id specified."""
+    """Test service action with child device id specified."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -197,7 +198,7 @@ async def test_service_dual_envoy_with_device_id(
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test inspect service action with device_id specified and multiple envoys."""
+    """Test service action with device_id specified and multiple envoys."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -245,6 +246,32 @@ async def test_service_dual_envoy_no_device_id(
             ServiceValidationError,
             match="No Envoy found",
         ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            ACTION_TOKEN_LIFETIME,
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_service_token_lifetime_value_with_prev7(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test token_lifetime service action for pre-V7 firmware."""
+    mock_envoy.firmware = "5.1.1"
+    mock_envoy.auth = EnvoyLegacyAuth(
+        "127.0.0.1", username="test-username", password="test-password"
+    )
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="only used with firmware",
     ):
         await hass.services.async_call(
             DOMAIN,

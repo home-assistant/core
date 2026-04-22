@@ -741,6 +741,9 @@
     "envoy_token_lifetime_service_no_device_id": {
       "message": "No Envoy found by token lifetime action. Configure an Envoy or specify a `device_id` if more than 1 Envoy is configured."
     },
+    "no_token_auth": {
+      "message": "{service}: Envoy token aurhorization is only used with firmware version 7.0 and later."
+    },
     "not_initialized": {
       "message": "{service}: Enphase Envoy is not yet initialized"
     },

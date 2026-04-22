@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyenphase import Envoy
+from pyenphase import Envoy, EnvoyTokenAuth
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -89,7 +89,7 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
     """Configure Home Assistant services for Enphase_Envoy."""
 
     async def token_lifetime_action(call: ServiceCall) -> dict[str, Any]:
-        """Inspect action sends get request to Envoy and returns reply."""
+        """Return the tracked token lifetime for the selected Envoy."""
         device_id = call.data.get(ATTR_ENVOY_DEVICE_ID)
         if not (coordinator := _find_envoy_coordinator(hass, device_id)):
             translation_key = (
@@ -110,6 +110,12 @@ def setup_envoy_service_actions(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="not_initialized",
+                translation_placeholders={"service": call.service},
+            )
+        if not isinstance(envoy.auth, EnvoyTokenAuth):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_token_auth",
                 translation_placeholders={"service": call.service},
             )
         _LOGGER.debug(
