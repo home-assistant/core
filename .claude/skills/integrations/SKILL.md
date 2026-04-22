@@ -40,3 +40,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 ## Testing Requirements
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
+
+## Reviewing guidelines
+
+- When reviewing an integration, check if there is business logic that is uncommon for Home Assistant integrations. If there is, suggest moving it out of the integration and into a separate library.
