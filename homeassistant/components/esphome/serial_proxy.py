@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from typing import cast
-import urllib.parse
 
 from aioesphomeapi import APIClient
 from serialx import register_uri_handler
@@ -13,6 +12,7 @@ from serialx.platforms.serial_esphome import (
     ESPHomeSerialTransport,
     InvalidSettingsError,
 )
+from yarl import URL
 
 from homeassistant.core import HomeAssistant, async_get_hass
 
@@ -33,27 +33,25 @@ def set_hass_loop(loop: asyncio.AbstractEventLoop) -> None:
     _HASS_LOOP = loop
 
 
-def build_url(entry_id: str, port_name: str) -> str:
+def build_url(entry_id: str, port_name: str) -> URL:
     """Build a canonical `esphome-hass://` URL."""
-    return urllib.parse.urlunparse(
-        urllib.parse.ParseResult(
-            scheme="esphome-hass",
-            netloc=entry_id,
-            path="",
-            params="",
-            query=urllib.parse.urlencode({"port_name": port_name}),
-            fragment="",
-        )
+    return URL.build(
+        scheme="esphome-hass",
+        host=entry_id,
+        query={"port_name": port_name},
     )
 
 
 async def _resolve_client(entry_id: str) -> APIClient:
     """Look up the `APIClient` for a specific config entry."""
 
+    entry_id = entry_id.upper()
+
     # This function is async specifically so that we can get a reference to the Home
     # Assistant Core instance from its own thread
     hass: HomeAssistant = async_get_hass()
     entry = cast(ESPHomeConfigEntry, hass.config_entries.async_get_entry(entry_id))
+
     if entry is None or entry.domain != DOMAIN:
         raise InvalidSettingsError(f"No ESPHome config entry with id {entry_id!r}")
 
@@ -73,16 +71,15 @@ class HassESPHomeSerial(ESPHomeSerial):
     async def _async_open(self) -> None:
         """Resolve the HA config entry's APIClient, then open the proxy."""
         if self._api is None and self._path is not None:
-            parsed = urllib.parse.urlparse(str(self._path))
-            entry_id = parsed.netloc
+            parsed = URL(str(self._path))
+            entry_id = parsed.host
             if not entry_id:
                 raise InvalidSettingsError(
                     f"No ESPHome config entry id in URL {self._path!r}"
                 )
 
-            params = urllib.parse.parse_qs(parsed.query)
-            if "port_name" in params:
-                self._port_name = params["port_name"][0]
+            if "port_name" in parsed.query:
+                self._port_name = parsed.query["port_name"]
 
             hass_loop = _HASS_LOOP
             if hass_loop is None:
@@ -90,6 +87,7 @@ class HassESPHomeSerial(ESPHomeSerial):
                     "ESPHome integration has not registered its event loop"
                 )
 
+            # Fetch the `APIClient` from the Core via the appropriate event loop
             self._api = await asyncio.wrap_future(
                 asyncio.run_coroutine_threadsafe(_resolve_client(entry_id), hass_loop)
             )

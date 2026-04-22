@@ -57,7 +57,7 @@ def _async_scan_serial_ports(
 
         ports.extend(
             SerialDevice(
-                device=serial_proxy.build_url(entry.entry_id, proxy.name),
+                device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
                 serial_number=device_info.mac_address,
                 manufacturer=device_info.manufacturer,
                 description=f"{device_info.model} ({proxy.name})",
