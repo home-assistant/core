@@ -311,6 +311,20 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
 
         value = prop.value
 
+        # Handle non-scalar property values (e.g., list/dict)
+        # SensorEntity.native_value only supports scalar types
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+            _LOGGER.warning(
+                "Sensor %s returned unsupported native value: %s (%s). "
+                "Returning None to avoid Home Assistant validation error",
+                self.name,
+                value,
+                type(value).__name__,
+            )
+            return None
+
         device_class = getattr(self, "_attr_device_class", None)
 
         # Validate value type matches device class expectations

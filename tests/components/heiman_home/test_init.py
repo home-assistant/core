@@ -552,8 +552,6 @@ async def test_unload_cleans_hass_data_when_coordinator_none(
 
     This tests lines 148-150 where coordinator is None and we clean up hass.data.
     """
-    from homeassistant.components.heiman_home import async_unload_entry
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
