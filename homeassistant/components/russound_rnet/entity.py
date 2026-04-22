@@ -6,11 +6,12 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
+from homeassistant.const import CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, RNET_EXCEPTIONS
+from .const import DOMAIN, RNET_EXCEPTIONS, RNET_MODELS
 from .coordinator import RussoundRNETCoordinator
 
 
@@ -55,10 +56,11 @@ class RussoundRNETEntity(CoordinatorEntity[RussoundRNETCoordinator]):
         self._controller_id = controller_id
         self._zone_id = zone_id
         entry = coordinator.config_entry
+        model = RNET_MODELS.get(entry.data.get(CONF_MODEL, ""))
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.unique_id}_{controller_id}_{zone_id}")},
             name=zone_name or f"Zone {zone_id}",
             manufacturer="Russound",
-            model=entry.data.get("model"),
+            model=model.name if model else None,
             via_device=(DOMAIN, f"{entry.unique_id}_{controller_id}"),
         )
