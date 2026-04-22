@@ -6,6 +6,8 @@ from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import patch
 
+from pyscorpiontrack import ScorpionTrackShare
+
 from homeassistant.components.scorpiontrack.device_tracker import (
     ScorpionTrackTrackerEntity,
 )
@@ -21,7 +23,7 @@ from tests.common import MockConfigEntry
 async def test_tracker_helper_methods_handle_removed_vehicle(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_share,
+    mock_share: ScorpionTrackShare,
 ) -> None:
     """Tracker helpers should fall back cleanly when a vehicle disappears."""
     await setup_integration(hass, mock_config_entry)
@@ -45,7 +47,7 @@ async def test_tracker_helper_methods_handle_removed_vehicle(
 async def test_tracker_helper_methods_handle_missing_and_future_timestamps(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_share,
+    mock_share: ScorpionTrackShare,
 ) -> None:
     """Tracker helpers should handle missing and future timestamps."""
     await setup_integration(hass, mock_config_entry)

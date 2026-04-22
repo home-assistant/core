@@ -9,6 +9,7 @@ from pyscorpiontrack import (
     ScorpionTrackClient,
     ScorpionTrackConnectionError,
     ScorpionTrackInvalidTokenError,
+    ScorpionTrackShare,
     ScorpionTrackShareUnavailableError,
 )
 import pytest
@@ -53,7 +54,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
 
 async def test_validate_input_strips_whitespace_and_uses_share_title(
     hass: HomeAssistant,
-    mock_share,
+    mock_share: ScorpionTrackShare,
 ) -> None:
     """Validation should strip pasted whitespace and prefer the share title."""
     with patch(
@@ -73,7 +74,7 @@ async def test_validate_input_strips_whitespace_and_uses_share_title(
 
 async def test_validate_input_extracts_token_from_share_url(
     hass: HomeAssistant,
-    mock_share,
+    mock_share: ScorpionTrackShare,
 ) -> None:
     """Validation should accept the pasted ScorpionTrack share URL format."""
     with patch(
@@ -98,7 +99,7 @@ async def test_validate_input_extracts_token_from_share_url(
 
 async def test_validate_input_uses_vehicle_display_name_without_share_title(
     hass: HomeAssistant,
-    mock_share,
+    mock_share: ScorpionTrackShare,
 ) -> None:
     """Validation should fall back to the first vehicle display name."""
     share = replace(mock_share, title="")
@@ -118,7 +119,7 @@ async def test_validate_input_uses_vehicle_display_name_without_share_title(
 
 async def test_validate_input_uses_default_name_without_title_or_vehicles(
     hass: HomeAssistant,
-    mock_share,
+    mock_share: ScorpionTrackShare,
 ) -> None:
     """Validation should use the default name when nothing descriptive exists."""
     share = replace(mock_share, title="", vehicles=())
@@ -194,3 +195,26 @@ async def test_user_flow_shows_validation_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
+
+
+async def test_user_flow_logs_without_echoing_share_token(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Validation warnings should not include the submitted token or URL."""
+    submitted_value = "https://app.scorpiontrack.com/shared/location?token=secret-token"
+
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow._async_validate_input",
+        side_effect=ScorpionTrackInvalidTokenError("Invalid token"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_SHARE_TOKEN: submitted_value},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_token"}
+    assert submitted_value not in caplog.text
+    assert "secret-token" not in caplog.text

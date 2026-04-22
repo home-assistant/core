@@ -22,7 +22,6 @@ from tests.common import MockConfigEntry
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_scorpiontrack_client: AsyncMock,
 ) -> None:
     """Test successful setup and unload of entry."""
     await setup_integration(hass, mock_config_entry)

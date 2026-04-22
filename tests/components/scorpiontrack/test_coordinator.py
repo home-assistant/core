@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 from pyscorpiontrack import (
     ScorpionTrackConnectionError,
     ScorpionTrackInvalidTokenError,
+    ScorpionTrackShare,
     ScorpionTrackShareUnavailableError,
 )
 import pytest
@@ -21,7 +22,7 @@ from tests.common import MockConfigEntry
 async def test_async_update_data_returns_share(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_share,
+    mock_share: ScorpionTrackShare,
     mock_scorpiontrack_client: AsyncMock,
 ) -> None:
     """The coordinator should return the latest share data."""

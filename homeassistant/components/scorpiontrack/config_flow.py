@@ -18,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SHARE_TOKEN, DEFAULT_NAME, DOMAIN
-from .utils import mask_token
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,22 +63,19 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await _async_validate_input(self.hass, user_input)
             except ScorpionTrackConnectionError as err:
                 _LOGGER.warning(
-                    "ScorpionTrack share validation could not connect for token %s: %s",
-                    mask_token(user_input[CONF_SHARE_TOKEN]),
+                    "ScorpionTrack share validation could not connect: %s",
                     err,
                 )
                 errors["base"] = "cannot_connect"
             except ScorpionTrackInvalidTokenError as err:
                 _LOGGER.warning(
-                    "ScorpionTrack share validation rejected token %s: %s",
-                    mask_token(user_input[CONF_SHARE_TOKEN]),
+                    "ScorpionTrack share validation rejected the provided share token or URL: %s",
                     err,
                 )
                 errors["base"] = "invalid_token"
             except ScorpionTrackShareUnavailableError as err:
                 _LOGGER.warning(
-                    "ScorpionTrack share validation found unavailable share for token %s: %s",
-                    mask_token(user_input[CONF_SHARE_TOKEN]),
+                    "ScorpionTrack share validation found an unavailable share: %s",
                     err,
                 )
                 errors["base"] = "share_unavailable"
