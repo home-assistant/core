@@ -1,5 +1,6 @@
 """Tests for the Heiman Home sensor platform."""
 
+import pytest
 from unittest.mock import MagicMock, patch
 
 from heimanconnect import DeviceProperty, HeimanDevice
