@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -52,7 +52,9 @@ async def async_setup_entry(
     _async_add_new_entities()
 
 
-class OPNsenseDeviceTrackerEntity(CoordinatorEntity, ScannerEntity):
+class OPNsenseDeviceTrackerEntity(
+    CoordinatorEntity[OPNsenseDeviceTrackerCoordinator], ScannerEntity
+):
     """Representation of a tracked device."""
 
     _attr_should_poll = False
@@ -72,7 +74,7 @@ class OPNsenseDeviceTrackerEntity(CoordinatorEntity, ScannerEntity):
     def device_data(self) -> DeviceDetails | None:
         """Return device data for current device."""
         if self.coordinator.data and self._mac_address in self.coordinator.data:
-            return cast(DeviceDetails, self.coordinator.data[self._mac_address])
+            return self.coordinator.data[self._mac_address]
         return None
 
     @property
