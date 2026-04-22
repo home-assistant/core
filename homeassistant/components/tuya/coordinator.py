@@ -57,6 +57,7 @@ class DeviceListener(SharingDeviceListener):
         entry = self._entry
         hass = self.hass
 
+        # Makes blocking call to load files from disk
         register_tuya_quirks(str(Path(hass.config.config_dir, "tuya_quirks")))
 
         token_listener = _TokenListener(hass, entry)
@@ -75,7 +76,7 @@ class DeviceListener(SharingDeviceListener):
         listener = DeviceListener(hass, manager)
         manager.add_device_listener(listener)
 
-        # Get all devices from Tuya
+        # Get all devices from Tuya, makes block web calls
         try:
             manager.update_device_cache()
         except Exception as exc:
