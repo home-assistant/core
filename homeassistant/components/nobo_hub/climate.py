@@ -34,6 +34,8 @@ from .const import (
 )
 from .entity import NoboBaseEntity
 
+PARALLEL_UPDATES = 0
+
 SUPPORT_FLAGS = (
     ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
 )

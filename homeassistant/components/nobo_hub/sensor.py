@@ -19,6 +19,8 @@ from . import NoboHubConfigEntry
 from .const import ATTR_SERIAL, ATTR_ZONE_ID, DOMAIN, NOBO_MANUFACTURER
 from .entity import NoboBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
