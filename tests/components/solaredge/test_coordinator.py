@@ -34,6 +34,11 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Make sure all entities are enabled."""
+
+
 @patch("homeassistant.components.solaredge.SolarEdge")
 async def test_solaredgeoverviewdataservice_energy_values_validity(
     mock_solaredge: MagicMock,
