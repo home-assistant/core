@@ -8,7 +8,6 @@ import os
 
 from serialx import SerialPortInfo, list_serial_ports
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.loader import USBMatcher
 
@@ -50,13 +49,6 @@ def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevic
 def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return [usb_serial_device_from_port(port) for port in list_serial_ports()]
-
-
-async def async_scan_serial_ports(
-    hass: HomeAssistant,
-) -> Sequence[USBDevice | SerialDevice]:
-    """Scan serial ports and return USB and other serial devices, async."""
-    return await hass.async_add_executor_job(scan_serial_ports)
 
 
 def usb_device_from_path(device_path: str) -> USBDevice | None:
