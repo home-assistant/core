@@ -670,6 +670,7 @@
     'object_id_base': 'Discharge limit',
     'options': dict({
     }),
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Discharge limit',
     'platform': 'indevolt',
