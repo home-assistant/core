@@ -29,6 +29,7 @@ from unifi_access_api.models.websocket import (
     LocationUpdateState,
     LocationUpdateV2,
     LogAdd,
+    RemoteView,
     SettingUpdate,
     ThumbnailInfo,
     V2LocationState,
@@ -173,6 +174,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             "access.data.device.location_update_v2": self._handle_location_update,
             "access.data.v2.location.update": self._handle_v2_location_update,
             "access.hw.door_bell": self._handle_doorbell,
+            "access.remote_view": self._handle_remote_view,
             "access.logs.insights.add": self._handle_insights_add,
             "access.logs.add": self._handle_logs_add,
             "access.data.setting.update": self._handle_setting_update,
@@ -427,6 +429,18 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             "ring",
             {},
         )
+
+    async def _handle_remote_view(self, msg: WebsocketMessage) -> None:
+        """Handle remote view (video intercom doorbell) press events."""
+        remote_view = cast(RemoteView, msg)
+        device_id = remote_view.data.device_id
+        if device_id in self._device_to_door:
+            door_id = self._device_to_door[device_id]
+            self._dispatch_door_event(door_id, "doorbell", "ring", {})
+        else:
+            _LOGGER.debug(
+                "Received access.remote_view for unknown device %s", device_id
+            )
 
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
