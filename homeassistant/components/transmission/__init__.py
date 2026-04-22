@@ -25,7 +25,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -34,8 +38,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN
+from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN, MIN_REQUIRED_TRANSMISSION_VERSION
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
+from .helpers import create_version
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,6 +101,17 @@ async def async_setup_entry(
         raise ConfigEntryAuthFailed from err
     except (TransmissionConnectError, TransmissionError) as err:
         raise ConfigEntryNotReady from err
+
+    version = create_version(api.server_version)
+    if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="version_error",
+            translation_placeholders={
+                "transmission_version": api.server_version,
+                "min_version": MIN_REQUIRED_TRANSMISSION_VERSION,
+            },
+        )
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)

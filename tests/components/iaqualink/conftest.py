@@ -1,4 +1,4 @@
-"""Configuration for iAqualink tests."""
+"""Configuration for iAquaLink tests."""
 
 import random
 from unittest.mock import AsyncMock, PropertyMock, patch
