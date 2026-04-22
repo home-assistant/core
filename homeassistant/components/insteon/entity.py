@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import UndefinedType
 
 from .const import (
     DOMAIN,
@@ -35,8 +36,18 @@ class InsteonBaseEntity(Entity):
 
     def __init__(self, device, group) -> None:
         """Initialize the INSTEON entity."""
-        self._insteon_device_group = device.groups[group]
         self._insteon_device = device
+        self._insteon_device_group = device.groups[group]
+
+        if self._insteon_device_group.group == 0x01:
+            self._attr_unique_id = self._insteon_device.id
+        else:
+            self._attr_unique_id = f"{self._insteon_device.id}_{self._insteon_device_group.group}"
+
+        self._attr_extra_state_attributes = {
+            "insteon_address": self.address,
+            "insteon_group": self.insteon_group,
+        }
 
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
@@ -51,23 +62,6 @@ class InsteonBaseEntity(Entity):
     def insteon_group(self):
         """Return the INSTEON group that the entity responds to."""
         return self._insteon_device_group.group
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        if self._insteon_device_group.group == 0x01:
-            uid = self._insteon_device.id
-        else:
-            uid = f"{self._insteon_device.id}_{self._insteon_device_group.group}"
-        return uid
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Provide attributes for display on device card."""
-        return {
-            "insteon_address": self.address,
-            "insteon_group": self.insteon_group,
-        }
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -172,7 +166,7 @@ class InsteonEntity(InsteonBaseEntity):
     """INSTEON abstract device entity."""
 
     @property
-    def name(self):
+    def name(self) -> str | UndefinedType | None:
         """Return the name of the node (used for Entity_ID)."""
         # Set a base description
         if (description := self._insteon_device.description) is None:

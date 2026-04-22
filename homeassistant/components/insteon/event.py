@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -76,6 +76,8 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
 
         self._attr_has_entity_name = True
 
+        self._attr_unique_id += "_event"
+
         self._attr_translation_key = (
             "main" if self._insteon_device_group.group == 1 else "additional"
         ) + "_button_press"
@@ -83,7 +85,6 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
         self._attr_translation_placeholders = {
             "button": self._insteon_device_group.name.rpartition('_')[-1].upper()
         }
-
 
         @callback
         def async_fire_button_event(
@@ -133,8 +134,3 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
                     err,
                 )
         await super().async_will_remove_from_hass()
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID for the event entity."""
-        return super().unique_id + "_event"
