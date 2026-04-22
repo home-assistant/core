@@ -473,13 +473,17 @@ async def test_water_heater_set_away_mode(
         (TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
         (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT),
         (TemperatureUnit.KELVIN, UnitOfTemperature.KELVIN),
+        (
+            3,
+            UnitOfTemperature.CELSIUS,
+        ),  # unknown value maps to Celsius via aioesphomeapi
     ],
 )
 async def test_water_heater_temperature_unit(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
-    temperature_unit: TemperatureUnit,
+    temperature_unit: TemperatureUnit | int,
     expected_unit: UnitOfTemperature,
 ) -> None:
     """Test that the temperature unit is passed through correctly."""

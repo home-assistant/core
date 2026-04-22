@@ -53,6 +53,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    UnitOfTemperature,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
@@ -143,7 +144,9 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._feature_flags = ClimateFeature(
             static_info.supported_feature_flags_compat(self._api_version)
         )
-        self._attr_temperature_unit = TEMPERATURE_UNIT_MAP[static_info.temperature_unit]
+        self._attr_temperature_unit = TEMPERATURE_UNIT_MAP.get(
+            static_info.temperature_unit, UnitOfTemperature.CELSIUS
+        )
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes
