@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import voluptuous as vol
 from zwave_js_server.const.command_class.access_control import (
-    SetCredentialStatus,
-    SetUserStatus,
+    SetCredentialResult,
+    SetUserResult,
     UserCredentialType,
 )
 from zwave_js_server.model.node import Node
@@ -43,16 +43,16 @@ def _mock_access_control(node: Node) -> MagicMock:
 
     api.async_get_users_cached = AsyncMock(return_value=[])
     api.async_get_user_cached = AsyncMock(return_value=None)
-    api.async_set_user = AsyncMock(return_value=SetUserStatus.OK)
-    api.async_delete_user = AsyncMock(return_value=SetUserStatus.OK)
-    api.async_delete_all_users = AsyncMock(return_value=SetUserStatus.OK)
+    api.async_set_user = AsyncMock(return_value=SetUserResult.OK)
+    api.async_delete_user = AsyncMock(return_value=SetUserResult.OK)
+    api.async_delete_all_users = AsyncMock(return_value=SetUserResult.OK)
 
     api.async_get_credentials_cached = AsyncMock(return_value=[])
     api.async_get_credentials_by_type_cached = AsyncMock(return_value=[])
     api.async_get_all_credentials_cached = AsyncMock(return_value=[])
     api.async_get_credential_cached = AsyncMock(return_value=None)
-    api.async_set_credential = AsyncMock(return_value=SetCredentialStatus.OK)
-    api.async_delete_credential = AsyncMock(return_value=SetCredentialStatus.OK)
+    api.async_set_credential = AsyncMock(return_value=SetCredentialResult.OK)
+    api.async_delete_credential = AsyncMock(return_value=SetCredentialResult.OK)
 
     # cached_property: override via instance __dict__
     node.endpoints[0].__dict__["access_control"] = api
@@ -403,7 +403,7 @@ async def test_set_credential_rejection_raises(
     """A device-reported rejection must surface as HomeAssistantError."""
     api = _mock_access_control(lock_schlage_be469)
     api.async_set_credential = AsyncMock(
-        return_value=SetCredentialStatus.ERROR_DUPLICATE_CREDENTIAL
+        return_value=SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL
     )
 
     with pytest.raises(HomeAssistantError):
@@ -432,7 +432,7 @@ async def test_set_user_rejection_raises(
     """A device-reported rejection on set_user must raise."""
     api = _mock_access_control(lock_schlage_be469)
     api.async_set_user = AsyncMock(
-        return_value=SetUserStatus.ERROR_ADD_REJECTED_LOCATION_OCCUPIED
+        return_value=SetUserResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED
     )
 
     with pytest.raises(HomeAssistantError):

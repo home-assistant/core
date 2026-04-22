@@ -9,8 +9,8 @@ from __future__ import annotations
 from typing import TypedDict
 
 from zwave_js_server.const.command_class.access_control import (
-    SetCredentialStatus,
-    SetUserStatus,
+    SetCredentialResult,
+    SetUserResult,
     UserCredentialRule,
     UserCredentialType,
     UserCredentialUserType,
@@ -89,50 +89,50 @@ CREDENTIAL_RULE_REVERSE_MAP: dict[str, UserCredentialRule] = {
 }
 
 
-_SET_USER_STATUS_KEYS: dict[SetUserStatus, str] = {
-    SetUserStatus.ERROR_ADD_REJECTED_LOCATION_OCCUPIED: "user_rejected_add_occupied",
-    SetUserStatus.ERROR_MODIFY_REJECTED_LOCATION_EMPTY: "user_rejected_modify_empty",
-    SetUserStatus.ERROR_UNKNOWN: "user_rejected_unknown",
+_SET_USER_RESULT_KEYS: dict[SetUserResult, str] = {
+    SetUserResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED: "user_rejected_add_occupied",
+    SetUserResult.ERROR_MODIFY_REJECTED_LOCATION_EMPTY: "user_rejected_modify_empty",
+    SetUserResult.ERROR_UNKNOWN: "user_rejected_unknown",
 }
 
-_SET_CREDENTIAL_STATUS_KEYS: dict[SetCredentialStatus, str] = {
-    SetCredentialStatus.ERROR_ADD_REJECTED_LOCATION_OCCUPIED: (
+_SET_CREDENTIAL_RESULT_KEYS: dict[SetCredentialResult, str] = {
+    SetCredentialResult.ERROR_ADD_REJECTED_LOCATION_OCCUPIED: (
         "credential_rejected_add_occupied"
     ),
-    SetCredentialStatus.ERROR_MODIFY_REJECTED_LOCATION_EMPTY: (
+    SetCredentialResult.ERROR_MODIFY_REJECTED_LOCATION_EMPTY: (
         "credential_rejected_modify_empty"
     ),
-    SetCredentialStatus.ERROR_DUPLICATE_CREDENTIAL: "credential_rejected_duplicate",
-    SetCredentialStatus.ERROR_MANUFACTURER_SECURITY_RULES: (
+    SetCredentialResult.ERROR_DUPLICATE_CREDENTIAL: "credential_rejected_duplicate",
+    SetCredentialResult.ERROR_MANUFACTURER_SECURITY_RULES: (
         "credential_rejected_manufacturer_rules"
     ),
-    SetCredentialStatus.ERROR_DUPLICATE_ADMIN_PIN_CODE: (
+    SetCredentialResult.ERROR_DUPLICATE_ADMIN_PIN_CODE: (
         "credential_rejected_duplicate_admin_pin"
     ),
-    SetCredentialStatus.ERROR_WRONG_USER_UNIQUE_IDENTIFIER: (
+    SetCredentialResult.ERROR_WRONG_USER_UNIQUE_IDENTIFIER: (
         "credential_rejected_wrong_uui"
     ),
-    SetCredentialStatus.ERROR_UNKNOWN: "credential_rejected_unknown",
+    SetCredentialResult.ERROR_UNKNOWN: "credential_rejected_unknown",
 }
 
 
-def _raise_on_set_user_error(status: SetUserStatus) -> None:
+def _raise_on_set_user_error(status: SetUserResult) -> None:
     """Raise HomeAssistantError when a user-mutation command is rejected."""
-    if status is SetUserStatus.OK:
+    if status is SetUserResult.OK:
         return
     raise HomeAssistantError(
         translation_domain=DOMAIN,
-        translation_key=_SET_USER_STATUS_KEYS.get(status, "user_rejected_unknown"),
+        translation_key=_SET_USER_RESULT_KEYS.get(status, "user_rejected_unknown"),
     )
 
 
-def _raise_on_set_credential_error(status: SetCredentialStatus) -> None:
+def _raise_on_set_credential_error(status: SetCredentialResult) -> None:
     """Raise HomeAssistantError when a credential-mutation command is rejected."""
-    if status is SetCredentialStatus.OK:
+    if status is SetCredentialResult.OK:
         return
     raise HomeAssistantError(
         translation_domain=DOMAIN,
-        translation_key=_SET_CREDENTIAL_STATUS_KEYS.get(
+        translation_key=_SET_CREDENTIAL_RESULT_KEYS.get(
             status, "credential_rejected_unknown"
         ),
     )
@@ -187,13 +187,13 @@ class UsersResult(TypedDict):
     users: list[UserEntry]
 
 
-class SetUserResult(TypedDict):
+class SetUserReturn(TypedDict):
     """Return type for set_user."""
 
     user_index: int
 
 
-class SetCredentialResult(TypedDict):
+class SetCredentialReturn(TypedDict):
     """Return type for set_credential."""
 
     credential_slot: int
@@ -308,7 +308,7 @@ async def async_set_user(
     user_type: UserCredentialUserType | None = None,
     credential_rule: UserCredentialRule | None = None,
     active: bool | None = None,
-) -> SetUserResult:
+) -> SetUserReturn:
     """Create or update an access-control user. Returns the allocated user_index."""
     supported = await node.access_control.async_is_supported()
     if not supported:
@@ -341,7 +341,7 @@ async def async_set_user(
 
     status = await node.access_control.async_set_user(user_index, options)
     _raise_on_set_user_error(status)
-    return SetUserResult(user_index=user_index)
+    return SetUserReturn(user_index=user_index)
 
 
 async def async_clear_user(node: Node, user_index: int) -> None:
@@ -362,7 +362,7 @@ async def async_set_credential(
     credential_type: UserCredentialType,
     credential_data: str,
     credential_slot: int | None = None,
-) -> SetCredentialResult:
+) -> SetCredentialReturn:
     """Add or update a credential (PIN/password only).
 
     user_index must refer to an existing user. To create a new user, call
@@ -416,7 +416,7 @@ async def async_set_credential(
     )
     _raise_on_set_credential_error(status)
 
-    return SetCredentialResult(
+    return SetCredentialReturn(
         credential_slot=credential_slot,
         user_index=user_index,
     )
