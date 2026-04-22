@@ -92,6 +92,24 @@ async def test_resolve_client_loaded_entry(
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
+async def test_resolve_client_lowercased_entry_id(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A yarl-lowercased uppercase entry_id still resolves."""
+    device = await mock_esphome_device(mock_client=mock_client)
+    # yarl lowercases URL hosts, so _resolve_client may be passed the
+    # lowercased form of an uppercase config entry id.
+    assert device.entry.entry_id == device.entry.entry_id.upper()
+
+    with patch.object(serial_proxy, "async_get_hass", return_value=hass):
+        client = await serial_proxy._resolve_client(device.entry.entry_id.lower())
+
+    assert client is mock_client
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_scan_serial_ports_no_entries(hass: HomeAssistant) -> None:
     """No loaded ESPHome entries yields no ports."""
     assert _async_scan_serial_ports(hass) == []
