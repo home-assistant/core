@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import cast
 
 from aioesphomeapi import APIClient
 from serialx import register_uri_handler
@@ -45,15 +46,12 @@ def build_url(entry_id: str, port_name: str) -> URL:
 async def _resolve_client(entry_id: str) -> APIClient:
     """Look up the `APIClient` for a specific config entry."""
 
+    entry_id = entry_id.upper()
+
     # This function is async specifically so that we can get a reference to the Home
     # Assistant Core instance from its own thread
     hass: HomeAssistant = async_get_hass()
-
-    # Config entry ids can be upper or lower case; yarl always lowercases the
-    # URL host so we need to look for the entry in both cases.
-    entry: ESPHomeConfigEntry | None = hass.config_entries.async_get_entry(
-        entry_id
-    ) or hass.config_entries.async_get_entry(entry_id.upper())
+    entry = cast(ESPHomeConfigEntry, hass.config_entries.async_get_entry(entry_id))
 
     if entry is None or entry.domain != DOMAIN:
         raise InvalidSettingsError(f"No ESPHome config entry with id {entry_id!r}")
