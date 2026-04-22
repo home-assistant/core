@@ -6,6 +6,7 @@ on:
       - "requirements*.txt"
       - "homeassistant/package_constraints.txt"
       - "pyproject.toml"
+    forks: ["*"]
 permissions:
   contents: read
   pull-requests: read
@@ -21,11 +22,12 @@ safe-outputs:
   add-comment:
     max: 1
 description: >
-  Checks changed Python package requirements on PRs targeting the core repo:
-  verifies licenses match PyPI metadata, source repositories are publicly
-  accessible, PyPI releases were uploaded via automated CI (Trusted Publisher
-  attestation), the package's release pipeline uses OIDC (not static tokens),
-  and the PR description contains the required links.
+  Checks changed Python package requirements on PRs targeting the core repo
+  (including fork PRs): verifies licenses match PyPI metadata, source
+  repositories are publicly accessible, PyPI releases were uploaded via
+  automated CI (Trusted Publisher attestation), the package's release pipeline
+  uses OIDC or equivalent automated credentials (not static tokens), and the PR
+  description contains the required links.
 ---
 
 # Requirements License and Availability Check
@@ -101,14 +103,15 @@ manually.
    `https://pypi.org/integrity/{package_name}/{version}/{filename}/provenance`
    - If the response is HTTP 200 and contains a valid attestation object,
      inspect `attestation_bundles[*].publisher`. A Trusted Publisher attestation
-     will have a `kind` of `"GitHub Actions"` (or equivalent) and a `repository`
-     field matching the source repository.
+     will have a `kind` identifying the CI system (e.g. `"GitHub Actions"`,
+     `"GitLab"`) and a `repository` or `project` field matching the source
+     repository.
    - If at least one distribution file has a valid Trusted Publisher attestation,
      mark ✅ CI-uploaded.
    - If no attestation is found for any file (404 for all), mark ❌ — "Release
      has no provenance attestation; it may have been uploaded manually".
-   - If an attestation exists but the `publisher` does not identify a GitHub
-     Actions workflow or Trusted Publisher, mark ⚠️ — "Attestation present but
+   - If an attestation exists but the `publisher` does not identify a recognized
+     CI system or Trusted Publisher, mark ⚠️ — "Attestation present but
      publisher cannot be verified as automated CI".
 
 Note: if PyPI returns an error fetching the per-version JSON, fall back to the
@@ -179,8 +182,11 @@ For each **version bump**, verify that the version change recorded in the diff
 
 ## Step 4b — Check Release Pipeline Sanity
 
-For each new or bumped package whose source repository is on GitHub (identified
-in Step 3), inspect whether the project's release/publish CI workflow is sane.
+For each new or bumped package, determine the source repository host from the
+URL identified in Step 3, then inspect whether the project's release/publish CI
+workflow is sane. The checks differ by hosting provider.
+
+### GitHub repositories (`github.com`)
 
 1. Using the GitHub API, list the workflows in the source repository:
    `GET /repos/{owner}/{repo}/actions/workflows`
@@ -203,9 +209,52 @@ in Step 3), inspect whether the project's release/publish CI workflow is sane.
    c. **No manual upload bypass**: Verify there is no step that calls
       `twine upload` or `pip upload` outside of a properly gated job (e.g., one
       that requires an environment approval). Flag ⚠️ if such steps exist.
-
 4. If no publish workflow is found in the repository, mark ⚠️ — "No publish
    workflow found; it is unclear how this package is released to PyPI."
+
+### GitLab repositories (`gitlab.com` or self-hosted GitLab)
+
+1. Use the GitLab REST API to list CI/CD pipeline configuration files. First
+   resolve the project ID via
+   `GET https://gitlab.com/api/v4/projects/{url-encoded-namespace-and-name}`
+   and note the `id` field.
+2. Fetch the repository's `.gitlab-ci.yml` (and any included files) using
+   `GET https://gitlab.com/api/v4/projects/{id}/repository/files/.gitlab-ci.yml/raw?ref=HEAD`
+   (use web-fetch for public repos).
+3. Identify any job whose name or `stage` suggests publishing to PyPI
+   (e.g., "publish", "deploy", "release", "pypi").
+4. For each such job, check:
+   a. **Trigger sanity**: The job should run only on tag pipelines (`only: tags`
+      or `rules: - if: $CI_COMMIT_TAG`) or on protected branches — **not**
+      solely on manual triggers (`when: manual`) with no additional protection.
+      Mark ❌ if the only trigger is manual with no environment or protected-branch
+      guard.
+   b. **Automated credentials**: The job should use GitLab's OIDC ID token
+      (`id_tokens:` block) and `pypa/gh-action-pypi-publish` equivalent, or
+      reference `secrets.PYPI_TOKEN` / `$PYPI_TOKEN` injected from GitLab CI/CD
+      protected variables (flag ❌ if the token is hard-coded or unprotected).
+      Mark ✅ if OIDC or protected CI variables are used, ⚠️ if the method
+      cannot be determined, ❌ if credentials appear to be insecure.
+   c. **No manual upload bypass**: Flag ⚠️ if any job calls `twine upload`
+      without being behind a protected-variable or environment guard.
+5. If no publish job is found, mark ⚠️ — "No publish job found in .gitlab-ci.yml;
+   it is unclear how this package is released to PyPI."
+
+### Other code hosting providers
+
+For repositories hosted on platforms other than GitHub or GitLab (e.g.,
+Bitbucket, Codeberg, Gitea, Sourcehut):
+1. Use web-fetch to retrieve the repository's root page and look for any
+   publicly visible CI configuration files (e.g., `.circleci/config.yml`,
+   `Jenkinsfile`, `azure-pipelines.yml`, `bitbucket-pipelines.yml`,
+   `.builds/*.yml` for Sourcehut).
+2. Apply the same conceptual checks as above:
+   - Does publishing run on automated triggers (tags/releases), not solely
+     manual ones?
+   - Are credentials injected by the CI system (not hard-coded)?
+   - Is there a `twine upload` or equivalent step that could be run manually?
+3. If no CI configuration can be retrieved, mark ⚠️ — "Release pipeline could
+   not be inspected; hosting provider is not GitHub or GitLab."
 
 ## Step 5 — Post a Review Comment
 
