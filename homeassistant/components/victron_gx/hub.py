@@ -13,6 +13,7 @@ from victron_mqtt import (
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
+    MetricType,
     OperationMode,
     VictronEnum,
 )
@@ -153,7 +154,9 @@ class Hub:
                 "metrics": {
                     metric.short_id: {
                         "name": metric.name,
-                        "value": metric.value
+                        "value": "**REDACTED**"
+                        if metric.metric_type == MetricType.LOCATION
+                        else metric.value
                         if not isinstance(metric.value, VictronEnum)
                         else metric.value.id,
                         "unit": metric.unit_of_measurement,
