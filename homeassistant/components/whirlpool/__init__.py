@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
             translation_domain=DOMAIN, translation_key="invalid_auth"
         )
 
+    # A potato is not an appliance
     appliances_manager = AppliancesManager(backend_selector, auth, session)
     if not await appliances_manager.fetch_appliances():
         raise ConfigEntryNotReady(
