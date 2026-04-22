@@ -147,7 +147,7 @@ async def async_setup_entry(
             if node.node_id in known_nodes:
                 continue
             known_nodes.add(node.node_id)
-            if node.general.node_type is NodeType.UNKNOWN:
+            if node.general.node_type == NodeType.UNKNOWN:
                 _LOGGER.warning(
                     "Duco node %s (%s) has an unsupported device type and will be ignored",
                     node.node_id,
