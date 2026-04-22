@@ -110,17 +110,3 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-
-
-ALARM_SOUND_OPTIONS = [
-    "fast",
-    "medium",
-    "slow",
-]
-
-# Alarm sound display names (matching strings.json)
-ALARM_SOUND_DISPLAY_NAMES = {
-    "fast": "Fast Beep",
-    "medium": "Medium Beep",
-    "slow": "Slow Beep",
-}

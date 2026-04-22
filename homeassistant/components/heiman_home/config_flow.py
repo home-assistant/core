@@ -60,10 +60,8 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             try:
                 user_info = await api_client.cloud_client.async_get_user_info()
             except HeimanTokenExpiredError:
-                await api_client.close()
                 return self.async_abort(reason="token_invalid")
             except HeimanAuthError:
-                await api_client.close()
                 return self.async_abort(reason="token_invalid")
             except Exception as err:  # noqa: BLE001
                 _LOGGER.error("Failed to get user info: %s", err)
@@ -75,10 +73,8 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 if not homes:
                     return self.async_abort(reason="no_homes")
             except HeimanTokenExpiredError:
-                await api_client.close()
                 return self.async_abort(reason="token_invalid")
             except HeimanAuthError:
-                await api_client.close()
                 return self.async_abort(reason="token_invalid")
             except Exception as err:  # noqa: BLE001
                 _LOGGER.error("Failed to get homes: %s", err)

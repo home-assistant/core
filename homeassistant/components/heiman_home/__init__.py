@@ -111,8 +111,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
 
     entry.runtime_data = coordinator
 
-    await coordinator.async_config_entry_first_refresh()
-    await coordinator.async_init_mqtt_client()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+        await coordinator.async_init_mqtt_client()
+    except Exception:
+        # Clean up resources if setup fails
+        await _async_call_cleanup_method(
+            coordinator,
+            (
+                "async_disconnect_mqtt_client",
+                "disconnect_mqtt_client",
+                "async_disconnect",
+                "disconnect",
+            ),
+        )
+        await _async_call_cleanup_method(api_client, ("async_close", "close"))
+        entry.runtime_data = None
+        hass.data[DOMAIN][entry.entry_id] = None
+        raise
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
