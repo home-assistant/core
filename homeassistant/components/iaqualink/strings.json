@@ -19,8 +19,8 @@
           "password": "[%key:component::iaqualink::config::step::user::data_description::password%]",
           "username": "[%key:component::iaqualink::config::step::user::data_description::username%]"
         },
-        "description": "Please enter the username and password for your iAqualink account.",
-        "title": "Reauthenticate iAqualink"
+        "description": "Please enter the username and password for your iAquaLink account.",
+        "title": "Reauthenticate iAquaLink"
       },
       "user": {
         "data": {
@@ -31,8 +31,8 @@
           "password": "The password associated with your account.",
           "username": "The email address used to sign in to your account using the iAquaLink app or website."
         },
-        "description": "Please enter the username and password for your iAqualink account.",
-        "title": "Connect to iAqualink"
+        "description": "Please enter the username and password for your iAquaLink account.",
+        "title": "Connect to iAquaLink"
       }
     }
   }
