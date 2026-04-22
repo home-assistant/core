@@ -11,17 +11,16 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import XthingsCloudCoordinator
+from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 from .entity import XthingsCloudEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: XthingsCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light platform."""
@@ -29,17 +28,16 @@ async def async_setup_entry(
     entities = [
         XthingsCloudLight(coordinator, device_id, device_data)
         for device_id, device_data in coordinator.data.items()
-        if device_data.get("type") == "light"
-        or (
-            device_data.get("type") in ("switch", "plug")
-            and "brightness" in device_data.get("status", {})
-        )
+        if device_data["type"] == "light"
     ]
     async_add_entities(entities)
 
 
 class XthingsCloudLight(XthingsCloudEntity, LightEntity):
     """Xthings Cloud light entity."""
+
+    _attr_min_color_temp_kelvin = 2000
+    _attr_max_color_temp_kelvin = 6500
 
     def __init__(
         self,
@@ -49,9 +47,8 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
     ) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator, device_id, device_data)
-        self._device_type = device_data.get("type", "light")
         # Determine supported color modes from device status
-        status = device_data.get("status", {})
+        status = device_data["status"]
         modes: set[ColorMode] = set()
         if "hue" in status or "saturation" in status:
             modes.add(ColorMode.HS)
@@ -66,7 +63,7 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return current color mode."""
-        status = self.device_data.get("status", {})
+        status = self.device_data["status"]
         color_type = status.get("color_type")
         modes = self._attr_supported_color_modes or set()
         if color_type == 0 and ColorMode.HS in modes:
@@ -84,12 +81,12 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
-        return self.device_data.get("status", {}).get("on")
+        return self.device_data["status"].get("on")
 
     @property
     def brightness(self) -> int | None:
         """Return brightness (0-255)."""
-        level = self.device_data.get("status", {}).get("brightness")
+        level = self.device_data["status"].get("brightness")
         if level is not None:
             return round(level * 255 / 100)
         return None
@@ -97,7 +94,7 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the HS color value."""
-        status = self.device_data.get("status", {})
+        status = self.device_data["status"]
         hue = status.get("hue")
         saturation = status.get("saturation")
         if hue is not None and saturation is not None:
@@ -107,17 +104,7 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
-        return self.device_data.get("status", {}).get("temperature")
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return the minimum color temperature in Kelvin."""
-        return 2000
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return the maximum color temperature in Kelvin."""
-        return 6500
+        return self.device_data["status"].get("temperature")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
@@ -126,23 +113,15 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
         has_brightness = ATTR_BRIGHTNESS in kwargs
         # Only send on command when no color/brightness adjustment
         if not has_color and not has_brightness:
-            if self._device_type == "plug":
-                await client.async_plug_on(self._device_id)
-            elif self._device_type == "switch":
-                await client.async_switch_on(self._device_id)
-            else:
-                await client.async_brite_on(self._device_id)
+            await client.async_brite_on(self._device_id)
         # Adjust brightness (standalone, no color change)
         if has_brightness and not has_color:
             brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
-            if self._device_type == "switch":
-                await client.async_switch_brightness(self._device_id, brightness)
-            else:
-                await client.async_brite_brightness(self._device_id, brightness)
+            await client.async_brite_brightness(self._device_id, brightness)
         # Adjust HS color
         if ATTR_HS_COLOR in kwargs:
             hue, saturation = kwargs[ATTR_HS_COLOR]
-            status = self.device_data.get("status", {})
+            status = self.device_data["status"]
             lightness = status.get("lightness", 50)
             cur_brightness = status.get("brightness", 100)
             if ATTR_BRIGHTNESS in kwargs:
@@ -160,7 +139,7 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
             )
         # Adjust color temperature
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            status = self.device_data.get("status", {})
+            status = self.device_data["status"]
             cur_brightness = status.get("brightness", 100)
             if ATTR_BRIGHTNESS in kwargs:
                 cur_brightness = round(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
@@ -175,9 +154,4 @@ class XthingsCloudLight(XthingsCloudEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        if self._device_type == "plug":
-            await self.coordinator.client.async_plug_off(self._device_id)
-        elif self._device_type == "switch":
-            await self.coordinator.client.async_switch_off(self._device_id)
-        else:
-            await self.coordinator.client.async_brite_off(self._device_id)
+        await self.coordinator.client.async_brite_off(self._device_id)

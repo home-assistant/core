@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This account is already configured.",
-      "reauth_successful": "Re-authentication successful."
+      "already_configured": "This account is already configured."
     },
     "error": {
       "cannot_connect": "Unable to connect to Xthings Cloud.",
@@ -42,38 +41,6 @@
         },
         "description": "A 6-digit verification code has been sent to your phone. Please enter the code.",
         "title": "Phone Verification"
-      },
-      "reauth_2fa_email": {
-        "data": {
-          "verification_code": "Verification Code"
-        },
-        "data_description": {
-          "verification_code": "Enter the 6-digit code sent to your email."
-        },
-        "description": "A 6-digit verification code has been sent to {email}. Please enter the code.",
-        "title": "Email Verification"
-      },
-      "reauth_2fa_phone": {
-        "data": {
-          "verification_code": "Verification Code"
-        },
-        "data_description": {
-          "verification_code": "Enter the 6-digit code sent to your phone."
-        },
-        "description": "A 6-digit verification code has been sent to your phone. Please enter the code.",
-        "title": "Phone Verification"
-      },
-      "reauth_confirm": {
-        "data": {
-          "email": "Email",
-          "password": "Password"
-        },
-        "data_description": {
-          "email": "The email address used to register your Xthings Cloud account.",
-          "password": "Your Xthings Cloud account password."
-        },
-        "description": "Your session has expired. Please re-enter your credentials.",
-        "title": "Re-authenticate Xthings Cloud"
       },
       "user": {
         "data": {

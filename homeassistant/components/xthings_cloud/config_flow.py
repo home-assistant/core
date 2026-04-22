@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from ha_xthings_cloud import (
@@ -88,9 +87,6 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_REFRESH_TOKEN: token_data["refresh_token"],
         }
 
-    def _get_2fa_step(self) -> str:
-        return "2fa_phone" if self._2fa_type == 2 else "2fa_email"
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,9 +110,10 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if token_data.get("2fa"):
                     self._2fa_type = token_data["2fa"]
-                    step = self._get_2fa_step()
-                    return await getattr(self, f"async_step_{step}")()
-                await self.async_set_unique_id(self._email)
+                    if self._2fa_type == 2:
+                        return await self.async_step_2fa_phone()
+                    return await self.async_step_2fa_email()
+                await self.async_set_unique_id(token_data["user_id"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=self._email or "",
@@ -138,7 +135,6 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         step_id: str,
         user_input: dict[str, Any] | None,
-        on_success_create: bool = True,
     ) -> ConfigFlowResult:
         """Shared 2FA verification handler."""
         errors: dict[str, str] = {}
@@ -164,16 +160,11 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if token_data.get("2fa"):
                     errors["base"] = "invalid_verification_code"
-                elif on_success_create:
-                    await self.async_set_unique_id(self._email)
+                else:
+                    await self.async_set_unique_id(token_data["user_id"])
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=self._email or "",
-                        data=self._create_entry_data(token_data),
-                    )
-                else:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(),
                         data=self._create_entry_data(token_data),
                     )
 
@@ -199,69 +190,3 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle 2FA via phone verification code."""
         return await self._async_handle_2fa("2fa_phone", user_input)
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle re-authentication."""
-        self._email = entry_data.get(CONF_EMAIL)
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle re-authentication confirm step."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            self._email = user_input[CONF_EMAIL]
-            self._password = user_input[CONF_PASSWORD]
-            try:
-                token_data = await self._async_try_login(self._email, self._password)
-            except XthingsCloudAuthError as err:
-                errors["base"] = _error_from_exception(err)
-            except XthingsCloudApiError as err:
-                errors["base"] = (
-                    _error_from_exception(err) if err.code else "cannot_connect"
-                )
-            except Exception:  # noqa: BLE001
-                errors["base"] = "unknown"
-            else:
-                if token_data.get("2fa"):
-                    self._2fa_type = token_data["2fa"]
-                    step = f"reauth_{self._get_2fa_step()}"
-                    return await getattr(self, f"async_step_{step}")()
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data=self._create_entry_data(token_data),
-                )
-
-        reauth_entry = self._get_reauth_entry()
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_EMAIL, default=reauth_entry.data.get(CONF_EMAIL, "")
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reauth_2fa_email(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle 2FA via email during re-authentication."""
-        return await self._async_handle_2fa(
-            "reauth_2fa_email", user_input, on_success_create=False
-        )
-
-    async def async_step_reauth_2fa_phone(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle 2FA via phone during re-authentication."""
-        return await self._async_handle_2fa(
-            "reauth_2fa_phone", user_input, on_success_create=False
-        )

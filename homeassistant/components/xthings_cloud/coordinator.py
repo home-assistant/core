@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import base64
 from datetime import timedelta
+import json
+import time
 from typing import Any
 
 from ha_xthings_cloud import (
@@ -20,17 +23,31 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 
+type XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
+
+
+def _is_token_expired(token: str) -> bool:
+    """Check if a JWT token is expired or about to expire (within 60s)."""
+    try:
+        payload = token.split(".")[1]
+        # Add padding for base64 decoding
+        payload += "=" * (-len(payload) % 4)
+        data = json.loads(base64.urlsafe_b64decode(payload))
+        return data.get("exp", 0) < time.time() + 60
+    except (IndexError, ValueError, json.JSONDecodeError):
+        return True
+
 
 class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Xthings Cloud data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: XthingsCloudConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         client: XthingsCloudApiClient,
-        entry: ConfigEntry,
+        entry: XthingsCloudConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -38,15 +55,15 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            config_entry=entry,
         )
         self.client = client
-        self.entry = entry
         self.devices: list[dict[str, Any]] = []
         self.websocket: XthingsCloudWebSocket | None = None
 
     async def _async_refresh_token(self) -> bool:
         """Try to refresh token using refresh_token."""
-        refresh_token = self.entry.data.get(CONF_REFRESH_TOKEN)
+        refresh_token = self.config_entry.data.get(CONF_REFRESH_TOKEN)
         if not refresh_token:
             return False
         try:
@@ -55,26 +72,29 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return False
         else:
             self.hass.config_entries.async_update_entry(
-                self.entry,
+                self.config_entry,
                 data={
-                    **self.entry.data,
+                    **self.config_entry.data,
                     CONF_TOKEN: token_data["token"],
-                    CONF_REFRESH_TOKEN: token_data.get("refresh_token", ""),
+                    CONF_REFRESH_TOKEN: token_data["refresh_token"],
                 },
             )
             return True
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest device data from cloud."""
+        if _is_token_expired(self.config_entry.data[CONF_TOKEN]):
+            if not await self._async_refresh_token():
+                raise ConfigEntryAuthFailed(
+                    "Token expired and refresh failed, re-authentication required"
+                )
         try:
             self.devices = await self.client.async_get_devices()
-            self._normalize_device_status(self.devices)
             return {device["id"]: device for device in self.devices}
         except XthingsCloudAuthError:
             if await self._async_refresh_token():
                 try:
                     self.devices = await self.client.async_get_devices()
-                    self._normalize_device_status(self.devices)
                     return {device["id"]: device for device in self.devices}
                 except XthingsCloudAuthError as err:
                     raise ConfigEntryAuthFailed(
@@ -86,20 +106,12 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except XthingsCloudApiError as err:
             raise UpdateFailed(f"Failed to fetch data: {err}") from err
 
-    @staticmethod
-    def _normalize_device_status(devices: list[dict[str, Any]]) -> None:
-        """Normalize device status fields (battery_percent -> battery)."""
-        for device in devices:
-            status = device.get("status", {})
-            if "battery_percent" in status:
-                status["battery"] = status["battery_percent"]
-
     async def async_start_websocket(self) -> None:
         """Start WebSocket connection."""
         if self.websocket:
             return
         session = async_get_clientsession(self.hass)
-        token = self.entry.data.get(CONF_TOKEN, "")
+        token = self.config_entry.data[CONF_TOKEN]
         self.websocket = XthingsCloudWebSocket(
             session=session,
             token=token,
@@ -134,7 +146,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _handle_ws_token_expired(self) -> None:
         """Handle WebSocket auth expiry, refresh token."""
         if await self._async_refresh_token():
-            new_token = self.entry.data.get(CONF_TOKEN, "")
+            new_token = self.config_entry.data[CONF_TOKEN]
             self.client.token = new_token
             if self.websocket:
                 self.websocket.token = new_token

@@ -29,22 +29,22 @@ class XthingsCloudEntity(CoordinatorEntity[XthingsCloudCoordinator]):
         self._attr_unique_id = device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=device_data.get("name", "Xthings Device"),
+            name=device_data["name"],
             manufacturer="Xthings",
-            model=device_data.get("model", "Unknown"),
+            model=device_data["model"],
             sw_version=device_data.get("version"),
         )
 
     @property
     def device_data(self) -> dict[str, Any]:
         """Return current device data."""
-        if self.coordinator.data and self._device_id in self.coordinator.data:
-            return self.coordinator.data[self._device_id]
-        return {}
+        return self.coordinator.data[self._device_id]
 
     @property
     def available(self) -> bool:
         """Return whether device is available (online)."""
-        return self.coordinator.last_update_success and self.device_data.get(
-            "online", False
+        return (
+            super().available
+            and self._device_id in self.coordinator.data
+            and self.device_data["online"]
         )

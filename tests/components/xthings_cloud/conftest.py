@@ -20,6 +20,7 @@ MOCK_EMAIL = "appdev@u-tec.com"
 MOCK_PASSWORD = "Welcome@2022"
 MOCK_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhcHBfaWQiOiIxMmE0MmNhZjdkYmI0N2JiYTAxNjM1YzQ4YzQ0YWU1ZiIsInZlcnNpb24iOiIxLjAuMCIsImF1ZCI6Inh0aGluZ3MtNWVhOTlkYTktODIxZC1kYWEyLWNiYjQtNWY2ZjZlM2U1MWRkIiwidXNlcl91dWlkIjoiMDJjN2JhZGYyYjNkNDRkOTUzYjQ4YjU3OWViOWVlYjUiLCJpc3MiOiJjbG91ZC51LXRlYy5jb20iLCJpYXQiOjE3NzY2NTM1MzQsIm5iZiI6MTc3NjY1MzUyNCwiZXhwIjoxNzc3MjU4MzM0fQ.5MU6NiatOOHbX_4Qw2Br4anLi4aPxtvWxML38MgqB9w"
 MOCK_REFRESH_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX3V1aWQiOiIwMmM3YmFkZjJiM2Q0NGQ5NTNiNDhiNTc5ZWI5ZWViNSIsImlzcyI6ImNsb3VkLnUtdGVjLmNvbSIsImlhdCI6MTc3NjY1MzUzNCwibmJmIjoxNzc2NjUzNTI0LCJleHAiOjE3NzkyNDU1MzR9.14qnBK9_dUIOaWzWvtewApO1qk3QJiHxOtc-CObT3IM"
+MOCK_USER_ID = "02c7badf2b3d44d953b48b579eb9eeb5"
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TOKEN: MOCK_TOKEN,
             CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
         },
-        unique_id=MOCK_EMAIL,
+        unique_id=MOCK_USER_ID,
     )
 
 
@@ -43,6 +44,7 @@ def mock_login_success() -> dict:
     return {
         "token": MOCK_TOKEN,
         "refresh_token": MOCK_REFRESH_TOKEN,
+        "user_id": MOCK_USER_ID,
         "client_id": "mock_client_id",
     }
 

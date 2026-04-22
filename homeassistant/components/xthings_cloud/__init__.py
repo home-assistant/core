@@ -10,9 +10,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN, CONF_TOKEN, PLATFORMS
-from .coordinator import XthingsCloudCoordinator
-
-XthingsCloudConfigEntry = ConfigEntry[XthingsCloudCoordinator]
+from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 
 
 async def async_setup_entry(
@@ -53,8 +51,9 @@ async def async_unload_entry(
 ) -> bool:
     """Unload config entry."""
     coordinator: XthingsCloudCoordinator = entry.runtime_data
-    await coordinator.async_stop_websocket()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await coordinator.async_stop_websocket()
+    return unload_ok
 
 
 @callback
@@ -69,6 +68,6 @@ def _async_update_token(
         data={
             **entry.data,
             CONF_TOKEN: token_data["token"],
-            CONF_REFRESH_TOKEN: token_data.get("refresh_token", ""),
+            CONF_REFRESH_TOKEN: token_data["refresh_token"],
         },
     )
