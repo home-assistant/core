@@ -6,7 +6,6 @@ on:
       - "requirements*.txt"
       - "homeassistant/package_constraints.txt"
       - "pyproject.toml"
-    forks: ["*"]
 permissions:
   contents: read
   pull-requests: read
@@ -22,9 +21,11 @@ safe-outputs:
   add-comment:
     max: 1
 description: >
-  Checks changed Python package requirements on PRs: verifies licenses match
-  PyPI metadata, source repositories are publicly accessible, and the PR
-  description contains the required links.
+  Checks changed Python package requirements on PRs targeting the core repo:
+  verifies licenses match PyPI metadata, source repositories are publicly
+  accessible, PyPI releases were uploaded via automated CI (Trusted Publisher
+  attestation), the package's release pipeline uses OIDC (not static tokens),
+  and the PR description contains the required links.
 ---
 
 # Requirements License and Availability Check
@@ -85,6 +86,34 @@ For each new or bumped package:
 4. Flag a package as ❌ if the license is unknown, missing, or not in the
    approved list. Flag as ⚠️ if the license information is ambiguous or cannot
    be definitively determined.
+
+## Step 2b — Verify PyPI Release Was Uploaded by CI
+
+For each new or bumped package, verify that the release on PyPI was published
+automatically by a CI pipeline (via OIDC Trusted Publisher), not uploaded
+manually.
+
+1. Fetch the PyPI JSON for the specific version being introduced or bumped:
+   `https://pypi.org/pypi/{package_name}/{version}/json`
+2. Inspect the `urls` array in the response. For each distribution file (wheel
+   or sdist), note the filename.
+3. For each filename, attempt to fetch the PyPI provenance attestation:
+   `https://pypi.org/integrity/{package_name}/{version}/{filename}/provenance`
+   - If the response is HTTP 200 and contains a valid attestation object,
+     inspect `attestation_bundles[*].publisher`. A Trusted Publisher attestation
+     will have a `kind` of `"GitHub Actions"` (or equivalent) and a `repository`
+     field matching the source repository.
+   - If at least one distribution file has a valid Trusted Publisher attestation,
+     mark ✅ CI-uploaded.
+   - If no attestation is found for any file (404 for all), mark ❌ — "Release
+     has no provenance attestation; it may have been uploaded manually".
+   - If an attestation exists but the `publisher` does not identify a GitHub
+     Actions workflow or Trusted Publisher, mark ⚠️ — "Attestation present but
+     publisher cannot be verified as automated CI".
+
+Note: if PyPI returns an error fetching the per-version JSON, fall back to the
+latest JSON (`https://pypi.org/pypi/{package_name}/json`) and look up the
+specific version in the `releases` dict.
 
 ## Step 3 — Check Repository Availability
 
@@ -148,6 +177,36 @@ For each **version bump**, verify that the version change recorded in the diff
 - Flag ❌ if the diff shows a downgrade (new version < old version) without an
   explanation, or if the version strings cannot be parsed.
 
+## Step 4b — Check Release Pipeline Sanity
+
+For each new or bumped package whose source repository is on GitHub (identified
+in Step 3), inspect whether the project's release/publish CI workflow is sane.
+
+1. Using the GitHub API, list the workflows in the source repository:
+   `GET /repos/{owner}/{repo}/actions/workflows`
+2. Identify any workflow whose name or filename suggests publishing to PyPI
+   (e.g., contains "release", "publish", "pypi", or "deploy").
+3. Fetch the workflow file content and check the following:
+   a. **Trigger sanity**: The publish job should be triggered by `push` to tags,
+      `release: published`, or `workflow_run` on a release job — **not** solely
+      by `workflow_dispatch` with no additional guards. A `workflow_dispatch`
+      trigger alongside other triggers is acceptable. Mark ❌ if the only trigger
+      is manual `workflow_dispatch` with no environment protection rules.
+   b. **OIDC / Trusted Publisher**: The workflow should use OIDC-based publishing.
+      Look for `id-token: write` permission and one of:
+      - `pypa/gh-action-pypi-publish` action
+      - `actions/attest-build-provenance` action
+      - Any step that sets `TWINE_PASSWORD` from `secrets.PYPI_TOKEN` directly
+        (flag ❌ if a long-lived API token is used instead of OIDC).
+      Mark ✅ if OIDC is used, ⚠️ if the publish method cannot be determined,
+      ❌ if a static secret token is the only credential.
+   c. **No manual upload bypass**: Verify there is no step that calls
+      `twine upload` or `pip upload` outside of a properly gated job (e.g., one
+      that requires an environment approval). Flag ⚠️ if such steps exist.
+
+4. If no publish workflow is found in the repository, mark ⚠️ — "No publish
+   workflow found; it is unclear how this package is released to PyPI."
+
 ## Step 5 — Post a Review Comment
 
 If **any** package fails or has warnings, post a review comment using
@@ -156,17 +215,18 @@ If **any** package fails or has warnings, post a review comment using
 ```
 ## Requirements Check
 
-| Package | Type | Old→New | License | Repository | PR Link | Diff Consistent |
-|---------|------|---------|---------|------------|---------|-----------------|
-| PackageA | bump | 1.2.3→1.3.0 | ✅ MIT | ✅ | ✅ compare/v1.2.3...v1.3.0 | ✅ |
-| PackageB | new  | —→4.5.6 | ❌ UNKNOWN | ✅ | ❌ missing repo link | ✅ |
-| PackageC | bump | 2.0.0→2.1.0 | ✅ Apache-2.0 | ✅ | ⚠️ link found but wrong repo | ✅ |
+| Package | Type | Old→New | License | Repository | CI Upload | Release Pipeline | PR Link | Diff Consistent |
+|---------|------|---------|---------|------------|-----------|------------------|---------|-----------------|
+| PackageA | bump | 1.2.3→1.3.0 | ✅ MIT | ✅ | ✅ | ✅ OIDC | ✅ compare/v1.2.3...v1.3.0 | ✅ |
+| PackageB | new  | —→4.5.6 | ❌ UNKNOWN | ✅ | ❌ no attestation | ⚠️ no publish workflow | ❌ missing repo link | ✅ |
+| PackageC | bump | 2.0.0→2.1.0 | ✅ Apache-2.0 | ✅ | ✅ | ❌ static token | ⚠️ link found but wrong repo | ✅ |
 ```
 
 Then add a summary section explaining each failure and what the contributor
 needs to fix, including:
 - The expected source repository URL (from PyPI) when a link is missing or wrong.
 - The expected version range (old → new) when a changelog URL doesn't match the diff.
+- Whether the PyPI release lacks provenance attestation or uses an insecure publish method.
 
 If **all** packages pass every check, do **not** post a comment.
 
