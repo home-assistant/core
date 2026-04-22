@@ -219,6 +219,8 @@ class HiveOptionsFlowHandler(OptionsFlow):
 
         schema = vol.Schema(
             {
+                # Polling interval is user-configurable, which is no longer allowed
+                # pylint: disable-next=hass-config-flow-polling-field
                 vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): vol.All(
                     vol.Coerce(int), vol.Range(min=30)
                 )

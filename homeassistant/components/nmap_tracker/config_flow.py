@@ -167,6 +167,8 @@ async def _async_build_schema_with_user_input(
     if include_options:
         schema.update(
             {
+                # Approved exemption: nmap scan interval is user-configurable
+                # pylint: disable-next=hass-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),

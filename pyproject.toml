@@ -121,6 +121,7 @@ load-plugins = [
   "hass_async_load_fixtures",
   "hass_decorator",
   "hass_enforce_class_module",
+  "hass_enforce_config_flow_no_polling",
   "hass_enforce_greek_micro_char",
   "hass_enforce_runtime_data",
   "hass_enforce_sorted_platforms",
