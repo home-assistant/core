@@ -13,6 +13,7 @@ from aioesphomeapi import (
     ClimatePreset,
     ClimateState,
     ClimateSwingMode,
+    TemperatureUnit,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -30,6 +31,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
+    DATA_COMPONENT,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
     SERVICE_SET_FAN_MODE,
@@ -41,7 +43,7 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -685,3 +687,39 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
     state = hass.states.get("climate.test_my_climate")
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+
+
+@pytest.mark.parametrize(
+    ("temperature_unit", "expected_unit"),
+    [
+        (TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
+        (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT),
+        (TemperatureUnit.KELVIN, UnitOfTemperature.KELVIN),
+    ],
+)
+async def test_climate_entity_temperature_unit(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    temperature_unit: TemperatureUnit,
+    expected_unit: UnitOfTemperature,
+) -> None:
+    """Test that the temperature unit is passed through correctly."""
+    entity_info = [
+        ClimateInfo(
+            object_id="myclimate",
+            key=1,
+            name="my climate",
+            temperature_unit=temperature_unit,
+        )
+    ]
+    states = [ClimateState(key=1, mode=ClimateMode.COOL, target_temperature=22)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("climate.test_my_climate") is not None
+    entity = hass.data[DATA_COMPONENT].get_entity("climate.test_my_climate")
+    assert entity is not None
+    assert entity.temperature_unit == expected_unit

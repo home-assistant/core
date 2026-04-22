@@ -4,6 +4,7 @@ from unittest.mock import call
 
 from aioesphomeapi import (
     APIClient,
+    TemperatureUnit,
     WaterHeaterFeature,
     WaterHeaterInfo,
     WaterHeaterMode,
@@ -15,6 +16,7 @@ import pytest
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
     ATTR_OPERATION_LIST,
+    DATA_COMPONENT,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+	UnitOfTemperature
 )
 from homeassistant.core import HomeAssistant
 
@@ -462,3 +465,40 @@ async def test_water_heater_set_away_mode(
     mock_client.water_heater_command.assert_has_calls(
         [call(key=1, away=away_mode, device_id=0)]
     )
+
+@pytest.mark.parametrize(
+    ("temperature_unit", "expected_unit"),
+    [
+        (TemperatureUnit.CELSIUS, UnitOfTemperature.CELSIUS),
+        (TemperatureUnit.FAHRENHEIT, UnitOfTemperature.FAHRENHEIT),
+        (TemperatureUnit.KELVIN, UnitOfTemperature.KELVIN),
+    ],
+)
+async def test_water_heater_temperature_unit(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    temperature_unit: TemperatureUnit,
+    expected_unit: UnitOfTemperature,
+) -> None:
+    """Test that the temperature unit is passed through correctly."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            temperature_unit=temperature_unit,
+        )
+    ]
+    states = [WaterHeaterState(key=1, target_temperature=50.0)]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("water_heater.test_my_boiler") is not None
+    entity = hass.data[DATA_COMPONENT].get_entity("water_heater.test_my_boiler")
+    assert entity is not None
+    assert entity.temperature_unit == expected_unit
