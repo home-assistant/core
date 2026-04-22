@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from rf_protocols import RadioFrequencyCommand
+from rf_protocols import ModulationType, RadioFrequencyCommand
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
@@ -57,6 +57,11 @@ class DemoRadioFrequency(RadioFrequencyTransmitterEntity):
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return supported frequency ranges."""
         return [(300_000_000, 928_000_000)]
+
+    @property
+    def supported_modulations(self) -> set[ModulationType]:
+        """Return supported modulations."""
+        return {ModulationType.OOK}
 
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Send an RF command."""
