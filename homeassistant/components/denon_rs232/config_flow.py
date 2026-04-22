@@ -15,7 +15,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    SerialSelector,
+    SerialPortSelector,
 )
 
 from .const import DOMAIN, LOGGER
@@ -110,7 +110,7 @@ class DenonRS232ConfigFlow(ConfigFlow, domain=DOMAIN):
                                 translation_key="model",
                             )
                         ),
-                        vol.Required(CONF_DEVICE): SerialSelector(),
+                        vol.Required(CONF_DEVICE): SerialPortSelector(),
                     }
                 ),
                 user_input or {},
