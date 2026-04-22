@@ -61,7 +61,10 @@ async def test_form(hass: HomeAssistant, mock_rotarex_api: AsyncMock) -> None:
     ],
 )
 async def test_form_errors(
-    hass: HomeAssistant, mock_rotarex_api: AsyncMock, exception: Exception, error: str
+    hass: HomeAssistant,
+    mock_rotarex_api: AsyncMock,
+    exception: type[Exception],
+    error: str,
 ) -> None:
     """Test we handle errors and can recover."""
     result = await hass.config_entries.flow.async_init(
