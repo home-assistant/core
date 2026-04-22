@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock
 
+import pytest
+
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -200,3 +202,27 @@ async def test_scene_updates(
     await hass.async_block_till_done()
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is None
+
+
+async def test_scene_with_orphaned_group(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a scene referencing a non-existent group is skipped and logged."""
+    orphaned_scene = {
+        **FAKE_SCENE,
+        "id": "orphaned_scene_id",
+        "group": {"rid": "non-existent-group-id", "rtype": "room"},
+    }
+    await mock_bridge_v2.api.load_test_data([*v2_resources_test_data, orphaned_scene])
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
+
+    # the orphaned scene should not be created as an entity
+    assert hass.states.get("scene.test_room_mocked_scene_orphaned") is None
+    # the valid scenes should still be created
+    assert len(hass.states.async_all()) == 3
+    # an error should be logged for the orphaned scene
+    assert "Unable to create Hue scene entity for orphaned_scene_id" in caplog.text
