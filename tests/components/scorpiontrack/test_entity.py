@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from pyscorpiontrack import ScorpionTrackShare
 
+from homeassistant.components.scorpiontrack.const import MANUFACTURER
 from homeassistant.components.scorpiontrack.device_tracker import (
     ScorpionTrackTrackerEntity,
 )
@@ -101,3 +102,23 @@ async def test_common_location_attributes_reuse_computed_age(
 
     assert attributes["stale"] is True
     assert mock_position_age.call_count == 1
+
+
+async def test_common_location_attributes_use_manufacturer_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_share: ScorpionTrackShare,
+) -> None:
+    """Shared attributes should fall back to the integration manufacturer."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    entity = ScorpionTrackTrackerEntity(coordinator, 1)
+    vehicle = replace(mock_share.vehicles[0], make=None)
+
+    coordinator.async_set_updated_data(replace(mock_share, vehicles=(vehicle,)))
+    await hass.async_block_till_done()
+
+    attributes = entity.common_location_attributes()
+
+    assert attributes["make"] == MANUFACTURER

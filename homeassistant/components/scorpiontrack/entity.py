@@ -99,7 +99,9 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
             "registration": vehicle.registration
             if vehicle
             else self._cached_registration,
-            "make": vehicle.make if vehicle else self._cached_manufacturer,
+            "make": vehicle.make or MANUFACTURER
+            if vehicle
+            else self._cached_manufacturer,
             "model": vehicle.model if vehicle else self._cached_model,
             "status": vehicle.status if vehicle else None,
             "bearing": position.bearing if position else None,
