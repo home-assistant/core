@@ -9,8 +9,6 @@ CHANNEL_CREATION_HELP_URL = "https://support.google.com/youtube/answer/1646861"
 
 CONF_CHANNELS = "channels"
 CONF_UPLOAD_PLAYLIST = "upload_playlist_id"
-COORDINATOR = "coordinator"
-AUTH = "auth"
 
 LOGGER = logging.getLogger(__package__)
 
