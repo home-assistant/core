@@ -1,8 +1,11 @@
 charge:
-  target:
-    entity:
-      integration: indevolt
   fields:
+    device_ids:
+      required: true
+      selector:
+        device:
+          multiple: true
+          integration: indevolt
     target_soc:
       required: true
       selector:
@@ -21,10 +24,13 @@ charge:
           unit_of_measurement: "W"
 
 discharge:
-  target:
-    entity:
-      integration: indevolt
   fields:
+    device_ids:
+      required: true
+      selector:
+        device:
+          multiple: true
+          integration: indevolt
     target_soc:
       required: true
       selector:
