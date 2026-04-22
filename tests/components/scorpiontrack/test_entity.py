@@ -42,6 +42,7 @@ async def test_tracker_helper_methods_handle_removed_vehicle(
     attributes = entity.common_location_attributes(include_coordinates=True)
     assert attributes["latitude"] is None
     assert attributes["longitude"] is None
+    assert attributes["make"] == "Volkswagen"
     assert attributes["removed_from_share"] is True
 
 
