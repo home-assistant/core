@@ -104,8 +104,6 @@ async def test_sensor_native_value_none_when_tank_disappears(
     mock_rotarex_api: AsyncMock,
 ) -> None:
     """Test native_value returns None when tank disappears from coordinator data."""
-    from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
-
     from homeassistant.components.rotarex.sensor import RotarexTankSensor
 
     mock_config_entry.add_to_hass(hass)
@@ -116,7 +114,11 @@ async def test_sensor_native_value_none_when_tank_disappears(
     coordinator = mock_config_entry.runtime_data
     tank1_sensor: RotarexTankSensor | None = None
     for entity in hass.data["entity_components"]["sensor"].entities:
-        if hasattr(entity, "_tank_id") and entity._tank_id == "tank1-guid" and entity.entity_description.key == "level":
+        if (
+            hasattr(entity, "_tank_id")
+            and entity._tank_id == "tank1-guid"
+            and entity.entity_description.key == "level"
+        ):
             tank1_sensor = entity
             break
     assert tank1_sensor is not None
