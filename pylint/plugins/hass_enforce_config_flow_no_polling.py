@@ -5,7 +5,7 @@ by the integration, not exposed as user-configurable fields. The integration
 author determines the appropriate polling frequency based on API rate limits,
 device capabilities, and data freshness needs.
 
-Found in 3.5% of new-integration PRs across 1,100+ analyzed PRs.
+Found in 3.5% of new-integration PRs across 1,100+ analyzed PRs, April 2026.
 """
 
 from __future__ import annotations
