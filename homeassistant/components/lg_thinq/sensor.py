@@ -520,11 +520,7 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     ),
     DeviceType.KIMCHI_REFRIGERATOR: (
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],
-        SensorEntityDescription(
-            key=ThinQProperty.TARGET_TEMPERATURE,
-            device_class=SensorDeviceClass.ENUM,
-            translation_key=ThinQProperty.TARGET_TEMPERATURE,
-        ),
+        TEMPERATURE_SENSOR_DESC[ThinQProperty.TARGET_TEMPERATURE],
     ),
     DeviceType.MICROWAVE_OVEN: (RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],),
     DeviceType.OVEN: (
@@ -707,6 +703,17 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             else f"{self.location}_{ThinQProperty.CURRENT_STATE}"
         )
 
+        if (
+            self.coordinator.api.device.device_type == DeviceType.KIMCHI_REFRIGERATOR
+            and self.entity_description.key == ThinQProperty.TARGET_TEMPERATURE
+            and self.data.options
+        ):
+            # some kimchi refrigerator's target temperature have data in the form of string with enum options.
+            # Set options to display the correct value in the UI.
+            self._attr_options = self.data.options
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_native_unit_of_measurement = None
+
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -762,36 +769,18 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                 )
         self._attr_native_value = value
 
-        if self.native_value is not None:
-            if isinstance(self.native_value, str):
-                # clear unit_of_measurement for non-numeric value
-                self._attr_native_unit_of_measurement = None
-            else:
-                # clear device_class for numeric value has ENUM
-                if self.entity_description.device_class == SensorDeviceClass.ENUM:
-                    self._attr_device_class = None
-
-                if (
-                    data_unit := self._get_unit_of_measurement(self.data.unit)
-                ) is not None:
-                    # data has its own unit C or F
-                    self._attr_native_unit_of_measurement = data_unit
-                else:
-                    # entity_description
-                    self._attr_native_unit_of_measurement = (
-                        self.entity_description.native_unit_of_measurement
-                    )
+        if (data_unit := self._get_unit_of_measurement(self.data.unit)) is not None:
+            # For different from description's unit
+            self._attr_native_unit_of_measurement = data_unit
 
         _LOGGER.debug(
-            "[%s:%s] update status: %s -> %s, options:%s, unit:%s, type:%s, device_class:%s",
+            "[%s:%s] update status: %s -> %s, options:%s, unit:%s",
             self.coordinator.device_name,
             self.property_id,
             self.data.value,
             self.native_value,
             self.options,
             self.native_unit_of_measurement,
-            type(self.native_value),
-            self.device_class,
         )
 
     def _get_duration(self, data: time, unit: str | None) -> float | None:

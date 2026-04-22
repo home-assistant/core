@@ -785,7 +785,13 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'kimchi',
+        'meat_fish',
+        'vegetable_fruit',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -821,6 +827,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test kimchi refrigerator middle temperature',
+      'options': list([
+        'kimchi',
+        'meat_fish',
+        'vegetable_fruit',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_kimchi_refrigerator_middle_temperature',
@@ -864,7 +875,7 @@
     'supported_features': 0,
     'translation_key': 'target_temperature_for_location',
     'unique_id': 'MW2-FD94EF23-EF86-4D65-92AB-5399A90C228F_top_target_temperature',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
 # name: test_sensor_entities[kimchi_refrigerator][sensor.test_kimchi_refrigerator_top_temperature-state]
