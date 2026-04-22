@@ -171,6 +171,19 @@ async def test_async_send_command_unsupported_frequency(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_supports_modulation_invalid_type(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+) -> None:
+    """Test supports_modulation rejects non-ModulationType values."""
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([mock_rf_entity])
+
+    with pytest.raises(TypeError, match="modulation must be a ModulationType"):
+        mock_rf_entity.supports_modulation("OOK")  # type: ignore[arg-type]
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_async_send_command_unsupported_modulation(
     hass: HomeAssistant,
 ) -> None:

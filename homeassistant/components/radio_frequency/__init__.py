@@ -195,6 +195,10 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
     @final
     def supports_modulation(self, modulation: ModulationType) -> bool:
         """Return whether the transmitter supports the given modulation."""
+        if not isinstance(modulation, ModulationType):
+            raise TypeError(
+                f"modulation must be a ModulationType, got {type(modulation).__name__}"
+            )
         return modulation in self.supported_modulations
 
     @property
