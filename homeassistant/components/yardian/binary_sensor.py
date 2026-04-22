@@ -10,14 +10,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import YardianUpdateCoordinator
+from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -77,11 +75,11 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YardianConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yardian binary sensors."""
-    coordinator: YardianUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities: list[BinarySensorEntity] = [
         YardianBinarySensor(coordinator, description)

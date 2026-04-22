@@ -223,8 +223,13 @@ async def test_light_strip(hass: HomeAssistant) -> None:
         blocking=True,
     )
     # Single color uses the fast path
-    assert bulb.set_color.calls[1][0][0] == [1820, 19660, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        1820,
+        19660,
+        65535,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
     assert len(bulb.set_color_zones.calls) == 0
 
     bulb.color_zones = [
@@ -245,8 +250,13 @@ async def test_light_strip(hass: HomeAssistant) -> None:
         blocking=True,
     )
     # Single color uses the fast path
-    assert bulb.set_color.calls[0][0][0] == [64643, 62964, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        64643,
+        62964,
+        65535,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
     assert len(bulb.set_color_zones.calls) == 0
 
     bulb.color_zones = [
@@ -267,8 +277,13 @@ async def test_light_strip(hass: HomeAssistant) -> None:
         blocking=True,
     )
     # Single color uses the fast path
-    assert bulb.set_color.calls[0][0][0] == [15848, 65535, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        15848,
+        65535,
+        65535,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
     assert len(bulb.set_color_zones.calls) == 0
 
     bulb.color_zones = [
@@ -1219,8 +1234,20 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [65535, 65535, 25700, 65535]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [65535, 65535, 25700, 65535],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": False,
+        "set_saturation": False,
+        "set_brightness": True,
+        "set_kelvin": False,
+    }
+    bulb.set_waveform_optional.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1228,8 +1255,20 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [1820, 19660, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [1820, 19660, 65535, 3500],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": True,
+        "set_saturation": True,
+        "set_brightness": False,
+        "set_kelvin": True,
+    }
+    bulb.set_waveform_optional.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1237,8 +1276,20 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (255, 30, 80)},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [63107, 57824, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [63107, 57824, 65535, 3500],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": True,
+        "set_saturation": True,
+        "set_brightness": False,
+        "set_kelvin": True,
+    }
+    bulb.set_waveform_optional.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1246,8 +1297,20 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.46, 0.376)},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [4956, 30583, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [4956, 30583, 65535, 3500],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": True,
+        "set_saturation": True,
+        "set_brightness": False,
+        "set_kelvin": True,
+    }
+    bulb.set_waveform_optional.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1357,8 +1420,20 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [32000, None, 25700, 6000]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [32000, None, 25700, 6000],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": False,
+        "set_saturation": False,
+        "set_brightness": True,
+        "set_kelvin": False,
+    }
+    bulb.set_waveform_optional.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1366,8 +1441,20 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 2500},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [32000, 0, 32000, 2500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [32000, 0, 32000, 2500],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": False,
+        "set_saturation": True,
+        "set_brightness": False,
+        "set_kelvin": True,
+    }
+    bulb.set_waveform_optional.reset_mock()
 
 
 @pytest.mark.usefixtures("mock_discovery")
@@ -1493,7 +1580,7 @@ async def test_white_light_fails(
         bulb.set_power.reset_mock()
 
         bulb.set_power = MockLifxCommand(bulb)
-        bulb.set_color = MockFailingLifxCommand(bulb)
+        bulb.set_waveform_optional = MockFailingLifxCommand(bulb)
 
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
@@ -1502,8 +1589,19 @@ async def test_white_light_fails(
                 {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6000},
                 blocking=True,
             )
-        assert bulb.set_color.calls[0][0][0] == [1, 0, 3, 6000]
-        bulb.set_color.reset_mock()
+        assert bulb.set_waveform_optional.calls[0][1]["value"] == {
+            "transient": False,
+            "color": [1, 0, 3, 6000],
+            "period": 0,
+            "cycles": 1,
+            "skew_ratio": 0,
+            "waveform": 0,
+            "set_hue": False,
+            "set_saturation": True,
+            "set_brightness": False,
+            "set_kelvin": True,
+        }
+        bulb.set_waveform_optional.reset_mock()
 
 
 async def test_brightness_bulb(hass: HomeAssistant) -> None:
@@ -1551,8 +1649,20 @@ async def test_brightness_bulb(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [32000, None, 25700, 6000]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [32000, None, 25700, 6000],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": False,
+        "set_saturation": False,
+        "set_brightness": True,
+        "set_kelvin": False,
+    }
+    bulb.set_waveform_optional.reset_mock()
 
 
 async def test_transitions_brightness_only(hass: HomeAssistant) -> None:
@@ -1683,13 +1793,25 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [65316, 64249, 25700, 3500]
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [65316, 64249, 25700, 3500],
+        "period": 0,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": True,
+        "set_saturation": True,
+        "set_brightness": True,
+        "set_kelvin": True,
+    }
     assert bulb.set_power.calls[0][0][0] is True
     call_dict = bulb.set_power.calls[0][1]
     call_dict.pop("callb")
     assert call_dict == {"duration": 5000}
     bulb.set_power.reset_mock()
-    bulb.set_color.reset_mock()
+    bulb.set_waveform_optional.reset_mock()
 
     bulb.power_level = 12800
 
@@ -1704,12 +1826,21 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [43690, 32767, 51400, 3500]
-    call_dict = bulb.set_color.calls[0][1]
-    call_dict.pop("callb")
-    assert call_dict == {"duration": 5000}
+    assert bulb.set_waveform_optional.calls[-1][1]["rapid"] is False
+    assert bulb.set_waveform_optional.calls[-1][1]["value"] == {
+        "transient": False,
+        "color": [43690, 32767, 51400, 3500],
+        "period": 5000,
+        "cycles": 1,
+        "skew_ratio": 0,
+        "waveform": 0,
+        "set_hue": True,
+        "set_saturation": True,
+        "set_brightness": True,
+        "set_kelvin": True,
+    }
     bulb.set_power.reset_mock()
-    bulb.set_color.reset_mock()
+    bulb.set_waveform_optional.reset_mock()
 
     await hass.async_block_till_done()
     bulb.get_color.reset_mock()
@@ -1721,7 +1852,7 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
         assert len(bulb.get_color.calls) == 2
 
     bulb.set_power.reset_mock()
-    bulb.set_color.reset_mock()
+    bulb.set_waveform_optional.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_off",
@@ -1736,7 +1867,7 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     call_dict.pop("callb")
     assert call_dict == {"duration": 5000}
     bulb.set_power.reset_mock()
-    bulb.set_color.reset_mock()
+    bulb.set_waveform_optional.reset_mock()
 
 
 async def test_lifx_set_state_brightness(hass: HomeAssistant) -> None:
@@ -1766,8 +1897,13 @@ async def test_lifx_set_state_brightness(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        0,
+        0,
+        65535,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
     # brightness_step_pct should convert from percentage to 16 bit
     await hass.services.async_call(
@@ -1777,8 +1913,13 @@ async def test_lifx_set_state_brightness(hass: HomeAssistant) -> None:
         blocking=True,
     )
 
-    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        0,
+        0,
+        65535,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
 
 async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
@@ -1807,8 +1948,13 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [32000, None, 65535, 2700]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        32000,
+        None,
+        65535,
+        2700,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
     # brightness_pct should convert into 16 bit
     await hass.services.async_call(
@@ -1817,8 +1963,13 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 90},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [32000, None, 59110, 2700]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        32000,
+        None,
+        59110,
+        2700,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
     # color name should turn into hue, saturation
     await hass.services.async_call(
@@ -1827,8 +1978,13 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_NAME: "red", ATTR_BRIGHTNESS_PCT: 100},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [0, 65535, 65535, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        0,
+        65535,
+        65535,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
     # unknown color name should reset back to neutral white, i.e. 3500K
     await hass.services.async_call(
@@ -1837,8 +1993,13 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_NAME: "deepblack"},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [0, 0, 32000, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        0,
+        0,
+        32000,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
     # RGB should convert to hue, saturation
     await hass.services.async_call(
@@ -1847,8 +2008,13 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (0, 255, 0)},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [21845, 65535, 32000, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        21845,
+        65535,
+        32000,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
     # XY should convert to hue, saturation
     await hass.services.async_call(
@@ -1857,8 +2023,13 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.34, 0.339)},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [5461, 5139, 32000, 3500]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        5461,
+        5139,
+        32000,
+        3500,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
 
 async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
@@ -1897,8 +2068,13 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 2700},
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [32000, 0, 25700, 2700]
-    bulb.set_color.reset_mock()
+    assert bulb.set_waveform_optional.calls[-1][1]["value"]["color"] == [
+        32000,
+        0,
+        25700,
+        2700,
+    ]
+    bulb.set_waveform_optional.reset_mock()
 
 
 async def test_infrared_color_bulb(hass: HomeAssistant) -> None:
@@ -1981,7 +2157,7 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
                 callb(self.bulb, MockMessage())
             self.calls.append([args, kwargs])
 
-    bulb.set_color = MockLifxCommandActuallyOff(bulb)
+    bulb.set_waveform_optional = MockLifxCommandActuallyOff(bulb)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1993,7 +2169,12 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
         },
         blocking=True,
     )
-    assert bulb.set_color.calls[0][0][0] == [0, 0, 25700, 3500]
+    assert bulb.set_waveform_optional.calls[0][1]["value"]["color"] == [
+        0,
+        0,
+        25700,
+        3500,
+    ]
     assert len(bulb.set_power.calls) == 1
 
 
@@ -2028,6 +2209,34 @@ async def test_clean_bulb(hass: HomeAssistant) -> None:
     call_dict.pop("callb")
     assert call_dict == {"duration": 0, "enable": True}
     bulb.set_hev_cycle.reset_mock()
+
+
+async def test_set_color_timeout_raises_home_assistant_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test service-driven color changes surface waveform timeouts consistently."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    bulb.set_waveform_optional = MockFailingLifxCommand(bulb)
+
+    with pytest.raises(HomeAssistantError, match="Timeout setting color"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            "turn_on",
+            {ATTR_ENTITY_ID: "light.my_bulb", ATTR_HS_COLOR: (10, 30)},
+            blocking=True,
+        )
 
 
 async def test_set_hev_cycle_state_fails_for_color_bulb(hass: HomeAssistant) -> None:

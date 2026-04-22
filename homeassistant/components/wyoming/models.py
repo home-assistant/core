@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from homeassistant.config_entries import ConfigEntry
+
 from .data import WyomingService
 from .devices import SatelliteDevice
 
@@ -12,3 +14,6 @@ class DomainDataItem:
 
     service: WyomingService
     device: SatelliteDevice | None = None
+
+
+type WyomingConfigEntry = ConfigEntry[DomainDataItem]

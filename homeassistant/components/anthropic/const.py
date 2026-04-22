@@ -50,15 +50,6 @@ DEFAULT = {
     CONF_WEB_SEARCH_MAX_USES: 5,
 }
 
-WEB_SEARCH_UNSUPPORTED_MODELS = [
-    "claude-3-haiku",
-]
-
-CODE_EXECUTION_UNSUPPORTED_MODELS = [
-    "claude-3-haiku",
-]
-
 TOOL_SEARCH_UNSUPPORTED_MODELS = [
-    "claude-3",
     "claude-haiku",
 ]

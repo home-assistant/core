@@ -5,10 +5,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
-from homeassistant.components.backup import (
-    DATA_MANAGER as BACKUP_DATA_MANAGER,
-    BackupManager,
-)
+from homeassistant.components.backup import DATA_MANAGER as BACKUP_DATA_MANAGER
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
@@ -31,7 +28,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-    backup_manager: BackupManager = hass.data[BACKUP_DATA_MANAGER]
+    backup_manager = hass.data[BACKUP_DATA_MANAGER]
     backups = await async_list_backups_from_s3(
         coordinator.client,
         bucket=entry.data[CONF_BUCKET],

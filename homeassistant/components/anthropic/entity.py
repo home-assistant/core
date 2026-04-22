@@ -124,10 +124,14 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> ToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf"}
+    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     return ToolParam(
         name=tool.name,
         description=tool.description or "",
-        input_schema=convert(tool.parameters, custom_serializer=custom_serializer),
+        input_schema=schema,
     )
 
 

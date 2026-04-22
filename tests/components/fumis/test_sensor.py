@@ -1,0 +1,102 @@
+"""Tests for the Fumis sensor entities."""
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry, snapshot_platform
+
+UNIQUE_ID_PREFIX = "aa:bb:cc:dd:ee:ff"
+
+pytestmark = pytest.mark.parametrize(
+    "init_integration", [Platform.SENSOR], indirect=True
+)
+
+
+@pytest.mark.freeze_time("2026-04-20 12:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Fumis sensor entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        f"{UNIQUE_ID_PREFIX}_fan_1_speed",
+        f"{UNIQUE_ID_PREFIX}_fan_2_speed",
+        f"{UNIQUE_ID_PREFIX}_module_temperature",
+        f"{UNIQUE_ID_PREFIX}_pressure",
+        f"{UNIQUE_ID_PREFIX}_wifi_rssi",
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_sensors_disabled_by_default(
+    entity_registry: er.EntityRegistry,
+    unique_id: str,
+) -> None:
+    """Test sensors that are disabled by default."""
+    entry = entity_registry.async_get_entity_id("sensor", "fumis", unique_id)
+    assert entry is not None, f"Entity with unique_id {unique_id} not found"
+    assert (entity_entry := entity_registry.async_get(entry))
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.parametrize("device_fixture", ["info_minimal"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_sensors_unknown_status(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor returns unknown when stove status is unmapped."""
+    for key in ("stove_status", "detailed_stove_status"):
+        entry = entity_registry.async_get_entity_id(
+            "sensor", "fumis", f"{UNIQUE_ID_PREFIX}_{key}"
+        )
+        assert entry is not None
+        assert (state := hass.states.get(entry))
+        assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("device_fixture", ["info_minimal"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_sensors_conditional_creation(
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensors with has_fn are not created when data is missing."""
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    unique_ids = {entry.unique_id for entry in entity_entries}
+
+    # These should NOT exist with the minimal fixture
+    for key in (
+        "combustion_chamber_temperature",
+        "fan_1_speed",
+        "fan_2_speed",
+        "fuel_quantity",
+        "module_temperature",
+        "pressure",
+        "temperature",
+        "time_to_service",
+    ):
+        assert f"{UNIQUE_ID_PREFIX}_{key}" not in unique_ids, key
+
+    # These should still exist
+    for key in (
+        "detailed_stove_status",
+        "power_output",
+        "stove_status",
+        "wifi_rssi",
+        "wifi_signal_strength",
+    ):
+        assert f"{UNIQUE_ID_PREFIX}_{key}" in unique_ids, key

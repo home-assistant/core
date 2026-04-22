@@ -1129,13 +1129,13 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
         ({}, ("/dev/ttyUSB0",), (None,)),
     ],
 )
-def test_serial_selector_schema(
+def test_serial_port_selector_schema(
     schema: dict | None,
     valid_selections: tuple[Any, ...],
     invalid_selections: tuple[Any, ...],
 ) -> None:
-    """Test serial selector."""
-    _test_selector("serial", schema, valid_selections, invalid_selections)
+    """Test serial port selector."""
+    _test_selector("serial_port", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(

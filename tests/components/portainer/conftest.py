@@ -7,6 +7,7 @@ from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     DockerSystemDF,
+    DockerVolume,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
@@ -81,6 +82,10 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.portainer_system_status.return_value = PortainerSystemStatus.from_dict(
             load_json_value_fixture("portainer_system_status.json", DOMAIN)
         )
+        client.get_volumes.return_value = [
+            DockerVolume.from_dict(volume)
+            for volume in load_json_array_fixture("volumes.json", DOMAIN)
+        ]
 
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)

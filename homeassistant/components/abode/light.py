@@ -16,21 +16,20 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN_DATA
+from . import AbodeConfigEntry
 from .entity import AbodeDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AbodeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode light devices."""
-    data = hass.data[DOMAIN_DATA]
+    data = entry.runtime_data
 
     async_add_entities(
         AbodeLight(data, device)

@@ -27,9 +27,11 @@ _MOISTURE_NUMERICAL_DOMAIN_SPECS = {
 }
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_detected": make_entity_state_condition(_MOISTURE_BINARY_DOMAIN_SPECS, STATE_ON),
+    "is_detected": make_entity_state_condition(
+        _MOISTURE_BINARY_DOMAIN_SPECS, STATE_ON, support_duration=True
+    ),
     "is_not_detected": make_entity_state_condition(
-        _MOISTURE_BINARY_DOMAIN_SPECS, STATE_OFF
+        _MOISTURE_BINARY_DOMAIN_SPECS, STATE_OFF, support_duration=True
     ),
     "is_value": make_entity_numerical_condition(
         _MOISTURE_NUMERICAL_DOMAIN_SPECS, PERCENTAGE

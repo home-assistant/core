@@ -34,16 +34,15 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_WIDTH
+from .const import SAMPLE_CHANNELS, SAMPLE_WIDTH
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,11 +67,11 @@ _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WyomingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming Assist satellite entity."""
-    domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    domain_data = config_entry.runtime_data
     assert domain_data.device is not None
 
     async_add_entities(
@@ -97,7 +96,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         hass: HomeAssistant,
         service: WyomingService,
         device: SatelliteDevice,
-        config_entry: ConfigEntry,
+        config_entry: WyomingConfigEntry,
     ) -> None:
         """Initialize an Assist satellite."""
         WyomingSatelliteEntity.__init__(self, device)

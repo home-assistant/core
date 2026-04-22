@@ -32,6 +32,7 @@ from .const import (
     DOMAIN,
     OVERRIDE_TYPE_NOW,
 )
+from .entity import NoboBaseEntity
 
 SUPPORT_FLAGS = (
     ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -63,7 +64,7 @@ async def async_setup_entry(
     async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
 
 
-class NoboZone(ClimateEntity):
+class NoboZone(NoboBaseEntity, ClimateEntity):
     """Representation of a Nobø zone.
 
     A Nobø zone consists of a group of physical devices that are
@@ -71,7 +72,6 @@ class NoboZone(ClimateEntity):
     """
 
     _attr_name = None
-    _attr_has_entity_name = True
     _attr_max_temp = MAX_TEMPERATURE
     _attr_min_temp = MIN_TEMPERATURE
     _attr_precision = PRECISION_TENTHS
@@ -81,12 +81,13 @@ class NoboZone(ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
-    # Need to poll to get preset change when in HVACMode.AUTO, so can't set _attr_should_poll = False
+    # Need to poll to get preset change when in HVACMode.AUTO
+    _attr_should_poll = True
 
     def __init__(self, zone_id, hub: nobo, override_type) -> None:
         """Initialize the climate device."""
+        super().__init__(hub)
         self._id = zone_id
-        self._nobo = hub
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._override_type = override_type
         self._attr_device_info = DeviceInfo(
@@ -96,14 +97,6 @@ class NoboZone(ClimateEntity):
             suggested_area=hub.zones[zone_id][ATTR_NAME],
         )
         self._read_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback from hub."""
-        self._nobo.register_callback(self._after_update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Deregister callback from hub."""
-        self._nobo.deregister_callback(self._after_update)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode, if it's supported."""
@@ -178,8 +171,3 @@ class NoboZone(ClimateEntity):
         self._attr_target_temperature_low = int(
             self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
         )
-
-    @callback
-    def _after_update(self, hub):
-        self._read_state()
-        self.async_write_ha_state()

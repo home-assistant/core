@@ -6,10 +6,18 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from .const import DOMAIN, LockState
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_jammed": make_entity_state_condition(DOMAIN, LockState.JAMMED),
-    "is_locked": make_entity_state_condition(DOMAIN, LockState.LOCKED),
-    "is_open": make_entity_state_condition(DOMAIN, LockState.OPEN),
-    "is_unlocked": make_entity_state_condition(DOMAIN, LockState.UNLOCKED),
+    "is_jammed": make_entity_state_condition(
+        DOMAIN, LockState.JAMMED, support_duration=True
+    ),
+    "is_locked": make_entity_state_condition(
+        DOMAIN, LockState.LOCKED, support_duration=True
+    ),
+    "is_open": make_entity_state_condition(
+        DOMAIN, LockState.OPEN, support_duration=True
+    ),
+    "is_unlocked": make_entity_state_condition(
+        DOMAIN, LockState.UNLOCKED, support_duration=True
+    ),
 }
 
 

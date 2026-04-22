@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
+from contextlib import suppress
 import dataclasses
 from datetime import datetime, timedelta
 import logging
@@ -35,7 +36,6 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN
 from .models import SerialDevice, USBDevice
 from .utils import (
-    async_scan_serial_ports,
     scan_serial_ports,
     usb_device_from_path,
     usb_device_matches_matcher,
@@ -47,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 _USB_DATA: HassKey[USBDiscovery] = HassKey(DOMAIN)
 
 PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
+SERIAL_PORT_SCANNER_TYPE = Callable[[HomeAssistant], Sequence[USBDevice | SerialDevice]]
 
 POLLING_MONITOR_SCAN_PERIOD = timedelta(seconds=5)
 REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
@@ -58,6 +59,7 @@ __all__ = [
     "USBDevice",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
+    "async_register_serial_port_scanner",
     "async_scan_serial_ports",
     "scan_serial_ports",
     "usb_device_from_path",
@@ -98,6 +100,21 @@ def async_register_port_event_callback(
 ) -> CALLBACK_TYPE:
     """Register to receive a callback when a USB device is connected or disconnected."""
     return hass.data[_USB_DATA].async_register_port_event_callback(callback)
+
+
+async def async_scan_serial_ports(
+    hass: HomeAssistant,
+) -> Sequence[USBDevice | SerialDevice]:
+    """Scan serial ports and return USB and other serial devices."""
+    return await hass.data[_USB_DATA].async_scan_serial_ports()
+
+
+@hass_callback
+def async_register_serial_port_scanner(
+    hass: HomeAssistant, scanner: SERIAL_PORT_SCANNER_TYPE
+) -> CALLBACK_TYPE:
+    """Register a scanner that contributes additional serial ports to scans."""
+    return hass.data[_USB_DATA].async_register_serial_port_scanner(scanner)
 
 
 @hass_callback
@@ -198,6 +215,7 @@ class USBDiscovery:
         self.initial_scan_done = False
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
         self._port_event_callbacks: set[PORT_EVENT_CALLBACK_TYPE] = set()
+        self._serial_port_scanners: list[SERIAL_PORT_SCANNER_TYPE] = []
         self._last_processed_devices: set[USBDevice] = set()
         self._scan_lock = asyncio.Lock()
 
@@ -312,6 +330,41 @@ class USBDiscovery:
             self._port_event_callbacks.discard(callback)
 
         return _async_remove_callback
+
+    @hass_callback
+    def async_register_serial_port_scanner(
+        self,
+        scanner: SERIAL_PORT_SCANNER_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register a scanner that contributes additional serial ports to scans."""
+        self._serial_port_scanners.append(scanner)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            with suppress(ValueError):
+                self._serial_port_scanners.remove(scanner)
+
+        return _async_remove_callback
+
+    async def async_scan_serial_ports(self) -> Sequence[USBDevice | SerialDevice]:
+        """Scan serial ports and return USB and other serial devices.
+
+        Ports returned by registered scanners override real ports with the same
+        device path, letting integrations enhance the metadata for known devices.
+        """
+        ports: dict[str, USBDevice | SerialDevice] = {
+            p.device: p
+            for p in await self.hass.async_add_executor_job(scan_serial_ports)
+        }
+
+        for scanner in self._serial_port_scanners:
+            try:
+                for port in scanner(self.hass):
+                    ports[port.device] = port
+            except Exception:
+                _LOGGER.exception("Error in USB scanner callback")
+
+        return list(ports.values())
 
     @hass_callback
     def async_get_usb_matchers_for_device(self, device: USBDevice) -> list[USBMatcher]:
@@ -440,7 +493,7 @@ class USBDiscovery:
             # Only consider USB-serial ports for discovery
             usb_ports = [
                 p
-                for p in await async_scan_serial_ports(self.hass)
+                for p in await self.async_scan_serial_ports()
                 if isinstance(p, USBDevice)
             ]
 

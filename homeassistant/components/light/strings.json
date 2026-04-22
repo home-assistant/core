@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "condition_threshold_name": "Threshold type",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
@@ -57,6 +58,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::light::common::condition_for_name%]"
         }
       },
       "name": "Light is off"
@@ -66,6 +70,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::light::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::light::common::condition_for_name%]"
         }
       },
       "name": "Light is on"
