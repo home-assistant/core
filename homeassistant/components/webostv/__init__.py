@@ -69,6 +69,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
                 CONF_NAME: entry.title,
                 ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             },
+            # Uses legacy hass.data[DOMAIN] pattern
+            # pylint: disable-next=hass-use-runtime-data
             hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
     )

@@ -1,4 +1,5 @@
 """Native Home Assistant iOS app component."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import datetime
 from http import HTTPStatus
