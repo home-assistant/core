@@ -1,5 +1,6 @@
 """Base for Hass.io entities."""
 
+from aiohasupervisor.models import OSInfo
 from aiohasupervisor.models.base import ContainerStats
 from aiohasupervisor.models.mounts import CIFSMountResponse, NFSMountResponse
 
@@ -51,6 +52,12 @@ class HassioStatsEntity(CoordinatorEntity[HassioStatsDataUpdateCoordinator]):
         return data.supervisor
 
     @property
+    def stats(self) -> ContainerStats:
+        """Return the stats object, asserting it is available."""
+        assert self._stats is not None
+        return self._stats
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._stats is not None
@@ -90,6 +97,11 @@ class HassioAddonEntity(CoordinatorEntity[HassioAddOnDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, addon.addon.slug)})
 
     @property
+    def addon_slug(self) -> str:
+        """Return the add-on slug."""
+        return self._addon_slug
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._addon_slug in self.coordinator.data.addons
@@ -124,6 +136,12 @@ class HassioOSEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data.os is not None
+
+    @property
+    def os(self) -> OSInfo:
+        """Return the OS info object, asserting it is available."""
+        assert self.coordinator.data.os is not None
+        return self.coordinator.data.os
 
 
 class HassioHostEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
@@ -200,6 +218,11 @@ class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self._mount = mount
 
     @property
+    def mount_name(self) -> str:
+        """Return the mount name."""
+        return self._mount.name
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._mount.name in self.coordinator.data.mounts
+        return super().available and self.mount_name in self.coordinator.data.mounts

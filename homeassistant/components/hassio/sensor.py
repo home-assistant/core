@@ -1,5 +1,8 @@
 """Sensor platform for Hass.io addons."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -28,85 +31,129 @@ from .entity import (
     HassioStatsEntity,
 )
 
+
+@dataclass(frozen=True, kw_only=True)
+class HassioAddonSensorEntityDescription(SensorEntityDescription):
+    """Hass.io add-on sensor entity description."""
+
+    value_fn: Callable[[HassioAddonSensor], str | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class HassioStatsSensorEntityDescription(SensorEntityDescription):
+    """Hass.io stats sensor entity description."""
+
+    value_fn: Callable[[HassioStatsSensor], float]
+
+
+@dataclass(frozen=True, kw_only=True)
+class HassioOSSensorEntityDescription(SensorEntityDescription):
+    """Hass.io OS sensor entity description."""
+
+    value_fn: Callable[[HassioOSSensor], str | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class HassioHostSensorEntityDescription(SensorEntityDescription):
+    """Hass.io host sensor entity description."""
+
+    value_fn: Callable[[HostSensor], str | float | None]
+
+
 ADDON_ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
+    HassioAddonSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="version",
         translation_key="version",
+        value_fn=lambda entity: (
+            entity.coordinator.data.addons[entity.addon_slug].addon.version
+        ),
     ),
-    SensorEntityDescription(
+    HassioAddonSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="version_latest",
         translation_key="version_latest",
+        value_fn=lambda entity: (
+            entity.coordinator.data.addons[entity.addon_slug].addon.version_latest
+        ),
     ),
 )
 
 STATS_ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
+    HassioStatsSensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_CPU_PERCENT,
         translation_key="cpu_percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: entity.stats.cpu_percent,
     ),
-    SensorEntityDescription(
+    HassioStatsSensorEntityDescription(
         entity_registry_enabled_default=False,
         key=ATTR_MEMORY_PERCENT,
         translation_key="memory_percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: entity.stats.memory_percent,
     ),
 )
 
 OS_ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
+    HassioOSSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="version",
         translation_key="version",
+        value_fn=lambda entity: entity.os.version,
     ),
-    SensorEntityDescription(
+    HassioOSSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="version_latest",
         translation_key="version_latest",
+        value_fn=lambda entity: entity.os.version_latest,
     ),
 )
 
 HOST_ENTITY_DESCRIPTIONS = (
-    SensorEntityDescription(
+    HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="agent_version",
         translation_key="agent_version",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda entity: entity.coordinator.data.host.agent_version,
     ),
-    SensorEntityDescription(
+    HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="apparmor_version",
         translation_key="apparmor_version",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda entity: entity.coordinator.data.host.apparmor_version,
     ),
-    SensorEntityDescription(
+    HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="disk_total",
         translation_key="disk_total",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda entity: entity.coordinator.data.host.disk_total,
     ),
-    SensorEntityDescription(
+    HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="disk_used",
         translation_key="disk_used",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda entity: entity.coordinator.data.host.disk_used,
     ),
-    SensorEntityDescription(
+    HassioHostSensorEntityDescription(
         entity_registry_enabled_default=False,
         key="disk_free",
         translation_key="disk_free",
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda entity: entity.coordinator.data.host.disk_free,
     ),
 )
 
@@ -199,39 +246,42 @@ async def async_setup_entry(
 class HassioAddonSensor(HassioAddonEntity, SensorEntity):
     """Sensor to track a Hass.io add-on attribute."""
 
+    entity_description: HassioAddonSensorEntityDescription
+
     @property
     def native_value(self) -> str | None:
         """Return native value of entity."""
-        return getattr(
-            self.coordinator.data.addons[self._addon_slug].addon,
-            self.entity_description.key,
-        )
+        return self.entity_description.value_fn(self)
 
 
 class HassioStatsSensor(HassioStatsEntity, SensorEntity):
     """Sensor to track container stats."""
 
+    entity_description: HassioStatsSensorEntityDescription
+
     @property
     def native_value(self) -> float:
         """Return native value of entity."""
-        assert self._stats is not None
-        return getattr(self._stats, self.entity_description.key)
+        return self.entity_description.value_fn(self)
 
 
 class HassioOSSensor(HassioOSEntity, SensorEntity):
     """Sensor to track a Hass.io OS attribute."""
 
+    entity_description: HassioOSSensorEntityDescription
+
     @property
     def native_value(self) -> str | None:
         """Return native value of entity."""
-        assert self.coordinator.data.os is not None
-        return getattr(self.coordinator.data.os, self.entity_description.key)
+        return self.entity_description.value_fn(self)
 
 
 class HostSensor(HassioHostEntity, SensorEntity):
     """Sensor to track a host attribute."""
 
+    entity_description: HassioHostSensorEntityDescription
+
     @property
     def native_value(self) -> str | float | None:
         """Return native value of entity."""
-        return getattr(self.coordinator.data.host, self.entity_description.key)
+        return self.entity_description.value_fn(self)
