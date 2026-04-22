@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ENTITY_ICONS, SENSOR_UNIT_MAP
+from .const import DOMAIN, SENSOR_UNIT_MAP
 from .coordinator import HeimanDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -260,26 +260,13 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
     def _apply_icon(
         self, property_identifier: str, prop: DeviceProperty | None
     ) -> None:
-        """Apply icon based on property type.
+        """Apply icon based on device class.
 
         Args:
             property_identifier: Property identifier
             prop: Property object
         """
-        # First try to get from ENTITY_ICONS (using original case)
-        icons_config = ENTITY_ICONS.get("sensor", {})
-
-        if property_identifier in icons_config:
-            self._attr_icon = icons_config[property_identifier]
-            return
-
-        # If not found, try lowercase matching
-        prop_lower = property_identifier.lower()
-        if prop_lower in icons_config:
-            self._attr_icon = icons_config[prop_lower]
-            return
-
-        # Set default icon based on device class (use getattr for safe access)
+        # Set default icon based on device class
         device_class = getattr(self, "_attr_device_class", None)
         if device_class == SensorDeviceClass.TEMPERATURE:
             self._attr_icon = "mdi:thermometer"

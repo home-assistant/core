@@ -103,24 +103,3 @@ ALARM_SOUND_DISPLAY_NAMES = {
     "medium": "Medium Beep",
     "slow": "Slow Beep",
 }
-
-# Service Definitions
-SERVICE_READ_DEVICE_PROPERTIES = "read_device_properties"
-
-# Icon Mapping (icons.json is primary source, this provides fallback)
-ENTITY_ICONS = {
-    # Sensor Icons
-    "sensor": {
-        "CurrentTemperature": "mdi:thermometer",
-        "BatteryPercentage": "mdi:battery",
-        "DeviceINFO_DBM": "mdi:signal",
-        "DeviceINFO_DBM_Level": "mdi:signal",
-        "DeviceINFO_MAC": "mdi:dharmachakra",
-        "DeviceINFO_IP": "mdi:ip",
-        "DeviceMac": "mdi:dharmachakra",
-        "humidity": "mdi:water-percent",
-        "temperature": "mdi:thermometer",
-        "SignalStrength": "mdi:signal",
-        "TimeZone": "mdi:clock-time-nine-outline",
-    },
-}

@@ -397,9 +397,12 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         # Extract DBM_Level (signal strength level)
         dbm_level_value = device_info.get("DBM_Level")
-        if dbm_level_value is None and dbm_value is not None:
+        numeric_dbm_value: float | int | None = None
+        if isinstance(dbm_value, (int, float)) and not isinstance(dbm_value, bool):
+            numeric_dbm_value = dbm_value
+        if dbm_level_value is None and numeric_dbm_value is not None:
             # Convert numeric DBM to level string if DBM_Level not provided
-            dbm_level_value = self._convert_dbm_to_level(dbm_value)
+            dbm_level_value = self._convert_dbm_to_level(numeric_dbm_value)
 
         if dbm_level_value is not None:
             # Update existing property or create if it doesn't exist

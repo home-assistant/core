@@ -55,12 +55,18 @@ class HeimanOAuth2Implementation(AuthImplementation):
         """Make a token request."""
         session = async_get_clientsession(self.hass)
 
+        # Add client_id and client_secret to request body
+        request_data = dict(data)
+        request_data.setdefault("client_id", self.client_id)
+        if self.client_secret:
+            request_data.setdefault("client_secret", self.client_secret)
+
         resp = None
         result: dict | None = None
         try:
             resp = await session.post(
                 self.token_url,
-                data=data,
+                data=request_data,
                 auth=BasicAuth(self.client_id, self.client_secret),
             )
 

@@ -173,19 +173,3 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 vol.Required(CONF_HOME_ID): vol.In(home_options),
             }
         )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reauth upon migration of old entries."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm reauth dialog."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-            )
-        return await self.async_step_user()
