@@ -6,6 +6,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock, patch
 
 from pyscorpiontrack import (
+    ScorpionTrackClient,
     ScorpionTrackConnectionError,
     ScorpionTrackInvalidTokenError,
     ScorpionTrackShareUnavailableError,
@@ -58,11 +59,37 @@ async def test_validate_input_strips_whitespace_and_uses_share_title(
     with patch(
         "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
     ) as mock_client:
+        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
         mock_client.return_value.async_get_share = AsyncMock(return_value=mock_share)
 
         info = await _async_validate_input(
             hass,
             {CONF_SHARE_TOKEN: "  canonical-token  \n"},
+        )
+
+    assert mock_client.call_args.kwargs["token"] == "canonical-token"
+    assert info == VALIDATION_INFO
+
+
+async def test_validate_input_extracts_token_from_share_url(
+    hass: HomeAssistant,
+    mock_share,
+) -> None:
+    """Validation should accept the pasted ScorpionTrack share URL format."""
+    with patch(
+        "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
+    ) as mock_client:
+        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
+        mock_client.return_value.async_get_share = AsyncMock(return_value=mock_share)
+
+        info = await _async_validate_input(
+            hass,
+            {
+                CONF_SHARE_TOKEN: (
+                    "  https://app.scorpiontrack.com/shared/location"
+                    "?token=canonical-token  "
+                )
+            },
         )
 
     assert mock_client.call_args.kwargs["token"] == "canonical-token"
@@ -78,6 +105,7 @@ async def test_validate_input_uses_vehicle_display_name_without_share_title(
     with patch(
         "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
     ) as mock_client:
+        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
         mock_client.return_value.async_get_share = AsyncMock(return_value=share)
 
         info = await _async_validate_input(
@@ -97,6 +125,7 @@ async def test_validate_input_uses_default_name_without_title_or_vehicles(
     with patch(
         "homeassistant.components.scorpiontrack.config_flow.ScorpionTrackClient",
     ) as mock_client:
+        mock_client.extract_token.side_effect = ScorpionTrackClient.extract_token
         mock_client.return_value.async_get_share = AsyncMock(return_value=share)
 
         info = await _async_validate_input(

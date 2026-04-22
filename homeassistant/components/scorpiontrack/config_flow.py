@@ -27,7 +27,7 @@ async def _async_validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> dict[str, str]:
     """Validate the provided share token or share URL."""
-    normalized_token = user_input[CONF_SHARE_TOKEN].strip()
+    normalized_token = ScorpionTrackClient.extract_token(user_input[CONF_SHARE_TOKEN])
     client = ScorpionTrackClient(
         session=async_get_clientsession(hass),
         token=normalized_token,
