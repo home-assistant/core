@@ -123,6 +123,7 @@ async def test_user_flow_duplicate_username_with_different_casing_aborts(
     """Test user flow aborts when the same email is entered with different casing."""
     MockConfigEntry(
         domain=DOMAIN,
+        unique_id=USERNAME,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     ).add_to_hass(hass)
 
