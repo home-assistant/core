@@ -138,7 +138,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
 
                 filtered_data[field] = field_data
 
-            sensor.data = filtered_data or None
+            sensor.data = filtered_data
 
         # Ensure read permission exists
         for sensor in self.devices:
