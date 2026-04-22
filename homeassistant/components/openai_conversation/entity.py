@@ -615,7 +615,7 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model != "gpt-image-1-mini":
+            if image_model not in ("gpt-image-1-mini", "gpt-image-2"):
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             # Keep image state on OpenAI so follow-up prompts can continue by
@@ -641,8 +641,8 @@ class OpenAIBaseLLMEntity(Entity):
                 and isinstance(last_message["content"], str)
             )
             last_message["content"] = [
-                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
-                *files,  # type: ignore[list-item]
+                {"type": "input_text", "text": last_message["content"]},
+                *files,
             ]
 
         if structure and structure_name:

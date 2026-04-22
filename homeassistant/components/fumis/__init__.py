@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import FumisConfigEntry, FumisDataUpdateCoordinator
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FumisConfigEntry) -> bool:

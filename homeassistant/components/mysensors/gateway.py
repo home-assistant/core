@@ -284,6 +284,8 @@ async def _gw_start(
 
     gateway.on_conn_made = gateway_connected
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     hass.data[DOMAIN][MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)] = (
         asyncio.create_task(gateway.start())
     )  # store the connect task so it can be cancelled in gw_stop
