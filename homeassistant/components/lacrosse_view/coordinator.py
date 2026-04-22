@@ -38,7 +38,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         self.name: str = entry.data["name"]
         self.id: str = entry.data["id"]
 
-        self.last_login: float = 0
+        self.last_login: float = time()
         self.devices: list[Sensor] | None = None
 
         super().__init__(
