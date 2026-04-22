@@ -73,8 +73,7 @@ class DeviceListener(SharingDeviceListener):
             token_listener,
         )
 
-        listener = DeviceListener(hass, manager)
-        manager.add_device_listener(listener)
+        manager.add_device_listener(self)
 
         # Get all devices from Tuya, makes block web calls
         try:
