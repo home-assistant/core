@@ -8,16 +8,21 @@ import logging
 from pymonoprice import Monoprice, get_monoprice
 from serial import SerialException
 
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_NOT_FIRST_RUN
+from .const import CONF_NOT_FIRST_RUN, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type MonopriceConfigEntry = ConfigEntry[MonopriceRuntimeData]
 
@@ -28,6 +33,27 @@ class MonopriceRuntimeData:
 
     client: Monoprice
     first_run: bool
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SNAPSHOT,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema=None,
+        func="snapshot",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_RESTORE,
+        entity_domain=MEDIA_PLAYER_DOMAIN,
+        schema=None,
+        func="restore",
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) -> bool:
