@@ -185,14 +185,6 @@ CONNECTION_SENSOR_TYPES: tuple[FritzConnectionSensorEntityDescription, ...] = (
         is_suitable=lambda info: info.ipv6_active,
     ),
     FritzConnectionSensorEntityDescription(
-        key="device_uptime",
-        translation_key="device_uptime",
-        device_class=SensorDeviceClass.UPTIME,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=_retrieve_device_uptime_state,
-        is_suitable=lambda info: True,
-    ),
-    FritzConnectionSensorEntityDescription(
         key="connection_uptime",
         translation_key="connection_uptime",
         device_class=SensorDeviceClass.UPTIME,
@@ -303,7 +295,7 @@ DEVICE_SENSOR_TYPES: tuple[FritzDeviceSensorEntityDescription, ...] = (
     FritzDeviceSensorEntityDescription(
         key="device_uptime",
         translation_key="device_uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
     ),
