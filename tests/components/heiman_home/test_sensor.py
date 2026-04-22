@@ -1506,8 +1506,8 @@ async def test_sensor_native_value_non_numeric_for_device_class(
     assert result is None
     # Warning should be logged
     assert (
-            "non-numeric" in caplog.text.lower()
-            or "validation error" in caplog.text.lower()
+        "non-numeric" in caplog.text.lower()
+        or "validation error" in caplog.text.lower()
     )
 
 
