@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ScorpionTrackConfigEntry
+from .coordinator import ScorpionTrackConfigEntry, ScorpionTrackCoordinator
 from .entity import ScorpionTrackEntity
 
 PARALLEL_UPDATES = 0
@@ -51,7 +51,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
     _attr_location_accuracy = 0.0
     _attr_source_type = SourceType.GPS
 
-    def __init__(self, coordinator, vehicle_id: int) -> None:
+    def __init__(self, coordinator: ScorpionTrackCoordinator, vehicle_id: int) -> None:
         """Initialize the tracker."""
         super().__init__(coordinator, vehicle_id)
         self._attr_unique_id = f"{coordinator.data.id}_{vehicle_id}_tracker"
@@ -104,7 +104,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
         converted_speed = self.share.convert_speed(
             position.speed_kmh if position else None
         )
-        attributes = self.common_location_attributes()
+        attributes = self.common_location_attributes(vehicle=vehicle)
         attributes.update(
             {
                 "speed": converted_speed,

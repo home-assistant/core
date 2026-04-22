@@ -56,9 +56,12 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         """Return if the entity is available."""
         return super().available and self.get_vehicle() is not None
 
-    def position_age(self) -> timedelta | None:
+    def position_age(
+        self, vehicle: ScorpionTrackVehicle | None = None
+    ) -> timedelta | None:
         """Return the age of the latest reported position."""
-        vehicle = self.get_vehicle()
+        if vehicle is None:
+            vehicle = self.get_vehicle()
         if vehicle is None:
             return None
 
@@ -80,11 +83,13 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         self,
         *,
         include_coordinates: bool = False,
+        vehicle: ScorpionTrackVehicle | None = None,
     ) -> dict[str, Any]:
         """Return shared location-related attributes."""
-        vehicle = self.get_vehicle()
+        if vehicle is None:
+            vehicle = self.get_vehicle()
         position = vehicle.position if vehicle else None
-        age = self.position_age()
+        age = self.position_age(vehicle)
         age_seconds = max(0, int(age.total_seconds())) if age is not None else None
 
         attributes = {

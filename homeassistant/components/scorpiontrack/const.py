@@ -8,7 +8,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "scorpiontrack"
 DEFAULT_NAME = "ScorpionTrack"
-SHARE_DEVICE_DEFAULT_NAME = "ScorpionTrack Share"
 MANUFACTURER = "ScorpionTrack"
 
 CONF_SHARE_TOKEN = "share_token"
