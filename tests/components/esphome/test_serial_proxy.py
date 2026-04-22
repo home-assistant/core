@@ -23,8 +23,8 @@ from tests.common import MockConfigEntry
 
 def test_build_url_basic() -> None:
     """Build a URL with a simple port name."""
-    url = serial_proxy.build_url("abc123", "uart0")
-    assert url == URL("esphome-hass://abc123?port_name=uart0")
+    url = serial_proxy.build_url("abc123DEF456", "uart0")
+    assert url == URL("esphome-hass://esphome/abc123DEF456?port_name=uart0")
 
 
 def test_build_url_escapes_port_name() -> None:

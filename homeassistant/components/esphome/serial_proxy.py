@@ -38,15 +38,14 @@ def build_url(entry_id: str, port_name: str) -> URL:
     """Build a canonical `esphome-hass://` URL."""
     return URL.build(
         scheme="esphome-hass",
-        host=entry_id,
+        host="esphome",
+        path=f"/{entry_id}",
         query={"port_name": port_name},
     )
 
 
 async def _resolve_client(entry_id: str) -> APIClient:
     """Look up the `APIClient` for a specific config entry."""
-
-    entry_id = entry_id.upper()
 
     # This function is async specifically so that we can get a reference to the Home
     # Assistant Core instance from its own thread
@@ -73,7 +72,7 @@ class HassESPHomeSerial(ESPHomeSerial):
         if self._api is None and self._path is not None:
             parsed = URL(str(self._path))
 
-            entry_id = parsed.host
+            entry_id = parsed.path.lstrip("/")
             if not entry_id:
                 raise InvalidSettingsError(
                     f"No ESPHome config entry id in URL {self._path!r}"
