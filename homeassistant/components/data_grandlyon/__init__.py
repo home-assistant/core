@@ -20,8 +20,8 @@ async def async_setup_entry(
     session = async_get_clientsession(hass)
     client = DataGrandLyonClient(
         session=session,
-        username=entry.data.get(CONF_USERNAME),
-        password=entry.data.get(CONF_PASSWORD),
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
     )
 
     coordinator = DataGrandLyonCoordinator(hass, entry, client)

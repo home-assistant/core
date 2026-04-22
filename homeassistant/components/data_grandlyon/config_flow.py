@@ -112,9 +112,6 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         """Handle the user step to add a new stop."""
         entry = self._get_entry()
 
-        if CONF_USERNAME not in entry.data:
-            return self.async_abort(reason="auth_required")
-
         if user_input is not None:
             line = user_input[CONF_LINE]
             stop_id = user_input[CONF_STOP_ID]
