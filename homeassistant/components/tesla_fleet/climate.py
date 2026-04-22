@@ -276,7 +276,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
                 translation_domain="climate",
                 translation_key="not_valid_fan_mode",
                 translation_placeholders={
-                    "mode": "fan_mode",
+                    "mode": fan_mode,
                     "modes": ", ".join(self.fan_modes) if self.fan_modes else "",
                 },
             )
