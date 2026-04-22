@@ -459,16 +459,10 @@ class SolarEdgeSensorEntity(
         super().__init__(data_service.coordinator)
         self.entity_description = description
         self.data_service = data_service
+        self._attr_unique_id = f"{data_service.site_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data_service.site_id)}, manufacturer="SolarEdge"
         )
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        if not self.data_service.site_id:
-            return None
-        return f"{self.data_service.site_id}_{self.entity_description.key}"
 
 
 class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
