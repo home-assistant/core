@@ -49,11 +49,11 @@
   },
   "entity": {
     "event": {
-      "main_button_press": {
-        "name": "Button Press"
-      },
       "additional_button_press": {
         "name": "Button {button} Press"
+      },
+      "main_button_press": {
+        "name": "Button Press"
       }
     }
   },

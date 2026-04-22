@@ -31,7 +31,7 @@ from .const import (
 from .ipdb import get_device_platform_groups, get_device_platforms
 
 if TYPE_CHECKING:
-    from .entity import InsteonEntity
+    from .entity import InsteonBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,9 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
         else:
             event = f"insteon.{name}"
 
-        schema["deprecated"] = "Events are deprecated. Please use event entities and entity state changes instead."
+        schema["deprecated"] = (
+            "Events are deprecated. Please use event entities and entity state changes instead."
+        )
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
@@ -143,7 +145,7 @@ def print_aldb_to_log(aldb):
 def async_add_insteon_entities(
     hass: HomeAssistant,
     platform: Platform,
-    entity_type: type[InsteonEntity],
+    entity_type: type[InsteonBaseEntity],
     async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: dict[str, Any],
 ) -> None:
@@ -160,18 +162,17 @@ def async_add_insteon_entities(
 def async_add_insteon_devices(
     hass: HomeAssistant,
     platform: Platform,
-    entity_type: type[InsteonEntity],
+    entity_type: type[InsteonBaseEntity],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add all entities to a platform."""
     for address in devices:
         device = devices[address]
         groups = get_device_platform_groups(device, platform)
-        if groups:
-            discovery_info = {"address": address, "groups": groups}
-            async_add_insteon_entities(
-                hass, platform, entity_type, async_add_entities, discovery_info
-            )
+        discovery_info = {"address": address, "groups": groups}
+        async_add_insteon_entities(
+            hass, platform, entity_type, async_add_entities, discovery_info
+        )
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
