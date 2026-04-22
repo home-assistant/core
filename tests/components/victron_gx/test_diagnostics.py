@@ -22,12 +22,18 @@ async def test_diagnostics(
     """Test diagnostics."""
     victron_hub, config_entry = init_integration
 
-    # Inject a sensor metric so the device tree is populated
+    # Inject metrics so the device tree is populated and enum serialization is covered
     await inject_message(
         victron_hub,
         f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
         '{"value": 10.5}',
     )
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/SystemState/State",
+        '{"value": 3}',
+    )
+
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 

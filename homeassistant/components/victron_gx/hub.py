@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -15,6 +14,7 @@ from victron_mqtt import (
     Metric as VictronVenusMetric,
     MetricKind,
     OperationMode,
+    VictronEnum,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -154,8 +154,8 @@ class Hub:
                     metric.short_id: {
                         "name": metric.name,
                         "value": metric.value
-                        if not isinstance(metric.value, Enum)
-                        else metric.value.name,
+                        if not isinstance(metric.value, VictronEnum)
+                        else metric.value.id,
                         "unit": metric.unit_of_measurement,
                         "kind": metric.metric_kind.name,
                         "type": metric.metric_type.name,
