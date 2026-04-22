@@ -126,7 +126,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
             ),
         )
         await _async_call_cleanup_method(api_client, ("async_close", "close"))
-        entry.runtime_data = None
         hass.data[DOMAIN][entry.entry_id] = None
         raise
 
