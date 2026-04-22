@@ -16,7 +16,10 @@ import pytest
 import yarl
 
 from homeassistant.components import media_player, tts
-from homeassistant.components.cast import CastRuntimeData, media_player as cast
+from homeassistant.components.cast import (
+    CastRuntimeData,
+    media_player as cast_media_player,
+)
 from homeassistant.components.cast.const import (
     DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -490,7 +493,7 @@ async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     entry.runtime_data = CastRuntimeData()
     info = get_fake_chromecast_info(uuid=None)
-    cast_device = cast._async_create_cast_device(hass, entry, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
@@ -502,12 +505,12 @@ async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
-    cast_device = cast._async_create_cast_device(hass, entry, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is not None
     assert info.uuid in added_casts
 
     # Sending second time should not create new entity
-    cast_device = cast._async_create_cast_device(hass, entry, info)
+    cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
