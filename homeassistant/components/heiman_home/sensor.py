@@ -94,9 +94,7 @@ async def async_setup_entry(
 
     # Listen for coordinator updates to add new devices dynamically
     # Only trigger discovery when coordinator data changes (new devices/properties)
-    entry.async_on_unload(
-        coordinator.async_add_listener(_create_sensors_for_devices)
-    )
+    entry.async_on_unload(coordinator.async_add_listener(_create_sensors_for_devices))
 
 
 class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorEntity):
