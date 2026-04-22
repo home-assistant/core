@@ -1,9 +1,9 @@
 """Tests for the Heiman Home sensor platform."""
 
-import pytest
 from unittest.mock import MagicMock, patch
 
 from heimanconnect import DeviceProperty, HeimanDevice
+import pytest
 
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.components.heiman_home.sensor import (

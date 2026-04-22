@@ -13,7 +13,10 @@ from heimanconnect import (
 import pytest
 
 from homeassistant.components.heiman_home.const import DOMAIN
-from homeassistant.components.heiman_home.coordinator import HeimanDataUpdateCoordinator
+from homeassistant.components.heiman_home.coordinator import (
+    HeimanDataUpdateCoordinator,
+    _infer_entity_type,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -3519,8 +3522,6 @@ def test_infer_entity_type_bool() -> None:
 
     This tests line 53 where prop_value is bool.
     """
-    from homeassistant.components.heiman_home.coordinator import _infer_entity_type
-
     assert _infer_entity_type(True) == "binary_sensor"
     assert _infer_entity_type(False) == "binary_sensor"
 
@@ -3530,8 +3531,6 @@ def test_infer_entity_type_numeric() -> None:
 
     This tests line 56 where prop_value is int or float.
     """
-    from homeassistant.components.heiman_home.coordinator import _infer_entity_type
-
     assert _infer_entity_type(42) == "sensor"
     assert _infer_entity_type(3.14) == "sensor"
     assert _infer_entity_type(-100) == "sensor"
@@ -3542,8 +3541,6 @@ def test_infer_entity_type_other() -> None:
 
     This tests line 58 where prop_value is not bool or numeric.
     """
-    from homeassistant.components.heiman_home.coordinator import _infer_entity_type
-
     assert _infer_entity_type("string") is None
     assert _infer_entity_type([1, 2, 3]) is None
     assert _infer_entity_type({"key": "value"}) is None

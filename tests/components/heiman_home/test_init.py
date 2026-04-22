@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.heiman_home import async_migrate_entry
+from homeassistant.components.heiman_home import async_migrate_entry, async_unload_entry
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -591,8 +591,6 @@ async def test_unload_returns_false_when_platforms_unload_fails(
 
     This tests line 142 where unload_ok is False and we return False.
     """
-    from homeassistant.components.heiman_home import async_unload_entry
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -625,6 +623,5 @@ async def test_unload_returns_false_when_platforms_unload_fails(
         # Now test the code path in async_unload_entry
         # Since async_unload_platforms returns False, we should return False
         # But we need to also mock the cleanup path
-        result = await async_unload_entry(hass, entry)
-        # The result will be False because platform unload failed
+        await async_unload_entry(hass, entry)
         # This tests line 142
