@@ -205,39 +205,39 @@ async def test_rpc_media_player_audio_file(
     assert state.attributes[ATTR_MEDIA_POSITION] == 64
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
 
-    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PAUSE,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
     mock_rpc_device.mock_update()
 
     mock_rpc_device.media_play_or_pause.assert_called_once()
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_IDLE
 
-    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", True)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PLAY,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", True)
     mock_rpc_device.mock_update()
 
     assert len(mock_rpc_device.media_play_or_pause.mock_calls) == 2
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_PLAYING
 
-    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_STOP,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+    monkeypatch.setitem(mock_rpc_device.status["media"]["playback"], "enable", False)
     mock_rpc_device.mock_update()
 
     mock_rpc_device.media_stop.assert_called_once()
