@@ -168,7 +168,9 @@ async def test_set_temperature_single_heat(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 22},
         blocking=True,
     )
-    mock_waterfurnace_client.set_heating_setpoint.assert_called_once()
+    mock_waterfurnace_client.set_heating_setpoint.assert_called_once_with(
+        pytest.approx(71.6, abs=0.1)
+    )
     mock_waterfurnace_client.set_cooling_setpoint.assert_not_called()
 
 
@@ -192,7 +194,9 @@ async def test_set_temperature_single_cool(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
         blocking=True,
     )
-    mock_waterfurnace_client.set_cooling_setpoint.assert_called_once()
+    mock_waterfurnace_client.set_cooling_setpoint.assert_called_once_with(
+        pytest.approx(75.2, abs=0.1)
+    )
     mock_waterfurnace_client.set_heating_setpoint.assert_not_called()
 
 
@@ -220,8 +224,12 @@ async def test_set_temperature_range(
         },
         blocking=True,
     )
-    mock_waterfurnace_client.set_heating_setpoint.assert_called_once()
-    mock_waterfurnace_client.set_cooling_setpoint.assert_called_once()
+    mock_waterfurnace_client.set_heating_setpoint.assert_called_once_with(
+        pytest.approx(64.4, abs=0.1)
+    )
+    mock_waterfurnace_client.set_cooling_setpoint.assert_called_once_with(
+        pytest.approx(78.8, abs=0.1)
+    )
 
 
 @pytest.mark.usefixtures("seed_statistics", "init_integration")
@@ -343,5 +351,7 @@ async def test_set_temperature_with_hvac_mode(
         blocking=True,
     )
     mock_waterfurnace_client.set_mode.assert_called_once_with(2)
-    mock_waterfurnace_client.set_cooling_setpoint.assert_called_once()
+    mock_waterfurnace_client.set_cooling_setpoint.assert_called_once_with(
+        pytest.approx(75.2, abs=0.1)
+    )
     mock_waterfurnace_client.set_heating_setpoint.assert_not_called()
