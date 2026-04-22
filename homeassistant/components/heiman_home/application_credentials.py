@@ -74,7 +74,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
             if resp.status >= 400:
                 try:
                     error_response = await resp.json()
-                except (ClientError, JSONDecodeError):
+                except ClientError, JSONDecodeError:
                     error_response = {}
                 error_code = error_response.get("error", "unknown")
                 error_description = error_response.get(
@@ -218,7 +218,7 @@ class HeimanOAuth2Implementation(AuthImplementation):
         try:
             response_data = await resp.json()
             return cast(dict, response_data)
-        except (ClientError, JSONDecodeError):
+        except ClientError, JSONDecodeError:
             _LOGGER.exception(
                 "Token request returned non-JSON response (status %s, content_type='%s'): %s",
                 resp.status,

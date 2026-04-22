@@ -7,8 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from heimanconnect import (
     DeviceManagement,
     DeviceProperty,
+    HeimanAuthError,
+    HeimanConnectionError,
     HeimanDevice,
     HeimanMQTTError,
+    HeimanTokenExpiredError,
 )
 import pytest
 
@@ -53,7 +56,9 @@ async def test_coordinator_update_success(
     # The coordinator accesses cloud_client methods, so set return values on cloud_client
     mock_api_client.cloud_client.async_get_user_info.return_value = mock_user
     mock_api_client.cloud_client.async_get_homes.return_value = [mock_home]
-    mock_api_client.cloud_client.async_get_devices.return_value = {"device-1": mock_device}
+    mock_api_client.cloud_client.async_get_devices.return_value = {
+        "device-1": mock_device
+    }
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -86,8 +91,8 @@ async def test_coordinator_update_auth_failed(
 ) -> None:
     """Test coordinator update with authentication failure."""
     # Set up cloud_client mock correctly
-    mock_api_client.cloud_client.async_get_user_info.side_effect = ConfigEntryAuthFailed(
-        "Authentication failed"
+    mock_api_client.cloud_client.async_get_user_info.side_effect = (
+        ConfigEntryAuthFailed("Authentication failed")
     )
 
     entry = MockConfigEntry(
@@ -291,7 +296,9 @@ async def test_coordinator_device_detail_caching(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value=mock_device_detail)
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value=mock_device_detail
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -319,7 +326,9 @@ async def test_coordinator_device_detail_caching(
     # Second update within cache TTL - should NOT call _async_get_device_detail again
     await coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert mock_api_client.cloud_client._async_get_device_detail.call_count == 1  # Still 1
+    assert (
+        mock_api_client.cloud_client._async_get_device_detail.call_count == 1
+    )  # Still 1
 
 
 async def test_coordinator_online_status_merge(
@@ -633,7 +642,9 @@ async def test_coordinator_process_device_detail_firmware(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value=mock_device_detail)
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value=mock_device_detail
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -696,7 +707,9 @@ async def test_coordinator_process_device_info(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value=mock_device_detail)
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value=mock_device_detail
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -755,7 +768,9 @@ async def test_coordinator_rssi_level_conversion(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value=mock_device_detail)
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value=mock_device_detail
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1673,9 +1688,11 @@ async def test_coordinator_process_device_info_missing_fields(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value={
-        "deriveMetadata": '[{"property": "DeviceINFO", "value": {"DBM": -60}}]',
-    })
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value={
+            "deriveMetadata": '[{"property": "DeviceINFO", "value": {"DBM": -60}}]',
+        }
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -2060,7 +2077,9 @@ async def test_coordinator_device_detail_cache_refresh(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value={"properties": []})
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value={"properties": []}
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -2198,8 +2217,12 @@ async def test_coordinator_home_info_auth_failed(
     ConfigEntryAuthFailed is caught by generic handler and logged as error,
     not re-raised. This test uses HeimanAuthError which is properly re-raised.
     """
-    mock_api_client.cloud_client.async_get_user_info = AsyncMock(return_value=MagicMock(user_id="test-user-id"))
-    mock_api_client.cloud_client.async_get_homes.side_effect = HeimanAuthError("Auth failed")
+    mock_api_client.cloud_client.async_get_user_info = AsyncMock(
+        return_value=MagicMock(user_id="test-user-id")
+    )
+    mock_api_client.cloud_client.async_get_homes.side_effect = HeimanAuthError(
+        "Auth failed"
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -2230,9 +2253,15 @@ async def test_coordinator_device_fetch_auth_failed(
     hass: HomeAssistant, mock_api_client: AsyncMock
 ) -> None:
     """Test that HeimanAuthError in device fetch is converted to ConfigEntryAuthFailed."""
-    mock_api_client.cloud_client.async_get_user_info = AsyncMock(return_value=MagicMock(user_id="test-user-id"))
-    mock_api_client.cloud_client.async_get_homes = AsyncMock(return_value=[MagicMock(home_id="test-home-id")])
-    mock_api_client.cloud_client.async_get_devices.side_effect = HeimanAuthError("Auth failed")
+    mock_api_client.cloud_client.async_get_user_info = AsyncMock(
+        return_value=MagicMock(user_id="test-user-id")
+    )
+    mock_api_client.cloud_client.async_get_homes = AsyncMock(
+        return_value=[MagicMock(home_id="test-home-id")]
+    )
+    mock_api_client.cloud_client.async_get_devices.side_effect = HeimanAuthError(
+        "Auth failed"
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -2329,9 +2358,11 @@ async def test_coordinator_process_device_detail_invalid_metadata(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value={
-        "deriveMetadata": "invalid json",
-    })
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value={
+            "deriveMetadata": "invalid json",
+        }
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -3377,7 +3408,9 @@ async def test_coordinator_async_update_data_unexpected_exception(
     mock_api_client.async_get_user_info.return_value = mock_user
     mock_api_client.async_get_homes.return_value = [mock_home]
     mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(return_value=mock_device)
+    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
+        return_value=mock_device
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
