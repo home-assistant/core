@@ -14,9 +14,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
-    ServiceValidationError,
 )
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
@@ -39,7 +37,6 @@ from .const import (
     CONF_TYPE_LIST,
     DOMAIN,
     PLATFORMS,
-    SERVICE_READ_DEVICE_PROPERTIES,
 )
 from .coordinator import HeimanDataUpdateCoordinator
 
@@ -121,76 +118,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register service only once (when first entry is loaded)
-    if not hass.services.has_service(DOMAIN, SERVICE_READ_DEVICE_PROPERTIES):
-
-        async def handle_read_device_properties(call):
-            """Handle read device properties service call."""
-            device_registry_ids = call.data.get("device_id")
-            if not device_registry_ids:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="device_id_required",
-                )
-
-            # Normalize to iterable (handle str, list, set, tuple)
-            if isinstance(device_registry_ids, str):
-                device_registry_ids = (device_registry_ids,)
-            elif not isinstance(device_registry_ids, (list, set, tuple)):
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_device_id_type",
-                    translation_placeholders={
-                        "type": type(device_registry_ids).__name__
-                    },
-                )
-
-            # Get device registry to translate device registry IDs to Heiman device_ids
-            device_registry = dr.async_get(hass)
-
-            for device_registry_id in device_registry_ids:
-                device_entry = device_registry.async_get(device_registry_id)
-                if not device_entry:
-                    _LOGGER.error(
-                        "Device %s not found in device registry", device_registry_id
-                    )
-                    continue
-
-                # Extract Heiman device_id from device identifiers
-                heiman_device_id = None
-                for identifier in device_entry.identifiers:
-                    if identifier[0] == DOMAIN:
-                        heiman_device_id = identifier[1]
-                        break
-
-                if not heiman_device_id:
-                    _LOGGER.error(
-                        "Device %s does not have a valid Heiman device identifier",
-                        device_registry_id,
-                    )
-                    continue
-
-                # Try all coordinators until we find the device
-                for coordinator in hass.data.get(DOMAIN, {}).values():
-                    if coordinator is None:
-                        continue
-                    # Check if device exists in this coordinator before calling
-                    if coordinator.get_device(heiman_device_id):
-                        await coordinator.async_read_device_properties(heiman_device_id)
-                        # Device found and handled, continue with next selected device
-                        break
-                else:
-                    _LOGGER.warning(
-                        "Heiman device %s not found in any coordinator",
-                        heiman_device_id,
-                    )
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_READ_DEVICE_PROPERTIES,
-            handle_read_device_properties,
-        )
-
     return True
 
 
@@ -221,8 +148,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
             domain_data.pop(entry.entry_id, None)
             if not domain_data:
                 hass.data.pop(DOMAIN, None)
-                if hass.services.has_service(DOMAIN, SERVICE_READ_DEVICE_PROPERTIES):
-                    hass.services.async_remove(DOMAIN, SERVICE_READ_DEVICE_PROPERTIES)
         return True
 
     # Disconnect MQTT client
@@ -258,11 +183,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> b
     if domain_data is not None:
         domain_data.pop(entry.entry_id, None)
 
-        # If this was the last entry, remove the service and clean up hass.data
+        # If this was the last entry, clean up hass.data
         if not domain_data:
             hass.data.pop(DOMAIN, None)
-            if hass.services.has_service(DOMAIN, SERVICE_READ_DEVICE_PROPERTIES):
-                hass.services.async_remove(DOMAIN, SERVICE_READ_DEVICE_PROPERTIES)
 
     return True
 
