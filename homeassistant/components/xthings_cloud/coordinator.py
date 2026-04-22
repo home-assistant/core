@@ -34,7 +34,7 @@ def _is_token_expired(token: str) -> bool:
         payload += "=" * (-len(payload) % 4)
         data = json.loads(base64.urlsafe_b64decode(payload))
         return data.get("exp", 0) < time.time() + 60
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return True
 
 

@@ -50,18 +50,6 @@ def mock_login_success() -> dict:
 
 
 @pytest.fixture
-def mock_login_2fa_email() -> dict:
-    """Return 2FA email response."""
-    return {"2fa": 1}
-
-
-@pytest.fixture
-def mock_login_2fa_phone() -> dict:
-    """Return 2FA phone response."""
-    return {"2fa": 2}
-
-
-@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(

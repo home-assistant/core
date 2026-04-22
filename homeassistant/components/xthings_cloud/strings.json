@@ -10,8 +10,6 @@
       "email_empty": "Email cannot be empty.",
       "email_invalid": "Invalid email format.",
       "email_not_found": "Email does not exist.",
-      "email_verify_error": "Email verification failed.",
-      "invalid_verification_code": "Invalid verification code, please try again.",
       "password_empty": "Password cannot be empty.",
       "password_wrong": "Incorrect password.",
       "token_expired": "Token expired, please log in again.",
@@ -22,26 +20,6 @@
       "user_not_logged_in": "Session expired, please log in again."
     },
     "step": {
-      "2fa_email": {
-        "data": {
-          "verification_code": "Verification Code"
-        },
-        "data_description": {
-          "verification_code": "Enter the 6-digit code sent to your email."
-        },
-        "description": "A 6-digit verification code has been sent to {email}. Please enter the code.",
-        "title": "Email Verification"
-      },
-      "2fa_phone": {
-        "data": {
-          "verification_code": "Verification Code"
-        },
-        "data_description": {
-          "verification_code": "Enter the 6-digit code sent to your phone."
-        },
-        "description": "A 6-digit verification code has been sent to your phone. Please enter the code.",
-        "title": "Phone Verification"
-      },
       "user": {
         "data": {
           "email": "Email",

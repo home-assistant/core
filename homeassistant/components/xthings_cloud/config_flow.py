@@ -24,14 +24,11 @@ from .const import (
     LOGGER,
 )
 
-CONF_VERIFICATION_CODE = "verification_code"
-
 ERROR_CODE_MAP: dict[int, str] = {
     20001: "token_invalid",
     21001: "email_empty",
     21002: "email_invalid",
     21004: "email_not_found",
-    21005: "email_verify_error",
     21011: "password_empty",
     21014: "password_wrong",
     21021: "user_disabled",
@@ -54,39 +51,6 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._email: str | None = None
-        self._password: str | None = None
-        self._instance_id: str | None = None
-        self._2fa_type: int = 0
-
-    async def _async_try_login(
-        self,
-        email: str,
-        password: str,
-        verification_code: str | None = None,
-    ) -> dict[str, Any]:
-        """Attempt login, return token data or 2fa info."""
-        if not self._instance_id:
-            self._instance_id = await async_get_instance_id(self.hass)
-        session = async_get_clientsession(self.hass)
-        client = XthingsCloudApiClient(session)
-        return await client.async_login(
-            email,
-            password,
-            client_id=self._instance_id,
-            verification_code=verification_code,
-        )
-
-    def _create_entry_data(self, token_data: dict[str, Any]) -> dict[str, str]:
-        assert self._email is not None
-        return {
-            CONF_EMAIL: self._email,
-            CONF_TOKEN: token_data["token"],
-            CONF_REFRESH_TOKEN: token_data["refresh_token"],
-        }
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -94,10 +58,15 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._email = user_input[CONF_EMAIL]
-            self._password = user_input[CONF_PASSWORD]
             try:
-                token_data = await self._async_try_login(self._email, self._password)
+                instance_id = await async_get_instance_id(self.hass)
+                session = async_get_clientsession(self.hass)
+                client = XthingsCloudApiClient(session)
+                token_data = await client.async_login(
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
+                    client_id=instance_id,
+                )
             except XthingsCloudAuthError as err:
                 errors["base"] = _error_from_exception(err)
             except XthingsCloudApiError as err:
@@ -108,16 +77,15 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected error during login")
                 errors["base"] = "unknown"
             else:
-                if token_data.get("2fa"):
-                    self._2fa_type = token_data["2fa"]
-                    if self._2fa_type == 2:
-                        return await self.async_step_2fa_phone()
-                    return await self.async_step_2fa_email()
                 await self.async_set_unique_id(token_data["user_id"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self._email or "",
-                    data=self._create_entry_data(token_data),
+                    title=user_input[CONF_EMAIL],
+                    data={
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_TOKEN: token_data["token"],
+                        CONF_REFRESH_TOKEN: token_data["refresh_token"],
+                    },
                 )
 
         return self.async_show_form(
@@ -130,63 +98,3 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def _async_handle_2fa(
-        self,
-        step_id: str,
-        user_input: dict[str, Any] | None,
-    ) -> ConfigFlowResult:
-        """Shared 2FA verification handler."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            code = user_input[CONF_VERIFICATION_CODE]
-            assert self._email is not None
-            assert self._password is not None
-            try:
-                token_data = await self._async_try_login(
-                    self._email,
-                    self._password,
-                    verification_code=code,
-                )
-            except XthingsCloudAuthError as err:
-                errors["base"] = _error_from_exception(err)
-            except XthingsCloudApiError as err:
-                errors["base"] = (
-                    _error_from_exception(err) if err.code else "cannot_connect"
-                )
-            except Exception:  # noqa: BLE001
-                errors["base"] = "unknown"
-            else:
-                if token_data.get("2fa"):
-                    errors["base"] = "invalid_verification_code"
-                else:
-                    await self.async_set_unique_id(token_data["user_id"])
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=self._email or "",
-                        data=self._create_entry_data(token_data),
-                    )
-
-        return self.async_show_form(
-            step_id=step_id,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_VERIFICATION_CODE): str,
-                }
-            ),
-            errors=errors,
-            description_placeholders={"email": self._email or ""},
-        )
-
-    async def async_step_2fa_email(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle 2FA via email verification code."""
-        return await self._async_handle_2fa("2fa_email", user_input)
-
-    async def async_step_2fa_phone(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle 2FA via phone verification code."""
-        return await self._async_handle_2fa("2fa_phone", user_input)
