@@ -14,6 +14,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, INTEGRATION_TITLE
@@ -115,10 +116,13 @@ async def _async_setup_coordinator(
     energy_coordinator = WaterFurnaceEnergyCoordinator(
         hass, device_client, entry, device_client.gwid
     )
-    # Use async_refresh() instead of async_config_entry_first_refresh() so that
-    # energy data failures (e.g. WFNoDataError for new accounts) don't block
-    # the integration from loading. Realtime sensor data is the primary concern.
-    await energy_coordinator.async_refresh()
+
+    # Defer the first energy refresh until HA has fully started so the
+    # potentially large initial backfill doesn't compete with startup I/O.
+    async def _async_start_energy(hass: HomeAssistant) -> None:
+        await energy_coordinator.async_refresh()
+
+    entry.async_on_unload(async_at_started(hass, _async_start_energy))
 
     return device_client.gwid, WaterFurnaceDeviceData(
         realtime=coordinator, energy=energy_coordinator

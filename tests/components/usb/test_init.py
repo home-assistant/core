@@ -7,24 +7,23 @@ import os
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
+from serialx import SerialPortInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.usb import DOMAIN
+from homeassistant.components.usb import DOMAIN, async_scan_serial_ports
 from homeassistant.components.usb.models import SerialDevice, USBDevice
-from homeassistant.components.usb.utils import scan_serial_ports, usb_device_from_path
+from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import (
-    force_usb_polling_watcher,  # noqa: F401
-    patch_scanned_serial_ports,
-)
+from . import patch_scanned_serial_ports
 
 from tests.common import (
     MockModule,
+    MockUser,
     async_fire_time_changed,
     mock_config_flow,
     mock_integration,
@@ -1293,108 +1292,142 @@ async def test_register_port_event_callback_failure(
     assert "Failure 2" in caplog.text
 
 
-def test_scan_serial_ports_with_unique_symlinks() -> None:
-    """Test scan_serial_ports returns devices with unique /dev/serial/by-id paths."""
-    entry1 = MagicMock(spec_set=os.DirEntry)
-    entry1.is_symlink.return_value = True
-    entry1.path = "/dev/serial/by-id/usb-device1"
-
-    entry2 = MagicMock(spec_set=os.DirEntry)
-    entry2.is_symlink.return_value = True
-    entry2.path = "/dev/serial/by-id/usb-device2"
-
-    mock_port1 = MagicMock()
-    mock_port1.device = "/dev/ttyUSB0"
-    mock_port1.vid = 0x1234
-    mock_port1.pid = 0x5678
-    mock_port1.serial_number = "ABC123"
-    mock_port1.manufacturer = "Test Manufacturer"
-    mock_port1.description = "Test Device"
-
-    mock_port2 = MagicMock()
-    mock_port2.device = "/dev/ttyUSB1"
-    mock_port2.vid = 0xABCD
-    mock_port2.pid = 0xEF01
-    mock_port2.serial_number = "XYZ789"
-    mock_port2.manufacturer = "Another Manufacturer"
-    mock_port2.description = "Another Device"
-
-    def mock_realpath(path: str) -> str:
-        realpath_map = {
-            "/dev/serial/by-id/usb-device1": "/dev/ttyUSB0",
-            "/dev/serial/by-id/usb-device2": "/dev/ttyUSB1",
-        }
-        return realpath_map.get(path, path)
-
-    with (
-        patch("os.path.isdir", return_value=True),
-        patch("os.scandir", return_value=[entry1, entry2]),
-        patch("os.path.realpath", side_effect=mock_realpath),
-        patch(
-            "homeassistant.components.usb.utils.comports",
-            return_value=[mock_port1, mock_port2],
-        ),
+async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
+    """Test async_scan_serial_ports parsing."""
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+    with patch(
+        "homeassistant.components.usb.utils.list_serial_ports",
+        return_value=[
+            SerialPortInfo(
+                device="/dev/ttyAMA1",
+                resolved_device="/dev/ttyAMA1",
+                vid=None,
+                pid=None,
+                serial_number=None,
+                manufacturer=None,
+                product=None,
+                bcd_device=None,
+                interface_description=None,
+                interface_num=None,
+            ),
+            SerialPortInfo(
+                device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+                resolved_device="/dev/ttyACM0",
+                vid=12346,
+                pid=16385,
+                serial_number="10B41DE589FC",
+                manufacturer="Nabu Casa",
+                product="ZBT-2",
+                bcd_device=257,
+                interface_description="Nabu Casa ZBT-2",
+                interface_num=0,
+            ),
+        ],
     ):
-        devices = scan_serial_ports()
+        devices = await async_scan_serial_ports(hass)
 
-    assert len(devices) == 2
-    assert devices[0].device == "/dev/serial/by-id/usb-device1"
-    assert devices[0].vid == "1234"
-    assert devices[1].device == "/dev/serial/by-id/usb-device2"
-    assert devices[1].vid == "ABCD"
-
-
-def test_scan_serial_ports_without_unique_symlinks() -> None:
-    """Test scan_serial_ports returns devices with original paths when no symlinks exist."""
-    mock_port = MagicMock()
-    mock_port.device = "/dev/ttyUSB0"
-    mock_port.vid = 0x1234
-    mock_port.pid = 0x5678
-    mock_port.serial_number = "ABC123"
-    mock_port.manufacturer = "Test Manufacturer"
-    mock_port.description = "Test Device"
-
-    with (
-        patch("os.path.isdir", return_value=False),
-        patch("os.path.realpath", side_effect=lambda x: x),
-        patch(
-            "homeassistant.components.usb.utils.comports",
-            return_value=[mock_port],
+    assert devices == [
+        SerialDevice(
+            device="/dev/ttyAMA1",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
         ),
-    ):
-        devices = scan_serial_ports()
-
-    assert len(devices) == 1
-    assert devices[0].device == "/dev/ttyUSB0"
-    assert devices[0].vid == "1234"
-
-
-def test_scan_serial_ports_no_vid_pid() -> None:
-    """Test scan_serial_ports returns devices without VID:PID."""
-    mock_port = MagicMock()
-    mock_port.device = "/dev/ttyAMA1"
-    mock_port.vid = None
-    mock_port.pid = None
-    mock_port.serial_number = None
-    mock_port.manufacturer = None
-    mock_port.description = None
-
-    with (
-        patch("os.path.isdir", return_value=False),
-        patch("os.path.realpath", side_effect=lambda x: x),
-        patch(
-            "homeassistant.components.usb.utils.comports",
-            return_value=[mock_port],
+        USBDevice(
+            device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+            vid="303A",
+            pid="4001",
+            serial_number="10B41DE589FC",
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
         ),
-    ):
-        devices = scan_serial_ports()
+    ]
 
-    assert len(devices) == 1
-    assert isinstance(devices[0], SerialDevice)
-    assert devices[0].device == "/dev/ttyAMA1"
-    assert devices[0].serial_number is None
-    assert devices[0].manufacturer is None
-    assert devices[0].description is None
+
+async def test_async_scan_serial_ports_with_scanner(hass: HomeAssistant) -> None:
+    """Contributed ports are appended to, and override, real scan results."""
+    real_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    real_usb = USBDevice(
+        device="/dev/serial/by-id/usb-Real-Stick",
+        vid="303A",
+        pid="4001",
+        serial_number="ABC123",
+        manufacturer="Nabu Casa",
+        description="ZBT-2",
+    )
+    contributed_amA1 = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+    extra_socket = SerialDevice(
+        device="socket://127.0.0.1:9999",
+        serial_number=None,
+        manufacturer="Test",
+        description="Extra",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+    unregister = usb.async_register_serial_port_scanner(
+        hass, lambda _hass: [contributed_amA1, extra_socket]
+    )
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [contributed_amA1, real_usb, extra_socket]
+
+    unregister()
+
+    with patch_scanned_serial_ports(return_value=[real_amA1, real_usb]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_amA1, real_usb]
+
+
+async def test_async_scan_serial_ports_scanner_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A scanner raising does not prevent other scanners or real ports."""
+    real_port = SerialDevice(
+        device="/dev/ttyUSB0",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    contributed_port = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer="Nabu Casa",
+        description="Yellow Radio",
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {"usb": {}})
+
+    def broken_scanner(_hass: HomeAssistant) -> list:
+        raise RuntimeError("scanner broke")
+
+    usb.async_register_serial_port_scanner(hass, broken_scanner)
+    usb.async_register_serial_port_scanner(hass, lambda _hass: [contributed_port])
+
+    with patch_scanned_serial_ports(return_value=[real_port]):
+        devices = await async_scan_serial_ports(hass)
+
+    assert devices == [real_port, contributed_port]
+    assert "Error in USB scanner callback" in caplog.text
+    assert "scanner broke" in caplog.text
 
 
 def test_usb_device_from_path_finds_by_symlink() -> None:
@@ -1639,3 +1672,83 @@ async def test_removal_aborts_discovery_flows(
         final_flows = hass.config_entries.flow.async_progress()
         assert len(final_flows) == 1
         assert final_flows[0]["handler"] == "test2"
+
+
+async def test_list_serial_ports(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_usb: MagicMock,
+) -> None:
+    """Test listing serial ports via websocket."""
+    setup_usb.return_value = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="10C4",
+            pid="EA60",
+            serial_number="001234",
+            manufacturer="Silicon Labs",
+            description="CP2102 USB to UART",
+        ),
+        SerialDevice(
+            device="/dev/ttyS0",
+            serial_number=None,
+            manufacturer=None,
+            description="ttyS0",
+        ),
+    ]
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert len(result) == 2
+
+    assert result[0]["device"] == "/dev/ttyUSB0"
+    assert result[0]["vid"] == "10C4"
+    assert result[0]["pid"] == "EA60"
+    assert result[0]["serial_number"] == "001234"
+    assert result[0]["manufacturer"] == "Silicon Labs"
+    assert result[0]["description"] == "CP2102 USB to UART"
+
+    assert result[1]["device"] == "/dev/ttyS0"
+    assert result[1]["serial_number"] is None
+    assert result[1]["manufacturer"] is None
+    assert result[1]["description"] == "ttyS0"
+    assert "vid" not in result[1]
+    assert "pid" not in result[1]
+
+
+async def test_list_serial_ports_require_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    setup_usb: MagicMock,
+) -> None:
+    """Test that listing serial ports requires admin."""
+    hass_admin_user.groups = []
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
+async def test_list_serial_ports_os_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_usb: MagicMock,
+) -> None:
+    """Test listing serial ports handles OSError."""
+    setup_usb.side_effect = OSError("Permission denied")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unknown_error"
+    assert "Permission denied" in response["error"]["message"]

@@ -63,6 +63,8 @@ async def test_update_information_available(
     """Test having no update information available at all."""
     mock_wled_releases.releases.return_value = Releases(
         beta=None,
+        nightly=None,
+        repo="https://github.com/wled/WLED",
         stable=None,
     )
 

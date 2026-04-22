@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
@@ -26,7 +27,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_CODE = "1234"
-MOCK_CONFIG_DATA = {CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT}
+MOCK_CONFIG_DATA = {
+    CONF_HOST: "192.168.0.2",
+    CONF_PORT: DEFAULT_PORT,
+    CONF_ENCRYPTION_KEY: "encryption_key",
+}
 MOCK_CONFIG_OPTIONS = {CONF_CODE: MOCK_CODE}
 
 MOCK_ENTRY_ID = "1234567890"

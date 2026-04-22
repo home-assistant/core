@@ -21,6 +21,7 @@ from tests.components.common import (
     assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
+    assert_trigger_options_supported,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -55,6 +56,31 @@ async def test_moisture_triggers_gated_by_labs_flag(
 ) -> None:
     """Test the moisture triggers are gated by the labs flag."""
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("moisture.detected", {}, True, True),
+        ("moisture.cleared", {}, True, True),
+    ],
+)
+async def test_moisture_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that moisture triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")

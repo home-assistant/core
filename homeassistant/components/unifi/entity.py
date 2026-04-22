@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -115,6 +115,8 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     """Entity name function, can be used to extend entity name beyond device name."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
+    translation_placeholders_fn: Callable[[ItemT], Mapping[str, str]] | None = None
+    """Provide translation placeholders used together with translation_key."""
 
     # Optional constants
     has_entity_name = True  # Part of EntityDescription
@@ -155,7 +157,12 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self._attr_unique_id = description.unique_id_fn(hub, obj_id)
 
         obj = description.object_fn(self.api, obj_id)
-        self._attr_name = description.name_fn(obj)
+        if (name := description.name_fn(obj)) is not None:
+            self._attr_name = name
+        if description.translation_placeholders_fn is not None:
+            self._attr_translation_placeholders = (
+                description.translation_placeholders_fn(obj)
+            )
         self.async_initiate_state()
 
     async def async_added_to_hass(self) -> None:

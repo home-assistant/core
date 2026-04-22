@@ -45,7 +45,9 @@ async def test_registry_cleanup(
 
     # Now remove the second device from the manager and re-initialize
     del main_manager.device_map[second_device.id]
-    with patch("homeassistant.components.tuya.Manager", return_value=main_manager):
+    with patch(
+        "homeassistant.components.tuya.coordinator.Manager", return_value=main_manager
+    ):
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
