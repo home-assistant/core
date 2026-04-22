@@ -197,7 +197,7 @@ async def _execute_realtime_action(
             translation_domain=DOMAIN,
             translation_key="multi_device_errors",
             translation_placeholders={"errors": "; ".join(errors)},
-        ) from exception
+        )
 
 
 def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Never:
