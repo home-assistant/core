@@ -1,5 +1,5 @@
 ---
-name: Home Assistant Integration knowledge
+name: ha-integration-knowledge
 description: Everything you need to know to build, test and review Home Assistant Integrations. If you're looking at an integration, you must use this as your primary reference.
 ---
 
