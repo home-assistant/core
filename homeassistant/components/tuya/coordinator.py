@@ -46,12 +46,12 @@ class DeviceListener(SharingDeviceListener):
         self.hass = hass
         self._entry = entry
 
-    def initialise(self) -> None:
-        """Initialise device listener.
+    def initialize(self) -> None:
+        """Initialize device listener.
 
         Needs to be called in executor as these make blocking calls:
         - `register_tuya_quirks`
-        - `Manager` initialisation
+        - `Manager` initialization
         - `manager.update_device_cache`
         """
         entry = self._entry
@@ -75,7 +75,7 @@ class DeviceListener(SharingDeviceListener):
 
         manager.add_device_listener(self)
 
-        # Get all devices from Tuya, makes block web calls
+        # Get all devices from Tuya, makes blocking web calls
         try:
             manager.update_device_cache()
         except Exception as exc:
