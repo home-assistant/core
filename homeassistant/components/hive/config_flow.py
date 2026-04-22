@@ -52,7 +52,8 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data.update(user_input)
             self.hive_auth = Auth(
-                username=self.data[CONF_USERNAME], password=self.data[CONF_PASSWORD]
+                username=self.data[CONF_USERNAME].lower(),
+                password=self.data[CONF_PASSWORD],
             )
 
             # Get user from existing entry and abort if already setup
