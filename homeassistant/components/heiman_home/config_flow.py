@@ -1,6 +1,5 @@
 """Config flow to configure Heiman."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 

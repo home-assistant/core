@@ -2,9 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
-from homeassistant.components.heiman_home import async_migrate_entry, async_unload_entry
+from homeassistant.components.heiman_home import async_migrate_entry
 from homeassistant.components.heiman_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
