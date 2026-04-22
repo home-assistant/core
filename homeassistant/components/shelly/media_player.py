@@ -308,9 +308,8 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             await self.coordinator.async_shutdown_device_and_start_reauth()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="rpc_call_action_error",
+                translation_key="auth_error",
                 translation_placeholders={
-                    "entity": self.entity_id,
                     "device": self.coordinator.name,
                 },
             ) from err

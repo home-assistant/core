@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 from aioshelly.const import MODEL_WALL_DISPLAY
+from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -524,9 +525,60 @@ async def test_rpc_media_player_browse_media_unsupported_media_type(
     )
 
     msg = await websocket_client.receive_json()
+
     assert msg["error"]
     assert msg["error"]["code"] == "home_assistant_error"
-    assert (
-        msg["error"]["message"]
-        == "Unsupported media content type for Shelly device: invalid"
+    assert msg["error"]["message"] == (
+        "Unsupported media content type for Shelly device: invalid"
     )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_message"),
+    [
+        (
+            DeviceConnectionError,
+            "Device communication error occurred while calling action for media_player.test_name of Test name",
+        ),
+        (
+            RpcCallError(999),
+            "RPC call error occurred while calling action for media_player.test_name of Test name",
+        ),
+        (
+            InvalidAuthError,
+            "Authentication failed for Test name, please update your credentials",
+        ),
+    ],
+)
+async def test_rpc_media_player_browse_media_errors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+    expected_message: str,
+) -> None:
+    """Test Shelly media player browse media returns errors."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.media_list_media.side_effect = side_effect
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": CONTENT_TYPE_AUDIO,
+            "media_content_id": CONTENT_TYPE_AUDIO,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+
+    assert msg["error"]
+    assert msg["error"]["code"] == "home_assistant_error"
+    assert msg["error"]["message"] == expected_message
