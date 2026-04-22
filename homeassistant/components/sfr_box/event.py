@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from sfrbox_api.models import VoipCallHistoryCall, VoipCallHistoryList
 
@@ -42,8 +42,6 @@ async def async_setup_entry(
     """Set up the sensors."""
     data = entry.runtime_data
     system_info = data.system.data
-    if TYPE_CHECKING:
-        assert system_info is not None
 
     if data.voip_callhistorylist is not None:
         entities: list[SFRBoxEvent] = [
