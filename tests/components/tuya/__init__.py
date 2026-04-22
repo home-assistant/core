@@ -44,6 +44,22 @@ class MockDeviceListener(DeviceListener):
         self.update_device(device, updated_status_properties, dp_timestamps)
         await self.hass.async_block_till_done()
 
+    async def async_send_add_device(
+        self, manager: Manager, device: CustomerDevice
+    ) -> None:
+        """Mock add device from the manager."""
+        manager.device_map[device.id] = device
+        self.add_device(device)
+        await self.hass.async_block_till_done()
+
+    async def async_send_remove_device(
+        self, manager: Manager, device: CustomerDevice
+    ) -> None:
+        """Mock remove device from the manager."""
+        manager.device_map.pop(device.id, None)
+        self.remove_device(device.id)
+        await self.hass.async_block_till_done()
+
     async def async_mock_online(self, device: CustomerDevice) -> None:
         """Mock online event from the manager."""
         device.online = True
