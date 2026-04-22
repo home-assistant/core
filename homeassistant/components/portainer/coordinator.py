@@ -20,6 +20,8 @@ from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     DockerSystemDF,
+    DockerVolume,
+    DockerVolumeUsageData,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
@@ -52,6 +54,7 @@ class PortainerCoordinatorData:
     docker_info: DockerInfo
     docker_system_df: DockerSystemDF
     stacks: dict[str, PortainerStackData]
+    volumes: dict[str, PortainerVolumeData]
 
 
 @dataclass(slots=True)
@@ -70,6 +73,13 @@ class PortainerStackData:
 
     stack: Stack
     container_count: int = 0
+
+
+@dataclass(slots=True)
+class PortainerVolumeData:
+    """Volume data held by the Portainer coordinator."""
+
+    volume: DockerVolume
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -96,6 +106,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         self.known_endpoints: set[int] = set()
         self.known_containers: set[tuple[int, str]] = set()
         self.known_stacks: set[tuple[int, str]] = set()
+        self.known_volumes: set[tuple[int, str]] = set()
 
         self.new_endpoints_callbacks: list[
             Callable[[list[PortainerCoordinatorData]], None]
@@ -107,6 +118,9 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         ] = []
         self.new_stacks_callbacks: list[
             Callable[[list[tuple[PortainerCoordinatorData, PortainerStackData]]], None]
+        ] = []
+        self.new_volumes_callbacks: list[
+            Callable[[list[tuple[PortainerCoordinatorData, PortainerVolumeData]]], None]
         ] = []
 
     async def _async_setup(self) -> None:
@@ -170,11 +184,13 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     docker_version,
                     docker_info,
                     docker_system_df,
+                    volumes,
                 ) = await asyncio.gather(
                     self.portainer.get_containers(endpoint.id),
                     self.portainer.docker_version(endpoint.id),
                     self.portainer.docker_info(endpoint.id),
-                    self.portainer.docker_system_df(endpoint.id),
+                    self.portainer.docker_system_df(endpoint.id, verbose=True),
+                    self.portainer.get_volumes(endpoint.id),
                 )
 
                 stack_requests = [self.portainer.get_stacks(endpoint_id=endpoint.id)]
@@ -204,6 +220,19 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     stack.name: PortainerStackData(stack=stack, container_count=0)
                     for stack in stacks
                 }
+
+                volume_usage_map = {
+                    item["Name"]: item
+                    for item in (docker_system_df.volume_disk_usage.items or [])
+                }
+                volume_map: dict[str, PortainerVolumeData] = {}
+                for volume in volumes:
+                    if item := volume_usage_map.get(volume.name):
+                        volume.usage_data = DockerVolumeUsageData(
+                            size=item["UsageData"]["Size"],
+                            ref_count=item["UsageData"]["RefCount"],
+                        )
+                    volume_map[volume.name] = PortainerVolumeData(volume=volume)
 
                 # Map containers, started and stopped
                 for container in containers:
@@ -286,6 +315,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 docker_version=docker_version,
                 docker_info=docker_info,
                 docker_system_df=docker_system_df,
+                volumes=volume_map,
                 stacks=stack_map,
             )
 
@@ -331,6 +361,28 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             ]
             for container_callback in self.new_containers_callbacks:
                 container_callback(new_container_data)
+
+        # Volume management
+        current_volumes = {
+            (endpoint.id, volume_name)
+            for endpoint in mapped_endpoints.values()
+            for volume_name in endpoint.volumes
+        }
+
+        self.known_volumes &= current_volumes
+        new_volumes = current_volumes - self.known_volumes
+        if new_volumes:
+            _LOGGER.debug("New volumes found: %s", new_volumes)
+            self.known_volumes.update(new_volumes)
+            new_volume_data = [
+                (
+                    mapped_endpoints[endpoint_id],
+                    mapped_endpoints[endpoint_id].volumes[name],
+                )
+                for endpoint_id, name in new_volumes
+            ]
+            for volume_callback in self.new_volumes_callbacks:
+                volume_callback(new_volume_data)
 
         # Stack management
         current_stacks = {

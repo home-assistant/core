@@ -6,6 +6,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
+from aiounifi import AiounifiException
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.devices import Devices
 from aiounifi.models.api import ApiItem
@@ -21,10 +22,12 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
 from . import UnifiConfigEntry
+from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -173,13 +176,27 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
-        await self.entity_description.control_fn(self.hub, self._obj_id, True, **kwargs)
+        try:
+            await self.entity_description.control_fn(
+                self.hub, self._obj_id, True, **kwargs
+            )
+        except AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        await self.entity_description.control_fn(
-            self.hub, self._obj_id, False, **kwargs
-        )
+        try:
+            await self.entity_description.control_fn(
+                self.hub, self._obj_id, False, **kwargs
+            )
+        except AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

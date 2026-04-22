@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -32,6 +33,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
@@ -1923,3 +1925,57 @@ async def test_port_control_switches(
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_BLOCK_CLIENT: [BLOCKED["mac"]]}]
+)
+@pytest.mark.parametrize("client_payload", [[BLOCKED]])
+async def test_switch_turn_on_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when turn on API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.block_client_1"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"
+
+
+@pytest.mark.parametrize(
+    "config_entry_options", [{CONF_BLOCK_CLIENT: [BLOCKED["mac"]]}]
+)
+@pytest.mark.parametrize("client_payload", [[BLOCKED]])
+async def test_switch_turn_off_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when turn off API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.block_client_1"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"

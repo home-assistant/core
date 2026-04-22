@@ -400,6 +400,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dnsip/ @gjohansson-ST
 /homeassistant/components/door/ @home-assistant/core
 /tests/components/door/ @home-assistant/core
+/homeassistant/components/doorbell/ @home-assistant/core
+/tests/components/doorbell/ @home-assistant/core
 /homeassistant/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dormakaba_dkey/ @emontnemery
