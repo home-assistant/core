@@ -18,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: VictronGxConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hub: Hub | None = getattr(entry, "runtime_data", None)
+    hub: Hub | None = entry.runtime_data
     merged_config = {**entry.data, **entry.options}
     return {
         "entry_data": async_redact_data(merged_config, TO_REDACT),
