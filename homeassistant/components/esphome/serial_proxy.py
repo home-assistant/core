@@ -14,6 +14,7 @@ from serialx.platforms.serial_esphome import (
 )
 from yarl import URL
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, async_get_hass
 
 from .const import DOMAIN
@@ -54,6 +55,9 @@ async def _resolve_client(entry_id: str) -> APIClient:
 
     if entry is None or entry.domain != DOMAIN:
         raise InvalidSettingsError(f"No ESPHome config entry with id {entry_id!r}")
+
+    if entry.state is not ConfigEntryState.LOADED:
+        raise InvalidSettingsError(f"ESPHome config entry {entry_id!r} is not loaded")
 
     return entry.runtime_data.client
 

@@ -64,6 +64,18 @@ async def test_resolve_client_wrong_domain(hass: HomeAssistant) -> None:
         await serial_proxy._resolve_client(entry.entry_id)
 
 
+async def test_resolve_client_unloaded_entry(hass: HomeAssistant) -> None:
+    """An ESPHome entry that isn't loaded raises InvalidSettingsError."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+
+    with (
+        patch.object(serial_proxy, "async_get_hass", return_value=hass),
+        pytest.raises(InvalidSettingsError),
+    ):
+        await serial_proxy._resolve_client(entry.entry_id)
+
+
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_resolve_client_loaded_entry(
     hass: HomeAssistant,
