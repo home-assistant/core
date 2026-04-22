@@ -46,8 +46,9 @@ async def async_setup_entry(
                 if not prop.readable:
                     continue
 
-                # Skip boolean properties - they should be handled by binary_sensor
-                # or switch platforms, not sensors (to avoid 1/0 coercion)
+                # Skip boolean properties - this integration only supports sensor
+                # platform. Boolean properties (on/off, alarm triggered, etc.) should
+                # be handled by binary_sensor platform (to be added separately).
                 if isinstance(prop.value, bool):
                     continue
 
