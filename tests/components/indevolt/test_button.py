@@ -70,7 +70,7 @@ async def test_button_press_standby(
     mock_indevolt.set_data.assert_has_calls(
         [
             call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, [RealtimeAction.STOP.value, 0, 0]),
+            call(REALTIME_ACTION_KEY, [RealtimeAction.STOP, 0, 0]),
         ]
     )
 

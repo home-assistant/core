@@ -69,5 +69,5 @@ class IndevoltButtonEntity(IndevoltEntity, ButtonEntity):
         """Handle the button press."""
 
         await self.coordinator.async_execute_realtime_action(
-            [RealtimeAction.STOP.value, 0, 0]
+            [RealtimeAction.STOP, 0, 0]
         )
