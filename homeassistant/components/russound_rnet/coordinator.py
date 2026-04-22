@@ -18,9 +18,6 @@ from .const import CONF_ZONES, DOMAIN, RNET_EXCEPTIONS, RNET_MODELS
 
 _LOGGER = logging.getLogger(__name__)
 
-# Small delay between zone polls to avoid overwhelming serial bridges
-_INTER_ZONE_DELAY = 0.1
-
 type RussoundRNETConfigEntry = ConfigEntry[RussoundRNETCoordinator]
 
 
@@ -83,7 +80,6 @@ class RussoundRNETCoordinator(
             for controller_id, zone_id in self._zone_keys:
                 info = await self.client.get_all_zone_info(controller_id, zone_id)
                 data[(controller_id, zone_id)] = info
-                await asyncio.sleep(_INTER_ZONE_DELAY)
         except RNET_EXCEPTIONS as err:
             # Disconnect on error so next poll reconnects cleanly
             with suppress(*RNET_EXCEPTIONS):
