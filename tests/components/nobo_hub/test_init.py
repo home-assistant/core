@@ -22,8 +22,6 @@ from .conftest import SERIAL, STORED_IP
 
 from tests.common import MockConfigEntry
 
-from tests.common import MockConfigEntry
-
 NEW_IP = "192.168.1.55"
 
 
@@ -170,6 +168,7 @@ async def test_setup_autodiscovered_rediscovery_failure(
 )
 async def test_migrate_options_lowercases_override_type(
     hass: HomeAssistant,
+    mock_nobo_class: MagicMock,
     stored_value: str,
     expected_value: str,
 ) -> None:
@@ -188,18 +187,17 @@ async def test_migrate_options_lowercases_override_type(
         minor_version=1,
     )
     entry.add_to_hass(hass)
-    hub = make_hub_mock()
-    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
-        mock_cls.return_value = hub
-        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.minor_version == 2
     assert entry.options == {CONF_OVERRIDE_TYPE: expected_value}
 
 
-async def test_migrate_options_without_override_type(hass: HomeAssistant) -> None:
+async def test_migrate_options_without_override_type(
+    hass: HomeAssistant,
+    mock_nobo_class: MagicMock,
+) -> None:
     """Migration still bumps the version when no override_type is stored."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -214,12 +212,8 @@ async def test_migrate_options_without_override_type(hass: HomeAssistant) -> Non
         minor_version=1,
     )
     entry.add_to_hass(hass)
-    hub = make_hub_mock()
-    with patch("homeassistant.components.nobo_hub.nobo") as mock_cls:
-        mock_cls.return_value = hub
-        mock_cls.async_discover_hubs = AsyncMock(return_value=set())
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.minor_version == 2
     assert entry.options == {}
