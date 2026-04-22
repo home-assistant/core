@@ -267,8 +267,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         if Scope.VEHICLE_CMDS not in self.scopes:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="missing_scope",
-                translation_placeholders={"scope": Scope.VEHICLE_CMDS.value},
+                translation_key="missing_scope_vehicle_cmds",
             )
 
         if not self.fan_modes or fan_mode not in self.fan_modes:
