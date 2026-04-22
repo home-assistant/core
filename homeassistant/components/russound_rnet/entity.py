@@ -60,4 +60,5 @@ class RussoundRNETEntity(CoordinatorEntity[RussoundRNETCoordinator]):
             name=zone_name or f"Zone {zone_id}",
             manufacturer="Russound",
             model=entry.data.get("model"),
+            via_device=(DOMAIN, f"{entry.unique_id}_{controller_id}"),
         )
