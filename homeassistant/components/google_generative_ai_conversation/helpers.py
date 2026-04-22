@@ -49,7 +49,7 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
         integers if found, otherwise None.
 
     """
-    if not mime_type.startswith("audio/L"):
+    if not mime_type.lower().startswith("audio/l"):
         LOGGER.warning("Received unexpected MIME type %s", mime_type)
         raise HomeAssistantError(f"Unsupported audio MIME type: {mime_type}")
 
@@ -65,9 +65,9 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
             with suppress(ValueError, IndexError):
                 rate_str = param.split("=", 1)[1]
                 rate = int(rate_str)
-        elif param.startswith("audio/L"):
+        elif param.lower().startswith("audio/l"):
             # Keep bits_per_sample as default if conversion fails
             with suppress(ValueError, IndexError):
-                bits_per_sample = int(param.split("L", 1)[1])
+                bits_per_sample = int(param.upper().split("L", 1)[1])
 
     return {"bits_per_sample": bits_per_sample, "rate": rate}
