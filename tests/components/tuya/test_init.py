@@ -152,6 +152,7 @@ async def test_dynamic_add_device(
     """Ensure add device event works correctly."""
     # Initialize with a single device
     main_device = await create_device(hass, "mcs_8yhypbo7")
+    second_device = await create_device(hass, "clkg_y7j64p60glp8qpx7")
     await initialize_entry(hass, mock_manager, mock_config_entry, [main_device])
     all_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
@@ -159,15 +160,17 @@ async def test_dynamic_add_device(
     assert len(all_entries) == 1
 
     # Trigger add second device from the manager
-    await mock_listener.async_send_add_device(
-        mock_manager, await create_device(hass, "clkg_y7j64p60glp8qpx7")
-    )
+    await mock_listener.async_send_add_device(mock_manager, second_device)
 
     # Should now have two devices in the registry
     all_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
     assert len(all_entries) == 2
+    assert any(
+        (DOMAIN, second_device.id) in device_registry_entry.identifiers
+        for device_registry_entry in all_entries
+    )
 
 
 async def test_dynamic_remove_device(
@@ -197,7 +200,10 @@ async def test_dynamic_remove_device(
         device_registry, mock_config_entry.entry_id
     )
     assert len(all_entries) == 1
-    assert all_entries[0].identifiers == {(DOMAIN, main_device.id)}
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, main_device.id)})
+        in all_entries
+    )
 
 
 async def test_fixtures_valid(hass: HomeAssistant) -> None:
