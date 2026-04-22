@@ -14,7 +14,7 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:component::firefly_iii::config::step::user::data::api_key%]"
         },
         "data_description": {
           "api_key": "The new access token for authenticating with Firefly III"
@@ -23,7 +23,7 @@
       },
       "reconfigure": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key": "[%key:component::firefly_iii::config::step::user::data::api_key%]",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
@@ -37,7 +37,7 @@
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key": "Access token",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
