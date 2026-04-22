@@ -93,7 +93,10 @@ async def async_setup_entry(
     _create_sensors_for_devices()
 
     # Listen for coordinator updates to add new devices dynamically
-    entry.async_on_unload(coordinator.async_add_listener(_create_sensors_for_devices))
+    # Only trigger discovery when coordinator data changes (new devices/properties)
+    entry.async_on_unload(
+        coordinator.async_add_listener(_create_sensors_for_devices)
+    )
 
 
 class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorEntity):
@@ -248,7 +251,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             if config.state_class:
                 self._attr_state_class = config.state_class
         elif prop:
-            # Only set state_xclass when the current value is numeric.
+            # Only set state_class when the current value is numeric.
             # Note: bool is a subclass of int, so we explicitly exclude it.
             if (
                 prop.value is not None
