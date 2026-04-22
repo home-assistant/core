@@ -54,7 +54,6 @@ from homeassistant.helpers.condition import (
     BEHAVIOR_ANY,
     CONDITIONS,
     Condition,
-    ConditionChecker,
     EntityNumericalConditionWithUnitBase,
     _async_get_condition_platform,
     async_validate_condition_config,
@@ -63,7 +62,12 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    TemplateVarsType,
+    UndefinedType,
+)
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -2150,16 +2154,16 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: True
+        def _check(self, variables: TemplateVarsType) -> bool:
+            """Check the condition."""
+            return True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_get_checker(self) -> ConditionChecker:
-            """Evaluate state based on configuration."""
-            return lambda **kwargs: False
+        def _check(self, variables: TemplateVarsType) -> bool:
+            """Check the condition."""
+            return False
 
     async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
         return {
@@ -2297,8 +2301,9 @@ async def test_get_condition_platform_registers_conditions(
         ) -> ConfigType:
             return config
 
-        async def async_get_checker(self) -> ConditionChecker:
-            return lambda **kwargs: True
+        def _check(self, variables: TemplateVarsType) -> bool:
+            """Check the condition."""
+            return True
 
     async def async_get_conditions(
         hass: HomeAssistant,
@@ -3103,7 +3108,7 @@ async def _setup_numerical_condition(
     entity_ids: str | list[str],
     domain_specs: Mapping[str, DomainSpec] | None = None,
     valid_unit: str | None | UndefinedType = UNDEFINED,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionCheckerBase:
     """Set up a numerical condition via a mock platform and return the test."""
     condition_cls = make_entity_numerical_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS, valid_unit
@@ -3432,7 +3437,7 @@ async def _setup_numerical_condition_with_unit(
     domain_specs: Mapping[str, DomainSpec] | None = None,
     base_unit: str = UnitOfTemperature.CELSIUS,
     unit_converter: type = TemperatureConverter,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionCheckerBase:
     """Set up a numerical condition with unit conversion via a mock platform."""
     condition_cls = make_entity_numerical_condition_with_unit(
         domain_specs or _DEFAULT_DOMAIN_SPECS, base_unit, unit_converter
@@ -3953,7 +3958,7 @@ async def _setup_state_condition(
     condition_options: dict[str, Any] | None = None,
     domain_specs: Mapping[str, DomainSpec] | None = None,
     support_duration: bool = False,
-) -> condition.ConditionCheckerType:
+) -> condition.ConditionCheckerBase:
     """Set up a state condition via a mock platform and return the checker."""
     condition_cls = make_entity_state_condition(
         domain_specs or _DEFAULT_DOMAIN_SPECS,

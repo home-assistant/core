@@ -19,8 +19,6 @@ from typing import (
     Final,
     Literal,
     Protocol,
-    TypedDict,
-    Unpack,
     cast,
     overload,
     override,
@@ -284,10 +282,63 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 )
 
 
-class Condition(abc.ABC):
-    """Condition class."""
+class ConditionCheckerBase(abc.ABC):
+    """Base class for condition checkers."""
 
-    _hass: HomeAssistant
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize condition checker."""
+        self._hass = hass
+        self._unsub: list[Callable[[], None]] = []
+
+    def __call__(
+        self, _: HomeAssistant, variables: TemplateVarsType | None = None
+    ) -> bool | None:
+        """Check the condition."""
+        return self.async_check(variables)
+
+    def __del__(self) -> None:
+        """Unsubscribe from listeners when the checker is deleted."""
+        self.async_unsubscribe()
+
+    def async_check(self, variables: TemplateVarsType | None = None) -> bool | None:
+        """Check the condition."""
+        with trace_condition(variables):
+            result = self._check(variables)
+            condition_trace_update_result(result=result)
+            return result
+
+    def async_unsubscribe(self) -> None:
+        """Unsubscribe from listeners."""
+        for unsub in self._unsub:
+            unsub()
+        self._unsub.clear()
+
+    @abc.abstractmethod
+    def _check(self, variables: TemplateVarsType) -> bool | None:
+        """Check the condition."""
+
+
+class LegacyConditionChecker(ConditionCheckerBase):
+    """Condition checker wrapping a legacy condition factory function."""
+
+    def __init__(self, hass: HomeAssistant, checker: ConditionCheckerType) -> None:
+        """Initialize condition checker."""
+        super().__init__(hass)
+        self._checker = checker
+
+    def _check(self, variables: TemplateVarsType) -> bool:
+        return self._checker(self._hass, variables)
+
+
+class DisabledConditionChecker(ConditionCheckerBase):
+    """Condition checker for disabled conditions."""
+
+    def _check(self, variables: TemplateVarsType | None) -> None:
+        return None
+
+
+class Condition(ConditionCheckerBase):
+    """Condition class."""
 
     @classmethod
     async def async_validate_complete_config(
@@ -323,11 +374,13 @@ class Condition(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
-        self._hass = hass
+        super().__init__(hass)
 
-    @abc.abstractmethod
-    async def async_get_checker(self) -> ConditionChecker:
-        """Get the condition checker."""
+    async def async_setup(self) -> None:
+        """Set up the condition checker.
+
+        Intended to be overridden in derived classes that need to do async setup.
+        """
 
 
 ATTR_BEHAVIOR: Final = "behavior"
@@ -379,6 +432,10 @@ class EntityConditionBase(Condition):
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
         self._duration: timedelta | None = config.options.get(CONF_FOR)
+        if self._behavior == BEHAVIOR_ANY:
+            self._matcher = self._check_any_match_state
+        elif self._behavior == BEHAVIOR_ALL:
+            self._matcher = self._check_all_match_state
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -395,56 +452,44 @@ class EntityConditionBase(Condition):
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
 
-    @override
-    async def async_get_checker(self) -> ConditionChecker:
-        """Get the condition checker."""
+    def _check_any_match_state(self, states: list[State]) -> bool:
+        """Test if any entity matches the state."""
+        if not self._duration:
+            # Skip duration check if duration is not specified or 0
+            return any(self.is_valid_state(state) for state in states)
+        duration = dt_util.utcnow() - self._duration
+        return any(
+            self.is_valid_state(state) and duration > state.last_changed
+            for state in states
+        )
 
-        def check_any_match_state(states: list[State]) -> bool:
-            """Test if any entity matches the state."""
-            if not self._duration:
-                # Skip duration check if duration is not specified or 0
-                return any(self.is_valid_state(state) for state in states)
-            duration = dt_util.utcnow() - self._duration
-            return any(
-                self.is_valid_state(state) and duration > state.last_changed
-                for state in states
-            )
+    def _check_all_match_state(self, states: list[State]) -> bool:
+        """Test if all entities match the state."""
+        if not self._duration:
+            # Skip duration check if duration is not specified or 0
+            return all(self.is_valid_state(state) for state in states)
+        duration = dt_util.utcnow() - self._duration
+        return all(
+            self.is_valid_state(state) and duration > state.last_changed
+            for state in states
+        )
 
-        def check_all_match_state(states: list[State]) -> bool:
-            """Test if all entities match the state."""
-            if not self._duration:
-                # Skip duration check if duration is not specified or 0
-                return all(self.is_valid_state(state) for state in states)
-            duration = dt_util.utcnow() - self._duration
-            return all(
-                self.is_valid_state(state) and duration > state.last_changed
-                for state in states
-            )
-
-        matcher: Callable[[list[State]], bool]
-        if self._behavior == BEHAVIOR_ANY:
-            matcher = check_any_match_state
-        elif self._behavior == BEHAVIOR_ALL:
-            matcher = check_all_match_state
-
-        def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
-            """Test state condition."""
-            targeted_entities = async_extract_referenced_entity_ids(
-                self._hass, self._target_selection, expand_group=False
-            )
-            referenced_entity_ids = targeted_entities.referenced.union(
-                targeted_entities.indirectly_referenced
-            )
-            filtered_entity_ids = self.entity_filter(referenced_entity_ids)
-            entity_states = [
-                _state
-                for entity_id in filtered_entity_ids
-                if (_state := self._hass.states.get(entity_id))
-                and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-            ]
-            return matcher(entity_states)
-
-        return test_state
+    def _check(self, variables: TemplateVarsType) -> bool:
+        """Test state condition."""
+        targeted_entities = async_extract_referenced_entity_ids(
+            self._hass, self._target_selection, expand_group=False
+        )
+        referenced_entity_ids = targeted_entities.referenced.union(
+            targeted_entities.indirectly_referenced
+        )
+        filtered_entity_ids = self.entity_filter(referenced_entity_ids)
+        entity_states = [
+            _state
+            for entity_id in filtered_entity_ids
+            if (_state := self._hass.states.get(entity_id))
+            and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        ]
+        return self._matcher(entity_states)
 
 
 class EntityStateConditionBase(EntityConditionBase):
@@ -733,19 +778,6 @@ class ConditionConfig:
     target: dict[str, Any] | None = None
 
 
-class ConditionCheckParams(TypedDict, total=False):
-    """Condition check params."""
-
-    variables: TemplateVarsType
-
-
-class ConditionChecker(Protocol):
-    """Protocol for condition checker callable with typed kwargs."""
-
-    def __call__(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
-        """Check the condition."""
-
-
 type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 type ConditionCheckerTypeOptional = Callable[
     [HomeAssistant, TemplateVarsType], bool | None
@@ -869,20 +901,10 @@ async def _async_get_condition_platform(
     return platform, platform_module
 
 
-async def _async_get_checker(condition: Condition) -> ConditionCheckerType:
-    new_checker = await condition.async_get_checker()
-
-    @trace_condition_function
-    def checker(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        return new_checker(variables=variables)
-
-    return checker
-
-
 async def async_from_config(
     hass: HomeAssistant,
     config: ConfigType,
-) -> ConditionCheckerTypeOptional:
+) -> ConditionCheckerBase:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -898,15 +920,7 @@ async def async_from_config(
                     f"Error rendering condition enabled template: {err}"
                 ) from err
         if not enabled:
-
-            @trace_condition_function
-            def disabled_condition(
-                hass: HomeAssistant, variables: TemplateVarsType = None
-            ) -> bool | None:
-                """Condition not enabled, will act as if it didn't exist."""
-                return None
-
-            return disabled_condition
+            return DisabledConditionChecker(hass)
 
     condition_key: str = config[CONF_CONDITION]
     factory: Any = None
@@ -925,7 +939,8 @@ async def async_from_config(
                 target=config.get(CONF_TARGET),
             ),
         )
-        return await _async_get_checker(condition)
+        await condition.async_setup()
+        return condition
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition_key), None)
@@ -939,8 +954,10 @@ async def async_from_config(
         check_factory = check_factory.func
 
     if inspect.iscoroutinefunction(check_factory):
-        return cast(ConditionCheckerType, await factory(hass, config))
-    return cast(ConditionCheckerType, factory(config))
+        checker = cast(ConditionCheckerType, await factory(hass, config))
+    else:
+        checker = cast(ConditionCheckerType, factory(config))
+    return LegacyConditionChecker(hass, checker)
 
 
 async def async_and_from_config(
@@ -949,7 +966,6 @@ async def async_and_from_config(
     """Create multi condition matcher using 'AND'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
 
-    @trace_condition_function
     def if_and_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -980,7 +996,6 @@ async def async_or_from_config(
     """Create multi condition matcher using 'OR'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
 
-    @trace_condition_function
     def if_or_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -1011,7 +1026,6 @@ async def async_not_from_config(
     """Create multi condition matcher using 'NOT'."""
     checks = [await async_from_config(hass, entry) for entry in config["conditions"]]
 
-    @trace_condition_function
     def if_not_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -1191,7 +1205,6 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    @trace_condition_function
     def if_numeric_state(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -1310,7 +1323,6 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     if not isinstance(req_states, list):
         req_states = [req_states]
 
-    @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
@@ -1372,7 +1384,6 @@ def async_template_from_config(config: ConfigType) -> ConditionCheckerType:
     """Wrap action method with state based condition."""
     value_template = cast(Template, config.get(CONF_VALUE_TEMPLATE))
 
-    @trace_condition_function
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
         return async_template(hass, value_template, variables)
@@ -1485,7 +1496,6 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
     after = config.get(CONF_AFTER)
     weekday = config.get(CONF_WEEKDAY)
 
-    @trace_condition_function
     def time_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate time based if-condition."""
         return time(hass, before, after, weekday)
@@ -1499,7 +1509,6 @@ async def async_trigger_from_config(
     """Test a trigger condition."""
     trigger_id = config[CONF_ID]
 
-    @trace_condition_function
     def trigger_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate trigger based if-condition."""
         return (

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Unpack, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -20,13 +20,8 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
-from homeassistant.helpers.condition import (
-    Condition,
-    ConditionChecker,
-    ConditionCheckParams,
-    ConditionConfig,
-)
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.condition import Condition, ConditionConfig
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import in_zone
 
@@ -117,44 +112,39 @@ class ZoneCondition(Condition):
         super().__init__(hass, config)
         assert config.options is not None
         self._options = config.options
+        self._entity_ids = self._options.get(CONF_ENTITY_ID, [])
+        self._zone_entity_ids = self._options.get(CONF_ZONE, [])
 
-    async def async_get_checker(self) -> ConditionChecker:
-        """Wrap action method with zone based condition."""
-        entity_ids = self._options.get(CONF_ENTITY_ID, [])
-        zone_entity_ids = self._options.get(CONF_ZONE, [])
+    def _check(self, variables: TemplateVarsType) -> bool:
+        """Test if condition."""
+        errors = []
 
-        def if_in_zone(**kwargs: Unpack[ConditionCheckParams]) -> bool:
-            """Test if condition."""
-            errors = []
-
-            all_ok = True
-            for entity_id in entity_ids:
-                entity_ok = False
-                for zone_entity_id in zone_entity_ids:
-                    try:
-                        if zone(self._hass, zone_entity_id, entity_id):
-                            entity_ok = True
-                    except ConditionErrorMessage as ex:
-                        errors.append(
-                            ConditionErrorMessage(
-                                "zone",
-                                (
-                                    f"error matching {entity_id} with {zone_entity_id}:"
-                                    f" {ex.message}"
-                                ),
-                            )
+        all_ok = True
+        for entity_id in self._entity_ids:
+            entity_ok = False
+            for zone_entity_id in self._zone_entity_ids:
+                try:
+                    if zone(self._hass, zone_entity_id, entity_id):
+                        entity_ok = True
+                except ConditionErrorMessage as ex:
+                    errors.append(
+                        ConditionErrorMessage(
+                            "zone",
+                            (
+                                f"error matching {entity_id} with {zone_entity_id}:"
+                                f" {ex.message}"
+                            ),
                         )
+                    )
 
-                if not entity_ok:
-                    all_ok = False
+            if not entity_ok:
+                all_ok = False
 
-            # Raise the errors only if no definitive result was found
-            if errors and not all_ok:
-                raise ConditionErrorContainer("zone", errors=errors)
+        # Raise the errors only if no definitive result was found
+        if errors and not all_ok:
+            raise ConditionErrorContainer("zone", errors=errors)
 
-            return all_ok
-
-        return if_in_zone
+        return all_ok
 
 
 CONDITIONS: dict[str, type[Condition]] = {
