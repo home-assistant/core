@@ -125,16 +125,16 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                         continue
 
                     age = utc_now - spot_time
-                if age > STALE_DATA_THRESHOLD:
-                    _LOGGER.debug(
-                        "Stale spot reading ignored: %s / %s (%.1f hours old), retaining old value",
-                        sensor.name,
-                        field,
-                        age.total_seconds() / 3600,
-                    )
-                    if field in previous_data:
-                        filtered_data[field] = previous_data[field]
-                    continue
+                    if age > STALE_DATA_THRESHOLD:
+                        _LOGGER.debug(
+                            "Stale spot reading ignored: %s / %s (%.1f hours old), retaining old value",
+                            sensor.name,
+                            field,
+                            age.total_seconds() / 3600,
+                        )
+                        if field in previous_data:
+                            filtered_data[field] = previous_data[field]
+                        continue
 
                 filtered_data[field] = field_data
 
