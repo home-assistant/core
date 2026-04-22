@@ -600,15 +600,15 @@ class SolarEdgeBatterySensor(SolarEdgeSensorEntity):
         """Initialize the per-battery sensor."""
         super().__init__(description, data_service)
         self._serial = serial
-        self._attr_translation_placeholders = {"serial": serial}
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        if not self.data_service.site_id:
-            return None
-        return (
-            f"{self.data_service.site_id}_{self._serial}_{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{data_service.site_id}_{serial}_{description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{data_service.site_id}_{serial}")},
+            manufacturer="SolarEdge",
+            name=f"Battery {serial}",
+            serial_number=serial,
+            via_device=(DOMAIN, data_service.site_id),
         )
 
     @property

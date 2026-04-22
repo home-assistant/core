@@ -86,16 +86,16 @@
         "name": "Batteries"
       },
       "battery_charge_energy": {
-        "name": "Battery {serial} charge energy today"
+        "name": "Charge energy today"
       },
       "battery_discharge_energy": {
-        "name": "Battery {serial} discharge energy today"
+        "name": "Discharge energy today"
       },
       "battery_power": {
-        "name": "Battery {serial} power"
+        "name": "Power"
       },
       "battery_state_of_charge": {
-        "name": "Battery {serial} state of charge"
+        "name": "State of charge"
       },
       "consumption_energy": {
         "name": "Consumed energy"
