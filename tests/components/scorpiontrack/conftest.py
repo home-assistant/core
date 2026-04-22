@@ -78,21 +78,3 @@ def mock_scorpiontrack_client(mock_share: ScorpionTrackShare) -> Generator[Async
         client.token = "canonical-token"
         client.async_get_share.return_value = mock_share
         yield client
-
-
-@pytest.fixture
-def ignore_missing_translations(request: pytest.FixtureRequest) -> list[str]:
-    """Ignore known core translation gaps only for tests that set up platforms."""
-    if request.node.originalname in {
-        "test_user_flow_creates_entry",
-        "test_setup_entry",
-        "test_device_tracker_state",
-        "test_device_is_registered",
-        "test_removed_vehicle_becomes_unavailable",
-    }:
-        return [
-            "component.device_tracker.services.see.",
-            "component.zone.services.reload.",
-        ]
-
-    return []
