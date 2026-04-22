@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
 from . import assist_satellite, dashboard, ffmpeg_proxy, serial_proxy
 from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
@@ -58,7 +59,9 @@ def _async_scan_serial_ports(
         ports.extend(
             SerialDevice(
                 device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
-                serial_number=device_info.mac_address,
+                serial_number=(
+                    device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
+                ),
                 manufacturer=device_info.manufacturer,
                 description=f"{device_info.model} ({proxy.name})",
             )
