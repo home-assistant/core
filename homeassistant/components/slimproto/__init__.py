@@ -19,6 +19,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     slimserver = SlimServer()
     await slimserver.start()
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     hass.data[DOMAIN] = slimserver
 
     # initialize platform(s)

@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import NoboHubConfigEntry
 from .const import (
@@ -35,6 +36,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nobø Ecohub."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -205,8 +207,11 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_OVERRIDE_TYPE, default=override_type): vol.In(
-                    [OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW]
+                vol.Required(CONF_OVERRIDE_TYPE, default=override_type): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW],
+                        translation_key=CONF_OVERRIDE_TYPE,
+                    )
                 ),
             }
         )

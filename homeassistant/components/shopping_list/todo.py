@@ -23,6 +23,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the shopping_list todo platform."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     shopping_data = hass.data[DOMAIN]
     entity = ShoppingTodoListEntity(shopping_data, unique_id=config_entry.entry_id)
     async_add_entities([entity], True)

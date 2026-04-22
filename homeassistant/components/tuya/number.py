@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -28,6 +27,7 @@ from .const import (
     DeviceCategory,
     DPCode,
 )
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {

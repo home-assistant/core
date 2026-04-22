@@ -4,8 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from automower_ble.protocol import ResponseResult
+from gardena_bluetooth.parse import ManufacturerData
 import pytest
 
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
@@ -44,6 +46,32 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_get_manufacturer_data(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> Generator[None]:
+    """Mock async_get_manufacturer_data to return decoded data from injected service infos."""
+
+    async def _get_manufacturer_data(
+        addresses: set[str], **kwargs
+    ) -> dict[str, ManufacturerData]:
+        result: dict[str, ManufacturerData] = {}
+        for address in addresses:
+            mfg = ManufacturerData()
+            if service_info := async_last_service_info(hass, address):
+                raw = service_info.manufacturer_data.get(ManufacturerData.company)
+                if raw is not None:
+                    mfg.update(raw)
+            result[address] = mfg
+        return result
+
+    with patch(
+        "homeassistant.components.husqvarna_automower_ble.config_flow.async_get_manufacturer_data",
+        new=_get_manufacturer_data,
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)

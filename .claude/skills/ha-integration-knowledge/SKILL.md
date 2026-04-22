@@ -1,5 +1,5 @@
 ---
-name: Home Assistant Integration knowledge
+name: ha-integration-knowledge
 description: Everything you need to know to build, test and review Home Assistant Integrations. If you're looking at an integration, you must use this as your primary reference.
 ---
 
@@ -12,6 +12,10 @@ description: Everything you need to know to build, test and review Home Assistan
 - When looking for examples, prefer integrations with the platinum or gold quality scale level first.
 - Polling intervals are NOT user-configurable. Never add scan_interval, update_interval, or polling frequency options to config flows or config entries.
 - Do NOT allow users to set config entry names in config flows. Names are automatically generated or can be customized later in UI. Exception: helper integrations may allow custom names.
+- For entity actions and entity services, avoid requesting redundant defensive checks for fields already enforced by Home Assistant validation schemas and entity filters; only request extra guards when values bypass validation or are transformed unsafely.
+- When validation guarantees a key is present, prefer direct dictionary indexing (`data["key"]`) over `.get("key")` so invalid assumptions fail fast.
+- Integrations should be thin wrappers. Protocol parsing, device state machines, or other domain logic belong in a separate PyPI library, not in the integration itself. If unsure, ask before inlining.
+- "potato" is a forbidden word for an integration and should never be used.
 
 The following platforms have extra guidelines:
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection

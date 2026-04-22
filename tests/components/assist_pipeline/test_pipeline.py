@@ -2153,3 +2153,123 @@ async def test_acknowledge_other_agents(
         text_to_speech.assert_not_called()
         async_converse.assert_called_once()
         get_all_targets_in_satellite_area.assert_not_called()
+
+
+async def test_stt_vad_enabled_based_on_audio_processing(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSTTProvider,
+    mock_wake_word_provider_entity: MockWakeWordEntity,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+) -> None:
+    """Test that VAD is enabled only when audio_processing.requires_external_vad is True."""
+
+    async def audio_data():
+        yield make_10ms_chunk(b"silence!")
+        yield make_10ms_chunk(b"speech!")
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    # Test with requires_external_vad=True (default)
+    # VAD should be used
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_stt_provider,
+        ),
+    ):
+        # Set the audio_processing on the mock provider
+        mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=True,
+            prefers_auto_gain_enabled=True,
+            prefers_noise_reduction_enabled=True,
+        )
+
+        mock_vad_instance = Mock()
+        mock_vad.return_value = mock_vad_instance
+        mock_vad_instance.process.return_value = False  # No voice command
+
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            session=mock_chat_session,
+            device_id=None,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-US",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                event_callback=lambda _: None,
+                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # VAD should be created when requires_external_vad is True
+        mock_vad.assert_called_once()
+        assert mock_vad_instance.process.called
+
+    # Test with requires_external_vad=False
+    # VAD should NOT be used
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_stt_provider,
+        ),
+    ):
+        # Set the audio_processing on the mock provider
+        mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=False,
+            prefers_auto_gain_enabled=True,
+            prefers_noise_reduction_enabled=True,
+        )
+
+        mock_vad_instance = Mock()
+        mock_vad.return_value = mock_vad_instance
+
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            session=mock_chat_session,
+            device_id=None,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-US",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                event_callback=lambda _: None,
+                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+        # VAD should NOT be created when requires_external_vad is False
+        mock_vad.assert_not_called()

@@ -122,7 +122,7 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
 
 def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get custom name from device settings."""
-    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+    if block and (key := block.type + "s") and key in device.settings:
         assert block.channel
 
         if name := device.settings[key][int(block.channel)].get("name"):
@@ -251,6 +251,8 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
 def get_coiot_port(hass: HomeAssistant) -> int:
     """Get CoIoT port from config."""
     if DOMAIN in hass.data:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
     return DEFAULT_COAP_PORT
 
