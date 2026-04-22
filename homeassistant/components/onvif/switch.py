@@ -140,7 +140,7 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
     @property
     def suggested_object_id(self) -> str:
         """Return suggested object id."""
-        return f"Relay {self._relay_token}"
+        return self._relay_token
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""

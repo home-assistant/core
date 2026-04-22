@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 from onvif.exceptions import ONVIFError
-import pytest
 from zeep.exceptions import XMLParseError
 
 from homeassistant.components.onvif.const import DOMAIN
@@ -228,8 +226,10 @@ async def test_get_relay_outputs_without_deviceio(hass: HomeAssistant) -> None:
     """Test relay outputs retrieval when DeviceIO unsupported."""
     device = _create_onvif_device(hass)
     device.capabilities = Capabilities(deviceio=False)
+    device.device = MagicMock(create_deviceio_service=AsyncMock())
 
     assert await device.async_get_relay_outputs() == []
+    device.device.create_deviceio_service.assert_not_awaited()
 
 
 async def test_set_relay_output_state(hass: HomeAssistant) -> None:
@@ -253,22 +253,3 @@ async def test_set_relay_output_state(hass: HomeAssistant) -> None:
     assert request.RelayOutputToken == "relay-token"
     assert request.LogicalState == "active"
     device_service.SetRelayOutputState.assert_awaited_once_with(request)
-
-
-async def test_set_relay_output_state_invalid_state(hass: HomeAssistant) -> None:
-    """Test setting relay output state validates the logical state."""
-    device = _create_onvif_device(hass)
-    device.capabilities = Capabilities(deviceio=True)
-
-    device_service = MagicMock()
-    device_service.SetRelayOutputState = AsyncMock()
-    device.device = MagicMock(
-        create_devicemgmt_service=AsyncMock(return_value=device_service)
-    )
-
-    with pytest.raises(ValueError, match="Invalid relay output state"):
-        await device.async_set_relay_output_state("relay-token", cast(Any, "invalid"))
-
-    device.device.create_devicemgmt_service.assert_not_awaited()
-    device_service.create_type.assert_not_called()
-    device_service.SetRelayOutputState.assert_not_called()

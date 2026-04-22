@@ -48,12 +48,7 @@ RELAY_DISCOVERY_EXCEPTIONS = (
     *GET_CAPABILITIES_EXCEPTIONS,
     XMLParseError,
     XMLSyntaxError,
-    AttributeError,
-    TypeError,
-    ValueError,
 )
-
-RELAY_OUTPUT_STATES: set[Literal["active", "inactive"]] = {"active", "inactive"}
 
 
 class ONVIFDevice:
@@ -719,6 +714,9 @@ class ONVIFDevice:
 
     async def async_get_relay_outputs(self) -> list[Any]:
         """Get relay outputs from the ONVIF DeviceIO service."""
+        if not self.capabilities.deviceio:
+            return []
+
         LOGGER.debug("Getting relay outputs")
         try:
             deviceio_service = await self.device.create_deviceio_service()
@@ -753,12 +751,8 @@ class ONVIFDevice:
 
         Raises:
             ONVIFError: If the relay output state cannot be set
-            ValueError: If the relay output state is invalid
 
         """
-        if state not in RELAY_OUTPUT_STATES:
-            raise ValueError(f"Invalid relay output state: {state}")
-
         # Use Device service per ONVIF spec design
         device_service = await self.device.create_devicemgmt_service()
 

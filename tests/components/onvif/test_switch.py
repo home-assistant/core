@@ -202,20 +202,20 @@ async def test_relay_switch(
     )
 
     # Check first relay
-    state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
+    state = hass.states.get("switch.testcamera_relayoutputtoken_0")
     assert state
     assert state.state == STATE_UNKNOWN
 
-    entry = entity_registry.async_get("switch.testcamera_relay_relayoutputtoken_0")
+    entry = entity_registry.async_get("switch.testcamera_relayoutputtoken_0")
     assert entry
     assert entry.unique_id == f"{MAC}_relay_RelayOutputToken_0"
 
     # Check second relay
-    state = hass.states.get("switch.testcamera_relay_relayoutputtoken_1")
+    state = hass.states.get("switch.testcamera_relayoutputtoken_1")
     assert state
     assert state.state == STATE_UNKNOWN
 
-    entry = entity_registry.async_get("switch.testcamera_relay_relayoutputtoken_1")
+    entry = entity_registry.async_get("switch.testcamera_relayoutputtoken_1")
     assert entry
     assert entry.unique_id == f"{MAC}_relay_RelayOutputToken_1"
 
@@ -226,7 +226,7 @@ async def test_relay_switch_no_deviceio(hass: HomeAssistant) -> None:
         hass, capabilities=Capabilities(deviceio=False, relay_outputs=0)
     )
 
-    assert hass.states.get("switch.testcamera_relay_relayoutputtoken_0") is None
+    assert hass.states.get("switch.testcamera_relayoutputtoken_0") is None
 
 
 async def test_relay_switch_fetches_relays_when_count_is_zero(
@@ -250,7 +250,7 @@ async def test_turn_relay_switch_on(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: "switch.testcamera_relay_relayoutputtoken_0"},
+        {ATTR_ENTITY_ID: "switch.testcamera_relayoutputtoken_0"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -258,7 +258,7 @@ async def test_turn_relay_switch_on(hass: HomeAssistant) -> None:
     device.async_set_relay_output_state.assert_called_once_with(
         "RelayOutputToken_0", "active"
     )
-    state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
+    state = hass.states.get("switch.testcamera_relayoutputtoken_0")
     assert state.state == STATE_ON
 
 
@@ -272,7 +272,7 @@ async def test_turn_relay_switch_off(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_off",
-        {ATTR_ENTITY_ID: "switch.testcamera_relay_relayoutputtoken_0"},
+        {ATTR_ENTITY_ID: "switch.testcamera_relayoutputtoken_0"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -280,7 +280,7 @@ async def test_turn_relay_switch_off(hass: HomeAssistant) -> None:
     device.async_set_relay_output_state.assert_called_once_with(
         "RelayOutputToken_0", "inactive"
     )
-    state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
+    state = hass.states.get("switch.testcamera_relayoutputtoken_0")
     assert state.state == STATE_OFF
 
 
@@ -297,11 +297,11 @@ async def test_relay_switch_error_handling(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             "turn_on",
-            {ATTR_ENTITY_ID: "switch.testcamera_relay_relayoutputtoken_0"},
+            {ATTR_ENTITY_ID: "switch.testcamera_relayoutputtoken_0"},
             blocking=True,
         )
 
-    state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
+    state = hass.states.get("switch.testcamera_relayoutputtoken_0")
     assert state.state == STATE_UNKNOWN
 
 
@@ -316,12 +316,12 @@ async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None
     await hass.services.async_call(
         SWITCH_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: "switch.testcamera_relay_relayoutputtoken_0"},
+        {ATTR_ENTITY_ID: "switch.testcamera_relayoutputtoken_0"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
+    state = hass.states.get("switch.testcamera_relayoutputtoken_0")
     assert state.state == STATE_ON
 
     device.async_set_relay_output_state = AsyncMock(
@@ -332,9 +332,9 @@ async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None
         await hass.services.async_call(
             SWITCH_DOMAIN,
             "turn_off",
-            {ATTR_ENTITY_ID: "switch.testcamera_relay_relayoutputtoken_0"},
+            {ATTR_ENTITY_ID: "switch.testcamera_relayoutputtoken_0"},
             blocking=True,
         )
 
-    state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
+    state = hass.states.get("switch.testcamera_relayoutputtoken_0")
     assert state.state == STATE_ON
