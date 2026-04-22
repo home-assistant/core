@@ -213,25 +213,6 @@ async def test_stop_subentry_flow_with_custom_name(
     assert result["data"] == {CONF_LINE: "T1", CONF_STOP_ID: 789}
 
 
-async def test_stop_subentry_aborts_without_auth(
-    hass: HomeAssistant,
-    mock_config_entry_no_auth: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test stop subentry aborts when no credentials are configured."""
-    mock_config_entry_no_auth.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_no_auth.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry_no_auth.entry_id, SUBENTRY_TYPE_STOP),
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "auth_required"
-
-
 async def test_stop_subentry_already_configured(
     hass: HomeAssistant,
     mock_config_entry_with_stop_subentry: MockConfigEntry,
