@@ -261,7 +261,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[DPIRestrictionGroups, DPIRestrictionGroup](
         key="DPI restriction",
-        translation_key="dpi_restriction",
         entity_category=EntityCategory.CONFIG,
         allowed_fn=lambda hub, obj_id: hub.config.option_dpi_restrictions,
         api_handler_fn=lambda api: api.dpi_groups,
@@ -276,7 +275,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[FirewallPolicies, FirewallPolicy](
         key="Firewall policy control",
-        translation_key="firewall_policy_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.firewall_policies,
@@ -303,7 +301,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[PortForwarding, PortForward](
         key="Port forward control",
-        translation_key="port_forward_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.port_forwarding,
@@ -316,7 +313,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[TrafficRules, TrafficRule](
         key="Traffic rule control",
-        translation_key="traffic_rule_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.traffic_rules,
@@ -329,7 +325,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     ),
     UnifiSwitchEntityDescription[TrafficRoutes, TrafficRoute](
         key="Traffic route control",
-        translation_key="traffic_route_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         api_handler_fn=lambda api: api.traffic_routes,
@@ -351,14 +346,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_poe_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         is_on_fn=lambda hub, port: port.poe_mode != "off",
-        name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"poe-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="Port control",
-        translation_key="port_control",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
