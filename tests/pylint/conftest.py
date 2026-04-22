@@ -154,6 +154,8 @@ def enforce_runtime_data_checker_fixture(
     hass_enforce_runtime_data, linter
 ) -> BaseChecker:
     """Fixture to provide a hass_enforce_runtime_data checker."""
+    # Clear the config flow cache between tests
+    hass_enforce_runtime_data._has_config_flow_cache.clear()
     enforce_runtime_data_checker = (
         hass_enforce_runtime_data.HassEnforceRuntimeDataChecker(linter)
     )

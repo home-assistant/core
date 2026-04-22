@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
@@ -160,6 +162,59 @@ def test_enforce_runtime_data_bad(
 ) -> None:
     """Bad test cases."""
     root_node = astroid.parse(code, module_name)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_runtime_data_checker)
+
+    walker.walk(root_node)
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "hass-use-runtime-data"
+
+
+def test_enforce_runtime_data_no_config_flow(
+    linter: UnittestLinter,
+    enforce_runtime_data_checker: BaseChecker,
+    tmp_path: Path,
+) -> None:
+    """Test that integrations without config_flow.py are not flagged."""
+    # Create a fake integration directory without config_flow.py
+    integration_dir = tmp_path / "homeassistant" / "components" / "yaml_only"
+    integration_dir.mkdir(parents=True)
+    init_file = integration_dir / "__init__.py"
+    init_file.touch()
+
+    code = """
+    hass.data[DOMAIN] = some_value
+    """
+    root_node = astroid.parse(code, "homeassistant.components.yaml_only")
+    root_node.file = str(init_file)
+
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_runtime_data_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+def test_enforce_runtime_data_with_config_flow(
+    linter: UnittestLinter,
+    enforce_runtime_data_checker: BaseChecker,
+    tmp_path: Path,
+) -> None:
+    """Test that integrations with config_flow.py are flagged."""
+    # Create a fake integration directory with config_flow.py
+    integration_dir = tmp_path / "homeassistant" / "components" / "modern"
+    integration_dir.mkdir(parents=True)
+    init_file = integration_dir / "__init__.py"
+    init_file.touch()
+    (integration_dir / "config_flow.py").touch()
+
+    code = """
+    hass.data[DOMAIN] = some_value
+    """
+    root_node = astroid.parse(code, "homeassistant.components.modern")
+    root_node.file = str(init_file)
+
     walker = ASTWalker(linter)
     walker.add_checker(enforce_runtime_data_checker)
 

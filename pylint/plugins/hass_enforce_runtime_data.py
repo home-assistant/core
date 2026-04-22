@@ -12,6 +12,8 @@ automated enforcement.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
@@ -28,6 +30,9 @@ _SKIP_FUNCTIONS: set[str] = {
     "async_remove_entry",
     "async_unload_entry",
 }
+
+
+_has_config_flow_cache: dict[str, bool] = {}
 
 
 class HassEnforceRuntimeDataChecker(BaseChecker):
@@ -62,6 +67,13 @@ class HassEnforceRuntimeDataChecker(BaseChecker):
         parts = root_name.split(".")
         current_module = parts[3] if len(parts) > 3 else ""
         if current_module in _SKIP_MODULES:
+            return
+
+        # Only flag integrations that have a config flow (and thus can use
+        # entry.runtime_data). YAML-only integrations legitimately need
+        # hass.data[DOMAIN].
+        integration = parts[2]
+        if not _has_config_flow(integration, node.root()):
             return
 
         func = _enclosing_function(node)
@@ -102,6 +114,29 @@ def _is_hass_data_domain_access(node: nodes.Subscript) -> bool:
         and isinstance(expr.expr, nodes.Name)
         and expr.expr.name == "self"
     )
+
+
+def _has_config_flow(integration: str, module: nodes.Module) -> bool:
+    """Return True if the integration has a config_flow.py.
+
+    Results are cached per integration domain. If the file path cannot be
+    resolved (e.g. in tests), defaults to True so the checker still flags.
+    """
+    if integration in _has_config_flow_cache:
+        return _has_config_flow_cache[integration]
+
+    result = True  # default to flagging when path is unknown
+    if module.file and module.file != "<?>":
+        # Derive integration directory from the file path
+        file_path = Path(module.file)
+        # Walk up to the integration directory (homeassistant/components/<domain>/)
+        for parent in (file_path.parent, *file_path.parents):
+            if parent.parent.name == "components":
+                result = (parent / "config_flow.py").exists()
+                break
+
+    _has_config_flow_cache[integration] = result
+    return result
 
 
 def _enclosing_function(node: nodes.NodeNG) -> nodes.FunctionDef | None:
