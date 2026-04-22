@@ -179,6 +179,8 @@
               "multi_press_6": "Pressed 6 times",
               "multi_press_7": "Pressed 7 times",
               "multi_press_8": "Pressed 8 times",
+              "multi_press_complete": "Multiple presses finished",
+              "multi_press_ongoing": "Multiple presses in progress",
               "short_release": "Released after being pressed",
               "switch_latched": "Switch latched"
             }
@@ -652,6 +654,10 @@
     }
   },
   "issues": {
+    "deprecated_entity": {
+      "description": "The entity `{entity}` is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. It has been replaced by a new entity on the `{new_platform}` platform. Please update `{info}` to use the new entity.",
+      "title": "Deprecated Matter event entity"
+    },
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
       "title": "Older version of Matter Server needed"
