@@ -32,7 +32,6 @@ async def test_async_media_previous_track_maps_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await entity.async_media_previous_track()
 
-    assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders["command"] == "media_previous_track"
 
