@@ -49,6 +49,7 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
         self,
         unique_id: str,
         frequency_ranges: list[tuple[int, int]] | None = None,
+        modulations: set[ModulationType] | None = None,
     ) -> None:
         """Initialize mock entity."""
         self._attr_unique_id = unique_id
@@ -57,12 +58,18 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
             if frequency_ranges is None
             else frequency_ranges
         )
+        self._modulations = {ModulationType.OOK} if modulations is None else modulations
         self.send_command_calls: list[RadioFrequencyCommand] = []
 
     @property
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return supported frequency ranges."""
         return self._frequency_ranges
+
+    @property
+    def supported_modulations(self) -> set[ModulationType]:
+        """Return supported modulations."""
+        return self._modulations
 
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Mock send command."""

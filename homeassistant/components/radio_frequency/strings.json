@@ -8,6 +8,12 @@
     },
     "no_transmitters": {
       "message": "No Radio Frequency transmitters available"
+    },
+    "unsupported_frequency": {
+      "message": "Radio Frequency entity `{entity_id}` does not support frequency {frequency} Hz"
+    },
+    "unsupported_modulation": {
+      "message": "Radio Frequency entity `{entity_id}` does not support modulation {modulation}"
     }
   }
 }

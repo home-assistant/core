@@ -71,10 +71,9 @@ def async_get_transmitters(
 ) -> list[str]:
     """Get entity IDs of all RF transmitters supporting the given frequency.
 
-    The ``frequency`` argument is used to filter transmitters by their
-    supported frequency ranges. The ``modulation`` argument is currently
-    accepted for forward compatibility and does not affect filtering yet.
-    An empty list means no compatible transmitters.
+    Transmitters are filtered by both their supported frequency ranges and
+    their supported modulation types. An empty list means no compatible
+    transmitters.
 
     Raises:
         HomeAssistantError: If the component is not loaded or if no
@@ -97,9 +96,8 @@ def async_get_transmitters(
     return [
         entity.entity_id
         for entity in entities
-        if any(
-            low <= frequency <= high for low, high in entity.supported_frequency_ranges
-        )
+        if entity.supports_modulation(modulation)
+        and entity.supports_frequency(frequency)
     ]
 
 
@@ -134,6 +132,26 @@ async def async_send_command(
             translation_placeholders={"entity_id": entity_id},
         )
 
+    if not entity.supports_frequency(command.frequency):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_frequency",
+            translation_placeholders={
+                "entity_id": entity_id,
+                "frequency": str(command.frequency),
+            },
+        )
+
+    if not entity.supports_modulation(command.modulation):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_modulation",
+            translation_placeholders={
+                "entity_id": entity_id,
+                "modulation": command.modulation,
+            },
+        )
+
     if context is not None:
         entity.async_set_context(context)
 
@@ -159,6 +177,25 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
     @abstractmethod
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return list of (min_hz, max_hz) tuples."""
+
+    @property
+    @abstractmethod
+    def supported_modulations(self) -> set[ModulationType]:
+        """Return the set of modulation types supported by this transmitter."""
+
+    @callback
+    @final
+    def supports_frequency(self, frequency: int) -> bool:
+        """Return whether the transmitter supports the given frequency."""
+        return any(
+            low <= frequency <= high for low, high in self.supported_frequency_ranges
+        )
+
+    @callback
+    @final
+    def supports_modulation(self, modulation: ModulationType) -> bool:
+        """Return whether the transmitter supports the given modulation."""
+        return modulation in self.supported_modulations
 
     @property
     @final

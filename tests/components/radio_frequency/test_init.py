@@ -58,6 +58,19 @@ async def test_get_transmitters_with_frequency_ranges(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_get_transmitters_filters_by_modulation(
+    hass: HomeAssistant,
+) -> None:
+    """Test transmitters are filtered by supported modulation."""
+    entity = MockRadioFrequencyEntity("test_rf_transmitter", modulations=set())
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([entity])
+
+    result = async_get_transmitters(hass, 433_920_000, ModulationType.OOK)
+    assert result == []
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_rf_entity_initial_state(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
@@ -132,6 +145,54 @@ async def test_async_send_command_entity_not_found(hass: HomeAssistant) -> None:
         match="Radio Frequency entity `radio_frequency.nonexistent_entity` not found",
     ):
         await async_send_command(hass, "radio_frequency.nonexistent_entity", command)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_async_send_command_unsupported_frequency(
+    hass: HomeAssistant,
+    mock_rf_entity: MockRadioFrequencyEntity,
+) -> None:
+    """Test async_send_command raises when the frequency is not supported."""
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([mock_rf_entity])
+
+    command = MockRadioFrequencyCommand(frequency=868_000_000)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "Radio Frequency entity `radio_frequency.test_rf_transmitter` "
+            "does not support frequency 868000000 Hz"
+        ),
+    ):
+        await async_send_command(hass, mock_rf_entity.entity_id, command)
+
+    assert mock_rf_entity.send_command_calls == []
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_async_send_command_unsupported_modulation(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_send_command raises when the modulation is not supported."""
+    entity = MockRadioFrequencyEntity("test_rf_transmitter", modulations=set())
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([entity])
+
+    command = MockRadioFrequencyCommand(
+        frequency=433_920_000, modulation=ModulationType.OOK
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "Radio Frequency entity `radio_frequency.test_rf_transmitter` "
+            "does not support modulation OOK"
+        ),
+    ):
+        await async_send_command(hass, entity.entity_id, command)
+
+    assert entity.send_command_calls == []
 
 
 async def test_async_send_command_component_not_loaded(hass: HomeAssistant) -> None:
