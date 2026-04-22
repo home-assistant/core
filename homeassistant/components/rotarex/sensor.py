@@ -74,12 +74,11 @@ async def async_setup_entry(
     """Set up Rotarex sensors from a config entry."""
     coordinator = config_entry.runtime_data
 
-    entities = [
+    async_add_entities([
         RotarexTankSensor(coordinator, tank_id, description)
         for tank_id in coordinator.data
         for description in SENSOR_DESCRIPTIONS
-    ]
-    async_add_entities(entities)
+    ])
 
 
 class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorEntity):
@@ -109,15 +108,9 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         )
 
     @property
-    def _tank_data(self) -> RotarexTankData | None:
-        # A tank can disappear from coordinator data if the API stops returning
-        # it (stale device). The entity becomes unavailable in that case.
-        return self.coordinator.data.get(self._tank_id)
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        tank_data = self._tank_data
+        tank_data = self.coordinator.data.get(self._tank_id)
         return (
             super().available
             and tank_data is not None
@@ -127,7 +120,5 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
     @property
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
-        tank_data = self._tank_data
-        if tank_data is None:
-            return None
-        return self.entity_description.value_fn(tank_data)
+        tank_data = self.coordinator.data.get(self._tank_id)
+        return self.entity_description.value_fn(tank_data) if tank_data is not None else None

@@ -110,16 +110,9 @@ async def test_sensor_native_value_none_when_tank_disappears(
 
     # Grab the level sensor entity for tank1 directly
     coordinator = mock_config_entry.runtime_data
-    tank1_sensor: RotarexTankSensor | None = None
-    for entity in hass.data["entity_components"]["sensor"].entities:
-        if (
-            hasattr(entity, "_tank_id")
-            and entity._tank_id == "tank1-guid"
-            and entity.entity_description.key == "level"
-        ):
-            tank1_sensor = entity
-            break
-    assert tank1_sensor is not None
+    sensor_component = hass.data["entity_components"]["sensor"]
+    tank1_sensor = sensor_component.get_entity("sensor.tank_1_level")
+    assert isinstance(tank1_sensor, RotarexTankSensor)
 
     # Remove tank1 from coordinator data to simulate disappearance
     coordinator.data.pop("tank1-guid", None)
