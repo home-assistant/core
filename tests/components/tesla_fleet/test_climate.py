@@ -151,6 +151,64 @@ async def test_climate_services(
     assert state.attributes[ATTR_FAN_MODE] == "off"
 
 
+async def test_climate_set_fan_mode_invalid_value(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalid fan mode values are rejected by service validation."""
+    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
+    entity_id = "climate.test_climate"
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: "invalid"},
+            blocking=True,
+        )
+
+
+async def test_climate_set_fan_mode_rejected_without_command_access(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_request: AsyncMock,
+) -> None:
+    """Test fan mode changes fail when vehicle commands are not permitted."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
+    entity_id = "climate.test_climate"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    initial_fan_mode = state.attributes[ATTR_FAN_MODE]
+    mock_request.side_effect = InvalidCommand("missing required vehicle command scope")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: "bioweapon"},
+            blocking=True,
+        )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_FAN_MODE] == initial_fan_mode
+
+
+async def test_climate_set_fan_mode_bioweapon_unsupported_vehicle(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test bioweapon fan mode is rejected when the vehicle does not support it."""
+    climate_state = mock_vehicle_data.return_value["response"]["climate_state"].copy()
+    climate_state["bioweapon_mode"] = False
+    response = mock_vehicle_data.return_value["response"].copy()
+    response["climate_state"] = climate_state
+    mock_vehicle_data.return_value = {
+        **mock_vehicle_data.return_value,
+        "response": response,
+    }
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_overheat_protection_services(
     hass: HomeAssistant,
@@ -444,6 +502,17 @@ async def test_climate_noscope(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
+            blocking=True,
+        )
+
+    with pytest.raises(
+        ServiceNotSupported,
+        match="Entity climate.test_climate does not support action climate.set_fan_mode",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: "on"},
             blocking=True,
         )
 
