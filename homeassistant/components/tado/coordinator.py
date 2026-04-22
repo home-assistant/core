@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import logging
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from PyTado.interface import Tado
 from requests import RequestException
@@ -33,7 +34,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
 
-class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage API calls from and to Tado via PyTado."""
 
     tado: Tado
@@ -67,28 +68,40 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.home_name: str
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
-        self.data: dict[str, dict] = {
+        self.data: dict[str, Any] = {
             "device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
         }
 
+        self._current_interval: float = 0
+        self._next_update: datetime | None = None
+        self._time_until_reset: float = 0
+
     @property
     def fallback(self) -> str:
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
-    async def _async_update_data(self) -> dict[str, dict]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
-        try:
-            _LOGGER.debug("Preloading home data")
-            tado_home_call = await self.hass.async_add_executor_job(self._tado.get_me)
-            _LOGGER.debug("Preloading zones and devices")
-            self.zones = await self.hass.async_add_executor_job(self._tado.get_zones)
-            self.devices = await self.hass.async_add_executor_job(
-                self._tado.get_devices
+
+        def _load_tado_data() -> tuple[dict, list, list]:
+            """Load Tado data in one call."""
+            _LOGGER.debug("Preloading Tado data")
+            return (
+                self._tado.get_me(),
+                self._tado.get_zones(),
+                self._tado.get_devices(),
             )
+
+        try:
+            (
+                tado_home_call,
+                self.zones,
+                self.devices,
+            ) = await self.hass.async_add_executor_job(_load_tado_data)
         except RequestException as err:
             _LOGGER.debug("Checking rate limit")
             ratelimit = self.get_rate_limit()
@@ -121,7 +134,74 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
             )
 
+        # Calculate the most recent update interval
+        self._calculate_update_interval()
+
         return self.data
+
+    @property
+    def _is_any_zone_active(self) -> bool:
+        """Check if any zone is currently active (heating or AC running)."""
+        return any(
+            (
+                zone_data.heating_power_percentage is not None
+                and zone_data.heating_power_percentage > 0
+            )
+            or zone_data.ac_power == "ON"
+            for zone_data in self.data.get("zone", {}).values()
+        )
+
+    def _calculate_update_interval(self) -> None:
+        """Calculate an update interval based on remaining calls and estimates."""
+
+        # Tado resets somewhere between 12:00 and 13:00, Berlin time
+        # So let's pretend we're in Berlin...
+        reset_time = datetime.now(ZoneInfo("Europe/Berlin"))
+
+        today_reset = datetime.combine(
+            reset_time.date(),
+            time(hour=12, minute=0),
+            tzinfo=ZoneInfo("Europe/Berlin"),
+        )
+
+        next_reset = today_reset
+        if reset_time >= today_reset:
+            next_reset = today_reset + timedelta(days=1)
+
+        self._time_until_reset = (next_reset - reset_time).total_seconds()
+
+        # When any zone is actively heating, we use a shorter minimum
+        # To prevent overshooting in temperature, check if there's heating/cooling activity
+        # Accept five minutes to "overshoot", else reset back to 30 minutes
+        min_interval = 300 if self._is_any_zone_active else 1800
+
+        remaining_calls = int(self.data.get("rate_limit", {}).get("remaining", 0))
+        if remaining_calls is None or remaining_calls <= 0:
+            # If rate limit info is unavailable, fall back to the static interval.
+            self._current_interval = SCAN_INTERVAL.total_seconds()
+            self.update_interval = SCAN_INTERVAL
+            self._next_update = reset_time + timedelta(seconds=self._current_interval)
+            _LOGGER.debug(
+                "Rate limit info unavailable; using default update interval: %s seconds",
+                self._current_interval,
+            )
+            return
+
+        # Each refresh cycle costs 9 + len(zones) calls
+        # Also take 10% of the remaining calls as buffer
+        self._current_interval = max(
+            min_interval,
+            (self._time_until_reset * (9 + len(self.zones))) / (remaining_calls * 0.9),
+        )
+
+        self._next_update = reset_time + timedelta(seconds=self._current_interval)
+        self.update_interval = timedelta(seconds=self._current_interval)
+
+        _LOGGER.debug(
+            "Calculated new update interval: %s seconds, for remaining calls: %s",
+            self._current_interval,
+            remaining_calls,
+        )
 
     async def _async_update_devices(self) -> dict[str, dict]:
         """Update the device data from Tado."""

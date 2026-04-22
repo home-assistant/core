@@ -641,8 +641,8 @@ class OpenAIBaseLLMEntity(Entity):
                 and isinstance(last_message["content"], str)
             )
             last_message["content"] = [
-                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
-                *files,  # type: ignore[list-item]
+                {"type": "input_text", "text": last_message["content"]},
+                *files,
             ]
 
         if structure and structure_name:

@@ -143,24 +143,24 @@
   },
   "services": {
     "upload": {
-      "description": "Uploads files to OneDrive.",
+      "description": "Uploads one or more files to OneDrive.",
       "fields": {
         "config_entry_id": {
           "description": "The config entry representing the OneDrive you want to upload to.",
           "name": "Config entry ID"
         },
         "destination_folder": {
-          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
+          "description": "Folder inside the Home Assistant app folder (Apps/Home Assistant) you want to upload the files to. Will be created if it does not exist.",
           "example": "photos/snapshots",
           "name": "Destination folder"
         },
         "filename": {
-          "description": "Path to the file to upload.",
+          "description": "One or more paths to files to upload.",
           "example": "{example_image_path}",
-          "name": "Filename"
+          "name": "Filenames"
         }
       },
-      "name": "Upload file"
+      "name": "Upload files"
     }
   }
 }

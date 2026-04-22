@@ -76,7 +76,6 @@ from .auth import async_setup_auth_view
 from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
-    ATTR_REPOSITORIES,
     DATA_ADDONS_LIST,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
@@ -343,21 +342,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except SupervisorError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
         else:
-            hass.data[DATA_INFO] = root_info.to_dict()
-            hass.data[DATA_HOST_INFO] = host_info.to_dict()
-            hass.data[DATA_STORE] = store_info.to_dict()
-            hass.data[DATA_CORE_INFO] = homeassistant_info.to_dict()
-            hass.data[DATA_SUPERVISOR_INFO] = supervisor_info.to_dict()
-            hass.data[DATA_OS_INFO] = os_info.to_dict()
-            hass.data[DATA_NETWORK_INFO] = network_info.to_dict()
-            hass.data[DATA_ADDONS_LIST] = [addon.to_dict() for addon in addons_list]
-
-            # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
-            # Can drop this after removal period
-            hass.data[DATA_SUPERVISOR_INFO]["repositories"] = hass.data[DATA_STORE][
-                ATTR_REPOSITORIES
-            ]
-            hass.data[DATA_SUPERVISOR_INFO]["addons"] = hass.data[DATA_ADDONS_LIST]
+            hass.data[DATA_INFO] = root_info
+            hass.data[DATA_HOST_INFO] = host_info
+            hass.data[DATA_STORE] = store_info
+            hass.data[DATA_CORE_INFO] = homeassistant_info
+            hass.data[DATA_SUPERVISOR_INFO] = supervisor_info
+            hass.data[DATA_OS_INFO] = os_info
+            hass.data[DATA_NETWORK_INFO] = network_info
+            hass.data[DATA_ADDONS_LIST] = addons_list
 
     # Fetch data
     update_info_task = hass.async_create_task(update_info_data(), eager_start=True)
