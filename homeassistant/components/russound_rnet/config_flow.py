@@ -155,10 +155,10 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data[CONF_MODEL] = user_input[CONF_MODEL]
             model = RNET_MODELS[self.data[CONF_MODEL]]
-            self.data[CONF_CONTROLLERS] = int(
-                user_input.get(CONF_CONTROLLERS, model.max_controllers)
-            )
-            return await self.async_step_sources()
+            if model.max_controllers == 1:
+                self.data[CONF_CONTROLLERS] = 1
+                return await self.async_step_sources()
+            return await self.async_step_controllers()
 
         model_schema = vol.Schema(
             {
@@ -172,10 +172,27 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
                         translation_key="model",
                     )
                 ),
+            }
+        )
+
+        return self.async_show_form(step_id="model", data_schema=model_schema)
+
+    async def async_step_controllers(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle controller count selection."""
+        model = RNET_MODELS[self.data[CONF_MODEL]]
+
+        if user_input is not None:
+            self.data[CONF_CONTROLLERS] = int(user_input[CONF_CONTROLLERS])
+            return await self.async_step_sources()
+
+        controllers_schema = vol.Schema(
+            {
                 vol.Required(CONF_CONTROLLERS, default=1): NumberSelector(
                     NumberSelectorConfig(
                         min=1,
-                        max=max(m.max_controllers for m in RNET_MODELS.values()),
+                        max=model.max_controllers,
                         step=1,
                         mode=NumberSelectorMode.BOX,
                     )
@@ -183,7 +200,9 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="model", data_schema=model_schema)
+        return self.async_show_form(
+            step_id="controllers", data_schema=controllers_schema
+        )
 
     async def async_step_sources(
         self, user_input: dict[str, Any] | None = None

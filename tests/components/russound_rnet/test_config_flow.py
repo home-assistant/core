@@ -59,7 +59,15 @@ async def test_user_flow_tcp_creates_entry(
     # Select model
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MODEL: MODEL, CONF_CONTROLLERS: 1},
+        {CONF_MODEL: MODEL},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "controllers"
+
+    # Enter number of controllers
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CONTROLLERS: 1},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sources"
@@ -122,7 +130,15 @@ async def test_user_flow_serial_creates_entry(
     # Select model
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MODEL: MODEL, CONF_CONTROLLERS: 1},
+        {CONF_MODEL: MODEL},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "controllers"
+
+    # Enter number of controllers
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CONTROLLERS: 1},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sources"
@@ -357,7 +373,11 @@ async def test_empty_sources_and_zones_excluded(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_MODEL: MODEL, CONF_CONTROLLERS: 1},
+        {CONF_MODEL: MODEL},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CONTROLLERS: 1},
     )
 
     # Only fill in 2 of 6 sources, leave rest empty

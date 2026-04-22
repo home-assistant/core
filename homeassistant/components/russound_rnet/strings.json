@@ -9,12 +9,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "controllers": {
+        "data": {
+          "controllers": "Number of controllers"
+        },
+        "description": "Enter the number of controllers in your Russound system.",
+        "title": "Controllers"
+      },
       "model": {
         "data": {
-          "controllers": "Number of controllers",
           "model": "Model"
         },
-        "description": "Select your Russound RNET device model and the number of controllers in your system.",
+        "description": "Select your Russound RNET device model.",
         "title": "Device Model"
       },
       "serial": {
