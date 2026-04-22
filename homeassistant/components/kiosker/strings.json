@@ -66,6 +66,11 @@
       "last_motion": {
         "name": "Last motion"
       }
+    },
+    "switch": {
+      "disable_screensaver": {
+        "name": "Disable screensaver"
+      }
     }
   }
 }
