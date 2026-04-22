@@ -6,6 +6,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -29,6 +30,9 @@ class MatterEntryData:
 
     adapter: MatterAdapter
     listen_task: asyncio.Task
+
+
+type MatterConfigEntry = ConfigEntry[MatterEntryData]
 
 
 @callback

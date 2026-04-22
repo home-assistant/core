@@ -17,7 +17,7 @@ from matter_server.client.exceptions import (
 from matter_server.common.errors import MatterError, NodeNotExists
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -36,6 +36,7 @@ from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
+    MatterConfigEntry,
     MatterEntryData,
     get_matter,
     get_node_from_device_entry,
@@ -75,7 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
     """Set up Matter from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
@@ -178,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _client_listen(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MatterConfigEntry,
     matter_client: MatterClient,
     init_ready: asyncio.Event,
 ) -> None:
@@ -200,7 +201,7 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, SUPPORTED_PLATFORMS
@@ -223,7 +224,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Config entry is being removed."""
 
     if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
@@ -247,7 +248,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 def _remove_via_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device_entry: dr.DeviceEntry
 ) -> None:
     """Remove all via devices associated with a device."""
     device_registry = dr.async_get(hass)
@@ -260,7 +261,7 @@ def _remove_via_devices(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     node = get_node_from_device_entry(hass, device_entry)
@@ -289,7 +290,9 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_ensure_addon_running(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
     """Ensure that Matter Server add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:
