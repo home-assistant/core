@@ -137,7 +137,6 @@ class DataGrandLyonStopSensor(
         if passage is None:
             return None
         return {
-            "line": passage.ligne,
             "direction": passage.direction,
             "type": passage.type.name.lower(),
         }
