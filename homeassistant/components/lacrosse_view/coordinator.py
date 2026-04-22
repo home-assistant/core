@@ -117,15 +117,14 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                     continue
 
                 timestamp = spot.get("time")
-                if timestamp is None:
-                    continue
+                # Only check for stale data if timestamp exists; data without timestamp is fresh
+                if timestamp is not None:
+                    try:
+                        spot_time = datetime.fromtimestamp(timestamp, tz=UTC)
+                    except TypeError, ValueError, OSError:
+                        continue
 
-                try:
-                    spot_time = datetime.fromtimestamp(timestamp, tz=UTC)
-                except TypeError, ValueError, OSError:
-                    continue
-
-                age = utc_now - spot_time
+                    age = utc_now - spot_time
                 if age > STALE_DATA_THRESHOLD:
                     _LOGGER.debug(
                         "Stale spot reading ignored: %s / %s (%.1f hours old), retaining old value",
