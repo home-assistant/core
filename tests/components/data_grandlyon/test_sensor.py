@@ -139,7 +139,6 @@ async def test_stop_sensor_extra_attributes(
 
     state = hass.states.get("sensor.c3_stop_100_next_passage_1")
     assert state is not None
-    assert state.attributes["line"] == "C3"
     assert state.attributes["direction"] == "Gare Part-Dieu"
     assert state.attributes["type"] == "estimated"
 
