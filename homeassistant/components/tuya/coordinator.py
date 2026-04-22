@@ -12,7 +12,7 @@ from tuya_sharing import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .const import (
     CONF_ENDPOINT,
@@ -94,7 +94,7 @@ class DeviceListener(SharingDeviceListener):
         # Ensure the (stale) device isn't present in the device registry
         self.async_remove_device(device_id)
 
-        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device_id])
+        async_dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device_id])
 
     def remove_device(self, device_id: str) -> None:
         """Handle device removal event."""
