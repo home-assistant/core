@@ -243,6 +243,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                             "url": data[CONF_URL],
                             "missing": ", ".join(missing),
                             "found": ", ".join(known_interfaces),
+                            "integration_title": "OPNsense",
                         },
                     )
                     return self.async_abort(reason="import_failed_missing_interfaces")
