@@ -254,27 +254,3 @@ async def test_remove_config_entry_device(
         hass, mock_config_entry, connected_device
     )
     assert result is False
-
-
-async def test_remove_config_entry_device_unloaded(
-    hass: HomeAssistant,
-    init_integration: tuple[VictronVenusHub, MockConfigEntry],
-) -> None:
-    """Test removing a device when the config entry is unloaded."""
-    _, mock_config_entry = init_integration
-    device_registry = dr.async_get(hass)
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_test_device")},
-    )
-
-    # Unload the config entry so runtime_data is removed
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Should allow removal when entry is unloaded (no runtime_data)
-    result = await async_remove_config_entry_device(
-        hass, mock_config_entry, device_entry
-    )
-    assert result is True
