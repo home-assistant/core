@@ -99,6 +99,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     yaml_config = config.get(DOMAIN, {})
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     hass.data[DOMAIN] = WemoData(
         discovery_enabled=yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY),
         static_config=yaml_config.get(CONF_STATIC, []),

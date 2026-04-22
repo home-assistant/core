@@ -28,6 +28,8 @@ async def async_setup_entry(
     async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Huawei LTE buttons."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
     buttons = [
         ClearTrafficStatisticsButton(router),

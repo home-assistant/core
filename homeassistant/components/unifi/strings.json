@@ -41,13 +41,45 @@
     }
   },
   "entity": {
+    "button": {
+      "port_power_cycle": {
+        "name": "{port_name} power cycle"
+      },
+      "wlan_regenerate_password": {
+        "name": "Regenerate password"
+      }
+    },
+    "image": {
+      "wlan_qr_code": {
+        "name": "QR code"
+      }
+    },
     "light": {
       "led_control": {
         "name": "LED"
       }
     },
     "sensor": {
+      "client_bandwidth_rx": {
+        "name": "RX"
+      },
+      "client_bandwidth_tx": {
+        "name": "TX"
+      },
+      "client_uptime": {
+        "name": "Uptime"
+      },
+      "device_clients": {
+        "name": "Clients"
+      },
+      "device_cpu_utilization": {
+        "name": "CPU utilization"
+      },
+      "device_memory_utilization": {
+        "name": "Memory utilization"
+      },
       "device_state": {
+        "name": "State",
         "state": {
           "adopting": "Adopting",
           "adoption_failed": "Adoption failed",
@@ -63,11 +95,55 @@
           "upgrading": "Upgrading"
         }
       },
+      "device_sub_temperature": {
+        "name": "{name} temperature"
+      },
+      "device_uplink_mac": {
+        "name": "Uplink MAC"
+      },
+      "device_uptime": {
+        "name": "Uptime"
+      },
+      "outlet_power": {
+        "name": "{outlet_name} outlet power"
+      },
+      "port_bandwidth_rx": {
+        "name": "{port_name} RX"
+      },
+      "port_bandwidth_tx": {
+        "name": "{port_name} TX"
+      },
       "port_link_speed": {
-        "name": "Link speed"
+        "name": "{port_name} link speed"
+      },
+      "port_poe_power": {
+        "name": "{port_name} PoE power"
+      },
+      "smartpower_ac_power_budget": {
+        "name": "AC power budget"
+      },
+      "smartpower_ac_power_consumption": {
+        "name": "AC power consumption"
+      },
+      "wan_latency": {
+        "name": "{target} {wan} latency"
       },
       "wired_client_link_speed": {
         "name": "Link speed"
+      },
+      "wlan_clients": {
+        "name": "Clients"
+      }
+    },
+    "switch": {
+      "block_client": {
+        "name": "Blocked"
+      },
+      "poe_port_control": {
+        "name": "{port_name} PoE"
+      },
+      "wlan_control": {
+        "name": "Enabled"
       }
     }
   },

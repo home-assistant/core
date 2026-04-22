@@ -42,6 +42,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SlimProto MediaPlayer(s) from Config Entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     slimserver: SlimServer = hass.data[DOMAIN]
     added_ids = set()
 
