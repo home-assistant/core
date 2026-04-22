@@ -1,7 +1,7 @@
 """Test fixtures for the ScorpionTrack integration."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from pyscorpiontrack import (
@@ -12,6 +12,7 @@ from pyscorpiontrack import (
 import pytest
 
 from homeassistant.components.scorpiontrack.const import CONF_SHARE_TOKEN, DOMAIN
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -19,14 +20,15 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_share() -> ScorpionTrackShare:
     """Return a representative ScorpionTrack share."""
+    now = dt_util.utcnow()
     return ScorpionTrackShare(
         id=101,
         token="canonical-token",
         title="Family Cars",
         owner_name="Ashby Herbert",
         distance_units="miles",
-        created_at=datetime(2026, 4, 20, 19, 0, tzinfo=UTC),
-        expires_at=datetime(2026, 5, 20, 19, 0, tzinfo=UTC),
+        created_at=now - timedelta(days=3),
+        expires_at=now + timedelta(days=28),
         vehicles=(
             ScorpionTrackVehicle(
                 id=1,
@@ -37,7 +39,7 @@ def mock_share() -> ScorpionTrackShare:
                 position=ScorpionTrackPosition(
                     latitude=51.5074,
                     longitude=-0.1278,
-                    timestamp=datetime(2026, 4, 21, 7, 0, tzinfo=UTC),
+                    timestamp=now - timedelta(days=2),
                     speed_kmh=48.3,
                     ignition=True,
                     bearing=182.0,
