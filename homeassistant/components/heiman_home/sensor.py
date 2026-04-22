@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
+
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -62,6 +63,12 @@ async def async_setup_entry(
                 elif hasattr(prop, "entity") and prop.entity not in (None, "sensor"):
                     continue
                 else:
+                    # Skip boolean-valued properties when auto-creating sensors
+                    # (unless explicitly marked as entity='sensor'), because
+                    # native_value always returns None for bool and this creates
+                    # permanently-unknown, unusable sensor entities.
+                    if prop.data_type == "bool":
+                        continue
                     unique_id = f"{device.device_id}_{property_id}_sensor"
                     if unique_id not in existing_entities:
                         new_sensors.append(
@@ -235,7 +242,7 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             if config.state_class:
                 self._attr_state_class = config.state_class
         elif prop:
-            # Only set state_class when the current value is numeric.
+            # Only set state_xclass when the current value is numeric.
             # Note: bool is a subclass of int, so we explicitly exclude it.
             if (
                 prop.value is not None

@@ -15,6 +15,7 @@ from heimanconnect import (
     HeimanConnectionError,
     HeimanHttpClient,
 )
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
