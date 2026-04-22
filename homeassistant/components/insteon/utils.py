@@ -73,6 +73,8 @@ def add_insteon_events(hass: HomeAssistant, device: Device) -> None:
             event = EVENT_GROUP_OFF_FAST
         else:
             event = f"insteon.{name}"
+
+        schema["deprecated"] = "Events are deprecated. Please use event entities and entity state changes instead."
         _LOGGER.debug("Firing event %s with %s", event, schema)
         hass.bus.async_fire(event, schema)
 
@@ -165,10 +167,11 @@ def async_add_insteon_devices(
     for address in devices:
         device = devices[address]
         groups = get_device_platform_groups(device, platform)
-        discovery_info = {"address": address, "groups": groups}
-        async_add_insteon_entities(
-            hass, platform, entity_type, async_add_entities, discovery_info
-        )
+        if groups:
+            discovery_info = {"address": address, "groups": groups}
+            async_add_insteon_entities(
+                hass, platform, entity_type, async_add_entities, discovery_info
+            )
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:

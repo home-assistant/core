@@ -47,6 +47,8 @@ INSTEON_PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SWITCH,
+    # setup up event entities last to ensure devices have been created before events are added
+    Platform.EVENT,
 ]
 
 X10_PLATFORMS = [

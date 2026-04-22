@@ -28,13 +28,13 @@ from .utils import print_aldb_to_log
 _LOGGER = logging.getLogger(__name__)
 
 
-class InsteonEntity(Entity):
+class InsteonBaseEntity(Entity):
     """INSTEON abstract base entity."""
 
     _attr_should_poll = False
 
-    def __init__(self, device, group):
-        """Initialize the INSTEON binary sensor."""
+    def __init__(self, device, group) -> None:
+        """Initialize the INSTEON entity."""
         self._insteon_device_group = device.groups[group]
         self._insteon_device = device
 
@@ -60,17 +60,6 @@ class InsteonEntity(Entity):
         else:
             uid = f"{self._insteon_device.id}_{self._insteon_device_group.group}"
         return uid
-
-    @property
-    def name(self):
-        """Return the name of the node (used for Entity_ID)."""
-        # Set a base description
-        if (description := self._insteon_device.description) is None:
-            description = "Unknown Device"
-        # Get an extension label if there is one
-        if extension := self._get_label():
-            extension = f" {extension}"
-        return f"{description} {self._insteon_device.address}{extension}"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -177,3 +166,17 @@ class InsteonEntity(Entity):
     async def _async_add_default_links(self):
         """Add default links between the device and the modem."""
         await self._insteon_device.async_add_default_links()
+
+class InsteonEntity(InsteonBaseEntity):
+    """INSTEON abstract device entity."""
+
+    @property
+    def name(self):
+        """Return the name of the node (used for Entity_ID)."""
+        # Set a base description
+        if (description := self._insteon_device.description) is None:
+            description = "Unknown Device"
+        # Get an extension label if there is one
+        if extension := self._get_label():
+            extension = f" {extension}"
+        return f"{description} {self._insteon_device.address}{extension}"
