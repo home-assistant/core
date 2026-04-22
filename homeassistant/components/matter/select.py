@@ -560,7 +560,7 @@ DISCOVERY_SCHEMAS = [
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
     ),
-    # Keep the legacy vendor-specific select entities around for one release
+    # Keep the legacy vendor-specific select entities until HA 2026.11.0,
     # so existing users can migrate before we remove them in favor of the
     # generic number slider.
     MatterDiscoverySchema(
