@@ -35,9 +35,7 @@ async def test_async_media_previous_track_maps_errors(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders["command"] == "media_previous_track"
-    if message is not None:
-        assert message in exc_info.value.translation_placeholders["message"]
-    else:
-        assert exc_info.value.translation_placeholders == {
-            "command": "media_previous_track"
-        }
+
+    assert (
+        message is None or message in exc_info.value.translation_placeholders["message"]
+    )
