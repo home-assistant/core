@@ -139,7 +139,7 @@ class RussoundRNETZone(RussoundRNETEntity, MediaPlayerEntity):
         # Reverse map: source name → slot number (1-based RNET index)
         self._source_to_index = {name: slot for slot, name in source_list}
         entry = coordinator.config_entry
-        self._attr_unique_id = f"{entry.unique_id}_{controller_id}_{zone_id}"
+        self._attr_unique_id = f"{entry.entry_id}_{controller_id}_{zone_id}"
         # RNET doesn't report mute state; track it locally
         self._attr_is_volume_muted = False
 

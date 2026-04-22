@@ -57,10 +57,10 @@ async def async_setup_entry(
     for controller_id in range(1, entry.data.get(CONF_CONTROLLERS, 1) + 1):
         via_device = None
         if controller_id != 1:
-            via_device = (DOMAIN, f"{entry.unique_id}_1")
+            via_device = (DOMAIN, f"{entry.entry_id}_1")
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, f"{entry.unique_id}_{controller_id}")},
+            identifiers={(DOMAIN, f"{entry.entry_id}_{controller_id}")},
             manufacturer="Russound",
             name=f"{model.name} Controller {controller_id}"
             if model

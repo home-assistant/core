@@ -114,10 +114,9 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             if not await _async_validate_connection(client):
                 errors["base"] = "cannot_connect"
             else:
+                self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
                 self.data[CONF_HOST] = host
                 self.data[CONF_PORT] = port
-                await self.async_set_unique_id(f"{host}:{port}")
-                self._abort_if_unique_id_configured()
                 return await self.async_step_model()
 
         return self.async_show_form(
@@ -139,9 +138,8 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
             if not await _async_validate_connection(client):
                 errors["base"] = "cannot_connect"
             else:
+                self._async_abort_entries_match({CONF_DEVICE: device})
                 self.data[CONF_DEVICE] = device
-                await self.async_set_unique_id(device)
-                self._abort_if_unique_id_configured()
                 return await self.async_step_model()
 
         return self.async_show_form(
@@ -272,11 +270,7 @@ class RussoundRNETConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from YAML (called by repair flow with complete data)."""
-        host = import_data.get(CONF_HOST, "")
-        port = import_data.get(CONF_PORT, 0)
-
-        await self.async_set_unique_id(f"{host}:{port}")
-        self._abort_if_unique_id_configured()
+        self._async_abort_entries_match({CONF_HOST: import_data.get(CONF_HOST, "")})
 
         model_key = import_data[CONF_MODEL]
         model = RNET_MODELS[model_key]
