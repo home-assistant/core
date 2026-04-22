@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
@@ -86,6 +86,9 @@ async def test_meter_pro_co2_sync_datetime_button(
 
     mock_set_datetime = AsyncMock(return_value=True)
     mock_set_time_offset = AsyncMock(return_value=True)
+    parent_mock = Mock()
+    parent_mock.attach_mock(mock_set_time_offset, "set_time_offset")
+    parent_mock.attach_mock(mock_set_datetime, "set_datetime")
 
     # Use a fixed datetime for testing
     fixed_time = datetime(2025, 1, 9, 12, 30, 45, tzinfo=UTC)
@@ -125,6 +128,14 @@ async def test_meter_pro_co2_sync_datetime_button(
             utc_offset_minutes=0,
         )
         mock_set_time_offset.assert_awaited_once_with(0)
+        assert parent_mock.mock_calls == [
+            call.set_time_offset(0),
+            call.set_datetime(
+                timestamp=int(fixed_time.timestamp()),
+                utc_offset_hours=0,
+                utc_offset_minutes=0,
+            ),
+        ]
 
 
 @pytest.mark.parametrize(
