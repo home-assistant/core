@@ -7,7 +7,6 @@ from typing import Any
 
 from aioesphomeapi import (
     EntityInfo,
-    TemperatureUnit,
     WaterHeaterFeature,
     WaterHeaterInfo,
     WaterHeaterMode,
@@ -21,6 +20,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import callback
 
+from .const import TEMPERATURE_UNIT_MAP
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
@@ -45,12 +45,6 @@ _WATER_HEATER_MODES: EsphomeEnumMapper[WaterHeaterMode, str] = EsphomeEnumMapper
     }
 )
 
-_WATER_HEATER_TEMPERATURE_UNIT_MAP: dict[TemperatureUnit, UnitOfTemperature] = {
-    TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,
-    TemperatureUnit.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
-    TemperatureUnit.KELVIN: UnitOfTemperature.KELVIN,
-}
-
 
 class EsphomeWaterHeater(
     EsphomeEntity[WaterHeaterInfo, WaterHeaterState], WaterHeaterEntity
@@ -65,9 +59,7 @@ class EsphomeWaterHeater(
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
-        self._attr_temperature_unit = _WATER_HEATER_TEMPERATURE_UNIT_MAP[
-            static_info.temperature_unit
-        ]
+        self._attr_temperature_unit = TEMPERATURE_UNIT_MAP[static_info.temperature_unit]
         self._attr_min_temp = static_info.min_temperature
         self._attr_max_temp = static_info.max_temperature
         self._attr_target_temperature_step = static_info.target_temperature_step
