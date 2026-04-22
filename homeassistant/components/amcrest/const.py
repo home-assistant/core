@@ -2,7 +2,6 @@
 
 DOMAIN = "amcrest"
 DATA_AMCREST = DOMAIN
-CAMERAS = "cameras"
 DEVICES = "devices"
 
 BINARY_SENSOR_SCAN_INTERVAL_SECS = 5
