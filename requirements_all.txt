@@ -1113,7 +1113,7 @@ google-cloud-pubsub==2.37.0
 google-cloud-speech==2.38.0
 
 # homeassistant.components.google_cloud
-google-cloud-texttospeech==2.25.1
+google-cloud-texttospeech==2.36.0
 
 # homeassistant.components.google_generative_ai_conversation
 google-genai==1.59.0
