@@ -1,4 +1,4 @@
-"""Tests for iAqualink integration utility functions."""
+"""Tests for iAquaLink integration utility functions."""
 
 from iaqualink.exception import AqualinkServiceException
 import pytest
