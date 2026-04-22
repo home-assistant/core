@@ -43,7 +43,6 @@ NUMBERS: Final = (
         native_max_value=100,
         native_step=1,
         native_unit_of_measurement=PERCENTAGE,
-        device_class=NumberDeviceClass.BATTERY,
     ),
     IndevoltNumberEntityDescription(
         key="max_ac_output_power",
