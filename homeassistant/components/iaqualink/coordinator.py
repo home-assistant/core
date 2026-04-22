@@ -42,10 +42,10 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.system.update()
         except AqualinkServiceUnauthorizedException as err:
-            raise ConfigEntryAuthFailed("Invalid credentials for iAqualink") from err
+            raise ConfigEntryAuthFailed("Invalid credentials for iAquaLink") from err
         except (AqualinkServiceException, httpx.HTTPError) as err:
             raise UpdateFailed(
-                f"Unable to update iAqualink system {self.system.serial}: {err}"
+                f"Unable to update iAquaLink system {self.system.serial}: {err}"
             ) from err
         if self.system.online is not True:
-            raise UpdateFailed(f"iAqualink system {self.system.serial} is offline")
+            raise UpdateFailed(f"iAquaLink system {self.system.serial} is offline")

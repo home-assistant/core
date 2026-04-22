@@ -538,6 +538,7 @@ async def test_lost_connection_with_imap_push(
 ) -> None:
     """Test error handling when the connection is lost."""
     # Mock an error in waiting for a pushed update
+    mock_imap_protocol.idle_start.return_value = asyncio.Future()
     mock_imap_protocol.wait_server_push.side_effect = imap_wait_server_push_exception
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     config_entry.add_to_hass(hass)
@@ -549,6 +550,10 @@ async def test_lost_connection_with_imap_push(
     # Our entity should keep its current state as this
     assert state is not None
     assert state.state == "0"
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    assert "Canceling IDLE wait for imap.server.com" in caplog.text
 
 
 @pytest.mark.parametrize("imap_has_capability", [True], ids=["push"])
