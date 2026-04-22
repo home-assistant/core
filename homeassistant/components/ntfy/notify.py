@@ -65,11 +65,16 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Publish a message to a topic."""
-        await self.publish(message=message, title=title)
+        """Publish a message to a topic via notify.send_message action."""
+        await self._publish(message=message, title=title)
 
     async def publish(self, **kwargs: Any) -> None:
-        """Publish a message to a topic."""
+        """Publish a message to a topic via ntfy.publish action."""
+        await self._publish(**kwargs)
+        self._async_record_notification()
+
+    async def _publish(self, **kwargs: Any) -> None:
+        """Shared internal helper to publish a message to a topic."""
         attachment = None
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
