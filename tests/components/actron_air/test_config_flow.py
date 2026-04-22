@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock
 
 from actron_neo_api import ActronAirAuthError
+from actron_neo_api.models.auth import ActronAirUserInfo
 
 from homeassistant import config_entries
 from homeassistant.components.actron_air.const import DOMAIN
@@ -225,7 +226,9 @@ async def test_reauth_flow_wrong_account(
 
     # Mock the API to return a different user ID
     mock_actron_api.get_user_info = AsyncMock(
-        return_value={"id": "different_user_id", "email": "different@example.com"}
+        return_value=ActronAirUserInfo(
+            id="different_user_id", email="different@example.com"
+        )
     )
 
     # Start the reauth flow
