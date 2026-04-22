@@ -38,6 +38,7 @@ class DemoInfrared(InfraredEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_supported_commands = frozenset({infrared_protocols.Command})
 
     def __init__(
         self,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from infrared_protocols import NECCommand
 from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -95,7 +96,9 @@ async def test_button_press_sends_correct_code(
     )
 
     assert len(mock_infrared_entity.send_command_calls) == 1
-    assert mock_infrared_entity.send_command_calls[0] == expected_code
+    sent = mock_infrared_entity.send_command_calls[0]
+    assert isinstance(sent, NECCommand)
+    assert sent.command == expected_code
 
 
 @pytest.mark.usefixtures("init_integration")

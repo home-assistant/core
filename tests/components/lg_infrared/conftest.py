@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from unittest.mock import patch
 
 from infrared_protocols import Command as InfraredCommand
@@ -34,6 +33,7 @@ class MockInfraredEntity(InfraredEntity):
 
     _attr_has_entity_name = True
     _attr_name = "Test IR transmitter"
+    _attr_supported_commands = frozenset({InfraredCommand})
 
     def __init__(self, unique_id: str) -> None:
         """Initialize mock entity."""
@@ -73,25 +73,10 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def mock_make_lg_tv_command() -> Generator[None]:
-    """Patch make_command to return the LGTVCode directly.
-
-    This allows tests to assert on the high-level code enum value
-    rather than the raw NEC timings.
-    """
-    with patch(
-        "homeassistant.components.lg_infrared.entity.make_lg_tv_command",
-        side_effect=lambda code, **kwargs: code,
-    ):
-        yield
-
-
-@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_entity: MockInfraredEntity,
-    mock_make_lg_tv_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the LG Infrared integration for testing."""

@@ -21,6 +21,7 @@ class MockInfraredEntity(InfraredEntity):
 
     _attr_has_entity_name = True
     _attr_name = "Test IR transmitter"
+    _attr_supported_commands = frozenset({InfraredCommand})
 
     def __init__(self, unique_id: str) -> None:
         """Initialize mock entity."""

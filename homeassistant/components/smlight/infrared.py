@@ -33,6 +33,7 @@ class SmInfraredEntity(SmEntity, InfraredEntity):
     """Representation of a SLZB-Ultima infrared."""
 
     _attr_translation_key = "infrared_emitter"
+    _attr_supported_commands = frozenset({InfraredCommand})
 
     def __init__(self, coordinator: SmDataUpdateCoordinator) -> None:
         """Initialize the SLZB-Ultima infrared."""

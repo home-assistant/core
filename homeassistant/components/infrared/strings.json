@@ -5,6 +5,9 @@
     },
     "entity_not_found": {
       "message": "Infrared entity `{entity_id}` not found"
+    },
+    "command_not_supported": {
+      "message": "Infrared entity `{entity_id}` does not support commands of type `{command_type}`"
     }
   }
 }

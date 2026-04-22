@@ -125,6 +125,30 @@ async def test_async_send_command_component_not_loaded(hass: HomeAssistant) -> N
         await async_send_command(hass, "infrared.some_entity", command)
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_async_send_command_unsupported_command(
+    hass: HomeAssistant,
+    mock_infrared_entity: MockInfraredEntity,
+) -> None:
+    """Test async_send_command raises error when command is not supported."""
+    mock_infrared_entity._attr_supported_commands = frozenset()
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([mock_infrared_entity])
+
+    command = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "Infrared entity `infrared.test_ir_transmitter` does not support "
+            "commands of type `NECCommand`"
+        ),
+    ):
+        await async_send_command(hass, mock_infrared_entity.entity_id, command)
+
+    assert len(mock_infrared_entity.send_command_calls) == 0
+
+
 @pytest.mark.parametrize(
     ("restored_value", "expected_state"),
     [

@@ -25,6 +25,7 @@ from .const import DOMAIN
 
 __all__ = [
     "DOMAIN",
+    "InfraredCommand",
     "InfraredEntity",
     "InfraredEntityDescription",
     "async_get_emitters",
@@ -79,7 +80,8 @@ async def async_send_command(
     """Send an IR command to the specified infrared entity.
 
     Raises:
-        HomeAssistantError: If the infrared entity is not found.
+        HomeAssistantError: If the infrared entity is not found, or if the entity
+            does not support the given command type.
     """
     component = hass.data.get(DATA_COMPONENT)
     if component is None:
@@ -98,6 +100,16 @@ async def async_send_command(
             translation_placeholders={"entity_id": entity_id},
         )
 
+    if not isinstance(command, tuple(entity.supported_commands)):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_not_supported",
+            translation_placeholders={
+                "entity_id": entity_id,
+                "command_type": type(command).__name__,
+            },
+        )
+
     if context is not None:
         entity.async_set_context(context)
 
@@ -114,8 +126,14 @@ class InfraredEntity(RestoreEntity):
     entity_description: InfraredEntityDescription
     _attr_should_poll = False
     _attr_state: None = None
+    _attr_supported_commands: frozenset[type[InfraredCommand]] = frozenset()
 
     __last_command_sent: str | None = None
+
+    @property
+    def supported_commands(self) -> frozenset[type[InfraredCommand]]:
+        """Return the command types this entity can transmit."""
+        return self._attr_supported_commands
 
     @property
     @final

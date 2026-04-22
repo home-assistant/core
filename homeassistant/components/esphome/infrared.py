@@ -24,6 +24,8 @@ PARALLEL_UPDATES = 0
 class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEntity):
     """ESPHome infrared entity using native API."""
 
+    _attr_supported_commands = frozenset({InfraredCommand})
+
     @callback
     def _on_device_update(self) -> None:
         """Call when device updates or entry data changes."""
