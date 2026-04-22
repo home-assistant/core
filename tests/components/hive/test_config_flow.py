@@ -115,6 +115,31 @@ async def test_user_flow_uppercase_username_normalized_for_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_flow_duplicate_username_with_different_casing_aborts(
+    hass: HomeAssistant,
+) -> None:
+    """Test user flow aborts when the same email is entered with different casing."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: USERNAME.upper(), CONF_PASSWORD: PASSWORD},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
 async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
     """Test user flow with no 2FA required and device registration."""
     result = await hass.config_entries.flow.async_init(
