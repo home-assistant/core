@@ -1,6 +1,6 @@
 """Test the Tesla Fleet climate platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -197,16 +197,27 @@ async def test_climate_set_fan_mode_bioweapon_unsupported_vehicle(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_vehicle_data: AsyncMock,
+    mock_request: AsyncMock,
 ) -> None:
     """Test bioweapon fan mode is rejected when the vehicle does not support it."""
-    climate_state = mock_vehicle_data.return_value["response"]["climate_state"].copy()
-    climate_state["bioweapon_mode"] = False
-    response = mock_vehicle_data.return_value["response"].copy()
-    response["climate_state"] = climate_state
-    mock_vehicle_data.return_value = {
-        **mock_vehicle_data.return_value,
-        "response": response,
-    }
+
+    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
+    entity_id = "climate.test_climate"
+
+    with (
+        patch(
+            "homeassistant.components.tesla_fleet.climate.TeslaFleetClimateEntity.fan_modes",
+            new_callable=PropertyMock,
+            return_value=None,
+        ),
+        pytest.raises((ServiceValidationError, ServiceNotSupported)),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: "bioweapon"},
+            blocking=True,
+        )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
