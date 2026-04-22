@@ -277,22 +277,14 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Browse radio stations and audio files."""
-        try:
-            if not media_content_type:
-                return await self._async_browse_media_root()
+        if not media_content_type:
+            return await self._async_browse_media_root()
 
+        try:
             if media_content_type == CONTENT_TYPE_RADIO:
                 return await self._async_browse_radio_stations(expanded=True)
             if media_content_type == CONTENT_TYPE_AUDIO:
                 return await self._async_browse_audio_files(expanded=True)
-
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_media_content_type",
-                translation_placeholders={
-                    "media_content_type": str(media_content_type)
-                },
-            )
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
@@ -322,6 +314,12 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
                     "device": self.coordinator.name,
                 },
             ) from err
+
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_media_content_type",
+            translation_placeholders={"media_content_type": str(media_content_type)},
+        )
 
     async def _async_browse_media_root(self) -> BrowseMedia:
         """Return root BrowseMedia tree."""

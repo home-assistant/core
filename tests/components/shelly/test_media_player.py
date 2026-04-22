@@ -496,3 +496,37 @@ async def test_rpc_media_player_browse_media_audio_files(
     assert [child["thumbnail"] for child in msg["result"]["children"]] == [
         item["preview"] for item in AUDIO_FILES if item["type"] == "AUDIO"
     ]
+
+
+async def test_rpc_media_player_browse_media_unsupported_media_type(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test Shelly media player browse media returns unsupported media content type."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.media_list_media.return_value = AUDIO_FILES
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "invalid",
+            "media_content_id": CONTENT_TYPE_AUDIO,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["error"]
+    assert msg["error"]["code"] == "home_assistant_error"
+    assert (
+        msg["error"]["message"]
+        == "Unsupported media content type for Shelly device: invalid"
+    )
