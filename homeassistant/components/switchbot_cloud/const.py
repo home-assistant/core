@@ -63,7 +63,7 @@ class Humidifier2Mode(Enum):
         return [mode.name.lower() for mode in cls]
 
 
-class LockState(Enum):
+class SwitchbotCloudDeviceLockState(Enum):
     """Lock State."""
 
     LOCKED = "locked"
@@ -75,6 +75,11 @@ class LockState(Enum):
     HALF_LOCKED = "halfLocked"
 
     @classmethod
-    def get_states(cls) -> list[str]:
+    def get_states(cls) -> list[SwitchbotCloudDeviceLockState]:
         """Get lock states."""
+        return list(cls)
+
+    @classmethod
+    def get_values(cls) -> list[str]:
+        """Get lock value."""
         return [mode.value for mode in cls]

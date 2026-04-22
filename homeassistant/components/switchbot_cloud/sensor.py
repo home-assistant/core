@@ -26,7 +26,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry
-from .const import DOMAIN, LockState
+from .const import DOMAIN, SwitchbotCloudDeviceLockState
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -170,9 +170,15 @@ LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
 
 LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=LOCK_SENSOR_TYPE_LOCK_STATE,
+    device_class=SensorDeviceClass.ENUM,
     translation_key="lock_state",
+    options=[
+        value.name.lower() for value in SwitchbotCloudDeviceLockState.get_states()
+    ],
     value_fn=lambda value: (
-        LockState(value).name.lower() if value in LockState.get_states() else None
+        SwitchbotCloudDeviceLockState(value).name.lower()
+        if value in SwitchbotCloudDeviceLockState.get_values()
+        else None
     ),
 )
 
@@ -239,6 +245,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         BATTERY_DESCRIPTION,
         LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION,
     ),
+    "Smart Lock Vision": (BATTERY_DESCRIPTION,),
     "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
     "Lock Vision": (BATTERY_DESCRIPTION,),
     "Lock Vision Pro": (BATTERY_DESCRIPTION,),
