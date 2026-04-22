@@ -48,19 +48,25 @@ class PushReceiver:
 
     Each device is identified by its MAC address. When push data arrives,
     the receiver parses it and calls the registered callback for that device.
+    Includes IP validation to reduce spoofing risk.
     """
 
     def __init__(self) -> None:
         """Initialize the push receiver."""
         self._listeners: dict[str, PushDataCallback] = {}
+        self._device_ips: dict[str, str] = {}
 
-    def register_device(self, mac_address: str, callback_fn: PushDataCallback) -> None:
+    def register_device(
+        self, mac_address: str, ip_address: str, callback_fn: PushDataCallback
+    ) -> None:
         """Register a device to receive push updates."""
         mac_clean = mac_address.replace(":", "").lower()
         self._listeners[mac_clean] = callback_fn
+        self._device_ips[mac_clean] = ip_address
         _LOGGER.debug(
-            "Registered push listener for MAC %s (total: %d)",
+            "Registered push listener for MAC %s at IP %s (total: %d)",
             mac_clean,
+            ip_address,
             len(self._listeners),
         )
 
@@ -68,6 +74,7 @@ class PushReceiver:
         """Unregister a device from push updates."""
         mac_clean = mac_address.replace(":", "").lower()
         self._listeners.pop(mac_clean, None)
+        self._device_ips.pop(mac_clean, None)
         _LOGGER.debug(
             "Unregistered push listener for MAC %s (remaining: %d)",
             mac_clean,
@@ -78,6 +85,14 @@ class PushReceiver:
         """Get the callback for a given MAC address."""
         mac_clean = mac_address.replace(":", "").lower()
         return self._listeners.get(mac_clean)
+
+    def validate_ip(self, mac_address: str, remote_ip: str | None) -> bool:
+        """Check if the request comes from the expected device IP."""
+        if remote_ip is None:
+            return False
+        mac_clean = mac_address.replace(":", "").lower()
+        expected_ip = self._device_ips.get(mac_clean)
+        return remote_ip == expected_ip
 
     @property
     def device_count(self) -> int:
@@ -161,6 +176,16 @@ async def _handle_push_request(
     if listener is None:
         _LOGGER.warning("Push from unknown device rejected: %s", mac_addr)
         return Response(status=403, text="unknown device")
+
+    # Validate source IP to reduce spoofing risk
+    remote_ip = request.remote
+    if not receiver.validate_ip(mac_addr, remote_ip):
+        _LOGGER.warning(
+            "Push for %s from unauthorized IP rejected: %s (expected registered IP)",
+            mac_addr,
+            remote_ip,
+        )
+        return Response(status=403, text="unauthorized source IP")
 
     # Process the push data
     result = _dispatch_push_data(receiver, query)

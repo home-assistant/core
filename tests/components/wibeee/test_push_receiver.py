@@ -34,7 +34,7 @@ def registered_receiver(
     def listener(data: dict[str, Any]) -> None:
         calls.append(data)
 
-    push_receiver.register_device("001ec0112232", listener)
+    push_receiver.register_device("001ec0112232", "192.168.1.100", listener)
     return push_receiver, calls
 
 
@@ -46,10 +46,10 @@ def registered_receiver(
 class MockRequest:
     """Mock Request for testing."""
 
-    def __init__(self, query: dict[str, str]) -> None:
+    def __init__(self, query: dict[str, str], remote: str = "192.168.1.100") -> None:
         """Initialize mock request."""
         self._query = query
-        self.remote = "127.0.0.1"
+        self.remote = remote
 
     @property
     def query(self) -> dict[str, str]:
@@ -194,6 +194,27 @@ async def test_handle_push_request_unknown_mac(push_receiver: PushReceiver) -> N
     assert resp.status == 403
 
 
+@pytest.mark.asyncio
+async def test_handle_push_request_unauthorized_ip(
+    registered_receiver: tuple[PushReceiver, list[dict[str, Any]]],
+) -> None:
+    """Test HTTP handler with unauthorized source IP."""
+    receiver, calls = registered_receiver
+
+    request = MockRequest(
+        {
+            "mac": "001ec0112232",
+            "v1": "230.5",
+        },
+        remote="192.168.1.200",  # Different from registered IP
+    )
+
+    resp = await _handle_push_request(receiver, request, "<<<WBAVG ")
+
+    assert resp.status == 403
+    assert len(calls) == 0
+
+
 # ---------------------------------------------------------------------------
 # Tests: PushReceiver
 # ---------------------------------------------------------------------------
@@ -207,10 +228,12 @@ def test_push_receiver_register() -> None:
     def listener(data: dict[str, Any]) -> None:
         calls.append(data)
 
-    receiver.register_device("001ec0112232", listener)
+    receiver.register_device("001ec0112232", "192.168.1.100", listener)
 
     assert receiver.device_count == 1
     assert receiver.get_listener("001ec0112232") is not None
+    assert receiver.validate_ip("001ec0112232", "192.168.1.100") is True
+    assert receiver.validate_ip("001ec0112232", "192.168.1.200") is False
 
 
 def test_push_receiver_unregister() -> None:
@@ -221,7 +244,7 @@ def test_push_receiver_unregister() -> None:
     def listener(data: dict[str, Any]) -> None:
         calls.append(data)
 
-    receiver.register_device("001ec0112232", listener)
+    receiver.register_device("001ec0112232", "192.168.1.100", listener)
     receiver.unregister_device("001ec0112232")
 
     assert receiver.device_count == 0
@@ -240,7 +263,7 @@ def test_push_receiver_multiple_devices() -> None:
     def listener2(data: dict[str, Any]) -> None:
         calls2.append(data)
 
-    receiver.register_device("001ec0112232", listener1)
-    receiver.register_device("001ec0112233", listener2)
+    receiver.register_device("001ec0112232", "192.168.1.100", listener1)
+    receiver.register_device("001ec0112233", "192.168.1.101", listener2)
 
     assert receiver.device_count == 2

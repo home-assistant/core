@@ -152,8 +152,8 @@ async def _get_local_ip(hass: HomeAssistant) -> str:
                 if not addr.is_loopback:
                     return host
             except ValueError:
-                # Not an IP literal (e.g. hostname) -- usable as-is
-                return host
+                # Not an IP literal (e.g. hostname) -- fall through to probe
+                pass
     except ImportError, HomeAssistantError, OSError:
         pass
 
@@ -259,7 +259,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during setup")
                 errors["base"] = "unknown"
 
-        default_host = (user_input or {}).get(CONF_HOST) or self._discovered_host
+        default_host = (user_input or {}).get(CONF_HOST) or self._discovered_host or ""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -290,7 +290,7 @@ class WibeeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if not _is_routable_ip(local_ip):
                         _LOGGER.warning(
                             "Detected non-routable local IP %s for auto-configuration. "
-                            "Please configure push manually via the device web interface.",
+                            "Please configure push manually via the device web interface",
                             local_ip,
                         )
                         errors["base"] = "auto_configure_failed"
@@ -434,7 +434,7 @@ class WibeeeOptionsFlowHandler(config_entries.OptionsFlow):
                     if not _is_routable_ip(local_ip):
                         _LOGGER.warning(
                             "Detected non-routable local IP %s for auto-configuration. "
-                            "Please configure push manually via the device web interface.",
+                            "Please configure push manually via the device web interface",
                             local_ip,
                         )
                         errors["base"] = "auto_configure_failed"
