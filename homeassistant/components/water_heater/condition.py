@@ -83,7 +83,7 @@ class WaterHeaterTargetTemperatureCondition(EntityNumericalConditionWithUnitBase
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF),
+    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF, support_duration=True),
     "is_on": WaterHeaterOnCondition,
     "is_operation_mode": WaterHeaterOperationModeCondition,
     "is_target_temperature": WaterHeaterTargetTemperatureCondition,
