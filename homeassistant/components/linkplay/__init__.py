@@ -1,4 +1,5 @@
 """Support for LinkPlay devices."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from dataclasses import dataclass
 

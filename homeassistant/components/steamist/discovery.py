@@ -114,6 +114,8 @@ async def async_discover_device(hass: HomeAssistant, host: str) -> Device30303 |
 @callback
 def async_get_discovery(hass: HomeAssistant, host: str) -> Device30303 | None:
     """Check if a device was already discovered via a broadcast discovery."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     discoveries: list[Device30303] = hass.data[DOMAIN][DISCOVERY]
     return async_find_discovery_by_ip(discoveries, host)
 

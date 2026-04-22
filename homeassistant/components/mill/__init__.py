@@ -58,6 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await data_coordinator.async_config_entry_first_refresh()
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     hass.data[DOMAIN][conn_type][key] = data_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

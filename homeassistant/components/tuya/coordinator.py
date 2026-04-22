@@ -12,7 +12,7 @@ from tuya_sharing import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
 from .const import (
     CONF_ENDPOINT,
@@ -59,7 +59,7 @@ class DeviceListener(SharingDeviceListener):
         updated_status_properties: list[str] | None = None,
         dp_timestamps: dict[str, int] | None = None,
     ) -> None:
-        """Update device status with optional DP timestamps."""
+        """Handle device update event."""
         LOGGER.debug(
             "Received update for device %s (online: %s): %s"
             " (updated properties: %s, dp_timestamps: %s)",
@@ -77,10 +77,7 @@ class DeviceListener(SharingDeviceListener):
         )
 
     def add_device(self, device: CustomerDevice) -> None:
-        """Add device added listener."""
-        # Ensure the device isn't present stale
-        self.hass.add_job(self.async_remove_device, device.id)
-
+        """Handle device added event."""
         LOGGER.debug(
             "Add device %s (online: %s): %s (function: %s, status range: %s)",
             device.id,
@@ -89,17 +86,24 @@ class DeviceListener(SharingDeviceListener):
             device.function,
             device.status_range,
         )
+        self.hass.add_job(self.async_add_device, device.id)
 
-        dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
+    @callback
+    def async_add_device(self, device_id: str) -> None:
+        """Add device to Home Assistant."""
+        # Ensure the (stale) device isn't present in the device registry
+        self.async_remove_device(device_id)
+
+        async_dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device_id])
 
     def remove_device(self, device_id: str) -> None:
-        """Add device removed listener."""
+        """Handle device removal event."""
+        LOGGER.debug("Remove device: %s", device_id)
         self.hass.add_job(self.async_remove_device, device_id)
 
     @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove device from Home Assistant."""
-        LOGGER.debug("Remove device: %s", device_id)
         device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, device_id)}
