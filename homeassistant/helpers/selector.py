@@ -1878,6 +1878,7 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
+    primary_entities_only: bool
 
 
 @SELECTORS.register("target")
@@ -1899,6 +1900,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
                 cv.ensure_list,
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
+            vol.Optional("primary_entities_only"): cv.boolean,
         }
     )
 
