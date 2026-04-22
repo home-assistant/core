@@ -62,9 +62,7 @@ class RotarexTankData:
     latest_sync_dt: datetime | None
 
 
-class RotarexDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, RotarexTankData]]
-):
+class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTankData]]):
     """Class to manage fetching Rotarex data."""
 
     def __init__(
