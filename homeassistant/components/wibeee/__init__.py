@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WibeeeConfigEntry) -> bo
         coordinator.async_push_update(initial_data)
         # Register with push receiver
         receiver = async_setup_push_receiver(hass)
-        receiver.register_device(mac_addr, coordinator.async_push_update)
+        receiver.register_device(mac_addr, host, coordinator.async_push_update)
 
         entry.async_on_unload(lambda: receiver.unregister_device(mac_addr))
 

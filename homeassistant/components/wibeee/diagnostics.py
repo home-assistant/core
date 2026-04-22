@@ -64,8 +64,8 @@ async def async_get_config_entry_diagnostics(
 
 
 def _redact_coordinator_data(
-    data: Any,
-) -> dict[str, dict[str, str]] | None:
+    data: dict[str, dict[str, Any]] | None,
+) -> dict[str, dict[str, Any]] | None:
     """Return coordinator data (sensor values are not sensitive)."""
     if data is None:
         return None
