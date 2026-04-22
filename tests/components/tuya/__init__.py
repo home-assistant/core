@@ -189,7 +189,13 @@ def create_manager(
         """Add device listener."""
         manager.device_listeners.add(listener)
 
+    def _remove_device_listener(listener: SharingDeviceListener):
+        """Remove device listener."""
+        manager.device_listeners.discard(listener)
+
     manager.add_device_listener.side_effect = _add_device_listener
+    manager.remove_device_listener.side_effect = _remove_device_listener
+
     return manager
 
 
