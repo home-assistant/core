@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
-from tuya_device_handlers.definition.camera import CameraQuirk, get_default_definition
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.camera import (
@@ -57,34 +55,6 @@ async def test_platform_setup_and_discovery(
         snapshot,
         mock_config_entry.entry_id,
     )
-
-
-@pytest.mark.parametrize("mock_device_code", ["sp_rudejjigkywujjvs"])
-@pytest.mark.parametrize(
-    ("get_quirks", "available"),
-    [
-        (None, True),
-        ([], False),
-        ([CameraQuirk(key="", definition_fn=get_default_definition)], True),
-        ([CameraQuirk(key="", definition_fn=lambda d: None)], False),
-    ],
-)
-async def test_empty_quirk(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    get_quirks: list | None,
-    available: bool,
-) -> None:
-    """Test None quirks use defaults and empty quirk list skips default entities."""
-    with patch.object(TUYA_QUIRKS_REGISTRY, "get_quirk_for_device") as mock_get_quirk:
-        mock_get_quirk.return_value = Mock()
-        mock_get_quirk.return_value.camera_quirks = get_quirks
-        await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get("camera.burocam")
-    assert (state is not None) is available
 
 
 @pytest.mark.parametrize(

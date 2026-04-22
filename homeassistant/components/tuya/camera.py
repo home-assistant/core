@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_device_handlers.definition.camera import (
-    CameraQuirk,
     TuyaCameraDefinition,
     get_default_definition,
 )
@@ -30,20 +28,6 @@ CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
 }
 
 
-def _get_quirk_entities(
-    manager: Manager, device: CustomerDevice
-) -> list[TuyaCameraEntity] | None:
-    if (quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device)) is None or (
-        entity_quirks := quirk.camera_quirks
-    ) is None:
-        return None
-    return [
-        TuyaCameraEntity(device, manager, definition, quirk=entity_quirk)
-        for entity_quirk in entity_quirks
-        if (definition := entity_quirk.definition_fn(device))
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -58,13 +42,10 @@ async def async_setup_entry(
         entities: list[TuyaCameraEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if (quirk_entities := _get_quirk_entities(manager, device)) is not None:
-                entities.extend(quirk_entities)
-                continue
             if description := CAMERAS.get(device.category):
                 entities.append(
                     TuyaCameraEntity(
-                        device, manager, get_default_definition(device), description
+                        device, manager, description, get_default_definition(device)
                     )
                 )
 
@@ -88,10 +69,8 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
+        description: CameraEntityDescription,
         definition: TuyaCameraDefinition,
-        description: CameraEntityDescription | None = None,
-        *,
-        quirk: CameraQuirk | None = None,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager, description)
@@ -99,8 +78,6 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self._attr_model = device.product_name
         self._motion_detection_switch = definition.motion_detection_switch
         self._recording_status = definition.recording_status
-        if quirk and quirk.key:
-            self._attr_unique_id = f"tuya.{device.id}_{quirk.key}"
 
     @property
     def is_recording(self) -> bool:
