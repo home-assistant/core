@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
-    CAST_BROWSER_KEY,
     CONF_KNOWN_HOSTS,
     INTERNAL_DISCOVERY_RUNNING_KEY,
     SIGNAL_CAST_DISCOVERED,
@@ -91,7 +90,7 @@ def setup_internal_discovery(
         ChromeCastZeroconf.get_zeroconf(),
         config_entry.data.get(CONF_KNOWN_HOSTS),
     )
-    hass.data[CAST_BROWSER_KEY] = browser
+    config_entry.runtime_data.browser = browser
     browser.start_discovery()
 
     def stop_discovery(event):
@@ -109,5 +108,6 @@ async def config_entry_updated(
     hass: HomeAssistant, config_entry: CastConfigEntry
 ) -> None:
     """Handle config entry being updated."""
-    browser = hass.data[CAST_BROWSER_KEY]
+    browser = config_entry.runtime_data.browser
+    assert browser is not None
     browser.host_browser.update_hosts(config_entry.data.get(CONF_KNOWN_HOSTS))

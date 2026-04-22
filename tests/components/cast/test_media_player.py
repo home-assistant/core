@@ -16,7 +16,7 @@ import pytest
 import yarl
 
 from homeassistant.components import media_player, tts
-from homeassistant.components.cast import media_player as cast
+from homeassistant.components.cast import CastRuntimeData, media_player as cast
 from homeassistant.components.cast.const import (
     DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -488,6 +488,7 @@ async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
     entry = MockConfigEntry(domain="cast")
     entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData()
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast._async_create_cast_device(hass, entry, info)
     assert cast_device is None
@@ -497,7 +498,8 @@ async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
     entry = MockConfigEntry(domain="cast")
     entry.add_to_hass(hass)
-    added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
+    entry.runtime_data = CastRuntimeData()
+    added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
     cast_device = cast._async_create_cast_device(hass, entry, info)

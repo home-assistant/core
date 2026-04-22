@@ -58,8 +58,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
-    ADDED_CAST_DEVICES_KEY,
-    CAST_MULTIZONE_MANAGER_KEY,
     CONF_IGNORE_CEC,
     DOMAIN,
     SIGNAL_CAST_DISCOVERED,
@@ -123,7 +121,7 @@ def _async_create_cast_device(
         return None
 
     # Found a cast with UUID
-    added_casts = hass.data[ADDED_CAST_DEVICES_KEY]
+    added_casts = config_entry.runtime_data.added_cast_devices
     if info.uuid in added_casts:
         # Already added this one, the entity will take care of moved hosts
         # itself
@@ -133,7 +131,7 @@ def _async_create_cast_device(
 
     if info.is_dynamic_group:
         # This is a dynamic group, do not add it but connect to the service.
-        group = DynamicCastGroup(hass, info)
+        group = DynamicCastGroup(hass, config_entry, info)
         group.async_setup()
         return None
 
@@ -146,8 +144,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cast from a config entry."""
-    hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
-
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config_entry.data.get(CONF_IGNORE_CEC) or []
 
@@ -181,13 +177,19 @@ class CastDevice:
 
     _mz_only: bool
 
-    def __init__(self, hass: HomeAssistant, cast_info: ChromecastInfo) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: CastConfigEntry,
+        cast_info: ChromecastInfo,
+    ) -> None:
         """Initialize the cast device."""
 
         self.hass: HomeAssistant = hass
+        self._config_entry = config_entry
         self._cast_info = cast_info
         self._chromecast: pychromecast.Chromecast | None = None
-        self.mz_mgr = None
+        self.mz_mgr: MultizoneManager | None = None
         self._status_listener: CastStatusListener | None = None
         self._add_remove_handler: Callable[[], None] | None = None
         self._del_remove_handler: Callable[[], None] | None = None
@@ -216,7 +218,9 @@ class CastDevice:
         if self._cast_info.uuid is not None:
             # Remove the entity from the added casts so that it can dynamically
             # be re-added again.
-            self.hass.data[ADDED_CAST_DEVICES_KEY].remove(self._cast_info.uuid)
+            self._config_entry.runtime_data.added_cast_devices.remove(
+                self._cast_info.uuid
+            )
         if self._add_remove_handler:
             self._add_remove_handler()
             self._add_remove_handler = None
@@ -239,10 +243,11 @@ class CastDevice:
         )
         self._chromecast = chromecast
 
-        if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
-            self.hass.data[CAST_MULTIZONE_MANAGER_KEY] = MultizoneManager()
+        runtime_data = self._config_entry.runtime_data
+        if runtime_data.multizone_manager is None:
+            runtime_data.multizone_manager = MultizoneManager()
 
-        self.mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
+        self.mz_mgr = runtime_data.multizone_manager
 
         self._status_listener = CastStatusListener(
             self, chromecast, self.mz_mgr, self._mz_only
@@ -310,9 +315,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     ) -> None:
         """Initialize the cast device."""
 
-        CastDevice.__init__(self, hass, cast_info)
+        CastDevice.__init__(self, hass, config_entry, cast_info)
 
-        self._config_entry = config_entry
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None

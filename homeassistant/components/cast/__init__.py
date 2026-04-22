@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Protocol
+from uuid import UUID
 
 from pychromecast import Chromecast
+from pychromecast.controllers.multizone import MultizoneManager
+from pychromecast.discovery import CastBrowser
 
 from homeassistant.components.media_player import BrowseMedia, MediaType
 from homeassistant.config_entries import ConfigEntry
@@ -33,6 +36,9 @@ class CastRuntimeData:
     unknown_models: dict[str | None, tuple[str | None, str | None]] = field(
         default_factory=dict
     )
+    added_cast_devices: set[UUID] = field(default_factory=set)
+    browser: CastBrowser | None = None
+    multizone_manager: MultizoneManager | None = None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool:

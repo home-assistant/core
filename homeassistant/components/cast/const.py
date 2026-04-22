@@ -14,13 +14,6 @@ DOMAIN = "cast"
 
 # Stores a threading.Lock that is held by the internal pychromecast discovery.
 INTERNAL_DISCOVERY_RUNNING_KEY = "cast_discovery_running"
-# Stores UUIDs of cast devices that were added as entities. Doesn't store
-# None UUIDs.
-ADDED_CAST_DEVICES_KEY = "cast_added_cast_devices"
-# Stores an audio group manager.
-CAST_MULTIZONE_MANAGER_KEY = "cast_multizone_manager"
-# Store a CastBrowser
-CAST_BROWSER_KEY = "cast_browser"
 
 # Dispatcher signal fired with a ChromecastInfo every time we discover a new
 # Chromecast or receive it through configuration
