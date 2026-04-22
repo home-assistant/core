@@ -5,7 +5,17 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from aiopnsense import OPNsenseClient
+from aiopnsense import (
+    OPNsenseBelowMinFirmware,
+    OPNsenseClient,
+    OPNsenseConnectionError,
+    OPNsenseInvalidAuth,
+    OPNsenseInvalidURL,
+    OPNsensePrivilegeMissing,
+    OPNsenseSSLError,
+    OPNsenseTimeoutError,
+    OPNsenseUnknownFirmware,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -55,7 +65,16 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator):
         try:
             devices = await self.client.get_arp_table(True)
             return self._get_mac_addrs(devices)
-        except Exception as err:
+        except (
+            OPNsenseConnectionError,
+            OPNsenseInvalidAuth,
+            OPNsenseInvalidURL,
+            OPNsensePrivilegeMissing,
+            OPNsenseSSLError,
+            OPNsenseTimeoutError,
+            OPNsenseBelowMinFirmware,
+            OPNsenseUnknownFirmware,
+        ) as err:
             raise UpdateFailed(
                 f"Error communicating with OPNsense router: {err}"
             ) from err
