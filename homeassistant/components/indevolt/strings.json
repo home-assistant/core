@@ -224,7 +224,7 @@
         "name": "DC output power"
       },
       "discharge_limit": {
-        "name": "Discharge limit"
+        "name": "[%key:component::indevolt::entity::number::discharge_limit::name%]"
       },
       "energy_mode": {
         "name": "Energy mode",
