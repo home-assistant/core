@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SENSOR_UNIT_MAP
+from .const import DOMAIN, SENSOR_TYPES
 from .coordinator import HeimanDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,12 +44,6 @@ async def async_setup_entry(
             # Create sensor for each readable property of each device
             for property_id, prop in device.properties.items():
                 if not prop.readable:
-                    continue
-
-                # Skip boolean properties - this integration only supports sensor
-                # platform. Boolean properties (on/off, alarm triggered, etc.) should
-                # be handled by binary_sensor platform (to be added separately).
-                if isinstance(prop.value, bool):
                     continue
 
                 # Use entity field from DeviceProperty
@@ -188,8 +182,12 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         matched_key = None
         for key, cfg in property_mapping.items():
             if key in property_identifier.lower():
-                config = SENSOR_UNIT_MAP.get(cfg["key"])
-                matched_key = cfg["key"]
+                # Find matching SensorEntityDescription from SENSOR_TYPES
+                for desc in SENSOR_TYPES:
+                    if desc.key == cfg["key"]:
+                        config = desc
+                        matched_key = cfg["key"]
+                        break
                 break
 
         if config and prop:
@@ -230,15 +228,11 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
                     config = None
 
         if config and matched_key:
-            device_class_value = config.get("device_class")
-            if device_class_value:
-                self._attr_device_class = SensorDeviceClass(device_class_value)
-            self._attr_native_unit_of_measurement = config.get("unit")
-            state_class_value = config.get(
-                "state_class", SensorStateClass.MEASUREMENT.value
-            )
-            if state_class_value:
-                self._attr_state_class = SensorStateClass(state_class_value)
+            if config.device_class:
+                self._attr_device_class = config.device_class
+            self._attr_native_unit_of_measurement = config.native_unit_of_measurement
+            if config.state_class:
+                self._attr_state_class = config.state_class
         elif prop:
             # Check if value is numeric before setting state_class
             # Note: bool is a subclass of int, so we explicitly exclude it
@@ -315,7 +309,13 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         # SensorEntity.native_value only supports scalar types
         if value is None:
             return None
-        if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+
+        # Convert boolean to string representation for sensor platform
+        # until binary_sensor platform is implemented
+        if isinstance(value, bool):
+            return "on" if value else "off"
+
+        if not isinstance(value, (str, int, float)):
             _LOGGER.warning(
                 "Sensor %s returned unsupported native value: %s (%s). "
                 "Returning None to avoid Home Assistant validation error",

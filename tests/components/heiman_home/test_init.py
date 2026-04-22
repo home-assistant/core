@@ -621,5 +621,6 @@ async def test_unload_returns_false_when_platforms_unload_fails(
         # Now test the code path in async_unload_entry
         # Since async_unload_platforms returns False, we should return False
         # But we need to also mock the cleanup path
-        await async_unload_entry(hass, entry)
+        unload_result = await async_unload_entry(hass, entry)
         # This tests line 142
+        assert unload_result is False

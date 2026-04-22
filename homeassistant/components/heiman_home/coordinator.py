@@ -12,10 +12,13 @@ from typing import Any
 from heimanconnect import (
     DeviceManagement,
     DeviceProperty,
+    HeimanAuthError,
+    HeimanConnectionError,
     HeimanDevice,
     HeimanHome,
     HeimanMqttClient,
     HeimanMQTTError,
+    HeimanTokenExpiredError,
     HeimanUser,
 )
 
@@ -38,24 +41,25 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=30)
 
 
-def _infer_entity_type(prop_value: Any) -> str | None:
+def _infer_entity_type(prop_value: Any) -> str:
     """Infer the appropriate entity type from a property value.
 
     Args:
         prop_value: The property value to analyze.
 
     Returns:
-        The entity type string (e.g., "sensor") or None for auto-detection.
+        The entity type string (e.g., "sensor").
+        Never returns None to ensure properties are always discoverable.
     """
     if isinstance(prop_value, bool):
-        # Default to binary_sensor for boolean properties discovered at runtime
-        # Binary sensor platform will handle them if entity matches
-        return "binary_sensor"
+        # Boolean properties are inferred as sensor for now.
+        # Once binary_sensor platform is added, this should return "binary_sensor".
+        return "sensor"
     if isinstance(prop_value, (int, float)):
         # Numeric values are typically sensors
         return "sensor"
-    # String and other types: let entity auto-detection handle it
-    return None
+    # String and other types: default to sensor so they are discoverable
+    return "sensor"
 
 
 @dataclass
@@ -123,71 +127,75 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             ConfigEntryAuthFailed: If authentication fails
             UpdateFailed: If data fetch fails
         """
+        # Ensure token is valid before making requests
         try:
-            # Get home ID
-            home_id = self.config_entry.data.get(CONF_HOME_ID)
-            if not home_id:
-                msg = "Home ID not found in config entry"
-                raise UpdateFailed(msg)  # noqa: TRY301
-
-            # Clear errors at the start of update, then repopulate as we go
-            # This allows partial failures to be observable
-            self.data.errors.clear()
-
-            # Fetch user and home info on first update
-            await self._fetch_user_and_home_info()
-
-            # Get and process devices
-            await self._fetch_and_process_devices(home_id)
-
-            # Update last update time
-            self.data.last_update = datetime.now(UTC)
-
-        except ConfigEntryAuthFailed:
-            _LOGGER.error("Authentication failed during data update")
-            raise
-        except UpdateFailed:
-            # Re-raise UpdateFailed as-is to preserve retry_after and message
-            raise
+            await self.api_client.async_ensure_token_valid()
         except Exception as err:
-            _LOGGER.error("Unexpected error during data update: %s", err)
-            raise UpdateFailed(f"Error fetching Heiman data: {err}") from err
-        else:
-            return self.data
+            _LOGGER.error("Token validation failed: %s", err)
+            raise ConfigEntryAuthFailed(f"Token validation failed: {err}") from err
+
+        # Get home ID
+        home_id = self.config_entry.data.get(CONF_HOME_ID)
+        if not home_id:
+            msg = "Home ID not found in config entry"
+            raise UpdateFailed(msg)
+
+        # Clear errors at the start of update, then repopulate as we go
+        self.data.errors.clear()
+
+        # Fetch user and home info on first update
+        await self._fetch_user_and_home_info()
+
+        # Get and process devices
+        await self._fetch_and_process_devices(home_id)
+
+        # Update last update time
+        self.data.last_update = datetime.now(UTC)
+
+        return self.data
 
     async def _fetch_user_and_home_info(self) -> None:
         """Fetch user and home information on first update."""
+        cloud_client = self.api_client.cloud_client
+
         # Get user info (only on first update)
         if self.data.user_info is None:
             try:
-                self.data.user_info = await self.api_client.async_get_user_info()
-            except ConfigEntryAuthFailed:
-                raise
+                self.data.user_info = await cloud_client.async_get_user_info()
+            except HeimanTokenExpiredError as err:
+                raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
+            except HeimanAuthError as err:
+                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            except HeimanConnectionError as err:
+                raise UpdateFailed(f"Connection error: {err}") from err
             except Exception as err:
                 _LOGGER.error("Failed to fetch user info: %s", err)
-                msg = f"Failed to fetch user info: {err}"
-                raise UpdateFailed(msg) from err
+                raise UpdateFailed(f"Failed to fetch user info: {err}") from err
 
         # Get home info (only on first update)
         if self.data.home_info is None:
             try:
-                homes = await self.api_client.async_get_homes()
+                homes = await cloud_client.async_get_homes()
                 if homes:
                     home_id = self.config_entry.data.get(CONF_HOME_ID)
                     self.data.home_info = next(
                         (h for h in homes if h.home_id == home_id),
                         homes[0],
                     )
-            except ConfigEntryAuthFailed:
-                raise
+            except HeimanTokenExpiredError as err:
+                raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
+            except HeimanAuthError as err:
+                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
             except Exception as err:  # noqa: BLE001
                 _LOGGER.warning("Failed to fetch home info: %s", err)
                 self.data.errors["home_info"] = str(err)
 
     async def _fetch_and_process_devices(self, home_id: str) -> None:
         """Fetch and process device data."""
+        cloud_client = self.api_client.cloud_client
+
         try:
-            devices_dict = await self.api_client.async_get_devices(home_id=home_id)
+            devices_dict = await cloud_client.async_get_devices(home_id=home_id)
 
             # Apply device filtering
             if self.device_management:
@@ -211,18 +219,20 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Update device data and merge old states
             self._merge_device_states(devices)
 
-        except ConfigEntryAuthFailed:
-            raise
-        except UpdateFailed:
-            # Re-raise UpdateFailed as-is to preserve retry_after and message
-            raise
+        except HeimanTokenExpiredError as err:
+            raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
+        except HeimanAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        except HeimanConnectionError as err:
+            self.data.errors["devices"] = str(err)
+            if not self.data.devices:
+                raise UpdateFailed(f"Connection error fetching devices: {err}") from err
         except Exception as err:
             _LOGGER.exception("Failed to fetch devices")
             self.data.errors["devices"] = str(err)
             # If there was previous device data, keep it
             if not self.data.devices:
-                msg = f"Failed to fetch devices: {err}"
-                raise UpdateFailed(msg) from err
+                raise UpdateFailed(f"Failed to fetch devices: {err}") from err
 
     def _extract_firmware_versions(self, devices: dict[str, HeimanDevice]) -> None:
         """Extract firmware versions from device data."""
@@ -282,13 +292,15 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # Create a semaphore to limit concurrent requests
         semaphore = asyncio.Semaphore(5)
 
+        cloud_client = self.api_client.cloud_client
+
         async def fetch_device_detail(
             device_id: str,
         ) -> tuple[str, dict[str, Any] | None]:
             """Fetch device detail with concurrency control."""
             async with semaphore:
                 try:
-                    device_detail = await self.api_client.async_get_device_detail(
+                    device_detail = await cloud_client._async_get_device_detail(
                         device_id
                     )
                 except Exception as err:  # noqa: BLE001

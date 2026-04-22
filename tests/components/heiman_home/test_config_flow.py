@@ -7,11 +7,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.heiman_home.api import (
-    HeimanApiClient,
-    HeimanHome,
-    HeimanUser,
-)
+from homeassistant.components.heiman_home.api import HeimanApiClient
+from heimanconnect import HeimanHome, HeimanUser
 from homeassistant.components.heiman_home.config_flow import HeimanConfigFlow
 from homeassistant.components.heiman_home.const import (
     CONF_HOME_ID,
