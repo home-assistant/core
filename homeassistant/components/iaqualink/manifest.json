@@ -3,10 +3,12 @@
   "name": "Jandy iAqualink",
   "codeowners": ["@flz"],
   "config_flow": true,
+  "dhcp": [{ "hostname": "iaqualink-*" }],
   "documentation": "https://www.home-assistant.io/integrations/iaqualink",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["iaqualink"],
+  "quality_scale": "bronze",
   "requirements": ["iaqualink==0.6.0", "h2==4.3.0"],
   "single_config_entry": true
 }

@@ -12,6 +12,11 @@
           options:
             - all
             - any
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
 
 is_jammed: *condition_common
 is_locked: *condition_common

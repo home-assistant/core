@@ -11,14 +11,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type YouLessConfigEntry = ConfigEntry[YouLessCoordinator]
+
 
 class YouLessCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching YouLess data."""
 
-    config_entry: ConfigEntry
+    config_entry: YouLessConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: YoulessAPI
+        self, hass: HomeAssistant, config_entry: YouLessConfigEntry, device: YoulessAPI
     ) -> None:
         """Initialize global YouLess data provider."""
         super().__init__(

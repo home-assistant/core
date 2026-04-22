@@ -267,6 +267,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "fumis",
+        "macaddress": "0016D0*",
+    },
+    {
         "domain": "fyta",
         "hostname": "fyta*",
     },
@@ -324,6 +328,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*",
+    },
+    {
+        "domain": "iaqualink",
+        "hostname": "iaqualink-*",
     },
     {
         "domain": "incomfort",

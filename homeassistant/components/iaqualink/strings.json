@@ -1,6 +1,8 @@
 {
   "config": {
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -13,6 +15,10 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::iaqualink::config::step::user::data_description::password%]",
+          "username": "[%key:component::iaqualink::config::step::user::data_description::username%]"
+        },
         "description": "Please enter the username and password for your iAqualink account.",
         "title": "Reauthenticate iAqualink"
       },
@@ -20,6 +26,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password associated with your account.",
+          "username": "The email address used to sign in to your account using the iAquaLink app or website."
         },
         "description": "Please enter the username and password for your iAqualink account.",
         "title": "Connect to iAqualink"
