@@ -61,7 +61,7 @@ class DeviceListener(SharingDeviceListener):
 
         token_listener = _TokenListener(hass, entry)
 
-        # Move to executor as it makes blocking call to import_module
+        # Makes blocking call to import_module
         # with args ('.system', 'urllib3.contrib.resolver')
         manager = Manager(
             TUYA_CLIENT_ID,
