@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 
 from data_grand_lyon_ha import DataGrandLyonClient, TclPassage
@@ -17,14 +16,7 @@ from .const import CONF_LINE, CONF_STOP_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_STOP
 type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonCoordinator]
 
 
-@dataclass
-class DataGrandLyonData:
-    """Aggregated data from the Data Grand Lyon coordinator."""
-
-    stops: dict[str, list[TclPassage]]
-
-
-class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonData]):
+class DataGrandLyonCoordinator(DataUpdateCoordinator[dict[str, list[TclPassage]]]):
     """Coordinator for the Data Grand Lyon integration."""
 
     config_entry: DataGrandLyonConfigEntry
@@ -42,10 +34,10 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonData]):
             LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(minutes=1),
+            update_interval=timedelta(minutes=5),
         )
 
-    async def _async_update_data(self) -> DataGrandLyonData:
+    async def _async_update_data(self) -> dict[str, list[TclPassage]]:
         """Fetch data for all monitored stops."""
         stop_subentries = list(
             self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_STOP)
@@ -77,4 +69,4 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonData]):
 
         if stop_subentries and not stops:
             raise UpdateFailed("Error fetching DataGrandLyon data: all requests failed")
-        return DataGrandLyonData(stops=stops)
+        return stops

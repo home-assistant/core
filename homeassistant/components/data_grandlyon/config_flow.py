@@ -63,17 +63,10 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match()
-
-            data: dict[str, Any] = {}
-            if username := user_input.get(CONF_USERNAME):
-                data[CONF_USERNAME] = username
-            if password := user_input.get(CONF_PASSWORD):
-                data[CONF_PASSWORD] = password
-
-            if error := await self._test_connection(data):
+            if error := await self._test_connection(user_input):
                 errors["base"] = error
             else:
-                return self.async_create_entry(title="Data Grand Lyon", data=data)
+                return self.async_create_entry(title="Data Grand Lyon", data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -81,7 +74,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _test_connection(self, data: dict[str, Any]) -> str | None:
+    async def _test_connection(self, user_input: dict[str, Any]) -> str | None:
         """Test connectivity by making a dummy API call.
 
         Returns None on success, or an error key for the errors dict.
@@ -89,8 +82,8 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         client = DataGrandLyonClient(
             session=session,
-            username=data.get(CONF_USERNAME),
-            password=data.get(CONF_PASSWORD),
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
         )
         try:
             # the upstream library filters in memory so these placeholder values
@@ -118,7 +111,8 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle the user step to add a new stop."""
         entry = self._get_entry()
-        if not entry.data.get(CONF_USERNAME):
+
+        if CONF_USERNAME not in entry.data:
             return self.async_abort(reason="auth_required")
 
         if user_input is not None:

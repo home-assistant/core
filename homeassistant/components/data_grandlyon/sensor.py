@@ -105,7 +105,7 @@ class DataGrandLyonStopSensor(
 
     def _get_passage(self) -> TclPassage | None:
         """Return the passage for this sensor's index, or None."""
-        passages = self.coordinator.data.stops.get(self._subentry_id, [])
+        passages = self.coordinator.data.get(self._subentry_id, [])
         index = self.entity_description.passage_index
         if index >= len(passages):
             return None
