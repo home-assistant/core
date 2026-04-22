@@ -71,7 +71,6 @@ SENSORS: Final = (
         generation=[1],
         translation_key="discharge_limit",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
     ),
     IndevoltSensorEntityDescription(
         key="2101",
