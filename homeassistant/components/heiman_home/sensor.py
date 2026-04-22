@@ -68,7 +68,11 @@ async def async_setup_entry(
                     # entity='sensor'), because native_value returns None for
                     # unsupported complex values and this creates
                     # permanently-unknown, unusable sensor entities.
-                    if prop.data_type in {"bool", "array", "object"}:  # pragma: no cover
+                    if prop.data_type in {
+                        "bool",
+                        "array",
+                        "object",
+                    }:  # pragma: no cover
                         continue
                     unique_id = f"{device.device_id}_{property_id}_sensor"
                     if unique_id not in existing_entities:
