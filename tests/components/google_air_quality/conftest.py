@@ -86,7 +86,7 @@ def mock_subentries_with_custom_laqi() -> list[ConfigSubentryDataWithId]:
                 CONF_LONGITUDE: 20.1,
                 CUSTOM_LOCAL_AQI_OPTIONS: {
                     CONF_ENABLE_CUSTOM_LAQI: True,
-                    CUSTOM_LAQI: "us_epa",
+                    CUSTOM_LAQI: "deu_uba",
                     CONF_COUNTRY: "DE",
                 },
             },
