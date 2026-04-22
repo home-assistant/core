@@ -1,6 +1,6 @@
 """The Homee lock platform."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyHomee.const import AttributeChangedBy, AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -139,5 +139,6 @@ class HomeeLock(HomeeEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open (unlatch) the lock."""
-        assert self._lock_state_open is not None
+        if TYPE_CHECKING:
+            assert self._lock_state_open is not None
         await self.async_set_homee_value(self._lock_state_open)
