@@ -35,8 +35,10 @@ standards.
 
 ## Context
 
-- Home Assistant uses `requirements_all.txt` (all integration packages) and
-  `requirements.txt` (core packages) to declare Python dependencies.
+- Home Assistant uses `requirements_all.txt` (all integration packages),
+  `requirements.txt` (core packages), `requirements_test.txt` (test
+  dependencies), and `requirements_test_all.txt` (all test dependencies) to
+  declare Python dependencies.
 - Each integration lists its packages in `homeassistant/components/<name>/manifest.json`
   under the `requirements` field.
 - Allowed licenses are maintained in `script/licenses.py` under
@@ -46,18 +48,26 @@ standards.
 ## Step 1 — Identify Changed Packages
 
 Use the GitHub tool to fetch the PR diff. Look for lines that were added (`+`)
-or removed (`-`) in:
-- `requirements_all.txt`
+or removed (`-`) in **all** of these files:
 - `requirements.txt`
+- `requirements_all.txt`
+- `requirements_test.txt`
+- `requirements_test_all.txt`
 - `homeassistant/package_constraints.txt`
 - `pyproject.toml`
 
 For each changed line that contains a package pin (e.g. `SomePackage==1.2.3`),
 classify it as:
-- **New package**: present in `+` lines but not in `-` lines (brand-new dependency)
-- **Version bump**: present in both `+` and `-` lines with different version numbers
+- **New package**: the package name appears only in `+` lines, with no
+  corresponding `-` line for the same package name.
+- **Version bump**: the same package name appears in both `+` lines (new
+  version) and `-` lines (old version), with different version numbers.
 
-Ignore comment lines (starting with `#`) and lines that don't contain `==`.
+Record the **old version** and **new version** for every version bump — you
+will need these values in Step 4.
+
+Ignore comment lines (starting with `#`), lines that start with `-r ` (file
+includes), and lines that don't contain `==`.
 
 ## Step 2 — Check License via PyPI
 
@@ -90,15 +100,53 @@ For each new or bumped package:
 ## Step 4 — Check PR Description
 
 Read the PR body from the GitHub API using the PR number `${{ github.event.pull_request.number }}`.
+Extract all URLs present in the PR body.
+
+### 4a — New packages: repository link required
 
 For **new packages** (brand-new dependency not previously in any requirements
-file): the PR description must contain a link to the package's source repository
-or its PyPI page. Flag as ❌ if no such link is found.
+file): the PR description must contain a link that points to the package's
+**source repository** as identified in Step 3 (the URL recorded from
+`info.project_urls`). A PyPI page link for the same package is also acceptable.
 
-For **version bumps**: the PR description must contain a link to the changelog,
-release notes, or a diff/comparison URL (e.g. a GitHub releases page, a
-`CHANGELOG.md` URL, or a `compare/vX.Y.Z...vA.B.C` URL). Flag as ❌ if no
-such link is found.
+- If a URL in the PR body matches (or is a sub-path of) the source repository
+  URL or the PyPI page for the package, mark ✅.
+- If no matching URL is present, mark ❌ — "PR description must link to the
+  source repository at `<repo_url>` (found via PyPI)".
+
+### 4b — Version bumps: changelog or diff link required
+
+For **version bumps**: the PR description must contain a link to a changelog,
+release notes page, or a diff/comparison URL that references the **correct
+versions** being bumped (old → new).
+
+Checks to perform for each bumped package (old version = X, new version = Y):
+1. Extract all URLs from the PR body that contain the repository's domain or
+   path (as identified in Step 3).
+2. Verify that at least one such URL includes both the old version string and
+   new version string in some form — e.g. a GitHub compare URL like
+   `compare/vX...vY`, a releases URL mentioning version Y, or a
+   `CHANGELOG.md` anchor referencing Y.
+3. If no URL matches, check if the PR body contains any changelog/diff link at
+   all for this package.
+
+Outcome:
+- ✅ — a URL pointing to the correct repo with version references covering the
+  exact bump (X → Y).
+- ⚠️ — a changelog/diff link exists but does not clearly reference the correct
+  versions or the correct repository; explain what was found and what is
+  expected.
+- ❌ — no changelog or diff link found at all in the PR description for this
+  package.
+
+### 4c — Diff consistency check
+
+For each **version bump**, verify that the version change recorded in the diff
+(Step 1) is internally consistent:
+- The `-` line must contain the old version and the `+` line must contain the
+  new version for the same package name.
+- Flag ❌ if the diff shows a downgrade (new version < old version) without an
+  explanation, or if the version strings cannot be parsed.
 
 ## Step 5 — Post a Review Comment
 
@@ -108,14 +156,17 @@ If **any** package fails or has warnings, post a review comment using
 ```
 ## Requirements Check
 
-| Package | Version | License | Repository | PR Description Link |
-|---------|---------|---------|------------|---------------------|
-| PackageA | 1.2.3 | ✅ MIT | ✅ | ✅ |
-| PackageB | 4.5.6 | ❌ UNKNOWN | ✅ | ⚠️ missing changelog link |
+| Package | Type | Old→New | License | Repository | PR Link | Diff Consistent |
+|---------|------|---------|---------|------------|---------|-----------------|
+| PackageA | bump | 1.2.3→1.3.0 | ✅ MIT | ✅ | ✅ compare/v1.2.3...v1.3.0 | ✅ |
+| PackageB | new  | —→4.5.6 | ❌ UNKNOWN | ✅ | ❌ missing repo link | ✅ |
+| PackageC | bump | 2.0.0→2.1.0 | ✅ Apache-2.0 | ✅ | ⚠️ link found but wrong repo | ✅ |
 ```
 
 Then add a summary section explaining each failure and what the contributor
-needs to fix.
+needs to fix, including:
+- The expected source repository URL (from PyPI) when a link is missing or wrong.
+- The expected version range (old → new) when a changelog URL doesn't match the diff.
 
 If **all** packages pass every check, do **not** post a comment.
 
@@ -128,3 +179,8 @@ If **all** packages pass every check, do **not** post a comment.
 - For packages that only appear in `homeassistant/package_constraints.txt` or
   `pyproject.toml` without being tied to a specific integration, the PR
   description link requirement still applies.
+- When checking test-only packages (from `requirements_test.txt` or
+  `requirements_test_all.txt`), apply the same license, repository, and PR
+  description checks as for production dependencies.
+- A package that appears in both a production file and a test file should only
+  be reported once; use the production file entry as the canonical one.
