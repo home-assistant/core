@@ -68,9 +68,11 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
     def available(self) -> bool:
         """Return if the tracker is available."""
         vehicle = self.get_vehicle()
+        if not self.coordinator.last_update_success or vehicle is None:
+            return False
+
         return (
-            self.is_vehicle_available(vehicle)
-            and vehicle.position.latitude is not None
+            vehicle.position.latitude is not None
             and vehicle.position.longitude is not None
         )
 

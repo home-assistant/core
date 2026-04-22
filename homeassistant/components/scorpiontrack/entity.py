@@ -14,8 +14,6 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, MANUFACTURER, STALE_POSITION_THRESHOLD
 from .coordinator import ScorpionTrackCoordinator
 
-_AGE_UNSET = object()
-
 
 class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
     """Base class for ScorpionTrack vehicle entities."""
@@ -80,16 +78,9 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
             return timedelta(seconds=0)
         return age
 
-    def position_is_stale(
-        self,
-        *,
-        vehicle: ScorpionTrackVehicle | None = None,
-        age: timedelta | None | object = _AGE_UNSET,
-    ) -> bool:
+    def position_is_stale(self, vehicle: ScorpionTrackVehicle | None = None) -> bool:
         """Return True if the latest reported position is stale."""
-        if age is _AGE_UNSET:
-            age = self.position_age(vehicle)
-        return age is None or age >= STALE_POSITION_THRESHOLD
+        return _is_position_stale(self.position_age(vehicle))
 
     def common_location_attributes(
         self,
@@ -121,7 +112,7 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
             if position and position.timestamp
             else None,
             "last_reported_age_seconds": age_seconds,
-            "stale": self.position_is_stale(age=age),
+            "stale": _is_position_stale(age),
             "stale_after_hours": int(STALE_POSITION_THRESHOLD.total_seconds() // 3600),
             "removed_from_share": vehicle is None,
             "share_title": self.share.title,
@@ -171,3 +162,8 @@ def _bearing_to_cardinal(bearing: float | None) -> str | None:
     )
     index = int((bearing % 360) / 22.5 + 0.5) % len(directions)
     return directions[index]
+
+
+def _is_position_stale(age: timedelta | None) -> bool:
+    """Return True if a reported position age should be treated as stale."""
+    return age is None or age >= STALE_POSITION_THRESHOLD
