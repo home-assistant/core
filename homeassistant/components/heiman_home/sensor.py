@@ -73,7 +73,7 @@ async def async_setup_entry(
                         "bool",
                         "array",
                         "object",
-                    } or isinstance(prop.value, bool | list | dict):  # pragma: no cover
+                    } or isinstance(prop.value, (bool, list, dict)):  # pragma: no cover
                         continue
                     unique_id = f"{device.device_id}_{property_id}_sensor"
                     if unique_id not in existing_entities:
