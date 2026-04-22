@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pyyardian import OperationInfo, YardianDeviceState
 
-from homeassistant.components.yardian import DOMAIN
+from homeassistant.components.yardian.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, Platform
 
 from tests.common import MockConfigEntry

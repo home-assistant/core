@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from awesomeversion import AwesomeVersion
 from transmission_rpc import Torrent
 
 DOMAIN = "transmission"
+
+MIN_REQUIRED_TRANSMISSION_VERSION = AwesomeVersion("4.0.0")
 
 ORDER_NEWEST_FIRST = "newest_first"
 ORDER_OLDEST_FIRST = "oldest_first"

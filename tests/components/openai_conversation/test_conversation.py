@@ -17,6 +17,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.openai_conversation.const import (
     CONF_CODE_INTERPRETER,
     CONF_SERVICE_TIER,
@@ -461,16 +462,32 @@ async def test_assist_api_tools_conversion(
         hass.states.async_set(f"{component}.test", "on")
         async_expose_entity(hass, "conversation", f"{component}.test", True)
 
+    async_register_timer_handler(hass, "test_device", lambda *args: None)
+
     mock_create_stream.return_value = [
         create_message_item(id="msg_A", text="Cool", output_index=0)
     ]
 
     await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id="conversation.openai_conversation"
+        hass,
+        "hello",
+        None,
+        Context(),
+        agent_id="conversation.openai_conversation",
+        device_id="test_device",
     )
 
     tools = mock_create_stream.mock_calls[0][2]["tools"]
     assert tools
+
+    for tool in tools:
+        msg = (
+            f"Invalid schema for function '{tool['name']}': schema must have type "
+            "'object' and not have 'oneOf'/'anyOf'/'allOf'/'enum'/'not' at the top level."
+        )
+        assert tool["parameters"]["type"] == "object", msg
+        for key in ("oneOf", "anyOf", "allOf", "enum", "not"):
+            assert key not in tool["parameters"], msg
 
 
 @pytest.mark.parametrize(
