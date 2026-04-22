@@ -82,7 +82,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'outlet_control',
+    'translation_key': None,
     'unique_id': 'outlet-01:02:03:04:05:ff_2',
     'unit_of_measurement': None,
   })
@@ -133,7 +133,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'outlet_control',
+    'translation_key': None,
     'unique_id': 'outlet-01:02:03:04:05:ff_1',
     'unit_of_measurement': None,
   })
@@ -184,7 +184,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_1',
     'unit_of_measurement': None,
   })
@@ -286,7 +286,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_2',
     'unit_of_measurement': None,
   })
@@ -388,7 +388,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_3',
     'unit_of_measurement': None,
   })
@@ -439,7 +439,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_4',
     'unit_of_measurement': None,
   })
@@ -541,7 +541,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'outlet_control',
+    'translation_key': None,
     'unique_id': 'outlet-fc:ec:da:76:4f:5f_1',
     'unit_of_measurement': None,
   })
@@ -643,7 +643,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'dpi_restriction',
+    'translation_key': None,
     'unique_id': '5f976f4ae3c58f018ec7dff6',
     'unit_of_measurement': None,
   })
@@ -693,7 +693,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_forward_control',
+    'translation_key': None,
     'unique_id': 'port_forward-5a32aa4ee4b0412345678911',
     'unit_of_measurement': None,
   })
@@ -744,7 +744,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'traffic_rule_control',
+    'translation_key': None,
     'unique_id': 'traffic_rule-6452cd9b859d5b11aa002ea1',
     'unit_of_measurement': None,
   })

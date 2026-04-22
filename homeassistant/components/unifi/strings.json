@@ -139,29 +139,8 @@
       "block_client": {
         "name": "Blocked"
       },
-      "dpi_restriction": {
-        "name": "{name}"
-      },
-      "firewall_policy_control": {
-        "name": "{name}"
-      },
-      "outlet_control": {
-        "name": "{outlet_name}"
-      },
       "poe_port_control": {
         "name": "{port_name} PoE"
-      },
-      "port_control": {
-        "name": "{port_name}"
-      },
-      "port_forward_control": {
-        "name": "{name}"
-      },
-      "traffic_route_control": {
-        "name": "{name}"
-      },
-      "traffic_rule_control": {
-        "name": "{name}"
       },
       "wlan_control": {
         "name": "Enabled"
