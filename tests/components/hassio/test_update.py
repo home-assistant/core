@@ -1101,9 +1101,11 @@ async def test_update_addon_sets_progress_immediately(
 
 
 async def test_update_addon_resets_progress_on_error(
-    hass: HomeAssistant, supervisor_client: AsyncMock
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
 ) -> None:
-    """Test addon update resets in_progress to False when update fails."""
+    """Test addon update resets in_progress and update_percentage on failure."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -1118,11 +1120,48 @@ async def test_update_addon_resets_progress_on_error(
 
     state = hass.states.get("update.test_update")
     assert state.attributes.get("in_progress") is False
+    assert state.attributes.get("update_percentage") is None
+
+    ws = await hass_ws_client(hass)
+    job_uuid = uuid4().hex
+
+    async def fake_update_addon_error(
+        _hass: HomeAssistant,
+        _addon: str,
+        _backup: bool,
+        _addon_name: str | None,
+        _installed_version: str | None,
+    ) -> None:
+        """Report some progress, then fail - as a mid-pull network error would."""
+        await ws.send_json(
+            {
+                "id": 1,
+                "type": "supervisor/event",
+                "data": {
+                    "event": "job",
+                    "data": {
+                        "uuid": job_uuid,
+                        "created": "2025-09-29T00:00:00.000000+00:00",
+                        "name": "addon_manager_update",
+                        "reference": "test",
+                        "progress": 42,
+                        "done": False,
+                        "stage": None,
+                        "extra": {"total": 1234567890},
+                        "errors": [],
+                    },
+                },
+            }
+        )
+        msg = await ws.receive_json()
+        assert msg["success"]
+        await hass.async_block_till_done()
+        raise HomeAssistantError
 
     with (
         patch(
             "homeassistant.components.hassio.update.update_addon",
-            side_effect=HomeAssistantError,
+            side_effect=fake_update_addon_error,
         ),
         pytest.raises(HomeAssistantError),
     ):
@@ -1136,6 +1175,9 @@ async def test_update_addon_resets_progress_on_error(
     state = hass.states.get("update.test_update")
     assert state.attributes.get("in_progress") is False, (
         "in_progress should be reset to False after error"
+    )
+    assert state.attributes.get("update_percentage") is None, (
+        "update_percentage should be reset to None after error"
     )
 
 

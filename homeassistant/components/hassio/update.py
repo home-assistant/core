@@ -186,6 +186,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             self._update_ongoing = False
             self._version_before_update = None
             self._attr_in_progress = False
+            self._attr_update_percentage = None
             self.async_write_ha_state()
             raise
         await self.coordinator.async_refresh()
