@@ -75,9 +75,17 @@
           "override_type": "Override type"
         },
         "data_description": {
-          "override_type": "Select `Now` to end the override on the next week profile change, or `Constant` to keep it until manually cleared."
+          "override_type": "Select \"Now\" to end the override on the next week profile change, or \"Constant\" to keep it until manually cleared."
         },
         "description": "Configure how overrides are ended."
+      }
+    }
+  },
+  "selector": {
+    "override_type": {
+      "options": {
+        "constant": "Constant",
+        "now": "Now"
       }
     }
   }
