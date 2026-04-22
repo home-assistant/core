@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator):
+class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
     """Coordinator for OPNsense device tracker updates."""
 
     def __init__(
@@ -54,7 +54,7 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator):
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC:
         """Create dict with mac address keys from list of devices."""
-        out_devices = {}
+        out_devices: DeviceDetailsByMAC = {}
         for device in devices:
             if not self.interfaces or device["intf_description"] in self.interfaces:
                 out_devices[device["mac"]] = device
