@@ -198,7 +198,10 @@ class YamlImportRepairFlow(RepairsFlow):
 
         # Determine number of controllers from converted zones
         if existing_zones:
-            num_controllers = max(int(key.split("_")[0]) for key in existing_zones)
+            num_controllers = min(
+                max(int(key.split("_")[0]) for key in existing_zones),
+                model.max_controllers,
+            )
         else:
             num_controllers = 1
 
