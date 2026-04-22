@@ -25,7 +25,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry, get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 SCAN_INTERVAL = timedelta(hours=12)
@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.UPDATE, async_add_entities)
 
 

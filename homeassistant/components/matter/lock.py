@@ -33,7 +33,7 @@ from .const import (
     LOGGER,
 )
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry, get_matter
+from .helpers import MatterConfigEntry
 from .lock_helpers import (
     DoorLockFeature,
     GetLockCredentialStatusResult,
@@ -73,7 +73,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.LOCK, async_add_entities)
 
 

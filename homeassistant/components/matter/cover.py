@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry, get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 # The MASK used for extracting bits 0 to 1 of the byte.
@@ -57,7 +57,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Cover from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.COVER, async_add_entities)
 
 

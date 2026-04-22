@@ -30,7 +30,7 @@ from homeassistant.util import color as color_util
 
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry, get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 from .util import (
     convert_to_hass_hs,
@@ -89,7 +89,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Light from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.LIGHT, async_add_entities)
 
 

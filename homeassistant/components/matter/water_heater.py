@@ -30,7 +30,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry, get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 TEMPERATURE_SCALING_FACTOR = 100
@@ -51,7 +51,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter WaterHeater platform from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.WATER_HEATER, async_add_entities)
 
 

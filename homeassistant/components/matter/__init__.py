@@ -1,5 +1,4 @@
 """The Matter integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -57,8 +56,7 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    # Test hass.data[DOMAIN] to ensure config entry is set up
-    if not hass.data.get(DOMAIN, False) or not (
+    if not hass.config_entries.async_loaded_entries(DOMAIN) or not (
         node := node_from_ha_device_id(hass, device_id)
     ):
         return None
@@ -154,13 +152,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         listen_task.cancel()
         raise ConfigEntryNotReady("Failed to set default fabric label") from err
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     # create an intermediate layer (adapter) which keeps track of the nodes
     # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
-    hass.data[DOMAIN][entry.entry_id] = MatterEntryData(matter, listen_task)
+    entry.runtime_data = MatterEntryData(matter, listen_task)
 
     await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
     await matter.setup_nodes()
@@ -168,7 +163,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
-        hass.data[DOMAIN].pop(entry.entry_id)
         try:
             await matter_client.disconnect()
         finally:
@@ -208,9 +202,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> b
     )
 
     if unload_ok:
-        matter_entry_data: MatterEntryData = hass.data[DOMAIN].pop(entry.entry_id)
-        matter_entry_data.listen_task.cancel()
-        await matter_entry_data.adapter.matter_client.disconnect()
+        entry.runtime_data.listen_task.cancel()
+        await entry.runtime_data.adapter.matter_client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)

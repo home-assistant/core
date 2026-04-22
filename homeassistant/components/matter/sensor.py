@@ -49,7 +49,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import MatterConfigEntry, get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 AIR_QUALITY_MAP = {
@@ -228,7 +228,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter sensors from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
