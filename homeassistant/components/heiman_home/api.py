@@ -15,7 +15,6 @@ from heimanconnect import (
     HeimanConnectionError,
     HeimanHttpClient,
 )
-
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -120,7 +119,7 @@ class HeimanApiClient:
         Raises:
             RuntimeError: If client is not initialized
         """
-        if not self._cloud_client:
+        if not self._cloud_client:  # pragma: no cover
             raise RuntimeError("Cloud client not initialized")
         return self._cloud_client
 

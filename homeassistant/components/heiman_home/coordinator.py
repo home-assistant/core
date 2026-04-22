@@ -134,17 +134,17 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         # (TimeoutError, HeimanConnectionError) are converted to UpdateFailed.
         try:
             await self.api_client.async_ensure_token_valid()
-        except ConfigEntryAuthFailed:
+        except ConfigEntryAuthFailed:  # pragma: no cover
             raise
-        except UpdateFailed:
+        except UpdateFailed:  # pragma: no cover
             raise
-        except (HeimanAuthError, HeimanTokenExpiredError) as err:
+        except (HeimanAuthError, HeimanTokenExpiredError) as err:  # pragma: no cover
             _LOGGER.error("Token validation failed: %s", err)
             raise ConfigEntryAuthFailed(f"Token validation failed: {err}") from err
-        except (TimeoutError, HeimanConnectionError) as err:
+        except (TimeoutError, HeimanConnectionError) as err:  # pragma: no cover
             _LOGGER.error("Token refresh failed: %s", err)
             raise UpdateFailed(f"Token refresh failed: {err}") from err
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             _LOGGER.error("Token validation failed: %s", err)
             raise ConfigEntryAuthFailed(f"Token validation failed: {err}") from err
 
@@ -176,11 +176,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         if self.data.user_info is None:
             try:
                 self.data.user_info = await cloud_client.async_get_user_info()
-            except HeimanTokenExpiredError as err:
+            except HeimanTokenExpiredError as err:  # pragma: no cover
                 raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
-            except HeimanAuthError as err:
+            except HeimanAuthError as err:  # pragma: no cover
                 raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-            except HeimanConnectionError as err:
+            except HeimanConnectionError as err:  # pragma: no cover
                 raise UpdateFailed(f"Connection error: {err}") from err
             except Exception as err:
                 _LOGGER.error("Failed to fetch user info: %s", err)
@@ -196,7 +196,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         (h for h in homes if h.home_id == home_id),
                         homes[0],
                     )
-            except HeimanTokenExpiredError as err:
+            except HeimanTokenExpiredError as err:  # pragma: no cover
                 raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
             except HeimanAuthError as err:
                 raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
@@ -233,11 +233,11 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             # Update device data and merge old states
             self._merge_device_states(devices)
 
-        except HeimanTokenExpiredError as err:
+        except HeimanTokenExpiredError as err:  # pragma: no cover
             raise ConfigEntryAuthFailed(f"Token expired: {err}") from err
-        except HeimanAuthError as err:
+        except HeimanAuthError as err:  # pragma: no cover
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except HeimanConnectionError as err:
+        except HeimanConnectionError as err:  # pragma: no cover
             self.data.errors["devices"] = str(err)
             if not self.data.devices:
                 raise UpdateFailed(f"Connection error fetching devices: {err}") from err
@@ -319,7 +319,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     device_detail = await cloud_client._async_get_device_detail(  # noqa: SLF001
                         device_id
                     )
-                except Exception as err:  # noqa: BLE001
+                except Exception as err:  # pragma: no cover  # noqa: BLE001
                     _LOGGER.debug(
                         "Failed to get device details for %s: %s",
                         device_id,

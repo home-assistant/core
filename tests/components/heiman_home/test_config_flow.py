@@ -3,7 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError, HeimanUser
+from heimanconnect import (
+    HeimanAuthError,
+    HeimanHome,
+    HeimanTokenExpiredError,
+    HeimanUser,
+)
 import pytest
 import voluptuous as vol
 
@@ -1103,7 +1108,9 @@ async def test_user_info_token_expired_abort(
     )
 
     # Mock API call to fail with token expired error
-    mock_cloud = create_mock_cloud_client(error=HeimanTokenExpiredError("Token expired"))
+    mock_cloud = create_mock_cloud_client(
+        error=HeimanTokenExpiredError("Token expired")
+    )
     with patch.object(
         HeimanApiClient,
         "cloud_client",
@@ -1158,8 +1165,10 @@ async def test_homes_fetch_token_expired_abort(
     mock_cloud.async_get_user_info = AsyncMock(
         return_value=HeimanUser(user_id="test-user", email="test@example.com")
     )
-    mock_cloud.async_get_homes = AsyncMock(side_effect=HeimanTokenExpiredError("Token expired"))
-    
+    mock_cloud.async_get_homes = AsyncMock(
+        side_effect=HeimanTokenExpiredError("Token expired")
+    )
+
     with patch.object(
         HeimanApiClient,
         "cloud_client",

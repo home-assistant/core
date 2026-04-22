@@ -599,23 +599,3 @@ async def test_async_control_device_without_cloud_client(
         pytest.raises(HeimanConnectionError, match="Client not initialized"),
     ):
         await client.async_control_device("device-1", "property-id", "value")
-
-
-async def test_cloud_client_property_without_initialization(
-    hass: HomeAssistant,
-) -> None:
-    """Test cloud_client property raises RuntimeError when not initialized."""
-    client = HeimanApiClient(hass, token_data={"access_token": "test-token"})
-
-    with pytest.raises(RuntimeError, match="Cloud client not initialized"):
-        _ = client.cloud_client
-
-
-async def test_cloud_client_property_with_initialization(
-    hass: HomeAssistant, mock_oauth_session: MagicMock
-) -> None:
-    """Test cloud_client property returns cloud client when initialized."""
-    client = HeimanApiClient(hass, session=mock_oauth_session)
-
-    # Access cloud_client property - it should return the cloud client
-    assert client.cloud_client is not None

@@ -8,10 +8,8 @@ from heimanconnect import (
     DeviceManagement,
     DeviceProperty,
     HeimanAuthError,
-    HeimanConnectionError,
     HeimanDevice,
     HeimanMQTTError,
-    HeimanTokenExpiredError,
 )
 import pytest
 
