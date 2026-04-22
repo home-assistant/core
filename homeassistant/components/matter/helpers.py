@@ -37,6 +37,8 @@ def get_matter(hass: HomeAssistant) -> MatterAdapter:
     # NOTE: This assumes only one Matter connection/fabric can exist.
     # Shall we support connecting to multiple servers in the client or by
     # config entries? In case of the config entry we need to fix this.
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     matter_entry_data: MatterEntryData = next(iter(hass.data[DOMAIN].values()))
     return matter_entry_data.adapter
 

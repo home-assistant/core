@@ -42,12 +42,10 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: todo
-    comment: DHCP discovery can be added.
+  discovery: done
   discovery-update-info:
-    status: todo
-    comment: DHCP discovery based update can be added.
+    status: exempt
+    comment: Cloud-only API, no local device information to update.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

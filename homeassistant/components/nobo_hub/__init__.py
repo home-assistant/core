@@ -20,6 +20,7 @@ from .const import (
     ATTR_HARDWARE_VERSION,
     ATTR_SOFTWARE_VERSION,
     CONF_AUTO_DISCOVERED,
+    CONF_OVERRIDE_TYPE,
     CONF_SERIAL,
     DOMAIN,
     NOBO_MANUFACTURER,
@@ -115,3 +116,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> 
         await entry.runtime_data.stop()
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # Lowercase override_type to match translation keys.
+        new_options = dict(entry.options)
+        if (override_type := new_options.get(CONF_OVERRIDE_TYPE)) is not None:
+            new_options[CONF_OVERRIDE_TYPE] = override_type.lower()
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, version=1, minor_version=2
+        )
+
+    return True
