@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import logging
@@ -36,7 +35,7 @@ class RussoundRNETCoordinator(
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
-        self._lock = asyncio.Lock()
+        self._pending_updates: dict[tuple[int, int], RNETZoneInfo] = {}
         model_key = entry.data[CONF_MODEL]
         self._model = RNET_MODELS[model_key]
 
@@ -63,11 +62,6 @@ class RussoundRNETCoordinator(
 
     async def _async_update_data(self) -> dict[tuple[int, int], RNETZoneInfo]:
         """Poll all zones and return zone data keyed by (controller_id, zone_id)."""
-        async with self._lock:
-            return await self._poll_zones()
-
-    async def _poll_zones(self) -> dict[tuple[int, int], RNETZoneInfo]:
-        """Poll all zones (must be called under lock)."""
         data: dict[tuple[int, int], RNETZoneInfo] = {}
 
         if not self.client.is_connected:
@@ -81,11 +75,13 @@ class RussoundRNETCoordinator(
                 info = await self.client.get_all_zone_info(controller_id, zone_id)
                 data[(controller_id, zone_id)] = info
         except RNET_EXCEPTIONS as err:
-            # Disconnect on error so next poll reconnects cleanly
             with suppress(*RNET_EXCEPTIONS):
                 await self.client.disconnect()
             raise UpdateFailed(f"Error polling RNET zones: {err}") from err
 
+        # Merge any pending single-zone updates (fresher than polled data)
+        data.update(self._pending_updates)
+        self._pending_updates.clear()
         return data
 
     async def async_refresh_zone(
@@ -94,14 +90,14 @@ class RussoundRNETCoordinator(
         zone_id: int,
     ) -> None:
         """Poll only the affected zone for instant feedback after a command."""
-        async with self._lock:
-            try:
-                info = await self.client.get_all_zone_info(controller_id, zone_id)
-            except RNET_EXCEPTIONS:
-                return
-            if self.data is not None:
-                self.data[(controller_id, zone_id)] = info
-                self.async_set_updated_data(self.data)
+        try:
+            info = await self.client.get_all_zone_info(controller_id, zone_id)
+        except RNET_EXCEPTIONS:
+            return
+        self._pending_updates[(controller_id, zone_id)] = info
+        if self.data is not None:
+            self.data[(controller_id, zone_id)] = info
+            self.async_set_updated_data(self.data)
 
     async def async_shutdown(self) -> None:
         """Disconnect the client on shutdown."""
