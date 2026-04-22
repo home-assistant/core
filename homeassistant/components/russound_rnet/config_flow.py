@@ -21,7 +21,7 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    SerialSelector,
+    SerialPortSelector,
     TextSelector,
 )
 
@@ -57,7 +57,7 @@ TCP_SCHEMA = vol.Schema(
 
 SERIAL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialSelector(),
+        vol.Required(CONF_DEVICE): SerialPortSelector(),
     }
 )
 
