@@ -62,29 +62,11 @@
     }
   },
   "exceptions": {
-    "device_id_required": {
-      "message": "Device ID is required for read_device_properties service"
-    },
-    "invalid_device_id_type": {
-      "message": "Unsupported device_id type: {type}"
-    },
     "oauth2_implementation_unavailable": {
       "message": "OAuth2 implementation is not available. Please check your configuration."
     },
     "token_expired": {
       "message": "Your authentication token has expired. Please re-authenticate to continue using the integration."
-    }
-  },
-  "services": {
-    "read_device_properties": {
-      "description": "Read properties from a Heiman device",
-      "fields": {
-        "device_id": {
-          "description": "The ID of the device to read properties from",
-          "name": "Device ID"
-        }
-      },
-      "name": "Read Device Properties"
     }
   }
 }

@@ -170,10 +170,5 @@
         "default": "mdi:package-up"
       }
     }
-  },
-  "services": {
-    "read_device_properties": {
-      "service": "mdi:file-document-outline"
-    }
   }
 }

@@ -40,20 +40,21 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=30)
 
 
-def _infer_entity_type(prop_value: Any) -> str:
+def _infer_entity_type(prop_value: Any) -> str | None:
     """Infer the appropriate entity type from a property value.
 
     Args:
         prop_value: The property value to analyze.
 
     Returns:
-        The entity type string (e.g., "sensor").
-        Never returns None to ensure properties are always discoverable.
+        The entity type string (e.g., "sensor"), or None when the value
+        cannot be represented by a supported inferred platform.
     """
     if isinstance(prop_value, bool):
-        # Boolean properties are inferred as sensor for now.
-        # Once binary_sensor platform is added, this should return "binary_sensor".
-        return "sensor"
+        # Do not infer boolean properties as sensors because the sensor
+        # platform rejects bool native values. Once a binary_sensor
+        # platform is added, this should return "binary_sensor".
+        return None
     if isinstance(prop_value, (int, float)):
         # Numeric values are typically sensors
         return "sensor"
@@ -640,13 +641,14 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 # Add new property if it doesn't exist
                 # Infer entity type from property value to avoid incorrect modeling
                 entity_type = _infer_entity_type(prop_value)
-                device.properties[prop_name] = DeviceProperty(
-                    identifier=prop_name,
-                    name=prop_name,
-                    value=prop_value,
-                    readable=True,
-                    entity=entity_type,
-                )
+                if entity_type is not None:
+                    device.properties[prop_name] = DeviceProperty(
+                        identifier=prop_name,
+                        name=prop_name,
+                        value=prop_value,
+                        readable=True,
+                        entity=entity_type,
+                    )
 
         # Schedule entity update if coordinator is set up
         # IMPORTANT: Must be called from the event loop thread for thread safety
@@ -687,13 +689,14 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                         # Add new property if it doesn't exist
                         # Infer entity type from property value to avoid incorrect modeling
                         entity_type = _infer_entity_type(prop_value)
-                        device.properties[prop_name] = DeviceProperty(
-                            identifier=prop_name,
-                            name=prop_name,
-                            value=prop_value,
-                            readable=True,
-                            entity=entity_type,
-                        )
+                        if entity_type is not None:
+                            device.properties[prop_name] = DeviceProperty(
+                                identifier=prop_name,
+                                name=prop_name,
+                                value=prop_value,
+                                readable=True,
+                                entity=entity_type,
+                            )
 
                 # Trigger entity update
                 # IMPORTANT: Must be called from the event loop thread for thread safety

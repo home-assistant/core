@@ -59,29 +59,29 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_api_client() -> Generator[AsyncMock]:
+def mock_api_client() -> Generator[MagicMock]:
     """Mock the Heiman API client."""
     with patch(
         "homeassistant.components.heiman_home.api.HeimanApiClient",
-        autospec=True,
     ) as mock_client:
         client = mock_client.return_value
         # Set up cloud_client mock
         mock_cloud = MagicMock()
         mock_cloud.async_get_user_info = AsyncMock()
         mock_cloud.async_get_homes = AsyncMock()
-        mock_cloud.async_get_devices = AsyncMock()
-        mock_cloud.async_get_device_detail = AsyncMock()
+        mock_cloud.async_get_devices = AsyncMock(return_value={})
+        mock_cloud.async_get_device_detail = AsyncMock(return_value=None)
         mock_cloud.async_get_device_properties = AsyncMock()
+        mock_cloud._async_get_device_detail = AsyncMock(return_value=None)
         client.cloud_client = mock_cloud
         # Set up async_ensure_token_valid as it's called by the coordinator
         client.async_ensure_token_valid = AsyncMock()
-        # Keep legacy methods for backward compatibility
-        client.async_get_user_info = client.cloud_client.async_get_user_info
-        client.async_get_homes = client.cloud_client.async_get_homes
-        client.async_get_devices = client.cloud_client.async_get_devices
-        client.async_get_device_detail = client.cloud_client.async_get_device_detail
-        client.async_get_device_properties = client.cloud_client.async_get_device_properties
+        # Keep legacy methods pointing to cloud_client
+        client.async_get_user_info = mock_cloud.async_get_user_info
+        client.async_get_homes = mock_cloud.async_get_homes
+        client.async_get_devices = mock_cloud.async_get_devices
+        client.async_get_device_detail = mock_cloud.async_get_device_detail
+        client.async_get_device_properties = mock_cloud.async_get_device_properties
         yield client
 
 

@@ -182,8 +182,8 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         for key, cfg in property_mapping.items():
             if key in property_identifier.lower():
                 # Find matching SensorEntityDescription from SENSOR_TYPES
-                # This enables translation keys and icon mappings defined in
-                # the SensorEntityDescription to be applied to the entity
+                # so this entity can copy supported sensor attributes such as
+                # device class, native unit of measurement, and state class
                 for desc in SENSOR_TYPES:
                     if desc.key == cfg["key"]:
                         config = desc
@@ -235,21 +235,13 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
             if config.state_class:
                 self._attr_state_class = config.state_class
         elif prop:
-            # Check if value is numeric before setting state_class
-            # Note: bool is a subclass of int, so we explicitly exclude it
+            # Only set state_class when the current value is numeric.
+            # Note: bool is a subclass of int, so we explicitly exclude it.
             if (
                 prop.value is not None
                 and isinstance(prop.value, (int, float))
                 and not isinstance(prop.value, bool)
-            ) or prop.data_type in [
-                "int",
-                "double",
-                "float",
-                "long",
-                "short",
-                "byte",
-                "number",
-            ]:
+            ):
                 self._attr_state_class = SensorStateClass.MEASUREMENT
             # Non-numeric sensors should not have state_class set
 
