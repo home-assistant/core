@@ -10,10 +10,11 @@ from duco.models import LanInfo
 import pytest
 
 from homeassistant.components.duco.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import TEST_HOST, TEST_MAC, USER_INPUT
@@ -28,6 +29,12 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     type="_http._tcp.local.",
     name="DUCO [a0dd6c061293]._http._tcp.local.",
     properties={},
+)
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip=TEST_HOST,
+    hostname="duco_ddeeff",
+    macaddress="aabbccddeeff",
 )
 
 
@@ -313,3 +320,137 @@ async def test_reconfigure_flow_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_dhcp_discovery_new_device(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test DHCP discovery of a new device shows confirmation form and creates entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {"name": "SILENT_CONNECT"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "SILENT_CONNECT"
+    assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == TEST_MAC
+
+
+async def test_dhcp_discovery_updates_host(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery updates the host of an existing entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    new_ip = "192.168.1.200"
+    discovery = DhcpServiceInfo(
+        ip=new_ip,
+        hostname="duco_ddeeff",
+        macaddress="aabbccddeeff",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=discovery,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == new_ip
+
+
+async def test_dhcp_discovery_already_configured_same_ip(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery with unchanged IP aborts as already_configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_reason"),
+    [
+        (DucoConnectionError("Connection refused"), "cannot_connect"),
+        (DucoError("Unexpected error"), "unknown"),
+    ],
+)
+async def test_dhcp_discovery_exceptions(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    exception: Exception,
+    expected_reason: str,
+) -> None:
+    """Test DHCP discovery aborts on connection and unknown errors."""
+    mock_duco_client.async_get_board_info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+
+
+async def test_dhcp_discovery_exception_recovery(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test DHCP discovery recovers after an initial exception and creates the entry."""
+    mock_duco_client.async_get_board_info.side_effect = DucoConnectionError(
+        "Connection refused"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+    mock_duco_client.async_get_board_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC

@@ -3,6 +3,11 @@
   "name": "Duco",
   "codeowners": ["@ronaldvdmeer"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/duco",
   "integration_type": "hub",
   "iot_class": "local_polling",
