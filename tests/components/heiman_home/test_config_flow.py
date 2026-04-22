@@ -7,7 +7,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.components.heiman_home.api import (
     HeimanApiClient,
     HeimanHome,
@@ -20,6 +19,7 @@ from homeassistant.components.heiman_home.const import (
     DOMAIN,
     OAUTH_TOKEN_URL,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -1058,7 +1058,9 @@ async def test_reauth_success(
         "_get_reauth_entry",
         return_value=existing_entry,
     ):
-        result = await flow.async_step_select_home(user_input={CONF_HOME_ID: "new_home"})
+        result = await flow.async_step_select_home(
+            user_input={CONF_HOME_ID: "new_home"}
+        )
 
         # Should update and abort to reload
         assert result["type"] is FlowResultType.ABORT

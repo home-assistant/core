@@ -1505,7 +1505,10 @@ async def test_sensor_native_value_non_numeric_for_device_class(
     # Should return None for non-numeric value with numeric device class
     assert result is None
     # Warning should be logged
-    assert "non-numeric" in caplog.text.lower() or "validation error" in caplog.text.lower()
+    assert (
+            "non-numeric" in caplog.text.lower()
+            or "validation error" in caplog.text.lower()
+    )
 
 
 async def test_sensor_native_value_bool_for_numeric_device_class(
