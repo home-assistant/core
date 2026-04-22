@@ -139,12 +139,18 @@ Extract all URLs present in the PR body.
 For **new packages** (brand-new dependency not previously in any requirements
 file): the PR description must contain a link that points to the package's
 **source repository** as identified in Step 3 (the URL recorded from
-`info.project_urls`). A PyPI page link for the same package is also acceptable.
+`info.project_urls`). A PyPI page link alone is **not** acceptable — the link
+must point directly to the source repository (e.g. a GitHub or GitLab URL).
 
 - If a URL in the PR body matches (or is a sub-path of) the source repository
-  URL or the PyPI page for the package, mark ✅.
-- If no matching URL is present, mark ❌ — "PR description must link to the
-  source repository at `<repo_url>` (found via PyPI)".
+  URL identified via PyPI, mark ✅.
+- If the PR body contains a source repository URL that does **not** match the
+  repository URL found in the package's PyPI metadata (`info.project_urls`),
+  mark ❌ — "PR description links to `<pr_url>` but PyPI reports the source
+  repository as `<pypi_repo_url>`; please use the correct repository URL."
+- If no source repository URL is present in the PR body at all, mark ❌ —
+  "PR description must link to the source repository at `<repo_url>` (found
+  via PyPI). A PyPI page link is not sufficient."
 
 ### 4b — Version bumps: changelog or diff link required
 
@@ -180,7 +186,27 @@ For each **version bump**, verify that the version change recorded in the diff
 - Flag ❌ if the diff shows a downgrade (new version < old version) without an
   explanation, or if the version strings cannot be parsed.
 
-## Step 4b — Check Release Pipeline Sanity
+## Step 5 — Verify Source Repository is Publicly Accessible
+
+Before inspecting the release pipeline, confirm that the source repository
+identified in Step 3 is publicly reachable.
+
+For each new or bumped package:
+
+1. Use the source repository URL recorded in Step 3.
+2. If no repository URL was found in `info.project_urls`, mark ❌ — "No source
+   repository URL found in PyPI metadata; a public source repository is
+   required."
+3. If a repository URL was found, perform a GET request to that URL (using
+   web-fetch). If the response is HTTP 200 and returns a publicly accessible
+   page (not a login redirect or error page), mark ✅.
+4. If the response is non-200, the URL redirects to a login/authentication page,
+   or the repository appears private or unavailable, mark ❌ — "Source
+   repository at `<repo_url>` is not publicly accessible. Home Assistant
+   requires all dependencies to have publicly available source code." **Do not
+   proceed with the release pipeline check (Step 6) for this package.**
+
+## Step 6 — Check Release Pipeline Sanity
 
 For each new or bumped package, determine the source repository host from the
 URL identified in Step 3, then inspect whether the project's release/publish CI
@@ -256,28 +282,32 @@ Bitbucket, Codeberg, Gitea, Sourcehut):
 3. If no CI configuration can be retrieved, mark ⚠️ — "Release pipeline could
    not be inspected; hosting provider is not GitHub or GitLab."
 
-## Step 5 — Post a Review Comment
+## Step 7 — Post a Review Comment
 
-If **any** package fails or has warnings, post a review comment using
-`add-comment` with the following structure:
+**Always** post a review comment using `add-comment`, regardless of whether
+packages pass or fail. Use the following structure:
 
 ```
 ## Requirements Check
 
-| Package | Type | Old→New | License | Repository | CI Upload | Release Pipeline | PR Link | Diff Consistent |
-|---------|------|---------|---------|------------|-----------|------------------|---------|-----------------|
+| Package | Type | Old→New | License | Repository Public | CI Upload | Release Pipeline | PR Link | Diff Consistent |
+|---------|------|---------|---------|-------------------|-----------|------------------|---------|-----------------|
 | PackageA | bump | 1.2.3→1.3.0 | ✅ MIT | ✅ | ✅ | ✅ OIDC | ✅ compare/v1.2.3...v1.3.0 | ✅ |
 | PackageB | new  | —→4.5.6 | ❌ UNKNOWN | ✅ | ❌ no attestation | ⚠️ no publish workflow | ❌ missing repo link | ✅ |
-| PackageC | bump | 2.0.0→2.1.0 | ✅ Apache-2.0 | ✅ | ✅ | ❌ static token | ⚠️ link found but wrong repo | ✅ |
+| PackageC | bump | 2.0.0→2.1.0 | ✅ Apache-2.0 | ❌ private repo | — | — | ⚠️ link found but wrong repo | ✅ |
 ```
 
-Then add a summary section explaining each failure and what the contributor
-needs to fix, including:
+If any package has failures or warnings, add a summary section explaining each
+failure and what the contributor needs to fix, including:
 - The expected source repository URL (from PyPI) when a link is missing or wrong.
 - The expected version range (old → new) when a changelog URL doesn't match the diff.
 - Whether the PyPI release lacks provenance attestation or uses an insecure publish method.
+- Whether the source repository is not publicly accessible.
 
-If **all** packages pass every check, do **not** post a comment.
+If all packages pass every check, the comment body should simply be the table
+with all ✅ entries and a brief confirmation such as:
+
+> All requirements checks passed. ✅
 
 ## Notes
 
