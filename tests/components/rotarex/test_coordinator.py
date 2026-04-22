@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
-from rotarex_dimes_srg_api import InvalidAuth
+from rotarex_dimes_srg_api import InvalidAuth, RotarexSyncData, RotarexTank
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -125,9 +125,7 @@ async def test_parse_synch_date_invalid(
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test that an unparseable synch_date is skipped gracefully."""
-    from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
-
+    """Test that an unparsable synch_date is skipped gracefully."""
     mock_rotarex_api.fetch_tanks.return_value = [
         RotarexTank(
             guid="tank-bad-date",

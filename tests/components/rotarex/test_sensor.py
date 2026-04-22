@@ -2,8 +2,10 @@
 
 from unittest.mock import AsyncMock
 
+from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.rotarex.sensor import RotarexTankSensor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -74,8 +76,6 @@ async def test_tank_without_name_uses_guid(
     mock_rotarex_api: AsyncMock,
 ) -> None:
     """Test that a tank without a name falls back to 'Tank <guid>'."""
-    from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
-
     mock_rotarex_api.fetch_tanks.return_value = [
         RotarexTank(
             guid="no-name-guid",
@@ -104,8 +104,6 @@ async def test_sensor_native_value_none_when_tank_disappears(
     mock_rotarex_api: AsyncMock,
 ) -> None:
     """Test native_value returns None when tank disappears from coordinator data."""
-    from homeassistant.components.rotarex.sensor import RotarexTankSensor
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
