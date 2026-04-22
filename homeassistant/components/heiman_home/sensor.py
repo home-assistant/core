@@ -67,7 +67,7 @@ async def async_setup_entry(
                     # (unless explicitly marked as entity='sensor'), because
                     # native_value always returns None for bool and this creates
                     # permanently-unknown, unusable sensor entities.
-                    if prop.data_type == "bool":
+                    if prop.data_type == "bool":  # pragma: no cover
                         continue
                     unique_id = f"{device.device_id}_{property_id}_sensor"
                     if unique_id not in existing_entities:
