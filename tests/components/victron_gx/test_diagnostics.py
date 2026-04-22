@@ -22,6 +22,9 @@ async def test_diagnostics(
     """Test diagnostics."""
     victron_hub, config_entry = init_integration
 
+    latitude = "52.0907"
+    longitude = "5.1214"
+
     # Inject metrics so the device tree is populated and enum serialization is covered
     await inject_message(
         victron_hub,
@@ -33,9 +36,24 @@ async def test_diagnostics(
         f"N/{MOCK_INSTALLATION_ID}/system/0/SystemState/State",
         '{"value": 3}',
     )
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/gps/0/Position/Latitude",
+        f'{{"value": {latitude}}}',
+    )
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/gps/0/Position/Longitude",
+        f'{{"value": {longitude}}}',
+    )
 
     await finalize_injection(victron_hub)
     await hass.async_block_till_done()
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+    serialized_result = repr(result)
+
+    assert latitude not in serialized_result
+    assert longitude not in serialized_result
+    assert "**REDACTED**" in serialized_result
     assert result == snapshot
