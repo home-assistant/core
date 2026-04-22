@@ -7,7 +7,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -15,18 +14,18 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MAX_VOL
 from .coordinator import Ws66iDataUpdateCoordinator
-from .models import Ws66iData
+from .models import Ws66iConfigEntry, Ws66iData
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: Ws66iConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WS66i 6-zone amplifier platform from a config entry."""
-    ws66i_data: Ws66iData = hass.data[DOMAIN][config_entry.entry_id]
+    ws66i_data = config_entry.runtime_data
 
     # Build and add the entities from the data class
     async_add_entities(
