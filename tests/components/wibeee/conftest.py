@@ -73,6 +73,17 @@ def get_config_options() -> dict:
     }
 
 
+@pytest.fixture(autouse=True)
+def mock_get_source_ip() -> Generator[AsyncMock]:
+    """Mock async_get_source_ip to return a valid IP."""
+    with patch(
+        "homeassistant.components.network.async_get_source_ip",
+        new_callable=AsyncMock,
+        return_value="192.168.1.50",
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture(name="loaded_entry")
 async def load_integration(
     hass: HomeAssistant,
@@ -131,6 +142,7 @@ def mock_wibeee_api() -> Generator[MagicMock]:
                 }
             }
         )
+        api.async_configure_push_server = AsyncMock(return_value=True)
         api.async_fetch_status = AsyncMock(
             return_value={
                 "fase1_vrms": "230.50",
@@ -167,6 +179,7 @@ def mock_wibeee_api_config_flow() -> Generator[MagicMock]:
                 ip_addr=MOCK_HOST,
             )
         )
+        api.async_configure_push_server = AsyncMock(return_value=True)
         api.host = MOCK_HOST
 
         mock_cls.return_value = api

@@ -27,12 +27,18 @@
         "data": {
           "host": "Hostname or IP address"
         },
+        "data_description": {
+          "host": "Enter the new IP address of your WiBeee device."
+        },
         "description": "Update the IP address of your WiBeee energy monitor.",
         "title": "Reconfigure WiBeee device"
       },
       "user": {
         "data": {
           "host": "Hostname or IP address"
+        },
+        "data_description": {
+          "host": "The IP address of your WiBeee energy monitor."
         },
         "description": "Enter the IP address of your WiBeee energy monitor. Make sure the device has a static IP or DHCP reservation.",
         "title": "Add WiBeee device"
