@@ -76,6 +76,15 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
 
         self._attr_has_entity_name = True
 
+        self._attr_translation_key = (
+            "main" if self._insteon_device_group.group == 1 else "additional"
+        ) + "_button_press"
+
+        self._attr_translation_placeholders = {
+            "button": self._insteon_device_group.name.rpartition('_')[-1].upper()
+        }
+
+
         @callback
         def async_fire_button_event(
             name: str, address: Address, group: int, button: str | None = None
@@ -90,7 +99,6 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
                 )
                 self._trigger_event(name.removesuffix("_event"), {})
                 self.async_write_ha_state()
-
 
         event_types: list[str] = []
 
@@ -130,15 +138,3 @@ class InsteonEventEntity(InsteonBaseEntity, EventEntity):
     def unique_id(self) -> str | None:
         """Return a unique ID for the event entity."""
         return super().unique_id + "_event"
-
-    @property
-    def translation_key(self) -> str | None:
-        """Return the translation key."""
-        return (
-            "main" if self._insteon_device_group.group == 1 else "additional"
-        ) + "_button_press"
-
-    @property
-    def translation_placeholders(self) -> Mapping[str, str]:
-        """Return translation placeholders."""
-        return {"button": self._insteon_device_group.name.rpartition('_')[-1].upper()}
