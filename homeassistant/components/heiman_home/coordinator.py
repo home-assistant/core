@@ -300,7 +300,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             """Fetch device detail with concurrency control."""
             async with semaphore:
                 try:
-                    device_detail = await cloud_client._async_get_device_detail(
+                    # Accessing _async_get_device_detail is necessary as there's no
+                    # public alternative for getting detailed device information
+                    device_detail = await cloud_client._async_get_device_detail(  # noqa: SLF001
                         device_id
                     )
                 except Exception as err:  # noqa: BLE001

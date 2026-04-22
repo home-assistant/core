@@ -17,15 +17,20 @@ from heimanconnect import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import API_BASE_URL
+
+
+class HeimanApiError(Exception):
+    """Custom exception for Heiman API errors."""
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,8 +142,8 @@ class HeimanApiClient:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except HeimanConnectionError as err:
             raise UpdateFailed(f"Connection error: {err}") from err
-        except Exception as err:  # noqa: BLE001
-            raise Exception(f"Failed to get user info: {err}") from err
+        except Exception as err:
+            raise HeimanApiError(f"Failed to get user info: {err}") from err
 
     async def async_get_homes(self):
         """Get homes from cloud client."""
@@ -178,9 +183,11 @@ class HeimanApiClient:
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except HeimanConnectionError as err:
-            raise UpdateFailed(f"Connection error getting device properties: {err}") from err
+            raise UpdateFailed(
+                f"Connection error getting device properties: {err}"
+            ) from err
         except Exception as err:
-            raise Exception(f"Failed to get device properties: {err}") from err
+            raise HeimanApiError(f"Failed to get device properties: {err}") from err
 
     async def async_get_device_detail(self, device_id: str):
         """Get device detail from cloud client."""
@@ -188,7 +195,9 @@ class HeimanApiClient:
             return None
         await self.async_ensure_token_valid()
         try:
-            return await self._cloud_client._async_get_device_detail(device_id)
+            # Accessing _async_get_device_detail is necessary as there's no public alternative
+            # for getting detailed device information including deriveMetadata
+            return await self._cloud_client._async_get_device_detail(device_id)  # noqa: SLF001
         except Exception:  # noqa: BLE001
             return None
 
@@ -198,7 +207,9 @@ class HeimanApiClient:
             raise HeimanConnectionError("Client not initialized")
         await self.async_ensure_token_valid()
         try:
-            return await self._cloud_client.async_control_device(device_id, property_id, value)
+            return await self._cloud_client.async_control_device(
+                device_id, property_id, value
+            )
         except HeimanAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except HeimanConnectionError as err:

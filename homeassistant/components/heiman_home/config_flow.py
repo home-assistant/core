@@ -3,9 +3,8 @@
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
