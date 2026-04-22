@@ -670,7 +670,6 @@
     'object_id_base': 'Discharge limit',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
     'original_name': 'Discharge limit',
     'platform': 'indevolt',
@@ -685,7 +684,6 @@
 # name: test_sensor[1][sensor.bk1600_discharge_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'BK1600 Discharge limit',
       'unit_of_measurement': '%',
     }),
