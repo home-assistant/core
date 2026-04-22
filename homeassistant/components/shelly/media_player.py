@@ -403,6 +403,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             can_expand=True,
         )
 
+    @rpc_call
     async def async_play_media(
         self,
         media_type: MediaType | str,
