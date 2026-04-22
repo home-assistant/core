@@ -56,7 +56,7 @@ def _discover_bulbs_for_import() -> list[dict[str, str]]:
         address = getattr(bulb.addr, "address", bulb.addr)
         try:
             name = bulb.get_name()
-            bulb.get_brightness()
+            brightness = bulb.get_brightness()
         except UPDATE_EXCEPTIONS as err:
             _LOGGER.warning(
                 "Skipping Avea bulb %s during YAML import due to read failure: %s",
@@ -67,6 +67,13 @@ def _discover_bulbs_for_import() -> list[dict[str, str]]:
         finally:
             with suppress(*UPDATE_EXCEPTIONS):
                 bulb.close()
+
+        if brightness is None:
+            _LOGGER.warning(
+                "Skipping Avea bulb %s during YAML import due to read failure: brightness is None",
+                address,
+            )
+            continue
 
         discovered_bulbs.append(
             {

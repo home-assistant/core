@@ -120,6 +120,32 @@ async def test_yaml_import_skips_bulbs_that_fail_validation(
     assert issue is not None
 
 
+async def test_yaml_import_skips_bulbs_with_none_brightness(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import skips bulbs with None brightness."""
+    failing_bulb = MagicMock()
+    failing_bulb.addr = "AA:BB:CC:DD:EE:FF"
+    failing_bulb.get_name.return_value = "Bedroom"
+    failing_bulb.get_brightness.return_value = None
+
+    with patch(
+        "homeassistant.components.avea.light.avea.discover_avea_bulbs",
+        return_value=[failing_bulb],
+    ):
+        assert await async_setup_component(
+            hass, "light", {"light": {"platform": DOMAIN}}
+        )
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue is not None
+
+
 async def test_yaml_import_handles_when_no_bulbs_are_discovered(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,

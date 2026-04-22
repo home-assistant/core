@@ -44,6 +44,20 @@ def test_validate_device_raises_cannot_connect_on_brightness_error() -> None:
         _validate_device(AVEA_DISCOVERY_INFO)
 
 
+def test_validate_device_raises_cannot_connect_on_none_brightness() -> None:
+    """Test the validator treats None brightness as cannot connect."""
+    bulb = MagicMock()
+    bulb.connect.return_value = True
+    bulb.get_name.return_value = "Bedroom"
+    bulb.get_brightness.return_value = None
+
+    with (
+        patch("homeassistant.components.avea.config_flow.avea.Bulb", return_value=bulb),
+        pytest.raises(CannotConnect),
+    ):
+        _validate_device(AVEA_DISCOVERY_INFO)
+
+
 def test_validate_device_raises_cannot_connect_on_connect_error() -> None:
     """Test the validator maps connect errors to cannot connect."""
     bulb = MagicMock()
