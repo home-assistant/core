@@ -24,7 +24,7 @@ async def test_diagnostics(
 ) -> None:
     """Test diagnostics."""
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup/setup_tahoma_switch.json", DOMAIN
+        hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
     with patch.multiple(
@@ -47,7 +47,7 @@ async def test_device_diagnostics(
 ) -> None:
     """Test device diagnostics."""
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup/setup_tahoma_switch.json", DOMAIN
+        hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
     device = device_registry.async_get_device(
@@ -75,9 +75,8 @@ async def test_device_diagnostics_execution_history_subsystem(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test execution history matching ignores subsystem suffix."""
-
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup/setup_tahoma_switch.json", DOMAIN
+        hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
     device = device_registry.async_get_device(
