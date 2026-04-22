@@ -14,6 +14,8 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, MANUFACTURER, STALE_POSITION_THRESHOLD
 from .coordinator import ScorpionTrackCoordinator
 
+_AGE_UNSET = object()
+
 
 class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
     """Base class for ScorpionTrack vehicle entities."""
@@ -51,10 +53,14 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
                 return vehicle
         return None
 
+    def is_vehicle_available(self, vehicle: ScorpionTrackVehicle | None) -> bool:
+        """Return if the entity has coordinator data and a matching vehicle."""
+        return super().available and vehicle is not None
+
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and self.get_vehicle() is not None
+        return self.is_vehicle_available(self.get_vehicle())
 
     def position_age(
         self, vehicle: ScorpionTrackVehicle | None = None
@@ -74,9 +80,15 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
             return timedelta(seconds=0)
         return age
 
-    def position_is_stale(self) -> bool:
+    def position_is_stale(
+        self,
+        *,
+        vehicle: ScorpionTrackVehicle | None = None,
+        age: timedelta | None | object = _AGE_UNSET,
+    ) -> bool:
         """Return True if the latest reported position is stale."""
-        age = self.position_age()
+        if age is _AGE_UNSET:
+            age = self.position_age(vehicle)
         return age is None or age >= STALE_POSITION_THRESHOLD
 
     def common_location_attributes(
@@ -109,7 +121,7 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
             if position and position.timestamp
             else None,
             "last_reported_age_seconds": age_seconds,
-            "stale": self.position_is_stale(),
+            "stale": self.position_is_stale(age=age),
             "stale_after_hours": int(STALE_POSITION_THRESHOLD.total_seconds() // 3600),
             "removed_from_share": vehicle is None,
             "share_title": self.share.title,

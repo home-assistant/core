@@ -69,8 +69,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
         """Return if the tracker is available."""
         vehicle = self.get_vehicle()
         return (
-            super().available
-            and vehicle is not None
+            self.is_vehicle_available(vehicle)
             and vehicle.position.latitude is not None
             and vehicle.position.longitude is not None
         )

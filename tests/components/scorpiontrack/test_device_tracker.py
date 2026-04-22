@@ -1,9 +1,13 @@
 """Test the ScorpionTrack device tracker platform."""
 
 from dataclasses import replace
+from unittest.mock import patch
 
 from pyscorpiontrack import ScorpionTrackShare
 
+from homeassistant.components.scorpiontrack.device_tracker import (
+    ScorpionTrackTrackerEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -71,3 +75,22 @@ async def test_removed_vehicle_becomes_unavailable(
     device = device_registry.async_get_device(identifiers={("scorpiontrack", "101_1")})
     assert device is not None
     assert device.name == "AB12 CDE"
+
+
+async def test_tracker_available_fetches_vehicle_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The availability check should reuse the selected vehicle."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity = ScorpionTrackTrackerEntity(mock_config_entry.runtime_data, 1)
+
+    with patch.object(
+        entity,
+        "get_vehicle",
+        wraps=entity.get_vehicle,
+    ) as mock_get_vehicle:
+        assert entity.available is True
+
+    assert mock_get_vehicle.call_count == 1

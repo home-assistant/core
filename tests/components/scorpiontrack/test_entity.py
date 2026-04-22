@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.scorpiontrack.device_tracker import (
     ScorpionTrackTrackerEntity,
@@ -78,3 +79,23 @@ async def test_tracker_helper_methods_handle_missing_and_future_timestamps(
 def test_bearing_to_cardinal_handles_missing_value() -> None:
     """A missing bearing should not produce a heading."""
     assert _bearing_to_cardinal(None) is None
+
+
+async def test_common_location_attributes_reuse_computed_age(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Shared attributes should not recompute age/staleness from scratch."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity = ScorpionTrackTrackerEntity(mock_config_entry.runtime_data, 1)
+
+    with patch.object(
+        entity,
+        "position_age",
+        wraps=entity.position_age,
+    ) as mock_position_age:
+        attributes = entity.common_location_attributes()
+
+    assert attributes["stale"] is True
+    assert mock_position_age.call_count == 1
