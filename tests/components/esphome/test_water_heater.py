@@ -29,7 +29,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-	UnitOfTemperature
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 
@@ -465,6 +465,7 @@ async def test_water_heater_set_away_mode(
     mock_client.water_heater_command.assert_has_calls(
         [call(key=1, away=away_mode, device_id=0)]
     )
+
 
 @pytest.mark.parametrize(
     ("temperature_unit", "expected_unit"),
