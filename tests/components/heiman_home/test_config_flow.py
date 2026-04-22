@@ -1,7 +1,7 @@
 """Tests for the Heiman Home config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
