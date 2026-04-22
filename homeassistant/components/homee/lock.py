@@ -7,11 +7,9 @@ from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
-from .const import DOMAIN
 from .entity import HomeeEntity
 from .helpers import get_name_for_enum, setup_homee_platform
 
@@ -141,9 +139,5 @@ class HomeeLock(HomeeEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open (unlatch) the lock."""
-        if self._lock_state_open is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="open_not_supported",
-            )
+        assert self._lock_state_open is not None
         await self.async_set_homee_value(self._lock_state_open)
