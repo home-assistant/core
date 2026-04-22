@@ -67,7 +67,9 @@ class ChromecastInfo:
         """
         cast_info = self.cast_info
         if self.cast_info.cast_type is None or self.cast_info.manufacturer is None:
-            entry: CastConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+            entry: CastConfigEntry = next(
+                iter(hass.config_entries.async_loaded_entries(DOMAIN))
+            )
             unknown_models = entry.runtime_data.unknown_models
             if self.cast_info.model_name not in unknown_models:
                 # Manufacturer and cast type is not available in mDNS data,
