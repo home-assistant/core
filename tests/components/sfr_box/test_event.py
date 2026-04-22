@@ -26,9 +26,9 @@ pytestmark = pytest.mark.usefixtures(
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
-    """Override PLATFORMS_WITH_AUTH."""
+    """Override PLATFORMS."""
     with (
-        patch("homeassistant.components.sfr_box.PLATFORMS_WITH_AUTH", [Platform.EVENT]),
+        patch("homeassistant.components.sfr_box.PLATFORMS", [Platform.EVENT]),
         patch("homeassistant.components.sfr_box.coordinator.SFRBox.authenticate"),
     ):
         yield
