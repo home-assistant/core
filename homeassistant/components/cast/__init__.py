@@ -1,8 +1,8 @@
 """Component to embed Google Cast."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from typing import Protocol
 
 from pychromecast import Chromecast
@@ -21,15 +21,6 @@ from . import home_assistant_cast
 from .const import DOMAIN
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Cast from a config entry."""
-    hass.data[DOMAIN] = {"cast_platform": {}, "unknown_models": {}}
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
-    return True
 
 
 class CastProtocol(Protocol):
@@ -67,27 +58,49 @@ class CastProtocol(Protocol):
         """
 
 
-@callback
-def _register_cast_platform(
-    hass: HomeAssistant, integration_domain: str, platform: CastProtocol
-):
-    """Register a cast platform."""
-    if (
-        not hasattr(platform, "async_get_media_browser_root_object")
-        or not hasattr(platform, "async_browse_media")
-        or not hasattr(platform, "async_play_media")
-    ):
-        raise HomeAssistantError(f"Invalid cast platform {platform}")
-    hass.data[DOMAIN]["cast_platform"][integration_domain] = platform
+@dataclass
+class CastRuntimeData:
+    """Runtime data for the Cast integration."""
+
+    cast_platform: dict[str, CastProtocol] = field(default_factory=dict)
+    unknown_models: dict[str | None, tuple[str | None, str | None]] = field(
+        default_factory=dict
+    )
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+type CastConfigEntry = ConfigEntry[CastRuntimeData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool:
+    """Set up Cast from a config entry."""
+    entry.runtime_data = CastRuntimeData()
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    @callback
+    def _register_cast_platform(
+        hass: HomeAssistant, integration_domain: str, platform: CastProtocol
+    ) -> None:
+        """Register a cast platform."""
+        if (
+            not hasattr(platform, "async_get_media_browser_root_object")
+            or not hasattr(platform, "async_browse_media")
+            or not hasattr(platform, "async_play_media")
+        ):
+            raise HomeAssistantError(f"Invalid cast platform {platform}")
+        entry.runtime_data.cast_platform[integration_domain] = platform
+
+    await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: CastConfigEntry) -> None:
     """Remove Home Assistant Cast user."""
     await home_assistant_cast.async_remove_user(hass, entry)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: CastConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove cast config entry from a device.
 

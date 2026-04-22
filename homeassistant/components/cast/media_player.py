@@ -1,5 +1,4 @@
 """Provide functionality to interact with Cast devices on the network."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -44,7 +43,6 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     CONF_UUID,
@@ -80,7 +78,7 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
-    from . import CastProtocol
+    from . import CastConfigEntry, CastProtocol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,7 +110,9 @@ def api_error[_CastDeviceT: CastDevice, **_P, _R](
 
 
 @callback
-def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
+def _async_create_cast_device(
+    hass: HomeAssistant, config_entry: CastConfigEntry, info: ChromecastInfo
+):
     """Create a CastDevice entity or dynamic group from the chromecast object.
 
     Returns None if the cast device has already been added.
@@ -137,12 +137,12 @@ def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
         group.async_setup()
         return None
 
-    return CastMediaPlayerEntity(hass, info)
+    return CastMediaPlayerEntity(hass, config_entry, info)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: CastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Cast from a config entry."""
@@ -162,7 +162,7 @@ async def async_setup_entry(
             # UUID not matching, ignore.
             return
 
-        cast_device = _async_create_cast_device(hass, discover)
+        cast_device = _async_create_cast_device(hass, config_entry, discover)
         if cast_device is not None:
             async_add_entities([cast_device])
 
@@ -302,11 +302,17 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     _attr_media_image_remotely_accessible = True
     _mz_only = False
 
-    def __init__(self, hass: HomeAssistant, cast_info: ChromecastInfo) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: CastConfigEntry,
+        cast_info: ChromecastInfo,
+    ) -> None:
         """Initialize the cast device."""
 
         CastDevice.__init__(self, hass, cast_info)
 
+        self._config_entry = config_entry
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
@@ -594,7 +600,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Generate root node."""
         children = []
         # Add media browsers
-        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
+        for platform in self._config_entry.runtime_data.cast_platform.values():
             children.extend(
                 await platform.async_get_media_browser_root_object(
                     self.hass, self._chromecast.cast_type
@@ -653,7 +659,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         platform: CastProtocol
         assert media_content_type is not None
-        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
+        for platform in self._config_entry.runtime_data.cast_platform.values():
             browse_media = await platform.async_browse_media(
                 self.hass,
                 media_content_type,
@@ -715,7 +721,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return
 
         # Try the cast platforms
-        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
+        for platform in self._config_entry.runtime_data.cast_platform.values():
             result = await platform.async_play_media(
                 self.hass, self.entity_id, chromecast, media_type, media_id
             )

@@ -486,22 +486,26 @@ async def test_stop_discovery_called_on_stop(
 
 async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
+    entry = MockConfigEntry(domain="cast")
+    entry.add_to_hass(hass)
     info = get_fake_chromecast_info(uuid=None)
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 
 async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
+    entry = MockConfigEntry(domain="cast")
+    entry.add_to_hass(hass)
     added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
     info = get_fake_chromecast_info()
 
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast._async_create_cast_device(hass, entry, info)
     assert cast_device is not None
     assert info.uuid in added_casts
 
     # Sending second time should not create new entity
-    cast_device = cast._async_create_cast_device(hass, info)
+    cast_device = cast._async_create_cast_device(hass, entry, info)
     assert cast_device is None
 
 

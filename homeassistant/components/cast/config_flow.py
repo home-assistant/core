@@ -2,17 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -20,6 +15,9 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
+
+if TYPE_CHECKING:
+    from . import CastConfigEntry
 
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(
@@ -42,7 +40,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: CastConfigEntry,
     ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler()
