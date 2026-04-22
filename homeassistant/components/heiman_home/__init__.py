@@ -1,3 +1,4 @@
+
 """Heiman Home Assistant integration."""
 
 from __future__ import annotations
@@ -68,9 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            "OAuth2 authentication failed, re-authentication required"
+        ) from err
     except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"OAuth2 token request failed: {err}"
+        ) from err
     except ValueError as err:
         _LOGGER.error(
             "OAuth2 token validation failed: %s. "
