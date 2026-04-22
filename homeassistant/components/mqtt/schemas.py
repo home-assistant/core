@@ -53,6 +53,7 @@ from .const import (
     CONF_SW_VERSION,
     CONF_TOPIC,
     CONF_VIA_DEVICE,
+    CONF_VISIBLE_BY_DEFAULT,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     ENTITY_PLATFORMS,
@@ -173,6 +174,7 @@ MQTT_ENTITY_COMMON_SCHEMA = _MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
         vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_VISIBLE_BY_DEFAULT, default=True): cv.boolean,
     }
 )
 

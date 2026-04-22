@@ -271,6 +271,7 @@ ABBREVIATIONS = {
     "l_ver_t": "latest_version_topic",
     "l_ver_tpl": "latest_version_template",
     "pl_inst": "payload_install",
+    "vis": "visible_by_default",
 }
 
 DEVICE_ABBREVIATIONS = {

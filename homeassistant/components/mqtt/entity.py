@@ -95,6 +95,7 @@ from .const import (
     CONF_SW_VERSION,
     CONF_TOPIC,
     CONF_VIA_DEVICE,
+    CONF_VISIBLE_BY_DEFAULT,
     DEFAULT_ENCODING,
     DOMAIN,
     MQTT_CONNECTION_STATE,
@@ -1438,6 +1439,9 @@ class MqttEntity(
             entity_registry.async_update_entity(
                 recreated_entry.entity_id,
                 disabled_by=None,
+                hidden_by=None
+                if self._config[CONF_VISIBLE_BY_DEFAULT]
+                else er.RegistryEntryHider.INTEGRATION,
             )
 
         if discovery_data is None:
@@ -1468,7 +1472,11 @@ class MqttEntity(
         if self._update_registry_entity_id is not None:
             entity_registry = er.async_get(self.hass)
             entity_registry.async_update_entity(
-                self.entity_id, new_entity_id=self._update_registry_entity_id
+                self.entity_id,
+                new_entity_id=self._update_registry_entity_id,
+                hidden_by=None
+                if self._config[CONF_VISIBLE_BY_DEFAULT]
+                else er.RegistryEntryHider.INTEGRATION,
             )
             self._update_registry_entity_id = None
 
@@ -1593,6 +1601,9 @@ class MqttEntity(
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_entity_registry_enabled_default = bool(
             config.get(CONF_ENABLED_BY_DEFAULT, True)
+        )
+        self._attr_entity_registry_visible_default = bool(
+            config.get(CONF_VISIBLE_BY_DEFAULT, True)
         )
         self._attr_icon = config.get(CONF_ICON)
         self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)
