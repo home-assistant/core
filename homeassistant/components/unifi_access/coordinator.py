@@ -453,9 +453,15 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         log = cast(LogAdd, msg)
         source = log.data.source
         device_target = source.device_config
-        if device_target is None or device_target.id not in self._device_to_door:
+        if device_target is None:
             return
-        door_id = self._device_to_door[device_target.id]
+        if device_target.id in self._device_to_door:
+            door_id = self._device_to_door[device_target.id]
+        elif msg.door_id:
+            # UAH-DOOR devices: door_id is enriched by the library via MAC→door map
+            door_id = msg.door_id
+        else:
+            return
         event_type = (
             "access_granted" if source.event.result == "ACCESS" else "access_denied"
         )

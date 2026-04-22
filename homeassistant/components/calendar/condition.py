@@ -7,7 +7,9 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from .const import DOMAIN
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_event_active": make_entity_state_condition(DOMAIN, STATE_ON),
+    "is_event_active": make_entity_state_condition(
+        DOMAIN, STATE_ON, support_duration=True
+    ),
 }
 
 
