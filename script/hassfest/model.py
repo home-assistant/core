@@ -141,6 +141,7 @@ class Integration:
     manifest_path: pathlib.Path | None = None
     errors: list[Error] = field(default_factory=list)
     warnings: list[Error] = field(default_factory=list)
+    notices: list[Error] = field(default_factory=list)
     translated_name: bool = False
 
     @property
@@ -236,6 +237,10 @@ class Integration:
             self.add_warning(*args, **kwargs)
         else:
             self.add_error(*args, **kwargs)
+
+    def add_notice(self, *args: Any, **kwargs: Any) -> None:
+        """Add a notice."""
+        self.notices.append(Error(*args, **kwargs))
 
     def load_manifest(self) -> None:
         """Load manifest."""

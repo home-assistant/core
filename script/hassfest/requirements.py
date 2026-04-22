@@ -12,6 +12,8 @@ import re
 import subprocess
 import sys
 from typing import Any, TypedDict
+import urllib.error
+import urllib.request
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from tqdm import tqdm
@@ -349,6 +351,63 @@ class _PackageFilesCheckResult(TypedDict):
 _packages_checked_files_cache: dict[str, _PackageFilesCheckResult] = {}
 
 
+@cache
+def _get_pypi_data(package: str, version: str) -> dict[str, Any] | None:
+    """Get package data from the PyPI JSON API (cached per package+version)."""
+    url = f"https://pypi.org/pypi/{package}/{version}/json"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            return json.loads(response.read())
+    except (urllib.error.URLError, json.JSONDecodeError, OSError):
+        return None
+
+
+def _is_pure_python_wheel(filename: str) -> bool:
+    """Return True if the wheel filename indicates a pure-Python package.
+
+    Pure-Python wheels use ``-none-any`` as their ABI/platform tags.
+    """
+    # Wheel filename format: {name}-{ver}(-{build})?-{python}-{abi}-{platform}.whl
+    parts = filename[:-4].rsplit("-", 2)  # strip ".whl" then split last 3 fields
+    return len(parts) >= 3 and parts[-1] == "any" and parts[-2] == "none"
+
+
+def _get_wheel_info(package: str, version: str) -> str:
+    """Return an informational string about wheel availability on PyPI.
+
+    Checks whether the given *package*/*version* provides a pure-Python wheel
+    or platform-specific wheels for the platforms that Home Assistant targets:
+    - amd64 glibc  (manylinux x86_64)
+    - amd64 musl   (musllinux x86_64, used by Alpine-based images)
+    - aarch64      (manylinux or musllinux aarch64, used by Raspberry Pi etc.)
+    """
+    data = _get_pypi_data(package, version)
+    if data is None:
+        return f"{package}=={version}: could not fetch data from PyPI"
+
+    urls: list[dict[str, Any]] = data.get("urls", [])
+    wheels = [u["filename"] for u in urls if u["packagetype"] == "bdist_wheel"]
+
+    if not wheels:
+        if any(u["packagetype"] == "sdist" for u in urls):
+            return f"{package}=={version}: source distribution only (no wheels)"
+        return f"{package}=={version}: no distributions found on PyPI"
+
+    if any(_is_pure_python_wheel(w) for w in wheels):
+        return f"{package}=={version}: pure Python wheel"
+
+    has_amd64_glibc = any("manylinux" in w and "x86_64" in w for w in wheels)
+    has_amd64_musl = any("musllinux" in w and "x86_64" in w for w in wheels)
+    has_aarch64 = any("aarch64" in w for w in wheels)
+
+    return (
+        f"{package}=={version}: platform-specific wheels -"
+        f" amd64-glibc: {'yes' if has_amd64_glibc else 'no'},"
+        f" amd64-musl: {'yes' if has_amd64_musl else 'no'},"
+        f" aarch64: {'yes' if has_aarch64 else 'no'}"
+    )
+
+
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle requirements for integrations."""
     # Check if we are doing format-only validation.
@@ -466,6 +525,26 @@ def validate_requirements(integration: Integration) -> None:
                 "are not compatible with the Python standard library"
             ),
         )
+
+    if integration._config.specific_integrations:
+        # When checking a specific integration (e.g. during a PR review), emit
+        # informational notices about PyPI wheel availability for each direct
+        # requirement so that reviewers can quickly see whether Home Assistant
+        # needs to build platform-specific wheels for the new dependency.
+        for req in integration.requirements:
+            if not (match := PACKAGE_REGEX.match(req)):
+                continue
+            pkg, sep, version = match.groups()
+            if sep != "==" or not version:
+                continue
+            # Strip environment markers (e.g. ";python_version>='3.10'") and
+            # extras (e.g. "pkg[extra]") before querying PyPI.
+            clean_version = version.split(";")[0].strip()
+            pypi_pkg = re.sub(r"\[.*?\]", "", pkg).strip()
+            integration.add_notice(
+                "requirements",
+                _get_wheel_info(pypi_pkg, clean_version),
+            )
 
 
 @cache

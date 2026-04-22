@@ -220,6 +220,7 @@ def main() -> int:
         invalid_itg = [itg for itg in integrations.values() if itg.errors]
 
     warnings_itg = [itg for itg in integrations.values() if itg.warnings]
+    notices_itg = [itg for itg in integrations.values() if itg.notices]
 
     print()
     print("Integrations:", len(integrations))
@@ -227,7 +228,10 @@ def main() -> int:
     print()
 
     if not invalid_itg and not general_errors:
-        print_integrations_status(config, warnings_itg, show_fixable_errors=False)
+        itgs_with_info = list(
+            dict.fromkeys([*warnings_itg, *notices_itg])
+        )  # deduplicated, order preserved
+        print_integrations_status(config, itgs_with_info, show_fixable_errors=False)
 
         if config.action == "generate":
             for plugin in plugins:
@@ -249,6 +253,7 @@ def main() -> int:
         print()
 
     invalid_itg.extend(itg for itg in warnings_itg if itg not in invalid_itg)
+    invalid_itg.extend(itg for itg in notices_itg if itg not in invalid_itg)
 
     print_integrations_status(config, invalid_itg, show_fixable_errors=False)
 
@@ -270,6 +275,8 @@ def print_integrations_status(
                 print("*", "[ERROR]", error)
         for warning in integration.warnings:
             print("*", "[WARNING]", warning)
+        for notice in integration.notices:
+            print("*", "[INFO]", notice)
         print()
 
 
