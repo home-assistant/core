@@ -1119,7 +1119,7 @@ google-cloud-texttospeech==2.36.0
 google-genai==1.59.0
 
 # homeassistant.components.google_travel_time
-google-maps-routing==0.6.15
+google-maps-routing==0.10.0
 
 # homeassistant.components.nest
 google-nest-sdm==9.1.2
