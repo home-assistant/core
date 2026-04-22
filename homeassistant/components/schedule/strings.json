@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
@@ -10,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::schedule::common::condition_for_name%]"
         }
       },
       "name": "Schedule is off"
@@ -19,6 +23,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::schedule::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::schedule::common::condition_for_name%]"
         }
       },
       "name": "Schedule is on"

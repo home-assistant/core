@@ -44,7 +44,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TuyaConfigEntry
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -53,6 +52,7 @@ from .const import (
     DeviceCategory,
     DPCode,
 )
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
