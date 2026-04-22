@@ -3512,3 +3512,92 @@ async def test_coordinator_async_update_data_unexpected_exception_in_device_proc
         pytest.raises(UpdateFailed, match="Error fetching Heiman data"),
     ):
         await coordinator._async_update_data()
+
+
+def test_infer_entity_type_bool() -> None:
+    """Test _infer_entity_type returns binary_sensor for bool values.
+
+    This tests line 53 where prop_value is bool.
+    """
+    from homeassistant.components.heiman_home.coordinator import _infer_entity_type
+
+    assert _infer_entity_type(True) == "binary_sensor"
+    assert _infer_entity_type(False) == "binary_sensor"
+
+
+def test_infer_entity_type_numeric() -> None:
+    """Test _infer_entity_type returns sensor for numeric values.
+
+    This tests line 56 where prop_value is int or float.
+    """
+    from homeassistant.components.heiman_home.coordinator import _infer_entity_type
+
+    assert _infer_entity_type(42) == "sensor"
+    assert _infer_entity_type(3.14) == "sensor"
+    assert _infer_entity_type(-100) == "sensor"
+
+
+def test_infer_entity_type_other() -> None:
+    """Test _infer_entity_type returns None for other types.
+
+    This tests line 58 where prop_value is not bool or numeric.
+    """
+    from homeassistant.components.heiman_home.coordinator import _infer_entity_type
+
+    assert _infer_entity_type("string") is None
+    assert _infer_entity_type([1, 2, 3]) is None
+    assert _infer_entity_type({"key": "value"}) is None
+
+
+async def test_coordinator_mqtt_init_exception(
+    hass: HomeAssistant, mock_api_client: AsyncMock
+) -> None:
+    """Test MQTT initialization when unexpected exception is raised.
+
+    This tests lines 591-592 where a general Exception is caught.
+    """
+    mock_user = MagicMock()
+    mock_user.user_id = "test-user-id"
+
+    mock_home = MagicMock()
+    mock_home.home_id = "test-home-id"
+
+    mock_api_client.async_get_user_info.return_value = mock_user
+    mock_api_client.async_get_homes.return_value = [mock_home]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "token": {"access_token": "test-token"},
+            "home_id": "test-home-id",
+            "user_id": "test-user-id",
+        },
+        unique_id="test-user-id",
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = HeimanDataUpdateCoordinator(
+        hass=hass,
+        logger=_LOGGER,
+        api_client=mock_api_client,
+        config_entry=entry,
+    )
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # Mock HeimanMqttClient to raise a general Exception
+    mock_mqtt_instance = MagicMock()
+    # Raise Exception in connect (not HeimanMQTTError)
+    mock_mqtt_instance.connect = AsyncMock(side_effect=RuntimeError("Unexpected error"))
+
+    with patch(
+        "homeassistant.components.heiman_home.coordinator.HeimanMqttClient",
+        return_value=mock_mqtt_instance,
+    ):
+        # Should not raise, just log error
+        await coordinator.async_init_mqtt_client()
+
+        # MQTT client instance is created but connect failed
+        assert coordinator.mqtt_client is not None
+        assert coordinator.mqtt_client.connect.called

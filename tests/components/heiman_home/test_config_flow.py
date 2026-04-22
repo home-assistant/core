@@ -7,6 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.components.heiman_home.api import (
     HeimanApiClient,
     HeimanHome,
@@ -924,3 +925,141 @@ async def test_select_home_zero_passes_schema(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_home"
         assert result["errors"] == {"base": "no_home_selected"}
+
+
+async def test_reauth_entry_none(
+    hass: HomeAssistant,
+    setup_credentials: None,
+) -> None:
+    """Test reauth when _get_reauth_entry returns None.
+
+    This tests lines 129-131 where _get_reauth_entry returns None.
+    """
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+    # Set context with SOURCE_REAUTH to enter the reauth code path
+    flow.context = {"source": SOURCE_REAUTH, "entry_id": "test_entry_id"}
+    flow._auth_info.user_info = HeimanUser(
+        user_id="test-user", email="test@example.com"
+    )
+    flow._auth_info.homes = [
+        HeimanHome(
+            home_id="home-1",
+            home_name="Home 1",
+            device_count=5,
+            user_id="test-user",
+        ),
+    ]
+    flow._auth_info.auth_data = {"token": {"access_token": "test"}}
+
+    # Patch _get_reauth_entry to return None (line 129-131)
+    with patch.object(
+        HeimanConfigFlow,
+        "_get_reauth_entry",
+        return_value=None,
+    ):
+        result = await flow.async_step_select_home(user_input={CONF_HOME_ID: "home-1"})
+
+        # Should abort with reauth_entry_not_found
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_entry_not_found"
+
+
+async def test_reauth_user_mismatch(
+    hass: HomeAssistant,
+    setup_credentials: None,
+) -> None:
+    """Test reauth when user_id doesn't match.
+
+    This tests lines 132-133 where user_id doesn't match.
+    """
+    # Create existing entry
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="existing_user",
+        data={
+            CONF_TOKEN: {"access_token": "existing_token"},
+            CONF_HOME_ID: "existing_home",
+            CONF_USER_ID: "existing_user",
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+    # Set context with SOURCE_REAUTH to enter the reauth code path
+    flow.context = {"source": SOURCE_REAUTH, "entry_id": existing_entry.entry_id}
+    flow._auth_info.user_info = HeimanUser(
+        user_id="different_user", email="different@example.com"
+    )
+    flow._auth_info.homes = [
+        HeimanHome(
+            home_id="home-1",
+            home_name="Home 1",
+            device_count=5,
+            user_id="different_user",
+        ),
+    ]
+    flow._auth_info.auth_data = {"token": {"access_token": "test"}}
+
+    # Patch _get_reauth_entry to return existing entry with different user_id
+    with patch.object(
+        HeimanConfigFlow,
+        "_get_reauth_entry",
+        return_value=existing_entry,
+    ):
+        result = await flow.async_step_select_home(user_input={CONF_HOME_ID: "home-1"})
+
+        # Should abort with reauth_user_mismatch
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_user_mismatch"
+
+
+async def test_reauth_success(
+    hass: HomeAssistant,
+    setup_credentials: None,
+) -> None:
+    """Test successful reauth flow.
+
+    This tests line 134 where reauth succeeds.
+    """
+    # Create existing entry
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="existing_user",
+        data={
+            CONF_TOKEN: {"access_token": "existing_token"},
+            CONF_HOME_ID: "existing_home",
+            CONF_USER_ID: "existing_user",
+        },
+    )
+    existing_entry.add_to_hass(hass)
+
+    flow = HeimanConfigFlow()
+    flow.hass = hass
+    # Set context with SOURCE_REAUTH to enter the reauth code path
+    flow.context = {"source": SOURCE_REAUTH, "entry_id": existing_entry.entry_id}
+    flow._auth_info.user_info = HeimanUser(
+        user_id="existing_user", email="existing@example.com"
+    )
+    flow._auth_info.homes = [
+        HeimanHome(
+            home_id="new_home",
+            home_name="New Home",
+            device_count=5,
+            user_id="existing_user",
+        ),
+    ]
+    flow._auth_info.auth_data = {"token": {"access_token": "test"}}
+
+    # Patch _get_reauth_entry to return existing entry with same user_id
+    with patch.object(
+        HeimanConfigFlow,
+        "_get_reauth_entry",
+        return_value=existing_entry,
+    ):
+        result = await flow.async_step_select_home(user_input={CONF_HOME_ID: "new_home"})
+
+        # Should update and abort to reload
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"

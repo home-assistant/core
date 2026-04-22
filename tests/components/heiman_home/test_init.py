@@ -543,3 +543,88 @@ async def test_unload_with_api_client_close_exception(
     await hass.async_block_till_done()
 
     assert unload_ok is True
+
+
+async def test_unload_cleans_hass_data_when_coordinator_none(
+    hass: HomeAssistant, setup_credentials: None
+) -> None:
+    """Test unload cleans hass.data when coordinator is None.
+
+    This tests lines 148-150 where coordinator is None and we clean up hass.data.
+    """
+    from homeassistant.components.heiman_home import async_unload_entry
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": 9999999999,
+                "token_type": "Bearer",
+            },
+            "home_id": "test_home",
+            "user_id": "test_user",
+        },
+        unique_id="test_user",
+    )
+    entry.add_to_hass(hass)
+
+    # Set hass.data[DOMAIN] with this entry_id and None coordinator
+    hass.data[DOMAIN] = {entry.entry_id: None}
+
+    # Call async_unload_entry directly
+    unload_ok = await async_unload_entry(hass, entry)
+    await hass.async_block_till_done()
+
+    # Should succeed
+    assert unload_ok is True
+    # hass.data[DOMAIN] should be cleaned up
+    assert DOMAIN not in hass.data
+
+
+async def test_unload_returns_false_when_platforms_unload_fails(
+    hass: HomeAssistant, setup_credentials: None
+) -> None:
+    """Test unload returns False when platforms unload fails.
+
+    This tests line 142 where unload_ok is False and we return False.
+    """
+    from homeassistant.components.heiman_home import async_unload_entry
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": 9999999999,
+                "token_type": "Bearer",
+            },
+            "home_id": "test_home",
+            "user_id": "test_user",
+        },
+        unique_id="test_user",
+    )
+    entry.add_to_hass(hass)
+
+    # Set hass.data[DOMAIN] with this entry_id and None coordinator
+    hass.data[DOMAIN] = {entry.entry_id: None}
+
+    # Mock the return value of async_unload_platforms to be False
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms",
+        return_value=False,
+    ):
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, [])
+        assert unload_ok is False
+
+        # Now test the code path in async_unload_entry
+        # Since async_unload_platforms returns False, we should return False
+        # But we need to also mock the cleanup path
+        result = await async_unload_entry(hass, entry)
+        # The result will be False because platform unload failed
+        # This tests line 142

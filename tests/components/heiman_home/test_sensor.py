@@ -1423,3 +1423,170 @@ async def test_sensor_creation_skips_non_sensor_entities(
     # Check that only sensor entity was created (switch and binary_sensor skipped)
     assert len(added_entities) == 1
     assert added_entities[0].unique_id == "device-mixed_temperature_sensor"
+
+
+async def test_sensor_signal_strength_non_numeric_skips_device_class(
+    hass: HomeAssistant,
+) -> None:
+    """Test signal_strength config skips device class for non-numeric values.
+
+    This tests lines 229-230 where non-numeric signal_strength values
+    don't get the device class applied.
+    """
+    mock_coordinator = MagicMock()
+    mock_device = MagicMock(spec=HeimanDevice)
+    mock_device.device_id = "device-1"
+    mock_device.device_name = "Test Device"
+    mock_device.online = True
+
+    # Signal strength with string value (non-numeric)
+    mock_device.properties = {
+        "signal_strength": DeviceProperty(
+            identifier="signal_strength",
+            name="Signal Strength",
+            value="excellent",  # Non-numeric string
+            data_type="string",  # String data type
+            readable=True,
+        )
+    }
+
+    mock_coordinator.get_device.return_value = mock_device
+
+    sensor = HeimanSensorEntity(
+        coordinator=mock_coordinator,
+        device=mock_device,
+        property_identifier="signal_strength",
+    )
+
+    # Should not have signal_strength device class set (lines 229-230)
+    # because value is non-numeric
+    assert sensor.device_class != SensorDeviceClass.SIGNAL_STRENGTH
+
+
+async def test_sensor_native_value_non_numeric_for_device_class(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test native_value returns None for non-numeric values with numeric device class.
+
+    This tests lines 333-341 where native_value returns None when
+    the value type doesn't match the device class expectations.
+    """
+    mock_coordinator = MagicMock()
+    mock_device = MagicMock(spec=HeimanDevice)
+    mock_device.device_id = "device-1"
+    mock_device.device_name = "Test Device"
+    mock_device.online = True
+
+    # Create a sensor with numeric device class but string value
+    mock_device.properties = {
+        "temperature": DeviceProperty(
+            identifier="temperature",
+            name="Temperature",
+            value="hot",  # String value for numeric device class
+            data_type="string",
+            readable=True,
+        )
+    }
+
+    mock_coordinator.get_device.return_value = mock_device
+
+    sensor = HeimanSensorEntity(
+        coordinator=mock_coordinator,
+        device=mock_device,
+        property_identifier="temperature",
+    )
+
+    # Manually set device class to temperature to trigger the check
+    sensor._attr_device_class = SensorDeviceClass.TEMPERATURE
+
+    # native_value should return None and log warning (lines 333-341)
+    result = sensor.native_value
+
+    # Should return None for non-numeric value with numeric device class
+    assert result is None
+    # Warning should be logged
+    assert "non-numeric" in caplog.text.lower() or "validation error" in caplog.text.lower()
+
+
+async def test_sensor_native_value_bool_for_numeric_device_class(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test native_value returns None for boolean values with numeric device class.
+
+    This tests the bool check in lines 330-331.
+    """
+    mock_coordinator = MagicMock()
+    mock_device = MagicMock(spec=HeimanDevice)
+    mock_device.device_id = "device-1"
+    mock_device.device_name = "Test Device"
+    mock_device.online = True
+
+    # Create a sensor with numeric device class but boolean value
+    mock_device.properties = {
+        "battery": DeviceProperty(
+            identifier="battery",
+            name="Battery",
+            value=True,  # Boolean value
+            data_type="bool",
+            readable=True,
+        )
+    }
+
+    mock_coordinator.get_device.return_value = mock_device
+
+    sensor = HeimanSensorEntity(
+        coordinator=mock_coordinator,
+        device=mock_device,
+        property_identifier="battery",
+    )
+
+    # Manually set device class to battery to trigger the check
+    sensor._attr_device_class = SensorDeviceClass.BATTERY
+
+    # native_value should return None (lines 330-331)
+    result = sensor.native_value
+
+    # Should return None for boolean value with numeric device class
+    assert result is None
+
+
+async def test_sensor_native_value_list_for_numeric_device_class(
+    hass: HomeAssistant,
+) -> None:
+    """Test native_value returns None for list values with numeric device class.
+
+    This tests line 331 where list type is rejected.
+    """
+    mock_coordinator = MagicMock()
+    mock_device = MagicMock(spec=HeimanDevice)
+    mock_device.device_id = "device-1"
+    mock_device.device_name = "Test Device"
+    mock_device.online = True
+
+    # Create a sensor with numeric device class but list value
+    mock_device.properties = {
+        "power": DeviceProperty(
+            identifier="power",
+            name="Power",
+            value=[100, 200],  # List value
+            data_type="array",
+            readable=True,
+        )
+    }
+
+    mock_coordinator.get_device.return_value = mock_device
+
+    sensor = HeimanSensorEntity(
+        coordinator=mock_coordinator,
+        device=mock_device,
+        property_identifier="power",
+    )
+
+    # Manually set device class to power to trigger the check
+    sensor._attr_device_class = SensorDeviceClass.POWER
+
+    # native_value should return None
+    result = sensor.native_value
+
+    # Should return None for list value with numeric device class
+    assert result is None
