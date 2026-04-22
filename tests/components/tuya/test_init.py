@@ -18,7 +18,13 @@ from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import DEVICE_MOCKS, create_device, create_manager, initialize_entry
+from . import (
+    DEVICE_MOCKS,
+    MockDeviceListener,
+    create_device,
+    create_manager,
+    initialize_entry,
+)
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
@@ -134,6 +140,64 @@ async def test_device_registry(
                 include_disabled_entities=True,
             )
         )
+
+
+async def test_dynamic_add_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_manager: Manager,
+    mock_listener: MockDeviceListener,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Ensure add device event works correctly."""
+    # Initialize with a single device
+    main_device = await create_device(hass, "mcs_8yhypbo7")
+    await initialize_entry(hass, mock_manager, mock_config_entry, [main_device])
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 1
+
+    # Trigger add second device from the manager
+    await mock_listener.async_send_add_device(
+        mock_manager, await create_device(hass, "clkg_y7j64p60glp8qpx7")
+    )
+
+    # Should now have two devices in the registry
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 2
+
+
+async def test_dynamic_remove_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_manager: Manager,
+    mock_listener: MockDeviceListener,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Ensure remove device event works correctly."""
+    # Initialize with two devices
+    main_device = await create_device(hass, "mcs_8yhypbo7")
+    second_device = await create_device(hass, "clkg_y7j64p60glp8qpx7")
+    await initialize_entry(
+        hass, mock_manager, mock_config_entry, [main_device, second_device]
+    )
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 2
+
+    # Trigger remove second device from the manager
+    await mock_listener.async_send_remove_device(mock_manager, second_device)
+
+    # Only the main device should remain
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 1
+    assert all_entries[0].identifiers == {(DOMAIN, main_device.id)}
 
 
 async def test_fixtures_valid(hass: HomeAssistant) -> None:
