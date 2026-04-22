@@ -50,6 +50,7 @@ class MockDeviceListener(DeviceListener):
         """Mock add device from the manager."""
         manager.device_map[device.id] = device
         self.add_device(device)
+        await self.hass.async_block_till_done()
 
     async def async_send_remove_device(
         self, manager: Manager, device: CustomerDevice
