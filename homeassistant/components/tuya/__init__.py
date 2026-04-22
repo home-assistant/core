@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
     """Async setup hass config entry."""
     listener = DeviceListener(hass, entry)
-    await hass.async_add_executor_job(listener.initialise)
+    await hass.async_add_executor_job(listener.initialize)
 
     # Connection is successful, store the listener in runtime_data
     entry.runtime_data = listener
