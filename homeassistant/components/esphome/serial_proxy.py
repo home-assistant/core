@@ -55,11 +55,7 @@ async def _resolve_client(entry_id: str) -> APIClient:
     if entry is None or entry.domain != DOMAIN:
         raise InvalidSettingsError(f"No ESPHome config entry with id {entry_id!r}")
 
-    runtime_data = entry.runtime_data
-    if runtime_data is None:
-        raise InvalidSettingsError(f"ESPHome config entry {entry_id!r} is not loaded")
-
-    return runtime_data.client
+    return entry.runtime_data.client
 
 
 class HassESPHomeSerial(ESPHomeSerial):
@@ -72,14 +68,17 @@ class HassESPHomeSerial(ESPHomeSerial):
         """Resolve the HA config entry's APIClient, then open the proxy."""
         if self._api is None and self._path is not None:
             parsed = URL(str(self._path))
+
             entry_id = parsed.host
             if not entry_id:
                 raise InvalidSettingsError(
                     f"No ESPHome config entry id in URL {self._path!r}"
                 )
 
-            if "port_name" in parsed.query:
-                self._port_name = parsed.query["port_name"]
+            if "port_name" not in parsed.query:
+                raise InvalidSettingsError("Port name is required")
+
+            self._port_name = parsed.query["port_name"]
 
             hass_loop = _HASS_LOOP
             if hass_loop is None:
