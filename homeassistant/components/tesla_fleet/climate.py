@@ -112,7 +112,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate."""
 
-        self.scopes = scopes
         self.read_only = Scope.VEHICLE_CMDS not in scopes
 
         if self.read_only:
@@ -331,11 +330,8 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
     ) -> None:
         """Initialize the cabin overheat climate entity."""
 
-        # Scopes
-        self.scopes = scopes
         self.read_only = Scope.VEHICLE_CMDS not in scopes
 
-        # Supported Features
         if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
             self._attr_hvac_modes = []
