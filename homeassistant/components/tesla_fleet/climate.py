@@ -273,9 +273,12 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
         if not self.fan_modes or fan_mode not in self.fan_modes:
             raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_fan_mode",
-                translation_placeholders={"fan_mode": fan_mode},
+                translation_domain="climate",
+                translation_key="not_valid_fan_mode",
+                translation_placeholders={
+                    "mode": "fan_mode",
+                    "modes": ", ".join(self.fan_modes) if self.fan_modes else "",
+                },
             )
 
         await self.wake_up_if_asleep()
