@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from heimanconnect import DeviceProperty, HeimanDevice
-
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -183,6 +182,8 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         for key, cfg in property_mapping.items():
             if key in property_identifier.lower():
                 # Find matching SensorEntityDescription from SENSOR_TYPES
+                # This enables translation keys and icon mappings defined in
+                # the SensorEntityDescription to be applied to the entity
                 for desc in SENSOR_TYPES:
                     if desc.key == cfg["key"]:
                         config = desc
@@ -310,10 +311,12 @@ class HeimanSensorEntity(CoordinatorEntity[HeimanDataUpdateCoordinator], SensorE
         if value is None:
             return None
 
-        # Convert boolean to string representation for sensor platform
-        # until binary_sensor platform is implemented
+        # Boolean values are not valid native sensor states.
+        # Return None so numeric device classes do not bypass validation
+        # with a non-numeric string state; boolean properties should be
+        # exposed by the binary_sensor platform instead.
         if isinstance(value, bool):
-            return "on" if value else "off"
+            return None
 
         if not isinstance(value, (str, int, float)):
             _LOGGER.warning(

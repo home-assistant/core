@@ -30,19 +30,8 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@pytest.fixture
-def mock_api_client():
-    """Create a mock API client."""
-    client = AsyncMock()
-    client.async_get_user_info = AsyncMock()
-    client.async_get_homes = AsyncMock()
-    client.async_get_devices = AsyncMock()
-    client.async_get_device_detail = AsyncMock()
-    return client
-
-
 async def test_coordinator_update_success(
-    hass: HomeAssistant, mock_api_client: AsyncMock
+    hass: HomeAssistant, mock_api_client: MagicMock
 ) -> None:
     """Test successful coordinator update."""
     # Setup mocks
@@ -61,9 +50,10 @@ async def test_coordinator_update_success(
     mock_device.online = True
     mock_device.raw_data = {}
 
-    mock_api_client.async_get_user_info.return_value = mock_user
-    mock_api_client.async_get_homes.return_value = [mock_home]
-    mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
+    # The coordinator accesses cloud_client methods, so set return values on cloud_client
+    mock_api_client.cloud_client.async_get_user_info.return_value = mock_user
+    mock_api_client.cloud_client.async_get_homes.return_value = [mock_home]
+    mock_api_client.cloud_client.async_get_devices.return_value = {"device-1": mock_device}
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -3518,12 +3508,13 @@ async def test_coordinator_async_update_data_unexpected_exception_in_device_proc
 
 
 def test_infer_entity_type_bool() -> None:
-    """Test _infer_entity_type returns binary_sensor for bool values.
+    """Test _infer_entity_type returns sensor for bool values.
 
+    Currently returns 'sensor' until binary_sensor platform is implemented.
     This tests line 53 where prop_value is bool.
     """
-    assert _infer_entity_type(True) == "binary_sensor"
-    assert _infer_entity_type(False) == "binary_sensor"
+    assert _infer_entity_type(True) == "sensor"
+    assert _infer_entity_type(False) == "sensor"
 
 
 def test_infer_entity_type_numeric() -> None:
@@ -3537,13 +3528,14 @@ def test_infer_entity_type_numeric() -> None:
 
 
 def test_infer_entity_type_other() -> None:
-    """Test _infer_entity_type returns None for other types.
+    """Test _infer_entity_type returns sensor for other types.
 
+    Defaults to 'sensor' so properties are discoverable.
     This tests line 58 where prop_value is not bool or numeric.
     """
-    assert _infer_entity_type("string") is None
-    assert _infer_entity_type([1, 2, 3]) is None
-    assert _infer_entity_type({"key": "value"}) is None
+    assert _infer_entity_type("string") == "sensor"
+    assert _infer_entity_type([1, 2, 3]) == "sensor"
+    assert _infer_entity_type({"key": "value"}) == "sensor"
 
 
 async def test_coordinator_mqtt_init_exception(

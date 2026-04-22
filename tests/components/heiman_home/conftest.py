@@ -66,11 +66,22 @@ def mock_api_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.async_get_user_info = AsyncMock()
-        client.async_get_homes = AsyncMock()
-        client.async_get_devices = AsyncMock()
-        client.async_get_device_detail = AsyncMock()
-        client.async_get_device_properties = AsyncMock()
+        # Set up cloud_client mock
+        mock_cloud = MagicMock()
+        mock_cloud.async_get_user_info = AsyncMock()
+        mock_cloud.async_get_homes = AsyncMock()
+        mock_cloud.async_get_devices = AsyncMock()
+        mock_cloud.async_get_device_detail = AsyncMock()
+        mock_cloud.async_get_device_properties = AsyncMock()
+        client.cloud_client = mock_cloud
+        # Set up async_ensure_token_valid as it's called by the coordinator
+        client.async_ensure_token_valid = AsyncMock()
+        # Keep legacy methods for backward compatibility
+        client.async_get_user_info = client.cloud_client.async_get_user_info
+        client.async_get_homes = client.cloud_client.async_get_homes
+        client.async_get_devices = client.cloud_client.async_get_devices
+        client.async_get_device_detail = client.cloud_client.async_get_device_detail
+        client.async_get_device_properties = client.cloud_client.async_get_device_properties
         yield client
 
 

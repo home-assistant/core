@@ -1,9 +1,9 @@
 """Tests for the Heiman Home config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from heimanconnect import HeimanHome, HeimanUser
+from heimanconnect import HeimanAuthError, HeimanHome, HeimanUser
 import pytest
 import voluptuous as vol
 
@@ -20,7 +20,6 @@ from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -29,6 +28,22 @@ from tests.typing import ClientSessionGenerator
 __all__ = [
     "MockConfigEntry",
 ]
+
+
+def create_mock_cloud_client(
+    user_info: HeimanUser | None = None,
+    homes: list[HeimanHome] | None = None,
+    error: Exception | None = None,
+) -> MagicMock:
+    """Create a mock cloud client with optional error simulation."""
+    mock_cloud = MagicMock()
+    if error:
+        mock_cloud.async_get_user_info = AsyncMock(side_effect=error)
+        mock_cloud.async_get_homes = AsyncMock(side_effect=error)
+    else:
+        mock_cloud.async_get_user_info = AsyncMock(return_value=user_info)
+        mock_cloud.async_get_homes = AsyncMock(return_value=homes or [])
+    return mock_cloud
 
 
 @pytest.fixture
@@ -77,24 +92,22 @@ async def test_full_flow(
         )
 
         # Mock API calls after OAuth
-        with (
-            patch.object(
-                HeimanApiClient,
-                "async_get_user_info",
-                return_value=HeimanUser(user_id="test-user", email="test@example.com"),
-            ),
-            patch.object(
-                HeimanApiClient,
-                "async_get_homes",
-                return_value=[
-                    HeimanHome(
-                        home_id="test-home-id",
-                        home_name="Test Home",
-                        device_count=5,
-                        user_id="test-user",
-                    )
-                ],
-            ),
+        mock_cloud = create_mock_cloud_client(
+            user_info=HeimanUser(user_id="test-user", email="test@example.com"),
+            homes=[
+                HeimanHome(
+                    home_id="test-home-id",
+                    home_name="Test Home",
+                    device_count=5,
+                    user_id="test-user",
+                )
+            ],
+        )
+        with patch.object(
+            HeimanApiClient,
+            "cloud_client",
+            new_callable=PropertyMock,
+            return_value=mock_cloud,
         ):
             # Continue flow after OAuth callback
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -164,26 +177,22 @@ async def test_user_already_configured(
         )
 
         # Mock API calls - return same user_id as existing entry
-        with (
-            patch.object(
-                HeimanApiClient,
-                "async_get_user_info",
-                return_value=HeimanUser(
-                    user_id="test_user_id", email="test@example.com"
-                ),
-            ),
-            patch.object(
-                HeimanApiClient,
-                "async_get_homes",
-                return_value=[
-                    HeimanHome(
-                        home_id="test-home-id",
-                        home_name="Test Home",
-                        device_count=5,
-                        user_id="test_user_id",
-                    )
-                ],
-            ),
+        mock_cloud = create_mock_cloud_client(
+            user_info=HeimanUser(user_id="test_user_id", email="test@example.com"),
+            homes=[
+                HeimanHome(
+                    home_id="test-home-id",
+                    home_name="Test Home",
+                    device_count=5,
+                    user_id="test_user_id",
+                )
+            ],
+        )
+        with patch.object(
+            HeimanApiClient,
+            "cloud_client",
+            new_callable=PropertyMock,
+            return_value=mock_cloud,
         ):
             # Continue flow after OAuth callback
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -240,24 +249,22 @@ async def test_select_home_step(
         )
 
         # Mock API calls after OAuth
-        with (
-            patch.object(
-                HeimanApiClient,
-                "async_get_user_info",
-                return_value=HeimanUser(user_id="test-user", email="test@example.com"),
-            ),
-            patch.object(
-                HeimanApiClient,
-                "async_get_homes",
-                return_value=[
-                    HeimanHome(
-                        home_id="test-home-id",
-                        home_name="Test Home",
-                        device_count=5,
-                        user_id="test-user",
-                    )
-                ],
-            ),
+        mock_cloud = create_mock_cloud_client(
+            user_info=HeimanUser(user_id="test-user", email="test@example.com"),
+            homes=[
+                HeimanHome(
+                    home_id="test-home-id",
+                    home_name="Test Home",
+                    device_count=5,
+                    user_id="test-user",
+                )
+            ],
+        )
+        with patch.object(
+            HeimanApiClient,
+            "cloud_client",
+            new_callable=PropertyMock,
+            return_value=mock_cloud,
         ):
             # Continue flow after OAuth callback
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -312,17 +319,15 @@ async def test_no_home_selected(
         )
 
         # Mock API calls after OAuth - return empty homes list
-        with (
-            patch.object(
-                HeimanApiClient,
-                "async_get_user_info",
-                return_value=HeimanUser(user_id="test-user", email="test@example.com"),
-            ),
-            patch.object(
-                HeimanApiClient,
-                "async_get_homes",
-                return_value=[],
-            ),
+        mock_cloud = create_mock_cloud_client(
+            user_info=HeimanUser(user_id="test-user", email="test@example.com"),
+            homes=[],
+        )
+        with patch.object(
+            HeimanApiClient,
+            "cloud_client",
+            new_callable=PropertyMock,
+            return_value=mock_cloud,
         ):
             # Continue flow after OAuth callback
             result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -368,10 +373,12 @@ async def test_token_invalid_abort(
     )
 
     # Mock API call to fail with auth error
+    mock_cloud = create_mock_cloud_client(error=HeimanAuthError("Invalid token"))
     with patch.object(
         HeimanApiClient,
-        "async_get_user_info",
-        side_effect=ConfigEntryAuthFailed("Invalid token"),
+        "cloud_client",
+        new_callable=PropertyMock,
+        return_value=mock_cloud,
     ):
         # Continue flow after OAuth callback
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -418,24 +425,22 @@ async def test_select_home_without_home_id(
         )
 
     # Mock API calls after OAuth
-    with (
-        patch.object(
-            HeimanApiClient,
-            "async_get_user_info",
-            return_value=HeimanUser(user_id="test-user", email="test@example.com"),
-        ),
-        patch.object(
-            HeimanApiClient,
-            "async_get_homes",
-            return_value=[
-                HeimanHome(
-                    home_id="home-1",
-                    home_name="Home 1",
-                    device_count=5,
-                    user_id="test-user",
-                ),
-            ],
-        ),
+    mock_cloud = create_mock_cloud_client(
+        user_info=HeimanUser(user_id="test-user", email="test@example.com"),
+        homes=[
+            HeimanHome(
+                home_id="home-1",
+                home_name="Home 1",
+                device_count=5,
+                user_id="test-user",
+            ),
+        ],
+    )
+    with patch.object(
+        HeimanApiClient,
+        "cloud_client",
+        new_callable=PropertyMock,
+        return_value=mock_cloud,
     ):
         # Continue flow after OAuth callback
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -488,10 +493,12 @@ async def test_user_info_fetch_error_abort(
     )
 
     # Mock API call to fail with non-auth error
+    mock_cloud = create_mock_cloud_client(error=Exception("Network error"))
     with patch.object(
         HeimanApiClient,
-        "async_get_user_info",
-        side_effect=Exception("Network error"),
+        "cloud_client",
+        new_callable=PropertyMock,
+        return_value=mock_cloud,
     ):
         # Continue flow after OAuth callback
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -537,17 +544,16 @@ async def test_homes_fetch_error_abort(
     )
 
     # Mock API calls after OAuth
-    with (
-        patch.object(
-            HeimanApiClient,
-            "async_get_user_info",
-            return_value=HeimanUser(user_id="test-user", email="test@example.com"),
-        ),
-        patch.object(
-            HeimanApiClient,
-            "async_get_homes",
-            side_effect=Exception("Network error"),
-        ),
+    mock_cloud = MagicMock()
+    mock_cloud.async_get_user_info = AsyncMock(
+        return_value=HeimanUser(user_id="test-user", email="test@example.com")
+    )
+    mock_cloud.async_get_homes = AsyncMock(side_effect=Exception("Network error"))
+    with patch.object(
+        HeimanApiClient,
+        "cloud_client",
+        new_callable=PropertyMock,
+        return_value=mock_cloud,
     ):
         # Continue flow after OAuth callback
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -593,17 +599,16 @@ async def test_homes_fetch_token_invalid(
     )
 
     # Mock API calls - user info succeeds but homes fetch fails with auth error
-    with (
-        patch.object(
-            HeimanApiClient,
-            "async_get_user_info",
-            return_value=HeimanUser(user_id="test-user", email="test@example.com"),
-        ),
-        patch.object(
-            HeimanApiClient,
-            "async_get_homes",
-            side_effect=ConfigEntryAuthFailed("Invalid token"),
-        ),
+    mock_cloud = MagicMock()
+    mock_cloud.async_get_user_info = AsyncMock(
+        return_value=HeimanUser(user_id="test-user", email="test@example.com")
+    )
+    mock_cloud.async_get_homes = AsyncMock(side_effect=HeimanAuthError("Invalid token"))
+    with patch.object(
+        HeimanApiClient,
+        "cloud_client",
+        new_callable=PropertyMock,
+        return_value=mock_cloud,
     ):
         # Continue flow after OAuth callback
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -650,30 +655,28 @@ async def test_multiple_homes_selection(
         )
 
     # Mock API calls after OAuth
-    with (
-        patch.object(
-            HeimanApiClient,
-            "async_get_user_info",
-            return_value=HeimanUser(user_id="test-user", email="test@example.com"),
-        ),
-        patch.object(
-            HeimanApiClient,
-            "async_get_homes",
-            return_value=[
-                HeimanHome(
-                    home_id="home-1",
-                    home_name="Home 1",
-                    device_count=5,
-                    user_id="test-user",
-                ),
-                HeimanHome(
-                    home_id="home-2",
-                    home_name="Home 2",
-                    device_count=10,
-                    user_id="test-user",
-                ),
-            ],
-        ),
+    mock_cloud = create_mock_cloud_client(
+        user_info=HeimanUser(user_id="test-user", email="test@example.com"),
+        homes=[
+            HeimanHome(
+                home_id="home-1",
+                home_name="Home 1",
+                device_count=5,
+                user_id="test-user",
+            ),
+            HeimanHome(
+                home_id="home-2",
+                home_name="Home 2",
+                device_count=10,
+                user_id="test-user",
+            ),
+        ],
+    )
+    with patch.object(
+        HeimanApiClient,
+        "cloud_client",
+        new_callable=PropertyMock,
+        return_value=mock_cloud,
     ):
         # Continue flow after OAuth callback
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

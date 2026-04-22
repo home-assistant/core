@@ -3,9 +3,9 @@
 import logging
 from typing import Any
 
-from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
 import voluptuous as vol
 
+from heimanconnect import HeimanAuthError, HeimanHome, HeimanTokenExpiredError
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -56,40 +56,44 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         try:
-            user_info = await api_client.cloud_client.async_get_user_info()
-        except HeimanTokenExpiredError:
-            return self.async_abort(reason="token_invalid")
-        except HeimanAuthError:
-            return self.async_abort(reason="token_invalid")
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Failed to get user info: %s", err)
-            await api_client.close()
-            return self.async_abort(reason="user_info_failed")
-
-        # Get home info
-        try:
-            homes = await api_client.cloud_client.async_get_homes()
-            if not homes:
+            # Get user info
+            try:
+                user_info = await api_client.cloud_client.async_get_user_info()
+            except HeimanTokenExpiredError:
                 await api_client.close()
-                return self.async_abort(reason="no_homes")
-        except HeimanTokenExpiredError:
-            await api_client.close()
-            return self.async_abort(reason="token_invalid")
-        except HeimanAuthError:
-            await api_client.close()
-            return self.async_abort(reason="token_invalid")
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Failed to get homes: %s", err)
-            await api_client.close()
-            return self.async_abort(reason="homes_fetch_failed")
+                return self.async_abort(reason="token_invalid")
+            except HeimanAuthError:
+                await api_client.close()
+                return self.async_abort(reason="token_invalid")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Failed to get user info: %s", err)
+                return self.async_abort(reason="user_info_failed")
 
-        # Store temporary data for home selection
-        self._auth_info.homes = homes if isinstance(homes, list) else []
-        self._auth_info.user_info = user_info
-        self._auth_info.auth_data = data
+            # Get home info
+            try:
+                homes = await api_client.cloud_client.async_get_homes()
+                if not homes:
+                    return self.async_abort(reason="no_homes")
+            except HeimanTokenExpiredError:
+                await api_client.close()
+                return self.async_abort(reason="token_invalid")
+            except HeimanAuthError:
+                await api_client.close()
+                return self.async_abort(reason="token_invalid")
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Failed to get homes: %s", err)
+                return self.async_abort(reason="homes_fetch_failed")
 
-        # Enter home selection step
-        return await self.async_step_select_home()
+            # Store temporary data for home selection
+            self._auth_info.homes = homes if isinstance(homes, list) else []
+            self._auth_info.user_info = user_info
+            self._auth_info.auth_data = data
+
+            # Enter home selection step
+            return await self.async_step_select_home()
+        finally:
+            # Always close the temporary API client to prevent resource leaks
+            await api_client.close()
 
     async def async_step_select_home(
         self, user_input: dict[str, Any] | None = None

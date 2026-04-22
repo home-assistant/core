@@ -21,7 +21,6 @@ from heimanconnect import (
     HeimanTokenExpiredError,
     HeimanUser,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -127,9 +126,23 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             ConfigEntryAuthFailed: If authentication fails
             UpdateFailed: If data fetch fails
         """
-        # Ensure token is valid before making requests
+        # Ensure token is valid before making requests.
+        # Preserve UpdateFailed vs ConfigEntryAuthFailed distinction by
+        # only converting authentication-related token errors (HeimanAuthError,
+        # HeimanTokenExpiredError) to ConfigEntryAuthFailed; other errors
+        # (TimeoutError, HeimanConnectionError) are converted to UpdateFailed.
         try:
             await self.api_client.async_ensure_token_valid()
+        except ConfigEntryAuthFailed:
+            raise
+        except UpdateFailed:
+            raise
+        except (HeimanAuthError, HeimanTokenExpiredError) as err:
+            _LOGGER.error("Token validation failed: %s", err)
+            raise ConfigEntryAuthFailed(f"Token validation failed: {err}") from err
+        except (TimeoutError, HeimanConnectionError) as err:
+            _LOGGER.error("Token refresh failed: %s", err)
+            raise UpdateFailed(f"Token refresh failed: {err}") from err
         except Exception as err:
             _LOGGER.error("Token validation failed: %s", err)
             raise ConfigEntryAuthFailed(f"Token validation failed: {err}") from err
