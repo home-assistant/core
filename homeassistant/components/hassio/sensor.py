@@ -15,19 +15,12 @@ from .const import (
     ADDONS_COORDINATOR,
     ATTR_CPU_PERCENT,
     ATTR_MEMORY_PERCENT,
-    ATTR_SLUG,
-    ATTR_VERSION,
-    ATTR_VERSION_LATEST,
     CORE_CONTAINER,
-    DATA_KEY_ADDONS,
-    DATA_KEY_CORE,
-    DATA_KEY_HOST,
-    DATA_KEY_OS,
-    DATA_KEY_SUPERVISOR,
     MAIN_COORDINATOR,
     STATS_COORDINATOR,
     SUPERVISOR_CONTAINER,
 )
+from .coordinator import StatsDataKey
 from .entity import (
     HassioAddonEntity,
     HassioHostEntity,
@@ -35,15 +28,15 @@ from .entity import (
     HassioStatsEntity,
 )
 
-COMMON_ENTITY_DESCRIPTIONS = (
+ADDON_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         entity_registry_enabled_default=False,
-        key=ATTR_VERSION,
+        key="version",
         translation_key="version",
     ),
     SensorEntityDescription(
         entity_registry_enabled_default=False,
-        key=ATTR_VERSION_LATEST,
+        key="version_latest",
         translation_key="version_latest",
     ),
 )
@@ -65,7 +58,18 @@ STATS_ENTITY_DESCRIPTIONS = (
     ),
 )
 
-OS_ENTITY_DESCRIPTIONS = COMMON_ENTITY_DESCRIPTIONS
+OS_ENTITY_DESCRIPTIONS = (
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="version",
+        translation_key="version",
+    ),
+    SensorEntityDescription(
+        entity_registry_enabled_default=False,
+        key="version_latest",
+        translation_key="version_latest",
+    ),
+)
 
 HOST_ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -126,8 +130,8 @@ async def async_setup_entry(
             coordinator=addons_coordinator,
             entity_description=entity_description,
         )
-        for addon in addons_coordinator.data[DATA_KEY_ADDONS].values()
-        for entity_description in COMMON_ENTITY_DESCRIPTIONS
+        for addon in addons_coordinator.data.addons.values()
+        for entity_description in ADDON_ENTITY_DESCRIPTIONS
     )
 
     # Add-on stats sensors (cpu_percent, memory_percent)
@@ -135,12 +139,12 @@ async def async_setup_entry(
         HassioStatsSensor(
             coordinator=stats_coordinator,
             entity_description=entity_description,
-            container_id=addon[ATTR_SLUG],
-            data_key=DATA_KEY_ADDONS,
-            device_id=addon[ATTR_SLUG],
-            unique_id_prefix=addon[ATTR_SLUG],
+            container_id=addon.addon.slug,
+            data_key=StatsDataKey.ADDONS,
+            device_id=addon.addon.slug,
+            unique_id_prefix=addon.addon.slug,
         )
-        for addon in addons_coordinator.data[DATA_KEY_ADDONS].values()
+        for addon in addons_coordinator.data.addons.values()
         for entity_description in STATS_ENTITY_DESCRIPTIONS
     )
 
@@ -150,7 +154,7 @@ async def async_setup_entry(
             coordinator=stats_coordinator,
             entity_description=entity_description,
             container_id=CORE_CONTAINER,
-            data_key=DATA_KEY_CORE,
+            data_key=StatsDataKey.CORE,
             device_id="core",
             unique_id_prefix="home_assistant_core",
         )
@@ -163,7 +167,7 @@ async def async_setup_entry(
             coordinator=stats_coordinator,
             entity_description=entity_description,
             container_id=SUPERVISOR_CONTAINER,
-            data_key=DATA_KEY_SUPERVISOR,
+            data_key=StatsDataKey.SUPERVISOR,
             device_id="supervisor",
             unique_id_prefix="home_assistant_supervisor",
         )
@@ -196,39 +200,38 @@ class HassioAddonSensor(HassioAddonEntity, SensorEntity):
     """Sensor to track a Hass.io add-on attribute."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return native value of entity."""
-        return self.coordinator.data[DATA_KEY_ADDONS][self._addon_slug][
-            self.entity_description.key
-        ]
+        return getattr(
+            self.coordinator.data.addons[self._addon_slug].addon,
+            self.entity_description.key,
+        )
 
 
 class HassioStatsSensor(HassioStatsEntity, SensorEntity):
     """Sensor to track container stats."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> float:
         """Return native value of entity."""
-        if self._data_key == DATA_KEY_ADDONS:
-            return self.coordinator.data[DATA_KEY_ADDONS][self._container_id][
-                self.entity_description.key
-            ]
-        return self.coordinator.data[self._data_key][self.entity_description.key]
+        assert self._stats is not None
+        return getattr(self._stats, self.entity_description.key)
 
 
 class HassioOSSensor(HassioOSEntity, SensorEntity):
     """Sensor to track a Hass.io OS attribute."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return native value of entity."""
-        return self.coordinator.data[DATA_KEY_OS][self.entity_description.key]
+        assert self.coordinator.data.os is not None
+        return getattr(self.coordinator.data.os, self.entity_description.key)
 
 
 class HostSensor(HassioHostEntity, SensorEntity):
     """Sensor to track a host attribute."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | float | None:
         """Return native value of entity."""
-        return self.coordinator.data[DATA_KEY_HOST][self.entity_description.key]
+        return getattr(self.coordinator.data.host, self.entity_description.key)
