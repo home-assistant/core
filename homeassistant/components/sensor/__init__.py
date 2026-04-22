@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, Undef
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.variance import ignore_variance
 
 from .const import (  # noqa: F401
     AMBIGUOUS_UNITS,
@@ -206,21 +207,21 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
     _invalid_suggested_unit_of_measurement_reported = False
-    _previous_uptime_value: datetime | None = None
+    _get_uptime: Callable[[datetime], datetime] | None = None
+    _uptime_drift_tolerance: int | None = None
 
     def _normalize_uptime(self, current_uptime: datetime) -> datetime:
         """Normalize uptime to suppress small drift between updates."""
         drift_tolerance = max(
             self._attr_uptime_drift_tolerance, UPTIME_MIN_TOLERANCE_SECONDS
         )
-        if (
-            not (previous_uptime := self._previous_uptime_value)
-            or abs((current_uptime - previous_uptime).total_seconds()) > drift_tolerance
-        ):
-            self._previous_uptime_value = current_uptime
-            return current_uptime
-
-        return previous_uptime
+        if self._get_uptime is None or self._uptime_drift_tolerance != drift_tolerance:
+            self._get_uptime = ignore_variance(
+                func=lambda value: value,
+                ignored_variance=timedelta(seconds=drift_tolerance),
+            )
+            self._uptime_drift_tolerance = drift_tolerance
+        return self._get_uptime(current_uptime)
 
     @callback
     def add_to_platform_start(
@@ -633,7 +634,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if device_class is SensorDeviceClass.UPTIME:
                 # Reset baseline so the first uptime after unavailable is not
                 # compared against a stale value.
-                self._previous_uptime_value = None
+                self._get_uptime = None
             return None
 
         # Received a datetime
