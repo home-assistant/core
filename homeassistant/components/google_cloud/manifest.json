@@ -9,6 +9,6 @@
   "iot_class": "cloud_push",
   "requirements": [
     "google-cloud-texttospeech==2.25.1",
-    "google-cloud-speech==2.31.1"
+    "google-cloud-speech==2.38.0"
   ]
 }
