@@ -2,6 +2,8 @@
 
 import logging
 
+from homeassistant.const import Platform
+
 DOMAIN = "xthings_cloud"
 LOGGER = logging.getLogger(__package__)
 
@@ -14,7 +16,5 @@ CONF_INSTANCE_ID = "instance_id"
 
 # Polling interval (seconds)
 DEFAULT_SCAN_INTERVAL = 1800
-
-from homeassistant.const import Platform
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
