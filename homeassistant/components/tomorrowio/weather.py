@@ -69,6 +69,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entity_registry = er.async_get(hass)
 

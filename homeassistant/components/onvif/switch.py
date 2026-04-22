@@ -69,6 +69,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a ONVIF switch platform."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     device = hass.data[DOMAIN][config_entry.unique_id]
 
     async_add_entities(

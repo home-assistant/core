@@ -29,6 +29,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     coordinator = hass.data[DOMAIN]
 
     async_add_entities(

@@ -170,6 +170,8 @@ def safe_registration(registration: dict) -> dict:
 def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
     return {
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
     }
 

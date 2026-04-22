@@ -1,4 +1,5 @@
 """Support for INSTEON Modems (PLM and Hub)."""
+# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
 import logging

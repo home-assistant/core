@@ -270,6 +270,8 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         _create_rfx, config, lambda event: hass.add_job(async_handle_receive, event)
     )
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 
     entry.async_on_unload(

@@ -27,6 +27,8 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     router = hass.data[DOMAIN].routers[discovery_info[ATTR_CONFIG_ENTRY_ID]]
     default_targets = discovery_info[CONF_RECIPIENT] or []
 

@@ -22,6 +22,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Mill Number."""
     if entry.data.get(CONNECTION_TYPE) == CLOUD:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         mill_data_coordinator: MillDataUpdateCoordinator = hass.data[DOMAIN][CLOUD][
             entry.data[CONF_USERNAME]
         ]

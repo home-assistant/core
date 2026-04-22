@@ -65,6 +65,8 @@ class ChromecastInfo:
         """
         cast_info = self.cast_info
         if self.cast_info.cast_type is None or self.cast_info.manufacturer is None:
+            # Uses legacy hass.data[DOMAIN] pattern
+            # pylint: disable-next=hass-use-runtime-data
             unknown_models = hass.data[DOMAIN]["unknown_models"]
             if self.cast_info.model_name not in unknown_models:
                 # Manufacturer and cast type is not available in mDNS data,

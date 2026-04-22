@@ -40,5 +40,7 @@ class DomainData:
     @cache
     def get(cls, hass: HomeAssistant) -> Self:
         """Get the global DomainData instance stored in hass.data."""
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=hass-use-runtime-data
         ret = hass.data[DOMAIN] = cls()
         return ret

@@ -88,6 +88,8 @@ async def async_unload_entry(
 def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry):
     """Populate default options."""
     host: str = entry.data[CONF_HOST]
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     imported_options: dict = hass.data[DOMAIN].get(f"imported_options_{host}", {})
     options = {
         CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,

@@ -58,6 +58,8 @@ async def async_setup_entry(
     # Grab hosts list once to examine whether the initial fetch has got some data for
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
     if (hosts := _get_hosts(router, True)) is None:
         return
