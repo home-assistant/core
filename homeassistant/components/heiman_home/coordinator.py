@@ -57,10 +57,16 @@ def _infer_entity_type(prop_value: Any) -> str | None:
         # platform is added, this should return "binary_sensor".
         return None
     if isinstance(prop_value, (int, float)):
-        # Numeric values are typically sensors
+        # Numeric values are typically sensors.
         return "sensor"
-    # String and other types: default to sensor so they are discoverable
-    return "sensor"
+    if isinstance(prop_value, str):
+        # String values are valid sensor native values.
+        return "sensor"
+    if isinstance(prop_value, (dict, list, tuple, set)):
+        # Non-scalar values cannot be represented as sensor native values.
+        return None
+    # Keep other scalar-like values discoverable.
+    return "sensor"  # pragma: no cover
 
 
 @dataclass

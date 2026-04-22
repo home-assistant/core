@@ -63,11 +63,12 @@ async def async_setup_entry(
                 elif hasattr(prop, "entity") and prop.entity not in (None, "sensor"):
                     continue
                 else:
-                    # Skip boolean-valued properties when auto-creating sensors
-                    # (unless explicitly marked as entity='sensor'), because
-                    # native_value always returns None for bool and this creates
+                    # Skip non-scalar and boolean-valued properties when
+                    # auto-creating sensors (unless explicitly marked as
+                    # entity='sensor'), because native_value returns None for
+                    # unsupported complex values and this creates
                     # permanently-unknown, unusable sensor entities.
-                    if prop.data_type == "bool":  # pragma: no cover
+                    if prop.data_type in {"bool", "array", "object"}:  # pragma: no cover
                         continue
                     unique_id = f"{device.device_id}_{property_id}_sensor"
                     if unique_id not in existing_entities:

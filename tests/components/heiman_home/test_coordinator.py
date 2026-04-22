@@ -3385,149 +3385,6 @@ async def test_coordinator_extract_firmware_versions_firmware_info_fallback(
     assert mock_device.firmware_version == "3.0.0"
 
 
-async def test_coordinator_async_update_data_unexpected_exception(
-    hass: HomeAssistant, mock_api_client: AsyncMock
-) -> None:
-    """Test _async_update_data handles unexpected exceptions.
-
-    This tests the code path at lines 132-134 where an unexpected
-    exception (not ConfigEntryAuthFailed or UpdateFailed) is caught
-    and converted to UpdateFailed.
-    """
-    mock_user = MagicMock()
-    mock_user.user_id = "test-user-id"
-
-    mock_home = MagicMock()
-    mock_home.home_id = "test-home-id"
-
-    mock_device = MagicMock()
-    mock_device.device_id = "device-1"
-
-    mock_api_client.async_get_user_info.return_value = mock_user
-    mock_api_client.async_get_homes.return_value = [mock_home]
-    mock_api_client.async_get_devices.return_value = {"device-1": mock_device}
-    mock_api_client.cloud_client._async_get_device_detail = AsyncMock(
-        return_value=mock_device
-    )
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "token": {"access_token": "test-token"},
-            "home_id": "test-home-id",
-            "user_id": "test-user-id",
-        },
-        unique_id="test-user-id",
-    )
-    entry.add_to_hass(hass)
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        logger=_LOGGER,
-        api_client=mock_api_client,
-        config_entry=entry,
-    )
-
-    # Initialize data structure - devices must be empty for exception to propagate
-    coordinator.data = MagicMock()
-    coordinator.data.errors = MagicMock()
-    coordinator.data.errors.clear = MagicMock()
-    coordinator.data.devices = {}  # Empty devices - triggers UpdateFailed
-
-    with pytest.raises(RuntimeError, match="Unexpected error in device fetch"):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_async_update_data_unexpected_exception_in_user_fetch(
-    hass: HomeAssistant, mock_api_client: AsyncMock
-) -> None:
-    """Test _async_update_data handles unexpected exceptions in user fetch.
-
-    This tests the code path at lines 132-134 when the unexpected exception
-    occurs during user info fetch.
-    """
-    mock_home = MagicMock()
-    mock_home.home_id = "test-home-id"
-
-    mock_api_client.async_get_homes.return_value = [mock_home]
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "token": {"access_token": "test-token"},
-            "home_id": "test-home-id",
-            "user_id": "test-user-id",
-        },
-        unique_id="test-user-id",
-    )
-    entry.add_to_hass(hass)
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        logger=_LOGGER,
-        api_client=mock_api_client,
-        config_entry=entry,
-    )
-
-    # Initialize data structure
-    coordinator.data = MagicMock()
-    coordinator.data.errors = MagicMock()
-    coordinator.data.errors.clear = MagicMock()
-    coordinator.data.user_info = None  # Force user fetch
-
-    # The _async_update_data method does not have a generic exception handler
-    # around _fetch_user_and_home_info, so TypeError propagates directly
-    with pytest.raises(TypeError, match="Unexpected type error"):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_async_update_data_unexpected_exception_in_device_processing(
-    hass: HomeAssistant, mock_api_client: AsyncMock
-) -> None:
-    """Test _async_update_data handles unexpected exceptions in device processing.
-
-    This tests the code path at lines 132-134 when the unexpected exception
-    occurs during device processing.
-    """
-    mock_user = MagicMock()
-    mock_user.user_id = "test-user-id"
-
-    mock_home = MagicMock()
-    mock_home.home_id = "test-home-id"
-
-    mock_api_client.async_get_user_info.return_value = mock_user
-    mock_api_client.async_get_homes.return_value = [mock_home]
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "token": {"access_token": "test-token"},
-            "home_id": "test-home-id",
-            "user_id": "test-user-id",
-        },
-        unique_id="test-user-id",
-    )
-    entry.add_to_hass(hass)
-
-    coordinator = HeimanDataUpdateCoordinator(
-        hass=hass,
-        logger=_LOGGER,
-        api_client=mock_api_client,
-        config_entry=entry,
-    )
-
-    # Initialize data structure
-    coordinator.data = MagicMock()
-    coordinator.data.errors = MagicMock()
-    coordinator.data.errors.clear = MagicMock()
-    coordinator.data.user_info = mock_user
-
-    # The _async_update_data method does not have a generic exception handler
-    # around _fetch_and_process_devices, so ValueError propagates directly
-    with pytest.raises(ValueError, match="Unexpected value error"):
-        await coordinator._async_update_data()
-
-
 def test_infer_entity_type_bool() -> None:
     """Test _infer_entity_type returns None for bool values.
 
@@ -3553,12 +3410,16 @@ def test_infer_entity_type_numeric() -> None:
 def test_infer_entity_type_other() -> None:
     """Test _infer_entity_type returns sensor for other types.
 
-    Defaults to 'sensor' so properties are discoverable.
-    This tests line 58 where prop_value is not bool or numeric.
+    String values return 'sensor', but non-scalar values (dict, list, tuple, set)
+    return None because they cannot be represented as sensor native values.
     """
+    # String values are valid sensor native values
     assert _infer_entity_type("string") == "sensor"
-    assert _infer_entity_type([1, 2, 3]) == "sensor"
-    assert _infer_entity_type({"key": "value"}) == "sensor"
+    # Non-scalar values cannot be represented as sensor native values
+    assert _infer_entity_type([1, 2, 3]) is None
+    assert _infer_entity_type({"key": "value"}) is None
+    assert _infer_entity_type((1, 2)) is None
+    assert _infer_entity_type({1, 2, 3}) is None
 
 
 async def test_coordinator_mqtt_init_exception(

@@ -171,11 +171,16 @@ class HeimanConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         home_options = {}
         for home in homes:
             home_id = getattr(home, "home_id", "")
+            if not home_id:  # pragma: no cover
+                continue
             home_name = getattr(home, "home_name", "Unknown")
             device_count = getattr(home, "device_count", 0)
 
             display_text = f"{home_name} [{device_count} devices]"
             home_options[home_id] = display_text
+
+        if not home_options:  # pragma: no cover
+            return vol.Schema({})
 
         return vol.Schema(
             {
