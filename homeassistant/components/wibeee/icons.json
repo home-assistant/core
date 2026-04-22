@@ -9,41 +9,41 @@
       }
     },
     "sensor": {
-      "phase_voltage": {
-        "default": "mdi:sine-wave"
-      },
-      "current": {
-        "default": "mdi:flash-auto"
-      },
-      "apparent_power": {
-        "default": "mdi:flash-circle"
+      "active_energy": {
+        "default": "mdi:pulse"
       },
       "active_power": {
         "default": "mdi:flash"
       },
-      "inductive_reactive_power": {
-        "default": "mdi:flash-outline"
+      "angle": {
+        "default": "mdi:angle-acute"
       },
-      "capacitive_reactive_power": {
-        "default": "mdi:flash-outline"
-      },
-      "frequency": {
-        "default": "mdi:current-ac"
-      },
-      "power_factor": {
-        "default": "mdi:math-cos"
-      },
-      "active_energy": {
-        "default": "mdi:pulse"
-      },
-      "inductive_reactive_energy": {
-        "default": "mdi:alpha-e-circle-outline"
+      "apparent_power": {
+        "default": "mdi:flash-circle"
       },
       "capacitive_reactive_energy": {
         "default": "mdi:alpha-e-circle-outline"
       },
-      "angle": {
-        "default": "mdi:angle-acute"
+      "capacitive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "current": {
+        "default": "mdi:flash-auto"
+      },
+      "frequency": {
+        "default": "mdi:current-ac"
+      },
+      "inductive_reactive_energy": {
+        "default": "mdi:alpha-e-circle-outline"
+      },
+      "inductive_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "phase_voltage": {
+        "default": "mdi:sine-wave"
+      },
+      "power_factor": {
+        "default": "mdi:math-cos"
       },
       "thd_current": {
         "default": "mdi:chart-bubble"
