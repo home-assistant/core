@@ -695,7 +695,7 @@ async def test_registry_not_visible_by_default(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test an entity that is not enabled by default or not."""
+    """Test an entity that is not visible by default."""
     await mqtt_mock_entry()
     state = hass.states.get("sensor.test")
     assert state is not None
