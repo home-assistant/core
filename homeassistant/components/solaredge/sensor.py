@@ -594,9 +594,7 @@ class SolarEdgeBatterySensor(SolarEdgeSensorEntity):
         """Initialize the per-battery sensor."""
         super().__init__(description, data_service)
         self._serial = serial
-        self._attr_unique_id = (
-            f"{data_service.site_id}_{serial}_{description.key}"
-        )
+        self._attr_unique_id = f"{data_service.site_id}_{serial}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{data_service.site_id}_{serial}")},
             manufacturer="SolarEdge",

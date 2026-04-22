@@ -412,4 +412,3 @@ async def test_modules_coordinator_no_energy_data(
         {"state", "sum"},
     )
     assert not stats
-
