@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
 import aiohttp
-from rotarex_dimes_srg_api import InvalidAuth, RotarexApi, RotarexTank
+from rotarex_dimes_srg_api import InvalidAuth, RotarexApi, RotarexSyncData, RotarexTank
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -25,7 +27,44 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=15)
 
 
-class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]):
+def _parse_synch_date(synch_date: str) -> datetime | None:
+    """Parse a synch_date string, replacing timezone with HA local timezone.
+
+    The API returns local time incorrectly tagged as UTC (+00:00).
+    We strip any timezone info and reattach the HA configured local timezone.
+    """
+    parsed = dt_util.parse_datetime(synch_date)
+    if parsed is None:
+        return None
+    return parsed.replace(tzinfo=dt_util.get_default_time_zone())
+
+
+def _latest_sync(tank: RotarexTank) -> tuple[RotarexSyncData | None, datetime | None]:
+    """Return the most recent synchronization entry for the tank and its parsed datetime."""
+    latest_sync: RotarexSyncData | None = None
+    latest_parsed: datetime | None = None
+    for sync in tank.synch_datas:
+        parsed = _parse_synch_date(sync.synch_date)
+        if parsed is None:
+            continue
+        if latest_parsed is None or parsed > latest_parsed:
+            latest_sync = sync
+            latest_parsed = parsed
+    return latest_sync, latest_parsed
+
+
+@dataclass(slots=True)
+class RotarexTankData:
+    """Per-tank data computed once per coordinator update."""
+
+    tank: RotarexTank
+    latest_sync: RotarexSyncData | None
+    latest_sync_dt: datetime | None
+
+
+class RotarexDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[str, RotarexTankData]]
+):
     """Class to manage fetching Rotarex data."""
 
     def __init__(
@@ -67,11 +106,10 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
                 translation_key="update_failed",
             ) from err
 
-    async def _async_update_data(self) -> dict[str, RotarexTank]:
+    async def _async_update_data(self) -> dict[str, RotarexTankData]:
         """Fetch data from API endpoint."""
         try:
             tanks = await self.api.fetch_tanks()
-            return {tank.guid: tank for tank in tanks}
         except InvalidAuth as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -83,8 +121,14 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
                 translation_key="update_failed",
             ) from err
         except Exception as err:
-            _LOGGER.exception("Unexpected error fetching Rotarex data")
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+        result: dict[str, RotarexTankData] = {}
+        for tank in tanks:
+            sync, sync_dt = _latest_sync(tank)
+            result[tank.guid] = RotarexTankData(
+                tank=tank, latest_sync=sync, latest_sync_dt=sync_dt
+            )
+        return result
