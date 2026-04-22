@@ -264,12 +264,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Bioweapon defense mode."""
-        if Scope.VEHICLE_CMDS not in self.scopes:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="missing_scope_vehicle_cmds",
-            )
-
         if not self.fan_modes or fan_mode not in self.fan_modes:
             raise ServiceValidationError(
                 translation_domain="climate",
