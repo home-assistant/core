@@ -108,10 +108,20 @@ class HassEnforceConfigEntryUniqueIdNoIpChecker(BaseChecker):
             return
         if node.func.attrname != "async_set_unique_id":
             return
-        if not node.args:
+
+        unique_id_node: nodes.NodeNG | None = None
+        if node.args:
+            unique_id_node = node.args[0]
+        elif node.keywords:
+            for keyword in node.keywords:
+                if keyword.arg == "unique_id":
+                    unique_id_node = keyword.value
+                    break
+
+        if unique_id_node is None:
             return
 
-        ref = _value_references_ip(node.args[0])
+        ref = _value_references_ip(unique_id_node)
         if ref:
             self.add_message(
                 "hass-unique-id-ip-based",

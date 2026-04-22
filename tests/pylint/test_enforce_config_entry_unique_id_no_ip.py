@@ -189,6 +189,22 @@ def test_enforce_unique_id_no_ip_bad_assign(
             "homeassistant.components.test.config_flow",
             id="async_set_string_host",
         ),
+        pytest.param(
+            """
+        await self.async_set_unique_id(unique_id=entry.data[CONF_HOST])
+        """,
+            "homeassistant.components.test.config_flow",
+            id="async_set_conf_host_keyword",
+        ),
+        pytest.param(
+            """
+        await self.async_set_unique_id(
+            unique_id=data[CONF_IP_ADDRESS], raise_on_progress=False
+        )
+        """,
+            "homeassistant.components.test.config_flow",
+            id="async_set_conf_ip_keyword_raise_on_progress_false",
+        ),
     ],
 )
 def test_enforce_unique_id_no_ip_bad_call(
