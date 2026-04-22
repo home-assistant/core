@@ -82,7 +82,7 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
                     err,
                 )
                 errors["base"] = "share_unavailable"
-            except Exception:  # pragma: no cover - defensive logging
+            except Exception:
                 _LOGGER.exception(
                     "Unexpected exception while validating ScorpionTrack share"
                 )
