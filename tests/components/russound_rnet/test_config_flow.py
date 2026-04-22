@@ -402,3 +402,52 @@ async def test_empty_sources_and_zones_excluded(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SOURCES] == {"1": "Sonos", "3": "Radio"}
     assert result["data"][CONF_ZONES] == {"1_1": "Kitchen", "1_4": "Office"}
+
+
+async def test_single_controller_model_skips_controllers_step(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test that CAS44 (max_controllers=1) skips the controllers step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TYPE: TYPE_TCP},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_TCP_STEP_INPUT,
+    )
+    assert result["step_id"] == "model"
+
+    # Select CAS44 (single-controller model)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "cas44"},
+    )
+    # Should skip controllers step and go directly to sources
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sources"
+
+    # Enter source names (CAS44 has 4 sources)
+    source_input = {f"source_{i}": f"Source {i}" for i in range(1, 5)}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        source_input,
+    )
+    assert result["step_id"] == "zones"
+
+    # Enter zone names (CAS44 has 4 zones, 1 controller)
+    zone_input = {f"zone_1_{z}": f"Zone {z}" for z in range(1, 5)}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        zone_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "CAS44"
+    assert result["data"][CONF_CONTROLLERS] == 1
+    assert result["data"][CONF_MODEL] == "cas44"
