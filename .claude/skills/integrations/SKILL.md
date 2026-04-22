@@ -14,6 +14,7 @@ description: Everything you need to know to build, test and review Home Assistan
 - Do NOT allow users to set config entry names in config flows. Names are automatically generated or can be customized later in UI. Exception: helper integrations may allow custom names.
 - For entity actions and entity services, avoid requesting redundant defensive checks for fields already enforced by Home Assistant validation schemas and entity filters; only request extra guards when values bypass validation or are transformed unsafely.
 - When validation guarantees a key is present, prefer direct dictionary indexing (`data["key"]`) over `.get("key")` so invalid assumptions fail fast.
+- Integrations should be thin wrappers. Protocol parsing, device state machines, or other domain logic belong in a separate PyPI library, not in the integration itself. If unsure, ask before inlining.
 
 The following platforms have extra guidelines:
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
@@ -40,7 +41,3 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 ## Testing Requirements
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
-
-## Reviewing guidelines
-
-- When reviewing an integration, check if there is business logic that is uncommon for Home Assistant integrations. If there is, suggest moving it out of the integration and into a separate library.
