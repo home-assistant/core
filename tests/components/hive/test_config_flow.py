@@ -113,6 +113,8 @@ async def test_user_flow_uppercase_username_normalized_for_auth(
     assert result2["data"][CONF_USERNAME] == uppercase_username
     assert mock_auth.call_args.kwargs["username"] == uppercase_username.lower()
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == USERNAME
 
 
 async def test_user_flow_duplicate_username_with_different_casing_aborts(
@@ -608,7 +610,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
-            CONF_USERNAME: USERNAME,
+            CONF_USERNAME: USERNAME.upper(),
             CONF_PASSWORD: PASSWORD,
         },
     )
