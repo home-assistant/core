@@ -77,8 +77,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
     async_setup_websocket_api(hass)
-    async_register_serial_port_scanner(hass, _async_scan_serial_ports)
-    serial_proxy.set_hass_loop(hass.loop)
+
+    if "usb" in hass.config.components:
+        async_register_serial_port_scanner(hass, _async_scan_serial_ports)
+        serial_proxy.set_hass_loop(hass.loop)
+
     return True
 
 
