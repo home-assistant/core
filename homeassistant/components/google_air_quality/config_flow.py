@@ -194,7 +194,6 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
                 return self.async_abort(reason="already_configured")
             session = async_get_clientsession(self.hass)
-            referrer = user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
             auth = Auth(session, user_input[CONF_API_KEY], referrer=referrer)
             api = GoogleAirQualityApi(auth)
             if await _validate_input(user_input, api, errors, description_placeholders):
