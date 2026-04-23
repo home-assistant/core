@@ -134,13 +134,13 @@ async def test_user_flow_duplicate_username_with_different_casing_aborts(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: USERNAME.upper(), CONF_PASSWORD: PASSWORD},
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
