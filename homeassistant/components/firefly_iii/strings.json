@@ -1,4 +1,9 @@
 {
+  "common": {
+    "api_key": "Access token",
+    "api_key_description": "The access token for authenticating with Firefly III",
+    "verify_ssl_description": "Verify the SSL certificate of the Firefly III instance"
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -14,39 +19,39 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:component::firefly_iii::common::api_key%]"
         },
         "data_description": {
-          "api_key": "The new API access token for authenticating with Firefly III"
+          "api_key": "[%key:component::firefly_iii::common::api_key_description%]"
         },
-        "description": "The access token for your Firefly III instance is invalid and needs to be updated. Go to **Options > Remote access and tokens**. Create a new personal access token and copy it (it will only display once)."
+        "description": "The access token for your Firefly III instance is invalid and needs to be updated. Go to **Options > Remote access and tokens**. Create a new **personal access token** and copy it (it will only display once)."
       },
       "reconfigure": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key": "[%key:component::firefly_iii::common::api_key%]",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "api_key": "[%key:component::firefly_iii::config::step::user::data_description::api_key%]",
+          "api_key": "[%key:component::firefly_iii::common::api_key_description%]",
           "url": "[%key:common::config_flow::data::url%]",
-          "verify_ssl": "[%key:component::firefly_iii::config::step::user::data_description::verify_ssl%]"
+          "verify_ssl": "[%key:component::firefly_iii::common::verify_ssl_description%]"
         },
         "description": "Use the following form to reconfigure your Firefly III instance.",
         "title": "Reconfigure Firefly III Integration"
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key": "[%key:component::firefly_iii::common::api_key%]",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "api_key": "The API key for authenticating with Firefly III",
+          "api_key": "[%key:component::firefly_iii::common::api_key_description%]",
           "url": "[%key:common::config_flow::data::url%]",
-          "verify_ssl": "Verify the SSL certificate of the Firefly III instance"
+          "verify_ssl": "[%key:component::firefly_iii::common::verify_ssl_description%]"
         },
-        "description": "You can create an API key in the Firefly III UI. Go to **Options > Remote access and tokens**. Create a new personal access token and copy it (it will only display once)."
+        "description": "You can create an access token in the Firefly III UI. Go to **Options > Remote access and tokens**. Create a new **personal access token** and copy it (it will only display once)."
       }
     }
   },

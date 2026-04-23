@@ -67,7 +67,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_hvac_mode": ClimateHVACModeCondition,
-    "is_off": make_entity_state_condition(DOMAIN, HVACMode.OFF),
+    "is_off": make_entity_state_condition(DOMAIN, HVACMode.OFF, support_duration=True),
     "is_on": make_entity_state_condition(
         DOMAIN,
         {
