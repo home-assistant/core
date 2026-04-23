@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 import json
@@ -75,6 +76,20 @@ class HeimanData:
     devices: dict[str, HeimanDevice] = field(default_factory=dict)
     last_update: datetime | None = None
     errors: dict[str, str] = field(default_factory=dict)
+
+
+async def _async_call_cleanup_method(
+    target: object, method_names: tuple[str, ...]
+) -> None:
+    """Call the first available cleanup method on a target."""
+    for method_name in method_names:
+        method = getattr(target, method_name, None)
+        if method is None:
+            continue  # pragma: no cover - defensive cleanup helper
+        result = method()
+        if hasattr(result, "__await__"):  # pragma: no cover - defensive cleanup helper
+            await result
+        return
 
 
 class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
@@ -589,10 +604,34 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
         except HeimanMQTTError as err:
             _LOGGER.error("Failed to initialize MQTT client: %s", err)
+            # Disconnect any partially connected client before clearing reference
+            if self.mqtt_client is not None:  # pragma: no cover - defensive cleanup in exception path
+                with contextlib.suppress(Exception):
+                    await _async_call_cleanup_method(
+                        self.mqtt_client,
+                        (
+                            "async_disconnect",
+                            "disconnect",
+                            "async_close",
+                            "close",
+                        ),
+                    )
             # Clear mqtt_client so future calls can retry
             self.mqtt_client = None
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unexpected error initializing MQTT client: %s", err)
+            # Disconnect any partially connected client before clearing reference
+            if self.mqtt_client is not None:  # pragma: no cover - defensive cleanup in exception path
+                with contextlib.suppress(Exception):
+                    await _async_call_cleanup_method(
+                        self.mqtt_client,
+                        (
+                            "async_disconnect",
+                            "disconnect",
+                            "async_close",
+                            "close",
+                        ),
+                    )
             # Clear mqtt_client so future calls can retry
             self.mqtt_client = None
 
@@ -695,7 +734,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         Returns:
             List of online HeimanDevice objects
         """
-        return [device for device in self.data.devices.values() if device.online]
+        return [
+            device for device in self.data.devices.values() if device.online is True
+        ]
 
     def get_device_property(self, device_id: str, property_name: str) -> Any | None:
         """Get device property value from cache.

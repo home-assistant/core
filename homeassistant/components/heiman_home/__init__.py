@@ -109,15 +109,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeimanConfigEntry) -> bo
         await coordinator.async_init_mqtt_client()
     except Exception:
         # Clean up resources if setup fails
-        await _async_call_cleanup_method(
-            coordinator,
-            (
-                "async_disconnect_mqtt_client",
-                "disconnect_mqtt_client",
-                "async_disconnect",
-                "disconnect",
-            ),
-        )
+        mqtt_client = getattr(coordinator, "mqtt_client", None)
+        if mqtt_client is not None:  # pragma: no cover - defensive cleanup in exception path
+            await _async_call_cleanup_method(
+                mqtt_client,
+                (
+                    "async_disconnect",
+                    "disconnect",
+                    "async_close",
+                    "close",
+                ),
+            )
         await _async_call_cleanup_method(api_client, ("async_close", "close"))
         raise
 
