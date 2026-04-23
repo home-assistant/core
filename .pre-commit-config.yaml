@@ -23,6 +23,7 @@ repos:
       - id: zizmor
         args:
           - --pedantic
+        exclude: ^\.github/workflows/check-requirements\.lock\.yml$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -46,6 +47,7 @@ repos:
         additional_dependencies:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
+        exclude: ^\.github/workflows/check-requirements\.lock\.yml$
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
     hooks:
