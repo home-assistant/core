@@ -21,8 +21,9 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER, BeoModel
 from .services import async_setup_services
+from .util import get_remotes
 from .websocket import BeoWebsocket
 
 
@@ -81,6 +82,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
         identifiers={(DOMAIN, entry.unique_id)},
         model=entry.data[CONF_MODEL],
     )
+
+    # Create devices for paired Beoremote One remotes
+    for remote in await get_remotes(client):
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, f"{remote.serial_number}_{entry.unique_id}")},
+            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{entry.unique_id}",
+            model=BeoModel.BEOREMOTE_ONE,
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, entry.unique_id),
+        )
 
     websocket = BeoWebsocket(hass, entry, client)
 

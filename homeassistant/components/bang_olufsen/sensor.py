@@ -21,13 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
-from .const import (
-    CONNECTION_STATUS,
-    DOMAIN,
-    MANUFACTURER,
-    BeoModel,
-    WebsocketNotification,
-)
+from .const import CONNECTION_STATUS, DOMAIN, WebsocketNotification
 from .entity import BeoEntity
 from .util import get_remotes, supports_battery
 
@@ -122,12 +116,6 @@ class BeoSensorRemoteBatteryLevel(BeoSensor):
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
-            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",
-            model=BeoModel.BEOREMOTE_ONE,
-            serial_number=remote.serial_number,
-            sw_version=remote.app_version,
-            manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, self._unique_id),
         )
         self._attr_native_value = remote.battery_level
         self._remote = remote
