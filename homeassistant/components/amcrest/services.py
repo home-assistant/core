@@ -8,8 +8,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .camera import _ATTR_COLOR_BW, _CBW, _MOV
-from .const import DOMAIN
+from .const import ATTR_COLOR_BW, CBW, DOMAIN, MOV
 
 _ATTR_PRESET = "preset"
 _ATTR_PTZ_MOV = "movement"
@@ -52,7 +51,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "set_color_bw",
         entity_domain=CAMERA_DOMAIN,
-        schema={vol.Required(_ATTR_COLOR_BW): vol.In(_CBW)},
+        schema={vol.Required(ATTR_COLOR_BW): vol.In(CBW)},
         func="async_set_color_bw",
     )
     service.async_register_platform_entity_service(
@@ -61,7 +60,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "ptz_control",
         entity_domain=CAMERA_DOMAIN,
         schema={
-            vol.Required(_ATTR_PTZ_MOV): vol.In(_MOV),
+            vol.Required(_ATTR_PTZ_MOV): vol.In(MOV),
             vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
         },
         func="async_ptz_control",

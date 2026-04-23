@@ -27,10 +27,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    ATTR_COLOR_BW,
     CAMERA_WEB_SESSION_TIMEOUT,
+    CBW,
     COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
+    MOV,
     RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
@@ -46,29 +49,10 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 STREAM_SOURCE_LIST = ["snapshot", "mjpeg", "rtsp"]
 
-_MOV = [
-    "zoom_out",
-    "zoom_in",
-    "right",
-    "left",
-    "up",
-    "down",
-    "right_down",
-    "right_up",
-    "left_down",
-    "left_up",
-]
 _ZOOM_ACTIONS = ["ZoomWide", "ZoomTele"]
 _MOVE_1_ACTIONS = ["Right", "Left", "Up", "Down"]
 _MOVE_2_ACTIONS = ["RightDown", "RightUp", "LeftDown", "LeftUp"]
 _ACTION = _ZOOM_ACTIONS + _MOVE_1_ACTIONS + _MOVE_2_ACTIONS
-
-_ATTR_COLOR_BW = "color_bw"
-
-_CBW_COLOR = "color"
-_CBW_AUTO = "auto"
-_CBW_BW = "bw"
-_CBW = [_CBW_COLOR, _CBW_AUTO, _CBW_BW]
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
@@ -237,7 +221,7 @@ class AmcrestCam(Camera):
                 self._motion_recording_enabled
             )
         if self._color_bw is not None:
-            attr[_ATTR_COLOR_BW] = self._color_bw
+            attr[ATTR_COLOR_BW] = self._color_bw
         return attr
 
     @property
@@ -408,7 +392,7 @@ class AmcrestCam(Camera):
 
     async def async_ptz_control(self, movement: str, travel_time: float) -> None:
         """Move or zoom camera in specified direction."""
-        code = _ACTION[_MOV.index(movement)]
+        code = _ACTION[MOV.index(movement)]
 
         kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
         if code in _MOVE_1_ACTIONS:
@@ -565,10 +549,10 @@ class AmcrestCam(Camera):
             )
 
     async def _async_get_color_mode(self) -> str:
-        return _CBW[await self._api.async_day_night_color]
+        return CBW[await self._api.async_day_night_color]
 
     async def _async_set_color_mode(self, cbw: str) -> None:
-        await self._api.async_set_day_night_color(_CBW.index(cbw), channel=0)
+        await self._api.async_set_day_night_color(CBW.index(cbw), channel=0)
 
     async def _async_set_color_bw(self, cbw: str) -> None:
         """Set camera color mode."""
