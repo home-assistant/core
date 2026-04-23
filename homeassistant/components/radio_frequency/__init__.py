@@ -178,11 +178,6 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return list of (min_hz, max_hz) tuples."""
 
-    @property
-    @abstractmethod
-    def supported_modulations(self) -> set[ModulationType]:
-        """Return the set of modulation types supported by this transmitter."""
-
     @callback
     @final
     def supports_frequency(self, frequency: int) -> bool:
@@ -195,11 +190,7 @@ class RadioFrequencyTransmitterEntity(RestoreEntity):
     @final
     def supports_modulation(self, modulation: ModulationType) -> bool:
         """Return whether the transmitter supports the given modulation."""
-        if not isinstance(modulation, ModulationType):
-            raise TypeError(
-                f"modulation must be a ModulationType, got {type(modulation).__name__}"
-            )
-        return modulation in self.supported_modulations
+        return modulation == ModulationType.OOK
 
     @property
     @final

@@ -5,7 +5,10 @@ from typing import override
 import pytest
 from rf_protocols import ModulationType, RadioFrequencyCommand
 
-from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
+from homeassistant.components.radio_frequency import (
+    DATA_COMPONENT,
+    RadioFrequencyTransmitterEntity,
+)
 from homeassistant.components.radio_frequency.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -49,7 +52,6 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
         self,
         unique_id: str,
         frequency_ranges: list[tuple[int, int]] | None = None,
-        modulations: set[ModulationType] | None = None,
     ) -> None:
         """Initialize mock entity."""
         self._attr_unique_id = unique_id
@@ -58,7 +60,6 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
             if frequency_ranges is None
             else frequency_ranges
         )
-        self._modulations = {ModulationType.OOK} if modulations is None else modulations
         self.send_command_calls: list[RadioFrequencyCommand] = []
 
     @property
@@ -66,17 +67,17 @@ class MockRadioFrequencyEntity(RadioFrequencyTransmitterEntity):
         """Return supported frequency ranges."""
         return self._frequency_ranges
 
-    @property
-    def supported_modulations(self) -> set[ModulationType]:
-        """Return supported modulations."""
-        return self._modulations
-
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Mock send command."""
         self.send_command_calls.append(command)
 
 
 @pytest.fixture
-def mock_rf_entity() -> MockRadioFrequencyEntity:
+async def mock_rf_entity(
+    hass: HomeAssistant, init_integration: None
+) -> MockRadioFrequencyEntity:
     """Return a mock radio frequency entity."""
-    return MockRadioFrequencyEntity("test_rf_transmitter")
+    entity = MockRadioFrequencyEntity("test_rf_transmitter")
+    component = hass.data[DATA_COMPONENT]
+    await component.async_add_entities([entity])
+    return entity
