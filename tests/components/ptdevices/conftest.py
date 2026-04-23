@@ -34,16 +34,6 @@ def mock_ptdevices_level() -> PTDevicesResponse:
 
 
 @pytest.fixture
-def mock_ptdevices_level_no_devices() -> PTDevicesResponse:
-    """Mock a PTLevel response with no devices."""
-    data = {}
-    return PTDevicesResponse(
-        code=200,
-        body=data,
-    )
-
-
-@pytest.fixture
 def mock_ptdevices_interface() -> Generator[AsyncMock]:
     """Mock a PTDevices Interfafce."""
     with (
