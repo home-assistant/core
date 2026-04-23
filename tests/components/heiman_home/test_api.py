@@ -2,11 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from aiohttp import RequestInfo
-from yarl import URL
-
 from heimanconnect import HeimanAuthError, HeimanConnectionError
+import pytest
+from yarl import URL
 
 from homeassistant.components.heiman_home.api import HeimanApiClient
 from homeassistant.core import HomeAssistant
@@ -72,7 +71,9 @@ async def test_api_client_ensure_initialized_no_token(hass: HomeAssistant) -> No
         await client._ensure_initialized()
 
 
-async def test_api_client_ensure_initialized_already_initialized(hass: HomeAssistant) -> None:
+async def test_api_client_ensure_initialized_already_initialized(
+    hass: HomeAssistant,
+) -> None:
     """Test that already initialized client is not re-initialized."""
     token_data = {"access_token": "test-token"}
     client = HeimanApiClient(hass, token_data=token_data)
@@ -179,7 +180,9 @@ async def test_api_client_refresh_token_no_new_token(hass: HomeAssistant) -> Non
         await client._refresh_token_callback()
 
 
-async def test_api_client_refresh_token_fallback_to_token_data(hass: HomeAssistant) -> None:
+async def test_api_client_refresh_token_fallback_to_token_data(
+    hass: HomeAssistant,
+) -> None:
     """Test token refresh falls back to token_data."""
     mock_session = MagicMock()
     mock_session.token = {}  # No token in session

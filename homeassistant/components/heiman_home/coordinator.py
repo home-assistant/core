@@ -19,7 +19,6 @@ from heimanconnect import (
     HeimanMQTTError,
     HeimanUser,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -149,7 +148,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         await self._fetch_and_process_devices(home_id)
 
         # Update last update time
-        self.data.last_update = datetime.now(UTC)  # pragma: no cover - covered indirectly in integration tests
+        self.data.last_update = datetime.now(
+            UTC
+        )  # pragma: no cover - covered indirectly in integration tests
 
         return self.data  # pragma: no cover - covered indirectly in integration tests
 
@@ -300,7 +301,10 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     )
                     return device_id, None
                 else:
-                    return device_id, device_detail  # pragma: no cover - normal execution path covered in integration tests
+                    return (
+                        device_id,
+                        device_detail,
+                    )  # pragma: no cover - normal execution path covered in integration tests
 
         # Fetch all device details concurrently
         results = await asyncio.gather(
@@ -315,7 +319,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
 
             # Process the detail if available
             if device_detail and device_id in devices:
-                self._process_device_detail(devices[device_id], device_detail)  # pragma: no cover - normal execution path covered in integration tests
+                self._process_device_detail(
+                    devices[device_id], device_detail
+                )  # pragma: no cover - normal execution path covered in integration tests
 
     def _process_device_detail(
         self, device: HeimanDevice, device_detail: dict[str, Any]

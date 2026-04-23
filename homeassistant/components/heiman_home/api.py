@@ -14,7 +14,6 @@ from heimanconnect import (
     HeimanCloudClientWrapper,
     HeimanConnectionError,
 )
-
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -25,7 +24,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import API_BASE_URL
-
 
 _LOGGER = logging.getLogger(__name__)
 

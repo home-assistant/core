@@ -21,7 +21,6 @@ from homeassistant.components.heiman_home.const import (
     DOMAIN,
     OAUTH_TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -935,7 +934,7 @@ async def test_select_home_zero_passes_schema(
 # Re-auth tests removed - will be implemented in a separate PR
 # The following tests were for reauth functionality that is not part of this PR:
 # - test_reauth_entry_none
-# - test_reauth_user_mismatch  
+# - test_reauth_user_mismatch
 # - test_reauth_success
 
 
