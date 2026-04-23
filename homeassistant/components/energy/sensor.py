@@ -766,11 +766,17 @@ class EnergyPowerSensor(SensorEntity):
             if source_entry := entity_reg.async_get(self._source_sensors[0]):
                 device_id = source_entry.device_id
                 # For combined mode, always use Watts because we may have different source units;
-                # for inverted mode, copy source unit or set Watt if it was not set
+                # for inverted mode, copy source unit from states or registry or set Watt if it was not set
                 if not self._is_combined:
-                    self._attr_native_unit_of_measurement = (
-                        source_entry.unit_of_measurement
-                    )
+                    if source_state := self.hass.states.get(self._source_sensors[0]):
+                        self._attr_native_unit_of_measurement = (
+                            source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                        )
+                    else:
+                        self._attr_native_unit_of_measurement = (
+                            source_entry.unit_of_measurement or UnitOfPower.WATT
+                        )
+
                 # Get source name from registry
                 source_name = source_entry.name or source_entry.original_name
             # Assign power sensor to same device as source sensor(s)
