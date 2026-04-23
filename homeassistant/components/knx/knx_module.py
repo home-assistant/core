@@ -54,6 +54,7 @@ from .const import (
     TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
+from .entity import KnxEntityIdentifier
 from .expose import KnxExposeEntity, KnxExposeTime
 from .project import KNXProject
 from .repairs import data_secure_group_key_issue_dispatcher
@@ -113,7 +114,7 @@ class KNXModule:
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
         self.group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
         self.group_address_entities: dict[
-            DeviceGroupAddress, set[tuple[str, str]]  # {(platform, unique_id),}
+            DeviceGroupAddress, set[KnxEntityIdentifier]
         ] = {}
         self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
 
@@ -237,7 +238,7 @@ class KNXModule:
     def add_to_group_address_entities(
         self,
         group_addresses: set[DeviceGroupAddress],
-        identifier: tuple[str, str],  # (platform, unique_id)
+        identifier: KnxEntityIdentifier,
     ) -> None:
         """Register entity in group_address_entities map."""
         for ga in group_addresses:
@@ -248,7 +249,7 @@ class KNXModule:
     def remove_from_group_address_entities(
         self,
         group_addresses: set[DeviceGroupAddress],
-        identifier: tuple[str, str],
+        identifier: KnxEntityIdentifier,
     ) -> None:
         """Unregister entity from group_address_entities map."""
         for ga in group_addresses:

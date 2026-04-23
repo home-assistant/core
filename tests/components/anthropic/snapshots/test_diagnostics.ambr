@@ -64,7 +64,7 @@
         'translation_key': 'conversation',
       }),
     }),
-    'entry_version': '2.3',
+    'entry_version': '2.4',
     'options': dict({
     }),
     'state': 'loaded',

@@ -39,6 +39,8 @@ async def async_setup_entry(
         async_add_entities(new_entities)
         _LOGGER.debug("Device %s add switch entity success", device.dev_name)
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=hass-use-runtime-data
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 

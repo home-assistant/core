@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import logging
 
-from unifi_access_api import Door
+from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import CONF_VERIFY_SSL
@@ -13,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .entity import UnifiAccessEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -28,7 +31,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_doors() -> None:
-        new_door_ids = sorted(set(coordinator.data.doors) - added_doors)
+        new_door_ids = sorted(set(coordinator.data.door_thumbnails) - added_doors)
         if not new_door_ids:
             return
         async_add_entities(
@@ -72,7 +75,14 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Return the door thumbnail image bytes."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):
-            return await self.coordinator.client.get_thumbnail(thumbnail.url)
+            try:
+                return await self.coordinator.client.get_thumbnail(thumbnail.url)
+            except UnifiAccessError as err:
+                _LOGGER.warning(
+                    "Failed to fetch thumbnail for door %s: %s",
+                    self._door_id,
+                    err,
+                )
         return None
 
     def _handle_coordinator_update(self) -> None:

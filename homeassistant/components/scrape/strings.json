@@ -4,8 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "no_data": "Rest data is empty. Verify your configuration",
-      "resource_error": "Could not update rest data. Verify your configuration"
+      "no_data": "REST data is empty. Verify your configuration",
+      "resource_error": "Could not update REST data. Verify your configuration"
     },
     "step": {
       "user": {

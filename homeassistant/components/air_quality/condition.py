@@ -36,7 +36,9 @@ def _make_detected_condition(
 ) -> type[Condition]:
     """Create a detected condition for a binary sensor device class."""
     return make_entity_state_condition(
-        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}, STATE_ON
+        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)},
+        STATE_ON,
+        support_duration=True,
     )
 
 
@@ -45,7 +47,9 @@ def _make_cleared_condition(
 ) -> type[Condition]:
     """Create a cleared condition for a binary sensor device class."""
     return make_entity_state_condition(
-        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)}, STATE_OFF
+        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=device_class)},
+        STATE_OFF,
+        support_duration=True,
     )
 
 

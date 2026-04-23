@@ -362,6 +362,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/deluge/ @tkdrob
 /homeassistant/components/demo/ @home-assistant/core
 /tests/components/demo/ @home-assistant/core
+/homeassistant/components/denon_rs232/ @balloob
+/tests/components/denon_rs232/ @balloob
 /homeassistant/components/denonavr/ @ol-iver @starkillerOG
 /tests/components/denonavr/ @ol-iver @starkillerOG
 /homeassistant/components/derivative/ @afaucogney @karwosts
@@ -398,6 +400,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dnsip/ @gjohansson-ST
 /homeassistant/components/door/ @home-assistant/core
 /tests/components/door/ @home-assistant/core
+/homeassistant/components/doorbell/ @home-assistant/core
+/tests/components/doorbell/ @home-assistant/core
 /homeassistant/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dormakaba_dkey/ @emontnemery
@@ -428,6 +432,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dynalite/ @ziv1234
 /homeassistant/components/eafm/ @Jc2k
 /tests/components/eafm/ @Jc2k
+/homeassistant/components/earn_e_p1/ @Miggets7
+/tests/components/earn_e_p1/ @Miggets7
 /homeassistant/components/easyenergy/ @klaasnicolaas
 /tests/components/easyenergy/ @klaasnicolaas
 /homeassistant/components/ecoforest/ @pjanuario
@@ -588,6 +594,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/fujitsu_fglair/ @crevetor
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
+/homeassistant/components/fumis/ @frenck
+/tests/components/fumis/ @frenck
 /homeassistant/components/fyta/ @dontinelli
 /tests/components/fyta/ @dontinelli
 /homeassistant/components/garage_door/ @home-assistant/core
@@ -898,8 +906,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/jewish_calendar/ @tsvi
 /homeassistant/components/justnimbus/ @kvanzuijlen
 /tests/components/justnimbus/ @kvanzuijlen
-/homeassistant/components/jvc_projector/ @SteveEasley @msavazzi
-/tests/components/jvc_projector/ @SteveEasley @msavazzi
+/homeassistant/components/jvc_projector/ @SteveEasley
+/tests/components/jvc_projector/ @SteveEasley
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -912,6 +920,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
+/homeassistant/components/kiosker/ @Claeysson
+/tests/components/kiosker/ @Claeysson
 /homeassistant/components/kitchen_sink/ @home-assistant/core
 /tests/components/kitchen_sink/ @home-assistant/core
 /homeassistant/components/kmtronic/ @dgomes
@@ -1245,6 +1255,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/open_meteo/ @frenck
 /homeassistant/components/open_router/ @joostlek @ab3lson
 /tests/components/open_router/ @joostlek @ab3lson
+/homeassistant/components/openai_conversation/ @Shulyaka
+/tests/components/openai_conversation/ @Shulyaka
 /homeassistant/components/opendisplay/ @g4bri3lDev
 /tests/components/opendisplay/ @g4bri3lDev
 /homeassistant/components/openerz/ @misialq
@@ -1726,6 +1738,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/telegram_bot/ @hanwg
 /tests/components/telegram_bot/ @hanwg
+/homeassistant/components/teleinfo/ @esciara
+/tests/components/teleinfo/ @esciara
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/teltonika/ @karlbeecken
@@ -1981,8 +1995,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/wsdot/ @ucodery
 /homeassistant/components/wyoming/ @synesthesiam
 /tests/components/wyoming/ @synesthesiam
-/homeassistant/components/xbox/ @hunterjm @tr4nt0r
-/tests/components/xbox/ @hunterjm @tr4nt0r
+/homeassistant/components/xbox/ @tr4nt0r
+/tests/components/xbox/ @tr4nt0r
 /homeassistant/components/xiaomi_aqara/ @danielhiversen @syssi
 /tests/components/xiaomi_aqara/ @danielhiversen @syssi
 /homeassistant/components/xiaomi_ble/ @Jc2k @Ernst79

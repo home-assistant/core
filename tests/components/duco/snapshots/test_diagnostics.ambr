@@ -104,6 +104,31 @@
           'time_state_remain': 0,
         }),
       }),
+      '50': dict({
+        'general': dict({
+          'asso': 1,
+          'identify': 0,
+          'name': 'Kitchen RH',
+          'network_type': 'RF',
+          'node_type': 'UCRH',
+          'parent': 1,
+          'sub_type': 0,
+        }),
+        'node_id': 50,
+        'sensor': dict({
+          'co2': None,
+          'iaq_co2': None,
+          'iaq_rh': 90,
+          'rh': 61.0,
+        }),
+        'ventilation': dict({
+          'flow_lvl_tgt': None,
+          'mode': '-',
+          'state': 'AUTO',
+          'time_state_end': 0,
+          'time_state_remain': 0,
+        }),
+      }),
     }),
     'write_requests_remaining': 100,
   })
