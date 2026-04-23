@@ -156,7 +156,7 @@ def mock_nodes() -> list[Node]:
                 network_type="RF",
                 parent=1,
                 asso=1,
-                name="Bedroom RH",
+                name="Kitchen RH",
                 identify=0,
             ),
             ventilation=NodeVentilationInfo(

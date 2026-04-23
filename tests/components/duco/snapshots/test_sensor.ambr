@@ -108,7 +108,7 @@
     'state': '85',
   })
 # ---
-# name: test_sensor_entities_state[sensor.bedroom_rh_humidity-entry]
+# name: test_sensor_entities_state[sensor.kitchen_rh_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -124,7 +124,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bedroom_rh_humidity',
+    'entity_id': 'sensor.kitchen_rh_humidity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -147,23 +147,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_state[sensor.bedroom_rh_humidity-state]
+# name: test_sensor_entities_state[sensor.kitchen_rh_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'Bedroom RH Humidity',
+      'friendly_name': 'Kitchen RH Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bedroom_rh_humidity',
+    'entity_id': 'sensor.kitchen_rh_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '61.0',
   })
 # ---
-# name: test_sensor_entities_state[sensor.bedroom_rh_humidity_air_quality_index-entry]
+# name: test_sensor_entities_state[sensor.kitchen_rh_humidity_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -179,7 +179,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.bedroom_rh_humidity_air_quality_index',
+    'entity_id': 'sensor.kitchen_rh_humidity_air_quality_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -202,15 +202,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_state[sensor.bedroom_rh_humidity_air_quality_index-state]
+# name: test_sensor_entities_state[sensor.kitchen_rh_humidity_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom RH Humidity air quality index',
+      'friendly_name': 'Kitchen RH Humidity air quality index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.bedroom_rh_humidity_air_quality_index',
+    'entity_id': 'sensor.kitchen_rh_humidity_air_quality_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

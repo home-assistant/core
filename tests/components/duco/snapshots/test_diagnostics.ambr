@@ -108,7 +108,7 @@
         'general': dict({
           'asso': 1,
           'identify': 0,
-          'name': 'Bedroom RH',
+          'name': 'Kitchen RH',
           'network_type': 'RF',
           'node_type': 'UCRH',
           'parent': 1,
