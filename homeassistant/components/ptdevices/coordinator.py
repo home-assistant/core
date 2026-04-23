@@ -11,7 +11,6 @@ from aioptdevices.interface import Interface, PTDevicesResponseData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import (
@@ -67,7 +66,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except aioptdevices.PTDevicesUnauthorizedError as err:
-            raise ConfigEntryAuthFailed(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_access_token",
                 translation_placeholders={"error": repr(err)},
