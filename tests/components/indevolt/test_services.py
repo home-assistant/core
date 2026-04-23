@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, call
 
+from indevolt_api import PowerExceedsMaxError, SocBelowMinimumError
 import pytest
 
 from homeassistant.components.indevolt.const import (
@@ -95,6 +96,12 @@ async def test_service_power_too_high(
     """Test charge and discharge service validation for max power."""
     await setup_integration(hass, mock_config_entry)
 
+    # Configure the API mock to raise PowerExceedsMaxError for exceeded power
+    mock_indevolt.check_charge_limits.side_effect = PowerExceedsMaxError(power, 1200, 1)
+    mock_indevolt.check_discharge_limits.side_effect = PowerExceedsMaxError(
+        power, 800, 1
+    )
+
     # Mock call to start service (exceed max power for gen 1)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
@@ -114,6 +121,38 @@ async def test_service_power_too_high(
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
 @pytest.mark.parametrize("service_name", ["charge", "discharge"])
+async def test_service_target_soc_below_minimum(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service_name: str,
+) -> None:
+    """Test charge and discharge service validation when SOC is below the library hard minimum."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Configure the API mock to raise SocBelowMinimumError
+    mock_indevolt.check_charge_limits.side_effect = SocBelowMinimumError(3)
+    mock_indevolt.check_discharge_limits.side_effect = SocBelowMinimumError(3)
+
+    # Mock call to start service (target SOC below hard minimum)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            service_name,
+            {
+                "device_id": [_get_device_id(hass, mock_config_entry)],
+                "power": 500,
+                "target_soc": 3,
+            },
+            blocking=True,
+        )
+
+    # Verify correct translation key is used for the error
+    assert exc_info.value.translation_key == "soc_below_minimum"
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize("service_name", ["charge", "discharge"])
 async def test_service_target_soc_below_emergency(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
@@ -123,7 +162,7 @@ async def test_service_target_soc_below_emergency(
     """Test charge and discharge service validation for target SOC."""
     await setup_integration(hass, mock_config_entry)
 
-    # Mock call to start service (target SOC < Emergency SOC)
+    # Mock call to start service (target SOC below Emergency SOC (soft limit))
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
@@ -189,6 +228,18 @@ async def test_multi_device_partial_validation_failure(
     # Set up multiple devices (gen 1 & gen 2)
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, alt_mock_config_entry)
+
+    # Configure the mock to raise PowerExceedsMaxError only for gen 1 devices
+    def raise_if_gen1_charge(p: int, soc: int, generation: int) -> None:
+        if generation == 1:
+            raise PowerExceedsMaxError(p, 1200, generation)
+
+    def raise_if_gen1_discharge(p: int, soc: int, generation: int) -> None:
+        if generation == 1:
+            raise PowerExceedsMaxError(p, 800, generation)
+
+    mock_indevolt.check_charge_limits.side_effect = raise_if_gen1_charge
+    mock_indevolt.check_discharge_limits.side_effect = raise_if_gen1_discharge
 
     # Mock call to start service on both devices (exceed max power for gen 1)
     with pytest.raises(ServiceValidationError) as exc_info:

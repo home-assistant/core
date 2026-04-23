@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Final, Never
 
+from indevolt_api import PowerExceedsMaxError, SocBelowMinimumError
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -12,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DOMAIN, POWER_LIMITS, RealtimeAction
+from .const import DOMAIN, RealtimeAction
 from .coordinator import IndevoltCoordinator
 
 RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
@@ -78,7 +79,7 @@ async def _async_handle_realtime_action(
         coordinators,
         power,
         target_soc,
-        power_key=power_key,
+        action_code=action_code,
     )
 
     await _execute_realtime_action(coordinators, action_code, power, target_soc)
@@ -107,7 +108,7 @@ def _validate_realtime_action(
     coordinators: list[IndevoltCoordinator],
     power: int,
     target_soc: int,
-    power_key: str,
+    action_code: RealtimeAction,
 ) -> None:
     """Validates parameters prior to calling async_execute_realtime_action."""
 
@@ -115,12 +116,24 @@ def _validate_realtime_action(
 
     for coordinator in coordinators:
         try:
-            # Validate (dis)charge power based on device generation
-            max_power: int = POWER_LIMITS[coordinator.generation][power_key]
-            if power > max_power:
-                _raise_power_exceeds_max(power, max_power, coordinator.generation)
+            try:
+                if action_code == RealtimeAction.CHARGE:
+                    coordinator.api.check_charge_limits(
+                        power, target_soc, coordinator.generation
+                    )
 
-            # Validate target SOC against emergency SOC threshold
+                else:
+                    coordinator.api.check_discharge_limits(
+                        power, target_soc, coordinator.generation
+                    )
+
+            except PowerExceedsMaxError as err:
+                _raise_power_exceeds_max(err.power, err.max_power, err.generation)
+
+            except SocBelowMinimumError as err:
+                _raise_soc_below_minimum(err.target_soc, err.minimum_soc)
+
+            # Validate target SOC against known emergency SOC (soft limit)
             emergency_soc = coordinator.get_emergency_soc()
             if target_soc < emergency_soc:
                 _raise_soc_below_emergency(target_soc, emergency_soc)
@@ -182,6 +195,18 @@ def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Nev
             "power": str(power),
             "max_power": str(max_power),
             "generation": str(generation),
+        },
+    )
+
+
+def _raise_soc_below_minimum(target_soc: int, minimum_soc: int) -> Never:
+    """Raise a translated validation error when SOC is below the device's hard minimum."""
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="soc_below_minimum",
+        translation_placeholders={
+            "target": str(target_soc),
+            "minimum_soc": str(minimum_soc),
         },
     )
 
