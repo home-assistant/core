@@ -56,7 +56,6 @@ class VeluxEntity(Entity):
         self.node = node
         unique_id = node.serial_number or f"{config_entry_id}_{node.node_id}"
         self._attr_unique_id = unique_id
-        self.unsubscribe = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={
