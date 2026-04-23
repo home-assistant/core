@@ -1977,5 +1977,13 @@
         "name": "ESS BatteryLife schedule charge {slot} start"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed for {host}."
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to the GX device at {host}."
+    }
   }
 }
