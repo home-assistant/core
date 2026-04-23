@@ -66,7 +66,7 @@
         "name": "Ventilation mode",
         "state": {
           "auto": "[%key:common::state::auto%]",
-          "manu": "Manual"
+          "manu": "[%key:common::state::manual%]"
         }
       },
       "ventilation_state": {

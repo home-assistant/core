@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 
 from duco.exceptions import DucoError, DucoRateLimitError
@@ -142,7 +143,11 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         # The Duco firmware applies FlowLvlTgt asynchronously after a state
         # change. Multiple follow-up refreshes ensure the airflow target sensor
         # picks up the updated value before the normal poll interval fires.
-        async def _deferred_refresh(_now: object) -> None:
+        for cancel in self._deferred_refresh_cancellers:
+            cancel()
+        self._deferred_refresh_cancellers.clear()
+
+        async def _deferred_refresh(_now: datetime) -> None:
             await self.coordinator.async_refresh()
 
         for delay in (1, 5, 10, 15, 20, 25):
