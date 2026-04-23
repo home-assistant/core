@@ -36,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
+ATTR_CONTROLLER_GUID = "controller_guid"
 ATTR_BUTTON_SUBTYPE = "button_subtype"
 ATTR_FULL_ID = "full_id"
 ATTR_KEYPAD_UUID = "keypad_uuid"

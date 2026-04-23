@@ -59,6 +59,7 @@ async def test_event_single_press(
     assert len(events) == 1
     assert events[0].data["action"] == "single"
     assert events[0].data["button_subtype"] == "button_1"
+    assert events[0].data["controller_guid"] == mock_lutron.guid
     assert events[0].data["keypad_uuid"] == "keypad_uuid"
     assert events[0].data["uuid"] == "button_uuid"
 
@@ -121,3 +122,4 @@ async def test_pico_event_uses_semantic_button_subtype(
 
     assert len(events) == 1
     assert events[0].data["button_subtype"] == "top"
+    assert events[0].data["controller_guid"] == mock_lutron.guid

@@ -26,6 +26,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import (
     ATTR_ACTION,
     ATTR_BUTTON_SUBTYPE,
+    ATTR_CONTROLLER_GUID,
     ATTR_KEYPAD_UUID,
     LutronConfigEntry,
     button_subtype,
@@ -157,7 +158,7 @@ async def async_attach_trigger(
 
     found = _get_entry_device_buttons(hass, config[CONF_DEVICE_ID])
     assert found is not None
-    _entry, buttons = found
+    entry, buttons = found
 
     for keypad, button in buttons:
         if button_subtype(keypad, button) != config[CONF_SUBTYPE]:
@@ -169,6 +170,7 @@ async def async_attach_trigger(
                 event_trigger.CONF_EVENT_TYPE: "lutron_event",
                 event_trigger.CONF_EVENT_DATA: {
                     ATTR_ACTION: TRIGGER_ACTIONS[config[CONF_TYPE]],
+                    ATTR_CONTROLLER_GUID: entry.runtime_data.client.guid,
                     ATTR_BUTTON_SUBTYPE: config[CONF_SUBTYPE],
                     ATTR_KEYPAD_UUID: keypad.uuid or keypad.legacy_uuid,
                 },

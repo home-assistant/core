@@ -14,6 +14,7 @@ from homeassistant.util import slugify
 from . import (
     ATTR_ACTION,
     ATTR_BUTTON_SUBTYPE,
+    ATTR_CONTROLLER_GUID,
     ATTR_FULL_ID,
     ATTR_KEYPAD_UUID,
     ATTR_UUID,
@@ -79,6 +80,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
 
         self._full_id = slugify(f"{area_name} {name}")
         self._id = slugify(name)
+        self._controller_guid = controller.guid
         self._keypad_uuid = keypad.uuid or keypad.legacy_uuid
         self._button_subtype = button_subtype(keypad, button)
 
@@ -107,6 +109,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
                 ATTR_ID: self._id,
                 ATTR_ACTION: LEGACY_EVENT_TYPES[action],
                 ATTR_BUTTON_SUBTYPE: self._button_subtype,
+                ATTR_CONTROLLER_GUID: self._controller_guid,
                 ATTR_FULL_ID: self._full_id,
                 ATTR_KEYPAD_UUID: self._keypad_uuid,
                 ATTR_UUID: button.uuid or button.legacy_uuid,

@@ -103,6 +103,7 @@ async def test_trigger_fires_on_event(
         {
             "action": "single",
             "button_subtype": "button_1",
+            "controller_guid": mock_lutron.guid,
             "keypad_uuid": keypad.uuid,
         },
     )
@@ -112,6 +113,7 @@ async def test_trigger_fires_on_event(
     trigger_data = result[0]["trigger"]["event"].data
     assert trigger_data["action"] == "single"
     assert trigger_data["button_subtype"] == "button_1"
+    assert trigger_data["controller_guid"] == mock_lutron.guid
     assert trigger_data["keypad_uuid"] == keypad.uuid
 
 
@@ -145,6 +147,53 @@ async def test_invalid_trigger_raises(
                 "subtype": "button_99",
             },
         )
+
+
+async def test_validate_trigger_unknown_device_raises(hass: HomeAssistant) -> None:
+    """Test validation rejects unknown device ids."""
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": "missing_device",
+                "type": "single_press",
+                "subtype": "button_1",
+            },
+        )
+
+
+async def test_validate_trigger_skips_unrelated_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unrelated config entries are ignored when validating triggers."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry_2 = MockConfigEntry(domain=DOMAIN, data=mock_config_entry.data)
+    mock_config_entry_2.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, f"{mock_lutron.guid}_{mock_lutron.areas[0].keypads[0].uuid}")
+        }
+    )
+    assert device is not None
+
+    config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": device.id,
+        "type": "single_press",
+        "subtype": "button_1",
+    }
+
+    assert await device_trigger.async_validate_trigger_config(hass, config) == config
 
 
 async def test_pico_get_triggers_use_semantic_subtypes(
@@ -183,6 +232,37 @@ async def test_pico_get_triggers_use_semantic_subtypes(
             "metadata": {},
         }
     ]
+
+
+async def test_get_triggers_missing_device_returns_empty(
+    hass: HomeAssistant,
+) -> None:
+    """Test missing devices produce no device triggers."""
+    assert await device_trigger.async_get_triggers(hass, "missing_device") == []
+
+
+async def test_get_triggers_with_empty_button_list_returns_empty(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test keypads without buttons produce no device triggers."""
+    mock_lutron.areas[0].keypads[0].buttons = []
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, f"{mock_lutron.guid}_{mock_lutron.areas[0].keypads[0].uuid}")
+        }
+    )
+    assert device is not None
+
+    assert await device_trigger.async_get_triggers(hass, device.id) == []
 
 
 async def test_pico_trigger_fires_on_semantic_subtype(
@@ -236,6 +316,7 @@ async def test_pico_trigger_fires_on_semantic_subtype(
         {
             "action": "pressed",
             "button_subtype": "raise",
+            "controller_guid": mock_lutron.guid,
             "keypad_uuid": keypad.uuid,
         },
     )
@@ -245,4 +326,47 @@ async def test_pico_trigger_fires_on_semantic_subtype(
     trigger_data = result[0]["trigger"]["event"].data
     assert trigger_data["action"] == "pressed"
     assert trigger_data["button_subtype"] == "raise"
+    assert trigger_data["controller_guid"] == mock_lutron.guid
     assert trigger_data["keypad_uuid"] == keypad.uuid
+
+
+async def test_attach_trigger_raises_when_no_matching_subtype(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test attach fails when no button matches the requested subtype."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    keypad = mock_lutron.areas[0].keypads[0]
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_lutron.guid}_{keypad.uuid}")}
+    )
+    assert device is not None
+
+    button_subtypes = iter(["button_1", "button_99"])
+
+    def fake_button_subtype(_keypad: Any, _button: Any) -> str:
+        """Return a matching subtype for validation and a mismatched one for attach."""
+        return next(button_subtypes)
+
+    monkeypatch.setattr(device_trigger, "button_subtype", fake_button_subtype)
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_attach_trigger(
+            hass,
+            {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": device.id,
+                "type": "single_press",
+                "subtype": "button_1",
+            },
+            lambda *_args, **_kwargs: None,
+            {"trigger_data": {}, "variables": {}},
+        )
