@@ -743,7 +743,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
                 updated = AddonData(
                     addon=_installed_addon_from_complete(info),
                     auto_update=info.auto_update,
-                    repository=info.repository,
+                    repository=self.data.addons[slug].repository,
                 )
                 self.async_set_updated_data(
                     HassioAddonData(addons={**self.data.addons, slug: updated})
