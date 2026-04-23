@@ -8,11 +8,7 @@ import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
