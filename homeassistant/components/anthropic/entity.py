@@ -1,8 +1,8 @@
 """Base entity for Anthropic."""
 
-import asyncio
 import base64
-from collections.abc import Callable, Iterable
+from collections import deque
+from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 import json
@@ -462,7 +462,7 @@ def _convert_content(  # noqa: C901
     return messages, container_id
 
 
-class AnthropicStreamManager:
+class AnthropicDeltaStream:
     """Transform the response stream into HA format.
 
     A typical stream of responses might look something like the following:
@@ -499,18 +499,16 @@ class AnthropicStreamManager:
         stream: AsyncStream[MessageStreamEvent],
         output_tool: str | None = None,
     ) -> None:
-        """Initialize the stream manager."""
+        """Initialize the delta stream."""
         self._chat_log: conversation.ChatLog = chat_log
         self._stream: AsyncStream[MessageStreamEvent] = stream
         self._output_tool: str | None = output_tool
 
-        self._queue: asyncio.Queue[
+        self._buffer: deque[
             conversation.AssistantContentDeltaDict
             | conversation.ToolResultContentDeltaDict
-            | Exception
-        ] = asyncio.Queue()
-        self._started = False
-        self._task: asyncio.Task[None] | None = None
+        ] = deque()
+        self._stream_iterator: AsyncIterator[MessageStreamEvent] | None = None
 
         self._current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = (
             None
@@ -521,12 +519,18 @@ class AnthropicStreamManager:
         self._input_usage: Usage | None = None
         self._first_block: bool = True
 
-    def __aiter__(self) -> AnthropicStreamManager:
-        """Initialize the stream and return the async generator."""
+    def __aiter__(
+        self,
+    ) -> AsyncIterator[
+        conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+    ]:
+        """Initialize the stream and return the async iterator."""
         if self._stream is None or not hasattr(self._stream, "__aiter__"):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unexpected_stream_object"
             )
+        if self._stream_iterator is None:
+            self._stream_iterator = self._stream.__aiter__()
         return self
 
     async def __anext__(
@@ -535,30 +539,14 @@ class AnthropicStreamManager:
         conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
     ):
         """Get the next item from the stream."""
-        if not self._started:
-            self._started = True
-            self._task = self._chat_log.hass.async_create_task(self._transform_stream())
+        while True:
+            if self._buffer:
+                return self._buffer.popleft()
 
-        item = await self._queue.get()
+            response = await self._stream_iterator.__anext__()  # type: ignore[union-attr]
 
-        if isinstance(item, Exception):
-            if self._task is not None:
-                await self._task
-            # Re-raise exception in the main context
-            raise item
-
-        return item
-
-    async def _transform_stream(self) -> None:
-        """Handle the incoming stream of API events."""
-        try:
-            async for response in self._stream:
-                LOGGER.debug("Received response: %s", response)
-                self.on_message_stream_event(response)
-        except Exception as exc:  # noqa: BLE001
-            self._queue.put_nowait(exc)
-        else:
-            self._queue.put_nowait(StopAsyncIteration())
+            LOGGER.debug("Received response: %s", response)
+            self.on_message_stream_event(response)
 
     def on_message_stream_event(self, event: MessageStreamEvent) -> None:
         """Handle MessageStreamEvent."""
@@ -650,10 +638,10 @@ class AnthropicStreamManager:
             if self._first_block or self._content_details.has_content():
                 if self._content_details:
                     self._content_details.delete_empty()
-                    self._queue.put_nowait({"native": self._content_details})
+                    self._buffer.append({"native": self._content_details})
                 self._content_details = ContentDetails()
                 self._content_details.add_citation_detail()
-                self._queue.put_nowait({"role": "assistant"})
+                self._buffer.append({"role": "assistant"})
                 self._first_block = False
 
     def on_text_block(self, text: str, citations: list[TextCitation] | None) -> None:
@@ -668,24 +656,24 @@ class AnthropicStreamManager:
         ):
             if self._content_details:
                 self._content_details.delete_empty()
-                self._queue.put_nowait({"native": self._content_details})
+                self._buffer.append({"native": self._content_details})
             self._content_details = ContentDetails()
-            self._queue.put_nowait({"role": "assistant"})
+            self._buffer.append({"role": "assistant"})
             self._first_block = False
         self._content_details.add_citation_detail()
         if text:
             self._content_details.citation_details[-1].length += len(text)
-            self._queue.put_nowait({"content": text})
+            self._buffer.append({"content": text})
 
     def on_thinking_block(self, thinking: str, signature: str) -> None:
         """Handle ThinkingBlock."""
         if self._first_block or self._content_details.thinking_signature:
             if self._content_details:
                 self._content_details.delete_empty()
-                self._queue.put_nowait({"native": self._content_details})
+                self._buffer.append({"native": self._content_details})
             self._content_details = ContentDetails()
             self._content_details.add_citation_detail()
-            self._queue.put_nowait({"role": "assistant"})
+            self._buffer.append({"role": "assistant"})
             self._first_block = False
 
     def on_redacted_thinking_block(self, data: str) -> None:
@@ -698,10 +686,10 @@ class AnthropicStreamManager:
         if self._first_block or self._content_details.redacted_thinking:
             if self._content_details:
                 self._content_details.delete_empty()
-                self._queue.put_nowait({"native": self._content_details})
+                self._buffer.append({"native": self._content_details})
             self._content_details = ContentDetails()
             self._content_details.add_citation_detail()
-            self._queue.put_nowait({"role": "assistant"})
+            self._buffer.append({"role": "assistant"})
             self._first_block = False
         self._content_details.redacted_thinking = data
 
@@ -749,10 +737,10 @@ class AnthropicStreamManager:
         """Handle various server tool result blocks."""
         if self._content_details:
             self._content_details.delete_empty()
-            self._queue.put_nowait({"native": self._content_details})
+            self._buffer.append({"native": self._content_details})
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
-        self._queue.put_nowait(
+        self._buffer.append(
             {
                 "role": "tool_result",
                 "tool_call_id": tool_use_id,
@@ -792,7 +780,7 @@ class AnthropicStreamManager:
             and self._current_tool_block["name"] == self._output_tool
         ):
             self._content_details.citation_details[-1].length += len(partial_json)
-            self._queue.put_nowait({"content": partial_json})
+            self._buffer.append({"content": partial_json})
         else:
             self._current_tool_args += partial_json
 
@@ -800,12 +788,12 @@ class AnthropicStreamManager:
         """Handle TextDelta."""
         if text:
             self._content_details.citation_details[-1].length += len(text)
-            self._queue.put_nowait({"content": text})
+            self._buffer.append({"content": text})
 
     def on_thinking_delta(self, thinking: str) -> None:
         """Handle ThinkingDelta."""
         if thinking:
-            self._queue.put_nowait({"thinking_content": thinking})
+            self._buffer.append({"thinking_content": thinking})
 
     def on_signature_delta(self, signature: str) -> None:
         """Handle SignatureDelta."""
@@ -825,7 +813,7 @@ class AnthropicStreamManager:
                 json.loads(self._current_tool_args) if self._current_tool_args else {}
             )
             self._current_tool_block["input"] |= tool_args
-            self._queue.put_nowait(
+            self._buffer.append(
                 {
                     "tool_calls": [
                         llm.ToolInput(
@@ -853,7 +841,7 @@ class AnthropicStreamManager:
         """Handle RawMessageStopEvent."""
         if self._content_details:
             self._content_details.delete_empty()
-            self._queue.put_nowait({"native": self._content_details})
+            self._buffer.append({"native": self._content_details})
         self._content_details = ContentDetails()
         self._content_details.add_citation_detail()
 
@@ -1161,7 +1149,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            AnthropicStreamManager(
+                            AnthropicDeltaStream(
                                 chat_log,
                                 stream,
                                 output_tool=structure_name or None,
