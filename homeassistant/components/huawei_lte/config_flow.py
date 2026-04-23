@@ -386,6 +386,8 @@ class HuaweiLteOptionsFlow(OptionsFlow):
 
         data_schema = vol.Schema(
             {
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=hass-config-flow-name-field
                 vol.Optional(
                     CONF_NAME,
                     default=self.config_entry.options.get(

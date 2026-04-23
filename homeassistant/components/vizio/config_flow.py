@@ -61,6 +61,8 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
 
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             vol.Required(
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,

@@ -92,6 +92,8 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST) or ""
                     ): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=hass-config-flow-name-field
                     vol.Optional(
                         CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
                     ): str,

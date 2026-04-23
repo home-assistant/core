@@ -323,6 +323,8 @@ async def google_generative_ai_config_option_schema(
         else:
             default_name = DEFAULT_CONVERSATION_NAME
         schema: dict[vol.Required | vol.Optional, Any] = {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             vol.Required(CONF_NAME, default=default_name): str,
         }
     else:

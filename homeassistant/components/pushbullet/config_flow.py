@@ -15,6 +15,8 @@ from .const import DEFAULT_NAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=hass-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
         vol.Required(CONF_API_KEY): selector.TextSelector(),
     }

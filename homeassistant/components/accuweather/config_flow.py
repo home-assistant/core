@@ -70,6 +70,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=hass-config-flow-name-field
                     vol.Optional(
                         CONF_NAME, default=self.hass.config.location_name
                     ): str,

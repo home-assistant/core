@@ -61,6 +61,8 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=hass-config-flow-name-field
                     vol.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),

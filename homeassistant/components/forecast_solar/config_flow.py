@@ -118,6 +118,8 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=hass-config-flow-name-field
                         vol.Required(CONF_NAME): str,
                         vol.Required(CONF_LATITUDE): cv.latitude,
                         vol.Required(CONF_LONGITUDE): cv.longitude,

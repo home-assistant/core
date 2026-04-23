@@ -21,6 +21,8 @@ DEFAULT_NAME = "myStrom Device"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=hass-config-flow-name-field
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
     }

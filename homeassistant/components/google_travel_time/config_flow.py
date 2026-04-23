@@ -69,6 +69,8 @@ RECONFIGURE_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=hass-config-flow-name-field
         vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )

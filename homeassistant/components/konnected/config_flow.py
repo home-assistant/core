@@ -1,4 +1,5 @@
 """Config flow for konnected.io integration."""
+# pylint: disable=hass-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from __future__ import annotations
 

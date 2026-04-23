@@ -28,6 +28,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_TOKEN): str,
         vol.Optional(CONF_NEW_TOKEN): BooleanSelector(BooleanSelectorConfig()),
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=hass-config-flow-name-field
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )

@@ -90,6 +90,8 @@ def get_user_step_schema(data: Mapping[str, Any]) -> vol.Schema:
         travel_mode = TRAVEL_MODE_PUBLIC
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             vol.Optional(
                 CONF_NAME, default=data.get(CONF_NAME, DEFAULT_NAME)
             ): cv.string,

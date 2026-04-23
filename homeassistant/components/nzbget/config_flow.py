@@ -71,6 +71,8 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = {
             vol.Required(CONF_HOST): str,
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Optional(CONF_USERNAME): str,
             vol.Optional(CONF_PASSWORD): str,

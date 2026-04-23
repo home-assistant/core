@@ -145,6 +145,8 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         schema = vol.Schema(
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
         )
         return self.async_show_form(

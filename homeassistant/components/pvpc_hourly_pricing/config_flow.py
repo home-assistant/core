@@ -86,6 +86,8 @@ class TariffSelectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=hass-config-flow-name-field
                 vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(ATTR_TARIFF, default=DEFAULT_TARIFF): VALID_TARIFF,
                 vol.Required(ATTR_POWER, default=DEFAULT_POWER_KW): VALID_POWER,

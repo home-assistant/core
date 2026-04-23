@@ -86,6 +86,8 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
 
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
+        # Approved exemption: user names the SQL query sensor
+        # pylint: disable-next=hass-config-flow-name-field
         vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
         vol.Optional(CONF_DB_URL): selector.TextSelector(),
     }

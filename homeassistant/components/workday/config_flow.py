@@ -243,6 +243,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=hass-config-flow-name-field
                     vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
                     vol.Optional(CONF_COUNTRY): CountrySelector(
                         CountrySelectorConfig(

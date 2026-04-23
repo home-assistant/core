@@ -55,6 +55,8 @@ async def get_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     )
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
             vol.Required(CONF_TIME_ZONE): SelectSelector(
                 SelectSelectorConfig(

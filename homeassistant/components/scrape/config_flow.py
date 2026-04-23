@@ -191,6 +191,8 @@ SENSOR_SETTINGS = vol.Schema(
     }
 )
 SENSOR_SETUP = vol.Schema(
+    # Name field is no longer allowed in config flow schemas
+    # pylint: disable-next=hass-config-flow-name-field
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector()}
 ).extend(SENSOR_SETTINGS.schema)
 

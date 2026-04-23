@@ -420,6 +420,8 @@ def ollama_config_option_schema(
             default_name = DEFAULT_CONVERSATION_NAME
 
         schema: dict = {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=hass-config-flow-name-field
             vol.Required(CONF_NAME, default=default_name): str,
         }
     else:

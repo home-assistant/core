@@ -61,6 +61,8 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=hass-config-flow-name-field
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude
