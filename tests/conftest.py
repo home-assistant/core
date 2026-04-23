@@ -8,12 +8,14 @@ from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
 import functools
 import gc
+import ipaddress
 import itertools
 import logging
 import os
 import pathlib
 import reprlib
 from shutil import copytree, rmtree
+import socket
 import sqlite3
 import ssl
 import sys
@@ -155,6 +157,9 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
 
+# Capture the real socket functions before any test patches them
+_real_getaddrinfo = socket.getaddrinfo
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
@@ -205,6 +210,30 @@ def pytest_runtest_setup() -> None:
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    def _validate_host(host):
+        if host in ("localhost", "127.0.0.1", "::1", None, "", "0.0.0.0", "::"):
+            return
+        try:
+            ipaddress.ip_address(host)
+        except ValueError:
+            raise RuntimeError("DNS resolution disabled in tests") from None
+
+    def getaddrinfo_patched(host, *args: Any, **kwargs: Any):
+        _validate_host(host)
+        return _real_getaddrinfo(host, *args, **kwargs)
+
+    def gethostbyname_patched(host, *args, **kwargs):
+        _validate_host(host)
+        return host
+
+    def gethostbyname_ex_patched(host, *args, **kwargs):
+        _validate_host(host)
+        return (host, [], [host])
+
+    setattr(socket, "getaddrinfo", getaddrinfo_patched)
+    setattr(socket, "gethostbyname", gethostbyname_patched)
+    setattr(socket, "gethostbyname_ex", gethostbyname_ex_patched)
 
     pytest_socket.SocketBlockedError = HASocketBlockedError
 

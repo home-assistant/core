@@ -1096,6 +1096,66 @@ async def assert_trigger_gated_by_labs_flag(
     ) in caplog.text
 
 
+async def _validate_condition_options(
+    hass: HomeAssistant,
+    condition: str,
+    options: dict[str, Any] | None,
+    *,
+    valid: bool,
+) -> None:
+    """Assert that a condition accepts or rejects the given options during validation."""
+    config: dict[str, Any] = {
+        CONF_CONDITION: condition,
+        CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
+    }
+    if options is not None:
+        config[CONF_OPTIONS] = options
+    if valid:
+        await async_validate_condition_config(hass, config)
+    else:
+        with pytest.raises(vol.Invalid):
+            await async_validate_condition_config(hass, config)
+
+
+async def assert_condition_options_supported(
+    hass: HomeAssistant,
+    condition: str,
+    base_options: dict[str, Any] | None,
+    *,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Assert which options a condition supports.
+
+    Tests that the condition:
+    - Accepts the minimal config (base_options)
+    - Accepts/rejects behavior depending on supports_behavior
+    - Accepts/rejects duration depending on supports_duration
+    - Rejects unknown options
+    """
+    # Minimal config should always be valid
+    await _validate_condition_options(hass, condition, base_options, valid=True)
+
+    def _merge(extra: dict[str, Any]) -> dict[str, Any]:
+        return {**(base_options or {}), **extra}
+
+    # Behavior
+    for behavior in ("any", "all"):
+        await _validate_condition_options(
+            hass, condition, _merge({"behavior": behavior}), valid=supports_behavior
+        )
+
+    # Duration
+    await _validate_condition_options(
+        hass, condition, _merge({"for": {"seconds": 5}}), valid=supports_duration
+    )
+
+    # Unknown option should always be rejected
+    await _validate_condition_options(
+        hass, condition, _merge({"unknown_option": True}), valid=False
+    )
+
+
 async def _validate_trigger_options(
     hass: HomeAssistant,
     trigger: str,
