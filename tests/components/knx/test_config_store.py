@@ -36,13 +36,18 @@ async def test_create_entity(
         entity_data={"name": test_name},
     )
 
-    # Test if entity is correctly stored in registry
-    await client.send_json_auto_id({"type": "knx/get_entity_entries"})
+    # Test if entity is correctly registered for its group address
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"] == [
-        test_entity.extended_dict,
-    ]
+    # expect group address "1/2/3" to reference the created entity
+    group_mapping = res["result"]
+    assert "1/2/3" in group_mapping
+    # identifiers are returned as a list of dicts; check unique_id present
+    identifiers = group_mapping["1/2/3"]
+    assert identifiers[0]["unique_id"] == test_entity.unique_id
+    assert identifiers[0]["platform"] == Platform.SWITCH
+    assert identifiers[0]["ui"] is True
     # Test if entity is correctly stored in config store
     test_storage_data = next(
         iter(
