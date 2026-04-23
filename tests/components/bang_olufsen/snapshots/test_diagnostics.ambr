@@ -14,7 +14,7 @@
         ]),
         'friendly_name': 'Living room Balance Play / Pause',
       }),
-      'entity_id': 'event.beosound_balance_11111111_play_pause',
+      'entity_id': 'event.living_room_balance_play_pause',
       'state': 'unknown',
     }),
     'config_entry': dict({
@@ -22,7 +22,7 @@
         'host': '192.168.0.1',
         'jid': '1111.1111111.11111111@products.bang-olufsen.com',
         'model': 'Beosound Balance',
-        'name': 'Beosound Balance-11111111',
+        'name': 'Living room Balance',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -36,7 +36,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'Beosound Balance-11111111',
+      'title': 'Living room Balance',
       'unique_id': '11111111',
       'version': 1,
     }),
@@ -59,7 +59,7 @@
         'entity_picture_local': None,
         'friendly_name': 'Living room Balance',
         'group_members': list([
-          'media_player.beosound_balance_11111111',
+          'media_player.living_room_balance',
           'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
           'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
         ]),
@@ -79,7 +79,7 @@
         ]),
         'supported_features': 2095933,
       }),
-      'entity_id': 'media_player.beosound_balance_11111111',
+      'entity_id': 'media_player.living_room_balance',
       'state': 'playing',
     }),
     'remote_55555555': dict({
@@ -128,7 +128,7 @@
         'state_class': 'measurement',
         'unit_of_measurement': '%',
       }),
-      'entity_id': 'sensor.beosound_a5_44444444_battery',
+      'entity_id': 'sensor.lounge_room_a5_battery',
       'state': '5',
     }),
     'charging': dict({
@@ -136,7 +136,7 @@
         'device_class': 'battery_charging',
         'friendly_name': 'Living room Balance Charging',
       }),
-      'entity_id': 'binary_sensor.beosound_a5_44444444_charging',
+      'entity_id': 'binary_sensor.lounge_room_a5_charging',
       'state': 'off',
     }),
     'config_entry': dict({
@@ -144,7 +144,7 @@
         'host': '192.168.0.4',
         'jid': '1111.1111111.44444444@products.bang-olufsen.com',
         'model': 'Beosound A5',
-        'name': 'Beosound A5-44444444',
+        'name': 'Lounge room A5',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -158,7 +158,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'Beosound A5-44444444',
+      'title': 'Lounge room A5',
       'unique_id': '44444444',
       'version': 1,
     }),
@@ -181,9 +181,9 @@
         'entity_picture_local': None,
         'friendly_name': 'Living room Balance',
         'group_members': list([
-          'media_player.beosound_a5_44444444',
+          'media_player.lounge_room_a5',
           'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
-          'media_player.beosound_a5_44444444',
+          'media_player.lounge_room_a5',
         ]),
         'media_content_type': 'music',
         'repeat': 'off',
@@ -201,7 +201,7 @@
         ]),
         'supported_features': 2095933,
       }),
-      'entity_id': 'media_player.beosound_a5_44444444',
+      'entity_id': 'media_player.lounge_room_a5',
       'state': 'playing',
     }),
     'remote_55555555': dict({

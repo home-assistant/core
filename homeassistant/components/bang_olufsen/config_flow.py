@@ -52,6 +52,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     _beolink_jid = ""
     _client: MozartClient
+    _friendly_name = ""
     _host = ""
     _model = ""
     _name = ""
@@ -111,6 +112,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
 
             self._beolink_jid = beolink_self.jid
+            self._friendly_name = beolink_self.friendly_name
             self._serial_number = get_serial_number_from_jid(beolink_self.jid)
 
             await self.async_set_unique_id(self._serial_number)
@@ -149,6 +151,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="invalid_address")
 
         self._model = discovery_info.hostname[:-16].replace("-", " ")
+        self._friendly_name = discovery_info.properties[ATTR_FRIENDLY_NAME]
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
         self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"
 
@@ -164,16 +167,13 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _create_entry(self) -> ConfigFlowResult:
         """Create the config entry for a discovered or manually configured Bang & Olufsen device."""
-        # Ensure that created entities have a unique and easily identifiable id and not a "friendly name"
-        self._name = f"{self._model}-{self._serial_number}"
-
         return self.async_create_entry(
-            title=self._name,
+            title=self._friendly_name,
             data=EntryData(
                 host=self._host,
                 jid=self._beolink_jid,
                 model=self._model,
-                name=self._name,
+                name=self._friendly_name,
             ),
         )
 
