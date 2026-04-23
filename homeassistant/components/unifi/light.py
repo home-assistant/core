@@ -130,7 +130,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiLightEntityDescription, ...] = (
         control_fn=async_device_led_control_fn,
         device_info_fn=async_device_device_info_fn,
         is_on_fn=async_device_led_is_on_fn,
-        name_fn=lambda device: "LED",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=async_device_led_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"led-{obj_id}",
