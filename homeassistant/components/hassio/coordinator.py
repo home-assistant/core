@@ -160,6 +160,34 @@ class HassioStatsData:
         }
 
 
+def _installed_addon_from_complete(info: InstalledAddonComplete) -> InstalledAddon:
+    """Build an InstalledAddon from an InstalledAddonComplete object.
+
+    InstalledAddonComplete contains a superset of InstalledAddon fields.
+    This helper extracts only the fields needed for InstalledAddon so fresh
+    data from an addon_info call can be stored in AddonData.addon.
+    """
+    return InstalledAddon(
+        advanced=info.advanced,
+        available=info.available,
+        build=info.build,
+        description=info.description,
+        homeassistant=info.homeassistant,
+        icon=info.icon,
+        logo=info.logo,
+        name=info.name,
+        repository=info.repository,
+        slug=info.slug,
+        stage=info.stage,
+        update_available=info.update_available,
+        url=info.url,
+        version_latest=info.version_latest,
+        version=info.version,
+        detached=info.detached,
+        state=info.state,
+    )
+
+
 @callback
 def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic information from Supervisor.
@@ -704,11 +732,10 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         try:
             slug, info = await self._update_addon_info(addon_slug)
             if info is not None and self.data and slug in self.data.addons:
-                existing = self.data.addons[slug]
                 updated = AddonData(
-                    addon=existing.addon,
+                    addon=_installed_addon_from_complete(info),
                     auto_update=info.auto_update,
-                    repository=existing.repository,
+                    repository=info.repository,
                 )
                 self.async_set_updated_data(
                     HassioAddonData(addons={**self.data.addons, slug: updated})
