@@ -110,7 +110,7 @@ def _create_yearly_event(
             return CalendarEvent(
                 start=target_date,
                 end=target_date,
-                summary=str(info.parasha)",
+                summary=str(info.parasha),
                 description=f"Parshat Hashavua: {info.parasha}",
             )
         return None
