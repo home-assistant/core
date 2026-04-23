@@ -77,7 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
 
     api.async_load_api(hass)
-    await api.async_register_insteon_frontend(hass, entry.options.get(CONF_DEV_PATH))
+    await api.async_register_insteon_frontend(
+        hass, entry.options.get(CONF_DEV_PATH) or None
+    )
 
     if not devices.modem:
         try:
