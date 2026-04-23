@@ -67,6 +67,20 @@ async def test_coordinator_setup_connect_error(
 
 @pytest.mark.parametrize(
     "mock_device",
+    [{"fixture_override": {cmd.Power: JvcProjectorCommandError}}],
+    indirect=True,
+)
+async def test_coordinator_setup_power_command_error(
+    hass: HomeAssistant,
+    mock_device: AsyncMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test coordinator fails setup when Power command errors with no cached value."""
+    assert mock_integration.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "mock_device",
     [{"fixture_override": {cmd.Input: JvcProjectorCommandError}}],
     indirect=True,
 )
