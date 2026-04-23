@@ -148,7 +148,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         self._deferred_refresh_cancellers.clear()
 
         async def _deferred_refresh(_now: datetime) -> None:
-            await self.coordinator.async_refresh()
+            await self.coordinator.async_refresh_nodes()
 
         for delay in (1, 5, 10, 15, 20, 25):
             self._deferred_refresh_cancellers.append(

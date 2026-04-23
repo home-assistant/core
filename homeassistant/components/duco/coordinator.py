@@ -100,3 +100,17 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             nodes={node.node_id: node for node in nodes},
             rssi_wifi=lan_info.rssi_wifi,
         )
+
+    async def async_refresh_nodes(self) -> None:
+        """Fetch only node data, reusing the last known rssi_wifi value."""
+        try:
+            nodes = await self.client.async_get_nodes()
+        except DucoConnectionError, DucoError:
+            return
+        if self.data is not None:
+            self.async_set_updated_data(
+                DucoData(
+                    nodes={node.node_id: node for node in nodes},
+                    rssi_wifi=self.data.rssi_wifi,
+                )
+            )
