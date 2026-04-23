@@ -1117,13 +1117,14 @@ async def async_and_from_config(
 class AndConditionChecker(CompoundConditionChecker):
     """Condition checker for 'and' compound conditions."""
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    @callback
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         """Test and condition."""
         errors = []
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, variables) is False:
+                    if check(self._hass, variables, **kwargs) is False:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -1150,7 +1151,8 @@ async def async_or_from_config(
 class OrConditionChecker(CompoundConditionChecker):
     """Condition checker for 'or' compound conditions."""
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    @callback
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         """Test or condition."""
         errors = []
         for index, check in enumerate(self._checks):
@@ -1183,13 +1185,14 @@ async def async_not_from_config(
 class NotConditionChecker(CompoundConditionChecker):
     """Condition checker for 'not' compound conditions."""
 
-    def _check(self, variables: TemplateVarsType) -> bool:
+    @callback
+    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
         """Test not condition."""
         errors = []
         for index, check in enumerate(self._checks):
             try:
                 with trace_path(["conditions", str(index)]):
-                    if check(self._hass, variables):
+                    if check(self._hass, variables, **kwargs):
                         return False
             except ConditionError as ex:
                 errors.append(
