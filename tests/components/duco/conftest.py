@@ -86,10 +86,10 @@ def mock_nodes() -> list[Node]:
             ),
             ventilation=NodeVentilationInfo(
                 state="AUTO",
-                time_state_remain=0,
-                time_state_end=0,
+                time_state_remain=900,
+                time_state_end=1700001800,
                 mode="AUTO",
-                flow_lvl_tgt=0,
+                flow_lvl_tgt=65,
             ),
             sensor=NodeSensorInfo(
                 co2=None,

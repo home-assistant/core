@@ -8,9 +8,10 @@ from duco.exceptions import DucoError, DucoRateLimitError
 from duco.models import Node, NodeType, VentilationState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util.percentage import percentage_to_ordered_list_item
 
 from .const import DOMAIN
@@ -85,6 +86,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         """Initialize the fan entity."""
         super().__init__(coordinator, node)
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{node.node_id}"
+        self._deferred_refresh_cancellers: list[CALLBACK_TYPE] = []
 
     @property
     def percentage(self) -> int | None:
@@ -136,3 +138,20 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
                 translation_placeholders={"error": repr(err)},
             ) from err
         await self.coordinator.async_refresh()
+
+        # The Duco firmware applies FlowLvlTgt asynchronously after a state
+        # change. Multiple follow-up refreshes ensure the airflow target sensor
+        # picks up the updated value before the normal poll interval fires.
+        async def _deferred_refresh(_now: object) -> None:
+            await self.coordinator.async_refresh()
+
+        for delay in (1, 5, 10, 15, 20, 25):
+            self._deferred_refresh_cancellers.append(
+                async_call_later(self.hass, delay, _deferred_refresh)
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel any pending deferred refreshes when entity is removed."""
+        for cancel in self._deferred_refresh_cancellers:
+            cancel()
+        self._deferred_refresh_cancellers.clear()

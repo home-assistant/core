@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import logging
 
-from duco.models import Node, NodeType, VentilationState
+from duco.models import Node, NodeType, VentilationMode, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -37,7 +39,7 @@ PARALLEL_UPDATES = 0
 class DucoSensorEntityDescription(SensorEntityDescription):
     """Duco sensor entity description."""
 
-    value_fn: Callable[[Node], int | float | str | None]
+    value_fn: Callable[[Node], int | float | str | datetime | None]
     node_types: tuple[NodeType, ...]
 
 
@@ -92,6 +94,50 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_rh if node.sensor else None,
         node_types=(NodeType.BSRH, NodeType.UCRH),
+    ),
+    DucoSensorEntityDescription(
+        key="flow_lvl_tgt",
+        translation_key="flow_lvl_tgt",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda node: (
+            node.ventilation.flow_lvl_tgt if node.ventilation else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="ventilation_mode",
+        translation_key="ventilation_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=[VentilationMode.AUTO.lower(), VentilationMode.MANU.lower()],
+        value_fn=lambda node: (
+            node.ventilation.mode.lower()
+            if node.ventilation and node.ventilation.mode != VentilationMode.NONE
+            else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="time_state_remain",
+        translation_key="time_state_remain",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda node: (
+            node.ventilation.time_state_remain if node.ventilation else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="time_state_end",
+        translation_key="time_state_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda node: (
+            datetime.fromtimestamp(node.ventilation.time_state_end, tz=UTC)
+            if node.ventilation and node.ventilation.time_state_end != 0
+            else None
+        ),
+        node_types=(NodeType.BOX,),
     ),
 )
 
@@ -190,7 +236,7 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | float | str | None:
+    def native_value(self) -> int | float | str | datetime | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
 

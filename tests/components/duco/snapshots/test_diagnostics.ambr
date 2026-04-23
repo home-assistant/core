@@ -47,11 +47,11 @@
           'rh': None,
         }),
         'ventilation': dict({
-          'flow_lvl_tgt': 0,
+          'flow_lvl_tgt': 65,
           'mode': 'AUTO',
           'state': 'AUTO',
-          'time_state_end': 0,
-          'time_state_remain': 0,
+          'time_state_end': 1700001800,
+          'time_state_remain': 900,
         }),
       }),
       '113': dict({

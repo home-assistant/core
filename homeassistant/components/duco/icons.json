@@ -1,11 +1,23 @@
 {
   "entity": {
     "sensor": {
+      "flow_lvl_tgt": {
+        "default": "mdi:gauge"
+      },
       "iaq_co2": {
         "default": "mdi:molecule-co2"
       },
       "iaq_rh": {
         "default": "mdi:water-percent"
+      },
+      "time_state_end": {
+        "default": "mdi:clock-end"
+      },
+      "time_state_remain": {
+        "default": "mdi:timer-sand"
+      },
+      "ventilation_mode": {
+        "default": "mdi:cog"
       },
       "ventilation_state": {
         "default": "mdi:tune-variant"

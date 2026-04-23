@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from duco.exceptions import DucoConnectionError, DucoError
@@ -253,3 +254,66 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
         identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_99")}
     )
     assert device is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_time_state_end_zero_returns_unknown(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    mock_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that time_state_end=0 (permanent state) results in an unknown sensor state."""
+    updated_box_node = Node(
+        node_id=1,
+        general=mock_nodes[0].general,
+        ventilation=NodeVentilationInfo(
+            state="AUTO",
+            time_state_remain=0,
+            time_state_end=0,
+            mode="AUTO",
+            flow_lvl_tgt=65,
+        ),
+        sensor=mock_nodes[0].sensor,
+    )
+    mock_duco_client.async_get_nodes.return_value = [
+        updated_box_node,
+        *mock_nodes[1:],
+    ]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_ventilation_state_end_time")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_time_state_end_nonzero_returns_datetime(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a non-zero time_state_end is returned as a UTC datetime."""
+    state = hass.states.get("sensor.living_ventilation_state_end_time")
+    assert state is not None
+    expected = datetime.fromtimestamp(1700001800, tz=UTC).isoformat()
+    assert state.state == expected
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_box_state_sensors_initial_state(
+    hass: HomeAssistant,
+) -> None:
+    """Test that box-level state sensors reflect the initial coordinator data."""
+    state_flow = hass.states.get("sensor.living_airflow_target_level")
+    assert state_flow is not None
+    assert state_flow.state == "65"
+
+    state_mode = hass.states.get("sensor.living_ventilation_mode")
+    assert state_mode is not None
+    assert state_mode.state == "auto"
+
+    state_remain = hass.states.get("sensor.living_ventilation_state_remaining_time")
+    assert state_remain is not None
+    assert state_remain.state == "900"

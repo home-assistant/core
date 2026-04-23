@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -136,6 +137,40 @@ async def test_fan_set_state_rate_limit_logs_warning(
         )
 
     assert "write rate limit exceeded" in caplog.text
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fan_set_state_triggers_deferred_refresh(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that coordinator refreshes fire after a state change.
+
+    One immediate refresh is followed by 6 deferred refreshes (1, 5, 10, 15,
+    20, 25 s) so the airflow target sensor picks up the updated FlowLvlTgt
+    value regardless of firmware latency.
+    """
+    mock_duco_client.async_set_ventilation_state = AsyncMock()
+    mock_duco_client.async_get_nodes.reset_mock()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
+        blocking=True,
+    )
+
+    # Immediate refresh fires synchronously inside the blocking call.
+    assert mock_duco_client.async_get_nodes.call_count == 1
+
+    # Advance time past the last deferred-refresh delay (25 s).
+    freezer.tick(timedelta(seconds=26))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # 1 immediate + 6 deferred refreshes (1, 5, 10, 15, 20, 25 s).
+    assert mock_duco_client.async_get_nodes.call_count == 7
 
 
 @pytest.mark.usefixtures("init_integration")

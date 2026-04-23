@@ -47,11 +47,27 @@
       }
     },
     "sensor": {
+      "flow_lvl_tgt": {
+        "name": "Airflow target level"
+      },
       "iaq_co2": {
         "name": "CO2 air quality index"
       },
       "iaq_rh": {
         "name": "Humidity air quality index"
+      },
+      "time_state_end": {
+        "name": "Ventilation state end time"
+      },
+      "time_state_remain": {
+        "name": "Ventilation state remaining time"
+      },
+      "ventilation_mode": {
+        "name": "Ventilation mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manu": "Manual"
+        }
       },
       "ventilation_state": {
         "name": "Ventilation state",
