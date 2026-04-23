@@ -6,9 +6,10 @@ upload:
         config_entry:
           integration: onedrive
     filename:
-      required: false
+      required: true
       selector:
-        object:
+        text:
+          multiple: true
     destination_folder:
       required: true
       selector:
