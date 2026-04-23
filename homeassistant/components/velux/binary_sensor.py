@@ -62,4 +62,4 @@ class VeluxRainSensor(
         # So far we've seen 89, 91, 93 (most cases) or 100 (Velux GPU). It probably makes sense to
         # assume that any large enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
-        return self.coordinator.data.min.position_percent >= 89
+        return self.coordinator.data.limitation_min.position_percent >= 89

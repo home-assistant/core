@@ -21,8 +21,8 @@ SCAN_INTERVAL = timedelta(minutes=5)
 class VeluxLimitationData:
     """Data for one opening device's limitations."""
 
-    min: Position
-    max: Position
+    limitation_min: Position
+    limitation_max: Position
 
 
 class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData]):
@@ -51,4 +51,4 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData]):
             max_pos = await self.node.get_limitation_max()
         except (OSError, PyVLXException) as err:
             raise UpdateFailed(f"Error fetching limitations: {err}") from err
-        return VeluxLimitationData(min=min_pos, max=max_pos)
+        return VeluxLimitationData(limitation_min=min_pos, limitation_max=max_pos)
