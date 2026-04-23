@@ -1004,6 +1004,10 @@ def _async_setup_device_registry(
     valid_connections = {
         (dr.CONNECTION_NETWORK_MAC, format_mac(device_info.mac_address))
     }
+    if device_info.bluetooth_mac_address:
+        valid_connections.add(
+            (dr.CONNECTION_BLUETOOTH, format_mac(device_info.bluetooth_mac_address))
+        )
     valid_identifiers = {
         (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
         for sub_device in device_info.devices
@@ -1056,10 +1060,17 @@ def _async_setup_device_registry(
         suggested_area = device_info.suggested_area
 
     # Create/update main device
+    connections: set[tuple[str, str]] = {
+        (dr.CONNECTION_NETWORK_MAC, device_info.mac_address)
+    }
+    if device_info.bluetooth_mac_address:
+        connections.add(
+            (dr.CONNECTION_BLUETOOTH, format_mac(device_info.bluetooth_mac_address))
+        )
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
-        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+        connections=connections,
         name=entry_data.friendly_name or entry_data.name,
         manufacturer=manufacturer,
         model=model,

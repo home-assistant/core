@@ -60,6 +60,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -1873,6 +1874,56 @@ async def test_entry_missing_bluetooth_mac_address(
     )
     await hass.async_block_till_done()
     assert entry.data[CONF_BLUETOOTH_MAC_ADDRESS] == "AA:BB:CC:DD:EE:FC"
+
+
+async def test_device_registry_bluetooth_connection_added(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a Bluetooth MAC address is registered as a device connection."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"bluetooth_mac_address": "AA:BB:CC:DD:EE:FC"},
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev is not None
+    assert (
+        dr.CONNECTION_BLUETOOTH,
+        format_mac("AA:BB:CC:DD:EE:FC"),
+    ) in dev.connections
+    assert any(
+        conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in dev.connections
+    )
+
+
+async def test_device_registry_no_bluetooth_connection_when_absent(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that no Bluetooth connection is added when bluetooth_mac_address is absent."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev is not None
+    assert not any(
+        conn_type == dr.CONNECTION_BLUETOOTH for conn_type, _ in dev.connections
+    )
+    assert any(
+        conn_type == dr.CONNECTION_NETWORK_MAC for conn_type, _ in dev.connections
+    )
 
 
 async def test_device_adds_friendly_name(
