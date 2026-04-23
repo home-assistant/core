@@ -372,7 +372,12 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok and CONF_WEBHOOK_ID in entry.data:
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
+    return unload_ok
 
 
 async def _initialize_webhook(
@@ -399,14 +404,14 @@ async def _initialize_webhook(
         if entry.title != ENTRY_TITLE:
             webhook_name = f"{ENTRY_TITLE} {entry.title}"
 
-        with contextlib.suppress(Exception):
-            webhook.async_register(
-                hass,
-                DOMAIN,
-                webhook_name,
-                entry.data[CONF_WEBHOOK_ID],
-                _create_handle_webhook(coordinators_by_id),
-            )
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        webhook.async_register(
+            hass,
+            DOMAIN,
+            webhook_name,
+            entry.data[CONF_WEBHOOK_ID],
+            _create_handle_webhook(coordinators_by_id),
+        )
 
         try:
             webhook_url = webhook.async_generate_url(

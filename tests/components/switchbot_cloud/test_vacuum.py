@@ -21,10 +21,20 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     VacuumActivity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.components.webhook import DOMAIN as WEBHOOK_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_WEBHOOK_ID,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 
 from . import configure_integration
+
+from tests.typing import ClientSessionGenerator
 
 
 async def test_coordinator_data_is_none(
@@ -205,6 +215,92 @@ async def test_k10_plus_set_start(
         mock_send_command.assert_called_once_with(
             "vacuum-id-1", VacuumCommands.START, "command", "default"
         )
+
+
+async def test_k10_plus_webhook_updates_state_after_reload(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_get_webook_configuration,
+    mock_delete_webhook,
+    mock_setup_webhook,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test webhook updates a K10+ vacuum after config entry reload."""
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
+    mock_get_webook_configuration.return_value = {"urls": ["https://example.com"]}
+    mock_list_devices.return_value = [
+        Device(
+            deviceId="360TY420703038421",
+            deviceName="Succ K10+",
+            deviceType="K10+",
+            hubDeviceId=None,
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {
+            "battery": 71,
+            "onlineStatus": "online",
+            "workingStatus": "Paused",
+        },
+        {
+            "battery": 71,
+            "onlineStatus": "online",
+            "workingStatus": "Paused",
+        },
+    ]
+    mock_delete_webhook.return_value = {}
+    mock_setup_webhook.return_value = {}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "vacuum.succ_k10"
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+    old_coordinator = entry.runtime_data.devices.vacuums[0][1]
+    old_handler = hass.data[WEBHOOK_DOMAIN][webhook_id]["handler"]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == VacuumActivity.PAUSED.value
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    new_coordinator = entry.runtime_data.devices.vacuums[0][1]
+    assert new_coordinator is not old_coordinator
+    assert hass.data[WEBHOOK_DOMAIN][webhook_id]["handler"] is not old_handler
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    client = await hass_client_no_auth()
+    await client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "eventType": "changeReport",
+            "eventVersion": "1",
+            "context": {
+                "battery": 74,
+                "deviceMac": "360TY420703038421",
+                "deviceType": "WoSweeperMini",
+                "onlineStatus": "online",
+                "timeOfSample": 1776974845413,
+                "workingStatus": "Clearing",
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert new_coordinator.data is not None
+    assert new_coordinator.data["workingStatus"] == "Clearing"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == VacuumActivity.CLEANING.value
+    assert state.attributes["battery_level"] == 74
 
 
 async def test_k20_plus_pro_set_fan_speed(
