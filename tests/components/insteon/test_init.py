@@ -88,7 +88,7 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
             {},
         )
         await hass.async_block_till_done()
-        mock_register_frontend.assert_called_once_with(hass, "/some/path")
+        mock_register_frontend.assert_awaited_once_with(hass, "/some/path")
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         assert insteon.devices.async_save.call_count == 1
