@@ -102,9 +102,13 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
             _LOGGER.exception("Unexpected error %s switch", action)
             raise HomeAssistantError(f"Unexpected error: {exc}") from exc
 
-        # Set optimistic state
+        # Refresh coordinator data to get updated device state
+        await self.coordinator.async_request_refresh()
+
+        # Set optimistic state briefly for UI feedback, then clear after refresh
         self._optimistic_state = state
         self.async_write_ha_state()
+        self._optimistic_state = None
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn the switch on."""
@@ -119,6 +123,3 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.api.screensaver_set_disabled_state, disabled
         )
-        await self.coordinator.async_request_refresh()
-        # Clear optimistic state after refresh
-        self._optimistic_state = None
