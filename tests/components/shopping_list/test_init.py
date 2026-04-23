@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shopping_list import NoMatchingShoppingListItem
+from homeassistant.components.shopping_list.common import _get_shopping_data
 from homeassistant.components.shopping_list.const import (
     ATTR_REVERSE,
     DOMAIN,
@@ -53,8 +54,8 @@ async def test_add_item(
     response = await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": " beer "}}
     )
-    assert len(hass.data[DOMAIN].items) == 1
-    assert hass.data[DOMAIN].items[0]["name"] == "beer"  # name was trimmed
+    assert len(_get_shopping_data(hass).items) == 1
+    assert _get_shopping_data(hass).items[0]["name"] == "beer"  # name was trimmed
 
     # Response text is now handled by default conversation agent
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -74,21 +75,21 @@ async def test_remove_item(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    assert len(hass.data[DOMAIN].items) == 2
+    assert len(_get_shopping_data(hass).items) == 2
 
     # Remove a single item
-    item_id = hass.data[DOMAIN].items[0]["id"]
-    await hass.data[DOMAIN].async_remove(item_id)
+    item_id = _get_shopping_data(hass).items[0]["id"]
+    await _get_shopping_data(hass).async_remove(item_id)
     assert_shopping_list_data(hass, snapshot)
 
-    assert len(hass.data[DOMAIN].items) == 1
+    assert len(_get_shopping_data(hass).items) == 1
 
-    item = hass.data[DOMAIN].items[0]
+    item = _get_shopping_data(hass).items[0]
     assert item["name"] == "cheese"
 
     # Trying to remove the same item twice should fail
     with pytest.raises(NoMatchingShoppingListItem):
-        await hass.data[DOMAIN].async_remove(item_id)
+        await _get_shopping_data(hass).async_remove(item_id)
     assert_shopping_list_data(hass, snapshot)
 
 
@@ -106,25 +107,27 @@ async def test_update_list(
     assert_shopping_list_data(hass, snapshot)
 
     # Update a single attribute, other attributes shouldn't change
-    await hass.data[DOMAIN].async_update_list({"complete": True})
+    await _get_shopping_data(hass).async_update_list({"complete": True})
 
-    beer = hass.data[DOMAIN].items[0]
+    beer = _get_shopping_data(hass).items[0]
     assert beer["name"] == "beer"
     assert beer["complete"] is True
 
-    cheese = hass.data[DOMAIN].items[1]
+    cheese = _get_shopping_data(hass).items[1]
     assert cheese["name"] == "cheese"
     assert cheese["complete"] is True
 
     # Update multiple attributes
-    await hass.data[DOMAIN].async_update_list({"name": "dupe", "complete": False})
+    await _get_shopping_data(hass).async_update_list(
+        {"name": "dupe", "complete": False}
+    )
     assert_shopping_list_data(hass, snapshot)
 
-    beer = hass.data[DOMAIN].items[0]
+    beer = _get_shopping_data(hass).items[0]
     assert beer["name"] == "dupe"
     assert beer["complete"] is False
 
-    cheese = hass.data[DOMAIN].items[1]
+    cheese = _get_shopping_data(hass).items[1]
     assert cheese["name"] == "dupe"
     assert cheese["complete"] is False
 
@@ -145,16 +148,16 @@ async def test_clear_completed_items(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    assert len(hass.data[DOMAIN].items) == 2
+    assert len(_get_shopping_data(hass).items) == 2
 
     # Update a single attribute, other attributes shouldn't change
-    await hass.data[DOMAIN].async_update_list({"complete": True})
+    await _get_shopping_data(hass).async_update_list({"complete": True})
     assert_shopping_list_data(hass, snapshot)
 
-    await hass.data[DOMAIN].async_clear_completed()
+    await _get_shopping_data(hass).async_clear_completed()
     assert_shopping_list_data(hass, snapshot)
 
-    assert len(hass.data[DOMAIN].items) == 0
+    assert len(_get_shopping_data(hass).items) == 0
 
 
 async def test_recent_items_intent(
@@ -263,8 +266,8 @@ async def test_deprecated_api_update(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    beer_id = hass.data["shopping_list"].items[0]["id"]
-    wine_id = hass.data["shopping_list"].items[1]["id"]
+    beer_id = _get_shopping_data(hass).items[0]["id"]
+    wine_id = _get_shopping_data(hass).items[1]["id"]
 
     client = await hass_client()
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -288,7 +291,7 @@ async def test_deprecated_api_update(
     data = await resp.json()
     assert data == {"id": wine_id, "name": "wine", "complete": True}
 
-    beer, wine = hass.data["shopping_list"].items
+    beer, wine = _get_shopping_data(hass).items
     assert beer == {"id": beer_id, "name": "soda", "complete": False}
     assert wine == {"id": wine_id, "name": "wine", "complete": True}
 
@@ -308,8 +311,8 @@ async def test_ws_update_item(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    beer_id = hass.data["shopping_list"].items[0]["id"]
-    wine_id = hass.data["shopping_list"].items[1]["id"]
+    beer_id = _get_shopping_data(hass).items[0]["id"]
+    wine_id = _get_shopping_data(hass).items[1]["id"]
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await client.send_json(
@@ -342,7 +345,7 @@ async def test_ws_update_item(
     assert len(events) == 2
     assert_shopping_list_data(hass, snapshot)
 
-    beer, wine = hass.data["shopping_list"].items
+    beer, wine = _get_shopping_data(hass).items
     assert beer == {"id": beer_id, "name": "soda", "complete": False}
     assert wine == {"id": wine_id, "name": "wine", "complete": True}
 
@@ -368,7 +371,7 @@ async def test_api_update_fails(
     assert resp.status == HTTPStatus.NOT_FOUND
     assert len(events) == 0
 
-    beer_id = hass.data["shopping_list"].items[0]["id"]
+    beer_id = _get_shopping_data(hass).items[0]["id"]
     resp = await client.post(f"/api/shopping_list/item/{beer_id}", json={"name": 123})
     assert_shopping_list_data(hass, snapshot)
 
@@ -426,8 +429,8 @@ async def test_deprecated_api_clear_completed(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    beer_id = hass.data["shopping_list"].items[0]["id"]
-    wine_id = hass.data["shopping_list"].items[1]["id"]
+    beer_id = _get_shopping_data(hass).items[0]["id"]
+    wine_id = _get_shopping_data(hass).items[1]["id"]
 
     client = await hass_client()
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -445,7 +448,7 @@ async def test_deprecated_api_clear_completed(
     assert len(events) == 2
     assert_shopping_list_data(hass, snapshot)
 
-    items = hass.data["shopping_list"].items
+    items = _get_shopping_data(hass).items
     assert len(items) == 1
 
     assert items[0] == {"id": wine_id, "name": "wine", "complete": False}
@@ -465,8 +468,8 @@ async def test_ws_clear_items(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": "wine"}}
     )
     assert_shopping_list_data(hass, snapshot)
-    beer_id = hass.data["shopping_list"].items[0]["id"]
-    wine_id = hass.data["shopping_list"].items[1]["id"]
+    beer_id = _get_shopping_data(hass).items[0]["id"]
+    wine_id = _get_shopping_data(hass).items[1]["id"]
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
     await client.send_json(
@@ -485,7 +488,7 @@ async def test_ws_clear_items(
     await client.send_json({"id": 6, "type": "shopping_list/items/clear"})
     msg = await client.receive_json()
     assert msg["success"] is True
-    items = hass.data["shopping_list"].items
+    items = _get_shopping_data(hass).items
     assert len(items) == 1
     assert items[0] == {"id": wine_id, "name": "wine", "complete": False}
     assert len(events) == 2
@@ -511,7 +514,7 @@ async def test_deprecated_api_create(
     assert data["complete"] is False
     assert len(events) == 1
 
-    items = hass.data["shopping_list"].items
+    items = _get_shopping_data(hass).items
     assert len(items) == 1
     assert items[0]["name"] == "soda"
     assert items[0]["complete"] is False
@@ -531,7 +534,7 @@ async def test_deprecated_api_create_fail(
     assert_shopping_list_data(hass, snapshot)
 
     assert resp.status == HTTPStatus.BAD_REQUEST
-    assert len(hass.data["shopping_list"].items) == 0
+    assert len(_get_shopping_data(hass).items) == 0
     assert len(events) == 0
 
 
@@ -553,7 +556,7 @@ async def test_ws_add_item(
     assert len(events) == 1
     assert_shopping_list_data(hass, snapshot)
 
-    items = hass.data["shopping_list"].items
+    items = _get_shopping_data(hass).items
     assert len(items) == 1
     assert items[0]["name"] == "soda"
     assert items[0]["complete"] is False
@@ -572,7 +575,7 @@ async def test_ws_add_item_fail(
     msg = await client.receive_json()
     assert msg["success"] is False
     assert len(events) == 0
-    assert len(hass.data["shopping_list"].items) == 0
+    assert len(_get_shopping_data(hass).items) == 0
     assert_shopping_list_data(hass, snapshot)
 
 
@@ -595,7 +598,7 @@ async def test_ws_remove_item(
     assert len(events) == 2
     assert_shopping_list_data(hass, snapshot)
 
-    items = hass.data["shopping_list"].items
+    items = _get_shopping_data(hass).items
     assert len(items) == 2
 
     await client.send_json(
@@ -606,7 +609,7 @@ async def test_ws_remove_item(
     assert msg["success"] is True
     assert_shopping_list_data(hass, snapshot)
 
-    items = hass.data["shopping_list"].items
+    items = _get_shopping_data(hass).items
     assert len(items) == 1
     assert items[0]["name"] == "cheese"
 
@@ -627,7 +630,7 @@ async def test_ws_remove_item_fail(
     msg = await client.receive_json()
     assert msg["success"] is False
     assert len(events) == 1
-    assert len(hass.data["shopping_list"].items) == 1
+    assert len(_get_shopping_data(hass).items) == 1
     assert_shopping_list_data(hass, snapshot)
 
 
@@ -649,9 +652,9 @@ async def test_ws_reorder_items(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    beer_id = hass.data["shopping_list"].items[0]["id"]
-    wine_id = hass.data["shopping_list"].items[1]["id"]
-    apple_id = hass.data["shopping_list"].items[2]["id"]
+    beer_id = _get_shopping_data(hass).items[0]["id"]
+    wine_id = _get_shopping_data(hass).items[1]["id"]
+    apple_id = _get_shopping_data(hass).items[2]["id"]
 
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -665,17 +668,17 @@ async def test_ws_reorder_items(
     msg = await client.receive_json()
     assert msg["success"] is True
     assert len(events) == 1
-    assert hass.data["shopping_list"].items[0] == {
+    assert _get_shopping_data(hass).items[0] == {
         "id": wine_id,
         "name": "wine",
         "complete": False,
     }
-    assert hass.data["shopping_list"].items[1] == {
+    assert _get_shopping_data(hass).items[1] == {
         "id": apple_id,
         "name": "apple",
         "complete": False,
     }
-    assert hass.data["shopping_list"].items[2] == {
+    assert _get_shopping_data(hass).items[2] == {
         "id": beer_id,
         "name": "beer",
         "complete": False,
@@ -705,17 +708,17 @@ async def test_ws_reorder_items(
     msg = await client.receive_json()
     assert msg["success"] is True
     assert len(events) == 3
-    assert hass.data["shopping_list"].items[0] == {
+    assert _get_shopping_data(hass).items[0] == {
         "id": apple_id,
         "name": "apple",
         "complete": False,
     }
-    assert hass.data["shopping_list"].items[1] == {
+    assert _get_shopping_data(hass).items[1] == {
         "id": beer_id,
         "name": "beer",
         "complete": False,
     }
-    assert hass.data["shopping_list"].items[2] == {
+    assert _get_shopping_data(hass).items[2] == {
         "id": wine_id,
         "name": "wine",
         "complete": True,
@@ -741,9 +744,9 @@ async def test_ws_reorder_items_failure(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    beer_id = hass.data["shopping_list"].items[0]["id"]
-    wine_id = hass.data["shopping_list"].items[1]["id"]
-    apple_id = hass.data["shopping_list"].items[2]["id"]
+    beer_id = _get_shopping_data(hass).items[0]["id"]
+    wine_id = _get_shopping_data(hass).items[1]["id"]
+    apple_id = _get_shopping_data(hass).items[2]["id"]
 
     client = await hass_ws_client(hass)
     events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
@@ -788,7 +791,7 @@ async def test_add_item_service(
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    assert len(hass.data[DOMAIN].items) == 1
+    assert len(_get_shopping_data(hass).items) == 1
     assert len(events) == 1
     assert_shopping_list_data(hass, snapshot)
 
@@ -810,7 +813,7 @@ async def test_remove_item_service(
         {ATTR_NAME: "cheese"},
         blocking=True,
     )
-    assert len(hass.data[DOMAIN].items) == 2
+    assert len(_get_shopping_data(hass).items) == 2
     assert len(events) == 2
     assert_shopping_list_data(hass, snapshot)
 
@@ -820,8 +823,8 @@ async def test_remove_item_service(
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    assert len(hass.data[DOMAIN].items) == 1
-    assert hass.data[DOMAIN].items[0]["name"] == "cheese"
+    assert len(_get_shopping_data(hass).items) == 1
+    assert _get_shopping_data(hass).items[0]["name"] == "cheese"
     assert len(events) == 3
     assert_shopping_list_data(hass, snapshot)
 
@@ -837,7 +840,7 @@ async def test_clear_completed_items_service(
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    assert len(hass.data[DOMAIN].items) == 1
+    assert len(_get_shopping_data(hass).items) == 1
     assert len(events) == 1
     assert_shopping_list_data(hass, snapshot)
 
@@ -848,7 +851,7 @@ async def test_clear_completed_items_service(
         {ATTR_NAME: "beer"},
         blocking=True,
     )
-    assert len(hass.data[DOMAIN].items) == 1
+    assert len(_get_shopping_data(hass).items) == 1
     assert len(events) == 1
     assert_shopping_list_data(hass, snapshot)
 
@@ -859,7 +862,7 @@ async def test_clear_completed_items_service(
         {},
         blocking=True,
     )
-    assert len(hass.data[DOMAIN].items) == 0
+    assert len(_get_shopping_data(hass).items) == 0
     assert len(events) == 1
     assert_shopping_list_data(hass, snapshot)
 
@@ -888,9 +891,9 @@ async def test_sort_list_service(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    assert hass.data[DOMAIN].items[0][ATTR_NAME] == "aaa"
-    assert hass.data[DOMAIN].items[1][ATTR_NAME] == "ddd"
-    assert hass.data[DOMAIN].items[2][ATTR_NAME] == "zzz"
+    assert _get_shopping_data(hass).items[0][ATTR_NAME] == "aaa"
+    assert _get_shopping_data(hass).items[1][ATTR_NAME] == "ddd"
+    assert _get_shopping_data(hass).items[2][ATTR_NAME] == "zzz"
     assert len(events) == 1
 
     # sort descending
@@ -902,7 +905,7 @@ async def test_sort_list_service(
     )
     assert_shopping_list_data(hass, snapshot)
 
-    assert hass.data[DOMAIN].items[0][ATTR_NAME] == "zzz"
-    assert hass.data[DOMAIN].items[1][ATTR_NAME] == "ddd"
-    assert hass.data[DOMAIN].items[2][ATTR_NAME] == "aaa"
+    assert _get_shopping_data(hass).items[0][ATTR_NAME] == "zzz"
+    assert _get_shopping_data(hass).items[1][ATTR_NAME] == "ddd"
+    assert _get_shopping_data(hass).items[2][ATTR_NAME] == "aaa"
     assert len(events) == 2
