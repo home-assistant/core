@@ -37,7 +37,6 @@ MISSING_INTEGRATION_TYPE = {
     "gree",
     "holiday",
     "homekit",
-    "html5",
     "ifttt",
     "influxdb",
     "ios",
