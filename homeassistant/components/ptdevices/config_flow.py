@@ -59,7 +59,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str
     if first_device is None:
         raise NoDevicesFound
 
-    # Ensure the user_name and user_id exist
     user_name = first_device.get("user_name")
     user_id = first_device.get("user_id")
 
