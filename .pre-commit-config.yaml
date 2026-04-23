@@ -23,6 +23,7 @@ repos:
       - id: zizmor
         args:
           - --pedantic
+        exclude: ^\.github/workflows/check-requirements\.lock\.yml$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
