@@ -51,7 +51,7 @@ HA_STATE_TO_DAIKIN = {
     HVACMode.FAN_ONLY: "fan",
     HVACMode.DRY: "dry",
     HVACMode.COOL: "cool",
-    HVACMode.HEAT: "hot",
+    HVACMode.HEAT: "heat",
     HVACMode.HEAT_COOL: "auto",
     HVACMode.OFF: "off",
 }
@@ -60,7 +60,7 @@ DAIKIN_TO_HA_STATE = {
     "fan": HVACMode.FAN_ONLY,
     "dry": HVACMode.DRY,
     "cool": HVACMode.COOL,
-    "hot": HVACMode.HEAT,
+    "heat": HVACMode.HEAT,
     "auto": HVACMode.HEAT_COOL,
     "off": HVACMode.OFF,
 }
