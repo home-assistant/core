@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, UnitOfDataRate, UnitOfInformation
+from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -96,7 +96,7 @@ async def async_setup_entry(
     """Set up NZBGet sensor based on a config entry."""
     coordinator = entry.runtime_data
     entities = [
-        NZBGetSensor(coordinator, entry.entry_id, entry.data[CONF_NAME], description)
+        NZBGetSensor(coordinator, entry.entry_id, entry.title, description)
         for description in SENSOR_TYPES
     ]
 

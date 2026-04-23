@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -18,7 +17,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
 from .coordinator import NZBGetAPI, NZBGetAPIException
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +70,6 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = {
             vol.Required(CONF_HOST): str,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
             vol.Optional(CONF_USERNAME): str,
             vol.Optional(CONF_PASSWORD): str,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,

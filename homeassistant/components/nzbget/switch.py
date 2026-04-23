@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -25,7 +24,7 @@ async def async_setup_entry(
         NZBGetDownloadSwitch(
             coordinator,
             entry.entry_id,
-            entry.data[CONF_NAME],
+            entry.title,
         ),
     ]
 
