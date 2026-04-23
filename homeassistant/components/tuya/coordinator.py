@@ -1,7 +1,9 @@
 """Support for Tuya Smart devices."""
 
+from pathlib import Path
 from typing import Any
 
+from tuya_device_handlers.devices import register_tuya_quirks
 from tuya_sharing import (
     CustomerDevice,
     Manager,
@@ -11,6 +13,7 @@ from tuya_sharing import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
@@ -29,28 +32,60 @@ from .const import (
 type TuyaConfigEntry = ConfigEntry[DeviceListener]
 
 
-def create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
-    """Create a Tuya Manager instance."""
-    return Manager(
-        TUYA_CLIENT_ID,
-        entry.data[CONF_USER_CODE],
-        entry.data[CONF_TERMINAL_ID],
-        entry.data[CONF_ENDPOINT],
-        entry.data[CONF_TOKEN_INFO],
-        token_listener,
-    )
-
-
 class DeviceListener(SharingDeviceListener):
     """Device Update Listener."""
+
+    manager: Manager
 
     def __init__(
         self,
         hass: HomeAssistant,
-        manager: Manager,
+        entry: TuyaConfigEntry,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
+        self._entry = entry
+
+    def initialize(self) -> None:
+        """Initialize device listener.
+
+        Needs to be called in executor as these make blocking calls:
+        - `register_tuya_quirks`
+        - `Manager` initialization
+        - `manager.update_device_cache`
+        """
+        entry = self._entry
+        hass = self.hass
+
+        # Makes blocking call to load files from disk
+        register_tuya_quirks(str(Path(hass.config.config_dir, "tuya_quirks")))
+
+        token_listener = _TokenListener(hass, entry)
+
+        # Makes blocking call to import_module
+        # with args ('.system', 'urllib3.contrib.resolver')
+        manager = Manager(
+            TUYA_CLIENT_ID,
+            entry.data[CONF_USER_CODE],
+            entry.data[CONF_TERMINAL_ID],
+            entry.data[CONF_ENDPOINT],
+            entry.data[CONF_TOKEN_INFO],
+            token_listener,
+        )
+
+        manager.add_device_listener(self)
+
+        # Get all devices from Tuya, makes blocking web calls
+        try:
+            manager.update_device_cache()
+        except Exception as exc:
+            # While in general, we should avoid catching broad exceptions,
+            # we have no other way of detecting this case.
+            if "sign invalid" in str(exc):
+                msg = "Authentication failed. Please re-authenticate"
+                raise ConfigEntryAuthFailed(msg) from exc
+            raise
+
         self.manager = manager
 
     def update_device(
@@ -112,7 +147,7 @@ class DeviceListener(SharingDeviceListener):
             device_registry.async_remove_device(device_entry.id)
 
 
-class TokenListener(SharingTokenListener):
+class _TokenListener(SharingTokenListener):
     """Token listener for upstream token updates."""
 
     def __init__(

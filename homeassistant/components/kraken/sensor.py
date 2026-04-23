@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -28,7 +27,7 @@ from .const import (
     DOMAIN,
     KrakenResponse,
 )
-from .coordinator import KrakenData
+from .coordinator import KrakenConfigEntry, KrakenData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +137,7 @@ SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: KrakenConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kraken entities from a config_entry."""
@@ -149,9 +148,7 @@ async def async_setup_entry(
             entities.extend(
                 [
                     KrakenSensor(
-                        # Uses legacy hass.data[DOMAIN] pattern
-                        # pylint: disable-next=hass-use-runtime-data
-                        hass.data[DOMAIN],
+                        config_entry.runtime_data,
                         tracked_asset_pair,
                         description,
                     )
@@ -163,7 +160,9 @@ async def async_setup_entry(
     _async_add_kraken_sensors(config_entry.options[CONF_TRACKED_ASSET_PAIRS])
 
     @callback
-    def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def async_update_sensors(
+        hass: HomeAssistant, config_entry: KrakenConfigEntry
+    ) -> None:
         """Add or remove sensors for configured tracked asset pairs."""
         dev_reg = dr.async_get(hass)
 

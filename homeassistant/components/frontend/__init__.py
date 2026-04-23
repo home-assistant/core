@@ -407,6 +407,12 @@ def async_remove_panel(
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
+@callback
+def async_panel_exists(hass: HomeAssistant, frontend_url_path: str) -> bool:
+    """Return if a panel is registered for the given frontend URL path."""
+    return frontend_url_path in hass.data.get(DATA_PANELS, {})
+
+
 def add_extra_js_url(hass: HomeAssistant, url: str, es5: bool = False) -> None:
     """Register extra js or module url to load.
 

@@ -1,5 +1,4 @@
 """The Matter integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from __future__ import annotations
 
@@ -17,7 +16,7 @@ from matter_server.client.exceptions import (
 from matter_server.common.errors import MatterError, NodeNotExists
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -36,6 +35,7 @@ from .api import async_register_api
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN, LOGGER
 from .discovery import SUPPORTED_PLATFORMS
 from .helpers import (
+    MatterConfigEntry,
     MatterEntryData,
     get_matter,
     get_node_from_device_entry,
@@ -56,8 +56,7 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    # Test hass.data[DOMAIN] to ensure config entry is set up
-    if not hass.data.get(DOMAIN, False) or not (
+    if not hass.config_entries.async_loaded_entries(DOMAIN) or not (
         node := node_from_ha_device_id(hass, device_id)
     ):
         return None
@@ -75,7 +74,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
     """Set up Matter from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
@@ -153,13 +152,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listen_task.cancel()
         raise ConfigEntryNotReady("Failed to set default fabric label") from err
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     # create an intermediate layer (adapter) which keeps track of the nodes
     # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
-    hass.data[DOMAIN][entry.entry_id] = MatterEntryData(matter, listen_task)
+    entry.runtime_data = MatterEntryData(matter, listen_task)
 
     await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
     await matter.setup_nodes()
@@ -167,7 +163,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # If the listen task is already failed, we need to raise ConfigEntryNotReady
     if listen_task.done() and (listen_error := listen_task.exception()) is not None:
         await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
-        hass.data[DOMAIN].pop(entry.entry_id)
         try:
             await matter_client.disconnect()
         finally:
@@ -178,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _client_listen(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MatterConfigEntry,
     matter_client: MatterClient,
     init_ready: asyncio.Event,
 ) -> None:
@@ -200,16 +195,15 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, SUPPORTED_PLATFORMS
     )
 
     if unload_ok:
-        matter_entry_data: MatterEntryData = hass.data[DOMAIN].pop(entry.entry_id)
-        matter_entry_data.listen_task.cancel()
-        await matter_entry_data.adapter.matter_client.disconnect()
+        entry.runtime_data.listen_task.cancel()
+        await entry.runtime_data.adapter.matter_client.disconnect()
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
@@ -223,7 +217,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Config entry is being removed."""
 
     if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
@@ -247,7 +241,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 def _remove_via_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device_entry: dr.DeviceEntry
 ) -> None:
     """Remove all via devices associated with a device."""
     device_registry = dr.async_get(hass)
@@ -260,7 +254,7 @@ def _remove_via_devices(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MatterConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     node = get_node_from_device_entry(hass, device_entry)
@@ -289,7 +283,9 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def _async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_ensure_addon_running(
+    hass: HomeAssistant, entry: MatterConfigEntry
+) -> None:
     """Ensure that Matter Server add-on is installed and running."""
     addon_manager = _get_addon_manager(hass)
     try:
