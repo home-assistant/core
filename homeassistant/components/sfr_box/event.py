@@ -67,7 +67,7 @@ class SFRBoxEvent(SFRCoordinatorEntity[VoipCallHistoryList], EventEntity):
         """Initialize the event entity."""
         super().__init__(coordinator, description, system_info)
         self._previous_calls: set[str] = set()
-        self._attr_event_types = description.event_types or []
+        self._attr_event_types = description.event_types
 
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
