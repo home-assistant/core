@@ -8,6 +8,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api.models.websocket import (
+    DeviceUpdate,
+    DeviceUpdateData,
+    DeviceUpdateDoor,
     HwDoorbell,
     HwDoorbellData,
     InsightsAdd,
@@ -21,6 +24,11 @@ from unifi_access_api.models.websocket import (
     LogEvent,
     LogSource,
     LogTarget,
+    RemoteView,
+    RemoteViewData,
+    V2DeviceLocationState,
+    V2DeviceUpdate,
+    V2DeviceUpdateData,
     V2LocationUpdate,
     V2LocationUpdateData,
     WebsocketMessage,
@@ -778,6 +786,266 @@ async def test_logs_add_device_mapping_pruned_on_refresh(
 
     # door-001 entity was removed when the door disappeared
     assert hass.states.get(FRONT_DOOR_ACCESS_ENTITY) is None
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_doorbell_ring_by_device_id(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.remote_view fires doorbell ring when device_id is in the mapping."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="hub-device-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_doorbell_ring_by_door_name_fallback(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.remote_view falls back to door_name lookup when device_id is unmapped."""
+    handlers = _get_ws_handlers(mock_client)
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="unknown-device", door_name="Front Door"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+async def test_remote_view_unknown_device_and_door_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.remote_view is ignored when both device_id and door_name are unknown."""
+    handlers = _get_ws_handlers(mock_client)
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="unknown-device", door_name="Unknown Door"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_device_mapping_via_device_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.remote_view resolves device_id populated by access.data.device.update."""
+    handlers = _get_ws_handlers(mock_client)
+
+    device_update_msg = DeviceUpdate(
+        event="access.data.device.update",
+        data=DeviceUpdateData(
+            unique_id="intercom-device-001",
+            door=DeviceUpdateDoor(unique_id="door-001"),
+        ),
+    )
+    await handlers["access.data.device.update"](device_update_msg)
+    await hass.async_block_till_done()
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="intercom-device-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_device_mapping_via_v2_device_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.remote_view resolves device_id populated by access.data.v2.device.update."""
+    handlers = _get_ws_handlers(mock_client)
+
+    v2_device_update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="intercom-v2-001",
+            location_states=[V2DeviceLocationState(location_id="door-001")],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](v2_device_update_msg)
+    await hass.async_block_till_done()
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="intercom-v2-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_v2_device_update_multiple_location_states_maps_to_first_door(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test device with multiple location_states maps to the first valid door only."""
+    handlers = _get_ws_handlers(mock_client)
+
+    # Device has two location_states; should be mapped to the first door (door-001).
+    v2_device_update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="hub-multi-001",
+            location_states=[
+                V2DeviceLocationState(location_id="door-001"),
+                V2DeviceLocationState(location_id="door-002"),
+            ],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](v2_device_update_msg)
+    await hass.async_block_till_done()
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="hub-multi-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    # Should ring front door (door-001), not back door (door-002)
+    front_state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert front_state is not None
+    assert front_state.attributes["event_type"] == "ring"
+    assert front_state.state == "2025-01-01T00:00:00.000+00:00"
+
+    back_state = hass.states.get(BACK_DOOR_DOORBELL_ENTITY)
+    assert back_state is not None
+    assert back_state.state == "unknown"
+
+
+async def test_device_update_without_door_does_not_map(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.device.update without a door does not populate the mapping."""
+    handlers = _get_ws_handlers(mock_client)
+
+    device_update_msg = DeviceUpdate(
+        event="access.data.device.update",
+        data=DeviceUpdateData(unique_id="orphan-device"),
+    )
+    await handlers["access.data.device.update"](device_update_msg)
+    await hass.async_block_till_done()
+
+    # Sending a remote_view for that device should not fire a doorbell event
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="orphan-device"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_device_update_empty_unique_id_does_not_pollute_mapping(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.device.update with empty unique_id does not create mapping."""
+    handlers = _get_ws_handlers(mock_client)
+
+    device_update_msg = DeviceUpdate(
+        event="access.data.device.update",
+        data=DeviceUpdateData(
+            unique_id="",
+            door=DeviceUpdateDoor(unique_id="door-001"),
+        ),
+    )
+    await handlers["access.data.device.update"](device_update_msg)
+    await hass.async_block_till_done()
+
+    # An empty device_id must not accidentally resolve via the empty-string key
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id=""),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_v2_device_update_empty_id_does_not_pollute_mapping(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.v2.device.update with empty id does not create mapping."""
+    handlers = _get_ws_handlers(mock_client)
+
+    v2_device_update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="",
+            location_states=[V2DeviceLocationState(location_id="door-001")],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](v2_device_update_msg)
+    await hass.async_block_till_done()
+
+    # The empty-string device id must not produce an entry in _device_to_door
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id=""),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
 
 
 @pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
