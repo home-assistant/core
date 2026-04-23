@@ -9,7 +9,10 @@ from aiohttp.web import Request
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
+from homeassistant.components.http.auth_util import (
+    AUTH_ACCESS_ERROR_DESCRIPTIONS,
+    async_user_not_allowed_do_auth,
+)
 from homeassistant.components.http.ban import process_success_login, process_wrong_login
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.const import __version__
@@ -101,7 +104,13 @@ class AuthPhase:
             if user_access_error := async_user_not_allowed_do_auth(
                 self._hass, refresh_token.user, self._request
             ):
-                await self._send_bytes_text(auth_invalid_message(user_access_error))
+                await self._send_bytes_text(
+                    auth_invalid_message(
+                        AUTH_ACCESS_ERROR_DESCRIPTIONS.get(
+                            user_access_error, user_access_error
+                        )
+                    )
+                )
                 await process_wrong_login(self._request)
                 raise Disconnect
 
