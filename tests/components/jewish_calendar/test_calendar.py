@@ -26,7 +26,7 @@ from homeassistant.components.jewish_calendar.const import (
     DailyCalendarEventType,
     YearlyCalendarEventType,
 )
-from homeassistant.const import Platform, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
