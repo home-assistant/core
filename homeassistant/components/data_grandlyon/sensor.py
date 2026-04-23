@@ -133,7 +133,7 @@ class DataGrandLyonStopSensor(
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return line and direction as extra attributes."""
+        """Return direction and type as extra attributes."""
         passage = self._get_passage()
         if passage is None:
             return None
