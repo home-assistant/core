@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Unpack, cast
 
 import voluptuous as vol
 
@@ -20,8 +20,12 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
-from homeassistant.helpers.condition import Condition, ConditionConfig
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.condition import (
+    Condition,
+    ConditionCheckParams,
+    ConditionConfig,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from . import in_zone
 
@@ -116,7 +120,7 @@ class ZoneCondition(Condition):
         self._zone_entity_ids = self._options.get(CONF_ZONE, [])
 
     @callback
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test if condition."""
         errors = []
 

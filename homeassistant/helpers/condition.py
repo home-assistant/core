@@ -19,6 +19,8 @@ from typing import (
     Final,
     Literal,
     Protocol,
+    TypedDict,
+    Unpack,
     cast,
     overload,
     override,
@@ -308,7 +310,7 @@ class ConditionChecker(abc.ABC):
     ) -> bool | None:
         """Check the condition."""
         with trace_condition(variables):
-            result = self._async_check(variables, **kwargs)
+            result = self._async_check(variables=variables, **kwargs)
             condition_trace_update_result(result=result)
             return result
 
@@ -331,7 +333,7 @@ class ConditionChecker(abc.ABC):
 
     @abc.abstractmethod
     @callback
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool | None:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool | None:
         """Check the condition."""
 
 
@@ -344,7 +346,7 @@ class LegacyConditionChecker(ConditionChecker):
         self._checker = checker
 
     @callback
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
+    def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
 
@@ -352,7 +354,7 @@ class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
     @callback
-    def _async_check(self, variables: TemplateVarsType | None, **kwargs: Any) -> None:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
 
 
@@ -487,7 +489,7 @@ class EntityConditionBase(Condition):
             for state in states
         )
 
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
             self._hass, self._target_selection, expand_group=False
@@ -789,6 +791,12 @@ class ConditionConfig:
 
     options: dict[str, Any] | None = None
     target: dict[str, Any] | None = None
+
+
+class ConditionCheckParams(TypedDict, total=False):
+    """Condition check params."""
+
+    variables: TemplateVarsType
 
 
 type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]

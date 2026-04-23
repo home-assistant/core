@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, Unpack, cast
 
 import voluptuous as vol
 
@@ -13,12 +13,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     Condition,
+    ConditionCheckParams,
     ConditionConfig,
     condition_trace_set_result,
     condition_trace_update_result,
 )
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
@@ -155,7 +156,7 @@ class SunCondition(Condition):
         self._after_offset = self._options.get("after_offset")
 
     @callback
-    def _async_check(self, variables: TemplateVarsType, **kwargs: Any) -> bool:
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         return sun(
             self._hass,
