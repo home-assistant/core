@@ -16,7 +16,7 @@ from kiosker import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -73,14 +73,14 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
         """Initialize the switch entity."""
         super().__init__(coordinator, description)
         self._method = getattr(self, description.method)
-        self._optimistic_state: bool | None = None
+        self._control_result: bool | None = None
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         # Use optimistic state if available (during API calls)
-        if self._optimistic_state is not None:
-            return self._optimistic_state
+        if self._control_result is not None:
+            return self._control_result
 
         return self.entity_description.is_on_fn(self.coordinator.data)
 
@@ -102,13 +102,9 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
             _LOGGER.exception("Unexpected error %s switch", action)
             raise HomeAssistantError(f"Unexpected error: {exc}") from exc
 
-        # Refresh coordinator data to get updated device state
-        await self.coordinator.async_request_refresh()
-
-        # Set optimistic state briefly for UI feedback, then clear after refresh
-        self._optimistic_state = state
+        # Set optimistic state for immediate UI feedback
+        self._control_result = state
         self.async_write_ha_state()
-        self._optimistic_state = None
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn the switch on."""
@@ -123,3 +119,11 @@ class KioskerSwitch(KioskerEntity, SwitchEntity):
         await self.hass.async_add_executor_job(
             self.coordinator.api.screensaver_set_disabled_state, disabled
         )
+        await self.coordinator.async_request_refresh()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update."""
+        # Clear optimistic state when real data arrives
+        self._control_result = None
+        super()._handle_coordinator_update()
