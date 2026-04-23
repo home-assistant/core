@@ -44,7 +44,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, patch_platforms
 
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.test_name"
 
@@ -245,30 +245,6 @@ async def test_rpc_media_player_audio_file(
     assert state.state == STATE_IDLE
 
 
-async def test_rpc_media_player_no_media_meta(
-    hass: HomeAssistant,
-    entity_registry: EntityRegistry,
-    mock_rpc_device: Mock,
-    monkeypatch: pytest.MonkeyPatch,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test a Shelly RPC media player with no media metadata."""
-    status = deepcopy(mock_rpc_device.status)
-    status["media"] = STATUS_AUDIO_FILE
-    status["media"]["playback"].pop("media_meta")
-    monkeypatch.setattr(mock_rpc_device, "status", status)
-
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
-
-    assert (state := hass.states.get(ENTITY_ID))
-    assert state.state == STATE_PLAYING
-    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
-    assert state.attributes.get(ATTR_MEDIA_ARTIST) is None
-    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
-    assert state.attributes.get(ATTR_MEDIA_DURATION) is None
-    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
-
-
 async def test_rpc_media_player_actions(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -375,6 +351,30 @@ async def test_rpc_media_player_play_media_errors(
             },
             blocking=True,
         )
+
+
+async def test_get_image_http(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test get image via http command."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    state = hass.states.get(ENTITY_ID)
+    assert "entity_picture_local" not in state.attributes
+
+    client = await hass_client_no_auth()
+
+    resp = await client.get(state.attributes["entity_picture"])
+    content = await resp.read()
+
+    assert isinstance(content, bytes)
 
 
 async def test_rpc_media_player_browse_media_root(
@@ -582,3 +582,27 @@ async def test_rpc_media_player_browse_media_errors(
     assert msg["error"]
     assert msg["error"]["code"] == "home_assistant_error"
     assert msg["error"]["message"] == expected_message
+
+
+async def test_rpc_media_player_no_media_meta(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a Shelly RPC media player with no media metadata."""
+    status = deepcopy(mock_rpc_device.status)
+    status["media"] = STATUS_AUDIO_FILE
+    status["media"]["playback"].pop("media_meta")
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_PLAYING
+    assert state.attributes.get(ATTR_MEDIA_TITLE) is None
+    assert state.attributes.get(ATTR_MEDIA_ARTIST) is None
+    assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) is None
+    assert state.attributes.get(ATTR_MEDIA_DURATION) is None
+    assert state.attributes.get(ATTR_MEDIA_POSITION) is None
