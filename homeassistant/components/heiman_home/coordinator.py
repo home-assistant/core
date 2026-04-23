@@ -149,11 +149,9 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
         await self._fetch_and_process_devices(home_id)
 
         # Update last update time
-        self.data.last_update = datetime.now(
-            UTC
-        )  # pragma: no cover - covered indirectly in integration tests
+        self.data.last_update = datetime.now(UTC)
 
-        return self.data  # pragma: no cover - covered indirectly in integration tests
+        return self.data
 
     async def _fetch_user_and_home_info(self) -> None:
         """Fetch user and home information on first update."""
@@ -201,7 +199,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                 # Convert back to dictionary
                 devices = {d.device_id: d for d in filtered_devices_list}
             else:
-                devices = devices_dict  # pragma: no cover - normal execution path covered in integration tests
+                devices = devices_dict
 
             # Extract firmware version from device list
             self._extract_firmware_versions(devices)
@@ -305,7 +303,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
                     return (
                         device_id,
                         device_detail,
-                    )  # pragma: no cover - normal execution path covered in integration tests
+                    )
 
         # Fetch all device details concurrently
         results = await asyncio.gather(
@@ -322,7 +320,7 @@ class HeimanDataUpdateCoordinator(DataUpdateCoordinator[HeimanData]):
             if device_detail is not None and device_id in devices:
                 self._process_device_detail(
                     devices[device_id], device_detail
-                )  # pragma: no cover - normal execution path covered in integration tests
+                )
 
     def _process_device_detail(
         self, device: HeimanDevice, device_detail: dict[str, Any]

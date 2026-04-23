@@ -56,23 +56,6 @@ async def test_sensor_entity_creation(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
     """Test sensor entity creation from device properties."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
     # Create mock coordinator with device
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -100,29 +83,17 @@ async def test_sensor_entity_creation(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
+    # Create a mock config entry and set runtime_data
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.runtime_data = mock_coordinator
+
     # Mock async_add_entities callback
     added_entities = []
 
     def async_add_entities(entities):
         added_entities.extend(entities)
 
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace coordinator with mock
-    entry.runtime_data = mock_coordinator
-
-    # Call sensor setup
+    # Call sensor setup directly
     await async_setup_entry(hass, entry, async_add_entities)
     await hass.async_block_till_done()
 
@@ -647,23 +618,6 @@ async def test_sensor_entity_creation_with_multiple_properties(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
     """Test sensor entity creation with multiple readable properties."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
     # Create mock coordinator with device with multiple properties
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -724,29 +678,17 @@ async def test_sensor_entity_creation_with_multiple_properties(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
+    # Create a mock config entry and set runtime_data
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.runtime_data = mock_coordinator
+
     # Mock async_add_entities callback
     added_entities = []
 
     def async_add_entities(entities):
         added_entities.extend(entities)
 
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace coordinator with mock
-    entry.runtime_data = mock_coordinator
-
-    # Call sensor setup
+    # Call sensor setup directly
     await async_setup_entry(hass, entry, async_add_entities)
     await hass.async_block_till_done()
 
@@ -762,23 +704,6 @@ async def test_sensor_entity_creation_no_readable_properties(
     hass: HomeAssistant, setup_credentials: None
 ) -> None:
     """Test sensor entity creation with no readable properties."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
     # Create mock coordinator with device without readable properties
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -804,29 +729,17 @@ async def test_sensor_entity_creation_no_readable_properties(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
+    # Create a mock config entry and set runtime_data
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.runtime_data = mock_coordinator
+
     # Mock async_add_entities callback
     added_entities = []
 
     def async_add_entities(entities):
         added_entities.extend(entities)
 
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace coordinator with mock
-    entry.runtime_data = mock_coordinator
-
-    # Call sensor setup
+    # Call sensor setup directly
     await async_setup_entry(hass, entry, async_add_entities)
     await hass.async_block_till_done()
 
@@ -1229,23 +1142,6 @@ async def test_sensor_creation_readable_without_entity_marker(
     This tests the else branch in _create_sensors_for_devices that creates
     sensors for readable properties without explicit entity='sensor' marker.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
     # Create mock coordinator with device that has properties without entity marker
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1286,29 +1182,17 @@ async def test_sensor_creation_readable_without_entity_marker(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
+    # Create a mock config entry and set runtime_data
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.runtime_data = mock_coordinator
+
     # Mock async_add_entities callback
     added_entities = []
 
     def async_add_entities(entities):
         added_entities.extend(entities)
 
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace coordinator with mock
-    entry.runtime_data = mock_coordinator
-
-    # Call sensor setup
+    # Call sensor setup directly
     await async_setup_entry(hass, entry, async_add_entities)
     await hass.async_block_till_done()
 
@@ -1327,23 +1211,6 @@ async def test_sensor_creation_skips_non_sensor_entities(
     This tests the elif branch that skips properties explicitly assigned
     to different entity platforms.
     """
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test_token",
-                "refresh_token": "test_refresh_token",
-                "expires_at": 9999999999,
-                "token_type": "Bearer",
-            },
-            "home_id": "test_home",
-            "user_id": "test_user",
-        },
-        unique_id="test_user",
-    )
-    entry.add_to_hass(hass)
-
     # Create mock coordinator with device that has properties with different entity types
     mock_coordinator = MagicMock()
     mock_device = MagicMock(spec=HeimanDevice)
@@ -1395,29 +1262,17 @@ async def test_sensor_creation_skips_non_sensor_entities(
     mock_coordinator.last_update_success = True
     mock_coordinator.get_device.return_value = mock_device
 
+    # Create a mock config entry and set runtime_data
+    entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="test_user")
+    entry.runtime_data = mock_coordinator
+
     # Mock async_add_entities callback
     added_entities = []
 
     def async_add_entities(entities):
         added_entities.extend(entities)
 
-    with (
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_config_entry_first_refresh",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.heiman_home.coordinator.HeimanDataUpdateCoordinator.async_init_mqtt_client",
-            return_value=None,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Replace coordinator with mock
-    entry.runtime_data = mock_coordinator
-
-    # Call sensor setup
+    # Call sensor setup directly
     await async_setup_entry(hass, entry, async_add_entities)
     await hass.async_block_till_done()
 

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 
 
 async def test_coordinator_update_data_success(hass: HomeAssistant) -> None:
-    """Test successful data update covering lines 152-154."""
+    """Test a successful coordinator update sets the timestamp and stores data."""
     # Create mock config entry
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
@@ -68,17 +68,17 @@ async def test_coordinator_update_data_success(hass: HomeAssistant) -> None:
     # Perform update
     result = await coordinator._async_update_data()
 
-    # Verify last_update was set (line 152)
+    # Verify last_update was set
     assert result.last_update is not None
     assert isinstance(result.last_update, datetime)
 
-    # Verify data was returned (line 154)
+    # Verify data was returned
     assert result is coordinator.data
     assert "device-1" in result.devices
 
 
 async def test_coordinator_fetch_devices_without_filtering(hass: HomeAssistant) -> None:
-    """Test fetching devices when device_management is None (line 202)."""
+    """Test fetching devices when device_management is None."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -122,7 +122,7 @@ async def test_coordinator_fetch_devices_without_filtering(hass: HomeAssistant) 
         last_update=None,
     )
 
-    # Fetch devices - device_management is None so line 202 executes
+    # Fetch devices - device_management is None so all devices are fetched
     await coordinator._fetch_and_process_devices("test-home-id")
 
     # Verify devices were fetched without filtering
@@ -130,7 +130,7 @@ async def test_coordinator_fetch_devices_without_filtering(hass: HomeAssistant) 
 
 
 async def test_coordinator_update_device_details_cache_hit(hass: HomeAssistant) -> None:
-    """Test device detail update with cache hit (line 303, 318)."""
+    """Test device detail update with cache hit avoids API calls."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -163,7 +163,7 @@ async def test_coordinator_update_device_details_cache_hit(hass: HomeAssistant) 
 
     devices = {"device-1": mock_device}
 
-    # This should use cached data (line 303, 318)
+    # This should use cached data without making API calls
     await coordinator._update_device_details(devices)
 
     # Verify cache was used (no API call made)
@@ -173,7 +173,7 @@ async def test_coordinator_update_device_details_cache_hit(hass: HomeAssistant) 
 async def test_coordinator_process_device_detail_with_derive_metadata(
     hass: HomeAssistant,
 ) -> None:
-    """Test processing device detail with deriveMetadata (line 342-343)."""
+    """Test processing device detail with invalid deriveMetadata JSON."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -199,7 +199,7 @@ async def test_coordinator_process_device_detail_with_derive_metadata(
         api_client=mock_api_client,
     )
 
-    # Test with invalid JSON in deriveMetadata (triggers exception at line 342-343)
+    # Test with invalid JSON in deriveMetadata (triggers exception handling)
     device_detail = {
         "firmwareInfo": {"version": "1.0.0"},
         "deriveMetadata": "invalid json {{{",
@@ -215,7 +215,7 @@ async def test_coordinator_process_device_detail_with_derive_metadata(
 async def test_coordinator_update_device_property_early_return(
     hass: HomeAssistant,
 ) -> None:
-    """Test property update with missing prop_id or value (line 355, 359)."""
+    """Test property update skips when prop_id or value is missing."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -241,11 +241,11 @@ async def test_coordinator_update_device_property_early_return(
         api_client=mock_api_client,
     )
 
-    # Test with missing prop_id (line 355)
+    # Test with missing prop_id
     prop_item_no_id = {"value": "test"}
     coordinator._update_device_property(mock_device, prop_item_no_id)
 
-    # Test with None value (line 359)
+    # Test with None value
     prop_item_no_value = {"identifier": "test", "value": None}
     coordinator._update_device_property(mock_device, prop_item_no_value)
 
@@ -254,7 +254,7 @@ async def test_coordinator_update_device_property_early_return(
 
 
 async def test_coordinator_process_device_info(hass: HomeAssistant) -> None:
-    """Test processing DeviceINFO object (line 411)."""
+    """Test processing DeviceINFO nested structure."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -302,7 +302,7 @@ async def test_coordinator_process_device_info(hass: HomeAssistant) -> None:
 async def test_coordinator_merge_device_states_keep_runtime_properties(
     hass: HomeAssistant,
 ) -> None:
-    """Test merging device states keeps runtime properties (line 442-443)."""
+    """Test merging device states preserves runtime-discovered properties."""
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
     config_entry.entry_id = "test-entry"
@@ -356,7 +356,7 @@ async def test_coordinator_merge_device_states_keep_runtime_properties(
         last_update=None,
     )
 
-    # Merge states - should keep runtime property (line 442-443)
+    # Merge states - should keep runtime property
     coordinator._merge_device_states({"device-1": new_device})
 
     # Verify runtime property was preserved
@@ -366,7 +366,7 @@ async def test_coordinator_merge_device_states_keep_runtime_properties(
 
 
 async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
-    """Test getting online devices (line 466, 485)."""
+    """Test retrieving only online devices from coordinator data."""
 
     config_entry = MagicMock(spec=ConfigEntry)
     config_entry.data = {CONF_HOME_ID: "test-home-id"}
@@ -413,12 +413,12 @@ async def test_coordinator_get_online_devices(hass: HomeAssistant) -> None:
         last_update=None,
     )
 
-    # Test get_online_devices (line 466)
+    # Test get_online_devices
     online_devices = coordinator.get_online_devices()
     assert len(online_devices) == 1
     assert online_devices[0].device_id == "device-1"
 
-    # Test get_device (line 485)
+    # Test get_device
     device = coordinator.get_device("device-1")
     assert device is not None
     assert device.device_id == "device-1"
