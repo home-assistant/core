@@ -87,8 +87,7 @@ def async_wifi_bulb_for_host(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[FLUX_LED_DISCOVERY] = []
+    hass.data[FLUX_LED_DISCOVERY] = []
 
     @callback
     def _async_start_background_discovery(*_: Any) -> None:
