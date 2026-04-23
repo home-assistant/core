@@ -179,6 +179,7 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.serial_number = f"serial_{request.param.__name__}"
     cover.is_opening = False
     cover.is_closing = False
+    cover.rain_sensor = False
     cover.position = MagicMock(position_percent=30, closed=False)
     cover.position_upper_curtain = MagicMock(position_percent=30, closed=False)
     cover.position_lower_curtain = MagicMock(position_percent=30, closed=False)
