@@ -9,6 +9,7 @@ from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloudAuthRequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -111,17 +112,52 @@ class IcloudAccount:
                 raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
             self.api = None
             # Login failed which means credentials need to be updated.
-            _LOGGER.error(
-                (
-                    "Your password for '%s' is no longer working; Go to the "
-                    "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again"
-                ),
-                self._config_entry.data[CONF_USERNAME],
-            )
+            if requires_2fa:
+                _LOGGER.warning(
+                    (
+                        "2FA authentication required for '%s'; Go to the "
+                        "Integrations menu and click on Configure on the iCloud "
+                        "card to enter your verification code"
+                    ),
+                    self._config_entry.data[CONF_USERNAME],
+                )
+            else:
+                _LOGGER.error(
+                    (
+                        "Your password for '%s' is no longer working; Go to the "
+                        "Integrations menu and click on Configure on the discovered Apple "
+                        "iCloud card to login again"
+                    ),
+                    self._config_entry.data[CONF_USERNAME],
+                )
 
+            self._require_reauth()
+            return
+
+        except PyiCloudAuthRequiredException:
+            requires_2fa = self.api is not None and self.api.requires_2fa
+            self.api = None
+            if requires_2fa:
+                _LOGGER.warning(
+                    (
+                        "2FA authentication required for '%s'; Go to the "
+                        "Integrations menu and click on Configure on the iCloud "
+                        "card to enter your verification code"
+                    ),
+                    self._config_entry.data[CONF_USERNAME],
+                )
+            else:
+                _LOGGER.error(
+                    (
+                        "Re-authentication required for '%s'; Go to the "
+                        "Integrations menu and click on Configure on the iCloud "
+                        "card to login again"
+                    ),
+                    self._config_entry.data[CONF_USERNAME],
+                )
             self._require_reauth()
             return
 
