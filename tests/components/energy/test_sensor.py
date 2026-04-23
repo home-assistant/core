@@ -1390,6 +1390,103 @@ async def test_needs_power_sensor_partial_combined(hass: HomeAssistant) -> None:
     )
 
 
+async def test_power_sensor_manager_creation_no_states(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test SensorManager creates power sensors correctly."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    # Set up a source sensor in the registry without state
+
+    # Create a config entry for the device
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    # Create a device and register source sensor to it
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "battery_device")},
+        name="Battery Device",
+    )
+
+    # Register the source sensor with the device
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "battery_power",
+        suggested_object_id="battery_power",
+        device_id=device_entry.id,
+    )
+
+    await hass.async_block_till_done()
+
+    # Update with battery that has inverted power_config
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Verify the power sensor entity was created
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
+
+
+async def test_power_sensor_manager_creation_no_energy_unit(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test SensorManager creates power sensors correctly."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    # Set up a source sensor
+    hass.states.async_set(
+        "sensor.battery_power",
+        "100.0",
+    )
+    await hass.async_block_till_done()
+
+    # Update with battery that has inverted power_config
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Verify the power sensor entity was created
+    state = hass.states.get("sensor.battery_power_inverted")
+    assert state is not None
+    assert float(state.state) == -100.0
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
+
+
 async def test_power_sensor_manager_creation(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -1427,6 +1524,7 @@ async def test_power_sensor_manager_creation(
     state = hass.states.get("sensor.battery_power_inverted")
     assert state is not None
     assert float(state.state) == -100.0
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
 
 
 async def test_power_sensor_manager_cleanup(
