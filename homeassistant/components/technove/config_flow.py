@@ -41,12 +41,11 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if self.source == SOURCE_RECONFIGURE:
                     entry = self._get_reconfigure_entry()
+                    assert entry.unique_id is not None
                     self._abort_if_unique_id_mismatch(
                         reason="unique_id_mismatch",
                         description_placeholders={
-                            "expected_mac": entry.unique_id.upper()
-                            if entry.unique_id
-                            else "",
+                            "expected_mac": entry.unique_id.upper(),
                             "actual_mac": station.info.mac_address.upper(),
                         },
                     )
